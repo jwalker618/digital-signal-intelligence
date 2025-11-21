@@ -56,10 +56,12 @@ Regulatory Defense
 * Clean regulatory record gives 30% credit
 
 ### Enforcement History Impact
+```
 0 actions:   0.95x modifier
 1 action:    1.20x modifier
 2 actions:   1.50x modifier
 3+ actions:  2.00x modifier + likely decline
+```
 
 ### Governance Critical for D&O
 * Governance score weighted 30% higher for D&O coverage
@@ -128,7 +130,8 @@ Regulatory Defense
 * Industry rankings
 
 ## Usage Example
-pythonfrom dsi_financial_pricing import (
+```python
+from dsi_financial_pricing import (
     FinancialInstitutionProfile, FinancialInstitutionSignals,
     FinancialInstitutionType, FICoverageType, RegulatoryJurisdiction,
     FinancialInstitutionPricingModel
@@ -157,6 +160,7 @@ result = model.price(bank)
 print(f"Premium: ${result.annual_premium:,.0f}")
 print(f"Regulatory Risk: {result.regulatory_action_probability:.1%}")
 print(f"Decision: {result.recommendation}")
+```
 
 ## Policy Structure Recommendations
 ### D&O Limits
