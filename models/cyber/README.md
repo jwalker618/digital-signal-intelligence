@@ -5,10 +5,14 @@ Comprehensive cyber insurance pricing based on digital security posture analysis
 This model implements automated cyber insurance pricing using Digital Signal Intelligence (DSI) with particular emphasis on vulnerability indicators, security maturity, and breach probability estimation. Unlike traditional cyber underwriting that relies heavily on questionnaires, this model automatically extracts security signals from the digital footprint.
 
 ## Installation
-bashcd digital-signal-intelligence/models/cyber
+```bash
+cd digital-signal-intelligence/models/cyber
 pip install -r requirements.txt
-Quick Start
-pythonfrom dsi_cyber_pricing import (
+```
+
+## Quick Start
+```python
+from dsi_cyber_pricing import (
     CyberCompanyProfile, CyberSecuritySignals,
     IndustryVertical, CompanySize, CyberCoverageType,
     CyberInsurancePricingModel
@@ -40,94 +44,128 @@ result = model.price(company)
 print(f"Premium: ${result.annual_premium:,.0f}")
 print(f"Breach Probability: {result.breach_probability:.1%}")
 print(f"Recommendation: {result.recommendation}")
-Model Architecture
-Coverage Types
+```
 
-First-Party Coverage
+## Model Architecture
+### Coverage Types
 
-Data breach response costs
-Forensic investigation
-Legal consultation
-Notification costs
-Credit monitoring
-Business interruption
-Cyber extortion/ransomware
+1/. First-Party Coverage
+* Data breach response costs
+* Forensic investigation
+* Legal consultation
+* Notification costs
+* Credit monitoring
+* Business interruption
+* Cyber extortion/ransomware
 
+2/. Third-Party Coverage
+* Privacy liability
+* Network security liability
+* Media liability
+* Regulatory defense and penalties
+* PCI-DSS fines
+* Class action defense
 
-Third-Party Coverage
+3/. Comprehensive (Both First and Third Party)
 
-Privacy liability
-Network security liability
-Media liability
-Regulatory defense and penalties
-PCI-DSS fines
-Class action defense
+### Five Signal Categories
+1/. Infrastructure Security (20% weight)
+* SSL certificate status and strength
+* TLS version (1.3 = optimal)
+* Security headers (HSTS, CSP, X-Frame-Options)
+* DNSSEC implementation
+* Email authentication (SPF, DMARC, DKIM)
+* Web Application Firewall presence
 
+2/. Vulnerability Indicators (30% weight) - CRITICAL
+* Open ports exposure
+* Outdated software detection
+* Known CVEs (Common Vulnerabilities)
+* Exposed databases
+* Leaked credentials in breaches
+* Historical breach incidents
 
-Comprehensive (Both First and Third Party)
+3/. Organizational Maturity (20% weight)
+* Security certifications (ISO 27001, SOC 2, etc.)
+* Privacy policy quality and GDPR compliance
+* Incident response plan visibility
+* Bug bounty program participation
+* Security team visibility (CISO, security engineers)
+* Security awareness content
 
-Five Signal Categories
-1. Infrastructure Security (20% weight)
+4/. Third-Party Risk (15% weight)
+* Vendor security standards
+* Supply chain transparency
+* Cloud provider quality (AWS/Azure/GCP preferred)
+* Third-party integration management
+* Data processing agreements
 
-SSL certificate status and strength
-TLS version (1.3 = optimal)
-Security headers (HSTS, CSP, X-Frame-Options)
-DNSSEC implementation
-Email authentication (SPF, DMARC, DKIM)
-Web Application Firewall presence
+5/. Behavioral Security (15% weight)
+* Patch discipline and update frequency
+* Security investment signals
+* Employee training programs
+* MFA adoption
+* Backup and disaster recovery procedures
+* Monitoring capabilities (SOC/SIEM)
 
-2. Vulnerability Indicators (30% weight) - CRITICAL
+### Industry Risk Multipliers
+|Industry|Multiplier|Rationale|
+|-|-|-
+|Healthcare|1.50x|PHI sensitivity, HIPAA penalties|
+|Financial Services|1.40x|High-value target, regulatory risk|
+|Retail|1.25x|PCI compliance, customer data|
+|Energy|1.20x|Critical infrastructure|
+|Technology|1.15x|High-value intellectual property|
+|Professional Services|1.10x|Client confidential data|
+|Education|1.05x|Student data, lower maturity|
+|Other|1.00x|Baseline|
+|Manufacturing|0.95x|Lower data exposure|
+|Government|0.90x|Security focus (but catastrophic if breached)|
 
-Open ports exposure
-Outdated software detection
-Known CVEs (Common Vulnerabilities)
-Exposed databases
-Leaked credentials in breaches
-Historical breach incidents
-
-3. Organizational Maturity (20% weight)
-
-Security certifications (ISO 27001, SOC 2, etc.)
-Privacy policy quality and GDPR compliance
-Incident response plan visibility
-Bug bounty program participation
-Security team visibility (CISO, security engineers)
-Security awareness content
-
-4. Third-Party Risk (15% weight)
-
-Vendor security standards
-Supply chain transparency
-Cloud provider quality (AWS/Azure/GCP preferred)
-Third-party integration management
-Data processing agreements
-
-5. Behavioral Security (15% weight)
-
-Patch discipline and update frequency
-Security investment signals
-Employee training programs
-MFA adoption
-Backup and disaster recovery procedures
-Monitoring capabilities (SOC/SIEM)
-
-Industry Risk Multipliers
-IndustryMultiplierRationaleHealthcare1.50xPHI sensitivity, HIPAA penaltiesFinancial Services1.40xHigh-value target, regulatory riskRetail1.25xPCI compliance, customer dataEnergy1.20xCritical infrastructureTechnology1.15xHigh-value intellectual propertyProfessional Services1.10xClient confidential dataEducation1.05xStudent data, lower maturityOther1.00xBaselineManufacturing0.95xLower data exposureGovernment0.90xSecurity focus (but catastrophic if breached)
-Pricing Formula
+### Pricing Formula
+```
 Technical Rate = Base Rate × Cyber Maturity Modifier × Vulnerability Modifier ×
                  Industry Modifier × Size Modifier × Data Sensitivity Modifier ×
                  IT Environment Modifier × Prior Incidents Modifier
 
 Annual Premium = Technical Rate × Revenue ($M)
-Cyber Maturity Modifiers
-Composite ScoreModifier RangeRisk Profile800-10000.60xExceptional security700-8000.70-0.80xStrong security600-7000.80-0.95xGood security500-6000.95-1.20xAdequate security400-5001.20-1.60xWeak security0-4001.60-2.50xPoor security
-Vulnerability Modifiers (Critical)
-Vulnerability ScoreModifierRisk Level90-1000.70xVery Low80-900.80xLow70-800.95xModerate60-701.10xElevated50-601.30xHigh40-501.60xVery High0-402.00xCritical
-Risk Tiers
-TierComposite ScoreVulnerability ScoreDecisionTier 1800+85+Auto-Approve - PreferredTier 2700-80075+Auto-Approve - StandardTier 3600-70065+Manual Review - ElevatedTier 4500-60055+Manual Review - High RiskTier 5<500 or <50 vuln<50Decline or Critical Risk
-Breach Probability Estimation
+```
+
+### Cyber Maturity Modifiers
+|Composite Score|Modifier Range|Risk Profile|
+|-|-|-|
+|800-1000|0.60x|Exceptional security|
+|700-800|0.70-0.80x|Strong security|
+|600-700|0.80-0.95x|Good security|
+|500-600|0.95-1.20x|Adequate security|
+|400-500|1.20-1.60x|Weak security|
+|0-400|1.60-2.50x|Poor security|
+
+### Vulnerability Modifiers (Critical)
+|Vulnerability Score|Modifier|Risk Level|
+|-|-|-|
+|90-100|0.70x|Very Low|
+|80-90|0.80x|Low|
+|70-80|0.95x|Moderate|
+|60-70|1.10x|Elevated|
+|50-60|1.30x|High|
+|40-50|1.60x|Very High|
+|0-40|2.00x|Critical|
+
+### Risk Tiers
+|Tier|Composite Score|Vulnerability Score|Decision|
+|-|-|-|-|
+|Tier 1|800+|85+|Auto-Approve - Preferred|
+|Tier 2|700-800|75+|Auto-Approve - Standard|
+|Tier 3|600-700|65+|Manual Review - Elevated|
+|Tier 4|500-600|55+|Manual Review - High Risk|
+|Tier 5|<500 or <50 vuln|<50|Decline or Critical Risk|
+
+### Breach Probability Estimation
 The model estimates annual breach probability based on:
-pythonBase Probability = f(Composite Score)
+
+```python
+Base Probability = f(Composite Score)
   • 800+: 2%
   • 700-800: 5%
   • 600-700: 10%
@@ -136,15 +174,21 @@ pythonBase Probability = f(Composite Score)
   • <400: 45%
 
 Adjusted = Base × Industry Multiplier × (1 + Prior Incidents × 0.40)
-Expected Loss Calculation
+```
+
+### Expected Loss Calculation
+```
 Breach Cost = (Records × $175/record × 10% exposure) +
               (Daily Revenue × 15 days downtime) +
               (Regulatory/Legal × 2.5x if third-party coverage)
 
 Expected Loss = Breach Cost × Breach Probability
-Usage Examples
-Example 1: Technology Company with Strong Security
-pythonstrong_signals = CyberSecuritySignals(
+```
+
+## Usage Examples
+### Example 1: Technology Company with Strong Security
+```python
+strong_signals = CyberSecuritySignals(
     ssl_certificate=95, tls_version=100, security_headers=90,
     known_vulnerabilities=92, exposed_databases=100,
     security_certifications=90, mfa_adoption=95,
@@ -171,8 +215,11 @@ result = model.price(tech_company)
 # Premium: ~$450,000
 # Breach Probability: 2-4%
 # Recommendation: Auto-Approve - Preferred Pricing
-Example 2: Healthcare with Vulnerabilities
-pythonvulnerable_signals = CyberSecuritySignals(
+```
+
+### Example 2: Healthcare with Vulnerabilities
+```python
+vulnerable_signals = CyberSecuritySignals(
     ssl_certificate=75, tls_version=80,
     known_vulnerabilities=45,  # CRITICAL LOW SCORE
     exposed_databases=50,       # CRITICAL LOW SCORE
@@ -198,8 +245,11 @@ result = model.price(healthcare)
 # Breach Probability: 35-45%
 # Recommendation: Manual Review or Decline
 # Conditions: Mandatory remediation of vulnerabilities
-Example 3: Batch Pricing Portfolio
-pythonimport pandas as pd
+```
+
+### Example 3: Batch Pricing Portfolio
+```python
+import pandas as pd
 
 companies = [company1, company2, company3, ...]
 model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
@@ -223,8 +273,11 @@ df.to_csv('cyber_pricing_results.csv', index=False)
 print(f"Total Premium: ${df['Premium'].sum():,.0f}")
 print(f"Avg Breach Prob: {df['Breach_Prob'].mean():.1%}")
 print(f"Auto-Approve Rate: {(df['Recommendation'].str.contains('Auto-Approve').sum() / len(df)):.0%}")
-Example 4: Vulnerability Remediation Analysis
-python# Show impact of fixing vulnerabilities
+```
+
+### Example 4: Vulnerability Remediation Analysis
+```python
+# Show impact of fixing vulnerabilities
 baseline_company = healthcare_company  # From Example 2
 
 # Scenario: Fix critical vulnerabilities
@@ -244,10 +297,13 @@ print(f"Baseline Premium: ${baseline_result.annual_premium:,.0f}")
 print(f"Improved Premium: ${improved_result.annual_premium:,.0f}")
 print(f"Annual Savings: ${savings:,.0f}")
 print(f"ROI on Security Investment: {(savings / 100_000):.1f}x")  # Assume $100k remediation cost
-Data Collection
-Automated Signal Collection
+```
+
+## Data Collection
+### Automated Signal Collection
 The model expects signals to be populated from various sources:
-pythondef collect_cyber_signals(domain: str, company_name: str) -> CyberSecuritySignals:
+```python
+def collect_cyber_signals(domain: str, company_name: str) -> CyberSecuritySignals:
     """
     Automated signal collection pipeline
     """
@@ -285,35 +341,35 @@ pythondef collect_cyber_signals(domain: str, company_name: str) -> CyberSecurity
     signals.patch_discipline = analyze_update_frequency(historical)
     
     return signals
-Data Sources
-Free/Low-Cost:
+```
 
-SSL Labs API (SSL/TLS assessment)
-SecurityHeaders.com (HTTP header analysis)
-Shodan (open ports, exposed services)
-Have I Been Pwned (breach checking)
-Common Crawl (historical web data)
-Certificate Transparency logs
+## Data Sources
+### Free/Low-Cost:
+* SSL Labs API (SSL/TLS assessment)
+* SecurityHeaders.com (HTTP header analysis)
+* Shodan (open ports, exposed services)
+* Have I Been Pwned (breach checking)
+* Common Crawl (historical web data)
+* Certificate Transparency logs
 
-Commercial:
+### Commercial:
+* SecurityScorecard ($5-15K/year)
+* BitSight ($10-25K/year)
+* RiskRecon by Mastercard
+* UpGuard
+* CyberGRX
+* Black Kite
 
-SecurityScorecard ($5-15K/year)
-BitSight ($10-25K/year)
-RiskRecon by Mastercard
-UpGuard
-CyberGRX
-Black Kite
+### Industry Databases:
+* NVD (National Vulnerability Database)
+* CVE (Common Vulnerabilities and Exposures)
+* MITRE ATT&CK Framework
+* NIST Cybersecurity Framework
 
-Industry Databases:
-
-NVD (National Vulnerability Database)
-CVE (Common Vulnerabilities and Exposures)
-MITRE ATT&CK Framework
-NIST Cybersecurity Framework
-
-Model Validation
-Backtesting Against Historical Breaches
-python# Load known breach data
+## Model Validation
+### Backtesting Against Historical Breaches
+```python
+# Load known breach data
 breaches = pd.read_csv('historical_cyber_losses_2020_2024.csv')
 
 # Score companies retrospectively
@@ -334,31 +390,39 @@ print(f"AUC-ROC: {auc:.3f}")  # Target: >0.70
 # Loss prediction accuracy
 mae = (breaches['predicted_loss'] - breaches['actual_loss']).abs().mean()
 print(f"MAE: ${mae:,.0f}")
-Expected Performance
+```
 
-AUC-ROC: Target >0.70 for breach prediction
-Top vs Bottom Quintile: 60%+ difference in breach rates
-Loss Prediction: Within 30% of actual for 70% of cases
-False Positive Rate: <15% for auto-approvals
+### Expected Performance
+* AUC-ROC: Target >0.70 for breach prediction
+* Top vs Bottom Quintile: 60%+ difference in breach rates
+* Loss Prediction: Within 30% of actual for 70% of cases
+* False Positive Rate: <15% for auto-approvals
 
-Customization
-Adjusting Base Rates by Market
-python# Update for hard market conditions
+## Customization
+### Adjusting Base Rates by Market
+```python
+# Update for hard market conditions
 model.base_rates["comprehensive"]["medium"] *= 1.35
 
 # Or load from market data
 import json
 with open('current_market_rates.json', 'r') as f:
     model.base_rates = json.load(f)
-Industry-Specific Adjustments
-python# Add new industry
+```
+
+### Industry-Specific Adjustments
+```python
+# Add new industry
 model.industry_multipliers[IndustryVertical.CRYPTOCURRENCY] = 1.65
 
 # Adjust for local market
 if company.country == "United Kingdom":
     model.industry_multipliers[IndustryVertical.FINANCIAL_SERVICES] *= 0.95
-Custom Vulnerability Thresholds
-pythonclass StrictCyberModel(CyberInsurancePricingModel):
+```
+
+### Custom Vulnerability Thresholds
+```python
+class StrictCyberModel(CyberInsurancePricingModel):
     def calculate_vulnerability_modifier(self, signals):
         modifier, score = super().calculate_vulnerability_modifier(signals)
         
@@ -368,8 +432,11 @@ pythonclass StrictCyberModel(CyberInsurancePricingModel):
                 modifier *= 1.40
         
         return modifier, score
-API Integration
-pythonfrom flask import Flask, request, jsonify
+```
+
+## API Integration
+```python
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
@@ -408,8 +475,11 @@ def get_quote():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
-Testing
-bash# Run full test suite
+```
+
+## Testing
+```bash
+# Run full test suite
 python -m pytest tests/test_dsi_cyber_pricing.py -v
 
 # Run specific test category
@@ -417,61 +487,31 @@ python -m pytest tests/test_dsi_cyber_pricing.py::TestVulnerabilityAssessment -v
 
 # Run with coverage
 python -m pytest tests/ --cov=dsi_cyber_pricing --cov-report=html
-Performance Considerations
+```
 
-Signal Collection: Most expensive operation (3-5 seconds per company with API calls)
-Pricing Calculation: <50ms per company
-Batch Processing: Use multiprocessing for portfolios >1000 companies
-Caching: Cache signal results for 24-48 hours to reduce API costs
+## Performance Considerations
+* Signal Collection: Most expensive operation (3-5 seconds per company with API calls)
+* Pricing Calculation: <50ms per company
+* Batch Processing: Use multiprocessing for portfolios >1000 companies
+* Caching: Cache signal results for 24-48 hours to reduce API costs
 
-Limitations
+## Limitations
+* Data Availability: Requires 55%+ signal coverage for reliable pricing
+* Private Companies: May have limited public security posture data
+* Emerging Technologies: Cryptocurrency, AI companies may lack historical data
+* APT Threats: Advanced persistent threats may not show in automated scans
+* Zero-Days: Unknown vulnerabilities not captured in scoring
 
-Data Availability: Requires 55%+ signal coverage for reliable pricing
-Private Companies: May have limited public security posture data
-Emerging Technologies: Cryptocurrency, AI companies may lack historical data
-APT Threats: Advanced persistent threats may not show in automated scans
-Zero-Days: Unknown vulnerabilities not captured in scoring
+## Regulatory Compliance
+### Rate Filing Considerations
+* Document actuarial basis for all modifiers
+* Demonstrate predictive validity through backtesting
+* Ensure no prohibited factors (race, gender, etc.) proxied
+* Provide clear disclosure of data sources
+* Allow for alternative underwriting path
 
-Regulatory Compliance
-Rate Filing Considerations
-
-Document actuarial basis for all modifiers
-Demonstrate predictive validity through backtesting
-Ensure no prohibited factors (race, gender, etc.) proxied
-Provide clear disclosure of data sources
-Allow for alternative underwriting path
-
-Data Privacy
-
-Only use publicly available security data
-No personal employee data collection
-Comply with GDPR/CCPA for data processing
-Provide transparency into scoring methodology
-
-Roadmap
-Version 1.1 (Q1 2026)
-
-Machine learning for vulnerability prioritization
-Real-time threat intelligence integration
-Automated penetration testing integration
-Dark web monitoring signals
-
-Version 2.0 (Q2 2026)
-
-Attack surface scoring
-Ransomware susceptibility index
-Supply chain risk propagation
-Continuous monitoring with monthly re-scoring
-
-Support
-
-Technical: cybersecurity-analytics@company.com
-Actuarial: cyber-pricing@company.com
-Underwriting: cyber-underwriting@company.com
-
-License
-Confidential and Proprietary - Internal Use Only
-
-Version: 1.0.0
-Last Updated: November 2025
-Maintainers: Cyber Insurance Innovation Team
+### Data Privacy
+* Only use publicly available security data
+* No personal employee data collection
+* Comply with GDPR/CCPA for data processing
+* Provide transparency into scoring methodology
