@@ -1,0 +1,379 @@
+openapi: 3.0.3
+info:
+  title: Digital Signal Intelligence API
+  description: |
+    Insurance pricing API using digital footprint analysis.
+
+    The DSI API provides automated insurance pricing for three major lines:
+    - **Cyber Insurance**: Technology and security-focused coverage
+    - **Energy Sector**: Upstream, midstream, and downstream operations
+    - **Financial Institutions**: Banks, asset managers, and other FIs
+
+    ## Features
+    - Automated risk scoring (0-1000 scale)
+    - 5-tier risk classification
+    - Industry-specific pricing models
+    - Portfolio-level analytics
+    - 75-85% straight-through processing
+
+    ## Authentication
+    Currently no authentication required (development mode).
+    Production deployment will require API keys.
+
+  version: 1.0.0
+  contact:
+    name: John Walker
+    email: john.walker@example.com
+  license:
+    name: Proprietary
+    url: https://example.com/license
+
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local development server
+  - url: https://api.dsi.example.com/v1
+    description: Production server (future)
+
+tags:
+  - name: cyber
+    description: Cyber insurance pricing operations
+  - name: energy
+    description: Energy sector pricing operations
+  - name: financial
+    description: Financial institutions pricing operations
+  - name: portfolio
+    description: Portfolio analytics operations
+  - name: health
+    description: Health check endpoints
+
+paths:
+  /cyber/quote:
+    post:
+      tags:
+        - cyber
+      summary: Get cyber insurance quote
+      description: Calculate cyber insurance premium based on company profile and security signals
+      operationId: getCyberQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CyberQuoteRequest'
+            example:
+              company_name: "TechCorp Inc"
+              industry: "TECHNOLOGY"
+              country: "United States"
+              annual_revenue: 50000000
+              employees: 250
+              records_stored: 1000000
+              coverage_type: "COMPREHENSIVE"
+              signals:
+                ssl_certificate: 85
+                tls_version: 90
+                security_headers: 80
+                known_vulnerabilities: 75
+                patch_discipline: 82
+      responses:
+        '200':
+          description: Quote generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CyberQuoteResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cyber/health:
+    get:
+      tags:
+        - health
+      summary: Cyber service health check
+      operationId: cyberHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /energy/quote:
+    post:
+      tags:
+        - energy
+      summary: Get energy sector insurance quote
+      description: Calculate insurance premium for energy companies
+      operationId: getEnergyQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnergyQuoteRequest'
+      responses:
+        '200':
+          description: Quote generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnergyQuoteResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /financial/quote:
+    post:
+      tags:
+        - financial
+      summary: Get financial institution insurance quote
+      description: Calculate insurance premium for financial institutions
+      operationId: getFIQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FIQuoteRequest'
+      responses:
+        '200':
+          description: Quote generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FIQuoteResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /portfolio/metrics:
+    post:
+      tags:
+        - portfolio
+      summary: Calculate portfolio metrics
+      description: Analyze portfolio-level risk metrics across multiple policies
+      operationId: getPortfolioMetrics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortfolioRequest'
+      responses:
+        '200':
+          description: Metrics calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioResponse'
+
+components:
+  schemas:
+    CyberQuoteRequest:
+      type: object
+      required:
+        - company_name
+        - industry
+        - country
+        - annual_revenue
+        - employees
+        - records_stored
+        - coverage_type
+        - signals
+      properties:
+        company_name:
+          type: string
+        industry:
+          type: string
+          enum: [TECHNOLOGY, HEALTHCARE, FINANCIAL, RETAIL, MANUFACTURING, ENERGY, GOVERNMENT, EDUCATION]
+        country:
+          type: string
+        annual_revenue:
+          type: number
+          format: float
+        employees:
+          type: integer
+        records_stored:
+          type: integer
+        coverage_type:
+          type: string
+          enum: [FIRST_PARTY, THIRD_PARTY, COMPREHENSIVE]
+        signals:
+          type: object
+          additionalProperties:
+            type: number
+
+    CyberQuoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        company_name:
+          type: string
+        coverage_type:
+          type: string
+        composite_score:
+          type: number
+        risk_tier:
+          type: string
+        annual_premium:
+          type: number
+        recommended_limit:
+          type: number
+        breach_probability:
+          type: number
+        recommendation:
+          type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    EnergyQuoteRequest:
+      type: object
+      required:
+        - company_name
+        - country
+        - segment
+        - annual_revenue
+        - employees
+        - coverage_type
+        - signals
+      properties:
+        company_name:
+          type: string
+        country:
+          type: string
+        segment:
+          type: string
+          enum: [upstream, midstream, downstream]
+        annual_revenue:
+          type: number
+        employees:
+          type: integer
+        coverage_type:
+          type: string
+        signals:
+          type: object
+
+    EnergyQuoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        company_name:
+          type: string
+        segment:
+          type: string
+        composite_score:
+          type: number
+        risk_tier:
+          type: string
+        annual_premium:
+          type: number
+        recommended_limit:
+          type: number
+        recommendation:
+          type: string
+
+    FIQuoteRequest:
+      type: object
+      required:
+        - institution_name
+        - institution_type
+        - country
+        - assets_under_management
+        - employees
+        - enforcement_actions_5yr
+        - coverage_type
+        - signals
+      properties:
+        institution_name:
+          type: string
+        institution_type:
+          type: string
+        country:
+          type: string
+        assets_under_management:
+          type: number
+        employees:
+          type: integer
+        enforcement_actions_5yr:
+          type: integer
+        coverage_type:
+          type: string
+        signals:
+          type: object
+
+    FIQuoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        institution_name:
+          type: string
+        composite_score:
+          type: number
+        risk_tier:
+          type: string
+        annual_premium:
+          type: number
+        regulatory_risk_probability:
+          type: number
+        recommendation:
+          type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+
+    PortfolioRequest:
+      type: object
+      properties:
+        policies:
+          type: array
+          items:
+            type: object
+
+    PortfolioResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        service:
+          type: string
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string

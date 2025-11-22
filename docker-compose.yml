@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # DSI API Service
+  dsi-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dsi-api
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DEBUG=True
+      - PORT=5000
+      - LOG_LEVEL=INFO
+    volumes:
+      # Mount code for development hot-reload
+      - ./api:/app/api
+      - ./models:/app/models
+    networks:
+      - dsi-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL Database (optional - for future use)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: dsi-postgres
+  #   environment:
+  #     - POSTGRES_USER=dsi_user
+  #     - POSTGRES_PASSWORD=dsi_password
+  #     - POSTGRES_DB=dsi_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - dsi-network
+  #   restart: unless-stopped
+
+  # Redis Cache (optional - for future use)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: dsi-redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - dsi-network
+  #   restart: unless-stopped
+  #   command: redis-server --appendonly yes
+  #   volumes:
+  #     - redis_data:/data
+
+networks:
+  dsi-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
+#   redis_data:
