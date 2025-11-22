@@ -4,9 +4,9 @@ Example: DSI API Client
 Demonstrates how to interact with the DSI REST API
 """
 
+from typing import Any, Dict
+
 import requests
-import json
-from typing import Dict, Any
 
 
 class DSIAPIClient:
@@ -27,7 +27,7 @@ class DSIAPIClient:
         response = requests.post(
             f"{self.api_base}/cyber/quote",
             json=profile,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
         return response.json()
@@ -37,7 +37,7 @@ class DSIAPIClient:
         response = requests.post(
             f"{self.api_base}/energy/quote",
             json=profile,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
         return response.json()
@@ -47,7 +47,7 @@ class DSIAPIClient:
         response = requests.post(
             f"{self.api_base}/financial/quote",
             json=profile,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
         return response.json()
@@ -66,9 +66,9 @@ def example_cyber_api_call():
         health = client.health_check()
         print(f"\nAPI Status: {health['status']}")
         print(f"Version: {health['version']}")
-    except Exception as e:
-        print(f"\nError: API not available. Please start the API server first.")
-        print(f"Run: python -m api.server")
+    except Exception:
+        print("\nError: API not available. Please start the API server first.")
+        print("Run: python -m api.server")
         return
 
     # Create quote request
@@ -117,16 +117,16 @@ def example_cyber_api_call():
             "employee_training": 70,
             "mfa_adoption": 85,
             "backup_procedures": 80,
-            "monitoring_capabilities": 78
-        }
+            "monitoring_capabilities": 78,
+        },
     }
 
     try:
         # Get quote
         result = client.cyber_quote(quote_request)
 
-        if result.get('success'):
-            print(f"\n✅ Quote Generated Successfully")
+        if result.get("success"):
+            print("\n✅ Quote Generated Successfully")
             print(f"\nCompany: {result['company_name']}")
             print(f"Coverage: {result['coverage_type']}")
             print(f"Composite Score: {result['composite_score']:.0f}/1000")
@@ -136,9 +136,9 @@ def example_cyber_api_call():
             print(f"Breach Probability: {result['breach_probability']:.1%}")
             print(f"Recommendation: {result['recommendation']}")
 
-            if result.get('recommendations'):
-                print(f"\nTop Recommendations:")
-                for rec in result['recommendations'][:3]:
+            if result.get("recommendations"):
+                print("\nTop Recommendations:")
+                for rec in result["recommendations"][:3]:
                     print(f"  • {rec}")
         else:
             print(f"\n❌ Error: {result.get('error')}")
@@ -171,8 +171,8 @@ def example_batch_quotes():
                     "ssl_certificate": 70,
                     "tls_version": 75,
                     # ... minimal signals for example
-                }
-            }
+                },
+            },
         },
         # Add more companies as needed
     ]
@@ -182,16 +182,18 @@ def example_batch_quotes():
 
     for company in companies:
         try:
-            if company['type'] == 'cyber':
-                result = client.cyber_quote(company['data'])
-            elif company['type'] == 'energy':
-                result = client.energy_quote(company['data'])
-            elif company['type'] == 'financial':
-                result = client.fi_quote(company['data'])
+            if company["type"] == "cyber":
+                result = client.cyber_quote(company["data"])
+            elif company["type"] == "energy":
+                result = client.energy_quote(company["data"])
+            elif company["type"] == "financial":
+                result = client.fi_quote(company["data"])
 
-            if result.get('success'):
-                print(f"✅ {company['name']}: ${result['annual_premium']:,.0f} "
-                      f"({result['risk_tier']})")
+            if result.get("success"):
+                print(
+                    f"✅ {company['name']}: ${result['annual_premium']:,.0f} "
+                    f"({result['risk_tier']})"
+                )
             else:
                 print(f"❌ {company['name']}: {result.get('error')}")
 

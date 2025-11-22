@@ -10,13 +10,13 @@ from pathlib import Path
 # Add models to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "models"))
 
-from cyber.dsi_cyber_pricing import (
-    CyberInsurancePricingModel,
+from cyber.dsi_cyber_pricing import (  # noqa: E402
+    CompanySize,
     CyberCompanyProfile,
-    CyberSecuritySignals,
     CyberCoverageType,
+    CyberInsurancePricingModel,
+    CyberSecuritySignals,
     IndustryVertical,
-    CompanySize
 )
 
 
@@ -28,18 +28,35 @@ def example_tech_company():
 
     # Create strong security signals
     signals = CyberSecuritySignals(
-        ssl_certificate=95, tls_version=100, security_headers=90,
-        dnssec_implementation=85, spf_dmarc_dkim=92, web_application_firewall=88,
-        open_ports_score=90, outdated_software=88, known_vulnerabilities=92,
-        exposed_databases=100, leaked_credentials=95, breached_history=100,
-        security_certifications=90, privacy_policy_quality=88,
-        incident_response_plan=85, bug_bounty_program=92,
-        security_team_visibility=87, security_blog_activity=80,
-        vendor_security_standards=85, supply_chain_transparency=82,
-        cloud_provider_quality=95, third_party_integrations=88,
-        data_processor_agreements=85, patch_discipline=90,
-        security_investment=88, employee_training=85,
-        mfa_adoption=95, backup_procedures=90, monitoring_capabilities=92
+        ssl_certificate=95,
+        tls_version=100,
+        security_headers=90,
+        dnssec_implementation=85,
+        spf_dmarc_dkim=92,
+        web_application_firewall=88,
+        open_ports_score=90,
+        outdated_software=88,
+        known_vulnerabilities=92,
+        exposed_databases=100,
+        leaked_credentials=95,
+        breached_history=100,
+        security_certifications=90,
+        privacy_policy_quality=88,
+        incident_response_plan=85,
+        bug_bounty_program=92,
+        security_team_visibility=87,
+        security_blog_activity=80,
+        vendor_security_standards=85,
+        supply_chain_transparency=82,
+        cloud_provider_quality=95,
+        third_party_integrations=88,
+        data_processor_agreements=85,
+        patch_discipline=90,
+        security_investment=88,
+        employee_training=85,
+        mfa_adoption=95,
+        backup_procedures=90,
+        monitoring_capabilities=92,
     )
 
     # Create company profile
@@ -61,7 +78,7 @@ def example_tech_company():
         prior_incidents=0,
         cyber_insurance_history=2,
         it_budget_pct=15.0,
-        signals=signals
+        signals=signals,
     )
 
     # Calculate pricing
@@ -90,18 +107,35 @@ def example_healthcare_vulnerable():
 
     # Create vulnerable signals
     signals = CyberSecuritySignals(
-        ssl_certificate=75, tls_version=60, security_headers=55,
-        dnssec_implementation=40, spf_dmarc_dkim=50, web_application_firewall=45,
-        open_ports_score=45, outdated_software=38, known_vulnerabilities=35,
-        exposed_databases=40, leaked_credentials=30, breached_history=35,
-        security_certifications=55, privacy_policy_quality=60,
-        incident_response_plan=45, bug_bounty_program=0,
-        security_team_visibility=50, security_blog_activity=30,
-        vendor_security_standards=48, supply_chain_transparency=42,
-        cloud_provider_quality=65, third_party_integrations=50,
-        data_processor_agreements=45, patch_discipline=35,
-        security_investment=40, employee_training=45,
-        mfa_adoption=50, backup_procedures=55, monitoring_capabilities=48
+        ssl_certificate=75,
+        tls_version=60,
+        security_headers=55,
+        dnssec_implementation=40,
+        spf_dmarc_dkim=50,
+        web_application_firewall=45,
+        open_ports_score=45,
+        outdated_software=38,
+        known_vulnerabilities=35,
+        exposed_databases=40,
+        leaked_credentials=30,
+        breached_history=35,
+        security_certifications=55,
+        privacy_policy_quality=60,
+        incident_response_plan=45,
+        bug_bounty_program=0,
+        security_team_visibility=50,
+        security_blog_activity=30,
+        vendor_security_standards=48,
+        supply_chain_transparency=42,
+        cloud_provider_quality=65,
+        third_party_integrations=50,
+        data_processor_agreements=45,
+        patch_discipline=35,
+        security_investment=40,
+        employee_training=45,
+        mfa_adoption=50,
+        backup_procedures=55,
+        monitoring_capabilities=48,
     )
 
     # Create company profile
@@ -123,7 +157,7 @@ def example_healthcare_vulnerable():
         prior_incidents=2,
         cyber_insurance_history=1,
         it_budget_pct=5.0,
-        signals=signals
+        signals=signals,
     )
 
     # Calculate pricing
@@ -164,18 +198,35 @@ def example_api_usage():
     for name, industry, revenue, employees, records in companies:
         # Create moderate signals
         signals = CyberSecuritySignals(
-            ssl_certificate=75, tls_version=80, security_headers=70,
-            dnssec_implementation=65, spf_dmarc_dkim=70, web_application_firewall=65,
-            open_ports_score=70, outdated_software=68, known_vulnerabilities=72,
-            exposed_databases=75, leaked_credentials=70, breached_history=75,
-            security_certifications=70, privacy_policy_quality=68,
-            incident_response_plan=65, bug_bounty_program=60,
-            security_team_visibility=67, security_blog_activity=60,
-            vendor_security_standards=68, supply_chain_transparency=62,
-            cloud_provider_quality=75, third_party_integrations=68,
-            data_processor_agreements=65, patch_discipline=70,
-            security_investment=68, employee_training=65,
-            mfa_adoption=72, backup_procedures=70, monitoring_capabilities=68
+            ssl_certificate=75,
+            tls_version=80,
+            security_headers=70,
+            dnssec_implementation=65,
+            spf_dmarc_dkim=70,
+            web_application_firewall=65,
+            open_ports_score=70,
+            outdated_software=68,
+            known_vulnerabilities=72,
+            exposed_databases=75,
+            leaked_credentials=70,
+            breached_history=75,
+            security_certifications=70,
+            privacy_policy_quality=68,
+            incident_response_plan=65,
+            bug_bounty_program=60,
+            security_team_visibility=67,
+            security_blog_activity=60,
+            vendor_security_standards=68,
+            supply_chain_transparency=62,
+            cloud_provider_quality=75,
+            third_party_integrations=68,
+            data_processor_agreements=65,
+            patch_discipline=70,
+            security_investment=68,
+            employee_training=65,
+            mfa_adoption=72,
+            backup_procedures=70,
+            monitoring_capabilities=68,
         )
 
         company = CyberCompanyProfile(
@@ -196,14 +247,16 @@ def example_api_usage():
             prior_incidents=0,
             cyber_insurance_history=0,
             it_budget_pct=8.0,
-            signals=signals
+            signals=signals,
         )
 
         model = CyberInsurancePricingModel(coverage_type=CyberCoverageType.THIRD_PARTY)
         result = model.calculate_premium(company)
 
-        print(f"{name:<25} {result.composite_score:<10.0f} {result.risk_tier:<10} "
-              f"${result.annual_premium:<14,.0f} {result.breach_probability:<10.1%}")
+        print(
+            f"{name:<25} {result.composite_score:<10.0f} {result.risk_tier:<10} "
+            f"${result.annual_premium:<14,.0f} {result.breach_probability:<10.1%}"
+        )
 
 
 if __name__ == "__main__":

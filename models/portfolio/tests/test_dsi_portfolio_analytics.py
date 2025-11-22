@@ -4,18 +4,21 @@ Unit tests for DSI Portfolio Analytics
 Run with: python -m pytest test_dsi_portfolio_analytics.py -v
 """
 
-import pytest
-import numpy as np
 from datetime import datetime
+
+import pytest
 from dsi_portfolio_analytics import (
-    DSIPortfolioAnalytics, PortfolioMetrics, ConcentrationAnalysis,
-    PortfolioAlert, ModelType, RiskConcentration
+    DSIPortfolioAnalytics,
+    ModelType,
+    PortfolioAlert,
+    RiskConcentration,
 )
 
 
 # Mock pricing result classes for testing
 class MockCyberPricingResult:
     """Mock cyber pricing result for testing"""
+
     def __init__(self, company_name, premium, tier, score, limit=1_000_000):
         self.company_name = company_name
         self.annual_premium = premium
@@ -28,6 +31,7 @@ class MockCyberPricingResult:
 
 class MockEnergyPricingResult:
     """Mock energy pricing result for testing"""
+
     def __init__(self, company_name, premium, tier, score, limit=5_000_000):
         self.company_name = company_name
         self.annual_premium = premium
@@ -39,6 +43,7 @@ class MockEnergyPricingResult:
 
 class MockFIPricingResult:
     """Mock financial institution pricing result for testing"""
+
     def __init__(self, institution_name, premium, tier, score, limit=10_000_000):
         self.institution_name = institution_name
         self.annual_premium = premium
@@ -88,30 +93,30 @@ def populated_portfolio(sample_cyber_policies, sample_energy_policies, sample_fi
     # Add cyber policies
     for i, result in enumerate(sample_cyber_policies):
         policy_data = {
-            'id': f'CYB_{i+1}',
-            'model_type': ModelType.CYBER.value,
-            'industry': 'Technology',
-            'country': 'United States'
+            "id": f"CYB_{i+1}",
+            "model_type": ModelType.CYBER.value,
+            "industry": "Technology",
+            "country": "United States",
         }
         portfolio.add_policy(policy_data, result)
 
     # Add energy policies
     for i, result in enumerate(sample_energy_policies):
         policy_data = {
-            'id': f'ENR_{i+1}',
-            'model_type': ModelType.ENERGY.value,
-            'industry': 'Energy',
-            'country': 'United States'
+            "id": f"ENR_{i+1}",
+            "model_type": ModelType.ENERGY.value,
+            "industry": "Energy",
+            "country": "United States",
         }
         portfolio.add_policy(policy_data, result)
 
     # Add FI policies
     for i, result in enumerate(sample_fi_policies):
         policy_data = {
-            'id': f'FIN_{i+1}',
-            'model_type': ModelType.FINANCIAL.value,
-            'industry': 'Financial Services',
-            'country': 'United States'
+            "id": f"FIN_{i+1}",
+            "model_type": ModelType.FINANCIAL.value,
+            "industry": "Financial Services",
+            "country": "United States",
         }
         portfolio.add_policy(policy_data, result)
 
@@ -132,24 +137,24 @@ class TestDSIPortfolioAnalytics:
         portfolio = DSIPortfolioAnalytics()
         result = MockCyberPricingResult("Test Corp", 100_000, "Tier 1", 850)
         policy_data = {
-            'id': 'TEST_001',
-            'model_type': ModelType.CYBER.value,
-            'industry': 'Technology'
+            "id": "TEST_001",
+            "model_type": ModelType.CYBER.value,
+            "industry": "Technology",
         }
 
         portfolio.add_policy(policy_data, result)
 
         assert len(portfolio.policies) == 1
         assert len(portfolio.results) == 1
-        assert portfolio.policies[0]['id'] == 'TEST_001'
-        assert portfolio.policies[0]['company_name'] == 'Test Corp'
+        assert portfolio.policies[0]["id"] == "TEST_001"
+        assert portfolio.policies[0]["company_name"] == "Test Corp"
 
     def test_add_multiple_policies(self, sample_cyber_policies):
         """Test adding multiple policies"""
         portfolio = DSIPortfolioAnalytics()
 
         for i, result in enumerate(sample_cyber_policies):
-            policy_data = {'id': f'CYB_{i}', 'model_type': ModelType.CYBER.value}
+            policy_data = {"id": f"CYB_{i}", "model_type": ModelType.CYBER.value}
             portfolio.add_policy(policy_data, result)
 
         assert len(portfolio.policies) == len(sample_cyber_policies)
@@ -159,11 +164,11 @@ class TestDSIPortfolioAnalytics:
         """Test auto-generation of policy ID when not provided"""
         portfolio = DSIPortfolioAnalytics()
         result = MockCyberPricingResult("Test Corp", 100_000, "Tier 1", 850)
-        policy_data = {'model_type': ModelType.CYBER.value}
+        policy_data = {"model_type": ModelType.CYBER.value}
 
         portfolio.add_policy(policy_data, result)
 
-        assert 'POL_' in portfolio.policies[0]['id']
+        assert "POL_" in portfolio.policies[0]["id"]
 
 
 class TestPortfolioMetricsCalculation:
@@ -181,9 +186,18 @@ class TestPortfolioMetricsCalculation:
         metrics = populated_portfolio.calculate_portfolio_metrics()
 
         # Sum of all premiums from fixtures
-        expected_total = (150_000 + 300_000 + 450_000 + 80_000 +  # Cyber
-                         2_000_000 + 800_000 + 1_200_000 +  # Energy
-                         500_000 + 250_000 + 350_000)  # FI
+        expected_total = (
+            150_000
+            + 300_000
+            + 450_000
+            + 80_000  # Cyber
+            + 2_000_000
+            + 800_000
+            + 1_200_000  # Energy
+            + 500_000
+            + 250_000
+            + 350_000
+        )  # FI
 
         assert metrics.total_premium == expected_total
 
@@ -237,7 +251,7 @@ class TestPortfolioMetricsCalculation:
         metrics = populated_portfolio.calculate_portfolio_metrics()
 
         # Concentration score should be calculated
-        assert hasattr(metrics, 'concentration_score')
+        assert hasattr(metrics, "concentration_score")
         assert metrics.concentration_score >= 0
 
     def test_diversification_score(self, populated_portfolio):
@@ -245,7 +259,7 @@ class TestPortfolioMetricsCalculation:
         metrics = populated_portfolio.calculate_portfolio_metrics()
 
         # Diversification score should be calculated
-        assert hasattr(metrics, 'diversification_score')
+        assert hasattr(metrics, "diversification_score")
         assert metrics.diversification_score >= 0
 
 
@@ -257,16 +271,16 @@ class TestConcentrationAnalysis:
         portfolio = DSIPortfolioAnalytics()
         for i, result in enumerate(sample_cyber_policies):
             policy_data = {
-                'id': f'CYB_{i}',
-                'model_type': ModelType.CYBER.value,
-                'industry': 'Technology'
+                "id": f"CYB_{i}",
+                "model_type": ModelType.CYBER.value,
+                "industry": "Technology",
             }
             portfolio.add_policy(policy_data, result)
 
-        analysis = portfolio.analyze_concentration('industry')
+        analysis = portfolio.analyze_concentration("industry")
 
         # Should identify high concentration in Technology
-        assert analysis.concentration_type == 'industry'
+        assert analysis.concentration_type == "industry"
         assert analysis.risk_level in [RiskConcentration.CONCERNING, RiskConcentration.CRITICAL]
 
     def test_geography_concentration(self):
@@ -277,37 +291,37 @@ class TestConcentrationAnalysis:
         for i in range(5):
             result = MockCyberPricingResult(f"Company {i}", 100_000, "Tier 2", 700)
             policy_data = {
-                'id': f'POL_{i}',
-                'model_type': ModelType.CYBER.value,
-                'country': 'United States'
+                "id": f"POL_{i}",
+                "model_type": ModelType.CYBER.value,
+                "country": "United States",
             }
             portfolio.add_policy(policy_data, result)
 
-        analysis = portfolio.analyze_concentration('geography')
+        analysis = portfolio.analyze_concentration("geography")
 
-        assert analysis.concentration_type == 'geography'
+        assert analysis.concentration_type == "geography"
         # Should show high US concentration
-        assert 'United States' in analysis.concentrations
+        assert "United States" in analysis.concentrations
 
     def test_coverage_type_concentration(self, populated_portfolio):
         """Test concentration by coverage type"""
-        analysis = populated_portfolio.analyze_concentration('coverage')
+        analysis = populated_portfolio.analyze_concentration("coverage")
 
-        assert analysis.concentration_type == 'coverage'
+        assert analysis.concentration_type == "coverage"
         # Should have distributions across model types
         assert len(analysis.concentrations) > 0
 
     def test_score_band_concentration(self, populated_portfolio):
         """Test concentration by score bands"""
-        analysis = populated_portfolio.analyze_concentration('score_band')
+        analysis = populated_portfolio.analyze_concentration("score_band")
 
-        assert analysis.concentration_type == 'score_band'
+        assert analysis.concentration_type == "score_band"
         # Should have policies distributed across score bands
         assert len(analysis.concentrations) > 0
 
     def test_concentration_recommendations(self, populated_portfolio):
         """Test that concentration analysis includes recommendations"""
-        analysis = populated_portfolio.analyze_concentration('industry')
+        analysis = populated_portfolio.analyze_concentration("industry")
 
         assert isinstance(analysis.recommendations, list)
         assert len(analysis.recommendations) > 0
@@ -332,10 +346,10 @@ class TestPortfolioAlerts:
         for i in range(10):
             result = MockCyberPricingResult(f"Tech Co {i}", 500_000, "Tier 2", 700)
             policy_data = {
-                'id': f'POL_{i}',
-                'model_type': ModelType.CYBER.value,
-                'industry': 'Technology',
-                'country': 'United States'
+                "id": f"POL_{i}",
+                "model_type": ModelType.CYBER.value,
+                "industry": "Technology",
+                "country": "United States",
             }
             portfolio.add_policy(policy_data, result)
 
@@ -343,7 +357,7 @@ class TestPortfolioAlerts:
 
         # Should generate concentration warning
         assert len(alerts) > 0
-        concentration_alerts = [a for a in alerts if a.category == 'concentration']
+        concentration_alerts = [a for a in alerts if a.category == "concentration"]
         assert len(concentration_alerts) > 0
 
     def test_generate_quality_alerts(self):
@@ -354,8 +368,8 @@ class TestPortfolioAlerts:
         for i in range(5):
             result = MockCyberPricingResult(f"Company {i}", 200_000, "Tier 3", 580)
             policy_data = {
-                'id': f'POL_{i}',
-                'model_type': ModelType.CYBER.value,
+                "id": f"POL_{i}",
+                "model_type": ModelType.CYBER.value,
             }
             portfolio.add_policy(policy_data, result)
 
@@ -373,7 +387,7 @@ class TestPortfolioAlerts:
             title="High Industry Concentration",
             message="70% of portfolio in Technology sector",
             affected_policies=["POL_1", "POL_2"],
-            recommended_action="Consider diversifying into other sectors"
+            recommended_action="Consider diversifying into other sectors",
         )
 
         assert alert.alert_id == "TEST_001"
@@ -391,17 +405,17 @@ class TestPortfolioReporting:
         summary = populated_portfolio.generate_portfolio_summary()
 
         assert isinstance(summary, dict)
-        assert 'total_premium' in summary
-        assert 'policy_count' in summary
-        assert 'risk_distribution' in summary
+        assert "total_premium" in summary
+        assert "policy_count" in summary
+        assert "risk_distribution" in summary
 
     def test_export_to_dict(self, populated_portfolio):
         """Test exporting portfolio to dictionary"""
         export_data = populated_portfolio.to_dict()
 
         assert isinstance(export_data, dict)
-        assert 'policies' in export_data
-        assert len(export_data['policies']) == 10
+        assert "policies" in export_data
+        assert len(export_data["policies"]) == 10
 
     def test_tier_distribution_report(self, populated_portfolio):
         """Test risk tier distribution reporting"""
@@ -409,7 +423,7 @@ class TestPortfolioReporting:
 
         assert isinstance(tier_report, dict)
         # Should have entries for each tier
-        assert 'tier_1' in tier_report or 'Tier 1' in str(tier_report)
+        assert "tier_1" in tier_report or "Tier 1" in str(tier_report)
 
 
 class TestModelTypeIntegration:
@@ -418,7 +432,7 @@ class TestModelTypeIntegration:
     def test_mixed_model_types_in_portfolio(self, populated_portfolio):
         """Test portfolio with multiple model types"""
         # Portfolio should contain all three model types
-        model_types = set(p['model_type'] for p in populated_portfolio.policies)
+        model_types = set(p["model_type"] for p in populated_portfolio.policies)
 
         assert ModelType.CYBER.value in model_types
         assert ModelType.ENERGY.value in model_types
@@ -449,7 +463,7 @@ class TestEdgeCases:
         """Test portfolio with only one policy"""
         portfolio = DSIPortfolioAnalytics()
         result = MockCyberPricingResult("Solo Corp", 100_000, "Tier 1", 850)
-        policy_data = {'id': 'SOLO_1', 'model_type': ModelType.CYBER.value}
+        policy_data = {"id": "SOLO_1", "model_type": ModelType.CYBER.value}
         portfolio.add_policy(policy_data, result)
 
         metrics = portfolio.calculate_portfolio_metrics()
@@ -464,7 +478,7 @@ class TestEdgeCases:
         # Add 1000 policies
         for i in range(1000):
             result = MockCyberPricingResult(f"Company {i}", 50_000, "Tier 2", 700)
-            policy_data = {'id': f'POL_{i}', 'model_type': ModelType.CYBER.value}
+            policy_data = {"id": f"POL_{i}", "model_type": ModelType.CYBER.value}
             portfolio.add_policy(policy_data, result)
 
         # Should handle large portfolio efficiently
@@ -479,7 +493,7 @@ class TestEdgeCases:
 
         for i in range(5):
             result = MockCyberPricingResult(f"Premium Co {i}", 100_000, "Tier 1", 900)
-            policy_data = {'id': f'POL_{i}', 'model_type': ModelType.CYBER.value}
+            policy_data = {"id": f"POL_{i}", "model_type": ModelType.CYBER.value}
             portfolio.add_policy(policy_data, result)
 
         metrics = portfolio.calculate_portfolio_metrics()
@@ -491,7 +505,7 @@ class TestEdgeCases:
         """Test handling of policy with zero premium"""
         portfolio = DSIPortfolioAnalytics()
         result = MockCyberPricingResult("Zero Premium", 0, "Tier 1", 850)
-        policy_data = {'id': 'ZERO_1', 'model_type': ModelType.CYBER.value}
+        policy_data = {"id": "ZERO_1", "model_type": ModelType.CYBER.value}
         portfolio.add_policy(policy_data, result)
 
         # Should handle gracefully without division by zero
@@ -525,7 +539,8 @@ class TestDataExport:
 
         # Should be able to serialize metrics
         import json
-        with open(report_path, 'w') as f:
+
+        with open(report_path, "w") as f:
             json.dump(metrics.__dict__, f, default=str)
 
         assert report_path.exists()

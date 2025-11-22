@@ -5,11 +5,13 @@ Run with: python -m pytest test_dsi_financial_institutions.py -v
 """
 
 import pytest
-import numpy as np
 from dsi_financial_institutions import (
-    FinancialInstitutionProfile, FinancialInstitutionSignals,
-    FinancialInstitutionType, FICoverageType, RegulatoryJurisdiction,
-    FinancialInstitutionPricingModel
+    FICoverageType,
+    FinancialInstitutionPricingModel,
+    FinancialInstitutionProfile,
+    FinancialInstitutionSignals,
+    FinancialInstitutionType,
+    RegulatoryJurisdiction,
 )
 
 
@@ -18,23 +20,47 @@ def strong_regulatory_signals():
     """Fixture for FI with excellent regulatory compliance"""
     return FinancialInstitutionSignals(
         # Regulatory & Compliance (Excellent)
-        regulatory_disclosures=95, enforcement_history=100, complaint_resolution=92,
-        licensing_status=100, audit_transparency=90, regulatory_cooperation=95,
+        regulatory_disclosures=95,
+        enforcement_history=100,
+        complaint_resolution=92,
+        licensing_status=100,
+        audit_transparency=90,
+        regulatory_cooperation=95,
         # Governance & Leadership (Strong)
-        board_composition=88, management_experience=92, compensation_disclosure=90,
-        succession_planning=85, risk_committee=90, ethics_program=88,
+        board_composition=88,
+        management_experience=92,
+        compensation_disclosure=90,
+        succession_planning=85,
+        risk_committee=90,
+        ethics_program=88,
         # Financial Transparency (Excellent)
-        financial_reporting=95, auditor_quality=100, financial_stability=92,
-        revenue_transparency=90, risk_disclosure=88, third_party_ratings=95,
+        financial_reporting=95,
+        auditor_quality=100,
+        financial_stability=92,
+        revenue_transparency=90,
+        risk_disclosure=88,
+        third_party_ratings=95,
         # Operational Controls (Strong)
-        compliance_program=90, internal_controls=92, vendor_management=88,
-        business_continuity=90, incident_reporting=85, insurance_coverage=90,
+        compliance_program=90,
+        internal_controls=92,
+        vendor_management=88,
+        business_continuity=90,
+        incident_reporting=85,
+        insurance_coverage=90,
         # Market & Reputation (Good)
-        media_sentiment=85, client_reviews=88, industry_recognition=90,
-        litigation_history=95, regulatory_citations=92, social_responsibility=85,
+        media_sentiment=85,
+        client_reviews=88,
+        industry_recognition=90,
+        litigation_history=95,
+        regulatory_citations=92,
+        social_responsibility=85,
         # Technology & Security (Modern)
-        cybersecurity_posture=90, technology_investment=88, data_protection=92,
-        system_resilience=90, innovation_signals=85, regulatory_technology=88
+        cybersecurity_posture=90,
+        technology_investment=88,
+        data_protection=92,
+        system_resilience=90,
+        innovation_signals=85,
+        regulatory_technology=88,
     )
 
 
@@ -43,23 +69,47 @@ def poor_regulatory_signals():
     """Fixture for FI with regulatory issues and enforcement history"""
     return FinancialInstitutionSignals(
         # Regulatory & Compliance (Poor - CRITICAL)
-        regulatory_disclosures=45, enforcement_history=30, complaint_resolution=40,
-        licensing_status=55, audit_transparency=35, regulatory_cooperation=40,
+        regulatory_disclosures=45,
+        enforcement_history=30,
+        complaint_resolution=40,
+        licensing_status=55,
+        audit_transparency=35,
+        regulatory_cooperation=40,
         # Governance & Leadership (Weak)
-        board_composition=50, management_experience=55, compensation_disclosure=45,
-        succession_planning=40, risk_committee=45, ethics_program=50,
+        board_composition=50,
+        management_experience=55,
+        compensation_disclosure=45,
+        succession_planning=40,
+        risk_committee=45,
+        ethics_program=50,
         # Financial Transparency (Concerning)
-        financial_reporting=60, auditor_quality=55, financial_stability=50,
-        revenue_transparency=45, risk_disclosure=40, third_party_ratings=50,
+        financial_reporting=60,
+        auditor_quality=55,
+        financial_stability=50,
+        revenue_transparency=45,
+        risk_disclosure=40,
+        third_party_ratings=50,
         # Operational Controls (Inadequate)
-        compliance_program=45, internal_controls=50, vendor_management=42,
-        business_continuity=48, incident_reporting=40, insurance_coverage=55,
+        compliance_program=45,
+        internal_controls=50,
+        vendor_management=42,
+        business_continuity=48,
+        incident_reporting=40,
+        insurance_coverage=55,
         # Market & Reputation (Negative)
-        media_sentiment=35, client_reviews=40, industry_recognition=30,
-        litigation_history=30, regulatory_citations=25, social_responsibility=40,
+        media_sentiment=35,
+        client_reviews=40,
+        industry_recognition=30,
+        litigation_history=30,
+        regulatory_citations=25,
+        social_responsibility=40,
         # Technology & Security (Outdated)
-        cybersecurity_posture=45, technology_investment=40, data_protection=50,
-        system_resilience=48, innovation_signals=35, regulatory_technology=40
+        cybersecurity_posture=45,
+        technology_investment=40,
+        data_protection=50,
+        system_resilience=48,
+        innovation_signals=35,
+        regulatory_technology=40,
     )
 
 
@@ -86,7 +136,7 @@ def major_bank_strong(strong_regulatory_signals):
         complex_products=True,
         prior_claims=0,
         insurance_history_years=10,
-        signals=strong_regulatory_signals
+        signals=strong_regulatory_signals,
     )
 
 
@@ -94,18 +144,42 @@ def major_bank_strong(strong_regulatory_signals):
 def hedge_fund_moderate():
     """Medium-sized hedge fund with moderate signals"""
     moderate_signals = FinancialInstitutionSignals(
-        regulatory_disclosures=70, enforcement_history=85, complaint_resolution=75,
-        licensing_status=90, audit_transparency=75, regulatory_cooperation=80,
-        board_composition=72, management_experience=78, compensation_disclosure=70,
-        succession_planning=65, risk_committee=75, ethics_program=72,
-        financial_reporting=75, auditor_quality=85, financial_stability=80,
-        revenue_transparency=70, risk_disclosure=75, third_party_ratings=72,
-        compliance_program=75, internal_controls=78, vendor_management=70,
-        business_continuity=75, incident_reporting=70, insurance_coverage=80,
-        media_sentiment=72, client_reviews=70, industry_recognition=68,
-        litigation_history=80, regulatory_citations=75, social_responsibility=65,
-        cybersecurity_posture=75, technology_investment=72, data_protection=78,
-        system_resilience=75, innovation_signals=70, regulatory_technology=72
+        regulatory_disclosures=70,
+        enforcement_history=85,
+        complaint_resolution=75,
+        licensing_status=90,
+        audit_transparency=75,
+        regulatory_cooperation=80,
+        board_composition=72,
+        management_experience=78,
+        compensation_disclosure=70,
+        succession_planning=65,
+        risk_committee=75,
+        ethics_program=72,
+        financial_reporting=75,
+        auditor_quality=85,
+        financial_stability=80,
+        revenue_transparency=70,
+        risk_disclosure=75,
+        third_party_ratings=72,
+        compliance_program=75,
+        internal_controls=78,
+        vendor_management=70,
+        business_continuity=75,
+        incident_reporting=70,
+        insurance_coverage=80,
+        media_sentiment=72,
+        client_reviews=70,
+        industry_recognition=68,
+        litigation_history=80,
+        regulatory_citations=75,
+        social_responsibility=65,
+        cybersecurity_posture=75,
+        technology_investment=72,
+        data_protection=78,
+        system_resilience=75,
+        innovation_signals=70,
+        regulatory_technology=72,
     )
 
     return FinancialInstitutionProfile(
@@ -128,7 +202,7 @@ def hedge_fund_moderate():
         complex_products=True,
         prior_claims=1,
         insurance_history_years=8,
-        signals=moderate_signals
+        signals=moderate_signals,
     )
 
 
@@ -155,7 +229,7 @@ def fintech_weak(poor_regulatory_signals):
         complex_products=False,
         prior_claims=2,
         insurance_history_years=2,
-        signals=poor_regulatory_signals
+        signals=poor_regulatory_signals,
     )
 
 
@@ -263,26 +337,52 @@ class TestFinancialInstitutionPricingModel:
         result = model.calculate_premium(fintech_weak)
 
         # With 3 enforcement actions and active investigation, should likely decline
-        assert result.recommendation in ["DECLINE", "MANUAL_REVIEW"], \
-            "Multiple enforcement actions should trigger decline or manual review"
+        assert result.recommendation in [
+            "DECLINE",
+            "MANUAL_REVIEW",
+        ], "Multiple enforcement actions should trigger decline or manual review"
 
     def test_regulatory_score_override(self):
         """Test that low regulatory score (<50) triggers decline regardless of other factors"""
         # Create profile with good overall signals but poor regulatory
         critical_regulatory_signals = FinancialInstitutionSignals(
-            regulatory_disclosures=30, enforcement_history=25, complaint_resolution=35,
-            licensing_status=40, audit_transparency=30, regulatory_cooperation=35,
+            regulatory_disclosures=30,
+            enforcement_history=25,
+            complaint_resolution=35,
+            licensing_status=40,
+            audit_transparency=30,
+            regulatory_cooperation=35,
             # All other signals are good
-            board_composition=85, management_experience=88, compensation_disclosure=85,
-            succession_planning=82, risk_committee=85, ethics_program=88,
-            financial_reporting=90, auditor_quality=95, financial_stability=88,
-            revenue_transparency=85, risk_disclosure=88, third_party_ratings=90,
-            compliance_program=85, internal_controls=88, vendor_management=85,
-            business_continuity=88, incident_reporting=85, insurance_coverage=88,
-            media_sentiment=80, client_reviews=82, industry_recognition=85,
-            litigation_history=90, regulatory_citations=88, social_responsibility=80,
-            cybersecurity_posture=85, technology_investment=82, data_protection=88,
-            system_resilience=85, innovation_signals=80, regulatory_technology=85
+            board_composition=85,
+            management_experience=88,
+            compensation_disclosure=85,
+            succession_planning=82,
+            risk_committee=85,
+            ethics_program=88,
+            financial_reporting=90,
+            auditor_quality=95,
+            financial_stability=88,
+            revenue_transparency=85,
+            risk_disclosure=88,
+            third_party_ratings=90,
+            compliance_program=85,
+            internal_controls=88,
+            vendor_management=85,
+            business_continuity=88,
+            incident_reporting=85,
+            insurance_coverage=88,
+            media_sentiment=80,
+            client_reviews=82,
+            industry_recognition=85,
+            litigation_history=90,
+            regulatory_citations=88,
+            social_responsibility=80,
+            cybersecurity_posture=85,
+            technology_investment=82,
+            data_protection=88,
+            system_resilience=85,
+            innovation_signals=80,
+            regulatory_technology=85,
         )
 
         profile = FinancialInstitutionProfile(
@@ -305,7 +405,7 @@ class TestFinancialInstitutionPricingModel:
             complex_products=False,
             prior_claims=0,
             insurance_history_years=5,
-            signals=critical_regulatory_signals
+            signals=critical_regulatory_signals,
         )
 
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
@@ -313,8 +413,9 @@ class TestFinancialInstitutionPricingModel:
 
         reg_score = critical_regulatory_signals.get_category_score("regulatory")
         assert reg_score < 50, "Regulatory score should be below critical threshold"
-        assert result.recommendation == "DECLINE", \
-            "Regulatory score <50 should trigger decline regardless of other factors"
+        assert (
+            result.recommendation == "DECLINE"
+        ), "Regulatory score <50 should trigger decline regardless of other factors"
 
     def test_systemically_important_modifier(self, major_bank_strong):
         """Test that systemically important institutions get appropriate adjustments"""
@@ -332,7 +433,7 @@ class TestFinancialInstitutionPricingModel:
             FICoverageType.DNO,
             FICoverageType.EPL,
             FICoverageType.CYBER,
-            FICoverageType.ERRORS_OMISSIONS
+            FICoverageType.ERRORS_OMISSIONS,
         ]
 
         results = {}
@@ -352,8 +453,10 @@ class TestFinancialInstitutionPricingModel:
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(major_bank_strong)
 
-        assert hasattr(result, 'recommendations'), "Result should contain recommendations"
-        assert hasattr(result, 'recommendation'), "Result should contain underwriting recommendation"
+        assert hasattr(result, "recommendations"), "Result should contain recommendations"
+        assert hasattr(
+            result, "recommendation"
+        ), "Result should contain underwriting recommendation"
         assert result.recommendation in ["AUTO_APPROVE", "MANUAL_REVIEW", "DECLINE"]
 
     def test_aum_size_impact_on_premium(self, strong_regulatory_signals):
@@ -379,7 +482,7 @@ class TestFinancialInstitutionPricingModel:
             complex_products=False,
             prior_claims=0,
             insurance_history_years=5,
-            signals=strong_regulatory_signals
+            signals=strong_regulatory_signals,
         )
 
         # Large institution
@@ -403,7 +506,7 @@ class TestFinancialInstitutionPricingModel:
             complex_products=True,
             prior_claims=0,
             insurance_history_years=20,
-            signals=strong_regulatory_signals
+            signals=strong_regulatory_signals,
         )
 
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
@@ -411,8 +514,9 @@ class TestFinancialInstitutionPricingModel:
         large_result = model.calculate_premium(large_fi)
 
         # Larger institution should have higher absolute premium
-        assert large_result.total_premium > small_result.total_premium, \
-            "Larger institution should have higher premium"
+        assert (
+            large_result.total_premium > small_result.total_premium
+        ), "Larger institution should have higher premium"
 
 
 class TestRiskTierLogic:
@@ -432,8 +536,9 @@ class TestRiskTierLogic:
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(fintech_weak)
 
-        assert result.risk_tier >= 4 or result.recommendation == "DECLINE", \
-            "Critical issues should result in Tier 4/5 or decline"
+        assert (
+            result.risk_tier >= 4 or result.recommendation == "DECLINE"
+        ), "Critical issues should result in Tier 4/5 or decline"
 
     def test_tier_boundaries(self):
         """Test that tier boundaries are correctly applied"""
@@ -467,7 +572,7 @@ class TestEdgeCases:
             complex_products=False,
             prior_claims=0,
             insurance_history_years=0,
-            signals=strong_regulatory_signals
+            signals=strong_regulatory_signals,
         )
 
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.EPL)
@@ -499,7 +604,7 @@ class TestEdgeCases:
             complex_products=False,
             prior_claims=0,
             insurance_history_years=0,
-            signals=strong_regulatory_signals
+            signals=strong_regulatory_signals,
         )
 
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
