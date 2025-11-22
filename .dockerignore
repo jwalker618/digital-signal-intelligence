@@ -1,0 +1,75 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+*.egg
+.pytest_cache
+.coverage
+htmlcov
+.mypy_cache
+.dmypy.json
+dmypy.json
+
+# Virtual environments
+venv
+env
+ENV
+.venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+docs/_build
+*.md
+!README.md
+
+# Test files
+tests
+*_test.py
+test_*.py
+
+# Development files
+*.log
+*.pot
+*.mo
+.env
+.env.local
+*.sqlite
+*.db
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
+
+# Case studies (large PowerPoint files)
+docs/case-studies/*.pptx
+
+# Temporary files
+temp
+tmp
+*.tmp
+
+# Coverage
+.coverage
+coverage.xml
