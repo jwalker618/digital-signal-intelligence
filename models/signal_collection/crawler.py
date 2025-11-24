@@ -319,4 +319,4 @@ class WebsiteCrawler:
     def clear(self):
         """Clear crawled data"""
         self.visited_urls.clear()
-        self.crawled_pages.clear(
+        self.crawled_pages.clear()
