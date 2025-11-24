@@ -211,17 +211,15 @@ class CyberPricingResult:
     expected_loss: float
     confidence_level: float
     
-    # Coverage recommendations
+    # Coverage and underwriting recommendations
     recommended_limit: float
     recommended_deductible: float
-    sublimits: Dict[str, float] = field(default_factory=dict)
-    
-    # Underwriting decision
     recommendation: str
     reasoning: str
     conditions: List[str] = field(default_factory=list)
-
-
+    sublimits: Dict[str, float] = field(default_factory=dict)
+    
+    
 class CyberInsurancePricingModel:
     """
     Comprehensive cyber insurance pricing model using Digital Signal Intelligence
@@ -258,19 +256,19 @@ class CyberInsurancePricingModel:
             }
         }
     
-    def _initialize_industry_multipliers(self) -> Dict[str, float]:
+    def _initialize_industry_multipliers(self) -> Dict[IndustryVertical, float]:
         """Initialize industry risk multipliers"""
         return {
-            "technology": 1.15,  # High-value target
-            "financial_services": 1.40,  # Heavily regulated, high-value data
-            "healthcare": 1.50,  # PHI, regulatory risk
-            "retail": 1.25,  # PCI compliance, customer data
-            "manufacturing": 0.95,  # Lower data exposure
-            "professional_services": 1.10,  # Client data risk
-            "education": 1.05,  # Student data, lower security maturity
-            "government": 0.90,  # Security focus, but catastrophic if breached
-            "energy": 1.20,  # Critical infrastructure
-            "other": 1.00
+            IndustryVertical.TECHNOLOGY: 1.15,  # High-value target
+            IndustryVertical.FINANCIAL_SERVICES: 1.40,  # Heavily regulated, high-value data
+            IndustryVertical.HEALTHCARE: 1.50,  # PHI, regulatory risk
+            IndustryVertical.RETAIL: 1.25,  # PCI compliance, customer data
+            IndustryVertical.MANUFACTURING: 0.95,  # Lower data exposure
+            IndustryVertical.PROFESSIONAL_SERVICES: 1.10,  # Client data risk
+            IndustryVertical.EDUCATION: 1.05,  # Student data, lower security maturity
+            IndustryVertical.GOVERNMENT: 0.90,  # Security focus, but catastrophic if breached
+            IndustryVertical.ENERGY: 1.20,  # Critical infrastructure
+            IndustryVertical.OTHER: 1.00
         }
     
     def calculate_cyber_maturity_modifier(self, signals: CyberSecuritySignals) -> Tuple[float, float]:

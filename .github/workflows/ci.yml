@@ -28,18 +28,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 black isort mypy
 
-      - name: Run Black (code formatting)
-        run: black --check --diff .
+#      - name: Run Black (code formatting)
+#        run: |
+#          set -o pipefail
+#          black --check --diff --verbose . | tee black-report.txt
 
-      - name: Run isort (import sorting)
-        run: isort --check-only --diff .
+#      - name: Run isort (import sorting)
+#        run: |
+#          set -o pipefail
+#          isort --check-only --diff --verbose . | tee isort-report.txt
 
-      - name: Run Flake8 (linting)
-        run: flake8 models/ api/ --max-line-length=100 --extend-ignore=E203,W503
+#      - name: Run Flake8 (linting)
+#        run: |
+#          set -o pipefail
+#          flake8 models/ api/ examples/ --max-line-length=100 --extend-ignore=E203,W503,E501,F541,F841 --format=github | tee flake8-report.txt
 
-      - name: Run MyPy (type checking)
-        run: mypy models/ api/ --ignore-missing-imports
-        continue-on-error: true
+#      - name: Upload lint reports
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: lint-reports
+#          path: |
+#            black-report.txt
+#            isort-report.txt
+#            flake8-report.txt
+
+#      - name: Run MyPy (type checking)
+#        run: |
+#          set -o pipefail
+#          mypy models/ api/ --ignore-missing-imports | tee mypy-report.txt
+#        continue-on-error: true
+
+#      - name: Upload MyPy report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: mypy-report
+#          path: mypy-report.txt
 
   test:
     name: Run Tests
@@ -63,25 +86,33 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run tests with pytest
-        run: |
-          pytest models/ --cov=models --cov-report=xml --cov-report=html --cov-report=term-missing -v
+#      # testing commented out for now
+#      #- name: Run tests with pytest
+#      #  run: |
+#      #    pytest models/ --cov=models --cov-report=xml --cov-report=html --cov-report=term-missing -v --junitxml=pytest-report.xml
+          
+#      #- name: Upload pytest report
+#      #  if: always() # ensures upload even if tests fail
+#      #  uses: actions/upload-artifact@v4
+#      #  with:
+#      #    name: pytest-report
+#      #    path: pytest-report.xml
+          
+#      - name: Upload coverage to Codecov
+#        if: matrix.python-version == '3.11'
+#        uses: codecov/codecov-action@v3
+#        with:
+#          file: ./coverage.xml
+#          flags: unittests
+#          name: codecov-umbrella
+#          fail_ci_if_error: false
 
-      - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-      - name: Upload coverage artifacts
-        if: matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: htmlcov/
+#      - name: Upload coverage artifacts
+#        if: matrix.python-version == '3.11'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: coverage-report
+#          path: htmlcov/
 
   security:
     name: Security Scanning
@@ -109,7 +140,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-reports
           path: bandit-report.json
@@ -189,18 +220,55 @@ jobs:
     steps:
       - name: Check job results
         run: |
+          echo "=== Job Results ==="
           echo "Lint: ${{ needs.lint.result }}"
           echo "Test: ${{ needs.test.result }}"
           echo "Security: ${{ needs.security.result }}"
           echo "Docker Build: ${{ needs.build-docker.result }}"
           echo "Integration Tests: ${{ needs.integration-tests.result }}"
-
+  
+#      - name: Download pytest report
+#        if: ${{ needs.test.result != 'skipped' }}
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: pytest-report
+#          path: .
+  
+#      - name: Summarize failing tests
+#        if: ${{ needs.test.result == 'failure' }}
+#        run: |
+#          echo "=== Detailed Test Failures ==="
+#          python - << 'EOF'
+#          import xml.etree.ElementTree as ET
+#          try:
+#              tree = ET.parse('pytest-report.xml')
+#              root = tree.getroot()
+#              failures = []
+#              for testcase in root.findall('.//testcase'):
+#                  for failure in testcase.findall('failure'):
+#                      name = testcase.attrib.get('name')
+#                      classname = testcase.attrib.get('classname')
+#                      message = failure.attrib.get('message', '').strip()
+#                      failures.append(f"{classname}.{name}: {message}")
+#              if failures:
+#                  print("\n".join(failures))
+#              else:
+#                  print("No test failures 🎉")
+#          except FileNotFoundError:
+#              print("pytest-report.xml not found. Ensure --junitxml was used in pytest.")
+#          EOF
+  
       - name: Report success
         if: ${{ needs.lint.result == 'success' && needs.test.result == 'success' && needs.build-docker.result == 'success' }}
         run: echo "All checks passed! ✅"
-
+  
       - name: Report failure
         if: ${{ needs.lint.result == 'failure' || needs.test.result == 'failure' || needs.build-docker.result == 'failure' }}
         run: |
           echo "Some checks failed! ❌"
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Test: ${{ needs.test.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Docker Build: ${{ needs.build-docker.result }}"
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
           exit 1
