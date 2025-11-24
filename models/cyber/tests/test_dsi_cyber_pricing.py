@@ -161,7 +161,7 @@ class TestCyberPricingModel:
         modifier, score = model.calculate_cyber_maturity_modifier(tech_company_secure.signals)
         
         assert 0.60 <= modifier <= 0.85  # Should get credit
-        assert score > = 800
+        assert score >= 800
     
     def test_cyber_maturity_modifier_weak(self, healthcare_vulnerable):
         """Test maturity modifier for weak security"""
