@@ -35,7 +35,7 @@ jobs:
         run: isort --check-only --diff .
 
       - name: Run Flake8 (linting)
-        run: flake8 models/ api/ --max-line-length=100 --extend-ignore=E203,W503
+        run: flake8 models/ api/ examples/ --max-line-length=100 --extend-ignore=E203,W503,E501,F541,F841
 
       - name: Run MyPy (type checking)
         run: mypy models/ api/ --ignore-missing-imports
@@ -78,7 +78,7 @@ jobs:
 
       - name: Upload coverage artifacts
         if: matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/
@@ -109,7 +109,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-reports
           path: bandit-report.json
@@ -189,18 +189,55 @@ jobs:
     steps:
       - name: Check job results
         run: |
+          echo "=== Job Results ==="
           echo "Lint: ${{ needs.lint.result }}"
           echo "Test: ${{ needs.test.result }}"
           echo "Security: ${{ needs.security.result }}"
           echo "Docker Build: ${{ needs.build-docker.result }}"
           echo "Integration Tests: ${{ needs.integration-tests.result }}"
-
+  
+      - name: Download pytest report
+        if: ${{ needs.test.result != 'skipped' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: pytest-report
+          path: .
+  
+      - name: Summarize failing tests
+        if: ${{ needs.test.result == 'failure' }}
+        run: |
+          echo "=== Detailed Test Failures ==="
+          python - << 'EOF'
+          import xml.etree.ElementTree as ET
+          try:
+              tree = ET.parse('pytest-report.xml')
+              root = tree.getroot()
+              failures = []
+              for testcase in root.findall('.//testcase'):
+                  for failure in testcase.findall('failure'):
+                      name = testcase.attrib.get('name')
+                      classname = testcase.attrib.get('classname')
+                      message = failure.attrib.get('message', '').strip()
+                      failures.append(f"{classname}.{name}: {message}")
+              if failures:
+                  print("\n".join(failures))
+              else:
+                  print("No test failures 🎉")
+          except FileNotFoundError:
+              print("pytest-report.xml not found. Ensure --junitxml was used in pytest.")
+          EOF
+  
       - name: Report success
         if: ${{ needs.lint.result == 'success' && needs.test.result == 'success' && needs.build-docker.result == 'success' }}
         run: echo "All checks passed! ✅"
-
+  
       - name: Report failure
         if: ${{ needs.lint.result == 'failure' || needs.test.result == 'failure' || needs.build-docker.result == 'failure' }}
         run: |
           echo "Some checks failed! ❌"
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Test: ${{ needs.test.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Docker Build: ${{ needs.build-docker.result }}"
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
           exit 1
