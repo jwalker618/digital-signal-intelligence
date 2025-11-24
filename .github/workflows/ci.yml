@@ -198,7 +198,7 @@ jobs:
   
       - name: Download pytest report
         if: ${{ needs.test.result != 'skipped' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: pytest-report
           path: .
