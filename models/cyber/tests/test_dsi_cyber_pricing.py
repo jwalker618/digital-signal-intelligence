@@ -198,7 +198,9 @@ class TestCyberPricingModel:
     def test_cyber_maturity_modifier_strong(self, tech_company_secure):
         """Test maturity modifier for strong security"""
         model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
-        modifier, score = model.calculate_cyber_maturity_modifier(tech_company_secure.signals)
+        modifier, score = model.calculate_cyber_maturity_modifier(
+            tech_company_secure.signals
+        )
 
         assert 0.60 <= modifier <= 0.85  # Should get credit
         assert 800 <= score <= 900
@@ -206,7 +208,9 @@ class TestCyberPricingModel:
     def test_cyber_maturity_modifier_weak(self, healthcare_vulnerable):
         """Test maturity modifier for weak security"""
         model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
-        modifier, score = model.calculate_cyber_maturity_modifier(healthcare_vulnerable.signals)
+        modifier, score = model.calculate_cyber_maturity_modifier(
+            healthcare_vulnerable.signals
+        )
 
         assert 1.20 <= modifier <= 2.50  # Should get debit
         assert 400 <= score <= 550
@@ -218,7 +222,9 @@ class TestVulnerabilityAssessment:
     def test_vulnerability_modifier_secure(self, strong_security_signals):
         """Test vulnerability modifier for secure company"""
         model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
-        modifier, score = model.calculate_vulnerability_modifier(strong_security_signals)
+        modifier, score = model.calculate_vulnerability_modifier(
+            strong_security_signals
+        )
 
         assert 0.70 <= modifier <= 0.95
         assert score >= 85
@@ -241,7 +247,9 @@ class TestVulnerabilityAssessment:
         model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
 
         # Maturity should still be good
-        maturity_mod, maturity_score = model.calculate_cyber_maturity_modifier(mixed_signals)
+        maturity_mod, maturity_score = model.calculate_cyber_maturity_modifier(
+            mixed_signals
+        )
         assert maturity_score >= 700
 
         # But vulnerability should be bad
@@ -334,8 +342,12 @@ class TestBreachProbability:
         """Test breach probability varies correctly by score"""
         model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
 
-        high_score_prob = model.estimate_breach_probability(850, IndustryVertical.TECHNOLOGY, 0)
-        low_score_prob = model.estimate_breach_probability(350, IndustryVertical.TECHNOLOGY, 0)
+        high_score_prob = model.estimate_breach_probability(
+            850, IndustryVertical.TECHNOLOGY, 0
+        )
+        low_score_prob = model.estimate_breach_probability(
+            350, IndustryVertical.TECHNOLOGY, 0
+        )
 
         assert low_score_prob > high_score_prob
         assert high_score_prob <= 0.05  # <5% for excellent security
@@ -346,7 +358,9 @@ class TestBreachProbability:
         model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
 
         # Same score, different industries
-        healthcare_prob = model.estimate_breach_probability(600, IndustryVertical.HEALTHCARE, 0)
+        healthcare_prob = model.estimate_breach_probability(
+            600, IndustryVertical.HEALTHCARE, 0
+        )
         manufacturing_prob = model.estimate_breach_probability(
             600, IndustryVertical.MANUFACTURING, 0
         )
@@ -357,9 +371,15 @@ class TestBreachProbability:
         """Test prior incidents dramatically increase probability"""
         model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
 
-        no_incidents = model.estimate_breach_probability(650, IndustryVertical.RETAIL, 0)
-        one_incident = model.estimate_breach_probability(650, IndustryVertical.RETAIL, 1)
-        two_incidents = model.estimate_breach_probability(650, IndustryVertical.RETAIL, 2)
+        no_incidents = model.estimate_breach_probability(
+            650, IndustryVertical.RETAIL, 0
+        )
+        one_incident = model.estimate_breach_probability(
+            650, IndustryVertical.RETAIL, 1
+        )
+        two_incidents = model.estimate_breach_probability(
+            650, IndustryVertical.RETAIL, 2
+        )
 
         assert two_incidents > one_incident > no_incidents
         assert one_incident >= no_incidents * 1.40  # At least 40% increase
@@ -452,7 +472,10 @@ class TestFullPricing:
         assert result.annual_premium > 0
         assert result.composite_score < 600
         assert result.vulnerability_score < 55
-        assert "Decline" in result.recommendation or "Manual Review" in result.recommendation
+        assert (
+            "Decline" in result.recommendation
+            or "Manual Review" in result.recommendation
+        )
         assert result.breach_probability > 0.25
         assert len(result.conditions) > 0  # Should have conditions
 
@@ -539,7 +562,8 @@ class TestEdgeCases:
         assert result.annual_premium > 0
         assert result.confidence_level < 0.60
         assert (
-            "Manual Review" in result.recommendation or "Insufficient Data" in result.recommendation
+            "Manual Review" in result.recommendation
+            or "Insufficient Data" in result.recommendation
         )
 
     def test_extreme_revenue_handling(self):

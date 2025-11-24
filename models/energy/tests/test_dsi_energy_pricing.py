@@ -230,7 +230,10 @@ class TestUpstreamPricingModel:
         assert result.annual_premium > 0
         assert result.composite_score < 600
         assert result.dsi_modifier > 1.2
-        assert "Decline" in result.recommendation or "Manual Review" in result.recommendation
+        assert (
+            "Decline" in result.recommendation
+            or "Manual Review" in result.recommendation
+        )
 
     def test_all_coverages(self, large_upstream_company):
         """Test that all upstream coverages can be priced"""
@@ -377,7 +380,10 @@ class TestPricingConsistency:
 
         assert result.annual_premium > 0  # Should still price
         assert result.confidence_level < 0.70  # Low confidence
-        assert "Manual Review" in result.recommendation or "Decline" in result.recommendation
+        assert (
+            "Manual Review" in result.recommendation
+            or "Decline" in result.recommendation
+        )
 
     def test_extreme_revenue_handling(self):
         """Test model with extreme revenue values"""

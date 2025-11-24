@@ -294,7 +294,14 @@ class DSIEnergyPricingModel:
     def calculate_territory_modifier(self, country: str) -> float:
         """Calculate territory-based modifier"""
         # Simplified territory scoring
-        tier1 = ["United States", "Canada", "United Kingdom", "Norway", "Australia", "Netherlands"]
+        tier1 = [
+            "United States",
+            "Canada",
+            "United Kingdom",
+            "Norway",
+            "Australia",
+            "Netherlands",
+        ]
         tier2 = ["Brazil", "Mexico", "Saudi Arabia", "UAE", "Qatar", "Singapore"]
         tier3 = ["Russia", "China", "India", "Indonesia", "Malaysia", "Nigeria"]
 
@@ -361,7 +368,9 @@ class DSIEnergyPricingModel:
         else:
             return 0.60
 
-    def estimate_loss_ratio(self, composite_score: float, loss_history_mod: float) -> float:
+    def estimate_loss_ratio(
+        self, composite_score: float, loss_history_mod: float
+    ) -> float:
         """Estimate expected loss ratio"""
         # Base loss ratio by composite score
         if composite_score >= 750:
@@ -443,7 +452,9 @@ class DSIEnergyPricingModel:
         expected_lr = self.estimate_loss_ratio(composite, loss_mod)
 
         # Generate recommendation
-        recommendation, reasoning = self.generate_recommendation(composite, confidence, expected_lr)
+        recommendation, reasoning = self.generate_recommendation(
+            composite, confidence, expected_lr
+        )
 
         return PricingResult(
             company_name=company.company_name,

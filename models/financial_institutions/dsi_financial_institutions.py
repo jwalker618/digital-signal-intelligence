@@ -190,7 +190,9 @@ class FinancialInstitutionSignals:
             "reputation",
             "technology",
         ]
-        weighted_sum = sum(self.get_category_score(cat) * weights[cat] for cat in categories)
+        weighted_sum = sum(
+            self.get_category_score(cat) * weights[cat] for cat in categories
+        )
 
         return weighted_sum * 10  # Convert to 0-1000 scale
 
@@ -240,7 +242,9 @@ class FinancialInstitutionProfile:
     largest_claim: float = 0.0
 
     # Digital signals
-    signals: FinancialInstitutionSignals = field(default_factory=FinancialInstitutionSignals)
+    signals: FinancialInstitutionSignals = field(
+        default_factory=FinancialInstitutionSignals
+    )
 
 
 @dataclass
@@ -388,7 +392,9 @@ class FinancialInstitutionPricingModel:
             },
         }
 
-    def _initialize_institution_multipliers(self) -> Dict[FinancialInstitutionType, float]:
+    def _initialize_institution_multipliers(
+        self,
+    ) -> Dict[FinancialInstitutionType, float]:
         """Risk multipliers by institution type"""
         return {
             FinancialInstitutionType.HEDGE_FUND: 1.45,
@@ -403,7 +409,9 @@ class FinancialInstitutionPricingModel:
             FinancialInstitutionType.CREDIT_UNION: 0.85,
         }
 
-    def _initialize_jurisdiction_multipliers(self) -> Dict[RegulatoryJurisdiction, float]:
+    def _initialize_jurisdiction_multipliers(
+        self,
+    ) -> Dict[RegulatoryJurisdiction, float]:
         """Regulatory jurisdiction risk multipliers"""
         return {
             RegulatoryJurisdiction.US_FEDERAL: 1.25,  # SEC, stringent enforcement
@@ -417,7 +425,9 @@ class FinancialInstitutionPricingModel:
         }
 
     def calculate_regulatory_modifier(
-        self, signals: FinancialInstitutionSignals, institution: FinancialInstitutionProfile
+        self,
+        signals: FinancialInstitutionSignals,
+        institution: FinancialInstitutionProfile,
     ) -> Tuple[float, float]:
         """
         Calculate modifier based on regulatory compliance and history
@@ -488,7 +498,9 @@ class FinancialInstitutionPricingModel:
 
         return modifier, gov_score
 
-    def calculate_size_modifier(self, institution: FinancialInstitutionProfile) -> float:
+    def calculate_size_modifier(
+        self, institution: FinancialInstitutionProfile
+    ) -> float:
         """Calculate size-based modifier"""
         revenue_mm = institution.revenue / 1_000_000
 
@@ -506,7 +518,9 @@ class FinancialInstitutionPricingModel:
         else:
             return 0.82  # Mega institutions
 
-    def calculate_complexity_modifier(self, institution: FinancialInstitutionProfile) -> float:
+    def calculate_complexity_modifier(
+        self, institution: FinancialInstitutionProfile
+    ) -> float:
         """Calculate modifier based on business complexity"""
         complexity_score = 1.0
 
@@ -536,7 +550,9 @@ class FinancialInstitutionPricingModel:
 
         return complexity_score
 
-    def calculate_history_modifier(self, institution: FinancialInstitutionProfile) -> float:
+    def calculate_history_modifier(
+        self, institution: FinancialInstitutionProfile
+    ) -> float:
         """Calculate modifier based on loss and litigation history"""
         modifier = 1.0
 
@@ -561,7 +577,9 @@ class FinancialInstitutionPricingModel:
         # Customer complaints (for retail institutions)
         if institution.customer_complaints_annual > 0:
             if institution.client_count:
-                complaint_rate = institution.customer_complaints_annual / institution.client_count
+                complaint_rate = (
+                    institution.customer_complaints_annual / institution.client_count
+                )
                 if complaint_rate > 0.05:  # >5% complaint rate
                     modifier *= 1.35
                 elif complaint_rate > 0.02:
@@ -570,7 +588,9 @@ class FinancialInstitutionPricingModel:
         return modifier
 
     def calculate_financial_stability_modifier(
-        self, signals: FinancialInstitutionSignals, institution: FinancialInstitutionProfile
+        self,
+        signals: FinancialInstitutionSignals,
+        institution: FinancialInstitutionProfile,
     ) -> float:
         """Calculate modifier based on financial strength"""
         fin_score = signals.get_category_score("financial")
@@ -773,7 +793,12 @@ class FinancialInstitutionPricingModel:
             restrictions.append("Aggregate limit reduced by 30%")
 
         # Strong profile
-        if composite_score >= 800 and reg_score >= 85 and gov_score >= 80 and confidence >= 0.85:
+        if (
+            composite_score >= 800
+            and reg_score >= 85
+            and gov_score >= 80
+            and confidence >= 0.85
+        ):
             rec = "Auto-Approve - Preferred Pricing"
             reason = f"Exceptional regulatory compliance (score: {reg_score:.0f}) and governance (score: {gov_score:.0f}). Clean enforcement history. Best-in-class controls."
             conditions = [
@@ -782,7 +807,12 @@ class FinancialInstitutionPricingModel:
                 "30-day notice of material changes",
             ]
 
-        elif composite_score >= 700 and reg_score >= 75 and gov_score >= 70 and confidence >= 0.80:
+        elif (
+            composite_score >= 700
+            and reg_score >= 75
+            and gov_score >= 70
+            and confidence >= 0.80
+        ):
             rec = "Auto-Approve - Standard Pricing"
             reason = f"Good regulatory standing (score: {reg_score:.0f}) and governance (score: {gov_score:.0f}). Acceptable risk profile with adequate controls."
             conditions = [
@@ -843,13 +873,17 @@ class FinancialInstitutionPricingModel:
         return rec, reason, conditions, restrictions
 
     def price(
-        self, institution: FinancialInstitutionProfile, requested_limit: Optional[float] = None
+        self,
+        institution: FinancialInstitutionProfile,
+        requested_limit: Optional[float] = None,
     ) -> FIPricingResult:
         """
         Generate complete financial institution pricing
         """
         # Calculate all modifiers
-        reg_mod, reg_score = self.calculate_regulatory_modifier(institution.signals, institution)
+        reg_mod, reg_score = self.calculate_regulatory_modifier(
+            institution.signals, institution
+        )
         gov_mod, gov_score = self.calculate_governance_modifier(institution.signals)
         size_mod = self.calculate_size_modifier(institution)
         complexity_mod = self.calculate_complexity_modifier(institution)
@@ -859,12 +893,16 @@ class FinancialInstitutionPricingModel:
         )
 
         # Jurisdiction multiplier
-        jurisdiction_mod = self.jurisdiction_multipliers[institution.primary_jurisdiction]
+        jurisdiction_mod = self.jurisdiction_multipliers[
+            institution.primary_jurisdiction
+        ]
         if len(institution.additional_jurisdictions) > 0:
             jurisdiction_mod *= 1.15  # Complexity of multiple jurisdictions
 
         # Get base rate
-        base_rate = self.base_rates[self.coverage_type.value][institution.institution_type.value]
+        base_rate = self.base_rates[self.coverage_type.value][
+            institution.institution_type.value
+        ]
 
         # Calculate technical rate
         tech_rate = (
@@ -1153,7 +1191,9 @@ if __name__ == "__main__":
         print(f"\n{label}: {result.institution_name}")
         print("-" * 120)
         print(f"Type: {result.institution_type.upper().replace('_', ' ')}")
-        print(f"Revenue: ${institution.revenue:,.0f} | Assets: ${institution.total_assets:,.0f}")
+        print(
+            f"Revenue: ${institution.revenue:,.0f} | Assets: ${institution.total_assets:,.0f}"
+        )
         print(
             f"Employees: {institution.employees:,} | Operating: {institution.years_operating} years"
         )
@@ -1166,7 +1206,9 @@ if __name__ == "__main__":
         print(f"  Regulatory Score: {result.regulatory_score:.0f}/100")
         print(f"  Governance Score: {result.governance_score:.0f}/100")
         print(f"  Risk Tier: {result.risk_tier}")
-        print(f"  Regulatory Action Probability (5yr): {result.regulatory_action_probability:.1%}")
+        print(
+            f"  Regulatory Action Probability (5yr): {result.regulatory_action_probability:.1%}"
+        )
         print(f"  Confidence Level: {result.confidence_level:.0%}")
 
         print(f"\nPRICING COMPONENTS:")
@@ -1231,6 +1273,8 @@ if __name__ == "__main__":
 
         print(f"Regulatory Score: {reg_score}/100 - {description}")
         print(f"  Premium: ${result.annual_premium:,.0f}")
-        print(f"  Regulatory Action Probability: {result.regulatory_action_probability:.1%}")
+        print(
+            f"  Regulatory Action Probability: {result.regulatory_action_probability:.1%}"
+        )
         print(f"  Recommendation: {result.recommendation}")
         print()

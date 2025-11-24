@@ -2,12 +2,12 @@
 # Defines what to collect for each pricing model
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import List
 
 
 @dataclass
 class CollectionConfig:
-    '''Base configuration for signal collection'''
+    """Base configuration for signal collection"""
 
     # URLs to prioritize
     priority_urls: List[str] = field(default_factory=list)
@@ -33,57 +33,57 @@ class CollectionConfig:
 
 @dataclass
 class CyberConfig(CollectionConfig):
-    '''Configuration for cyber insurance signal collection'''
+    """Configuration for cyber insurance signal collection"""
 
     priority_urls: List[str] = field(
         default_factory=lambda: [
-            '/blog',
-            '/news',
-            '/security',
-            '/press',
-            '/careers',
-            '/team',
-            '/about',
+            "/blog",
+            "/news",
+            "/security",
+            "/press",
+            "/careers",
+            "/team",
+            "/about",
         ]
     )
 
     document_types: List[str] = field(
         default_factory=lambda: [
-            'security policy',
-            'privacy policy',
-            'incident report',
-            'security update',
-            'press release',
+            "security policy",
+            "privacy policy",
+            "incident report",
+            "security update",
+            "press release",
         ]
     )
 
     keywords: List[str] = field(
         default_factory=lambda: [
             # Security incidents
-            'breach',
-            'incident',
-            'security',
-            'cyber attack',
-            'ransomware',
-            'data leak',
-            'vulnerability',
-            'patch',
+            "breach",
+            "incident",
+            "security",
+            "cyber attack",
+            "ransomware",
+            "data leak",
+            "vulnerability",
+            "patch",
             # IT hires
-            'chief information security officer',
-            'ciso',
-            'chief technology officer',
-            'cto',
-            'head of security',
-            'security engineer',
-            'it director',
+            "chief information security officer",
+            "ciso",
+            "chief technology officer",
+            "cto",
+            "head of security",
+            "security engineer",
+            "it director",
             # Security improvements
-            'iso 27001',
-            'soc 2',
-            'penetration test',
-            'security audit',
-            'encryption',
-            'multi-factor authentication',
-            'mfa',
+            "iso 27001",
+            "soc 2",
+            "penetration test",
+            "security audit",
+            "encryption",
+            "multi-factor authentication",
+            "mfa",
         ]
     )
 
@@ -93,93 +93,93 @@ class CyberConfig(CollectionConfig):
     # Categories to track
     incident_keywords: List[str] = field(
         default_factory=lambda: [
-            'breach',
-            'incident',
-            'attack',
-            'ransomware',
-            'compromise',
+            "breach",
+            "incident",
+            "attack",
+            "ransomware",
+            "compromise",
         ]
     )
 
     hire_keywords: List[str] = field(
         default_factory=lambda: [
-            'appointed',
-            'hired',
-            'joins',
-            'welcome',
-            'new ciso',
-            'new cto',
+            "appointed",
+            "hired",
+            "joins",
+            "welcome",
+            "new ciso",
+            "new cto",
         ]
     )
 
     certification_keywords: List[str] = field(
         default_factory=lambda: [
-            'iso 27001',
-            'soc 2',
-            'certified',
-            'certification',
-            'accredited',
+            "iso 27001",
+            "soc 2",
+            "certified",
+            "certification",
+            "accredited",
         ]
     )
 
 
 @dataclass
 class FinancialConfig(CollectionConfig):
-    '''Configuration for financial institutions signal collection'''
+    """Configuration for financial institutions signal collection"""
 
     priority_urls: List[str] = field(
         default_factory=lambda: [
-            '/investor',
-            '/investors',
-            '/annual-report',
-            '/reports',
-            '/governance',
-            '/esg',
-            '/sustainability',
-            '/press',
-            '/news',
+            "/investor",
+            "/investors",
+            "/annual-report",
+            "/reports",
+            "/governance",
+            "/esg",
+            "/sustainability",
+            "/press",
+            "/news",
         ]
     )
 
     document_types: List[str] = field(
         default_factory=lambda: [
-            'annual report',
-            'integrated report',
-            'sustainability report',
-            'esg report',
-            'governance report',
-            'financial statements',
-            'proxy statement',
+            "annual report",
+            "integrated report",
+            "sustainability report",
+            "esg report",
+            "governance report",
+            "financial statements",
+            "proxy statement",
         ]
     )
 
     keywords: List[str] = field(
         default_factory=lambda: [
             # Financial metrics
-            'total assets',
-            'assets under management',
-            'aum',
-            'revenue',
-            'net income',
-            'return on equity',
-            'roe',
+            "total assets",
+            "assets under management",
+            "aum",
+            "revenue",
+            "net income",
+            "return on equity",
+            "roe",
             # Governance
-            'board of directors',
-            'independent directors',
-            'audit committee',
-            'risk committee',
-            'compliance',
+            "board of directors",
+            "independent directors",
+            "audit committee",
+            "risk committee",
+            "compliance",
             # Regulatory
-            'regulatory capital',
-            'tier 1 capital',
-            'capital ratio',
-            'stress test',
-            'regulatory examination',
+            "regulatory capital",
+            "tier 1 capital",
+            "capital ratio",
+            "stress test",
+            "regulatory examination",
             # ESG
-            'esg score',
-            'sustainability',
-            'carbon emissions',
-            'diversity',
+            "esg score",
+            "sustainability",
+            "carbon emissions",
+            "diversity",
         ]
     )
 
@@ -189,66 +189,66 @@ class FinancialConfig(CollectionConfig):
     # Key metrics to extract
     required_metrics: List[str] = field(
         default_factory=lambda: [
-            'total_assets',
-            'revenue',
-            'capital_ratio',
-            'independent_directors_pct',
+            "total_assets",
+            "revenue",
+            "capital_ratio",
+            "independent_directors_pct",
         ]
     )
 
 
 @dataclass
 class EnergyConfig(CollectionConfig):
-    '''Configuration for energy sector signal collection'''
+    """Configuration for energy sector signal collection"""
 
     priority_urls: List[str] = field(
         default_factory=lambda: [
-            '/safety',
-            '/sustainability',
-            '/esg',
-            '/operations',
-            '/news',
-            '/press',
-            '/investor',
-            '/responsibility',
+            "/safety",
+            "/sustainability",
+            "/esg",
+            "/operations",
+            "/news",
+            "/press",
+            "/investor",
+            "/responsibility",
         ]
     )
 
     document_types: List[str] = field(
         default_factory=lambda: [
-            'sustainability report',
-            'safety report',
-            'incident report',
-            'esg report',
-            'annual report',
+            "sustainability report",
+            "safety report",
+            "incident report",
+            "esg report",
+            "annual report",
         ]
     )
 
     keywords: List[str] = field(
         default_factory=lambda: [
             # Safety
-            'safety record',
-            'incident rate',
-            'lost time injury',
-            'lti',
-            'safety performance',
-            'zero harm',
+            "safety record",
+            "incident rate",
+            "lost time injury",
+            "lti",
+            "safety performance",
+            "zero harm",
             # Environmental
-            'emissions',
-            'carbon footprint',
-            'environmental compliance',
-            'spill',
-            'environmental incident',
+            "emissions",
+            "carbon footprint",
+            "environmental compliance",
+            "spill",
+            "environmental incident",
             # Operational
-            'production',
-            'capacity',
-            'reserves',
-            'uptime',
-            'reliability',
+            "production",
+            "capacity",
+            "reserves",
+            "uptime",
+            "reliability",
             # ESG
-            'esg rating',
-            'sustainability',
-            'climate risk',
+            "esg rating",
+            "sustainability",
+            "climate risk",
         ]
     )
 
@@ -258,18 +258,18 @@ class EnergyConfig(CollectionConfig):
     # Incident tracking
     incident_types: List[str] = field(
         default_factory=lambda: [
-            'oil spill',
-            'gas leak',
-            'explosion',
-            'fire',
-            'safety incident',
-            'environmental violation',
+            "oil spill",
+            "gas leak",
+            "explosion",
+            "fire",
+            "safety incident",
+            "environmental violation",
         ]
     )
 
 
 def get_config_for_model(model_type: str) -> CollectionConfig:
-    '''
+    """
     Get collection configuration for a specific pricing model.
 
     Args:
@@ -277,12 +277,12 @@ def get_config_for_model(model_type: str) -> CollectionConfig:
 
     Returns:
         Appropriate configuration object
-    '''
+    """
     configs = {
-        'cyber': CyberConfig(),
-        'energy': EnergyConfig(),
-        'financial': FinancialConfig(),
-        'financial_institutions': FinancialConfig(),
+        "cyber": CyberConfig(),
+        "energy": EnergyConfig(),
+        "financial": FinancialConfig(),
+        "financial_institutions": FinancialConfig(),
     }
 
     return configs.get(model_type.lower(), CollectionConfig())

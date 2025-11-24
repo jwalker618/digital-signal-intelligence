@@ -1,5 +1,5 @@
-# 
-#Unit tests for DSI Financial Institutions Pricing Model
+#
+# Unit tests for DSI Financial Institutions Pricing Model
 
 # Run with: python -m pytest test_dsi_financial_institutions.py -v
 
@@ -16,7 +16,7 @@ from dsi_financial_institutions import (
 
 @pytest.fixture
 def strong_regulatory_signals():
-    '''Fixture for FI with excellent regulatory compliance'''
+    """Fixture for FI with excellent regulatory compliance"""
     return FinancialInstitutionSignals(
         # Regulatory & Compliance (Excellent)
         regulatory_disclosures=95,
@@ -65,7 +65,7 @@ def strong_regulatory_signals():
 
 @pytest.fixture
 def poor_regulatory_signals():
-    '''Fixture for FI with regulatory issues and enforcement history'''
+    """Fixture for FI with regulatory issues and enforcement history"""
     return FinancialInstitutionSignals(
         # Regulatory & Compliance (Poor - CRITICAL)
         regulatory_disclosures=45,
@@ -114,12 +114,12 @@ def poor_regulatory_signals():
 
 @pytest.fixture
 def major_bank_strong(strong_regulatory_signals):
-    '''Large commercial bank with strong compliance'''
+    """Large commercial bank with strong compliance"""
     return FinancialInstitutionProfile(
-        institution_name='Global Trust Bank',
+        institution_name="Global Trust Bank",
         institution_type=FinancialInstitutionType.COMMERCIAL_BANK,
         jurisdiction=RegulatoryJurisdiction.US_FEDERAL,
-        country='United States',
+        country="United States",
         assets_under_management=50_000_000_000,
         annual_revenue=2_000_000_000,
         employees=10000,
@@ -141,7 +141,7 @@ def major_bank_strong(strong_regulatory_signals):
 
 @pytest.fixture
 def hedge_fund_moderate():
-    '''Medium-sized hedge fund with moderate signals'''
+    """Medium-sized hedge fund with moderate signals"""
     moderate_signals = FinancialInstitutionSignals(
         regulatory_disclosures=70,
         enforcement_history=85,
@@ -182,10 +182,10 @@ def hedge_fund_moderate():
     )
 
     return FinancialInstitutionProfile(
-        institution_name='Alpha Capital Partners',
+        institution_name="Alpha Capital Partners",
         institution_type=FinancialInstitutionType.HEDGE_FUND,
         jurisdiction=RegulatoryJurisdiction.US_FEDERAL,
-        country='United States',
+        country="United States",
         assets_under_management=5_000_000_000,
         annual_revenue=150_000_000,
         employees=150,
@@ -207,12 +207,12 @@ def hedge_fund_moderate():
 
 @pytest.fixture
 def fintech_weak(poor_regulatory_signals):
-    '''Fintech startup with compliance issues'''
+    """Fintech startup with compliance issues"""
     return FinancialInstitutionProfile(
-        institution_name='QuickPay Tech',
+        institution_name="QuickPay Tech",
         institution_type=FinancialInstitutionType.FINTECH,
         jurisdiction=RegulatoryJurisdiction.MULTIPLE,
-        country='United States',
+        country="United States",
         assets_under_management=500_000_000,
         annual_revenue=75_000_000,
         employees=200,
@@ -233,116 +233,133 @@ def fintech_weak(poor_regulatory_signals):
 
 
 class TestFinancialInstitutionSignals:
-    '''Test suite for FinancialInstitutionSignals class'''
+    """Test suite for FinancialInstitutionSignals class"""
 
     def test_strong_signals_composite_score(self, strong_regulatory_signals):
-        '''Test composite score calculation for strong signals'''
+        """Test composite score calculation for strong signals"""
         score = strong_regulatory_signals.get_composite_score()
-        assert 800 <= score <= 950, f'Expected high score for strong signals, got {score}'
+        assert (
+            800 <= score <= 950
+        ), f"Expected high score for strong signals, got {score}"
 
     def test_weak_signals_composite_score(self, poor_regulatory_signals):
-        '''Test composite score calculation for weak signals'''
+        """Test composite score calculation for weak signals"""
         score = poor_regulatory_signals.get_composite_score()
-        assert 300 <= score <= 500, f'Expected low score for weak signals, got {score}'
+        assert 300 <= score <= 500, f"Expected low score for weak signals, got {score}"
 
     def test_regulatory_category_score(self, strong_regulatory_signals):
-        '''Test regulatory category scoring'''
-        reg_score = strong_regulatory_signals.get_category_score('regulatory')
-        assert 90 <= reg_score <= 100, f'Expected high regulatory score, got {reg_score}'
+        """Test regulatory category scoring"""
+        reg_score = strong_regulatory_signals.get_category_score("regulatory")
+        assert (
+            90 <= reg_score <= 100
+        ), f"Expected high regulatory score, got {reg_score}"
 
     def test_governance_category_score(self, strong_regulatory_signals):
-        '''Test governance category scoring'''
-        gov_score = strong_regulatory_signals.get_category_score('governance')
-        assert 85 <= gov_score <= 95, f'Expected high governance score, got {gov_score}'
+        """Test governance category scoring"""
+        gov_score = strong_regulatory_signals.get_category_score("governance")
+        assert 85 <= gov_score <= 95, f"Expected high governance score, got {gov_score}"
 
     def test_technology_category_score(self, strong_regulatory_signals):
-        '''Test technology category scoring'''
-        tech_score = strong_regulatory_signals.get_category_score('technology')
-        assert 85 <= tech_score <= 95, f'Expected high technology score, got {tech_score}'
+        """Test technology category scoring"""
+        tech_score = strong_regulatory_signals.get_category_score("technology")
+        assert (
+            85 <= tech_score <= 95
+        ), f"Expected high technology score, got {tech_score}"
 
     def test_invalid_category_returns_zero(self, strong_regulatory_signals):
-        '''Test that invalid category returns 0'''
-        score = strong_regulatory_signals.get_category_score('invalid')
+        """Test that invalid category returns 0"""
+        score = strong_regulatory_signals.get_category_score("invalid")
         assert score == 0.0
 
 
 class TestFinancialInstitutionProfile:
-    '''Test suite for FinancialInstitutionProfile class'''
+    """Test suite for FinancialInstitutionProfile class"""
 
     def test_major_bank_profile_creation(self, major_bank_strong):
-        '''Test creation of major bank profile'''
-        assert major_bank_strong.institution_name == 'Global Trust Bank'
-        assert major_bank_strong.institution_type == FinancialInstitutionType.COMMERCIAL_BANK
+        """Test creation of major bank profile"""
+        assert major_bank_strong.institution_name == "Global Trust Bank"
+        assert (
+            major_bank_strong.institution_type
+            == FinancialInstitutionType.COMMERCIAL_BANK
+        )
         assert major_bank_strong.assets_under_management == 50_000_000_000
         assert major_bank_strong.enforcement_actions_5yr == 0
 
     def test_hedge_fund_profile_creation(self, hedge_fund_moderate):
-        '''Test creation of hedge fund profile'''
-        assert hedge_fund_moderate.institution_type == FinancialInstitutionType.HEDGE_FUND
+        """Test creation of hedge fund profile"""
+        assert (
+            hedge_fund_moderate.institution_type == FinancialInstitutionType.HEDGE_FUND
+        )
         assert hedge_fund_moderate.public_company is False
         assert hedge_fund_moderate.complex_products is True
 
     def test_fintech_profile_with_issues(self, fintech_weak):
-        '''Test fintech profile with regulatory issues'''
+        """Test fintech profile with regulatory issues"""
         assert fintech_weak.enforcement_actions_5yr == 3
         assert fintech_weak.active_investigations is True
         assert fintech_weak.regulatory_examinations_clean is False
 
 
 class TestFinancialInstitutionPricingModel:
-    '''Test suite for FinancialInstitutionPricingModel pricing logic'''
+    """Test suite for FinancialInstitutionPricingModel pricing logic"""
 
     def test_dno_pricing_major_bank(self, major_bank_strong):
-        '''Test D&O pricing for major bank with strong signals'''
+        """Test D&O pricing for major bank with strong signals"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(major_bank_strong)
 
         assert result is not None
         assert result.total_premium > 0
-        assert result.risk_tier in [1, 2], 'Strong bank should be Tier 1 or 2'
-        assert 0.6 <= result.composite_modifier <= 0.9, 'Should have favorable modifier'
+        assert result.risk_tier in [1, 2], "Strong bank should be Tier 1 or 2"
+        assert 0.6 <= result.composite_modifier <= 0.9, "Should have favorable modifier"
 
     def test_dno_pricing_fintech_weak(self, fintech_weak):
-        '''Test D&O pricing for fintech with regulatory issues'''
+        """Test D&O pricing for fintech with regulatory issues"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(fintech_weak)
 
         # Should be declined or very high tier due to enforcement actions
-        assert result.risk_tier in [4, 5] or result.recommendation == 'DECLINE'
-        if result.recommendation != 'DECLINE':
-            assert result.composite_modifier >= 1.5, 'Should have high modifier for weak fintech'
+        assert result.risk_tier in [4, 5] or result.recommendation == "DECLINE"
+        if result.recommendation != "DECLINE":
+            assert (
+                result.composite_modifier >= 1.5
+            ), "Should have high modifier for weak fintech"
 
     def test_cyber_pricing_hedge_fund(self, hedge_fund_moderate):
-        '''Test Cyber pricing for hedge fund'''
+        """Test Cyber pricing for hedge fund"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.CYBER)
         result = model.calculate_premium(hedge_fund_moderate)
 
         assert result is not None
         assert result.total_premium > 0
-        assert result.risk_tier in [2, 3], 'Moderate signals should be mid-tier'
+        assert result.risk_tier in [2, 3], "Moderate signals should be mid-tier"
 
     def test_regulatory_defense_pricing(self, major_bank_strong):
-        '''Test Regulatory Defense coverage pricing'''
-        model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.REGULATORY)
+        """Test Regulatory Defense coverage pricing"""
+        model = FinancialInstitutionPricingModel(
+            coverage_type=FICoverageType.REGULATORY
+        )
         result = model.calculate_premium(major_bank_strong)
 
         assert result is not None
         assert result.total_premium > 0
-        assert result.regulatory_risk_probability < 0.15, 'Clean record should have low probability'
+        assert (
+            result.regulatory_risk_probability < 0.15
+        ), "Clean record should have low probability"
 
     def test_enforcement_actions_trigger_decline(self, fintech_weak):
-        '''Test that 3+ enforcement actions trigger decline'''
+        """Test that 3+ enforcement actions trigger decline"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(fintech_weak)
 
         # With 3 enforcement actions and active investigation, should likely decline
         assert result.recommendation in [
-            'DECLINE',
-            'MANUAL_REVIEW',
-        ], 'Multiple enforcement actions should trigger decline or manual review'
+            "DECLINE",
+            "MANUAL_REVIEW",
+        ], "Multiple enforcement actions should trigger decline or manual review"
 
     def test_regulatory_score_override(self):
-        '''Test that low regulatory score (<50) triggers decline regardless of other factors'''
+        """Test that low regulatory score (<50) triggers decline regardless of other factors"""
         # Create profile with good overall signals but poor regulatory
         critical_regulatory_signals = FinancialInstitutionSignals(
             regulatory_disclosures=30,
@@ -385,10 +402,10 @@ class TestFinancialInstitutionPricingModel:
         )
 
         profile = FinancialInstitutionProfile(
-            institution_name='Test Bank',
+            institution_name="Test Bank",
             institution_type=FinancialInstitutionType.COMMERCIAL_BANK,
             jurisdiction=RegulatoryJurisdiction.US_FEDERAL,
-            country='United States',
+            country="United States",
             assets_under_management=10_000_000_000,
             annual_revenue=500_000_000,
             employees=2000,
@@ -410,14 +427,14 @@ class TestFinancialInstitutionPricingModel:
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(profile)
 
-        reg_score = critical_regulatory_signals.get_category_score('regulatory')
-        assert reg_score < 50, 'Regulatory score should be below critical threshold'
+        reg_score = critical_regulatory_signals.get_category_score("regulatory")
+        assert reg_score < 50, "Regulatory score should be below critical threshold"
         assert (
-            result.recommendation == 'DECLINE'
-        ), 'Regulatory score <50 should trigger decline regardless of other factors'
+            result.recommendation == "DECLINE"
+        ), "Regulatory score <50 should trigger decline regardless of other factors"
 
     def test_systemically_important_modifier(self, major_bank_strong):
-        '''Test that systemically important institutions get appropriate adjustments'''
+        """Test that systemically important institutions get appropriate adjustments"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(major_bank_strong)
 
@@ -427,7 +444,7 @@ class TestFinancialInstitutionPricingModel:
         assert result.total_premium > 0
 
     def test_multiple_coverage_types(self, hedge_fund_moderate):
-        '''Test pricing across different coverage types'''
+        """Test pricing across different coverage types"""
         coverage_types = [
             FICoverageType.DNO,
             FICoverageType.EPL,
@@ -440,32 +457,38 @@ class TestFinancialInstitutionPricingModel:
             model = FinancialInstitutionPricingModel(coverage_type=coverage)
             result = model.calculate_premium(hedge_fund_moderate)
             results[coverage.value] = result
-            assert result is not None, f'Failed to price {coverage.value}'
-            assert result.total_premium > 0, f'Premium should be positive for {coverage.value}'
+            assert result is not None, f"Failed to price {coverage.value}"
+            assert (
+                result.total_premium > 0
+            ), f"Premium should be positive for {coverage.value}"
 
         # Verify we got different premiums for different coverage types
         premiums = [r.total_premium for r in results.values()]
-        assert len(set(premiums)) > 1, 'Different coverage types should have different premiums'
+        assert (
+            len(set(premiums)) > 1
+        ), "Different coverage types should have different premiums"
 
     def test_pricing_result_contains_recommendations(self, major_bank_strong):
-        '''Test that pricing result includes actionable recommendations'''
+        """Test that pricing result includes actionable recommendations"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(major_bank_strong)
 
-        assert hasattr(result, 'recommendations'), 'Result should contain recommendations'
         assert hasattr(
-            result, 'recommendation'
-        ), 'Result should contain underwriting recommendation'
-        assert result.recommendation in ['AUTO_APPROVE', 'MANUAL_REVIEW', 'DECLINE']
+            result, "recommendations"
+        ), "Result should contain recommendations"
+        assert hasattr(
+            result, "recommendation"
+        ), "Result should contain underwriting recommendation"
+        assert result.recommendation in ["AUTO_APPROVE", "MANUAL_REVIEW", "DECLINE"]
 
     def test_aum_size_impact_on_premium(self, strong_regulatory_signals):
-        '''Test that AUM size appropriately impacts premium'''
+        """Test that AUM size appropriately impacts premium"""
         # Small institution
         small_fi = FinancialInstitutionProfile(
-            institution_name='Small Advisor',
+            institution_name="Small Advisor",
             institution_type=FinancialInstitutionType.ASSET_MANAGER,
             jurisdiction=RegulatoryJurisdiction.US_FEDERAL,
-            country='United States',
+            country="United States",
             assets_under_management=100_000_000,
             annual_revenue=5_000_000,
             employees=25,
@@ -486,10 +509,10 @@ class TestFinancialInstitutionPricingModel:
 
         # Large institution
         large_fi = FinancialInstitutionProfile(
-            institution_name='Large Advisor',
+            institution_name="Large Advisor",
             institution_type=FinancialInstitutionType.ASSET_MANAGER,
             jurisdiction=RegulatoryJurisdiction.US_FEDERAL,
-            country='United States',
+            country="United States",
             assets_under_management=100_000_000_000,
             annual_revenue=1_000_000_000,
             employees=5000,
@@ -515,47 +538,47 @@ class TestFinancialInstitutionPricingModel:
         # Larger institution should have higher absolute premium
         assert (
             large_result.total_premium > small_result.total_premium
-        ), 'Larger institution should have higher premium'
+        ), "Larger institution should have higher premium"
 
 
 class TestRiskTierLogic:
-    '''Test suite for risk tier assignment logic'''
+    """Test suite for risk tier assignment logic"""
 
     def test_tier_1_assignment(self, major_bank_strong):
-        '''Test Tier 1 assignment for excellent profiles'''
+        """Test Tier 1 assignment for excellent profiles"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(major_bank_strong)
 
         composite_score = major_bank_strong.signals.get_composite_score()
         if composite_score >= 800 and major_bank_strong.enforcement_actions_5yr == 0:
-            assert result.risk_tier == 1, 'Excellent profile should be Tier 1'
+            assert result.risk_tier == 1, "Excellent profile should be Tier 1"
 
     def test_tier_5_or_decline_for_critical_issues(self, fintech_weak):
-        '''Test Tier 5 or decline for critical regulatory issues'''
+        """Test Tier 5 or decline for critical regulatory issues"""
         model = FinancialInstitutionPricingModel(coverage_type=FICoverageType.DNO)
         result = model.calculate_premium(fintech_weak)
 
         assert (
-            result.risk_tier >= 4 or result.recommendation == 'DECLINE'
-        ), 'Critical issues should result in Tier 4/5 or decline'
+            result.risk_tier >= 4 or result.recommendation == "DECLINE"
+        ), "Critical issues should result in Tier 4/5 or decline"
 
     def test_tier_boundaries(self):
-        '''Test that tier boundaries are correctly applied'''
+        """Test that tier boundaries are correctly applied"""
         # This test would verify the exact score ranges for each tier
         # Implementation depends on the actual tier logic in the model
         pass
 
 
 class TestEdgeCases:
-    '''Test suite for edge cases and boundary conditions'''
+    """Test suite for edge cases and boundary conditions"""
 
     def test_zero_aum_handling(self, strong_regulatory_signals):
-        '''Test handling of zero or very small AUM'''
+        """Test handling of zero or very small AUM"""
         zero_aum_profile = FinancialInstitutionProfile(
-            institution_name='Startup Fintech',
+            institution_name="Startup Fintech",
             institution_type=FinancialInstitutionType.FINTECH,
             jurisdiction=RegulatoryJurisdiction.US_FEDERAL,
-            country='United States',
+            country="United States",
             assets_under_management=0,
             annual_revenue=1_000_000,
             employees=10,
@@ -582,12 +605,12 @@ class TestEdgeCases:
         assert result.total_premium > 0
 
     def test_new_institution_no_insurance_history(self, strong_regulatory_signals):
-        '''Test pricing for new institution with no insurance history'''
+        """Test pricing for new institution with no insurance history"""
         new_profile = FinancialInstitutionProfile(
-            institution_name='New Ventures Bank',
+            institution_name="New Ventures Bank",
             institution_type=FinancialInstitutionType.COMMERCIAL_BANK,
             jurisdiction=RegulatoryJurisdiction.US_FEDERAL,
-            country='United States',
+            country="United States",
             assets_under_management=1_000_000_000,
             annual_revenue=50_000_000,
             employees=100,
@@ -614,5 +637,5 @@ class TestEdgeCases:
         assert result.total_premium > 0
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v', '--tb=short'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "--tb=short"])

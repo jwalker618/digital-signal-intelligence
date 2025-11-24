@@ -136,7 +136,9 @@ energy_profile_model = energy_ns.model(
     {
         "company_name": fields.String(required=True),
         "country": fields.String(required=True),
-        "segment": fields.String(required=True, enum=["upstream", "midstream", "downstream"]),
+        "segment": fields.String(
+            required=True, enum=["upstream", "midstream", "downstream"]
+        ),
         "annual_revenue": fields.Float(required=True),
         "employees": fields.Integer(required=True),
         "coverage_type": fields.String(required=True),
@@ -276,7 +278,9 @@ class EnergyQuote(Resource):
         """Generate an energy sector insurance quote"""
         try:
             data = request.json
-            logger.info(f"Received energy quote request for: {data.get('company_name')}")
+            logger.info(
+                f"Received energy quote request for: {data.get('company_name')}"
+            )
 
             # Parse segment and coverage
             segment = data.get("segment", "upstream").lower()
@@ -308,7 +312,10 @@ class EnergyQuote(Resource):
             model_key = f"{segment}_{coverage_type}"
 
             if model_key not in models:
-                return {"success": False, "error": f"Invalid segment/coverage: {model_key}"}, 400
+                return {
+                    "success": False,
+                    "error": f"Invalid segment/coverage: {model_key}",
+                }, 400
 
             model = models[model_key]
             result = model.calculate_premium(profile)
@@ -363,7 +370,9 @@ class FIQuote(Resource):
         """Generate a financial institution insurance quote"""
         try:
             data = request.json
-            logger.info(f"Received FI quote request for: {data.get('institution_name')}")
+            logger.info(
+                f"Received FI quote request for: {data.get('institution_name')}"
+            )
 
             # Parse coverage type
             coverage_str = data.get("coverage_type", "DNO").upper()
@@ -391,7 +400,9 @@ class FIQuote(Resource):
                 years_in_operation=data.get("years_in_operation", 10),
                 public_company=data.get("public_company", False),
                 systemically_important=data.get("systemically_important", False),
-                regulatory_examinations_clean=data.get("regulatory_examinations_clean", True),
+                regulatory_examinations_clean=data.get(
+                    "regulatory_examinations_clean", True
+                ),
                 enforcement_actions_5yr=data["enforcement_actions_5yr"],
                 settlement_amount_5yr=data.get("settlement_amount_5yr", 0),
                 active_investigations=data.get("active_investigations", False),

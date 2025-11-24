@@ -9,10 +9,10 @@ from .strategies import DomainGenerationStrategy, SearchStrategy
 from .validators import WebsiteValidator
 
 __all__ = [
-    'CorporateWebsiteDiscovery',
-    'DiscoveryResult',
-    'WebsiteCandidate',
-    'DomainGenerationStrategy',
-    'SearchStrategy',
-    'WebsiteValidator',
+    "CorporateWebsiteDiscovery",
+    "DiscoveryResult",
+    "WebsiteCandidate",
+    "DomainGenerationStrategy",
+    "SearchStrategy",
+    "WebsiteValidator",
 ]

@@ -161,7 +161,9 @@ class CyberSecuritySignals:
             "third_party",
             "behavioral",
         ]
-        weighted_sum = sum(self.get_category_score(cat) * weights[cat] for cat in categories)
+        weighted_sum = sum(
+            self.get_category_score(cat) * weights[cat] for cat in categories
+        )
 
         # Convert from 0-100 to 0-1000 scale
         return weighted_sum * 10
@@ -356,7 +358,9 @@ class CyberInsurancePricingModel:
 
         return modifier, vuln_score
 
-    def calculate_data_sensitivity_modifier(self, company: CyberCompanyProfile) -> float:
+    def calculate_data_sensitivity_modifier(
+        self, company: CyberCompanyProfile
+    ) -> float:
         """Calculate modifier based on data sensitivity"""
         base_modifier = 1.0
 
@@ -481,7 +485,10 @@ class CyberInsurancePricingModel:
         bi_exposure = daily_revenue * interruption_days
 
         # Third-party liability
-        if self.coverage_type in [CyberCoverageType.THIRD_PARTY, CyberCoverageType.COMPREHENSIVE]:
+        if self.coverage_type in [
+            CyberCoverageType.THIRD_PARTY,
+            CyberCoverageType.COMPREHENSIVE,
+        ]:
             liability_exposure = exposure * 2.5  # Regulatory fines, lawsuits
         else:
             liability_exposure = 0
@@ -515,7 +522,9 @@ class CyberInsurancePricingModel:
             50_000_000,
             100_000_000,
         ]
-        recommended_limit = min(standard_limits, key=lambda x: abs(x - recommended_limit))
+        recommended_limit = min(
+            standard_limits, key=lambda x: abs(x - recommended_limit)
+        )
 
         # Deductible: typically 1-5% of limit or $10k minimum
         deductible = max(recommended_limit * 0.02, 10_000)
@@ -531,7 +540,9 @@ class CyberInsurancePricingModel:
 
         return recommended_limit, deductible, sublimits
 
-    def determine_risk_tier(self, composite_score: float, vulnerability_score: float) -> str:
+    def determine_risk_tier(
+        self, composite_score: float, vulnerability_score: float
+    ) -> str:
         """Determine risk tier with emphasis on vulnerabilities"""
         # Vulnerability score can override composite
         if vulnerability_score < 50:
@@ -625,9 +636,14 @@ class CyberInsurancePricingModel:
         if composite_score >= 800 and vulnerability_score >= 85 and confidence >= 0.85:
             rec = "Auto-Approve - Preferred Pricing"
             reason = f"Exceptional cyber security maturity (score: {composite_score:.0f}). Strong controls, minimal vulnerabilities, low breach probability ({breach_probability:.1%}). Best-in-class risk."
-            conditions = ["Annual security assessment required", "30-day breach notification"]
+            conditions = [
+                "Annual security assessment required",
+                "30-day breach notification",
+            ]
 
-        elif composite_score >= 700 and vulnerability_score >= 75 and confidence >= 0.80:
+        elif (
+            composite_score >= 700 and vulnerability_score >= 75 and confidence >= 0.80
+        ):
             rec = "Auto-Approve - Standard Pricing"
             reason = f"Good cyber security posture (score: {composite_score:.0f}). Adequate controls with acceptable vulnerability profile. Breach probability: {breach_probability:.1%}."
             conditions = [
@@ -636,7 +652,9 @@ class CyberInsurancePricingModel:
                 "30-day breach notification",
             ]
 
-        elif composite_score >= 600 and vulnerability_score >= 65 and confidence >= 0.70:
+        elif (
+            composite_score >= 600 and vulnerability_score >= 65 and confidence >= 0.70
+        ):
             rec = "Manual Review - Elevated Risk"
             reason = f"Moderate security maturity (score: {composite_score:.0f}). Some vulnerabilities present. Breach probability: {breach_probability:.1%}. Underwriter review required."
             conditions = [
@@ -677,7 +695,9 @@ class CyberInsurancePricingModel:
         Generate complete cyber insurance pricing
         """
         # Calculate all modifiers
-        maturity_mod, composite = self.calculate_cyber_maturity_modifier(company.signals)
+        maturity_mod, composite = self.calculate_cyber_maturity_modifier(
+            company.signals
+        )
         vuln_mod, vuln_score = self.calculate_vulnerability_modifier(company.signals)
         industry_mod = self.industry_multipliers[company.industry]
         data_mod = self.calculate_data_sensitivity_modifier(company)
@@ -695,7 +715,9 @@ class CyberInsurancePricingModel:
             size_mod = 1.15
 
         # Get base rate
-        base_rate = self.base_rates[self.coverage_type.value][company.size_category.value]
+        base_rate = self.base_rates[self.coverage_type.value][
+            company.size_category.value
+        ]
 
         # Calculate technical rate
         tech_rate = (
@@ -724,7 +746,9 @@ class CyberInsurancePricingModel:
         risk_tier = self.determine_risk_tier(composite, vuln_score)
 
         # Policy structure
-        limit, deductible, sublimits = self.recommend_policy_structure(company, expected_loss)
+        limit, deductible, sublimits = self.recommend_policy_structure(
+            company, expected_loss
+        )
 
         # Use requested limit if provided
         if requested_limit:
@@ -955,8 +979,12 @@ if __name__ == "__main__":
 
         print(f"\n{label}: {result.company_name}")
         print("-" * 100)
-        print(f"Industry: {result.industry.upper()} | Size: {company.size_category.value.upper()}")
-        print(f"Revenue: ${company.annual_revenue:,.0f} | Employees: {company.employees:,}")
+        print(
+            f"Industry: {result.industry.upper()} | Size: {company.size_category.value.upper()}"
+        )
+        print(
+            f"Revenue: ${company.annual_revenue:,.0f} | Employees: {company.employees:,}"
+        )
         print(
             f"Records Stored: {company.records_stored:,} | PII Volume: {company.pii_volume.upper()}"
         )
