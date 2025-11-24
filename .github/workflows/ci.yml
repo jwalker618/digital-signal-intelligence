@@ -52,7 +52,7 @@ jobs:
           name: lint-reports
           path: |
             black-report.txt
-            isort_report.txt
+            isort-report.txt
             flake8-report.txt
 
       - name: Run MyPy (type checking)
