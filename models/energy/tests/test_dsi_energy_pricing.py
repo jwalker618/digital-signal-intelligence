@@ -6,7 +6,7 @@ Run with: python -m pytest test_dsi_energy_pricing.py -v
 
 import pytest
 import numpy as np
-from dsi_energy_pricing import (
+from models.energy.dsi_energy_pricing import (
     CompanyProfile, DigitalSignals, EnergySegment, CoverageType,
     UpstreamPricingModel, MidstreamPricingModel, DownstreamPricingModel,
     create_pricing_models
