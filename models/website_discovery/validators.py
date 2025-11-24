@@ -207,7 +207,7 @@ class WebsiteValidator:
 
         # Extract description
         desc_match = re.search(
-            r'<meta[^>]*name=['\']description['\'][^>]*content=['\'](.*?)['\']',
+            r"<meta[^>]*name=['\']description['\'][^>]*content=['\'](.*?)['\']",
             html,
             re.IGNORECASE,
         )
