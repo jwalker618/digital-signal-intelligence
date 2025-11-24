@@ -6,7 +6,7 @@ Run with: python -m pytest test_dsi_financial_institutions.py -v
 
 import pytest
 import numpy as np
-from dsi_financial_institutions import (
+from models.financial_institutions.dsi_financial_institutions import (
     FinancialInstitutionProfile, FinancialInstitutionSignals,
     FinancialInstitutionType, FICoverageType, RegulatoryJurisdiction,
     FinancialInstitutionPricingModel
