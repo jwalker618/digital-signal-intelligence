@@ -211,14 +211,14 @@ class CyberPricingResult:
     expected_loss: float
     confidence_level: float
     
-    # Coverage  and underwriting recommendations
+    # Coverage and underwriting recommendations
     recommended_limit: float
     recommended_deductible: float
     recommendation: str
     reasoning: str
-    
-    sublimits: Dict[str, float] = field(default_factory=dict)
     conditions: List[str] = field(default_factory=list)
+    sublimits: Dict[str, float] = field(default_factory=dict)
+    
     
 class CyberInsurancePricingModel:
     """
