@@ -75,12 +75,12 @@ jobs:
           --ignore=models/financial_institions/tests/test_dsi_financial_institutions_pricing.py \
           --ignore=models/portfolio/tests/test_dsi_portfolio_analytics.py
           
-      - name: Upload pytest report
-        if: always() # ensures upload even if tests fail
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-report
-          path: pytest-report.xml
+      #- name: Upload pytest report
+      #  if: always() # ensures upload even if tests fail
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: pytest-report
+      #    path: pytest-report.xml
           
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
