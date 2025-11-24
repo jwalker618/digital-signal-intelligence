@@ -115,9 +115,9 @@ class TestRealCompanyDiscovery:
         '''Test discovery for Marks & Spencer'''
         result = discovery.discover('Marks and Spencer', use_search=False)
 
-        print(f'\n{'='*80}')
+        print(f"\n{'='*80}")
         print(f'MARKS & SPENCER DISCOVERY RESULTS')
-        print(f'{'='*80}')
+        print(f"{'='*80}")
         print(f'Success: {result.success}')
         print(f'Total Candidates: {result.total_candidates}')
         print(f'Discovery Time: {result.discovery_time:.2f}s')
@@ -148,9 +148,9 @@ class TestRealCompanyDiscovery:
         '''Test discovery for MS Amlin'''
         result = discovery.discover('MS Amlin', use_search=False)
 
-        print(f'\n{'='*80}')
+        print(f"\n{'='*80}")
         print(f'MS AMLIN DISCOVERY RESULTS')
-        print(f'{'='*80}')
+        print(f"{'='*80}")
         print(f'Success: {result.success}')
         print(f'Total Candidates: {result.total_candidates}')
         print(f'Discovery Time: {result.discovery_time:.2f}s')
@@ -175,9 +175,9 @@ class TestRealCompanyDiscovery:
         '''Test discovery for Brit Insurance'''
         result = discovery.discover('Brit', use_search=False)
 
-        print(f'\n{'='*80}')
+        print(f"\n{'='*80}")
         print(f'BRIT DISCOVERY RESULTS')
-        print(f'{'='*80}')
+        print(f"{'='*80}")
         print(f'Success: {result.success}')
         print(f'Total Candidates: {result.total_candidates}')
         print(f'Discovery Time: {result.discovery_time:.2f}s')
@@ -204,9 +204,9 @@ class TestRealCompanyDiscovery:
 
         results = discovery.discover_batch(companies, use_search=False, delay=0.5)
 
-        print(f'\n{'='*80}')
+        print(f"\n{'='*80}")
         print(f'BATCH DISCOVERY RESULTS')
-        print(f'{'='*80}')
+        print(f"{'='*80}")
 
         for company_name, result in results.items():
             print(f'\n{company_name}:')
@@ -227,9 +227,9 @@ class TestRealCompanyDiscovery:
             use_search=False,
         )
 
-        print(f'\n{'='*80}')
+        print(f'"n{'='*80}")
         print(f'MARKS & SPENCER WITH DOMAIN HINT')
-        print(f'{'='*80}')
+        print(f"{'='*80}")
 
         if result.best_match:
             print(f'Best Match: {result.best_match.url}')
