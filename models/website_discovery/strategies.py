@@ -185,7 +185,7 @@ class SearchStrategy:
         '''
         results = []
         try:
-            query = f''{company_name}' corporate website OR investor relations'
+            query = f"'{company_name}' corporate website OR investor relations"
             url = 'https://api.bing.microsoft.com/v7.0/search'
 
             headers = {'Ocp-Apim-Subscription-Key': self.bing_api_key}
