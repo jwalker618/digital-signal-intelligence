@@ -203,4 +203,9 @@ jobs:
         if: ${{ needs.lint.result == 'failure' || needs.test.result == 'failure' || needs.build-docker.result == 'failure' }}
         run: |
           echo "Some checks failed! ❌"
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Test: ${{ needs.test.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Docker Build: ${{ needs.build-docker.result }}"
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
           exit 1
