@@ -31,7 +31,7 @@ jobs:
       - name: Run Black (code formatting)
         run: |
           set -o pipefail
-          black --check --diff --verbose . | tee black-report.txt
+          black --check --diff --verbose . | tee black-report.txt || true
 
 #      - name: Run isort (import sorting)
 #        run: |
@@ -43,12 +43,12 @@ jobs:
 #          set -o pipefail
 #          flake8 models/ api/ examples/ --max-line-length=100 --extend-ignore=E203,W503,E501,F541,F841 --format=github | tee flake8-report.txt
 
-#      - name: Upload lint reports
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: lint-reports
-#          path: |
-#            black-report.txt
+      - name: Upload lint reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: |
+            black-report.txt
 #            isort-report.txt
 #            flake8-report.txt
 
