@@ -6,7 +6,7 @@ Run with: python -m pytest test_dsi_cyber_pricing.py -v
 
 import pytest
 import numpy as np
-from dsi_cyber_pricing import (
+from models.cyber.dsi_cyber_pricing import (
     CyberCompanyProfile, CyberSecuritySignals, IndustryVertical,
     CompanySize, CyberCoverageType, CyberInsurancePricingModel
 )
