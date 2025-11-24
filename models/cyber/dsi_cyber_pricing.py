@@ -211,17 +211,15 @@ class CyberPricingResult:
     expected_loss: float
     confidence_level: float
     
-    # Coverage recommendations
+    # Coverage  and underwriting recommendations
     recommended_limit: float
     recommended_deductible: float
-    sublimits: Dict[str, float] = field(default_factory=dict)
-    
-    # Underwriting decision
     recommendation: str
     reasoning: str
+    
+    sublimits: Dict[str, float] = field(default_factory=dict)
     conditions: List[str] = field(default_factory=list)
-
-
+    
 class CyberInsurancePricingModel:
     """
     Comprehensive cyber insurance pricing model using Digital Signal Intelligence
