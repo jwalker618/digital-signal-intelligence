@@ -29,10 +29,10 @@ jobs:
           pip install flake8 black isort mypy
 
       - name: Run Black (code formatting)
-        run: black
+        run: black .
 
       - name: Run isort (import sorting)
-        run: isort
+        run: isort .
 
       - name: Run Flake8 (linting)
         run: |
