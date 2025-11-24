@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: dsi-api
     ports:
-      - "5000:5000"
+      - '5000:5000'
     environment:
       - FLASK_ENV=development
       - DEBUG=True
@@ -22,7 +22,7 @@ services:
       - dsi-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:5000/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -37,7 +37,7 @@ services:
   #     - POSTGRES_PASSWORD=dsi_password
   #     - POSTGRES_DB=dsi_db
   #   ports:
-  #     - "5432:5432"
+  #     - '5432:5432'
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data
   #   networks:
@@ -49,7 +49,7 @@ services:
   #   image: redis:7-alpine
   #   container_name: dsi-redis
   #   ports:
-  #     - "6379:6379"
+  #     - '6379:6379'
   #   networks:
   #     - dsi-network
   #   restart: unless-stopped

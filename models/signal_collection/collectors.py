@@ -1,6 +1,4 @@
-"""
-Model-specific signal collectors for corporate website analysis
-"""
+# Model-specific signal collectors for corporate website analysis
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -13,7 +11,7 @@ from .extractors import DocumentExtractor, HTMLArticle, PDFContent
 
 @dataclass
 class SignalMatch:
-    """A found signal/keyword match"""
+    '''A found signal/keyword match'''
 
     keyword: str
     context: str
@@ -25,7 +23,7 @@ class SignalMatch:
 
 @dataclass
 class CollectionResult:
-    """Results from signal collection"""
+    '''Results from signal collection'''
 
     company_name: str
     website_url: str
@@ -39,18 +37,18 @@ class CollectionResult:
 
 
 class SignalCollector:
-    """
+    '''
     Base class for signal collection from corporate websites
-    """
+    '''
 
     def __init__(self, config: CollectionConfig, timeout: int = 30):
-        """
+        '''
         Initialize signal collector.
 
         Args:
             config: Collection configuration
             timeout: Request timeout in seconds
-        """
+        '''
         self.config = config
         self.crawler = WebsiteCrawler(
             max_pages=config.max_pages,
@@ -63,7 +61,7 @@ class SignalCollector:
     def collect(
         self, company_name: str, website_url: str
     ) -> Optional[CollectionResult]:
-        """
+        '''
         Collect signals from corporate website.
 
         Args:
@@ -72,7 +70,7 @@ class SignalCollector:
 
         Returns:
             CollectionResult or None
-        """
+        '''
         start_time = datetime.now()
         errors = []
 
@@ -81,7 +79,7 @@ class SignalCollector:
             pages = self.crawler.crawl(website_url, self.config.priority_urls)
 
             if not pages:
-                errors.append("No pages could be crawled")
+                errors.append('No pages could be crawled')
                 return CollectionResult(
                     company_name=company_name,
                     website_url=website_url,
@@ -115,7 +113,7 @@ class SignalCollector:
             )
 
         except Exception as e:
-            errors.append(f"Collection failed: {str(e)}")
+            errors.append(f'Collection failed: {str(e)}')
             return CollectionResult(
                 company_name=company_name,
                 website_url=website_url,
@@ -129,7 +127,7 @@ class SignalCollector:
             )
 
     def _analyze_pages(self, pages: List[CrawledPage]) -> List[SignalMatch]:
-        """
+        '''
         Analyze crawled pages for signals.
         To be overridden by subclasses.
 
@@ -138,11 +136,11 @@ class SignalCollector:
 
         Returns:
             List of signal matches
-        """
-        raise NotImplementedError("Subclasses must implement _analyze_pages")
+        '''
+        raise NotImplementedError('Subclasses must implement _analyze_pages')
 
     def _find_documents(self, pages: List[CrawledPage]) -> List[str]:
-        """
+        '''
         Find specific documents from crawled pages.
 
         Args:
@@ -150,7 +148,7 @@ class SignalCollector:
 
         Returns:
             List of document URLs
-        """
+        '''
         documents = []
         for page in pages:
             for doc_type in self.config.document_types:
@@ -159,7 +157,7 @@ class SignalCollector:
         return documents
 
     def _calculate_relevance(self, context: str, keyword: str) -> float:
-        """
+        '''
         Calculate relevance score for a match.
 
         Args:
@@ -168,7 +166,7 @@ class SignalCollector:
 
         Returns:
             Relevance score (0-1)
-        """
+        '''
         context_lower = context.lower()
         keyword_lower = keyword.lower()
 
@@ -187,25 +185,25 @@ class SignalCollector:
 
 
 class CyberSignalCollector(SignalCollector):
-    """
+    '''
     Collects cyber security signals from corporate websites
-    """
+    '''
 
     def __init__(self, config: Optional[CyberConfig] = None, timeout: int = 30):
-        """
+        '''
         Initialize cyber signal collector.
 
         Args:
             config: Cyber configuration (uses default if not provided)
             timeout: Request timeout in seconds
-        """
+        '''
         if config is None:
             config = CyberConfig()
         super().__init__(config, timeout)
         self.cyber_config = config
 
     def _analyze_pages(self, pages: List[CrawledPage]) -> List[SignalMatch]:
-        """
+        '''
         Analyze pages for cyber security signals.
 
         Args:
@@ -213,7 +211,7 @@ class CyberSignalCollector(SignalCollector):
 
         Returns:
             List of signal matches
-        """
+        '''
         signals = []
         cutoff_date = datetime.now() - timedelta(
             days=self.config.time_window_months * 30
@@ -222,7 +220,7 @@ class CyberSignalCollector(SignalCollector):
         # Extract articles from pages
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.content_type and 'html' in page.content_type.lower():
                 article = self.extractor.html_extractor.extract_article(
                     page.content, page.url
                 )
@@ -248,16 +246,16 @@ class CyberSignalCollector(SignalCollector):
         )
 
         for match in keyword_matches:
-            if match["published_date"] and match["published_date"] >= cutoff_date:
+            if match['published_date'] and match['published_date'] >= cutoff_date:
                 signals.append(
                     SignalMatch(
-                        keyword=match["keyword"],
-                        context=match["context"],
-                        url=match["article_url"],
-                        date=match["published_date"],
-                        source_type="blog/news",
+                        keyword=match['keyword'],
+                        context=match['context'],
+                        url=match['article_url'],
+                        date=match['published_date'],
+                        source_type='blog/news',
                         relevance_score=self._calculate_relevance(
-                            match["context"], match["keyword"]
+                            match['context'], match['keyword']
                         ),
                     )
                 )
@@ -265,7 +263,7 @@ class CyberSignalCollector(SignalCollector):
         return signals
 
     def _find_incidents(self, articles: List[HTMLArticle]) -> List[SignalMatch]:
-        """
+        '''
         Find security incidents in articles.
 
         Args:
@@ -273,7 +271,7 @@ class CyberSignalCollector(SignalCollector):
 
         Returns:
             List of incident matches
-        """
+        '''
         matches = []
         incident_matches = self.extractor.html_extractor.find_keywords_in_articles(
             articles, self.cyber_config.incident_keywords
@@ -282,13 +280,13 @@ class CyberSignalCollector(SignalCollector):
         for match in incident_matches:
             matches.append(
                 SignalMatch(
-                    keyword=match["keyword"],
-                    context=match["context"],
-                    url=match["article_url"],
-                    date=match["published_date"],
-                    source_type="incident",
+                    keyword=match['keyword'],
+                    context=match['context'],
+                    url=match['article_url'],
+                    date=match['published_date'],
+                    source_type='incident',
                     relevance_score=self._calculate_relevance(
-                        match["context"], match["keyword"]
+                        match['context'], match['keyword']
                     )
                     * 1.2,  # Boost incidents
                 )
@@ -297,7 +295,7 @@ class CyberSignalCollector(SignalCollector):
         return matches
 
     def _find_key_hires(self, articles: List[HTMLArticle]) -> List[SignalMatch]:
-        """
+        '''
         Find IT/security key hires in articles.
 
         Args:
@@ -305,7 +303,7 @@ class CyberSignalCollector(SignalCollector):
 
         Returns:
             List of hire matches
-        """
+        '''
         matches = []
 
         # Look for hire keywords
@@ -314,21 +312,21 @@ class CyberSignalCollector(SignalCollector):
         )
 
         # Filter for IT/security roles
-        it_roles = ["ciso", "cto", "it director", "security", "chief information"]
+        it_roles = ['ciso', 'cto', 'it director', 'security', 'chief information']
 
         for match in hire_matches:
-            context_lower = match["context"].lower()
+            context_lower = match['context'].lower()
             # Check if IT/security role mentioned
             if any(role in context_lower for role in it_roles):
                 matches.append(
                     SignalMatch(
-                        keyword=match["keyword"],
-                        context=match["context"],
-                        url=match["article_url"],
-                        date=match["published_date"],
-                        source_type="hire",
+                        keyword=match['keyword'],
+                        context=match['context'],
+                        url=match['article_url'],
+                        date=match['published_date'],
+                        source_type='hire',
                         relevance_score=self._calculate_relevance(
-                            match["context"], match["keyword"]
+                            match['context'], match['keyword']
                         )
                         * 1.3,  # Boost key hires
                     )
@@ -338,25 +336,25 @@ class CyberSignalCollector(SignalCollector):
 
 
 class FinancialInstitutionSignalCollector(SignalCollector):
-    """
+    '''
     Collects signals for financial institutions
-    """
+    '''
 
     def __init__(self, config: Optional[FinancialConfig] = None, timeout: int = 30):
-        """
+        '''
         Initialize financial institution signal collector.
 
         Args:
             config: Financial configuration (uses default if not provided)
             timeout: Request timeout in seconds
-        """
+        '''
         if config is None:
             config = FinancialConfig()
         super().__init__(config, timeout)
         self.financial_config = config
 
     def _analyze_pages(self, pages: List[CrawledPage]) -> List[SignalMatch]:
-        """
+        '''
         Analyze pages for financial signals.
 
         Args:
@@ -364,7 +362,7 @@ class FinancialInstitutionSignalCollector(SignalCollector):
 
         Returns:
             List of signal matches
-        """
+        '''
         signals = []
 
         # Find and analyze reports
@@ -374,7 +372,7 @@ class FinancialInstitutionSignalCollector(SignalCollector):
         # Extract articles for general keyword search
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.content_type and 'html' in page.content_type.lower():
                 article = self.extractor.html_extractor.extract_article(
                     page.content, page.url
                 )
@@ -389,13 +387,13 @@ class FinancialInstitutionSignalCollector(SignalCollector):
         for match in keyword_matches:
             signals.append(
                 SignalMatch(
-                    keyword=match["keyword"],
-                    context=match["context"],
-                    url=match["article_url"],
-                    date=match["published_date"],
-                    source_type="web_content",
+                    keyword=match['keyword'],
+                    context=match['context'],
+                    url=match['article_url'],
+                    date=match['published_date'],
+                    source_type='web_content',
                     relevance_score=self._calculate_relevance(
-                        match["context"], match["keyword"]
+                        match['context'], match['keyword']
                     ),
                 )
             )
@@ -403,7 +401,7 @@ class FinancialInstitutionSignalCollector(SignalCollector):
         return signals
 
     def _analyze_reports(self, pages: List[CrawledPage]) -> List[SignalMatch]:
-        """
+        '''
         Find and analyze financial reports.
 
         Args:
@@ -411,12 +409,12 @@ class FinancialInstitutionSignalCollector(SignalCollector):
 
         Returns:
             List of signal matches
-        """
+        '''
         signals = []
 
         # Find PDF reports
         for page in pages:
-            if page.url.lower().endswith(".pdf"):
+            if page.url.lower().endswith('.pdf'):
                 # Check if it's a report type we care about
                 url_lower = page.url.lower()
                 if any(
@@ -437,10 +435,10 @@ class FinancialInstitutionSignalCollector(SignalCollector):
                             signals.append(
                                 SignalMatch(
                                     keyword=metric_name,
-                                    context=f"{metric_name}: {value}",
+                                    context=f'{metric_name}: {value}',
                                     url=page.url,
-                                    date=pdf_content.metadata.get("created_date"),
-                                    source_type="report",
+                                    date=pdf_content.metadata.get('created_date'),
+                                    source_type='report',
                                     relevance_score=0.9,  # High relevance for reports
                                 )
                             )
@@ -449,25 +447,25 @@ class FinancialInstitutionSignalCollector(SignalCollector):
 
 
 class EnergySignalCollector(SignalCollector):
-    """
+    '''
     Collects signals for energy companies
-    """
+    '''
 
     def __init__(self, config: Optional[EnergyConfig] = None, timeout: int = 30):
-        """
+        '''
         Initialize energy signal collector.
 
         Args:
             config: Energy configuration (uses default if not provided)
             timeout: Request timeout in seconds
-        """
+        '''
         if config is None:
             config = EnergyConfig()
         super().__init__(config, timeout)
         self.energy_config = config
 
     def _analyze_pages(self, pages: List[CrawledPage]) -> List[SignalMatch]:
-        """
+        '''
         Analyze pages for energy signals.
 
         Args:
@@ -475,7 +473,7 @@ class EnergySignalCollector(SignalCollector):
 
         Returns:
             List of signal matches
-        """
+        '''
         signals = []
 
         # Find and analyze reports
@@ -489,7 +487,7 @@ class EnergySignalCollector(SignalCollector):
         # Extract articles for general keyword search
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.content_type and 'html' in page.content_type.lower():
                 article = self.extractor.html_extractor.extract_article(
                     page.content, page.url
                 )
@@ -504,13 +502,13 @@ class EnergySignalCollector(SignalCollector):
         for match in keyword_matches:
             signals.append(
                 SignalMatch(
-                    keyword=match["keyword"],
-                    context=match["context"],
-                    url=match["article_url"],
-                    date=match["published_date"],
-                    source_type="web_content",
+                    keyword=match['keyword'],
+                    context=match['context'],
+                    url=match['article_url'],
+                    date=match['published_date'],
+                    source_type='web_content',
                     relevance_score=self._calculate_relevance(
-                        match["context"], match["keyword"]
+                        match['context'], match['keyword']
                     ),
                 )
             )
@@ -518,7 +516,7 @@ class EnergySignalCollector(SignalCollector):
         return signals
 
     def _analyze_reports(self, pages: List[CrawledPage]) -> List[SignalMatch]:
-        """
+        '''
         Find and analyze energy reports.
 
         Args:
@@ -526,12 +524,12 @@ class EnergySignalCollector(SignalCollector):
 
         Returns:
             List of signal matches
-        """
+        '''
         signals = []
 
         # Find PDF reports
         for page in pages:
-            if page.url.lower().endswith(".pdf"):
+            if page.url.lower().endswith('.pdf'):
                 # Check if it's a report type we care about
                 url_lower = page.url.lower()
                 if any(
@@ -558,8 +556,8 @@ class EnergySignalCollector(SignalCollector):
                                         keyword=keyword,
                                         context=context,
                                         url=page.url,
-                                        date=pdf_content.metadata.get("created_date"),
-                                        source_type="report",
+                                        date=pdf_content.metadata.get('created_date'),
+                                        source_type='report',
                                         relevance_score=0.85,
                                     )
                                 )
@@ -567,7 +565,7 @@ class EnergySignalCollector(SignalCollector):
         return signals
 
     def _find_incidents(self, pages: List[CrawledPage]) -> List[SignalMatch]:
-        """
+        '''
         Find safety/environmental incidents.
 
         Args:
@@ -575,13 +573,13 @@ class EnergySignalCollector(SignalCollector):
 
         Returns:
             List of incident matches
-        """
+        '''
         signals = []
 
         # Extract articles
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.content_type and 'html' in page.content_type.lower():
                 article = self.extractor.html_extractor.extract_article(
                     page.content, page.url
                 )
@@ -601,13 +599,13 @@ class EnergySignalCollector(SignalCollector):
         for match in incident_matches:
             signals.append(
                 SignalMatch(
-                    keyword=match["keyword"],
-                    context=match["context"],
-                    url=match["article_url"],
-                    date=match["published_date"],
-                    source_type="incident",
+                    keyword=match['keyword'],
+                    context=match['context'],
+                    url=match['article_url'],
+                    date=match['published_date'],
+                    source_type='incident',
                     relevance_score=self._calculate_relevance(
-                        match["context"], match["keyword"]
+                        match['context'], match['keyword']
                     )
                     * 1.25,  # Boost incidents
                 )

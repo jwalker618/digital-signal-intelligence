@@ -1,4 +1,4 @@
-"""
+'''
 Digital Signal Intelligence - Corporate Website Discovery
 ==========================================================
 
@@ -7,7 +7,7 @@ Main module for discovering corporate websites from company names or domains.
 Author: John Walker
 Date: November 2025
 Version: 1.0
-"""
+'''
 
 import time
 from dataclasses import dataclass, field
@@ -23,32 +23,32 @@ from .validators import ValidationResult, WebsiteValidator
 
 
 class DiscoveryMethod(Enum):
-    """Methods used for discovery"""
+    '''Methods used for discovery'''
 
-    DOMAIN_GENERATION = "domain_generation"
-    SEARCH_ENGINE = "search_engine"
-    LINKEDIN = "linkedin"
-    WIKIPEDIA = "wikipedia"
-    MANUAL = "manual"
+    DOMAIN_GENERATION = 'domain_generation'
+    SEARCH_ENGINE = 'search_engine'
+    LINKEDIN = 'linkedin'
+    WIKIPEDIA = 'wikipedia'
+    MANUAL = 'manual'
 
 
 @dataclass
 class WebsiteCandidate:
-    """A potential corporate website candidate"""
+    '''A potential corporate website candidate'''
 
     url: str
     confidence_score: float
     discovery_method: DiscoveryMethod
     validation_result: Optional[ValidationResult] = None
     rank: int = 0
-    title: str = ""
-    description: str = ""
+    title: str = ''
+    description: str = ''
     corporate_indicators: List[str] = field(default_factory=list)
 
 
 @dataclass
 class DiscoveryResult:
-    """Result of corporate website discovery"""
+    '''Result of corporate website discovery'''
 
     company_name: str
     best_match: Optional[WebsiteCandidate]
@@ -60,11 +60,11 @@ class DiscoveryResult:
 
 
 class CorporateWebsiteDiscovery:
-    """
+    '''
     Main class for discovering corporate websites.
 
     Orchestrates multiple discovery strategies and ranks results.
-    """
+    '''
 
     def __init__(
         self,
@@ -75,7 +75,7 @@ class CorporateWebsiteDiscovery:
         max_candidates: int = 20,
         use_cache: bool = True,
     ):
-        """
+        '''
         Initialize corporate website discovery.
 
         Args:
@@ -85,7 +85,7 @@ class CorporateWebsiteDiscovery:
             timeout: Request timeout in seconds
             max_candidates: Maximum number of candidates to evaluate
             use_cache: Whether to cache results
-        """
+        '''
         self.timeout = timeout
         self.max_candidates = max_candidates
         self.use_cache = use_cache
@@ -111,7 +111,7 @@ class CorporateWebsiteDiscovery:
         domain_hint: Optional[str] = None,
         use_search: bool = True,
     ) -> DiscoveryResult:
-        """
+        '''
         Discover corporate website for a company.
 
         Args:
@@ -121,11 +121,11 @@ class CorporateWebsiteDiscovery:
 
         Returns:
             DiscoveryResult with best match and all candidates
-        """
+        '''
         start_time = time.time()
 
         # Check cache
-        cache_key = f"{company_name}:{domain_hint}:{use_search}"
+        cache_key = f'{company_name}:{domain_hint}:{use_search}'
         if self.use_cache and cache_key in self._cache:
             return self._cache[cache_key]
 
@@ -133,31 +133,31 @@ class CorporateWebsiteDiscovery:
         strategies_used = []
 
         # Strategy 1: Domain Generation
-        print(f"🔍 Discovering website for: {company_name}")
-        print("  Strategy 1: Domain generation...")
+        print(f'🔍 Discovering website for: {company_name}')
+        print('  Strategy 1: Domain generation...')
         domain_candidates = self._discover_via_domains(company_name)
         candidates.extend(domain_candidates)
         if domain_candidates:
-            strategies_used.append("domain_generation")
-        print(f"  Found {len(domain_candidates)} candidates via domain generation")
+            strategies_used.append('domain_generation')
+        print(f'  Found {len(domain_candidates)} candidates via domain generation')
 
         # Strategy 2: Domain hint (if provided)
         if domain_hint:
-            print("  Strategy 2: Using domain hint...")
+            print('  Strategy 2: Using domain hint...')
             hint_candidate = self._discover_via_hint(domain_hint, company_name)
             if hint_candidate:
                 candidates.append(hint_candidate)
-                strategies_used.append("domain_hint")
-            print(f"  Domain hint validated: {hint_candidate is not None}")
+                strategies_used.append('domain_hint')
+            print(f'  Domain hint validated: {hint_candidate is not None}')
 
         # Strategy 3: Search engines (if enabled and API keys available)
         if use_search:
-            print("  Strategy 3: Search engine discovery...")
+            print('  Strategy 3: Search engine discovery...')
             search_candidates = self._discover_via_search(company_name)
             candidates.extend(search_candidates)
             if search_candidates:
-                strategies_used.append("search_engine")
-            print(f"  Found {len(search_candidates)} candidates via search")
+                strategies_used.append('search_engine')
+            print(f'  Found {len(search_candidates)} candidates via search')
 
         # Rank and deduplicate candidates
         candidates = self._rank_candidates(candidates)
@@ -187,7 +187,7 @@ class CorporateWebsiteDiscovery:
         return result
 
     def _discover_via_domains(self, company_name: str) -> List[WebsiteCandidate]:
-        """Discover via domain generation strategy"""
+        '''Discover via domain generation strategy'''
         candidates = []
         valid_domains = self.domain_strategy.discover(company_name)
 
@@ -205,18 +205,18 @@ class CorporateWebsiteDiscovery:
                         corporate_indicators=validation.corporate_indicators,
                     )
                     candidates.append(candidate)
-                    print(f"    ✓ {url} (score: {validation.confidence_score:.1f})")
+                    print(f'    ✓ {url} (score: {validation.confidence_score:.1f})')
             except Exception:
                 pass  # Skip failed validations
 
         return candidates
 
     def _discover_via_hint(self, domain_hint: str, company_name: str) -> Optional[WebsiteCandidate]:
-        """Discover via provided domain hint"""
+        '''Discover via provided domain hint'''
         try:
             # Ensure URL format
-            if not domain_hint.startswith(("http://", "https://")):
-                domain_hint = f"https://{domain_hint}"
+            if not domain_hint.startswith(('http://', 'https://')):
+                domain_hint = f'https://{domain_hint}'
 
             validation = self.validator.validate_website(domain_hint, company_name)
             if validation.is_valid:
@@ -235,7 +235,7 @@ class CorporateWebsiteDiscovery:
         return None
 
     def _discover_via_search(self, company_name: str) -> List[WebsiteCandidate]:
-        """Discover via search engine strategy"""
+        '''Discover via search engine strategy'''
         candidates = []
         search_results = self.search_strategy.discover(company_name, max_results=10)
 
@@ -260,7 +260,7 @@ class CorporateWebsiteDiscovery:
         return candidates
 
     def _rank_candidates(self, candidates: List[WebsiteCandidate]) -> List[WebsiteCandidate]:
-        """
+        '''
         Rank candidates by confidence score and deduplicate.
 
         Args:
@@ -268,14 +268,14 @@ class CorporateWebsiteDiscovery:
 
         Returns:
             Sorted and deduplicated list
-        """
+        '''
         # Deduplicate by URL
         seen_urls = set()
         unique_candidates = []
 
         for candidate in candidates:
             # Normalize URL for comparison
-            normalized_url = candidate.url.lower().rstrip("/")
+            normalized_url = candidate.url.lower().rstrip('/')
 
             if normalized_url not in seen_urls:
                 seen_urls.add(normalized_url)
@@ -300,7 +300,7 @@ class CorporateWebsiteDiscovery:
         use_search: bool = True,
         delay: float = 1.0,
     ) -> Dict[str, DiscoveryResult]:
-        """
+        '''
         Discover websites for multiple companies.
 
         Args:
@@ -310,7 +310,7 @@ class CorporateWebsiteDiscovery:
 
         Returns:
             Dictionary mapping company names to results
-        """
+        '''
         results = {}
 
         for company_name in company_names:
@@ -324,9 +324,9 @@ class CorporateWebsiteDiscovery:
         return results
 
     def clear_cache(self):
-        """Clear the results cache"""
+        '''Clear the results cache'''
         self._cache.clear()
 
     def get_cache_stats(self) -> Dict[str, int]:
-        """Get cache statistics"""
-        return {"cached_results": len(self._cache)}
+        '''Get cache statistics'''
+        return {'cached_results': len(self._cache)}

@@ -1,1 +1,1 @@
-"""Examples for Signal Collection Module"""
+# Examples for Signal Collection Module

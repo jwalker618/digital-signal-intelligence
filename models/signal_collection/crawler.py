@@ -1,6 +1,4 @@
-"""
-Website crawler for discovering and collecting content
-"""
+# Website crawler for discovering and collecting content
 
 import re
 import time
@@ -17,7 +15,7 @@ from .config import CollectionConfig
 
 @dataclass
 class CrawledPage:
-    """Represents a crawled page"""
+    '''Represents a crawled page'''
 
     url: str
     title: str
@@ -30,18 +28,18 @@ class CrawledPage:
 
 
 class WebsiteCrawler:
-    """
+    '''
     Intelligent website crawler for corporate content discovery
-    """
+    '''
 
     def __init__(
         self,
         config: CollectionConfig,
         timeout: int = 10,
         delay: float = 1.0,
-        user_agent: str = "DSI Signal Collector Bot",
+        user_agent: str = 'DSI Signal Collector Bot',
     ):
-        """
+        '''
         Initialize crawler.
 
         Args:
@@ -49,20 +47,20 @@ class WebsiteCrawler:
             timeout: Request timeout in seconds
             delay: Delay between requests in seconds
             user_agent: User agent string
-        """
+        '''
         self.config = config
         self.timeout = timeout
         self.delay = delay
 
         self.session = requests.Session()
-        self.session.headers.update({"User-Agent": user_agent})
+        self.session.headers.update({'User-Agent': user_agent})
 
         # Tracking
         self.visited_urls: Set[str] = set()
         self.crawled_pages: List[CrawledPage] = []
 
     def crawl(self, base_url: str) -> List[CrawledPage]:
-        """
+        '''
         Crawl website starting from base URL.
 
         Args:
@@ -70,8 +68,8 @@ class WebsiteCrawler:
 
         Returns:
             List of crawled pages
-        """
-        print(f"🕷️  Starting crawl from: {base_url}")
+        '''
+        print(f'🕷️  Starting crawl from: {base_url}')
 
         # Initialize queue with priority URLs
         to_visit = deque([(base_url, 0)])  # (url, depth)
@@ -107,7 +105,7 @@ class WebsiteCrawler:
                 pages_crawled += 1
 
                 print(
-                    f"  [{pages_crawled}/{self.config.max_pages}] ✓ {url} (depth: {depth})"
+                    f'  [{pages_crawled}/{self.config.max_pages}] ✓ {url} (depth: {depth})'
                 )
 
                 # Add links to queue
@@ -118,11 +116,11 @@ class WebsiteCrawler:
                 # Rate limiting
                 time.sleep(self.delay)
 
-        print(f"✅ Crawl complete: {len(self.crawled_pages)} pages crawled")
+        print(f'✅ Crawl complete: {len(self.crawled_pages)} pages crawled')
         return self.crawled_pages
 
     def _crawl_page(self, url: str, depth: int) -> Optional[CrawledPage]:
-        """Crawl a single page"""
+        '''Crawl a single page'''
         try:
             response = self.session.get(url, timeout=self.timeout)
 
@@ -130,27 +128,27 @@ class WebsiteCrawler:
             if response.status_code != 200:
                 return None
 
-            content_type = response.headers.get("Content-Type", "")
-            if "text/html" not in content_type:
+            content_type = response.headers.get('Content-Type', '')
+            if 'text/html' not in content_type:
                 return None
 
             # Parse HTML
-            soup = BeautifulSoup(response.text, "html.parser")
+            soup = BeautifulSoup(response.text, 'html.parser')
 
             # Extract title
-            title = soup.find("title")
-            title_text = title.get_text().strip() if title else ""
+            title = soup.find('title')
+            title_text = title.get_text().strip() if title else ''
 
             # Extract text content
             # Remove script and style elements
-            for script in soup(["script", "style"]):
+            for script in soup(['script', 'style']):
                 script.decompose()
 
             text_content = soup.get_text()
             # Clean up whitespace
             lines = (line.strip() for line in text_content.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            text_content = "\n".join(chunk for chunk in chunks if chunk)
+            chunks = (phrase.strip() for line in lines for phrase in line.split('  '))
+            text_content = '\n'.join(chunk for chunk in chunks if chunk)
 
             # Extract links
             links = self._extract_links(soup, url)
@@ -170,35 +168,35 @@ class WebsiteCrawler:
             return None
 
     def _extract_links(self, soup: BeautifulSoup, base_url: str) -> List[str]:
-        """Extract and normalize links from page"""
+        '''Extract and normalize links from page'''
         links = []
 
-        for link in soup.find_all("a", href=True):
-            href = link["href"]
+        for link in soup.find_all('a', href=True):
+            href = link['href']
 
             # Skip anchors and javascript
-            if href.startswith(("#", "javascript:", "mailto:")):
+            if href.startswith(('#', 'javascript:', 'mailto:')):
                 continue
 
             # Convert to absolute URL
             absolute_url = urljoin(base_url, href)
 
             # Remove fragments
-            absolute_url = absolute_url.split("#")[0]
+            absolute_url = absolute_url.split('#')[0]
 
             links.append(absolute_url)
 
         return links
 
     def _is_same_domain(self, url1: str, url2: str) -> bool:
-        """Check if two URLs are from the same domain"""
+        '''Check if two URLs are from the same domain'''
         domain1 = urlparse(url1).netloc
         domain2 = urlparse(url2).netloc
 
         return domain1 == domain2
 
     def find_documents(self, document_type: str = None) -> List[CrawledPage]:
-        """
+        '''
         Find pages matching document types from config.
 
         Args:
@@ -206,7 +204,7 @@ class WebsiteCrawler:
 
         Returns:
             List of matching pages
-        """
+        '''
         matching_pages = []
 
         # Determine which document types to search for
@@ -217,7 +215,7 @@ class WebsiteCrawler:
 
         for page in self.crawled_pages:
             # Check title and content
-            text = (page.title + " " + page.content).lower()
+            text = (page.title + ' ' + page.content).lower()
 
             for doc_type in search_types:
                 if doc_type in text:
@@ -227,16 +225,16 @@ class WebsiteCrawler:
         return matching_pages
 
     def find_pdfs(self) -> List[str]:
-        """Find all PDF links in crawled pages"""
+        '''Find all PDF links in crawled pages'''
         pdf_links = []
 
         for page in self.crawled_pages:
             # Find PDF links in HTML
-            soup = BeautifulSoup(page.html, "html.parser")
+            soup = BeautifulSoup(page.html, 'html.parser')
 
-            for link in soup.find_all("a", href=True):
-                href = link["href"]
-                if href.lower().endswith(".pdf"):
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                if href.lower().endswith('.pdf'):
                     absolute_url = urljoin(page.url, href)
                     if absolute_url not in pdf_links:
                         pdf_links.append(absolute_url)
@@ -244,7 +242,7 @@ class WebsiteCrawler:
         return pdf_links
 
     def search_content(self, keywords: List[str]) -> List[Dict]:
-        """
+        '''
         Search crawled content for keywords.
 
         Args:
@@ -252,7 +250,7 @@ class WebsiteCrawler:
 
         Returns:
             List of matches with context
-        """
+        '''
         matches = []
 
         for page in self.crawled_pages:
@@ -270,11 +268,11 @@ class WebsiteCrawler:
                     for context in contexts:
                         matches.append(
                             {
-                                "url": page.url,
-                                "title": page.title,
-                                "keyword": keyword,
-                                "context": context,
-                                "timestamp": page.timestamp,
+                                'url': page.url,
+                                'title': page.title,
+                                'keyword': keyword,
+                                'context': context,
+                                'timestamp': page.timestamp,
                             }
                         )
 
@@ -283,7 +281,7 @@ class WebsiteCrawler:
     def _extract_context(
         self, text: str, keyword: str, context_chars: int = 200
     ) -> List[str]:
-        """Extract text context around keyword"""
+        '''Extract text context around keyword'''
         contexts = []
         keyword_lower = keyword.lower()
         text_lower = text.lower()
@@ -307,7 +305,7 @@ class WebsiteCrawler:
         return contexts
 
     def get_pages_by_url_pattern(self, pattern: str) -> List[CrawledPage]:
-        """Get pages matching URL pattern"""
+        '''Get pages matching URL pattern'''
         matching_pages = []
 
         regex = re.compile(pattern, re.IGNORECASE)
@@ -319,6 +317,6 @@ class WebsiteCrawler:
         return matching_pages
 
     def clear(self):
-        """Clear crawled data"""
+        '''Clear crawled data'''
         self.visited_urls.clear()
         self.crawled_pages.clear()

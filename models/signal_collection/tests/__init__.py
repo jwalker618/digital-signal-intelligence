@@ -1,1 +1,1 @@
-"""Tests for Signal Collection Module"""
+# Tests for Signal Collection Module
