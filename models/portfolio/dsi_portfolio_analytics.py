@@ -334,7 +334,7 @@ class DSIPortfolioAnalytics:
         )[:3]:
             if data['percentage'] > 30:
                 recommendations.append(
-                    f'Reduce {dimension} concentration in '{key}' (currently {data['percentage']:.1f}%)'
+                    f"Reduce {dimension} concentration in '{key}' (currently {data['percentage']:.1f}%)"
                 )
 
         if not recommendations:
