@@ -7,7 +7,7 @@ Run with: python -m pytest test_dsi_portfolio_analytics.py -v
 import pytest
 import numpy as np
 from datetime import datetime
-from dsi_portfolio_analytics import (
+from models.portfolio.dsi_portfolio_analytics import (
     DSIPortfolioAnalytics, PortfolioMetrics, ConcentrationAnalysis,
     PortfolioAlert, ModelType, RiskConcentration
 )
