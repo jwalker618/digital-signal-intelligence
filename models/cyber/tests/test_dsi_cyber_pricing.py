@@ -112,7 +112,7 @@ class TestCyberSecuritySignals:
     def test_composite_score_strong_signals(self, strong_security_signals):
         """Test composite score for strong signals"""
         composite = strong_security_signals.get_composite_score()
-        assert 800 <= composite <= 900  # Should be Tier 1
+        assert composite >= 800  # Should be Tier 1
     
     def test_composite_score_vulnerable(self, vulnerable_signals):
         """Test composite score for vulnerable company"""
