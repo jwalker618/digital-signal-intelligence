@@ -1,4 +1,3 @@
-""" # DISABLE
 """
 Unit tests for DSI Portfolio Analytics
 
@@ -534,4 +533,3 @@ class TestDataExport:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
-""" # DISABLE
