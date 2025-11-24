@@ -9,7 +9,7 @@
 cd /home/user/digital-signal-intelligence
 
 # Run the examples
-python models/website_discovery/examples/example_discovery.py
+python models/website_discovery/examples/examples_discovery.py
 ```
 
 ### 2. Simple Python Script
