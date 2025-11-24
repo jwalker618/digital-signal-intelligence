@@ -417,7 +417,7 @@ class DSIPortfolioAnalytics:
                         ),
                         category='concentration',
                         title=f'High {conc.concentration_type.capitalize()} Concentration',
-                        message=f'{top_concentration[0]} represents {top_concentration[1]['percentage']:.1f}% of portfolio premium.',
+                        message=f'{top_concentration[0]} represents {top_concentration[1]["percentage"]:.1f}% of portfolio premium.',
                         affected_policies=[],
                         recommended_action=(
                             conc.recommendations[0]
