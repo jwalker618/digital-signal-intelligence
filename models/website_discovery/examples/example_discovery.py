@@ -164,7 +164,7 @@ def example_detailed_analysis():
         val = candidate.validation_result
         print(f'\n📊 VALIDATION DETAILS:')
         print(f'  Status Code: {val.status_code}')
-        print(f'  SSL Valid: {'✓' if val.ssl_valid else '✗'}')
+        print(f"  SSL Valid: {'✓' if val.ssl_valid else '✗'}")
         print(f'  Response Time: {val.response_time:.2f}s')
 
         print(f'\n✓ INDICATORS:')
