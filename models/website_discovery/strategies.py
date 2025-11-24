@@ -131,9 +131,9 @@ class SearchStrategy:
         results = []
         try:
             queries = [
-                f''{company_name}' corporate website',
-                f''{company_name}' investor relations',
-                f''{company_name}' official website',
+                f"'{company_name}' corporate website",
+                f"'{company_name}' investor relations",
+                f"'{company_name}' official website",
             ]
 
             for query in queries:
