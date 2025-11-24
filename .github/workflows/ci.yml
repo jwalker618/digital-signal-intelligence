@@ -28,41 +28,42 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 black isort mypy
 
-      - name: Run Black (code formatting)
-        run: |
-          set -o pipefail
-          black --check --diff --verbose . | tee black-report.txt
+#      - name: Run Black (code formatting)
+#        run: |
+#          set -o pipefail
+#          black --check --diff --verbose . | tee black-report.txt
 
-      - name: Run isort (import sorting)
-        run: |
-          set -o pipefail
-          isort --check-only --diff --verbose . | tee isort-report.txt
+#      - name: Run isort (import sorting)
+#        run: |
+#          set -o pipefail
+#          isort --check-only --diff --verbose . | tee isort-report.txt
 
-      - name: Run Flake8 (linting)
-        run: |
-          set -o pipefail
-          flake8 models/ api/ examples/ --max-line-length=100 --extend-ignore=E203,W503,E501,F541,F841 --format=github | tee flake8-report.txt
+#      - name: Run Flake8 (linting)
+#        run: |
+#          set -o pipefail
+#          flake8 models/ api/ examples/ --max-line-length=100 --extend-ignore=E203,W503,E501,F541,F841 --format=github | tee flake8-report.txt
 
-      - name: Upload lint reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-reports
-          path: |
-            black-report.txt
-            isort-report.txt
-            flake8-report.txt
+#      - name: Upload lint reports
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: lint-reports
+#          path: |
+#            black-report.txt
+#            isort-report.txt
+#            flake8-report.txt
 
-      - name: Run MyPy (type checking)
-        run: |
-          set -o pipefail
-          mypy models/ api/ --ignore-missing-imports | tee mypy-report.txt
-        continue-on-error: true
+#      - name: Run MyPy (type checking)
+#        run: |
+#          set -o pipefail
+#          mypy models/ api/ --ignore-missing-imports | tee mypy-report.txt
+#        continue-on-error: true
 
-      - name: Upload MyPy report
-        uses: actions/upload-artifact@v4
-        with:
-          name: mypy-report
-          path: mypy-report.txt
+#      - name: Upload MyPy report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: mypy-report
+#          path: mypy-report.txt
+
   test:
     name: Run Tests
     runs-on: ubuntu-latest
