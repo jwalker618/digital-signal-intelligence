@@ -227,7 +227,7 @@ class TestRealCompanyDiscovery:
             use_search=False,
         )
 
-        print(f'"n{'='*80}")
+        print(f"n{'='*80}")
         print(f'MARKS & SPENCER WITH DOMAIN HINT')
         print(f"{'='*80}")
 
