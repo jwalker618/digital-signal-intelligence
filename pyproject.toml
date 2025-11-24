@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "Proprietary"}
 authors = [
-    {name = "John Walker", email = "john.walker@example.com"}
+    {name = "John Walker", email = "johnea.walker@outlook.com"}
 ]
 keywords = ["insurance", "pricing", "underwriting", "risk-assessment", "insurtech"]
 classifiers = [

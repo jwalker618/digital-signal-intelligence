@@ -14,7 +14,7 @@ setup(
     name="digital-signal-intelligence",
     version="0.1.0",
     author="John Walker",
-    author_email="john.walker@example.com",
+    author_email="johnea.walker@outlook.com",
     description="Revolutionary insurance technical pricing using digital footprint analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
