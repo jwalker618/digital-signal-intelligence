@@ -40,7 +40,7 @@ jobs:
           flake8 models/ api/ examples/ \
             --max-line-length=100 \
             --extend-ignore=E203,W503,E501,F541,F841 \
-            --format=github \
+            --format=default \
             > flake8-report.txt || true
 
       - name: upload flake8 report
