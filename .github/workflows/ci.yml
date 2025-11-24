@@ -28,14 +28,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 black isort mypy
 
-      - name: Run Black (code formatting)
-        run: black --check --diff .
+      - name: Run Black (show full diff and verbose output)
+        run: |
+          set -o pipefail
+          black --check --diff --verbose . | tee black-report.txt
 
-      - name: Run isort (import sorting)
-        run: isort --check-only --diff .
+      - name: Run isort (show full diff and verbose output)
+        run: |
+          set -o pipefail
+          isort --check-only --diff --verbose . | tee isort-report.txt
 
-      - name: Run Flake8 (linting)
-        run: flake8 models/ api/ examples/ --max-line-length=100 --extend-ignore=E203,W503,E501,F541,F841
+      - name: Run Flake8 (use github format for anno and upload)
+        run: |
+          set -o pipefail
+          flake8 models/ api/ examples/ \
+          --max-line-length=100 \
+          --extend-ignore=E203,W503,E501,F541,F841 \
+          --format=github | tee flake8-report.txt
+
+      - name: upload lint reports as artifact for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: |
+            black-report.txt
+            isort_report.txt
+            flake8-report.txt
 
       - name: Run MyPy (type checking)
         run: mypy models/ api/ --ignore-missing-imports
