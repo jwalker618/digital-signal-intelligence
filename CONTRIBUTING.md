@@ -27,7 +27,7 @@ This project adheres to professional standards of conduct. All contributors are 
 
 - Python 3.9 or higher
 - Git
-- Docker (optional, for containerized development)
+- Docker (optional, for containerised development)
 
 ### Fork and Clone
 

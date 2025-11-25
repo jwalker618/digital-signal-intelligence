@@ -126,8 +126,8 @@ class HTMLExtractor:
         date_metas = [
             soup.find("meta", property="article:published_time"),
             soup.find("meta", property="og:published_time"),
-            soup.find("meta", name="publish_date"),
-            soup.find("meta", name="date"),
+            soup.find("meta", attrs={"name": "publish_date"}),
+            soup.find("meta", attrs={"name": "date"}),
         ]
 
         for meta in date_metas:
