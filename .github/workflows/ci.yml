@@ -103,8 +103,9 @@ jobs:
       - name: Run tests with pytest
         if: matrix.python-version == needs.setup.outputs.run-version
         run: |
-          pytest models/cyber/ \
+          pytest models/cyber/ models/energy \
           --cov=models/cyber \
+          --cov=models/energy \
           --cov-report=xml \
           --cov-report=html \
           --cov-report=term-missing \
