@@ -27,6 +27,9 @@ class CollectionConfig:
     # Max depth for crawling
     max_depth: int = 3
 
+    # Delay when processing
+    delay: float = 1.0
+
     # Follow external links
     follow_external: bool = False
 
