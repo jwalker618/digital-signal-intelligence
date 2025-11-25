@@ -7,7 +7,8 @@ on:
     branches: [ main, develop ]
 
 env:
-  PYTHON_VERSION: '3.11'
+  RUN_VERSION: '3.11'
+  PYTHON_VERSIONS: '["3.9","3.10","3.11","3.12"]'
 
 jobs:
   lint:
@@ -20,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ env.RUN_VERSION }}
           cache: 'pip'
 
       - name: Install dependencies
@@ -68,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ${{ fromJSON(env.PYTHON_VERSIONS) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,6 +87,7 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests with pytest
+        if: matrix.python-version == ${{ env.RUN_VERSION }}
         run: |
           pytest models/cyber/ \
           --cov=models/cyber \
@@ -94,12 +96,9 @@ jobs:
           --cov-report=term-missing \
           -v \
           --junitxml=pytest-report-${{ matrix.python-version }}.xml
-
-      - name: check pytest XML exists
-        run: ls -l pytest-report-${{ matrix.python-version }}.xml || echo "XML not found"
           
       - name: Upload pytest report
-        if: always() # ensures upload even if tests fail
+        if: ${{ always() && matrix.python-version == env.RUN_VERSION }}
         uses: actions/upload-artifact@v4
         with:
           name: pytest-report-${{ matrix.python-version }}
@@ -107,7 +106,7 @@ jobs:
           if-no-files-found: ignore
           
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.11'
+        if: ${{ matrix.python-version == env.RUN_VERSION }}
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
@@ -116,7 +115,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload coverage artifacts
-        if: matrix.python-version == '3.11'
+        if: ${{ matrix.python-version == env.RUN_VERSION }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ matrix.python-version }}
