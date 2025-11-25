@@ -27,11 +27,11 @@ class CollectionConfig:
     # Max depth for crawling
     max_depth: int = 3
 
-    # Delay when processing
-    delay: float = 1.0
-
     # Follow external links
     follow_external: bool = False
+
+    # Delay between requests (seconds)
+    delay: float = 1.0
 
 
 @dataclass
@@ -278,6 +278,21 @@ class EnergyConfig(CollectionConfig):
             "fire",
             "safety incident",
             "environmental violation",
+        ]
+    )
+
+    # Alias for collector compatibility
+    incident_keywords: List[str] = field(
+        default_factory=lambda: [
+            "oil spill",
+            "gas leak",
+            "explosion",
+            "fire",
+            "safety incident",
+            "environmental violation",
+            "spill",
+            "accident",
+            "fatality",
         ]
     )
 
