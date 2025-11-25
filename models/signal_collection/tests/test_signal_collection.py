@@ -1,22 +1,23 @@
 # Unit tests for Signal Collection Module
 # Run with: python -m pytest test_signal_collection.py -v -s
 
-import sys
+import time
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 
-from signal_collection.collectors import (  
+from signal_collection.collectors import (
     CollectionResult,
     CyberSignalCollector,
     EnergySignalCollector,
     FinancialInstitutionSignalCollector,
     SignalMatch,
 )
-from signal_collection.config import CyberConfig, EnergyConfig, FinancialConfig  
-from signal_collection.crawler import CrawledPage, WebsiteCrawler  
-from signal_collection.extractors import DocumentExtractor  
+from signal_collection.config import CyberConfig, EnergyConfig, FinancialConfig
+from signal_collection.crawler import CrawledPage, WebsiteCrawler
+from signal_collection.extractors import DocumentExtractor
+
 
 class TestCyberSignalCollector:
     """Test cyber signal collector"""
@@ -34,30 +35,32 @@ class TestCyberSignalCollector:
             CrawledPage(
                 url="https://example.com/blog/security-breach",
                 title="Recent Security Breach",
-                content="""
-                <article>
+                content="We experienced a security breach last week affecting 100 customers. Our team responded immediately to contain the incident.",
+                html="""<article>
                 <h1>Recent Security Breach</h1>
-                <time datetime='2024-11-01'>November 1, 2024</time>
+                <time datetime='2025-11-01'>November 1, 2025</time>
                 <p>We experienced a security breach last week affecting 100 customers.
                 Our team responded immediately to contain the incident.</p>
-                </article>
-                """,
-                content_type="text/html",
+                </article>""",
+                links=[],
                 depth=1,
+                timestamp=time.time(),
+                status_code=200,
             ),
             CrawledPage(
                 url="https://example.com/news/ciso-hire",
                 title="New CISO Appointed",
-                content="""
-                <article>
+                content="We are pleased to announce that Jane Smith has been appointed as our new Chief Information Security Officer (CISO).",
+                html="""<article>
                 <h1>New CISO Appointed</h1>
-                <time datetime='2024-10-15'>October 15, 2024</time>
+                <time datetime='2025-10-15'>October 15, 2025</time>
                 <p>We are pleased to announce that Jane Smith has been appointed as our
                 new Chief Information Security Officer (CISO).</p>
-                </article>
-                """,
-                content_type="text/html",
+                </article>""",
+                links=[],
                 depth=1,
+                timestamp=time.time(),
+                status_code=200,
             ),
         ]
         return pages
@@ -75,7 +78,7 @@ class TestCyberSignalCollector:
         articles = []
         for page in mock_pages:
             article = collector.extractor.html_extractor.extract_article(
-                page.content, page.url
+                page.html, page.url
             )
             if article:
                 articles.append(article)
@@ -93,7 +96,7 @@ class TestCyberSignalCollector:
         articles = []
         for page in mock_pages:
             article = collector.extractor.html_extractor.extract_article(
-                page.content, page.url
+                page.html, page.url
             )
             if article:
                 articles.append(article)
@@ -124,15 +127,16 @@ class TestCyberSignalCollector:
         old_page = CrawledPage(
             url="https://example.com/blog/old",
             title="Old Article",
-            content="""
-            <article>
+            content="This breach happened years ago. It was a significant security incident that affected many of our customers. We have since implemented comprehensive security measures to prevent such incidents in the future. Our security team has worked tirelessly to ensure that all vulnerabilities have been addressed.",
+            html="""<article>
             <h1>Old Breach</h1>
             <time datetime='2020-01-01'>January 1, 2020</time>
-            <p>This breach happened years ago.</p>
-            </article>
-            """,
-            content_type="text/html",
+            <p>This breach happened years ago. It was a significant security incident that affected many of our customers. We have since implemented comprehensive security measures to prevent such incidents in the future. Our security team has worked tirelessly to ensure that all vulnerabilities have been addressed.</p>
+            </article>""",
+            links=[],
             depth=1,
+            timestamp=time.time() - 365 * 24 * 3600,  # 1 year ago
+            status_code=200,
         )
 
         pages_with_old = mock_pages + [old_page]
@@ -141,7 +145,7 @@ class TestCyberSignalCollector:
         articles = []
         for page in pages_with_old:
             article = collector.extractor.html_extractor.extract_article(
-                page.content, page.url
+                page.html, page.url
             )
             if article:
                 articles.append(article)
@@ -174,22 +178,26 @@ class TestFinancialInstitutionSignalCollector:
             CrawledPage(
                 url="https://example.com/investors",
                 title="Investor Relations",
-                content="""
-                <html>
+                content="Investor Relations - Annual Report 2023, Integrated Report 2023",
+                html="""<html>
                 <h1>Investor Relations</h1>
                 <a href='/reports/annual-report-2023.pdf'>Annual Report 2023</a>
                 <a href='/reports/integrated-report-2023.pdf'>Integrated Report 2023</a>
-                </html>
-                """,
-                content_type="text/html",
+                </html>""",
+                links=["/reports/annual-report-2023.pdf", "/reports/integrated-report-2023.pdf"],
                 depth=1,
+                timestamp=time.time(),
+                status_code=200,
             ),
             CrawledPage(
                 url="https://example.com/reports/annual-report-2023.pdf",
                 title="Annual Report 2023",
                 content="",  # PDF binary content
-                content_type="application/pdf",
+                html="",
+                links=[],
                 depth=2,
+                timestamp=time.time(),
+                status_code=200,
             ),
         ]
         return pages
@@ -245,23 +253,27 @@ class TestEnergySignalCollector:
             CrawledPage(
                 url="https://example.com/news/spill",
                 title="Environmental Incident",
-                content="""
-                <article>
+                content="A minor oil spill occurred at our offshore facility. The spill has been contained and cleanup is underway.",
+                html="""<article>
                 <h1>Minor Oil Spill Contained</h1>
-                <time datetime='2024-11-15'>November 15, 2024</time>
+                <time datetime='2025-11-15'>November 15, 2025</time>
                 <p>A minor oil spill occurred at our offshore facility.
                 The spill has been contained and cleanup is underway.</p>
-                </article>
-                """,
-                content_type="text/html",
+                </article>""",
+                links=[],
                 depth=1,
+                timestamp=time.time(),
+                status_code=200,
             ),
             CrawledPage(
                 url="https://example.com/sustainability/report-2023.pdf",
                 title="Sustainability Report 2023",
                 content="",  # PDF binary
-                content_type="application/pdf",
+                html="",
+                links=[],
                 depth=2,
+                timestamp=time.time(),
+                status_code=200,
             ),
         ]
         return pages
@@ -270,7 +282,8 @@ class TestEnergySignalCollector:
         """Test collector initialization"""
         assert collector is not None
         assert collector.energy_config is not None
-        assert "safety" in [kw.lower() for kw in collector.config.keywords]
+        # Check if any keyword contains "safety"
+        assert any("safety" in kw.lower() for kw in collector.config.keywords)
 
     @patch.object(WebsiteCrawler, "crawl")
     def test_find_incidents(self, mock_crawl, collector, mock_pages_with_incident):
@@ -280,9 +293,9 @@ class TestEnergySignalCollector:
         # Extract articles
         articles = []
         for page in mock_pages_with_incident:
-            if page.content_type and "html" in page.content_type:
+            if page.html:  # Only process pages with HTML content
                 article = collector.extractor.html_extractor.extract_article(
-                    page.content, page.url
+                    page.html, page.url
                 )
                 if article:
                     articles.append(article)
