@@ -24,10 +24,10 @@ python-json-logger>=2.0.0
 # Production server
 gunicorn>=21.0.0
 
-# Optional: Web scraping (for signal collection)
+# Web scraping (for signal collection)
 # Uncomment when needed:
-# beautifulsoup4>=4.12.0
-# selenium>=4.10.0
+beautifulsoup4>=4.12.0
+selenium>=4.10.0
 
 # Optional: Database connectivity
 # Uncomment when needed:

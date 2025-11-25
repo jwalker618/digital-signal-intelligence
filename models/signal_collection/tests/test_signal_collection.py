@@ -7,20 +7,16 @@ from unittest.mock import patch
 
 import pytest
 
-# Add parent directory to path for imports
-sys.path.insert(0, "..")  # noqa: E402
-
-from collectors import (  # noqa: E402
+from signal_collection.collectors import (  
     CollectionResult,
     CyberSignalCollector,
     EnergySignalCollector,
     FinancialInstitutionSignalCollector,
     SignalMatch,
 )
-from config import CyberConfig, EnergyConfig, FinancialConfig  # noqa: E402
-from crawler import CrawledPage, WebsiteCrawler  # noqa: E402
-from extractors import DocumentExtractor  # noqa: E402
-
+from signal_collection.config import CyberConfig, EnergyConfig, FinancialConfig  
+from signal_collection.crawler import CrawledPage, WebsiteCrawler  
+from signal_collection.extractors import DocumentExtractor  
 
 class TestCyberSignalCollector:
     """Test cyber signal collector"""

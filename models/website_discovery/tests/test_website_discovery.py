@@ -2,15 +2,14 @@
 # Run with: python -m pytest test_website_discovery.py -v
 
 import pytest
-from dsi_website_discovery import CorporateWebsiteDiscovery
-from strategies import DomainGenerationStrategy
-from utils import (
+from website_discovery.dsi_website_discovery import CorporateWebsiteDiscovery
+from website_discovery.strategies import DomainGenerationStrategy
+from website_discovery.utils import (
     extract_company_keywords,
     generate_domain_variations,
     normalize_company_name,
 )
-from validators import WebsiteValidator
-
+from website_discovery.validators import WebsiteValidator
 
 class TestUtils:
     """Test utility functions"""

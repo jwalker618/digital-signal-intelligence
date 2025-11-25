@@ -7,11 +7,25 @@ on:
     branches: [ main, develop ]
 
 env:
-  PYTHON_VERSION: '3.11'
+  RUN_VERSION: '3.11'
+  PYTHON_VERSIONS: '["3.9","3.10","3.11","3.12"]'
 
 jobs:
+  setup: 
+    name: Setup matrix
+    runs-on: ubuntu-latest
+    outputs:
+      python-versions: ${{ steps.set-matrix.outputs.python-versions }}
+      run-version: ${{ steps.set-matrix.outputs.run-version }}
+    steps:
+      - id: set-matrix
+        run: |
+          echo 'python-versions=["3.9","3.10","3.11","3.12"]' >> $GITHUB_OUTPUT
+          echo 'run-version=3.11' >> $GITHUB_OUTPUT
+  
   lint:
     name: Code Linting
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ needs.setup.outputs.run-version }}
           cache: 'pip'
 
       - name: Install dependencies
@@ -63,56 +77,64 @@ jobs:
           name: mypy-report
           path: mypy-report.txt
 
-# THIS WORKS PERFECTLY, COMMENTING OUT FOR SPEED
-#  test:
-#    name: Run Tests
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        python-version: ['3.9', '3.10', '3.11', '3.12']
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
+  test:
+    name: Run Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJSON(needs.setup.outputs.python-versions) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#      - name: Set up Python ${{ matrix.python-version }}
-#        uses: actions/setup-python@v5
-#        with:
-#          python-version: ${{ matrix.python-version }}
-#          cache: 'pip'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-#      - name: Install dependencies
-#        run: |
-#          python -m pip install --upgrade pip
-#          pip install -r requirements.txt
-#          pip install -r requirements-dev.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
-## COMMENTING OUT, THESE NEED REFINEMENT ACROSS THE BOARD
-##      #- name: Run tests with pytest
-##      #  run: |
-##      #    pytest models/ --cov=models --cov-report=xml --cov-report=html --cov-report=term-missing -v --junitxml=pytest-report.xml
+      - name: Run tests with pytest
+        if: matrix.python-version == needs.setup.outputs.run-version
+        run: |
+          pytest models/ \
+          --cov=models/
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term-missing \
+          -v \
+          --junitxml=pytest-report-${{ matrix.python-version }}.xml
           
-##      #- name: Upload pytest report
-##      #  if: always() # ensures upload even if tests fail
-##      #  uses: actions/upload-artifact@v4
-##      #  with:
-##      #    name: pytest-report
-##      #    path: pytest-report.xml
+      - name: Upload pytest report
+        if: always() && matrix.python-version == needs.setup.outputs.run-version
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report-${{ matrix.python-version }}
+          path: pytest-report-${{ matrix.python-version }}.xml
+          if-no-files-found: ignore
           
-##      - name: Upload coverage to Codecov
-##        if: matrix.python-version == '3.11'
-##        uses: codecov/codecov-action@v3
-##        with:
-##          file: ./coverage.xml
-##          flags: unittests
-##          name: codecov-umbrella
-##          fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == needs.setup.outputs.run-version
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
-##      - name: Upload coverage artifacts
-##        if: matrix.python-version == '3.11'
-##        uses: actions/upload-artifact@v4
-##        with:
-##          name: coverage-report
-##          path: htmlcov/
+      - name: Upload coverage artifacts
+        if: matrix.python-version == needs.setup.outputs.run-version
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: htmlcov/
+          if-no-files-found: ignore
 
 # THIS WORKS PERFECTLY, COMMENTING OUT FOR SPEED
 #  security:
@@ -219,62 +241,84 @@ jobs:
     name: Build Summary
     runs-on: ubuntu-latest
 #    needs: [lint, test, security, build-docker, integration-tests]
-    needs: [lint]
+    needs: [setup, lint, test]
     if: always()
     steps:
       - name: Check job results
         run: |
           echo "=== Job Results ==="
           echo "Lint: ${{ needs.lint.result }}"
-#          echo "Test: ${{ needs.test.result }}"
+          echo "Test: ${{ needs.test.result }}"
 #          echo "Security: ${{ needs.security.result }}"
 #          echo "Docker Build: ${{ needs.build-docker.result }}"
 #          echo "Integration Tests: ${{ needs.integration-tests.result }}"
   
-##      - name: Download pytest report
-##        if: ${{ needs.test.result != 'skipped' }}
-##        uses: actions/download-artifact@v4
-##        with:
-##          name: pytest-report
-##          path: .
+      - name: Download pytest reports
+        if: needs.test.result != 'skipped'
+        uses: actions/download-artifact@v4
+        with:
+          name: pytest-report-${{ needs.setup.outputs.run-version }}
+          path: reports
   
-##      - name: Summarize failing tests
-##        if: ${{ needs.test.result == 'failure' }}
-##        run: |
-##          echo "=== Detailed Test Failures ==="
-##          python - << 'EOF'
-##          import xml.etree.ElementTree as ET
-##          try:
-##              tree = ET.parse('pytest-report.xml')
-##              root = tree.getroot()
-##              failures = []
-##              for testcase in root.findall('.//testcase'):
-##                  for failure in testcase.findall('failure'):
-##                      name = testcase.attrib.get('name')
-##                      classname = testcase.attrib.get('classname')
-##                      message = failure.attrib.get('message', '').strip()
-##                      failures.append(f"{classname}.{name}: {message}")
-##              if failures:
-##                  print("\n".join(failures))
-##              else:
-##                  print("No test failures 🎉")
-##          except FileNotFoundError:
-##              print("pytest-report.xml not found. Ensure --junitxml was used in pytest.")
-##          EOF
-  
+      # Summarise failing tests across all matrix runs
+      - name: Summarise failing tests
+        if: ${{ needs.test.result == 'failure' }}
+        run: |
+          echo "=== Detailed Test Failures ==="
+          python - << 'EOF'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+
+          reports_dir = "reports"
+          xml_files = sorted(glob.glob(os.path.join(reports_dir, "pytest-report-*.xml")))
+
+          if not xml_files:
+              print("No JUnit XML files found. Skipping summary.")
+              raise SystemExit(0)
+
+          failures_out = []
+          for xml_path in xml_files:
+              py_ver = os.path.basename(xml_path).replace("pytest-report-", "").replace(".xml", "")
+              try:
+                  tree = ET.parse(xml_path)
+                  root = tree.getroot()
+              except Exception as e:
+                  failures_out.append(f"\n---\n[{py_ver}] Failed to parse {xml_path}: {e}")
+                  continue
+
+              for testcase in root.findall('.//testcase'):
+                  for failure in testcase.findall('failure'):
+                      name = testcase.attrib.get('name')
+                      classname = testcase.attrib.get('classname')
+                      message = (failure.attrib.get('message') or '').strip()
+                      details = (failure.text or '').strip()
+                      formatted = (
+                          f"\n---\n"
+                          f"[Python {py_ver}] Test: {classname}.{name}\n"
+                          f"Message: {message}\n"
+                          f"Details:\n{details}\n"
+                      )
+                      failures_out.append(formatted)
+
+          if failures_out:
+              print("\n".join(failures_out))
+          else:
+              print("No test failures 🎉")
+          EOF
+
       - name: Report success
 #        if: ${{ needs.lint.result == 'success' && needs.test.result == 'success' && needs.build-docker.result == 'success' }}
-        if: ${{ needs.lint.result == 'success'}}
+        if: ${{ needs.lint.result == 'success' && needs.test.result == 'success'}}
         run: echo "All checks passed! ✅"
   
       - name: Report failure
 #        if: ${{ needs.lint.result == 'failure' || needs.test.result == 'failure' || needs.build-docker.result == 'failure' }}
-        if: ${{ needs.lint.result == 'failure'  }}
+        if: ${{ needs.lint.result == 'failure' || needs.test.result == 'failure'  }}
         run: |
           echo "Some checks failed! ❌"
           echo "Lint: ${{ needs.lint.result }}"
-#          echo "Test: ${{ needs.test.result }}"
+          echo "Test: ${{ needs.test.result }}"
 #          echo "Security: ${{ needs.security.result }}"
 #          echo "Docker Build: ${{ needs.build-docker.result }}"
 #          echo "Integration Tests: ${{ needs.integration-tests.result }}"
-#          exit 1

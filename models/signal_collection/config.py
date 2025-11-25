@@ -2,7 +2,7 @@
 # Defines what to collect for each pricing model
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Dict
 
 
 @dataclass
@@ -26,6 +26,9 @@ class CollectionConfig:
 
     # Max depth for crawling
     max_depth: int = 3
+
+    # Delay when processing
+    delay: float = 1.0
 
     # Follow external links
     follow_external: bool = False
@@ -187,6 +190,17 @@ class FinancialConfig(CollectionConfig):
     time_window_months: int = 24
 
     # Key metrics to extract
+    # Regex patterns for extracting financial metrics
+    metric_patterns: Dict[str, str] = field(
+        default_factory=lambda: {
+            "Total Assets": r"Total Assets.*?([£$€]\s*[\d,]+\s*(?:billion|million))",
+            "Net Income": r"Net Income.*?([£$€]\s*[\d,]+\s*(?:billion|million))",
+            "Capital Ratio": r"Capital Ratio.*?([\d.]+%)",
+            "NPL Ratio": r"NPL.*?Ratio.*?([\d.]+%)",
+            "ROE": r"Return on Equity.*?([\d.]+%)",
+        }
+    )
+
     required_metrics: List[str] = field(
         default_factory=lambda: [
             "total_assets",
