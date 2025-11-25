@@ -51,7 +51,7 @@ class SignalCollector:
         """
         self.config = config
         self.crawler = WebsiteCrawler(
-            max_pages=config.max_pages,
+            #max_pages=config.max_pages,
             max_depth=config.max_depth,
             delay=config.delay,
             timeout=timeout,
