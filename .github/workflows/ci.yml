@@ -94,6 +94,9 @@ jobs:
           --cov-report=term-missing \
           -v \
           --junitxml=pytest-report-${{ matrix.python-version }}.xml
+
+      - name: check pytest XML exists
+        run: ls -l pytest-report-${{ matrix.python-version }}.xml || echo "XML not found"
           
       - name: Upload pytest report
         if: always() # ensures upload even if tests fail
@@ -101,6 +104,7 @@ jobs:
         with:
           name: pytest-report-${{ matrix.python-version }}
           path: pytest-report-${{ matrix.python-version }}.xml
+          if-no-files-found: ignore
           
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
@@ -117,6 +121,7 @@ jobs:
         with:
           name: coverage-report-${{ matrix.python-version }}
           path: htmlcov/
+          if-no-files-found: ignore
 
 # THIS WORKS PERFECTLY, COMMENTING OUT FOR SPEED
 #  security:
@@ -235,7 +240,7 @@ jobs:
 #          echo "Docker Build: ${{ needs.build-docker.result }}"
 #          echo "Integration Tests: ${{ needs.integration-tests.result }}"
   
-      - name: Download pytest report
+      - name: Download pytest reports
         if: ${{ needs.test.result != 'skipped' }}
         uses: actions/download-artifact@v4
         with:
