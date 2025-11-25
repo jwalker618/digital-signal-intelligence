@@ -51,10 +51,9 @@ class SignalCollector:
         """
         self.config = config
         self.crawler = WebsiteCrawler(
-            # max_pages=config.max_pages,
-            # max_depth=config.max_depth,
-            delay=config.delay,
+            config=config,
             timeout=timeout,
+            delay=config.delay,
         )
         self.extractor = DocumentExtractor(timeout=timeout)
 
@@ -151,9 +150,12 @@ class SignalCollector:
         """
         documents = []
         for page in pages:
+            # Normalize URL for matching (replace hyphens/underscores with spaces)
+            normalized_url = page.url.lower().replace('-', ' ').replace('_', ' ')
             for doc_type in self.config.document_types:
-                if doc_type.lower() in page.url.lower():
+                if doc_type.lower() in normalized_url:
                     documents.append(page.url)
+                    break  # Only add once per page
         return documents
 
     def _calculate_relevance(self, context: str, keyword: str) -> float:
@@ -220,9 +222,9 @@ class CyberSignalCollector(SignalCollector):
         # Extract articles from pages
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.html:  # Only process pages with HTML content
                 article = self.extractor.html_extractor.extract_article(
-                    page.content, page.url
+                    page.html, page.url
                 )
                 if article:
                     articles.append(article)
@@ -372,9 +374,9 @@ class FinancialInstitutionSignalCollector(SignalCollector):
         # Extract articles for general keyword search
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.html:  # Only process pages with HTML content
                 article = self.extractor.html_extractor.extract_article(
-                    page.content, page.url
+                    page.html, page.url
                 )
                 if article:
                     articles.append(article)
@@ -487,9 +489,9 @@ class EnergySignalCollector(SignalCollector):
         # Extract articles for general keyword search
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.html:  # Only process pages with HTML content
                 article = self.extractor.html_extractor.extract_article(
-                    page.content, page.url
+                    page.html, page.url
                 )
                 if article:
                     articles.append(article)
@@ -579,9 +581,9 @@ class EnergySignalCollector(SignalCollector):
         # Extract articles
         articles = []
         for page in pages:
-            if page.content_type and "html" in page.content_type.lower():
+            if page.html:  # Only process pages with HTML content
                 article = self.extractor.html_extractor.extract_article(
-                    page.content, page.url
+                    page.html, page.url
                 )
                 if article:
                     articles.append(article)
