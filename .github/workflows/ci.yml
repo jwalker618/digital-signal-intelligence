@@ -87,7 +87,7 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests with pytest
-        if: matrix.python-version == ${{ env.RUN_VERSION }}
+        if: matrix.python-version == env.RUN_VERSION
         run: |
           pytest models/cyber/ \
           --cov=models/cyber \
@@ -98,7 +98,7 @@ jobs:
           --junitxml=pytest-report-${{ matrix.python-version }}.xml
           
       - name: Upload pytest report
-        if: ${{ always() && matrix.python-version == env.RUN_VERSION }}
+        if: always() && matrix.python-version == env.RUN_VERSION
         uses: actions/upload-artifact@v4
         with:
           name: pytest-report-${{ matrix.python-version }}
@@ -106,7 +106,7 @@ jobs:
           if-no-files-found: ignore
           
       - name: Upload coverage to Codecov
-        if: ${{ matrix.python-version == env.RUN_VERSION }}
+        if: matrix.python-version == env.RUN_VERSION
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
@@ -115,7 +115,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload coverage artifacts
-        if: ${{ matrix.python-version == env.RUN_VERSION }}
+        if: matrix.python-version == env.RUN_VERSION
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ matrix.python-version }}
@@ -240,11 +240,10 @@ jobs:
 #          echo "Integration Tests: ${{ needs.integration-tests.result }}"
   
       - name: Download pytest reports
-        if: ${{ needs.test.result != 'skipped' }}
+        if: needs.test.result != 'skipped'
         uses: actions/download-artifact@v4
         with:
-          name: pytest-report-*
-          merge-multiple: true
+          name: pytest-report-${{ env.RUN_VERSION }}
           path: reports
   
       # Summarise failing tests across all matrix runs
