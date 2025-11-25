@@ -85,7 +85,6 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-## COMMENTING OUT, THESE NEED REFINEMENT ACROSS THE BOARD
       - name: Run tests with pytest
         run: |
           pytest models/cyber/ \
@@ -94,14 +93,14 @@ jobs:
           --cov-report=html \
           --cov-report=term-missing \
           -v \
-          --junitxml=pytest-report.xml
+          --junitxml=pytest-report-${{ matrix.python-version }}.xml
           
       - name: Upload pytest report
         if: always() # ensures upload even if tests fail
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-report
-          path: pytest-report.xml
+          name: pytest-report-${{ matrix.python-version }}
+          path: pytest-report-${{ matrix.python-version }}.xml
           
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
@@ -116,7 +115,7 @@ jobs:
         if: matrix.python-version == '3.11'
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-${{ matrix.python-version }}
           path: htmlcov/
 
 # THIS WORKS PERFECTLY, COMMENTING OUT FOR SPEED
@@ -240,38 +239,55 @@ jobs:
         if: ${{ needs.test.result != 'skipped' }}
         uses: actions/download-artifact@v4
         with:
-          name: pytest-report
-          path: .
+          name: pytest-report-*
+          merge-multiple: true
+          path: reports
   
+      # Summarise failing tests across all matrix runs
       - name: Summarise failing tests
         if: ${{ needs.test.result == 'failure' }}
         run: |
           echo "=== Detailed Test Failures ==="
           python - << 'EOF'
+          import glob
+          import os
           import xml.etree.ElementTree as ET
-          try:
-              tree = ET.parse('pytest-report.xml')
-              root = tree.getroot()
-              failures = []
+
+          reports_dir = "reports"
+          xml_files = sorted(glob.glob(os.path.join(reports_dir, "pytest-report-*.xml")))
+
+          if not xml_files:
+              print("No JUnit XML files found. Ensure --junitxml was used and artifacts were uploaded.")
+              raise SystemExit(0)
+
+          failures_out = []
+          for xml_path in xml_files:
+              py_ver = os.path.basename(xml_path).replace("pytest-report-", "").replace(".xml", "")
+              try:
+                  tree = ET.parse(xml_path)
+                  root = tree.getroot()
+              except Exception as e:
+                  failures_out.append(f"\n---\n[{py_ver}] Failed to parse {xml_path}: {e}")
+                  continue
+
               for testcase in root.findall('.//testcase'):
                   for failure in testcase.findall('failure'):
                       name = testcase.attrib.get('name')
                       classname = testcase.attrib.get('classname')
-                      message = failure.attrib.get('message', '').strip()
-                      details = failure.text.strip() if failure.text else ''
+                      message = (failure.attrib.get('message') or '').strip()
+                      details = (failure.text or '').strip()
                       formatted = (
                           f"\n---\n"
-                          f"Test: {classname}.{name}\n"
+                          f"[Python {py_ver}] Test: {classname}.{name}\n"
                           f"Message: {message}\n"
                           f"Details:\n{details}\n"
                       )
-                      failures.append(formatted)
-              if failures:
-                  print("\n".join(failures))
-              else:
-                  print("No test failures 🎉")
-          except FileNotFoundError:
-              print("pytest-report.xml not found. Ensure --junitxml was used in pytest.")
+                      failures_out.append(formatted)
+
+          if failures_out:
+              print("\n".join(failures_out))
+          else:
+              print("No test failures 🎉")
           EOF
 
       - name: Report success
@@ -289,4 +305,3 @@ jobs:
 #          echo "Security: ${{ needs.security.result }}"
 #          echo "Docker Build: ${{ needs.build-docker.result }}"
 #          echo "Integration Tests: ${{ needs.integration-tests.result }}"
-#          exit 1
