@@ -262,7 +262,7 @@ jobs:
           xml_files = sorted(glob.glob(os.path.join(reports_dir, "pytest-report-*.xml")))
 
           if not xml_files:
-              print("No JUnit XML files found. Ensure --junitxml was used and artifacts were uploaded.")
+              print("No JUnit XML files found. Skipping summary.")
               raise SystemExit(0)
 
           failures_out = []
