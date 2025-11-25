@@ -94,7 +94,7 @@ jobs:
           --cov-report=html \
           --cov-report=term-missing \
           -v \
-          --junitxml=pytest.report.xml
+          --junitxml=pytest-report.xml
           
       - name: Upload pytest report
         if: always() # ensures upload even if tests fail
