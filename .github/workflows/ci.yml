@@ -25,6 +25,7 @@ jobs:
   
   lint:
     name: Code Linting
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -100,7 +101,7 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests with pytest
-        if: matrix.python-version == env.RUN_VERSION
+        if: matrix.python-version == needs.setup.outputs.run-version
         run: |
           pytest models/cyber/ \
           --cov=models/cyber \
@@ -256,7 +257,7 @@ jobs:
         if: needs.test.result != 'skipped'
         uses: actions/download-artifact@v4
         with:
-          name: pytest-report-${{ env.RUN_VERSION }}
+          name: pytest-report-${{ needs.setup.outputs.run-version }}
           path: reports
   
       # Summarise failing tests across all matrix runs
