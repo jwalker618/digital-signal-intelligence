@@ -1,4 +1,4 @@
-# Digital Signal Intelligence (DSI) - Demos
+# Digital Signal Intelligence (DSI) - Demos and Retrospective Case-studies
 
 ## Overview
 
