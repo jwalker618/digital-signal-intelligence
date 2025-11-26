@@ -191,7 +191,7 @@ class CyberQuote(Resource):
 
             # Calculate pricing
             model = CyberInsurancePricingModel(coverage_type=coverage_type)
-            result = model.calculate_premium(profile)
+            result = model.price(profile)
 
             # Format response
             response = {
@@ -277,7 +277,7 @@ class EnergyQuote(Resource):
                 return {'success': False, 'error': f'Invalid segment/coverage: {model_key}'}, 400
 
             model = models[model_key]
-            result = model.calculate_premium(profile)
+            result = model.price(profile)
 
             # Format response
             response = {
@@ -362,7 +362,7 @@ class FIQuote(Resource):
 
             # Calculate pricing
             model = FinancialInstitutionPricingModel(coverage_type=coverage_type)
-            result = model.calculate_premium(profile)
+            result = model.price(profile)
 
             # Format response
             response = {
