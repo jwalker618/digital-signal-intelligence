@@ -236,6 +236,26 @@ print(f"Quintile Lift: {result.quintile_lift:.1%}")
 print(f"Improvement: {result.improvement_points:.1f} points")
 ```
 
+#### Quick Starts
+##### Run Scoring Engine Tests
+```bash
+cd models/signal_collection
+python scoring_engine.py
+```
+
+##### Run Validation Demo
+```bash
+cd models/signal_collection/validation
+python validation_framework.py
+```
+
+##### Open Interactive Demos
+Open the HTML files in any modern browser:
+- `docs/demos/dsi_demo_dashboard.html`
+- `docs/demos/dsi_retrospective_casestudies.html`
+
+---
+
 ## ⚙️ Configuration
 
 ### Base Configuration
