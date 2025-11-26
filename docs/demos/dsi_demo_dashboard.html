@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSI Live Analysis Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e1a; color: #fff; min-height: 100vh; padding: 24px; }
+        .mono { font-family: 'Courier New', monospace; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+        .header h1 { font-size: 28px; background: linear-gradient(90deg, #34d399, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: #94a3b8; margin-top: 4px; }
+        .status-badge { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+        .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
+        .status-text { color: #34d399; font-size: 14px; font-weight: 500; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .panel { background: rgba(15,23,42,0.5); border: 1px solid rgba(51,65,85,0.5); border-radius: 12px; padding: 20px; }
+        .panel-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .panel-title svg { width: 20px; height: 20px; color: #22d3ee; }
+        .company-btn { width: 100%; text-align: left; padding: 16px; background: rgba(51,65,85,0.3); border: 1px solid rgba(71,85,105,0.5); border-radius: 8px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s; color: #fff; }
+        .company-btn:hover { border-color: #64748b; }
+        .company-btn.selected { background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.5); }
+        .company-btn .name { font-weight: 500; }
+        .company-btn .meta { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+        .empty-state { text-align: center; padding: 48px; }
+        .empty-icon { width: 64px; height: 64px; margin: 0 auto 16px; background: rgba(51,65,85,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .empty-icon svg { width: 32px; height: 32px; color: #475569; }
+        .empty-state h3 { font-size: 20px; color: #94a3b8; }
+        .empty-state p { color: #64748b; margin-top: 8px; }
+        .analyzing { text-align: center; padding: 32px; }
+        .scan-icon { width: 80px; height: 80px; margin: 0 auto 16px; background: rgba(6,182,212,0.1); border: 2px solid rgba(6,182,212,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .scan-icon::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(34,197,94,0.8), transparent); animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { transform: translateY(-40px); } 100% { transform: translateY(80px); } }
+        .scan-icon svg { width: 40px; height: 40px; color: #22d3ee; animation: pulse 1s infinite; }
+        .analyzing h3 { font-size: 20px; margin-bottom: 4px; }
+        .analyzing .domain { color: #94a3b8; }
+        .stages { max-width: 400px; margin: 32px auto 0; text-align: left; }
+        .stage { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+        .stage-dot { width: 20px; height: 20px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stage-dot.complete { background: #10b981; }
+        .stage-dot.active { background: #06b6d4; animation: pulse 1s infinite; }
+        .stage-dot svg { width: 12px; height: 12px; color: #fff; }
+        .stage-text { font-size: 14px; color: #64748b; }
+        .stage-text.active { color: #fff; }
+        .results { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .score-card { border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid; }
+        .score-card.tier-1 { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,78,59,0.1)); border-color: rgba(16,185,129,0.4); }
+        .score-card.tier-2 { background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(30,58,138,0.1)); border-color: rgba(59,130,246,0.4); }
+        .score-card.tier-3 { background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(120,53,15,0.1)); border-color: rgba(245,158,11,0.4); }
+        .score-card.tier-4 { background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(127,29,29,0.1)); border-color: rgba(239,68,68,0.4); }
+        .score-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+        .score-label { font-size: 14px; color: #94a3b8; margin-bottom: 4px; }
+        .score-value { font-size: 48px; font-weight: 700; }
+        .score-max { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+        .tier-badge { padding: 8px 16px; border-radius: 8px; text-align: right; }
+        .tier-badge .tier { font-weight: 600; }
+        .tier-badge .label { font-size: 14px; opacity: 0.8; }
+        .score-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(71,85,105,0.5); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .score-footer span { color: #94a3b8; }
+        .score-footer .rec { font-weight: 600; }
+        .signal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        @media (max-width: 700px) { .signal-grid { grid-template-columns: 1fr; } }
+        .signal-section h3 { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+        .signal-bar { margin-bottom: 12px; }
+        .signal-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+        .signal-name { color: #94a3b8; }
+        .signal-value { font-weight: 600; }
+        .bar-track { height: 8px; background: rgba(51,65,85,0.5); border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease-out; }
+        .bar-fill.green { background: #10b981; }
+        .bar-fill.blue { background: #3b82f6; }
+        .bar-fill.amber { background: #f59e0b; }
+        .bar-fill.red { background: #ef4444; }
+        .warnings { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .warnings h3 { color: #f87171; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .warnings h3 svg { width: 20px; height: 20px; }
+        .warnings ul { list-style: none; }
+        .warnings li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #fca5a5; margin-bottom: 8px; }
+        .warning-dot { width: 6px; height: 6px; background: #ef4444; border-radius: 50%; flex-shrink: 0; }
+        .profile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        @media (max-width: 600px) { .profile-grid { grid-template-columns: repeat(2, 1fr); } }
+        .profile-item .label { font-size: 12px; color: #64748b; }
+        .profile-item .value { font-weight: 500; margin-top: 2px; }
+        .profile-item .value.cyan { color: #22d3ee; }
+        .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(51,65,85,0.5); display: flex; justify-content: space-between; font-size: 14px; color: #64748b; flex-wrap: wrap; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Digital Signal Intelligence</h1>
+                <p>Real-time cyber risk assessment powered by digital footprint analysis</p>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span class="status-text">System Active</span>
+            </div>
+        </div>
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-title">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                    Select Company
+                </div>
+                <div id="company-list"></div>
+            </div>
+            <div class="panel" id="analysis-panel">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    <h3>Select a Company to Analyze</h3>
+                    <p>Choose from the sample companies to see DSI in action</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div>Digital Signal Intelligence 2025</div>
+            <div>Signals Updated: Real-time | API Version: 2.0</div>
+        </div>
+    </div>
+    <script>
+        var COMPANIES = {
+            secure_tech: { name: "SecureTech Global", domain: "securetech.com", industry: "Technology", revenue: 2500000000, employees: 8500, signals: { ssl_certificate: 98, security_headers: 92, known_vulnerabilities: 95, patch_discipline: 88, mfa_indicators: 94, governance_disclosure: 85, update_frequency: 90, domain_authority: 78, tech_stack_modernity: 92 } },
+            legacy_retail: { name: "Heritage Retail Corp", domain: "heritageretail.com", industry: "Retail", revenue: 8500000000, employees: 45000, signals: { ssl_certificate: 75, security_headers: 48, known_vulnerabilities: 42, patch_discipline: 38, mfa_indicators: 52, governance_disclosure: 65, update_frequency: 35, domain_authority: 72, tech_stack_modernity: 45 } },
+            fintech_startup: { name: "PayFlow Technologies", domain: "payflow.io", industry: "Financial Services", revenue: 150000000, employees: 320, signals: { ssl_certificate: 95, security_headers: 88, known_vulnerabilities: 72, patch_discipline: 78, mfa_indicators: 92, governance_disclosure: 68, update_frequency: 95, domain_authority: 55, tech_stack_modernity: 98 } },
+            healthcare_provider: { name: "Regional Medical Network", domain: "regionalmedical.org", industry: "Healthcare", revenue: 3200000000, employees: 12000, signals: { ssl_certificate: 82, security_headers: 58, known_vulnerabilities: 48, patch_discipline: 42, mfa_indicators: 55, governance_disclosure: 78, update_frequency: 45, domain_authority: 68, tech_stack_modernity: 52 } }
+        };
+        var WEIGHTS = { ssl_certificate: 0.08, security_headers: 0.10, known_vulnerabilities: 0.20, patch_discipline: 0.15, mfa_indicators: 0.12, governance_disclosure: 0.08, update_frequency: 0.10, domain_authority: 0.07, tech_stack_modernity: 0.10 };
+        function calculateScore(signals) { var sum = 0, weight = 0; for (var k in signals) { var w = WEIGHTS[k] || 0.05; sum += signals[k] * w; weight += w; } return (sum / weight) * 10; }
+        function getTier(score) { if (score >= 750) return { tier: "Tier 1", label: "Preferred", tierClass: "tier-1", color: "#10b981", rec: "Auto-Approve at Preferred Pricing" }; if (score >= 650) return { tier: "Tier 2", label: "Standard", tierClass: "tier-2", color: "#3b82f6", rec: "Auto-Approve at Standard Pricing" }; if (score >= 500) return { tier: "Tier 3", label: "Elevated", tierClass: "tier-3", color: "#f59e0b", rec: "Manual Review Required" }; return { tier: "Tier 4", label: "High Risk", tierClass: "tier-4", color: "#ef4444", rec: "Decline or Require Conditions" }; }
+        function getWarnings(signals) { var warnings = []; if (signals.known_vulnerabilities < 55) warnings.push("Elevated vulnerability exposure"); if (signals.patch_discipline < 50) warnings.push("Poor patch management discipline"); if (signals.security_headers < 55) warnings.push("Inadequate security headers"); if (signals.mfa_indicators < 60) warnings.push("Weak MFA implementation"); if (signals.update_frequency < 45) warnings.push("Stagnant digital presence"); return warnings; }
+        function formatSignalName(name) { return name.split('_').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' '); }
+        function getBarClass(value) { if (value >= 80) return 'green'; if (value >= 60) return 'blue'; if (value >= 40) return 'amber'; return 'red'; }
+        function renderCompanyList() { var list = document.getElementById('company-list'); var html = ''; for (var key in COMPANIES) { var comp = COMPANIES[key]; html += '<button class="company-btn" onclick="analyzeCompany(\'' + key + '\')" data-key="' + key + '"><div class="name">' + comp.name + '</div><div class="meta">' + comp.industry + ' - ' + comp.domain + '</div></button>'; } list.innerHTML = html; }
+        function analyzeCompany(key) { var company = COMPANIES[key]; var panel = document.getElementById('analysis-panel'); var btns = document.querySelectorAll('.company-btn'); for (var i = 0; i < btns.length; i++) { btns[i].classList.toggle('selected', btns[i].getAttribute('data-key') === key); } var stages = ["Resolving domain...", "Scanning SSL/TLS...", "Analyzing headers...", "Checking vulnerabilities...", "Evaluating patches...", "Assessing governance...", "Calculating score..."]; panel.innerHTML = '<div class="analyzing"><div class="scan-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div><h3>Analyzing ' + company.name + '</h3><p class="domain">' + company.domain + '</p><div class="stages" id="stages"></div></div>'; var stagesDiv = document.getElementById('stages'); var currentStage = 0; var interval = setInterval(function() { var html = ''; for (var i = 0; i <= currentStage && i < stages.length; i++) { var dotClass = 'stage-dot'; var textClass = 'stage-text'; var checkmark = ''; if (i < currentStage) { dotClass += ' complete'; checkmark = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>'; } else if (i === currentStage) { dotClass += ' active'; } if (i <= currentStage) textClass += ' active'; html += '<div class="stage"><div class="' + dotClass + '">' + checkmark + '</div><span class="' + textClass + '">' + stages[i] + '</span></div>'; } stagesDiv.innerHTML = html; currentStage++; if (currentStage >= stages.length) { clearInterval(interval); setTimeout(function() { showResults(key); }, 500); } }, 350); }
+        function showResults(key) { var company = COMPANIES[key]; var score = calculateScore(company.signals); var tier = getTier(score); var warnings = getWarnings(company.signals); var panel = document.getElementById('analysis-panel'); var securitySignals = ['ssl_certificate', 'security_headers', 'known_vulnerabilities', 'patch_discipline', 'mfa_indicators']; var businessSignals = ['governance_disclosure', 'update_frequency', 'domain_authority', 'tech_stack_modernity']; function renderSignals(signals) { var html = ''; for (var i = 0; i < signals.length; i++) { var sig = signals[i]; var val = company.signals[sig]; html += '<div class="signal-bar"><div class="signal-header"><span class="signal-name">' + formatSignalName(sig) + '</span><span class="signal-value mono">' + val + '</span></div><div class="bar-track"><div class="bar-fill ' + getBarClass(val) + '" style="width: ' + val + '%"></div></div></div>'; } return html; } var warningsHtml = ''; if (warnings.length > 0) { warningsHtml = '<div class="warnings"><h3><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>Warning Signals Detected</h3><ul>'; for (var i = 0; i < warnings.length; i++) { warningsHtml += '<li><span class="warning-dot"></span>' + warnings[i] + '</li>'; } warningsHtml += '</ul></div>'; } panel.innerHTML = '<div class="results"><div class="score-card ' + tier.tierClass + '"><div class="score-header"><div><div class="score-label">DSI Composite Score</div><div class="score-value mono">' + score.toFixed(0) + '</div><div class="score-max">out of 1,000</div></div><div class="tier-badge" style="background: ' + tier.color + '20; border: 1px solid ' + tier.color + '60;"><div class="tier" style="color: ' + tier.color + '">' + tier.tier + '</div><div class="label" style="color: ' + tier.color + '">' + tier.label + '</div></div></div><div class="score-footer"><span>Recommendation:</span><span class="rec" style="color: ' + tier.color + '">' + tier.rec + '</span></div></div><div class="signal-grid"><div class="panel signal-section"><h3>Security Signals</h3>' + renderSignals(securitySignals) + '</div><div class="panel signal-section"><h3>Business Signals</h3>' + renderSignals(businessSignals) + '</div></div>' + warningsHtml + '<div class="panel"><h3 style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">Company Profile</h3><div class="profile-grid"><div class="profile-item"><div class="label">Industry</div><div class="value">' + company.industry + '</div></div><div class="profile-item"><div class="label">Revenue</div><div class="value">$' + (company.revenue / 1000000000).toFixed(1) + 'B</div></div><div class="profile-item"><div class="label">Employees</div><div class="value">' + company.employees.toLocaleString() + '</div></div><div class="profile-item"><div class="label">Domain</div><div class="value cyan mono">' + company.domain + '</div></div></div></div></div>'; }
+        renderCompanyList();
+    </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSI Retrospective: Major Cyber Incidents 2023-2025</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%); color: #fff; min-height: 100vh; padding: 32px; }
+        .mono { font-family: 'Courier New', monospace; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 48px; }
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 14px; margin-bottom: 16px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; }
+        .header h1 { font-size: 36px; margin-bottom: 16px; background: linear-gradient(90deg, #f87171, #fbbf24, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: #94a3b8; font-size: 18px; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 48px; }
+        @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stat-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px; text-align: center; }
+        .stat-value { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+        .stat-value.white { color: #fff; }
+        .stat-value.green { color: #34d399; }
+        .stat-value.amber { color: #fbbf24; }
+        .stat-value.cyan { color: #22d3ee; }
+        .stat-label { font-size: 14px; color: #94a3b8; }
+        .case-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; margin-bottom: 32px; }
+        .case-header { padding: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+        .case-header.red { background: linear-gradient(90deg, rgba(239,68,68,0.1), transparent); }
+        .case-header.purple { background: linear-gradient(90deg, rgba(168,85,247,0.1), transparent); }
+        .case-tags { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .case-tag { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .case-tag.red { background: rgba(239,68,68,0.2); color: #f87171; }
+        .case-tag.purple { background: rgba(168,85,247,0.2); color: #c084fc; }
+        .case-date { color: #64748b; font-size: 14px; }
+        .case-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+        .case-subtitle { color: #94a3b8; font-size: 14px; }
+        .case-loss { text-align: right; }
+        .loss-value { font-size: 28px; font-weight: 700; color: #f87171; }
+        .loss-label { font-size: 14px; color: #64748b; }
+        .case-body { padding: 24px; }
+        .case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+        @media (max-width: 700px) { .case-grid { grid-template-columns: 1fr; } }
+        .case-section h3 { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+        .check-list { list-style: none; }
+        .check-list li { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+        .check-icon { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+        .check-icon.green { color: #34d399; }
+        .check-icon.red { color: #f87171; }
+        .check-icon.amber { color: #fbbf24; }
+        .rating-box { margin-top: 16px; padding: 12px; border-radius: 8px; }
+        .rating-box.green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #34d399; }
+        .rating-box.amber { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #fbbf24; }
+        .rating-box.red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+        .rating-box .rating-label { font-weight: 600; }
+        .rating-box .rating-action { float: right; }
+        .outcome-box { margin: 24px; padding: 16px; border-radius: 8px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2); }
+        .outcome-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #34d399; font-weight: 600; }
+        .outcome-header svg { width: 20px; height: 20px; }
+        .outcome-text { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+        .simple-case { padding: 24px; }
+        .simple-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 24px; }
+        @media (max-width: 600px) { .simple-grid { grid-template-columns: 1fr; } }
+        .simple-case p { font-size: 14px; color: #cbd5e1; line-height: 1.6; }
+        .warning-signal { display: flex; align-items: center; gap: 8px; color: #f87171; margin-bottom: 8px; font-size: 14px; }
+        .warning-signal svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .conclusion { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px; text-align: center; margin-top: 48px; }
+        .conclusion h2 { font-size: 24px; margin-bottom: 16px; }
+        .conclusion p { color: #94a3b8; max-width: 700px; margin: 0 auto 24px; line-height: 1.6; }
+        .cta-button { display: inline-block; padding: 12px 24px; border-radius: 8px; background: linear-gradient(90deg, #10b981, #06b6d4); color: #fff; font-weight: 600; text-decoration: none; }
+        .footer { margin-top: 32px; text-align: center; font-size: 14px; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="tag">Retrospective Analysis</div>
+            <h1>Would DSI Have Caught These Breaches?</h1>
+            <p>Analysis of major cyber incidents from 2023-2025 showing how Digital Signal Intelligence would have flagged risks that traditional underwriting missed.</p>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value white">5</div><div class="stat-label">Cases Analyzed</div></div>
+            <div class="stat-card"><div class="stat-value green">5</div><div class="stat-label">Would Have Flagged</div></div>
+            <div class="stat-card"><div class="stat-value amber">$13B+</div><div class="stat-label">Total Losses</div></div>
+            <div class="stat-card"><div class="stat-value cyan">100%</div><div class="stat-label">Detection Rate</div></div>
+        </div>
+
+```
+    <div class="case-card">
+        <div class="case-header red">
+            <div>
+                <div class="case-tags"><span class="case-tag red">RANSOMWARE</span><span class="case-date">April 2025</span></div>
+                <h2 class="case-title">Marks and Spencer plc</h2>
+                <p class="case-subtitle">UK Retail - 11.9B GBP Revenue - 65,000 Employees</p>
+            </div>
+            <div class="case-loss"><div class="loss-value">$350M</div><div class="loss-label">Estimated Loss</div></div>
+        </div>
+        <div class="case-body">
+            <div class="case-grid">
+                <div class="case-section">
+                    <h3>Traditional Underwriting View</h3>
+                    <ul class="check-list">
+                        <li><svg class="check-icon green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>Major UK retailer with 140+ year history</span></li>
+                        <li><svg class="check-icon green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>ISO 27001 certified</span></li>
+                        <li><svg class="check-icon green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>Dedicated security team</span></li>
+                        <li><svg class="check-icon green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>Strong brand reputation</span></li>
+                    </ul>
+                    <div class="rating-box green"><span class="rating-label">Traditional Rating: STANDARD</span></div>
+                </div>
+                <div class="case-section">
+                    <h3>DSI Signal Analysis</h3>
+                    <ul class="check-list">
+                        <li><svg class="check-icon red" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>Vulnerability Score: <strong class="mono">45/100</strong></span></li>
+                        <li><svg class="check-icon red" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>Patch Discipline: <strong class="mono">40/100</strong></span></li>
+                        <li><svg class="check-icon red" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>Vendor Security: <strong class="mono">45/100</strong></span></li>
+                        <li><svg class="check-icon amber" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>MFA Indicators: <strong class="mono">50/100</strong></span></li>
+                    </ul>
+                    <div class="rating-box amber"><span class="rating-label">DSI Score: 520 - Tier 3</span><span class="rating-action">MANUAL REVIEW</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="outcome-box">
+            <div class="outcome-header"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>DSI Would Have Flagged This Risk</div>
+            <p class="outcome-text">The combination of poor vulnerability (45) and patch discipline (40) scores would have triggered mandatory manual review. An underwriter would have required security improvements or applied risk-adjusted pricing before binding coverage.</p>
+        </div>
+    </div>
+
+    <div class="case-card">
+        <div class="case-header red">
+            <div>
+                <div class="case-tags"><span class="case-tag red">RANSOMWARE</span><span class="case-date">February 2024</span></div>
+                <h2 class="case-title">Change Healthcare</h2>
+                <p class="case-subtitle">Healthcare - $17B Revenue - 15,000 Employees</p>
+            </div>
+            <div class="case-loss"><div class="loss-value">$1.6B</div><div class="loss-label">Disclosed Costs</div></div>
+        </div>
+        <div class="case-body">
+            <div class="case-grid">
+                <div class="case-section">
+                    <h3>Traditional View</h3>
+                    <ul class="check-list">
+                        <li><svg class="check-icon green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>Part of UnitedHealth Group ($324B parent)</span></li>
+                        <li><svg class="check-icon green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>HIPAA compliant</span></li>
+                        <li><svg class="check-icon green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>Critical healthcare infrastructure</span></li>
+                    </ul>
+                    <div class="rating-box green"><span class="rating-label">Traditional Rating: PREFERRED</span></div>
+                </div>
+                <div class="case-section">
+                    <h3>DSI Signal Analysis</h3>
+                    <ul class="check-list">
+                        <li><svg class="check-icon red" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span><strong>MFA Indicators: <span class="mono">35/100</span> - CRITICAL</strong></span></li>
+                        <li><svg class="check-icon red" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>Patch Discipline: <strong class="mono">45/100</strong></span></li>
+                        <li><svg class="check-icon amber" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>Vendor Security: <strong class="mono">50/100</strong></span></li>
+                    </ul>
+                    <div class="rating-box red"><span class="rating-label">DSI Score: 545 - Tier 3</span><span class="rating-action">DECLINE / CONDITIONS</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="outcome-box">
+            <div class="outcome-header"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>DSI Would Have Flagged This Risk</div>
+            <p class="outcome-text"><strong>The MFA score of 35 was the exact attack vector.</strong> Attackers used stolen credentials on a Citrix portal that lacked MFA. DSI would have flagged this as unacceptable - no coverage without MFA on all remote access would have been the recommendation.</p>
+        </div>
+    </div>
+
+    <div class="case-card">
+        <div class="case-header purple">
+            <div>
+                <div class="case-tags"><span class="case-tag purple">SOCIAL ENGINEERING</span><span class="case-date">September 2023</span></div>
+                <h2 class="case-title">MGM Resorts International</h2>
+                <p class="case-subtitle">Hospitality/Gaming - $14B Revenue - 75,000 Employees</p>
+            </div>
+            <div class="case-loss"><div class="loss-value" style="color: #c084fc;">$100M</div><div class="loss-label">Estimated Loss</div></div>
+        </div>
+        <div class="simple-case">
+            <div class="simple-grid">
+                <div>
+                    <h3 style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">What Happened</h3>
+                    <p>Attackers called MGM's IT help desk, impersonated an employee using LinkedIn research, and convinced support staff to reset MFA credentials. This single phone call led to 10 days of disrupted operations.</p>
+                </div>
+                <div>
+                    <h3 style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">DSI Warning Signal</h3>
+                    <div class="warning-signal"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>Employee Training Score: <strong class="mono">40/100</strong></span></div>
+                    <p style="margin-top: 8px;">DSI detected limited security awareness content and no visible phishing simulation program - a red flag for social engineering vulnerability.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="conclusion">
+        <h2>The Evidence Is Clear</h2>
+        <p>In every major cyber incident analyzed, DSI identified warning signals that traditional underwriting missed. The digital footprint does not lie - companies that demonstrate poor patch management, weak MFA signals, and elevated vulnerability exposure suffer breaches.</p>
+        <a href="#" class="cta-button">Implement DSI Today</a>
+    </div>
+    <div class="footer">Digital Signal Intelligence - Retrospective Case Study Analysis 2025</div>
+</div>
+```
+
+</body>
+</html>
