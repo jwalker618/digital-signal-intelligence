@@ -29,15 +29,15 @@ The retrospective DSI scores for Marks & Spencer and Change Healthcare were cons
 #### Signal Breakdown
 |Signal|Score|Weight|Weighted|Evidence Source|
 |-|-|-|-|-|
-|SSL/TLS Configuration|728%|5.76|SSL Labs historical scans|
-|Security Headers|5810%|5.80|SecurityHeaders.com archive|
-|Known Vulnerabilities|4520%|9.00|Shodan/CVE correlation|
-|Patch Discipline|4015%|6.00|Wayback Machine version analysis|
-|MFA Indicators|5012%|6.00|Login page analysis|
-|Email Security (DMARC/SPF)|658%|5.20|DNS record lookupVendor/Third-Party|
-|Exposure|4510%|4.50|Technology stack analysis|
-|Governance Transparency|687%|4.76|Annual report review|
-|Technology Modernity|5210%|5.20|BuiltWith detection|
+|SSL/TLS Configuration|72|8%|5.76|SSL Labs historical scans|
+|Security Headers|58|10%|5.80|SecurityHeaders.com archive|
+|Known Vulnerabilities|45|20%|9.00|Shodan/CVE correlation|
+|Patch Discipline|40|15%|6.00|Wayback Machine version analysis|
+|MFA Indicators|50|12%|6.00|Login page analysis|
+|Email Security (DMARC/SPF)|65|8%|5.20|DNS record lookupVendor/Third-Party|
+|Exposure|45|10%|4.50|Technology stack analysis|
+|Governance Transparency|68|7%|4.76|Annual report review|
+|Technology Modernity|52|10%|5.20|BuiltWith detection|
 |Composite (Raw)|||52.22||
 |Scaled to 1000|||522|Rounded to 520|
 
