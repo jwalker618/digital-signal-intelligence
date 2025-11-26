@@ -98,7 +98,19 @@ M&S profile: 47 third parties, 8 with prior incidents = **Score 45**
 **Assessment Date:** Pre-incident signals observable through January 2024
 
 #### Signal Breakdown
-SignalScoreWeightWeightedEvidence SourceSSL/TLS Configuration788%6.24SSL Labs historical scansSecurity Headers6210%6.20SecurityHeaders.com archiveKnown Vulnerabilities5220%10.40Shodan/CVE correlationPatch Discipline4515%6.75Wayback Machine version analysisMFA Indicators3512%4.20Login page/Citrix analysisEmail Security (DMARC/SPF)708%5.60DNS record lookupVendor/Third-Party Exposure5010%5.00Technology stack analysisGovernance Transparency727%5.04SEC filings reviewTechnology Modernity5810%5.80BuiltWith detectionComposite (Raw)55.23Scaled to 1000552Rounded to 545
+|Signal|Score|Weight|Weighted|Evidence Source|
+|-|-|-|-|-|
+|SSL/TLS Configuration|78|8%|6.24|SSL Labs historical scans|
+|Security Headers|62|10%|6.20|SecurityHeaders.com archive|
+|Known Vulnerabilities|52|20%|10.40|Shodan/CVE correlation|
+|Patch Discipline|45|15%|6.75|Wayback Machine version analysis|
+|MFA Indicators|35|12%|4.20|Login page/Citrix analysis|
+|Email Security (DMARC/SPF)|70|8%|5.60|DNS record lookup|
+|Vendor/Third-Party Exposure|50|10%|5.00|Technology stack analysis|
+|Governance Transparency|72|7%|5.04|SEC filings review|
+|Technology Modernity|58|10%|5.80|BuiltWith detection|
+|Composite (Raw)||55.23||
+|Scaled to 1000||552|Rounded to 545|
 
 #### Critical Signal Details
 **MFA Indicators (35/100) - THE ATTACK VECTOR**
