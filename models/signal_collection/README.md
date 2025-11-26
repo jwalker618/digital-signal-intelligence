@@ -52,6 +52,28 @@ Transforms raw observations into normalised 0 - 100 scores with explicit rubrics
 - `TechnologyStackScorer` - Evaluates tech stack modernity
 - `ComprehensiveSignalScorer` - Unified scoring orchestrator
 
+### External API Integrations (`api_integrations.py`)
+Production-ready clients for security intelligence APIs.
+
+**Supported APIs:**
+| API | Purpose | Auth Required |
+|-----|---------|---------------|
+| SSL Labs | SSL/TLS grading | No |
+| Shodan | Exposed services, vulnerabilities | Yes |
+| Have I Been Pwned | Credential breach exposure | Yes |
+| Wayback Machine | Historical website analysis | No |
+| BuiltWith | Technology detection | Yes |
+| SecurityHeaders.com | Header analysis | No |
+
+### Validation Framework (validation/validation_framework.py)
+Statistical validation to prove DSI predicts losses.
+
+**Key Metrics:**
+- **Gini Coefficient** - Measures discrimination power (target: >0.30)
+- **C-Statistic** - AUC-ROC for claim prediction
+- **Quintile Analysis** - Loss ratio by risk segment
+- **Lift** - Difference between best and worst quintile loss ratios
+
 ## 📦 Installation
 
 The module is part of the Digital Signal Intelligence repository:
@@ -183,6 +205,35 @@ all_signals = scorer.score_all_signals(
    ...
 )
 composite, confidence = scorer.calculate_composite_score(all_signals)
+```
+
+### API Integrations Example
+```python
+from api_integrations import IntegratedSignalCollector
+
+collector = IntegratedSignalCollector(
+   shodan_api_key="YOUR_KEY",
+   hibp_api_key="YOUR_KEY"
+)
+
+results = collector.collect_all_signals("example.com")
+summary = collector.get_collection_summary(results)
+```
+
+### Validation Framework Example
+```python
+from validation_framework import ValidationFramework, SyntheticDataGenerator
+
+# Generate test data or load real policies
+policies = SyntheticDataGenerator.generate_policies(n=2000)
+
+# Run validation
+framework = ValidationFramework()
+result = framework.validate_model(policies, "DSI Cyber v1.0")
+
+print(f"Gini: {result.gini_coefficient:.3f}")
+print(f"Quintile Lift: {result.quintile_lift:.1%}")
+print(f"Improvement: {result.improvement_points:.1f} points")
 ```
 
 ## ⚙️ Configuration
@@ -450,6 +501,8 @@ signal_collection/
 ├── config.py                # Configuration classes
 ├── crawler.py               # Website crawler
 ├── collectors.py            # Model-specific collectors
+├── scoring_engine.py        # Conversion of signals into weighted composite score
+├── api_integrations.py      # API links for Signal Extraction
 ├── extractors/              # Content extractors
 │   ├── __init__.py
 │   ├── document_extractor.py
@@ -461,6 +514,9 @@ signal_collection/
 ├── examples/                # Example scripts
 │   ├── __init__.py
 │   └── example_signal_collection.py
+├── validation/                # Example scripts
+│   ├── __init__.py
+│   └── validation_framework.py
 └── README.md               # This file
 ```
 
