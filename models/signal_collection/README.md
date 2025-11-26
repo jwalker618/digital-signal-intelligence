@@ -164,6 +164,27 @@ if result.success:
         print(f"    {incident.context[:150]}")
 ```
 
+### Scoring Engine Example
+```python
+from scoring_engine import ComprehensiveSignalScorer
+
+scorer = ComprehensiveSignalScorer()
+
+# Score from SSL Labs result
+ssl_result = {"grade": "A", "protocols": ["TLSv1.3"], ...}
+ssl_signal = scorer.ssl_scorer.score_from_ssl_labs(ssl_result)
+print(f"SSL Score: {ssl_signal.score}, Evidence: {ssl_signal.evidence}")
+
+# Calculate composite
+all_signals = scorer.score_all_signals(
+   ssl_labs_result=ssl_result,
+   headers=response_headers,
+   url="https://example.com",
+   ...
+)
+composite, confidence = scorer.calculate_composite_score(all_signals)
+```
+
 ## ⚙️ Configuration
 
 ### Base Configuration
