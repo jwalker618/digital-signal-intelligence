@@ -14,6 +14,27 @@ Different insurance models require different types of information:
 
 This module provides model-specific collectors that can be configured to extract exactly the information needed for each pricing model.
 
+## Signal Categories and Scoring
+DSI collects and scores signals across multiple categories. 
+Each signal is scored 0-100, with higher scores indicating better risk posture. 
+The composite score scales these to 0-1000.
+
+### Security Signal Example
+* **SSL/TLS Configuration (8%)** Evaluates the quality of SSL/TLS implementation including certificate validity, protocol versions, cipher suites, and vulnerability exposure. Source: SSL Labs API.
+* **Security Headers (10%)** Measures implementation of security headers including Content-Security-Policy, X-Frame-Options, Strict-Transport-Security, Referrer-Policy, and Permissions-Policy.
+* **Known Vulnerabilities (20%)** Identifies exposed services with known vulnerabilities via Shodan and CVE databases. This is the highest-weighted signal due to strong correlation with breach probability.
+* **Patch Discipline (15%)** Evaluates how quickly an organization updates software after vulnerabilities are disclosed. Uses version analysis and Wayback Machine historical patterns.
+* **MFA Indicators (12%)** Assesses multi-factor authentication implementation signals across login pages and authentication flows. Critical for preventing credential-based attacks.
+
+### Risk Tier Classification
+The DSI composite score (0-1000) determines risk tier classification and underwriting workflow:
+|Score|Tier|Classification|Action|
+|-|-|-|-|
+|750-1000|Tier 1|Preferred|Auto-approve|
+|650-749|Tier 2|Standard|Auto-approve|
+|500-649|Tier 3|Elevated|Manual review|
+|0-499|Tier 4|High Risk|Decline or conditions|
+
 ## ✨ Features
 
 ### Model-Specific Collectors
