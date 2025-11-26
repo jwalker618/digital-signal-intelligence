@@ -23,26 +23,34 @@ This module provides model-specific collectors that can be configured to extract
 - **EnergySignalCollector**: Identifies safety incidents and ESG information
 
 ### Intelligent Crawling
-
 - Priority URL handling (crawl important pages first)
 - Configurable depth and page limits
 - Rate limiting and politeness
 - Content-type aware processing
 
 ### Content Extraction
-
 - PDF extraction with multiple fallback strategies
 - HTML article extraction with date awareness
 - Document type detection and routing
 - Metadata extraction
 
 ### Configurable Analysis
-
 - Custom keywords per model
 - Time-based filtering (e.g., last 12 months)
 - Relevance scoring
 - Context extraction
 - Pattern matching with regex
+
+### Signal Scoring Engine (scoring_engine.py)
+Transforms raw observations into normalised 0 - 100 scores with explicit rubrics.
+
+**key classes**
+- `SSLScorer` - Scores SSL/TLS configuration quality
+- `SecurityHeadersScorer` - Evaluates security header implementation
+- `VulnerabilityScorer` - Assesses exposure to known CVEs
+- `GovernanceTransparencyScorer` - Measures corporate governance signals
+- `TechnologyStackScorer` - Evaluates tech stack modernity
+- `ComprehensiveSignalScorer` - Unified scoring orchestrator
 
 ## 📦 Installation
 
