@@ -2,8 +2,8 @@
 Digital Signal Intelligence - Signal Scoring Engine
 ====================================================
 
-This module provides the CRITICAL missing bridge between raw data collection
-and the numerical scores (0-100) that pricing models require.
+This module provides the critical bridge between raw data collection
+and the numerical scores (0-100) that each pricing model requires.
 
 Each signal category has explicit scoring rubrics that transform observations
 into actuarially meaningful scores.
