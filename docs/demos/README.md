@@ -15,12 +15,13 @@ The dashboard is fixed in-time but interactive.
 In reality the data shown here would be automated, likely behind a fully agentic operating model, but this serves to show how it woruld work, how decisions would be made, and most importantly what analysis would be available afterwards.
 
 ## DSI Retrospective Case-studies
-The case-studies focus on two cyber losses in 2024 and 2025 with a combined value of ~$2B.
+The case-studies focus on five cyber losses between 2023 and 2025 with a combined value of ~$13.1B.
 They serve to demonstrate how DSI would have flagged both for review as opposed to preferential clients (as traditional underwriting would have done).
 Furthermore, this serves to show how DSI could proactively identify clients (albeit in this case both requiring remediation). 
 
 ### The "Science" behind these case studies.
 
+Whilst all scores have been calculated on the same basis, details on two are shown below.
 The retrospective DSI scores for Marks & Spencer and Change Healthcare were constructed using publicly observable digital signals that would have been available to an insurer at the time of underwriting. These scores are not speculative - they are based on the same data sources and scoring rubrics that DSI uses for prospective analysis.
 
 ### Marks & Spencer (DSI Score: 520)
