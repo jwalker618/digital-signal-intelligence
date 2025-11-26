@@ -1,8 +1,8 @@
 # Signal Collection Module
 
-**Intelligent corporate website analysis for insurance pricing**
+**Intelligent web analysis for insurance pricing**
 
-The Signal Collection Module extracts model-specific information from corporate websites to inform insurance pricing decisions. It combines intelligent crawling, content extraction, and configurable analysis to identify relevant signals for different insurance models.
+The Signal Collection Module extracts model-specific information from corporate websites and other online sources to inform insurance pricing decisions. It combines intelligent crawling, content extraction, and configurable analysis to identify relevant signals for different insurance models.
 
 ## 🎯 Overview
 
