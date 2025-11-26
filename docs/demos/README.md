@@ -109,8 +109,8 @@ M&S profile: 47 third parties, 8 with prior incidents = **Score 45**
 |Vendor/Third-Party Exposure|50|10%|5.00|Technology stack analysis|
 |Governance Transparency|72|7%|5.04|SEC filings review|
 |Technology Modernity|58|10%|5.80|BuiltWith detection|
-|Composite (Raw)||55.23||
-|Scaled to 1000||552|Rounded to 545|
+|Composite (Raw)|||55.23||
+|Scaled to 1000|||552|Rounded to 545|
 
 #### Critical Signal Details
 **MFA Indicators (35/100) - THE ATTACK VECTOR**
