@@ -6,6 +6,10 @@ This provides two html files that serve as a demonstration about how DSI might w
 1/. dsi_demo_dashboard.html
 2/. dsi_retrospective_casestudies.html
 
+## How to
+If viewing directly in a repository simply download the files to open as HTML in your brower. Ensure you use a modern browser - not IE!
+Otherwise, these should just open.
+
 ## DSI Demo Dashboard
 The dashboard is fixed in-time but interactive. 
 In reality the data shown here would be automated, likely behind a fully agentic operating model, but this serves to show how it woruld work, how decisions would be made, and most importantly what analysis would be available afterwards.
@@ -18,6 +22,3 @@ Furthermore, this serves to show how DSI could proactively identify clients (alb
 ### The "Science" behind these case studies.
 
 
-## How to
-If viewing directly in a repository simply download the files to open as HTML in your brower. Ensure you use a modern browser - not IE!
-Otherwise, these shoudl just open.
