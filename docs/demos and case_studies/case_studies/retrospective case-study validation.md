@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This study examines whether Digital Signal Intelligence (DSI) methodology could have identified elevated risk profiles for organisations that subsequently experienced major cyber incidents. We analyze six high-profile breaches using only signals that were **externally observable before each incident occurred**.
+This study examines whether Digital Signal Intelligence (DSI) methodology could have identified elevated risk profiles for organisations that subsequently experienced major cyber incidents. We analyse six high-profile breaches using only signals that were **externally observable before each incident occurred**.
 
 ### Key Finding
 
