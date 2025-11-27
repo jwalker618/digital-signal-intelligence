@@ -17,7 +17,7 @@ This model implements Digital Signal Intelligence (DSI) for D&O insurance pricin
 | Network Authority | Auditor quality, legal counsel, board networks, investor quality |
 | Behavioral Inference | Insider trading patterns, filing timeliness, governance disclosure |
 | Absence as Signal | Missing governance page, no ESG reporting, limited IR presence |
-| Structured Data Utilization | Credit ratings, ESG scores, ISS governance scores |
+| Structured Data Utilisation | Credit ratings, ESG scores, ISS governance scores |
 | Minimal Direct Inquiry | 5 optional Yes/No questions for critical factors |
 | Organisational Assessment | Company-level governance assessment |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
