@@ -113,7 +113,7 @@ Marine network authority captures who trusts the operator:
 |-------|----------|
 | 95-100 | Top IACS members (DNV, Lloyd's, BV, ABS) |
 | 80-94 | Other IACS members |
-| 60-79 | Recognized non-IACS societies |
+| 60-79 | Recognised non-IACS societies |
 | 40-59 | Lesser-known societies |
 | 0-39 | Unknown or no classification |
 
