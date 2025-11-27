@@ -99,7 +99,7 @@ Structured Data Feeds (10%)
 
 #### Security Vendor Relationships
 
-**What it measures:** Partnerships with recognized security vendors.
+**What it measures:** Partnerships with recognised security vendors.
 
 **Collection method:**
 - Check partner directories of major security vendors (CrowdStrike, Palo Alto, etc.)
@@ -119,7 +119,7 @@ Structured Data Feeds (10%)
 
 #### Industry Body Membership
 
-**What it measures:** Participation in security-focused industry organizations.
+**What it measures:** Participation in security-focused industry organisations.
 
 **Collection method:**
 - Query member directories of ISACs (FS-ISAC, Health-ISAC, etc.)
@@ -542,6 +542,4 @@ GET /api/v2/cyber/signals/{domain}
 | 2.0 | November 2025 | Complete rebuild for DSI Principles v1.0 compliance |
 | 1.0 | October 2025 | Initial implementation (deprecated) |
 
----
 
-*This model conforms to DSI Principles v1.0*
