@@ -5,7 +5,7 @@ Digital Signal Intelligence (DSI) - Marine Insurance Pricing Model
 DSI-compliant marine insurance pricing based entirely on externally observable
 signals, network authority analysis, and minimal optional direct inquiry.
 
-This model conforms to DSI Principles v1.0.
+This model conforms to Foundational Principles.
 
 Marine insurance is uniquely suited to DSI because vessel operations generate
 extensive digital footprints through AIS tracking, classification society
