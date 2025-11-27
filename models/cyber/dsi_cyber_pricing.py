@@ -8,7 +8,7 @@ direct inquiry.
 
 This model conforms to DSI Principles v1.0.
 
-Author: DSI Framework
+Author: John Walker
 Version: 2.0
 Date: November 2025
 """
