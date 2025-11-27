@@ -433,7 +433,3 @@ For questions about DSI implementation or methodology:
 - **Technical**: [technical-contact]
 - **Business**: [business-contact]
 - **Actuarial**: [actuarial-contact]
-
----
-
-*Digital Signal Intelligence Framework v2.0 | November 2025*
