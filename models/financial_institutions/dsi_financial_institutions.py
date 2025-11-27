@@ -5,7 +5,7 @@ Digital Signal Intelligence (DSI) - Financial Institutions Insurance Pricing Mod
 DSI-compliant financial institutions insurance pricing based entirely on externally
 observable signals, network authority analysis, and minimal optional direct inquiry.
 
-This model conforms to DSI Principles v1.0.
+This model conforms to Foundational Principles.
 
 Financial Institutions insurance is exceptionally suited to DSI because:
 - Regulatory filings (Call Reports, 10-K, FFIEC) are comprehensive and structured
