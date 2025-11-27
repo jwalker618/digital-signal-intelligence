@@ -31,7 +31,7 @@ This model implements Digital Signal Intelligence (DSI) for financial institutio
 | Network Authority | Correspondent relationships, auditor quality |
 | Behavioral Inference | CFPB complaints, examination patterns |
 | Absence as Signal | Missing security page, no ESG reporting |
-| Structured Data Utilization | Credit ratings, ESG scores |
+| Structured Data Utilisation | Credit ratings, ESG scores |
 | Minimal Direct Inquiry | 6 optional questions |
 | Organisational Assessment | Institution-level, not product-level |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
