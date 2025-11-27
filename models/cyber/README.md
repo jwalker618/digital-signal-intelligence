@@ -1,517 +1,547 @@
-# DSI Cyber Insurance Pricing Model
-Comprehensive cyber insurance pricing based on digital security posture analysis and vulnerability assessment.
+# DSI Cyber Insurance Pricing Model v2.0
 
 ## Overview
-This model implements automated cyber insurance pricing using Digital Signal Intelligence (DSI) with particular emphasis on vulnerability indicators, security maturity, and breach probability estimation. Unlike traditional cyber underwriting that relies heavily on questionnaires, this model automatically extracts security signals from the digital footprint.
 
-## Installation
-```bash
-cd digital-signal-intelligence/models/cyber
-pip install -r requirements.txt
+This model implements Digital Signal Intelligence (DSI) for cyber insurance pricing, conforming to DSI Principles v1.0. It replaces traditional questionnaire-based underwriting with externally observable signals, enabling high straight-through processing rates and autonomous operation.
+
+**Key Differentiator:** Unlike traditional cyber underwriting that relies on lengthy security questionnaires, this model derives risk assessment from observable digital behavior - what companies actually do, not what they claim.
+
+---
+
+## DSI Principles Compliance
+
+| Principle | Implementation |
+|-----------|----------------|
+| External Observability | All primary signals obtainable without insured cooperation |
+| Machine Readability | All signals have defined collection methods and scoring algorithms |
+| Network Authority | PageRank-style relationship analysis with deep graph traversal |
+| Behavioral Inference | Technical implementation and digital footprint reveal security culture |
+| Absence as Signal | Missing security page, security.txt, bug bounty are negative signals |
+| Structured Data Utilization | BitSight, ESG scores used as authority signals |
+| Minimal Direct Inquiry | 8 optional Yes/No questions for critical factors |
+| Organizational Assessment | Company-level signals, not asset-by-asset analysis |
+| Simplicity in Scoring | Signal → Score → Tier → Price |
+| Agentic Readiness | All components executable by AI without human interpretation |
+
+---
+
+## Signal Framework
+
+### Signal Categories & Weights
+
+```
+Network Authority (15%)
+├── Customer Quality (15%)
+├── Partner Quality (10%)
+├── Security Vendor Relationships (20%)    ← Important for cyber
+├── Industry Body Membership (15%)
+├── Certification Authority (15%)
+├── Financial Relationships (5%)
+├── Network Centrality (10%)
+└── Second-Degree Quality (10%)
+
+Technical Infrastructure (35%)              ← Critical for cyber
+├── TLS Configuration (15%)
+├── Security Headers (12%)
+├── Email Authentication (12%)
+├── DNSSEC (6%)
+├── Network Exposure (20%)                  ← Attack surface
+├── Software Currency (12%)
+├── CVE Exposure (18%)                      ← Known vulnerabilities
+└── Cloud Infrastructure (5%)
+
+Corporate Digital Footprint (15%)
+├── Security Page Presence (15%)
+├── Privacy Policy Quality (10%)
+├── security.txt Presence (10%)
+├── Bug Bounty Program (20%)                ← Strong security signal
+├── Security Hiring Activity (15%)
+├── Technical Content (10%)
+├── Developer Resources (5%)
+└── Security Leadership Visibility (15%)
+
+Public Records (25%)
+├── Breach History (35%)                    ← Critical predictor
+├── Regulatory Actions (20%)
+├── Data Breach Litigation (15%)
+├── Credential Exposure (20%)
+└── Dark Web Exposure (10%)
+
+Structured Data Feeds (10%)
+├── Security Rating (BitSight etc.) (50%)
+├── ESG Cyber Component (25%)
+└── Credit Rating (25%)
 ```
 
-## Quick Start
-```python
-from dsi_cyber_pricing import (
-    CyberCompanyProfile, CyberSecuritySignals,
-    IndustryVertical, CompanySize, CyberCoverageType,
-    CyberInsurancePricingModel
-)
+---
 
-# Create company profile
-company = CyberCompanyProfile(
-    company_name="Example Corp",
-    industry=IndustryVertical.TECHNOLOGY,
-    country="United States",
-    annual_revenue=50_000_000,
-    employees=200,
-    size_category=CompanySize.SMALL,
-    records_stored=500_000,
-    pii_volume="medium",
-    signals=CyberSecuritySignals(
-        ssl_certificate=90,
-        known_vulnerabilities=85,
-        security_certifications=80,
-        # ... other signals
-    )
-)
+## Signal Definitions
 
-# Create pricing model
-model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
+### Type 1: Network Authority Signals
 
-# Get pricing
-result = model.price(company)
-print(f"Premium: ${result.annual_premium:,.0f}")
-print(f"Breach Probability: {result.breach_probability:.1%}")
-print(f"Recommendation: {result.recommendation}")
+#### Customer Quality Score
+
+**What it measures:** Quality of the company's visible customer base.
+
+**Collection method:** 
+- Crawl case studies, customer logos, testimonials from company website
+- Cross-reference detected customers against quality database
+- Score based on Fortune 500 presence, industry leaders, regulated entities
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 85-100 | Fortune 500 / major enterprise customers visible |
+| 70-84 | Mid-market enterprise customers |
+| 50-69 | SMB customers only |
+| 30-49 | Limited customer visibility |
+| 0-29 | No customers visible or concerning customer base |
+
+#### Security Vendor Relationships
+
+**What it measures:** Partnerships with recognized security vendors.
+
+**Collection method:**
+- Check partner directories of major security vendors (CrowdStrike, Palo Alto, etc.)
+- Crawl partnership announcements on company website
+- Verify through vendor partnership badges/certifications
+
+**Why it matters:** Companies partnered with top-tier security vendors are more likely to have mature security practices. This is network authority - being trusted by security experts.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Multiple tier-1 security vendor partnerships |
+| 75-89 | One tier-1 or multiple tier-2 partnerships |
+| 50-74 | Tier-2 security vendor relationships |
+| 25-49 | Security vendor relationships unclear |
+| 0-24 | No visible security vendor relationships |
+
+#### Industry Body Membership
+
+**What it measures:** Participation in security-focused industry organizations.
+
+**Collection method:**
+- Query member directories of ISACs (FS-ISAC, Health-ISAC, etc.)
+- Check Cloud Security Alliance membership
+- Verify industry association participation
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Active ISAC member + other security bodies |
+| 70-89 | ISAC member or equivalent |
+| 50-69 | Industry association member (non-security focus) |
+| 25-49 | Limited industry engagement visible |
+| 0-24 | No industry body membership detected |
+
+### Type 2: Technical Infrastructure Signals
+
+#### TLS Configuration
+
+**What it measures:** Quality of SSL/TLS implementation.
+
+**Collection method:**
+- Automated SSL Labs-style scanning
+- Check certificate validity, chain, expiration
+- Verify TLS version (1.3 preferred, 1.2 acceptable)
+- Test cipher suite quality
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 95-100 | A+ rating: TLS 1.3, strong ciphers, HSTS preload |
+| 85-94 | A rating: TLS 1.2+, good configuration |
+| 70-84 | B rating: Acceptable, minor issues |
+| 50-69 | C rating: Configuration problems |
+| 0-49 | D/F rating: Serious vulnerabilities |
+
+#### Network Exposure (Attack Surface)
+
+**What it measures:** Exposed services, open ports, administrative interfaces.
+
+**Collection method:**
+- Shodan/Censys queries for company IP ranges
+- Check for exposed admin panels, databases, development environments
+- Identify unnecessary services
+
+**Why it matters:** This is a direct measure of attack surface. Exposed databases, admin panels, and unnecessary services are primary attack vectors.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Minimal exposure, only necessary services |
+| 70-89 | Minor unnecessary services, no critical exposure |
+| 50-69 | Some concerning exposure, managed risk |
+| 30-49 | Significant exposure (databases, admin panels) |
+| 0-29 | Critical exposure (unprotected databases, RDP, etc.) |
+
+#### CVE Exposure
+
+**What it measures:** Known vulnerabilities in detected software versions.
+
+**Collection method:**
+- Fingerprint software versions from banners, headers
+- Cross-reference against NVD/CVE databases
+- Weight by severity (CVSS score)
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | No critical/high CVEs in detected software |
+| 70-89 | Minor CVEs only, patches available |
+| 50-69 | Some high-severity CVEs |
+| 30-49 | Multiple high-severity CVEs |
+| 0-29 | Critical CVEs actively exploited in the wild |
+
+### Type 5: Corporate Digital Footprint Signals
+
+#### Security Page Presence
+
+**What it measures:** Existence and quality of dedicated security information.
+
+**Collection method:**
+- Check for /security, /trust, security center pages
+- Analyze content depth and recency
+- Verify certifications mentioned
+
+**Why it matters:** Companies serious about security communicate it. Absence of a security page is a signal of lower maturity.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Comprehensive security page with certifications, policies, contact |
+| 70-89 | Good security page with key information |
+| 50-69 | Basic security information present |
+| 25-49 | Minimal security mention (footer only) |
+| 0 | No security page or information |
+
+#### Bug Bounty Program
+
+**What it measures:** Presence and activity of bug bounty/vulnerability disclosure program.
+
+**Collection method:**
+- Check HackerOne, Bugcrowd, Intigriti directories
+- Verify security.txt for bug bounty reference
+- Assess program scope and responsiveness
+
+**Why it matters:** Bug bounty programs indicate proactive security posture and willingness to engage security community.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 95-100 | Active public bug bounty with good reputation |
+| 80-94 | Private bug bounty or VDP with track record |
+| 60-79 | Vulnerability disclosure policy only |
+| 30-59 | Security contact exists but no formal program |
+| 0-29 | No bug bounty or VDP |
+
+### Type 6: Public Record Signals
+
+#### Breach History
+
+**What it measures:** History of reported data breaches.
+
+**Collection method:**
+- HHS breach portal (healthcare)
+- State attorney general breach notifications
+- SEC 8-K filings (material breaches)
+- Privacy Rights Clearinghouse database
+- Media monitoring for disclosed breaches
+
+**Why it matters:** Prior breaches are the strongest predictor of future breaches. Companies with breach history have 3x higher probability of future incidents.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 100 | No breach history found |
+| 70-89 | Minor breach >5 years ago, remediated |
+| 50-69 | Moderate breach 3-5 years ago |
+| 30-49 | Significant breach in past 3 years |
+| 0-29 | Multiple breaches or major recent breach |
+
+#### Credential Exposure
+
+**What it measures:** Exposure of corporate credentials in data breaches.
+
+**Collection method:**
+- HaveIBeenPwned API for corporate domain
+- Dark web monitoring for corporate credentials
+- Breach database cross-reference
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | No credential exposure detected |
+| 70-89 | Minor historical exposure, old breaches |
+| 50-69 | Moderate exposure, some recent |
+| 30-49 | Significant exposure including recent |
+| 0-29 | Widespread exposure, credentials actively circulating |
+
+---
+
+## Direct Inquiry Questions (Optional)
+
+These 8 questions are optional. The model produces a valid assessment without them, but responses improve accuracy for factors that cannot be externally observed.
+
+| # | Question | Type | Impact |
+|---|----------|------|--------|
+| 1 | Is multi-factor authentication enabled for all remote access? | Yes/No | +30 if Yes, -50 if No |
+| 2 | Do all employees complete annual cyber security training? | Yes/No | +20 if Yes |
+| 3 | Do you process Protected Health Information (PHI)? | Yes/No | Pricing adjustment |
+| 4 | Do you store payment card data (PCI scope)? | Yes/No | Pricing adjustment |
+| 5 | Do you have a documented incident response plan? | Yes/No | +25 if Yes |
+| 6 | Is EDR deployed on all endpoints? | Yes/No | +30 if Yes |
+| 7 | Are backups maintained offline or immutable? | Yes/No | +35 if Yes |
+| 8 | Have you experienced a material cyber incident in the past 3 years? | Yes/No | -100 if Yes |
+
+**Constraint:** These are declarations subject to policy terms. Misrepresentation may void coverage.
+
+---
+
+## Risk Tier Structure
+
+| Tier | Score Range | Label | Underwriting Action |
+|------|-------------|-------|---------------------|
+| 1 | 800-1000 | Preferred | Auto-approve at preferred pricing |
+| 2 | 650-799 | Standard | Auto-approve at standard pricing |
+| 3 | 500-649 | Elevated | Auto-approve with conditions |
+| 4 | 350-499 | High Risk | Manual review required |
+| 5 | 0-349 | Critical | Decline or senior review |
+
+### Critical Overrides
+
+Certain signals force minimum tier regardless of composite score:
+
+| Condition | Minimum Tier |
+|-----------|--------------|
+| CVE exposure score < 30 | Tier 4 |
+| Network exposure score < 30 | Tier 4 |
+| Breach history score < 40 | Tier 4 |
+| Dark web exposure score < 30 | Tier 4 |
+| Recent incident disclosed | Tier 4 |
+
+---
+
+## Pricing Structure
+
+### Base Premium by Tier
+
+For $1M limit, medium-sized company:
+
+| Tier | Base Premium |
+|------|--------------|
+| 1 (Preferred) | $8,000 |
+| 2 (Standard) | $12,000 |
+| 3 (Elevated) | $18,000 |
+| 4 (High Risk) | $30,000 |
+| 5 (Critical) | $50,000 |
+
+### Industry Multipliers
+
+| Industry | Multiplier |
+|----------|------------|
+| Healthcare | 1.50x |
+| Financial Services | 1.40x |
+| Retail | 1.25x |
+| Energy | 1.20x |
+| Technology | 1.15x |
+| Professional Services | 1.10x |
+| Education | 1.05x |
+| Manufacturing | 0.95x |
+| Government | 0.90x |
+
+### Size Multipliers
+
+| Size Band | Multiplier |
+|-----------|------------|
+| Small (<500 employees) | 0.60x |
+| Medium (500-5,000) | 1.00x |
+| Large (5,000-25,000) | 2.50x |
+| Enterprise (>25,000) | 5.00x |
+
+### Limit Factors
+
+| Limit | Factor |
+|-------|--------|
+| $1M | 1.00x |
+| $2M | 1.70x |
+| $5M | 3.20x |
+| $10M | 5.00x |
+| $25M | 9.00x |
+| $50M | 14.00x |
+| $100M | 22.00x |
+
+### Regulatory Multipliers
+
+| Exposure | Multiplier |
+|----------|------------|
+| PHI Handler (HIPAA) | 1.30x |
+| PCI Scope | 1.20x |
+| Both | 1.56x (compound) |
+
+---
+
+## Confidence Levels
+
+| Signal Coverage | Confidence | Treatment |
+|-----------------|------------|-----------|
+| ≥85% signals available | ≥0.90 | Full automation |
+| 70-84% available | 0.75-0.89 | Automation with margin |
+| 55-69% available | 0.60-0.74 | Manual review recommended |
+| <55% available | <0.60 | Manual underwriting required |
+
+---
+
+## Example Outputs
+
+### Strong Security Posture (Tier 1)
+
+```
+Company: SecureTech Corp
+Domain: securetech.com
+Industry: TECHNOLOGY
+Size: LARGE
+
+Composite Score: 920/1000
+Confidence: 95%
+
+Category Scores:
+  network_authority: 89/100
+  technical_infrastructure: 92/100
+  corporate_footprint: 91/100
+  public_records: 95/100
+  structured_data: 86/100
+
+Tier: 1 (Preferred)
+Decision: APPROVE
+Premium: $207,000 for $25M limit
+Rate: 0.83% of limit
 ```
 
-## Model Architecture
-### Coverage Types
+### Weak Security Posture (Tier 5)
 
-1/. First-Party Coverage
-* Data breach response costs
-* Forensic investigation
-* Legal consultation
-* Notification costs
-* Credit monitoring
-* Business interruption
-* Cyber extortion/ransomware
-
-2/. Third-Party Coverage
-* Privacy liability
-* Network security liability
-* Media liability
-* Regulatory defense and penalties
-* PCI-DSS fines
-* Class action defense
-
-3/. Comprehensive (Both First and Third Party)
-
-### Five Signal Categories
-1/. Infrastructure Security (20% weight)
-* SSL certificate status and strength
-* TLS version (1.3 = optimal)
-* Security headers (HSTS, CSP, X-Frame-Options)
-* DNSSEC implementation
-* Email authentication (SPF, DMARC, DKIM)
-* Web Application Firewall presence
-
-2/. Vulnerability Indicators (30% weight) - CRITICAL
-* Open ports exposure
-* Outdated software detection
-* Known CVEs (Common Vulnerabilities)
-* Exposed databases
-* Leaked credentials in breaches
-* Historical breach incidents
-
-3/. Organizational Maturity (20% weight)
-* Security certifications (ISO 27001, SOC 2, etc.)
-* Privacy policy quality and GDPR compliance
-* Incident response plan visibility
-* Bug bounty program participation
-* Security team visibility (CISO, security engineers)
-* Security awareness content
-
-4/. Third-Party Risk (15% weight)
-* Vendor security standards
-* Supply chain transparency
-* Cloud provider quality (AWS/Azure/GCP preferred)
-* Third-party integration management
-* Data processing agreements
-
-5/. Behavioral Security (15% weight)
-* Patch discipline and update frequency
-* Security investment signals
-* Employee training programs
-* MFA adoption
-* Backup and disaster recovery procedures
-* Monitoring capabilities (SOC/SIEM)
-
-### Industry Risk Multipliers
-|Industry|Multiplier|Rationale|
-|-|-|-
-|Healthcare|1.50x|PHI sensitivity, HIPAA penalties|
-|Financial Services|1.40x|High-value target, regulatory risk|
-|Retail|1.25x|PCI compliance, customer data|
-|Energy|1.20x|Critical infrastructure|
-|Technology|1.15x|High-value intellectual property|
-|Professional Services|1.10x|Client confidential data|
-|Education|1.05x|Student data, lower maturity|
-|Other|1.00x|Baseline|
-|Manufacturing|0.95x|Lower data exposure|
-|Government|0.90x|Security focus (but catastrophic if breached)|
-
-### Pricing Formula
 ```
-Technical Rate = Base Rate × Cyber Maturity Modifier × Vulnerability Modifier ×
-                 Industry Modifier × Size Modifier × Data Sensitivity Modifier ×
-                 IT Environment Modifier × Prior Incidents Modifier
+Company: QuickMart Retail
+Domain: quickmart.com
+Industry: RETAIL
+Size: MEDIUM
 
-Annual Premium = Technical Rate × Revenue ($M)
+Composite Score: 259/1000
+Confidence: 61%
+
+Category Scores:
+  network_authority: 38/100
+  technical_infrastructure: 44/100
+  corporate_footprint: 30/100
+  public_records: 44/100
+  structured_data: 42/100
+
+Tier: 5 (Critical)
+Decision: DECLINE
+Reasoning: Recent breach history, critical CVE exposure, 
+           no MFA, no EDR, recent incident disclosed
 ```
 
-### Cyber Maturity Modifiers
-|Composite Score|Modifier Range|Risk Profile|
-|-|-|-|
-|800-1000|0.60x|Exceptional security|
-|700-800|0.70-0.80x|Strong security|
-|600-700|0.80-0.95x|Good security|
-|500-600|0.95-1.20x|Adequate security|
-|400-500|1.20-1.60x|Weak security|
-|0-400|1.60-2.50x|Poor security|
-
-### Vulnerability Modifiers (Critical)
-|Vulnerability Score|Modifier|Risk Level|
-|-|-|-|
-|90-100|0.70x|Very Low|
-|80-90|0.80x|Low|
-|70-80|0.95x|Moderate|
-|60-70|1.10x|Elevated|
-|50-60|1.30x|High|
-|40-50|1.60x|Very High|
-|0-40|2.00x|Critical|
-
-### Risk Tiers
-|Tier|Composite Score|Vulnerability Score|Decision|
-|-|-|-|-|
-|Tier 1|800+|85+|Auto-Approve - Preferred|
-|Tier 2|700-800|75+|Auto-Approve - Standard|
-|Tier 3|600-700|65+|Manual Review - Elevated|
-|Tier 4|500-600|55+|Manual Review - High Risk|
-|Tier 5|<500 or <50 vuln|<50|Decline or Critical Risk|
-
-### Breach Probability Estimation
-The model estimates annual breach probability based on:
-
-```python
-Base Probability = f(Composite Score)
-  • 800+: 2%
-  • 700-800: 5%
-  • 600-700: 10%
-  • 500-600: 18%
-  • 400-500: 30%
-  • <400: 45%
-
-Adjusted = Base × Industry Multiplier × (1 + Prior Incidents × 0.40)
-```
-
-### Expected Loss Calculation
-```
-Breach Cost = (Records × $175/record × 10% exposure) +
-              (Daily Revenue × 15 days downtime) +
-              (Regulatory/Legal × 2.5x if third-party coverage)
-
-Expected Loss = Breach Cost × Breach Probability
-```
-
-## Usage Examples
-### Example 1: Technology Company with Strong Security
-```python
-strong_signals = CyberSecuritySignals(
-    ssl_certificate=95, tls_version=100, security_headers=90,
-    known_vulnerabilities=92, exposed_databases=100,
-    security_certifications=90, mfa_adoption=95,
-    # ... all other signals
-)
-
-tech_company = CyberCompanyProfile(
-    company_name="SecureTech Inc",
-    industry=IndustryVertical.TECHNOLOGY,
-    annual_revenue=5_000_000_000,
-    employees=1500,
-    size_category=CompanySize.LARGE,
-    records_stored=2_000_000,
-    pii_volume="high",
-    cloud_percentage=85,
-    prior_incidents=0,
-    signals=strong_signals
-)
-
-model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
-result = model.price(tech_company)
-
-# Expected output:
-# Premium: ~$450,000
-# Breach Probability: 2-4%
-# Recommendation: Auto-Approve - Preferred Pricing
-```
-
-### Example 2: Healthcare with Vulnerabilities
-```python
-vulnerable_signals = CyberSecuritySignals(
-    ssl_certificate=75, tls_version=80,
-    known_vulnerabilities=45,  # CRITICAL LOW SCORE
-    exposed_databases=50,       # CRITICAL LOW SCORE
-    leaked_credentials=40,      # CRITICAL LOW SCORE
-    security_certifications=70,
-    # ... other signals
-)
-
-healthcare = CyberCompanyProfile(
-    company_name="Regional Hospital",
-    industry=IndustryVertical.HEALTHCARE,
-    annual_revenue=500_000_000,
-    size_category=CompanySize.MEDIUM,
-    phi_handler=True,  # HIPAA sensitive
-    prior_incidents=1,
-    signals=vulnerable_signals
-)
-
-result = model.price(healthcare)
-
-# Expected output:
-# Premium: $800,000+ (high due to vulnerabilities)
-# Breach Probability: 35-45%
-# Recommendation: Manual Review or Decline
-# Conditions: Mandatory remediation of vulnerabilities
-```
-
-### Example 3: Batch Pricing Portfolio
-```python
-import pandas as pd
-
-companies = [company1, company2, company3, ...]
-model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
-
-results = []
-for company in companies:
-    result = model.price(company)
-    results.append({
-        'Company': result.company_name,
-        'Premium': result.annual_premium,
-        'Score': result.composite_score,
-        'Vulnerability': result.vulnerability_score,
-        'Breach_Prob': result.breach_probability,
-        'Recommendation': result.recommendation
-    })
-
-df = pd.DataFrame(results)
-df.to_csv('cyber_pricing_results.csv', index=False)
-
-# Portfolio analytics
-print(f"Total Premium: ${df['Premium'].sum():,.0f}")
-print(f"Avg Breach Prob: {df['Breach_Prob'].mean():.1%}")
-print(f"Auto-Approve Rate: {(df['Recommendation'].str.contains('Auto-Approve').sum() / len(df)):.0%}")
-```
-
-### Example 4: Vulnerability Remediation Analysis
-```python
-# Show impact of fixing vulnerabilities
-baseline_company = healthcare_company  # From Example 2
-
-# Scenario: Fix critical vulnerabilities
-improved_signals = CyberSecuritySignals(**baseline_company.signals.__dict__)
-improved_signals.known_vulnerabilities = 85  # Patched
-improved_signals.exposed_databases = 95      # Secured
-improved_signals.leaked_credentials = 90     # Rotated
-
-improved_company = CyberCompanyProfile(**baseline_company.__dict__)
-improved_company.signals = improved_signals
-
-baseline_result = model.price(baseline_company)
-improved_result = model.price(improved_company)
-
-savings = baseline_result.annual_premium - improved_result.annual_premium
-print(f"Baseline Premium: ${baseline_result.annual_premium:,.0f}")
-print(f"Improved Premium: ${improved_result.annual_premium:,.0f}")
-print(f"Annual Savings: ${savings:,.0f}")
-print(f"ROI on Security Investment: {(savings / 100_000):.1f}x")  # Assume $100k remediation cost
-```
-
-## Data Collection
-### Automated Signal Collection
-The model expects signals to be populated from various sources:
-```python
-def collect_cyber_signals(domain: str, company_name: str) -> CyberSecuritySignals:
-    """
-    Automated signal collection pipeline
-    """
-    signals = CyberSecuritySignals()
-    
-    # Infrastructure (automated tools)
-    ssl_result = check_ssl_labs(domain)
-    signals.ssl_certificate = ssl_result['score']
-    signals.tls_version = ssl_result['protocol_score']
-    
-    headers = check_security_headers(domain)
-    signals.security_headers = calculate_header_score(headers)
-    
-    # Vulnerabilities (critical - multiple sources)
-    shodan = query_shodan(domain)
-    signals.open_ports_score = 100 - (len(shodan['open_ports']) * 5)
-    
-    nvd = check_nvd_vulnerabilities(domain, company_name)
-    signals.known_vulnerabilities = 100 - (nvd['critical_count'] * 10)
-    
-    # Check breach databases
-    breach_check = query_haveibeenpwned_domain(domain)
-    signals.leaked_credentials = 100 if not breach_check else 50
-    
-    # Organizational (web scraping + APIs)
-    certifications = extract_certifications(domain)
-    signals.security_certifications = score_certifications(certifications)
-    
-    # Third-party (vendor analysis)
-    tech_stack = get_builtwith(domain)
-    signals.cloud_provider_quality = score_cloud_providers(tech_stack)
-    
-    # Behavioral (historical analysis)
-    historical = get_wayback_snapshots(domain)
-    signals.patch_discipline = analyze_update_frequency(historical)
-    
-    return signals
-```
+---
 
 ## Data Sources
-### Free/Low-Cost:
-* SSL Labs API (SSL/TLS assessment)
-* SecurityHeaders.com (HTTP header analysis)
-* Shodan (open ports, exposed services)
-* Have I Been Pwned (breach checking)
-* Common Crawl (historical web data)
-* Certificate Transparency logs
 
-### Commercial:
-* SecurityScorecard ($5-15K/year)
-* BitSight ($10-25K/year)
-* RiskRecon by Mastercard
-* UpGuard
-* CyberGRX
-* Black Kite
+| Source | Signals Provided | Update Frequency |
+|--------|------------------|------------------|
+| SSL Labs / Custom Scanner | TLS, certificates | On-demand |
+| DNS Queries | SPF, DKIM, DMARC, DNSSEC | On-demand |
+| Shodan / Censys | Network exposure, services | Daily |
+| CVE/NVD Databases | Known vulnerabilities | Daily |
+| HaveIBeenPwned | Credential exposure | Daily |
+| Company Websites | Footprint signals | Weekly |
+| HackerOne / Bugcrowd | Bug bounty presence | Weekly |
+| HHS Breach Portal | Healthcare breaches | Daily |
+| BitSight / SecurityScorecard | Security ratings | Daily |
+| ISAC Directories | Membership | Monthly |
 
-### Industry Databases:
-* NVD (National Vulnerability Database)
-* CVE (Common Vulnerabilities and Exposures)
-* MITRE ATT&CK Framework
-* NIST Cybersecurity Framework
-
-## Model Validation
-### Backtesting Against Historical Breaches
-```python
-# Load known breach data
-breaches = pd.read_csv('historical_cyber_losses_2020_2024.csv')
-
-# Score companies retrospectively
-for idx, breach in breaches.iterrows():
-    company = create_company_from_breach_data(breach)
-    result = model.price(company)
-    
-    breaches.loc[idx, 'predicted_probability'] = result.breach_probability
-    breaches.loc[idx, 'predicted_loss'] = result.expected_loss
-    breaches.loc[idx, 'actual_loss'] = breach['total_cost']
-
-# Calculate accuracy metrics
-from sklearn.metrics import roc_auc_score
-
-auc = roc_auc_score(breaches['breached'], breaches['predicted_probability'])
-print(f"AUC-ROC: {auc:.3f}")  # Target: >0.70
-
-# Loss prediction accuracy
-mae = (breaches['predicted_loss'] - breaches['actual_loss']).abs().mean()
-print(f"MAE: ${mae:,.0f}")
-```
-
-### Expected Performance
-* AUC-ROC: Target >0.70 for breach prediction
-* Top vs Bottom Quintile: 60%+ difference in breach rates
-* Loss Prediction: Within 30% of actual for 70% of cases
-* False Positive Rate: <15% for auto-approvals
-
-## Customization
-### Adjusting Base Rates by Market
-```python
-# Update for hard market conditions
-model.base_rates["comprehensive"]["medium"] *= 1.35
-
-# Or load from market data
-import json
-with open('current_market_rates.json', 'r') as f:
-    model.base_rates = json.load(f)
-```
-
-### Industry-Specific Adjustments
-```python
-# Add new industry
-model.industry_multipliers[IndustryVertical.CRYPTOCURRENCY] = 1.65
-
-# Adjust for local market
-if company.country == "United Kingdom":
-    model.industry_multipliers[IndustryVertical.FINANCIAL_SERVICES] *= 0.95
-```
-
-### Custom Vulnerability Thresholds
-```python
-class StrictCyberModel(CyberInsurancePricingModel):
-    def calculate_vulnerability_modifier(self, signals):
-        modifier, score = super().calculate_vulnerability_modifier(signals)
-        
-        # Stricter thresholds for healthcare
-        if self.current_company.industry == IndustryVertical.HEALTHCARE:
-            if score < 75:  # Require higher bar
-                modifier *= 1.40
-        
-        return modifier, score
-```
+---
 
 ## API Integration
-```python
-from flask import Flask, request, jsonify
 
-app = Flask(__name__)
-model = CyberInsurancePricingModel(CyberCoverageType.COMPREHENSIVE)
+### Endpoints
 
-@app.route('/api/cyber/quote', methods=['POST'])
-def get_quote():
-    data = request.json
-    
-    # Parse company data
-    company = CyberCompanyProfile(
-        company_name=data['company_name'],
-        industry=IndustryVertical(data['industry']),
-        annual_revenue=data['revenue'],
-        # ... map all fields
-    )
-    
-    # Collect signals (or use provided)
-    if 'signals' in data:
-        company.signals = CyberSecuritySignals(**data['signals'])
-    else:
-        company.signals = collect_cyber_signals(data['domain'], data['company_name'])
-    
-    # Price
-    result = model.price(company, requested_limit=data.get('requested_limit'))
-    
-    return jsonify({
-        'premium': result.annual_premium,
-        'limit': result.policy_limit,
-        'deductible': result.deductible,
-        'breach_probability': result.breach_probability,
-        'recommendation': result.recommendation,
-        'conditions': result.conditions,
-        'composite_score': result.composite_score,
-        'vulnerability_score': result.vulnerability_score
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+```
+POST /api/v2/cyber/assess
+GET /api/v2/cyber/score/{domain}
+GET /api/v2/cyber/signals/{domain}
 ```
 
-## Testing
-```bash
-# Run full test suite
-python -m pytest tests/test_dsi_cyber_pricing.py -v
+### Sample Request
 
-# Run specific test category
-python -m pytest tests/test_dsi_cyber_pricing.py::TestVulnerabilityAssessment -v
-
-# Run with coverage
-python -m pytest tests/ --cov=dsi_cyber_pricing --cov-report=html
+```json
+{
+  "domain": "example.com",
+  "requested_limit": 10000000,
+  "direct_inquiry": {
+    "mfa_enabled": true,
+    "security_training": true,
+    "phi_handler": false,
+    "pci_scope": true,
+    "incident_response_plan": true,
+    "edr_deployed": true,
+    "immutable_backups": true,
+    "recent_incident": false
+  }
+}
 ```
 
-## Performance Considerations
-* Signal Collection: Most expensive operation (3-5 seconds per company with API calls)
-* Pricing Calculation: <50ms per company
-* Batch Processing: Use multiprocessing for portfolios >1000 companies
-* Caching: Cache signal results for 24-48 hours to reduce API costs
+### Sample Response
 
-## Limitations
-* Data Availability: Requires 55%+ signal coverage for reliable pricing
-* Private Companies: May have limited public security posture data
-* Emerging Technologies: Cryptocurrency, AI companies may lack historical data
-* APT Threats: Advanced persistent threats may not show in automated scans
-* Zero-Days: Unknown vulnerabilities not captured in scoring
+```json
+{
+  "company_name": "Example Corp",
+  "domain": "example.com",
+  "composite_score": 782,
+  "confidence": 0.88,
+  "tier": 2,
+  "tier_label": "Standard",
+  "decision": "APPROVE",
+  "recommended_limit": 10000000,
+  "recommended_retention": 100000,
+  "annual_premium": 62500,
+  "conditions": [
+    "Annual security assessment required",
+    "Notify insurer of incidents within 72 hours"
+  ],
+  "category_scores": {
+    "network_authority": 75,
+    "technical_infrastructure": 82,
+    "corporate_footprint": 70,
+    "public_records": 88,
+    "structured_data": 72
+  }
+}
+```
 
-## Regulatory Compliance
-### Rate Filing Considerations
-* Document actuarial basis for all modifiers
-* Demonstrate predictive validity through backtesting
-* Ensure no prohibited factors (race, gender, etc.) proxied
-* Provide clear disclosure of data sources
-* Allow for alternative underwriting path
+---
 
-### Data Privacy
-* Only use publicly available security data
-* No personal employee data collection
-* Comply with GDPR/CCPA for data processing
-* Provide transparency into scoring methodology
+## Comparison: DSI vs Traditional
+
+| Aspect | Traditional | DSI |
+|--------|-------------|-----|
+| Data collection | 20+ page questionnaire | Automated signal collection |
+| Processing time | Days to weeks | Minutes |
+| Accuracy | Self-reported (unverified) | Observable behavior (verified) |
+| Scalability | Manual review required | Full automation for Tier 1-3 |
+| Cost per bind | High (analyst time) | Low (automated) |
+| Consistency | Varies by underwriter | Algorithmic (consistent) |
+| Refresh frequency | Annual renewal | Continuous monitoring possible |
+
+---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.0 | November 2025 | Complete rebuild for DSI Principles v1.0 compliance |
+| 1.0 | October 2025 | Initial implementation (deprecated) |
+
+---
+
+*This model conforms to DSI Principles v1.0*
