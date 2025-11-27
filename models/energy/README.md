@@ -24,7 +24,7 @@ This model implements Digital Signal Intelligence (DSI) for energy insurance pri
 | Network Authority | JV partners, contractor quality, regulator relationships |
 | Behavioral Inference | Safety metrics, spill history, maintenance patterns |
 | Absence as Signal | Missing ESG reporting, no industry membership |
-| Structured Data Utilization | ESG ratings, credit ratings |
+| Structured Data Utilisation | ESG ratings, credit ratings |
 | Minimal Direct Inquiry | 6 optional questions |
 | Organisational Assessment | Operator-level, not asset-level |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
