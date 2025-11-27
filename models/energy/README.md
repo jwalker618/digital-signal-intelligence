@@ -2,7 +2,7 @@
 
 ## Overview
 
-This model implements Digital Signal Intelligence (DSI) for energy insurance pricing, conforming to DSI Principles v1.0. It replaces traditional asset-by-asset engineering assessments with operator-level behavioral analysis based on publicly observable safety and environmental signals.
+This model implements Digital Signal Intelligence (DSI) for energy insurance pricing, conforming to Foundational Principles. It replaces traditional asset-by-asset engineering assessments with operator-level behavioral analysis based on publicly observable safety and environmental signals.
 
 **Key DSI Principle:** We assess OPERATOR safety culture and operational patterns, not individual asset characteristics. Good operators maintain all assets well; poor operators have systemic issues across their portfolio.
 
@@ -26,7 +26,7 @@ This model implements Digital Signal Intelligence (DSI) for energy insurance pri
 | Absence as Signal | Missing ESG reporting, no industry membership |
 | Structured Data Utilization | ESG ratings, credit ratings |
 | Minimal Direct Inquiry | 6 optional questions |
-| Organizational Assessment | Operator-level, not asset-level |
+| Organisational Assessment | Operator-level, not asset-level |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
 | Agentic Readiness | All sources programmatically accessible |
 
