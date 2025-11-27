@@ -93,10 +93,10 @@ DSI organises signals into seven categories, each capturing different aspects of
 ```
 Raw Signals                 Normalised Scores           Tier Assignment
 ─────────────               ─────────────────           ───────────────
-TLS Grade: A+        →      95/100                      
-Security Headers: 6/7 →      86/100           →         Tier 2
-DMARC: Enforced      →      100/100                     (Standard)
-Breach History: 1    →      60/100                      
+TLS Grade: A+         →      95/100                      
+Security Headers: 6/7 →      86/100              →       Tier 2
+DMARC: Enforced       →      100/100                     (Standard)
+Breach History: 1     →      60/100                      
 ...                         ...                         
                                                         ↓
                             Weighted Average            
