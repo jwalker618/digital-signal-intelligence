@@ -217,10 +217,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 
 ### Validation Principle
 
-All signals used in these assessments were externally observable at the time of assessment. DSI does not claim to predict specific breaches, but rather to identify elevated risk based on observable organizational behavior patterns.
+All signals used in these assessments were externally observable at the time of assessment. DSI does not claim to predict specific breaches, but rather to identify elevated risk based on observable organisational behavior patterns.
 
 The retrospective validation study demonstrates that DSI methodology would have flagged 5 of 6 major cyber incidents examined based on pre-incident observable signals.
 
----
-
-*DSI Case Studies v2.0 | November 2025 | Confidential*
