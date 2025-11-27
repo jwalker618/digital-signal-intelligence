@@ -206,10 +206,10 @@ Weights are adjusted based on:
 **Post-Breach Analysis:**
 
 If a Tier 1/2 organisation experiences a major breach:
-1. Analyze whether pre-incident signals were correctly assessed
+1. Analyse whether pre-incident signals were correctly assessed
 2. Identify any signals that should have been weighted differently
 3. Update the methodology if systematic blind spots are identified
-4. Accept that some breaches will occur in well-secured organizations
+4. Accept that some breaches will occur in well-secured organisations
 
 ---
 
