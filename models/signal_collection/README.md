@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `signal_collection` module is the core DSI engine for extracting, analysing, and scoring risk signals from external sources. It transforms observable data into normalized scores that drive pricing decisions.
+The `signal_collection` module is the core DSI engine for extracting, analysing, and scoring risk signals from external sources. It transforms observable data into normalised scores that drive pricing decisions.
 
 ## Architecture
 
