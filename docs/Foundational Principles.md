@@ -8,7 +8,7 @@
 
 ---
 
-## Preamble
+## Introduction
 
 Digital Signal Intelligence (DSI) is a methodology for insurance underwriting that replaces traditional document-based analysis with observable digital signals. It is designed for today's market but architected for an Agentic AI future where autonomous systems require structured, predictable, machine-readable inputs.
 
@@ -24,7 +24,7 @@ The result is a pricing methodology that can operate autonomously, at scale, wit
 
 ### The PageRank Insight
 
-Google's PageRank algorithm transformed web search by recognizing that the structure of links between pages revealed more about page quality than the content itself. A page linked to by many authoritative pages was likely authoritative itself, regardless of what it claimed about itself.
+Google's PageRank algorithm transformed web search by recognising that the structure of links between pages revealed more about page quality than the content itself. A page linked to by many authoritative pages was likely authoritative itself, regardless of what it claimed about itself.
 
 DSI applies this insight to insurance underwriting. The network of relationships surrounding a company—who trusts them, who partners with them, who references them, who transacts with them—reveals risk quality more reliably than self-reported information.
 
@@ -40,7 +40,7 @@ These signals are difficult to fake at scale. A company can claim strong securit
 
 The behavior of a parent organization is a reliable proxy for the behavior of its subsidiaries and assets. A shipping company with strong operational discipline across its fleet is unlikely to have rogue vessels operating to different standards. A financial institution with robust governance culture is unlikely to have divisions operating without controls.
 
-This principle allows DSI to assess risk at the organizational level without requiring asset-by-asset analysis, enabling scalable underwriting for complex portfolios.
+This principle allows DSI to assess risk at the organisational level without requiring asset-by-asset analysis, enabling scalable underwriting for complex portfolios.
 
 ---
 
@@ -168,11 +168,11 @@ The goal is not merely automation of current processes but architecture for a fu
 
 ## Signal Taxonomy
 
-DSI signals are categorized into seven types. All pricing models must identify which signal types they employ and document the specific signals within each type.
+DSI signals are categorised into seven types. All pricing models must identify which signal types they employ and document the specific signals within each type.
 
 ### Type 1: Network Authority Signals
 
-Signals derived from an entity's position in networks of trust, partnership, and transaction. These signals should be analyzed to maximum practical depth, building relationship graphs that extend beyond first-degree connections.
+Signals derived from an entity's position in networks of trust, partnership, and transaction. These signals should be analysed to maximum practical depth, building relationship graphs that extend beyond first-degree connections.
 
 | Signal Class | Description | Collection Method |
 |--------------|-------------|-------------------|
@@ -201,7 +201,7 @@ Signals derived from observable technical implementation.
 
 ### Type 3: Asset Telemetry Signals
 
-Signals derived from digital telemetry of physical assets, used for behavioral pattern analysis at the organizational level.
+Signals derived from digital telemetry of physical assets, used for behavioral pattern analysis at the organisational level.
 
 | Signal Class | Description | Collection Method |
 |--------------|-------------|-------------------|
@@ -210,7 +210,7 @@ Signals derived from digital telemetry of physical assets, used for behavioral p
 | Facility monitoring | Activity patterns, condition | Satellite imagery analysis |
 | IoT/sensor data | Connected device telemetry | Where available via API |
 
-**Constraint:** Asset telemetry is used to assess organizational behavior patterns, not to price individual assets. The question is "how does this organization operate its assets?" not "what is this specific asset worth?"
+**Constraint:** Asset telemetry is used to assess organizational behavior patterns, not to price individual assets. The question is "how does this organisation operate its assets?" not "what is this specific asset worth?"
 
 ### Type 4: Structured Data Feed Signals
 
@@ -240,7 +240,7 @@ Signals derived from analysis of an entity's own digital presence.
 | Policy publications | Privacy policy, terms, security.txt | Targeted page retrieval |
 | Press releases | Company-issued announcements | News/PR section crawling |
 
-**Constraint:** We analyze the company's own published content, not third-party commentary about them.
+**Constraint:** We analyse the company's own published content, not third-party commentary about them.
 
 ### Type 6: Public Record Signals
 
@@ -319,7 +319,7 @@ Every DSI pricing model must conform to the following architecture:
         ▼            ▼            ▼            ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      SIGNAL SCORING LAYER                        │
-│         Each signal → Normalized score (0-100)                   │
+│         Each signal → Normalised score (0-100)                   │
 │         Defined algorithm, no subjective judgment                │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -358,7 +358,7 @@ Every DSI pricing model must conform to the following architecture:
 
 ## Risk Tiers
 
-All DSI models use a standardized five-tier risk classification:
+All DSI models use a standardised five-tier risk classification:
 
 | Tier | Score Range | Classification | Underwriting Action |
 |------|-------------|----------------|---------------------|
@@ -393,7 +393,7 @@ Low confidence does not mean decline—it means the DSI assessment has insuffici
 
 Each DSI pricing model must include documentation covering:
 
-1. **Signal inventory:** Complete list of signals used, categorized by type
+1. **Signal inventory:** Complete list of signals used, categorised by type
 2. **Collection methods:** How each signal is obtained
 3. **Scoring algorithms:** How each signal is converted to a 0-100 score
 4. **Weight justification:** Why each signal receives its assigned weight
@@ -449,7 +449,7 @@ Changes to DSI Principles require:
 
 ## Appendix: Line of Business Considerations
 
-Different lines of business emphasize different signal types. The following provides guidance on signal type relevance by line:
+Different lines of business emphasise different signal types. The following provides guidance on signal type relevance by line:
 
 | Signal Type | Cyber | D&O | Marine | Energy | FI |
 |-------------|-------|-----|--------|--------|-----|
