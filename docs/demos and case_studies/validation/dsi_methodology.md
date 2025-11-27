@@ -8,7 +8,7 @@ This document provides comprehensive answers to anticipated skeptical questions 
 
 ## Executive Summary
 
-**DSI does not claim to predict which organizations will be breached.** It claims to systematically identify elevated risk based on externally observable organizational behavior patterns.
+**DSI does not claim to predict which organisations will be breached.** It claims to systematically identify elevated risk based on externally observable organisational behavior patterns.
 
 **Validation Result:** DSI methodology would have flagged 5 of 6 major cyber incidents (2017-2024) for elevated risk assessment based on signals that were publicly observable BEFORE each breach.
 
@@ -185,11 +185,11 @@ Weights are adjusted based on:
 
 ### Q7: "What if a company has great signals but still gets breached?"
 
-**Answer: DSI measures risk, not certainty. Some well-secured organizations will still be breached.**
+**Answer: DSI measures risk, not certainty. Some well-secured organisations will still be breached.**
 
 **Probability vs. Certainty:**
 
-- A Tier 1 organization (DSI 800+) is not guaranteed to avoid breaches
+- A Tier 1 organisation (DSI 800+) is not guaranteed to avoid breaches
 - It has demonstrated security behaviors that statistically correlate with lower incident probability
 - Insurance is priced on probability distributions, not certainty
 
@@ -205,7 +205,7 @@ Weights are adjusted based on:
 
 **Post-Breach Analysis:**
 
-If a Tier 1/2 organization experiences a major breach:
+If a Tier 1/2 organisation experiences a major breach:
 1. Analyze whether pre-incident signals were correctly assessed
 2. Identify any signals that should have been weighted differently
 3. Update the methodology if systematic blind spots are identified
@@ -336,7 +336,7 @@ Based on DSI case studies and retrospective validation:
 
 **If Gaming Occurs:**
 
-Good news: If organizations improve their actual security posture to game DSI, they ARE actually more secure. The goal is risk reduction, not just measurement.
+Good news: If organisations improve their actual security posture to game DSI, they ARE actually more secure. The goal is risk reduction, not just measurement.
 
 ---
 
@@ -381,7 +381,7 @@ Good news: If organizations improve their actual security posture to game DSI, t
    - Sector risk (documented regulatory gaps)
    - Limited positive individual signals to offset
 
-**Principle:** When sector-level risk is elevated and individual signals are absent or neutral, the organization inherits the sector risk premium.
+**Principle:** When sector-level risk is elevated and individual signals are absent or neutral, the organisation inherits the sector risk premium.
 
 ---
 
@@ -484,8 +484,8 @@ DSI is a systematic methodology for identifying elevated cyber risk based on ext
 **Explicit Limitations (Acknowledged):**
 - Cannot predict true zero-day vulnerabilities
 - Cannot detect specific internal configurations
-- Cannot predict which organization will be targeted
-- Some well-secured organizations will still experience breaches
+- Cannot predict which organisation will be targeted
+- Some well-secured organisations will still experience breaches
 
 **Value Proposition:**
 DSI doesn't eliminate risk. It systematically identifies elevated risk so it can be appropriately priced, mitigated, or declined.
