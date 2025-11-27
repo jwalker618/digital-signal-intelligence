@@ -340,6 +340,4 @@ Larger institutions have:
 
 Asset size multipliers reflect this.
 
----
 
-*Conforms to DSI Principles v1.0*
