@@ -27,8 +27,7 @@ import logging
 import json
 
 # Import website discovery module
-# In production: from website_discovery import WebsiteDiscoveryEngine, DiscoveryResult
-# For now, we'll reference it
+from models.website_discovery import WebsiteDiscoveryEngine, DiscoveryResult
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
