@@ -1,8 +1,8 @@
 # Signal Collection Module
 
-**Intelligent corporate website analysis for insurance pricing**
+**Intelligent web analysis for insurance pricing**
 
-The Signal Collection Module extracts model-specific information from corporate websites to inform insurance pricing decisions. It combines intelligent crawling, content extraction, and configurable analysis to identify relevant signals for different insurance models.
+The Signal Collection Module extracts model-specific information from corporate websites and other online sources to inform insurance pricing decisions. It combines intelligent crawling, content extraction, and configurable analysis to identify relevant signals for different insurance models.
 
 ## 🎯 Overview
 
@@ -14,6 +14,27 @@ Different insurance models require different types of information:
 
 This module provides model-specific collectors that can be configured to extract exactly the information needed for each pricing model.
 
+## Signal Categories and Scoring
+DSI collects and scores signals across multiple categories. 
+Each signal is scored 0-100, with higher scores indicating better risk posture. 
+The composite score scales these to 0-1000.
+
+### Security Signal Example
+* **SSL/TLS Configuration (8%)** Evaluates the quality of SSL/TLS implementation including certificate validity, protocol versions, cipher suites, and vulnerability exposure. Source: SSL Labs API.
+* **Security Headers (10%)** Measures implementation of security headers including Content-Security-Policy, X-Frame-Options, Strict-Transport-Security, Referrer-Policy, and Permissions-Policy.
+* **Known Vulnerabilities (20%)** Identifies exposed services with known vulnerabilities via Shodan and CVE databases. This is the highest-weighted signal due to strong correlation with breach probability.
+* **Patch Discipline (15%)** Evaluates how quickly an organization updates software after vulnerabilities are disclosed. Uses version analysis and Wayback Machine historical patterns.
+* **MFA Indicators (12%)** Assesses multi-factor authentication implementation signals across login pages and authentication flows. Critical for preventing credential-based attacks.
+
+### Risk Tier Classification
+The DSI composite score (0-1000) determines risk tier classification and underwriting workflow:
+|Score|Tier|Classification|Action|
+|-|-|-|-|
+|750-1000|Tier 1|Preferred|Auto-approve|
+|650-749|Tier 2|Standard|Auto-approve|
+|500-649|Tier 3|Elevated|Manual review|
+|0-499|Tier 4|High Risk|Decline or conditions|
+
 ## ✨ Features
 
 ### Model-Specific Collectors
@@ -23,26 +44,56 @@ This module provides model-specific collectors that can be configured to extract
 - **EnergySignalCollector**: Identifies safety incidents and ESG information
 
 ### Intelligent Crawling
-
 - Priority URL handling (crawl important pages first)
 - Configurable depth and page limits
 - Rate limiting and politeness
 - Content-type aware processing
 
 ### Content Extraction
-
 - PDF extraction with multiple fallback strategies
 - HTML article extraction with date awareness
 - Document type detection and routing
 - Metadata extraction
 
 ### Configurable Analysis
-
 - Custom keywords per model
 - Time-based filtering (e.g., last 12 months)
 - Relevance scoring
 - Context extraction
 - Pattern matching with regex
+
+### Signal Scoring Engine (scoring_engine.py)
+Transforms raw observations into normalised 0 - 100 scores with explicit rubrics.
+
+**key classes**
+- `SSLScorer` - Scores SSL/TLS configuration quality
+- `SecurityHeadersScorer` - Evaluates security header implementation
+- `VulnerabilityScorer` - Assesses exposure to known CVEs
+- `GovernanceTransparencyScorer` - Measures corporate governance signals
+- `TechnologyStackScorer` - Evaluates tech stack modernity
+- `ComprehensiveSignalScorer` - Unified scoring orchestrator
+
+### External API Integrations (`api_integrations.py`)
+Production-ready clients for security intelligence APIs.
+
+**Supported APIs:**
+| API | Purpose | Auth Required |
+|-----|---------|---------------|
+| SSL Labs | SSL/TLS grading | No |
+| Shodan | Exposed services, vulnerabilities | Yes |
+| Have I Been Pwned | Credential breach exposure | Yes |
+| Wayback Machine | Historical website analysis | No |
+| BuiltWith | Technology detection | Yes |
+| SecurityHeaders.com | Header analysis | No |
+
+### Validation Framework (validation/validation_framework.py)
+Statistical validation to prove DSI predicts losses.
+
+**Key Metrics:**
+- **Gini Coefficient** - Measures discrimination power (target: >0.30)
+- **C-Statistic** - AUC-ROC for claim prediction
+- **Quintile Analysis** - Loss ratio by risk segment
+- **Lift** - Difference between best and worst quintile loss ratios
 
 ## 📦 Installation
 
@@ -155,6 +206,75 @@ if result.success:
         print(f"  - {incident.keyword} on {incident.date}")
         print(f"    {incident.context[:150]}")
 ```
+
+### Scoring Engine Example
+```python
+from scoring_engine import ComprehensiveSignalScorer
+
+scorer = ComprehensiveSignalScorer()
+
+# Score from SSL Labs result
+ssl_result = {"grade": "A", "protocols": ["TLSv1.3"], ...}
+ssl_signal = scorer.ssl_scorer.score_from_ssl_labs(ssl_result)
+print(f"SSL Score: {ssl_signal.score}, Evidence: {ssl_signal.evidence}")
+
+# Calculate composite
+all_signals = scorer.score_all_signals(
+   ssl_labs_result=ssl_result,
+   headers=response_headers,
+   url="https://example.com",
+   ...
+)
+composite, confidence = scorer.calculate_composite_score(all_signals)
+```
+
+### API Integrations Example
+```python
+from api_integrations import IntegratedSignalCollector
+
+collector = IntegratedSignalCollector(
+   shodan_api_key="YOUR_KEY",
+   hibp_api_key="YOUR_KEY"
+)
+
+results = collector.collect_all_signals("example.com")
+summary = collector.get_collection_summary(results)
+```
+
+### Validation Framework Example
+```python
+from validation_framework import ValidationFramework, SyntheticDataGenerator
+
+# Generate test data or load real policies
+policies = SyntheticDataGenerator.generate_policies(n=2000)
+
+# Run validation
+framework = ValidationFramework()
+result = framework.validate_model(policies, "DSI Cyber v1.0")
+
+print(f"Gini: {result.gini_coefficient:.3f}")
+print(f"Quintile Lift: {result.quintile_lift:.1%}")
+print(f"Improvement: {result.improvement_points:.1f} points")
+```
+
+### Run Scoring Engine Tests
+```bash
+cd models/signal_collection
+python scoring_engine.py
+```
+
+### Run Validation Demo
+```bash
+cd models/signal_collection/validation
+python validation_framework.py
+```
+
+### Open Interactive Demos
+Open the HTML files in any modern browser:
+- `docs/demos/dsi_demo_dashboard.html`
+- `docs/demos/dsi_retrospective_casestudies.html`
+
+---
 
 ## ⚙️ Configuration
 
@@ -421,6 +541,8 @@ signal_collection/
 ├── config.py                # Configuration classes
 ├── crawler.py               # Website crawler
 ├── collectors.py            # Model-specific collectors
+├── scoring_engine.py        # Conversion of signals into weighted composite score
+├── api_integrations.py      # API links for Signal Extraction
 ├── extractors/              # Content extractors
 │   ├── __init__.py
 │   ├── document_extractor.py
@@ -432,6 +554,9 @@ signal_collection/
 ├── examples/                # Example scripts
 │   ├── __init__.py
 │   └── example_signal_collection.py
+├── validation/                # Example scripts
+│   ├── __init__.py
+│   └── validation_framework.py
 └── README.md               # This file
 ```
 

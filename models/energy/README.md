@@ -1,369 +1,376 @@
-# DSI Energy Sector Pricing Models
-Python implementation of Digital Signal Intelligence pricing models for upstream, midstream, and downstream energy coverages.
+# DSI Energy Insurance Pricing Model v2.0
 
 ## Overview
-These models implement automated insurance pricing based on digital footprint analysis for energy sector companies. The models support six coverage types across three energy segments.
 
-### Installation
+This model implements Digital Signal Intelligence (DSI) for energy insurance pricing, conforming to Foundational Principles. It replaces traditional asset-by-asset engineering assessments with operator-level behavioral analysis based on publicly observable safety and environmental signals.
 
-``` bash
-# Clone repository
-git clone https://github.com/jwalker618/digital-signal-intelligence.git
-cd digital-signal-intelligence/models/energy
- 
-# Install dependencies
-pip install -r requirements.txt
+**Key DSI Principle:** We assess OPERATOR safety culture and operational patterns, not individual asset characteristics. Good operators maintain all assets well; poor operators have systemic issues across their portfolio.
+
+**Energy Insurance Suitability for DSI:**
+- OSHA/BSEE safety records are public and structured
+- EPA violations are searchable databases
+- Satellite imagery reveals operational patterns (flaring, facility activity)
+- SEC filings disclose environmental liabilities
+- Industry benchmarking data is available
+
+---
+
+## DSI Principles Compliance
+
+| Principle | Implementation |
+|-----------|----------------|
+| External Observability | OSHA, EPA, BSEE records; satellite imagery |
+| Machine Readability | Regulatory databases are structured and API-accessible |
+| Network Authority | JV partners, contractor quality, regulator relationships |
+| Behavioral Inference | Safety metrics, spill history, maintenance patterns |
+| Absence as Signal | Missing ESG reporting, no industry membership |
+| Structured Data Utilisation | ESG ratings, credit ratings |
+| Minimal Direct Inquiry | 6 optional questions |
+| Organisational Assessment | Operator-level, not asset-level |
+| Simplicity in Scoring | Signal → Score → Tier → Price |
+| Agentic Readiness | All sources programmatically accessible |
+
+---
+
+## The Operator-Level Approach
+
+Traditional energy underwriting requires engineering surveys of individual assets. DSI inverts this:
+
+| Traditional | DSI |
+|-------------|-----|
+| Individual asset surveys | Operator behavior patterns |
+| Asset-by-asset pricing | Fleet-wide safety performance |
+| Engineering reports | OSHA/EPA compliance records |
+| On-site inspections | Satellite-derived operational patterns |
+| One asset, one price | Operator profile → portfolio pricing |
+
+**Why this works:** Operators with strong safety cultures don't have random unsafe assets. Poor operators have systemic issues that appear in regulatory records, incident rates, and observable behavior patterns.
+
+---
+
+## Signal Framework (43 Signals)
+
+### Category Weights
+
+| Category | Weight | Rationale |
+|----------|--------|-----------|
+| Network Authority | 10% | Quality of industry relationships |
+| Safety Performance | 30% | OSHA, BSEE, process safety - critical |
+| Environmental Compliance | 20% | EPA, spills - liability exposure |
+| Operational Telemetry | 10% | Satellite, production patterns |
+| Financial Stability | 10% | Affects maintenance investment |
+| Asset Portfolio | 10% | Age, complexity, concentration |
+| Corporate Footprint | 5% | Digital presence |
+| Structured Data | 5% | Third-party ratings |
+
+### Key Signal Categories
+
+#### Safety Performance (30%)
+*From OSHA, BSEE, industry databases*
+
+| Signal | Weight | What It Measures |
+|--------|--------|------------------|
+| OSHA TRIR | 20% | Total Recordable Incident Rate vs benchmark |
+| OSHA Violations | 15% | Serious/willful violations |
+| BSEE Incidents | 10% | Offshore incidents (if applicable) |
+| Process Safety | 20% | Tier 1/Tier 2 PSE rates |
+| Fatality History | 15% | Work-related fatalities |
+| Major Incidents | 15% | Explosions, blowouts, major spills |
+
+#### Environmental Compliance (20%)
+*From EPA, state agencies, satellite data*
+
+| Signal | Weight | What It Measures |
+|--------|--------|------------------|
+| EPA Violations | 20% | CAA, CWA, RCRA violations |
+| Spill History | 25% | NRC reports, state records |
+| Emissions Compliance | 15% | Air permit compliance |
+| Flaring | 15% | Satellite-derived flaring intensity |
+| Methane | 15% | Satellite-derived methane emissions |
+| Remediation | 10% | Remediation obligations |
+
+---
+
+## Network Authority Signals
+
+Energy network authority captures who trusts the operator:
+
+### JV Partner Quality
+
+**What it measures:** Quality of joint venture partners.
+
+**Why it matters:** Supermajors and quality NOCs only partner with operators meeting their HSE standards. Being trusted by Shell, Chevron, or Equinor is strong network authority.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Supermajor JV partners, operated assets |
+| 75-89 | Major independent JV partners |
+| 60-74 | Regional operator partners |
+| 40-59 | Limited JV activity |
+| 0-39 | No quality JV relationships |
+
+### Contractor Quality
+
+**What it measures:** Relationships with tier-1 service companies.
+
+**Why it matters:** Top service companies (Schlumberger, Halliburton, Baker Hughes) have HSE requirements for operators they work with.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Exclusive tier-1 contractor relationships |
+| 75-89 | Primarily tier-1 contractors |
+| 60-74 | Mix of tier-1 and tier-2 |
+| 40-59 | Primarily tier-2/3 contractors |
+| 0-39 | Unknown or concerning contractors |
+
+---
+
+## Safety Performance Signals
+
+### OSHA Total Recordable Incident Rate (TRIR)
+
+**What it measures:** Recordable incidents per 200,000 hours worked.
+
+**Collection method:**
+- OSHA inspection database
+- SEC filings (sustainability reports)
+- Industry benchmarking databases
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | TRIR <0.5 (top quartile) |
+| 75-89 | TRIR 0.5-1.0 |
+| 60-74 | TRIR 1.0-2.0 (industry average) |
+| 40-59 | TRIR 2.0-4.0 |
+| 0-39 | TRIR >4.0 or major concerns |
+
+### Process Safety Events
+
+**What it measures:** Tier 1 and Tier 2 process safety events.
+
+**Why it matters:** Process safety events (releases, fires, explosions) are the primary source of major energy insurance claims.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 95-100 | Zero Tier 1 PSE in past 5 years |
+| 80-94 | Single Tier 1 PSE, no pattern |
+| 60-79 | Multiple Tier 1 PSE, improving trend |
+| 40-59 | Multiple Tier 1 PSE, no improvement |
+| 0-39 | Major process safety concerns |
+
+---
+
+## Environmental Compliance Signals
+
+### Spill History
+
+**What it measures:** Reportable spills from NRC and state databases.
+
+**Collection method:**
+- National Response Center (NRC) reports
+- State environmental agency records
+- EPA enforcement database
+- SEC environmental disclosures
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 95-100 | No reportable spills in 5 years |
+| 80-94 | Minor spills only, rapid response |
+| 60-79 | Moderate spills, remediated |
+| 40-59 | Significant spill history |
+| 0-39 | Major spills or ongoing issues |
+
+### Flaring Intensity (Satellite-Derived)
+
+**What it measures:** Gas flaring relative to production.
+
+**Collection method:**
+- VIIRS satellite nightfire data
+- World Bank GGFR database
+- Operator-reported data validation
+
+**Why it matters:** Excessive flaring indicates poor operational practices and environmental performance.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Near-zero flaring, gas capture |
+| 75-89 | Below industry average |
+| 60-74 | Industry average |
+| 40-59 | Above average flaring |
+| 0-39 | Excessive flaring |
+
+---
+
+## Direct Inquiry Questions (6 Maximum)
+
+| Question | Type | Impact |
+|----------|------|--------|
+| Major incidents in past 5 years? | Yes/No | -150 if Yes, +50 if No |
+| Fatalities in past 3 years? | Yes/No | -100 if Yes, +30 if No |
+| Pending regulatory enforcement? | Yes/No | -75 if Yes |
+| Unfunded decommissioning obligations? | Yes/No | -50 if Yes |
+| JV operator status? | Yes/No | Informational |
+| Third-party contractors for D&C? | Yes/No | Informational |
+
+---
+
+## Pricing Structure
+
+### Base Rate by Tier (per $1M TIV)
+
+| Tier | Score | Rate |
+|------|-------|------|
+| 1 Preferred | 800+ | 0.08% |
+| 2 Standard | 650-799 | 0.12% |
+| 3 Elevated | 500-649 | 0.18% |
+| 4 High Risk | 350-499 | 0.28% |
+| 5 Critical | <350 | 0.45% |
+
+### Operator Type Multipliers
+
+| Type | Multiplier |
+|------|------------|
+| Supermajor | 0.75x |
+| Major Integrated | 0.85x |
+| Large Independent | 0.95x |
+| Mid Independent | 1.00x |
+| Small Independent | 1.20x |
+| Private Equity | 1.15x |
+| National Oil | 0.90x |
+| Unknown | 1.40x |
+
+### Segment Multipliers
+
+| Segment | Multiplier |
+|---------|------------|
+| Renewable | 0.70x |
+| Midstream Pipeline | 0.80x |
+| Midstream Storage | 0.85x |
+| Power Generation | 0.90x |
+| Upstream Unconventional | 0.95x |
+| Upstream Conventional | 1.00x |
+| Midstream Processing | 1.00x |
+| Upstream Offshore | 1.20x |
+| Downstream Petrochemical | 1.25x |
+| Downstream Refining | 1.30x |
+| Upstream Deepwater | 1.50x |
+
+### Geography Multipliers
+
+| Geography | Multiplier |
+|-----------|------------|
+| US Onshore | 1.00x |
+| Global Diversified | 1.05x |
+| Asia-Pacific | 1.10x |
+| US Gulf Shelf | 1.10x |
+| North Sea | 1.15x |
+| Middle East | 1.20x |
+| Latin America | 1.20x |
+| West Africa | 1.25x |
+| US Gulf Deepwater | 1.40x |
+
+---
+
+## Critical Overrides
+
+| Condition | Result |
+|-----------|--------|
+| Major incident score < 40 | Tier 4 minimum |
+| Fatality score < 50 | Tier 3 minimum |
+| OSHA violations score < 40 | Tier 3 minimum |
+| EPA violations score < 40 | Tier 3 minimum |
+| Major spill history (< 40) | Tier 4 minimum |
+| Restructuring history (< 40) | Tier 4 minimum |
+| Major incidents disclosed | Tier 4 minimum |
+| Fatalities disclosed | Tier 3 minimum |
+
+---
+
+## Data Sources
+
+| Source | Data Provided |
+|--------|---------------|
+| OSHA | Inspection records, violations, incident rates |
+| BSEE | Offshore incidents, INCs |
+| EPA | Violations, enforcement actions, spills |
+| NRC | Reportable spill reports |
+| SEC EDGAR | 10-K environmental disclosures |
+| VIIRS Satellite | Flaring intensity |
+| GHGSat/Kayrros | Methane emissions |
+| MSCI/Sustainalytics | ESG ratings |
+| State Agencies | Permits, violations, remediation |
+
+---
+
+## Example Output
+
+```
+Operator: PetroCorp International
+Type: MAJOR_INTEGRATED | Segment: MIXED
+Geography: GLOBAL_DIVERSIFIED
+
+Composite Score: 947/1000 | Confidence: 95%
+
+Category Scores:
+  safety_performance: 90/100
+  environmental_compliance: 83/100
+  financial_stability: 88/100
+  network_authority: 88/100
+  operational_telemetry: 86/100
+
+Tier: 1 (Preferred)
+Decision: APPROVE
+
+Total Insured Value: $5,000,000,000
+Annual Premium: $3,748,500
+Rate: 0.075%
+Deductible: $10,000,000
 ```
 
-### Quick Start
-```python
+---
 
-from dsi_energy_pricing import (
-    CompanyProfile, DigitalSignals, EnergySegment,
-    create_pricing_models
-)
+## Comparison: DSI vs Traditional Energy Underwriting
 
-# Create company profile
-company = CompanyProfile(
-    company_name="Example Energy Corp",
-    segment=EnergySegment.UPSTREAM,
-    country="United States",
-    annual_revenue=5_000_000_000,
-    employees=12000,
-    years_operating=25,
-    public_traded=True,
-    state_owned=False,
-    signals=DigitalSignals(
-        ssl_score=85,
-        transparency_score=78,
-        domain_authority=82,
-        # ... other signals
-    )
-)
+| Aspect | Traditional | DSI |
+|--------|-------------|-----|
+| Unit of assessment | Individual asset | Operator portfolio |
+| Primary data | Engineering surveys | Regulatory records |
+| Processing time | Weeks (survey scheduling) | Minutes |
+| Safety assessment | Self-reported questionnaire | OSHA/BSEE databases |
+| Environmental check | Application questions | EPA records + satellite |
+| On-site requirement | Per major asset | Sample-based Tier 3+ |
+| Scalability | Linear with assets | Constant per operator |
 
-# Create pricing models
-models = create_pricing_models(EnergySegment.UPSTREAM)
+---
 
-# Price all coverages
-for coverage_name, model in models.items():
-    result = model.price(company)
-    print(f"{coverage_name}: ${result.annual_premium:,.0f}")
-```
+## Energy-Specific Considerations
 
-## Model Architecture
-### Three Energy Segments
-#### Upstream (Exploration & Production)
+### Segment Risk Variation
 
-* Operators Extra Expense (OEE)
-* Control of Well (COW)
-* Pollution Liability (POLL)
-* Property Damage (PD)
-* Business Interruption (BI)
-* General Liability (GL)
+Energy covers widely different risk profiles:
+- Deepwater offshore: High severity, complex operations
+- Onshore unconventional: High frequency, lower severity
+- Refining: Process safety, high values
+- Midstream: Linear exposures, third-party liability
 
-#### Midstream (Transportation & Storage)
+DSI handles this through segment multipliers while maintaining operator-level assessment.
 
-* Operators Extra Expense (OEE)
-* Pollution Liability (POLL)
-* Property Damage (PD)
-* Business Interruption (BI)
-* General Liability (GL)
+### Financial Stability Impact
 
-#### Downstream (Refining & Distribution)
+Unlike some lines, energy operator financial health directly affects:
+- Maintenance investment levels
+- Decommissioning obligation coverage
+- Contractor quality affordable
+- Response capability
 
-* Operators Extra Expense (OEE)
-* Pollution Liability (POLL)
-* Property Damage (PD)
-* Business Interruption (BI)
-* General Liability (GL)
+Financial signals are weighted accordingly.
 
-#### Four Signal Categories
-Each with 6 individual metrics (24 total signals):
+---
 
-1/. Infrastructure Signals (20-30% weight)
-* SSL certificate status
-* Security headers implementation
-* Domain age
-* Technology stack modernity
-* Uptime reliability
-* Mobile optimization
-
-2/. Content Signals (22-32% weight)
-* Update frequency
-* Transparency score
-* Governance disclosure
-* Multilingual presence
-* Certification visibility
-* Incident response protocols
-
-3/. Network Signals (25-35% weight)
-* Backlink quality
-* Domain authority
-* Industry citations
-* Partnership quality
-* Social engagement
-* Supplier diversity
-
-4/. Behavioral Signals (25-30% weight)
-* Digital transformation
-* Innovation signals
-* Operational consistency
-* Compliance history
-* Investor relations sophistication
-* Sustainability commitment
-
-## Pricing Formula
-```
-Technical Rate = Base Rate × DSI Modifier × Size Modifier × 
-                 Territory Modifier × Loss History Modifier
-
-Annual Premium = Technical Rate × Exposure Base
-```
-
-### DSI Modifier Calculation
-Composite Score (0-1000) = Weighted average of four signal categories
-
-#### Score-Based Modifiers:
-* 750-1000: 0.70-0.85x (Preferred)
-* 650-750: 0.85-1.00x (Standard)
-* 500-650: 1.00-1.25x (Elevated)
-* 0-500: 1.25-1.75x (High Risk)
-
-#### Exposure Base Calculation
-* Upstream: Revenue / $1M (or production volume proxy)
-* Midstream: Pipeline miles × $100K (or revenue / $1M)
-* Downstream: Refining capacity × $50K (or revenue / $1M)
-
-## Risk Tiers
-| Tier | Score Range | Description | Recommendation|
-|------|-------------|-------------|---------------|
-|Tier 1|750-1000|Preferred|Auto-Approve - Preferred Pricing|
-|Tier 2|650-750|Standard|Auto-Approve - Standard Pricing|
-|Tier 3|500-650|Elevated|Manual Review Required|
-|Tier 4|0-500|High Risk|Decline or Heavy Manual Review|
-
-### Example Output
-```
-DSI PRICING ANALYSIS: Petróleo Brasileiro S.A.
-================================================================================
-Segment: UPSTREAM
-Composite DSI Score: 742/1000
-
-OEE Coverage:
-  Base Rate: $1,250.00 per $1M
-  DSI Modifier: 0.748x
-  Technical Rate: $845.32 per $1M
-  Exposure Base: $102,000M
-  Annual Premium: $86,222,640
-  Risk Tier: Tier 1 - Preferred
-  Confidence: 95%
-  Expected LR: 48.3%
-  Recommendation: Auto-Approve - Preferred Pricing
-  Reasoning: Exceptional digital maturity (score: 742). Strong signals across 
-             all categories indicate robust operational discipline and risk 
-             management. Expected LR: 48.3%.
-```
-
-#### Usage Examples
-##### Example 1: Price Single Coverage
-``` python
-from dsi_energy_pricing import UpstreamPricingModel, CoverageType
-
-# Create model for Control of Well coverage
-model = UpstreamPricingModel(CoverageType.CONTROL_OF_WELL)
-
-# Price the company
-result = model.price(company)
-
-print(f"Premium: ${result.annual_premium:,.0f}")
-print(f"Recommendation: {result.recommendation}")
-```
-
-#### Example 2: Batch Pricing Multiple Companies
-``` python
-import pandas as pd
-
-companies = [company1, company2, company3]
-models = create_pricing_models(EnergySegment.UPSTREAM)
-
-results = []
-for company in companies:
-    for cov_name, model in models.items():
-        result = model.price(company)
-        results.append({
-            'Company': result.company_name,
-            'Coverage': result.coverage,
-            'Premium': result.annual_premium,
-            'Score': result.composite_score,
-            'Recommendation': result.recommendation
-        })
-
-df = pd.DataFrame(results)
-df.to_csv('pricing_results.csv', index=False)
-```
-
-#### Example 3: Signal Sensitivity Analysis
-```  python
-# Test impact of different signal levels
-base_signals = company.signals
-
-for transparency in [30, 50, 70, 90]:
-    test_signals = DigitalSignals(**base_signals.__dict__)
-    test_signals.transparency_score = transparency
-    
-    test_company = CompanyProfile(**company.__dict__)
-    test_company.signals = test_signals
-    
-    result = model.price(test_company)
-    print(f"Transparency {transparency}: Premium ${result.annual_premium:,.0f}")
-```
-
-## Data Integration
-### Input Data Sources
-Models expect digital signals to be populated from:
-
-1/. Infrastructure Signals: SSL Labs API, SecurityHeaders.com, Shodan
-2/. Content Signals: Web scraping, NLP analysis, manual review
-3/. Network Signals: Ahrefs API, Moz API, Common Crawl
-4/. Behavioral Signals: Historical snapshots, news analysis, SEC filings
-
-
-### Sample Data Pipeline
-``` py
-# Pseudocode for data pipeline
-def collect_digital_signals(company_domain):
-    signals = DigitalSignals()
-    
-    # Infrastructure
-    signals.ssl_score = check_ssl_certificate(company_domain)
-    signals.security_headers = analyze_security_headers(company_domain)
-    
-    # Content
-    signals.transparency_score = analyze_content_transparency(company_domain)
-    signals.update_frequency = calculate_update_frequency(company_domain)
-    
-    # Network
-    signals.domain_authority = get_moz_domain_authority(company_domain)
-    signals.backlink_quality = analyze_backlink_profile(company_domain)
-    
-    # Behavioral
-    signals.compliance_history = check_regulatory_filings(company_name)
-    signals.operational_consistency = analyze_historical_snapshots(company_domain)
-    
-    return signals
-```
-
-## Model Validation
-### Backtesting Approach
-```  py
-from dsi_energy_pricing import validate_model
-
-# Load historical data
-historical_data = pd.read_csv('historical_losses_2019_2024.csv')
-
-# Backtest model
-validation_results = validate_model(
-    model=UpstreamPricingModel(CoverageType.CONTROL_OF_WELL),
-    historical_data=historical_data,
-    test_period='2022-2024'
-)
-
-print(f"Gini Coefficient: {validation_results.gini:.3f}")
-print(f"Top Quintile LR: {validation_results.top_quintile_lr:.2%}")
-print(f"Bottom Quintile LR: {validation_results.bottom_quintile_lr:.2%}")
-```
-
-### Expected Performance Metrics
-* Gini Coefficient: Target > 0.35
-* C-Statistic: Target > 0.65
-* Top vs Bottom Quintile: 40%+ LR differential
-* Calibration: Predicted vs actual LR within 5 points
-
-## Customization
-### Adjusting Base Rates
-``` py
-# Modify base rates
-model.base_rates[("upstream", "COW")] = 4000.0  # Increase COW base rate
-
-# Or load from external file
-import json
-with open('custom_rates.json', 'r') as f:
-    model.base_rates = json.load(f)
-```
-
-### Adjusting Signal Weights
-``` py
-# Emphasize behavioral signals for upstream
-model.weights["upstream"]["behavioral"] = 0.35
-model.weights["upstream"]["network"] = 0.30
-Custom Signal Calculations
-pythonclass CustomUpstreamModel(UpstreamPricingModel):
-    def calculate_dsi_modifier(self, signals):
-        # Add custom logic
-        modifier, score = super().calculate_dsi_modifier(signals)
-        
-        # Penalize low compliance scores more heavily
-        if signals.compliance_history < 50:
-            modifier *= 1.20
-        
-        return modifier, score
-```
-
-## API Integration
-Models can be wrapped in REST API for integration:
-``` py
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
-@app.route('/api/price', methods=['POST'])
-def price_coverage():
-    data = request.json
-    
-    # Parse input
-    company = CompanyProfile(**data['company'])
-    segment = EnergySegment(data['segment'])
-    coverage = CoverageType(data['coverage'])
-    
-    # Create model and price
-    if segment == EnergySegment.UPSTREAM:
-        model = UpstreamPricingModel(coverage)
-    elif segment == EnergySegment.MIDSTREAM:
-        model = MidstreamPricingModel(coverage)
-    else:
-        model = DownstreamPricingModel(coverage)
-    
-    result = model.price(company)
-    
-    return jsonify({
-        'premium': result.annual_premium,
-        'recommendation': result.recommendation,
-        'score': result.composite_score,
-        'confidence': result.confidence_level
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-```
-
-## Testing
-``` bash
-# Run unit tests
-python -m pytest tests/
-
-# Run with coverage
-python -m pytest tests/ --cov=dsi_energy_pricing --cov-report=html
-```
-
-## Performance Considerations
-* Signal Collection: Cache results for 7 days to reduce API calls
-* Batch Processing: Use multiprocessing for large portfolios
-* Memory: Models use ~50MB RAM per instance
-* Speed: ~50ms per pricing calculation on standard hardware
-
-## Limitations
-* Data Coverage: Requires sufficient digital footprint (60%+ signals populated)
-* Emerging Markets: Limited effectiveness for companies with minimal web presence
-* Private Companies: May have less public digital information
-* Real-Time: Signals updated on schedule (weekly/monthly), not real-time
-
+*Conforms to DSI Principles v1.0*
