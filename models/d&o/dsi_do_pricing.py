@@ -1,1076 +1,587 @@
 """
-Digital Signal Intelligence - Directors & Officers (D&O) Insurance Pricing Model
+Digital Signal Intelligence (DSI) - Directors & Officers Insurance Pricing Model
 =================================================================================
 
-This module implements DSI-based pricing for D&O insurance, covering:
-- Side A (Personal liability when company cannot indemnify)
-- Side B (Company reimbursement for indemnifying D&Os)
-- Side C (Entity securities coverage)
-- Employment Practices Liability (EPL) 
-- Fiduciary Liability
+DSI-compliant D&O insurance pricing based entirely on externally observable
+signals, network authority analysis, and minimal optional direct inquiry.
+
+This model conforms to DSI Principles v1.0.
 
 D&O insurance is uniquely suited to DSI because corporate governance generates
-extensive digital footprints through SEC filings, proxy statements, news coverage,
-litigation databases, executive backgrounds, and ESG ratings.
+extensive public footprints through SEC filings, proxy statements, court records,
+and regulatory databases - all structured, authoritative, and machine-readable.
 
-Signal Categories:
-1. Corporate Governance (board composition, independence, committees)
-2. Financial Health (accounting quality, audit opinions, debt metrics)
-3. Litigation History (securities suits, derivative actions, regulatory)
-4. Executive Signals (turnover, compensation, background issues)
-5. ESG & Reputation (controversies, stakeholder sentiment, ESG scores)
-6. Regulatory Environment (industry scrutiny, enforcement trends)
+Author: John Walker
+Version: 2.0
+Date: November 2025
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Set
 from enum import Enum
-from datetime import datetime, timedelta
-import json
+from typing import Dict, List, Optional, Tuple
+from datetime import datetime
 
+
+# =============================================================================
+# ENUMERATIONS
+# =============================================================================
 
 class CompanyType(Enum):
-    """Company classification for D&O"""
-    PUBLIC_LARGE_CAP = "public_large_cap"      # >$10B market cap
-    PUBLIC_MID_CAP = "public_mid_cap"          # $2B-$10B
-    PUBLIC_SMALL_CAP = "public_small_cap"      # $300M-$2B
-    PUBLIC_MICRO_CAP = "public_micro_cap"      # <$300M
+    """Company type classification from observable signals."""
+    PUBLIC_LARGE_CAP = "public_large_cap"
+    PUBLIC_MID_CAP = "public_mid_cap"
+    PUBLIC_SMALL_CAP = "public_small_cap"
+    PUBLIC_MICRO_CAP = "public_micro_cap"
     PRE_IPO = "pre_ipo"
     SPAC = "spac"
-    PRIVATE_PE_BACKED = "private_pe_backed"
-    PRIVATE_VC_BACKED = "private_vc_backed"
-    PRIVATE_FAMILY = "private_family"
+    PRIVATE_BACKED = "private_backed"
+    PRIVATE_OTHER = "private_other"
     NONPROFIT = "nonprofit"
 
 
-class IndustryRisk(Enum):
-    """Industry risk classification for D&O"""
-    FINANCIAL_SERVICES = "financial_services"   # Banks, insurance, asset management
-    HEALTHCARE_PHARMA = "healthcare_pharma"     # Biotech, pharma, medical devices
-    TECHNOLOGY = "technology"                    # Software, hardware, internet
-    ENERGY = "energy"                           # Oil & gas, utilities, renewables
+class IndustryClassification(Enum):
+    """Industry classification from SIC/NAICS codes."""
+    FINANCIAL_SERVICES = "financial_services"
+    HEALTHCARE_PHARMA = "healthcare_pharma"
+    TECHNOLOGY = "technology"
+    ENERGY = "energy"
     RETAIL_CONSUMER = "retail_consumer"
     MANUFACTURING = "manufacturing"
     REAL_ESTATE = "real_estate"
-    CRYPTO_DIGITAL = "crypto_digital_assets"    # Highest risk category
+    CRYPTO_DIGITAL = "crypto_digital"
     CANNABIS = "cannabis"
     OTHER = "other"
 
 
-class CoverageType(Enum):
-    """D&O coverage types"""
-    SIDE_A = "side_a"                    # Personal D&O liability
-    SIDE_B = "side_b"                    # Corporate reimbursement
-    SIDE_C = "side_c"                    # Entity securities coverage
-    ABC_COMBINED = "abc_combined"         # Full D&O package
-    EPL = "employment_practices"          # Employment practices liability
-    FIDUCIARY = "fiduciary"              # ERISA fiduciary
-    CRIME = "crime"                       # Fidelity/crime
+# =============================================================================
+# SIGNAL DATA STRUCTURES
+# =============================================================================
+
+@dataclass
+class NetworkAuthoritySignals:
+    """Type 1: Network Authority Signals - PageRank-style relationship analysis."""
+    auditor_quality_score: float = 0.0
+    auditor_quality_evidence: str = ""
+    legal_counsel_score: float = 0.0
+    legal_counsel_evidence: str = ""
+    banking_relationship_score: float = 0.0
+    banking_relationship_evidence: str = ""
+    investor_quality_score: float = 0.0
+    investor_quality_evidence: str = ""
+    board_network_score: float = 0.0
+    board_network_evidence: str = ""
+    index_inclusion_score: float = 0.0
+    index_inclusion_evidence: str = ""
+    analyst_coverage_score: float = 0.0
+    analyst_coverage_evidence: str = ""
+    industry_association_score: float = 0.0
+    industry_association_evidence: str = ""
 
 
 @dataclass
-class DOSignal:
-    """Individual D&O risk signal"""
-    signal_name: str
-    raw_value: any
-    normalized_score: float  # 0-100
-    weight: float
-    evidence: str
-    data_source: str
-    observation_date: datetime
-    confidence: float = 1.0
+class GovernanceSignals:
+    """Type 6: Public Record Signals - from SEC proxy statements."""
+    board_independence_score: float = 0.0
+    board_independence_evidence: str = ""
+    board_diversity_score: float = 0.0
+    board_diversity_evidence: str = ""
+    ceo_chair_separation_score: float = 0.0
+    ceo_chair_separation_evidence: str = ""
+    committee_structure_score: float = 0.0
+    committee_structure_evidence: str = ""
+    board_refreshment_score: float = 0.0
+    board_refreshment_evidence: str = ""
+    related_party_score: float = 0.0
+    related_party_evidence: str = ""
+    compensation_structure_score: float = 0.0
+    compensation_structure_evidence: str = ""
+    shareholder_rights_score: float = 0.0
+    shareholder_rights_evidence: str = ""
 
 
 @dataclass
-class CompanyProfile:
-    """Company information for D&O underwriting"""
+class FinancialSignals:
+    """Type 6: Public Record Signals - from SEC filings and market data."""
+    audit_opinion_score: float = 0.0
+    audit_opinion_evidence: str = ""
+    internal_controls_score: float = 0.0
+    internal_controls_evidence: str = ""
+    restatement_score: float = 0.0
+    restatement_evidence: str = ""
+    filing_timeliness_score: float = 0.0
+    filing_timeliness_evidence: str = ""
+    revenue_recognition_score: float = 0.0
+    revenue_recognition_evidence: str = ""
+    debt_covenant_score: float = 0.0
+    debt_covenant_evidence: str = ""
+    stock_volatility_score: float = 0.0
+    stock_volatility_evidence: str = ""
+    short_interest_score: float = 0.0
+    short_interest_evidence: str = ""
+
+
+@dataclass
+class LitigationSignals:
+    """Type 6: Public Record Signals - from PACER, SEC, SCAC."""
+    securities_litigation_score: float = 0.0
+    securities_litigation_evidence: str = ""
+    derivative_litigation_score: float = 0.0
+    derivative_litigation_evidence: str = ""
+    sec_enforcement_score: float = 0.0
+    sec_enforcement_evidence: str = ""
+    regulatory_action_score: float = 0.0
+    regulatory_action_evidence: str = ""
+    pending_litigation_score: float = 0.0
+    pending_litigation_evidence: str = ""
+    whistleblower_score: float = 0.0
+    whistleblower_evidence: str = ""
+
+
+@dataclass
+class ExecutiveSignals:
+    """Type 5/6: Executive-related signals from filings and observable sources."""
+    executive_stability_score: float = 0.0
+    executive_stability_evidence: str = ""
+    cfo_quality_score: float = 0.0
+    cfo_quality_evidence: str = ""
+    insider_trading_score: float = 0.0
+    insider_trading_evidence: str = ""
+    executive_background_score: float = 0.0
+    executive_background_evidence: str = ""
+    trading_plan_score: float = 0.0
+    trading_plan_evidence: str = ""
+
+
+@dataclass
+class CorporateFootprintSignals:
+    """Type 5: Corporate Digital Footprint Signals."""
+    investor_relations_score: float = 0.0
+    investor_relations_evidence: str = ""
+    governance_page_score: float = 0.0
+    governance_page_evidence: str = ""
+    esg_reporting_score: float = 0.0
+    esg_reporting_evidence: str = ""
+    press_release_score: float = 0.0
+    press_release_evidence: str = ""
+    leadership_visibility_score: float = 0.0
+    leadership_visibility_evidence: str = ""
+    hiring_signals_score: float = 0.0
+    hiring_signals_evidence: str = ""
+
+
+@dataclass
+class StructuredDataSignals:
+    """Type 4: Structured Data Feed Signals - third-party ratings."""
+    credit_rating_score: float = 0.0
+    credit_rating_evidence: str = ""
+    esg_rating_score: float = 0.0
+    esg_rating_evidence: str = ""
+    governance_rating_score: float = 0.0
+    governance_rating_evidence: str = ""
+    iss_governance_score: float = 0.0
+    iss_governance_evidence: str = ""
+
+
+@dataclass
+class DirectInquirySignals:
+    """Type 7: Direct Inquiry Signals (Optional) - maximum 5 questions."""
+    pending_claims: Optional[bool] = None
+    regulatory_investigation: Optional[bool] = None
+    planned_transaction: Optional[bool] = None
+    covenant_compliance: Optional[bool] = None
+    executive_dispute: Optional[bool] = None
+
+
+# =============================================================================
+# COMPANY PROFILE
+# =============================================================================
+
+@dataclass
+class DOCompanyProfile:
+    """Company profile from observable data only."""
     company_name: str
     ticker: Optional[str]
+    cik: Optional[str]
+    primary_domain: str
     company_type: CompanyType
-    industry: IndustryRisk
-    market_cap: Optional[float]          # For public companies
-    revenue: float
-    total_assets: float
-    employees: int
-    headquarters_country: str
-    stock_exchange: Optional[str]
-    fiscal_year_end: str
-    year_founded: int
+    industry: IndustryClassification
+    country: str
+    stock_exchange: Optional[str] = None
+    market_cap: Optional[float] = None
+    is_index_member: bool = False
     
-
-@dataclass
-class BoardProfile:
-    """Board of directors composition"""
-    board_size: int
-    independent_directors: int
-    female_directors: int
-    minority_directors: int
-    avg_tenure_years: float
-    avg_age: float
-    directors_over_75: int
-    interlocking_directorships: int      # Directors serving on multiple boards
-    audit_committee_financial_experts: int
-    ceo_is_chairman: bool
-    founder_controlled: bool
+    network_authority: NetworkAuthoritySignals = field(default_factory=NetworkAuthoritySignals)
+    governance: GovernanceSignals = field(default_factory=GovernanceSignals)
+    financial: FinancialSignals = field(default_factory=FinancialSignals)
+    litigation: LitigationSignals = field(default_factory=LitigationSignals)
+    executive: ExecutiveSignals = field(default_factory=ExecutiveSignals)
+    corporate_footprint: CorporateFootprintSignals = field(default_factory=CorporateFootprintSignals)
+    structured_data: StructuredDataSignals = field(default_factory=StructuredDataSignals)
+    direct_inquiry: DirectInquirySignals = field(default_factory=DirectInquirySignals)
 
 
-@dataclass
-class DOSubmission:
-    """Complete D&O insurance submission"""
-    submission_id: str
-    company: CompanyProfile
-    board: BoardProfile
-    coverage_types: List[CoverageType]
-    policy_period_start: datetime
-    policy_period_end: datetime
-    limit_requested: float
-    retention: float
-    broker: str
-    expiring_premium: Optional[float] = None
-    expiring_insurer: Optional[str] = None
-    claims_history: List[Dict] = field(default_factory=list)
+# =============================================================================
+# SCORING ENGINE
+# =============================================================================
 
-
-class DOSignalScorer:
-    """
-    Scores D&O-specific digital signals from various data sources.
+class DODSIScorer:
+    """Calculates composite scores from individual signals."""
     
-    Data Sources:
-    - SEC EDGAR (10-K, 10-Q, 8-K, DEF 14A proxy statements)
-    - PACER (federal litigation database)
-    - State court records
-    - Glassdoor/Indeed (employee sentiment)
-    - News APIs (controversy detection)
-    - ESG rating providers (MSCI, Sustainalytics)
-    - Executive background databases
-    - Short interest data
-    - Social media sentiment
-    """
+    CATEGORY_WEIGHTS = {
+        "network_authority": 0.10,
+        "governance": 0.25,
+        "financial": 0.20,
+        "litigation": 0.25,
+        "executive": 0.10,
+        "corporate_footprint": 0.05,
+        "structured_data": 0.05,
+    }
     
-    # Signal weights for D&O insurance
     SIGNAL_WEIGHTS = {
-        # Corporate Governance (25%)
-        "board_independence": 0.08,
-        "board_diversity": 0.05,
-        "committee_quality": 0.06,
-        "governance_structure": 0.06,
-        
-        # Financial Health (25%)
-        "accounting_quality": 0.10,
-        "audit_opinion": 0.06,
-        "financial_distress": 0.05,
-        "related_party_transactions": 0.04,
-        
-        # Litigation & Regulatory (20%)
-        "securities_litigation_history": 0.08,
-        "regulatory_enforcement": 0.06,
-        "derivative_litigation": 0.03,
-        "class_action_risk": 0.03,
-        
-        # Executive Signals (15%)
-        "executive_turnover": 0.05,
-        "compensation_controversy": 0.04,
-        "insider_trading_patterns": 0.03,
-        "executive_background": 0.03,
-        
-        # ESG & Reputation (15%)
-        "esg_score": 0.05,
-        "controversy_score": 0.05,
-        "employee_sentiment": 0.03,
-        "short_interest": 0.02,
+        "network_authority": {
+            "auditor_quality": 0.20, "legal_counsel": 0.15, "banking_relationship": 0.15,
+            "investor_quality": 0.15, "board_network": 0.15, "index_inclusion": 0.05,
+            "analyst_coverage": 0.10, "industry_association": 0.05,
+        },
+        "governance": {
+            "board_independence": 0.20, "board_diversity": 0.10, "ceo_chair_separation": 0.15,
+            "committee_structure": 0.15, "board_refreshment": 0.10, "related_party": 0.10,
+            "compensation_structure": 0.10, "shareholder_rights": 0.10,
+        },
+        "financial": {
+            "audit_opinion": 0.20, "internal_controls": 0.20, "restatement": 0.20,
+            "filing_timeliness": 0.10, "revenue_recognition": 0.10, "debt_covenant": 0.05,
+            "stock_volatility": 0.10, "short_interest": 0.05,
+        },
+        "litigation": {
+            "securities_litigation": 0.35, "derivative_litigation": 0.15, "sec_enforcement": 0.20,
+            "regulatory_action": 0.15, "pending_litigation": 0.10, "whistleblower": 0.05,
+        },
+        "executive": {
+            "executive_stability": 0.25, "cfo_quality": 0.20, "insider_trading": 0.25,
+            "executive_background": 0.15, "trading_plan": 0.15,
+        },
+        "corporate_footprint": {
+            "investor_relations": 0.25, "governance_page": 0.20, "esg_reporting": 0.15,
+            "press_release": 0.15, "leadership_visibility": 0.15, "hiring_signals": 0.10,
+        },
+        "structured_data": {
+            "credit_rating": 0.30, "esg_rating": 0.20, "governance_rating": 0.30, "iss_governance": 0.20,
+        },
     }
     
-    # Industry base risk factors
-    INDUSTRY_RISK_FACTORS = {
-        IndustryRisk.CRYPTO_DIGITAL: 2.5,
-        IndustryRisk.CANNABIS: 2.0,
-        IndustryRisk.HEALTHCARE_PHARMA: 1.6,
-        IndustryRisk.FINANCIAL_SERVICES: 1.4,
-        IndustryRisk.TECHNOLOGY: 1.3,
-        IndustryRisk.ENERGY: 1.2,
-        IndustryRisk.REAL_ESTATE: 1.1,
-        IndustryRisk.RETAIL_CONSUMER: 1.0,
-        IndustryRisk.MANUFACTURING: 0.95,
-        IndustryRisk.OTHER: 1.0,
-    }
+    def calculate_category_score(self, signals: object, category: str) -> Tuple[float, int, int]:
+        weights = self.SIGNAL_WEIGHTS.get(category, {})
+        weighted_sum, weight_sum, signals_available = 0.0, 0.0, 0
+        
+        for signal_name, weight in weights.items():
+            score = getattr(signals, f"{signal_name}_score", 0)
+            if score > 0:
+                weighted_sum += score * weight
+                weight_sum += weight
+                signals_available += 1
+        
+        return (weighted_sum / weight_sum if weight_sum > 0 else 0.0, signals_available, len(weights))
     
-    def __init__(self):
-        self.signals: Dict[str, DOSignal] = {}
-    
-    def score_board_independence(self, board: BoardProfile) -> DOSignal:
-        """
-        Score board independence and structure.
-        
-        Independent boards provide better oversight and reduce litigation risk.
-        NYSE/NASDAQ require majority independence, but best practice is higher.
-        
-        Scoring:
-        - 90-100: >75% independent, diverse committees, no CEO/Chair duality
-        - 75-89: >66% independent, meets listing standards
-        - 60-74: 50-66% independent, some concerns
-        - 40-59: <50% independent, significant governance gaps
-        - 0-39: Controlled board, major independence issues
-        """
-        independence_ratio = board.independent_directors / board.board_size if board.board_size > 0 else 0
-        
-        # Base score from independence ratio
-        if independence_ratio >= 0.80:
-            base_score = 95
-        elif independence_ratio >= 0.70:
-            base_score = 85
-        elif independence_ratio >= 0.60:
-            base_score = 72
-        elif independence_ratio >= 0.50:
-            base_score = 58
-        else:
-            base_score = 35
-        
-        # Adjustments
-        adjustments = 0
-        evidence_parts = [f"{independence_ratio:.0%} independent directors"]
-        
-        if board.ceo_is_chairman:
-            adjustments -= 10
-            evidence_parts.append("CEO/Chair duality")
-        
-        if board.founder_controlled:
-            adjustments -= 8
-            evidence_parts.append("founder-controlled")
-        
-        if board.interlocking_directorships > 3:
-            adjustments -= 5
-            evidence_parts.append(f"{board.interlocking_directorships} interlocks")
-        
-        if board.directors_over_75 > 2:
-            adjustments -= 5
-            evidence_parts.append(f"{board.directors_over_75} directors over 75")
-        
-        if board.avg_tenure_years > 12:
-            adjustments -= 5
-            evidence_parts.append(f"high avg tenure ({board.avg_tenure_years:.1f}yr)")
-        
-        score = max(min(base_score + adjustments, 100), 10)
-        
-        return DOSignal(
-            signal_name="board_independence",
-            raw_value={"independence_ratio": independence_ratio, "adjustments": adjustments},
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["board_independence"],
-            evidence="; ".join(evidence_parts),
-            data_source="SEC_DEF14A_PROXY",
-            observation_date=datetime.now()
-        )
-    
-    def score_board_diversity(self, board: BoardProfile) -> DOSignal:
-        """
-        Score board diversity.
-        
-        Diverse boards correlate with better governance outcomes and
-        reduced litigation risk. Increasingly important for institutional
-        investors and regulatory scrutiny.
-        """
-        female_ratio = board.female_directors / board.board_size if board.board_size > 0 else 0
-        minority_ratio = board.minority_directors / board.board_size if board.board_size > 0 else 0
-        
-        # Score based on diversity metrics
-        if female_ratio >= 0.40 and minority_ratio >= 0.20:
-            score = 95
-            evidence = f"Excellent diversity: {female_ratio:.0%} female, {minority_ratio:.0%} minority"
-        elif female_ratio >= 0.30 and minority_ratio >= 0.15:
-            score = 85
-            evidence = f"Good diversity: {female_ratio:.0%} female, {minority_ratio:.0%} minority"
-        elif female_ratio >= 0.20:
-            score = 70
-            evidence = f"Adequate diversity: {female_ratio:.0%} female"
-        elif female_ratio >= 0.10:
-            score = 55
-            evidence = f"Below average diversity: {female_ratio:.0%} female"
-        else:
-            score = 35
-            evidence = f"Poor diversity: {female_ratio:.0%} female, {minority_ratio:.0%} minority"
-        
-        return DOSignal(
-            signal_name="board_diversity",
-            raw_value={"female_ratio": female_ratio, "minority_ratio": minority_ratio},
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["board_diversity"],
-            evidence=evidence,
-            data_source="SEC_DEF14A_PROXY",
-            observation_date=datetime.now()
-        )
-    
-    def score_accounting_quality(self, financial_data: Dict) -> DOSignal:
-        """
-        Score accounting quality and financial reporting.
-        
-        Key indicators:
-        - Material weaknesses in internal controls
-        - Restatements
-        - Non-GAAP adjustments magnitude
-        - Revenue recognition complexity
-        - Audit fees relative to peers
-        - CFO turnover
-        """
-        material_weaknesses = financial_data.get("material_weaknesses", 0)
-        significant_deficiencies = financial_data.get("significant_deficiencies", 0)
-        restatements_3yr = financial_data.get("restatements_3_years", 0)
-        late_filings = financial_data.get("late_filings_3_years", 0)
-        non_gaap_gap = financial_data.get("non_gaap_vs_gaap_eps_gap_pct", 0)
-        cfo_changes_3yr = financial_data.get("cfo_changes_3_years", 0)
-        auditor_changes_3yr = financial_data.get("auditor_changes_3_years", 0)
-        
-        # Critical failures
-        if material_weaknesses > 0 and restatements_3yr > 0:
-            score = 15
-            evidence = f"CRITICAL: {material_weaknesses} material weaknesses + {restatements_3yr} restatements"
-        elif material_weaknesses > 0:
-            score = 30
-            evidence = f"Material weakness in internal controls"
-        elif restatements_3yr > 1:
-            score = 35
-            evidence = f"Multiple restatements: {restatements_3yr} in 3 years"
-        elif restatements_3yr > 0:
-            score = 50
-            evidence = f"Financial restatement in past 3 years"
-        elif late_filings > 1:
-            score = 45
-            evidence = f"Multiple late filings: {late_filings} in 3 years"
-        elif significant_deficiencies > 1:
-            score = 55
-            evidence = f"Significant deficiencies: {significant_deficiencies}"
-        elif non_gaap_gap > 50:
-            score = 55
-            evidence = f"Large non-GAAP adjustments: {non_gaap_gap:.0f}% gap"
-        elif cfo_changes_3yr > 1 or auditor_changes_3yr > 0:
-            score = 65
-            evidence = f"CFO/auditor turnover: {cfo_changes_3yr} CFO, {auditor_changes_3yr} auditor changes"
-        elif non_gaap_gap > 25:
-            score = 75
-            evidence = f"Moderate non-GAAP adjustments: {non_gaap_gap:.0f}% gap"
-        else:
-            score = 90
-            evidence = "Clean accounting record, no material issues"
-        
-        return DOSignal(
-            signal_name="accounting_quality",
-            raw_value=financial_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["accounting_quality"],
-            evidence=evidence,
-            data_source="SEC_10K_10Q",
-            observation_date=datetime.now()
-        )
-    
-    def score_audit_opinion(self, audit_data: Dict) -> DOSignal:
-        """
-        Score audit opinion and going concern.
-        
-        Audit opinions are binary for coverage purposes (qualified = serious issue)
-        but DSI looks at subtler signals:
-        - Going concern language
-        - Critical audit matters (CAMs)
-        - Audit fee trends
-        - Auditor tenure
-        """
-        opinion_type = audit_data.get("opinion_type", "unqualified")
-        going_concern = audit_data.get("going_concern", False)
-        going_concern_resolved = audit_data.get("going_concern_resolved", False)
-        cams_count = audit_data.get("critical_audit_matters", 0)
-        auditor_tenure = audit_data.get("auditor_tenure_years", 5)
-        big4_auditor = audit_data.get("big4_auditor", True)
-        
-        if opinion_type in ["adverse", "disclaimer"]:
-            score = 5
-            evidence = f"CRITICAL: {opinion_type} audit opinion"
-        elif opinion_type == "qualified":
-            score = 20
-            evidence = "Qualified audit opinion"
-        elif going_concern and not going_concern_resolved:
-            score = 25
-            evidence = "Going concern warning - unresolved"
-        elif going_concern and going_concern_resolved:
-            score = 55
-            evidence = "Going concern warning - subsequently resolved"
-        elif not big4_auditor:
-            score = 60
-            evidence = f"Non-Big 4 auditor"
-        elif cams_count > 3:
-            score = 65
-            evidence = f"Elevated critical audit matters: {cams_count}"
-        elif auditor_tenure > 20:
-            score = 70
-            evidence = f"Long auditor tenure: {auditor_tenure} years (independence concern)"
-        elif cams_count > 1:
-            score = 80
-            evidence = f"Standard audit, {cams_count} critical audit matters"
-        else:
-            score = 95
-            evidence = "Clean unqualified opinion, Big 4 auditor"
-        
-        return DOSignal(
-            signal_name="audit_opinion",
-            raw_value=audit_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["audit_opinion"],
-            evidence=evidence,
-            data_source="SEC_10K_AUDIT_REPORT",
-            observation_date=datetime.now()
-        )
-    
-    def score_securities_litigation(self, litigation_data: Dict) -> DOSignal:
-        """
-        Score securities litigation history.
-        
-        Prior securities class actions are the strongest predictor of future
-        claims. DSI tracks:
-        - Securities class actions (10b-5)
-        - Derivative suits
-        - SEC enforcement
-        - Settlement amounts
-        """
-        class_actions_5yr = litigation_data.get("securities_class_actions_5yr", 0)
-        pending_class_actions = litigation_data.get("pending_class_actions", 0)
-        sec_enforcement_5yr = litigation_data.get("sec_enforcement_5yr", 0)
-        derivative_suits_5yr = litigation_data.get("derivative_suits_5yr", 0)
-        total_settlements = litigation_data.get("total_settlement_amount_5yr", 0)
-        
-        if pending_class_actions > 0 and sec_enforcement_5yr > 0:
-            score = 10
-            evidence = f"CRITICAL: {pending_class_actions} pending class actions + SEC enforcement"
-        elif pending_class_actions > 1:
-            score = 20
-            evidence = f"Multiple pending class actions: {pending_class_actions}"
-        elif pending_class_actions > 0:
-            score = 35
-            evidence = f"Pending securities class action"
-        elif sec_enforcement_5yr > 0:
-            score = 40
-            evidence = f"SEC enforcement action in past 5 years"
-        elif class_actions_5yr > 1:
-            score = 45
-            evidence = f"Multiple prior class actions: {class_actions_5yr} in 5 years"
-        elif class_actions_5yr > 0:
-            score = 55
-            evidence = f"Prior securities class action (settled)"
-        elif derivative_suits_5yr > 1:
-            score = 60
-            evidence = f"Derivative suits: {derivative_suits_5yr} in 5 years"
-        elif derivative_suits_5yr > 0:
-            score = 75
-            evidence = f"Single derivative suit in 5 years"
-        else:
-            score = 95
-            evidence = "No securities litigation history"
-        
-        return DOSignal(
-            signal_name="securities_litigation_history",
-            raw_value=litigation_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["securities_litigation_history"],
-            evidence=evidence,
-            data_source="PACER_SCAC_DATABASE",
-            observation_date=datetime.now()
-        )
-    
-    def score_executive_turnover(self, executive_data: Dict) -> DOSignal:
-        """
-        Score executive turnover patterns.
-        
-        High C-suite turnover, especially sudden departures, correlates
-        with underlying problems that lead to D&O claims.
-        """
-        ceo_changes_3yr = executive_data.get("ceo_changes_3_years", 0)
-        cfo_changes_3yr = executive_data.get("cfo_changes_3_years", 0)
-        coo_changes_3yr = executive_data.get("coo_changes_3_years", 0)
-        sudden_departures = executive_data.get("sudden_departures_3_years", 0)
-        departures_under_investigation = executive_data.get("departures_under_investigation", 0)
-        avg_c_suite_tenure = executive_data.get("avg_c_suite_tenure_years", 5)
-        
-        total_c_suite_changes = ceo_changes_3yr + cfo_changes_3yr + coo_changes_3yr
-        
-        if departures_under_investigation > 0:
-            score = 15
-            evidence = f"CRITICAL: Executive departures under investigation"
-        elif sudden_departures > 2:
-            score = 30
-            evidence = f"Multiple sudden executive departures: {sudden_departures}"
-        elif ceo_changes_3yr > 1 or cfo_changes_3yr > 1:
-            score = 40
-            evidence = f"High C-suite turnover: {ceo_changes_3yr} CEO, {cfo_changes_3yr} CFO changes"
-        elif sudden_departures > 0:
-            score = 50
-            evidence = f"Sudden executive departure in past 3 years"
-        elif total_c_suite_changes > 3:
-            score = 55
-            evidence = f"Elevated C-suite turnover: {total_c_suite_changes} changes in 3 years"
-        elif avg_c_suite_tenure < 2:
-            score = 60
-            evidence = f"Short C-suite tenure: {avg_c_suite_tenure:.1f} years average"
-        elif total_c_suite_changes > 1:
-            score = 75
-            evidence = f"Some C-suite turnover: {total_c_suite_changes} changes"
-        else:
-            score = 92
-            evidence = f"Stable executive team, {avg_c_suite_tenure:.1f} years avg tenure"
-        
-        return DOSignal(
-            signal_name="executive_turnover",
-            raw_value=executive_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["executive_turnover"],
-            evidence=evidence,
-            data_source="SEC_8K_PROXY",
-            observation_date=datetime.now()
-        )
-    
-    def score_insider_trading_patterns(self, insider_data: Dict) -> DOSignal:
-        """
-        Score insider trading patterns.
-        
-        Unusual insider selling, especially clustered selling before
-        negative news, is a litigation red flag.
-        """
-        insider_sell_ratio = insider_data.get("sell_buy_ratio_12m", 1.0)
-        clustered_selling = insider_data.get("clustered_selling_events", 0)
-        selling_before_decline = insider_data.get("selling_before_price_decline", False)
-        rule_10b5_1_plans = insider_data.get("10b5_1_plan_coverage_pct", 0)
-        
-        if selling_before_decline and clustered_selling > 0:
-            score = 15
-            evidence = "CRITICAL: Clustered insider selling before price decline"
-        elif selling_before_decline:
-            score = 30
-            evidence = "Insider selling preceded significant stock decline"
-        elif clustered_selling > 2:
-            score = 45
-            evidence = f"Multiple clustered selling events: {clustered_selling}"
-        elif insider_sell_ratio > 5 and rule_10b5_1_plans < 50:
-            score = 50
-            evidence = f"Heavy insider selling ({insider_sell_ratio:.1f}x) outside 10b5-1 plans"
-        elif insider_sell_ratio > 3:
-            score = 60
-            evidence = f"Elevated insider selling: {insider_sell_ratio:.1f}x sell/buy ratio"
-        elif rule_10b5_1_plans < 30:
-            score = 70
-            evidence = f"Low 10b5-1 plan coverage: {rule_10b5_1_plans:.0f}%"
-        elif insider_sell_ratio > 1.5:
-            score = 80
-            evidence = f"Moderate insider selling: {insider_sell_ratio:.1f}x ratio"
-        else:
-            score = 92
-            evidence = f"Normal insider trading patterns, {rule_10b5_1_plans:.0f}% 10b5-1 coverage"
-        
-        return DOSignal(
-            signal_name="insider_trading_patterns",
-            raw_value=insider_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["insider_trading_patterns"],
-            evidence=evidence,
-            data_source="SEC_FORM4_EDGAR",
-            observation_date=datetime.now()
-        )
-    
-    def score_esg(self, esg_data: Dict) -> DOSignal:
-        """
-        Score ESG profile.
-        
-        ESG issues increasingly drive D&O claims through:
-        - Climate disclosure litigation
-        - Greenwashing claims
-        - Human capital management suits
-        - Board diversity demands
-        """
-        esg_rating = esg_data.get("overall_rating", "BBB")  # MSCI scale
-        environmental_score = esg_data.get("environmental_score", 50)
-        social_score = esg_data.get("social_score", 50)
-        governance_score = esg_data.get("governance_score", 50)
-        controversies = esg_data.get("active_controversies", 0)
-        severe_controversies = esg_data.get("severe_controversies", 0)
-        
-        # Map MSCI ratings to scores
-        rating_scores = {
-            "AAA": 95, "AA": 88, "A": 78, "BBB": 65,
-            "BB": 52, "B": 40, "CCC": 25
+    def calculate_composite_score(self, company: DOCompanyProfile) -> Tuple[float, float, Dict[str, float]]:
+        category_signals = {
+            "network_authority": company.network_authority, "governance": company.governance,
+            "financial": company.financial, "litigation": company.litigation,
+            "executive": company.executive, "corporate_footprint": company.corporate_footprint,
+            "structured_data": company.structured_data,
         }
-        base_score = rating_scores.get(esg_rating, 50)
         
-        # Adjust for controversies
-        if severe_controversies > 0:
-            score = min(base_score, 35)
-            evidence = f"Severe ESG controversy active, rating: {esg_rating}"
-        elif controversies > 2:
-            score = min(base_score - 15, 55)
-            evidence = f"Multiple ESG controversies ({controversies}), rating: {esg_rating}"
-        elif controversies > 0:
-            score = min(base_score - 8, 70)
-            evidence = f"ESG controversy present, rating: {esg_rating}"
-        elif governance_score < 40:
-            score = min(base_score, 55)
-            evidence = f"Weak governance pillar ({governance_score}), overall: {esg_rating}"
-        else:
-            score = base_score
-            evidence = f"ESG rating: {esg_rating}, G score: {governance_score}"
+        category_scores, total_available, total_possible = {}, 0, 0
+        weighted_composite, weight_sum = 0.0, 0.0
         
-        return DOSignal(
-            signal_name="esg_score",
-            raw_value=esg_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["esg_score"],
-            evidence=evidence,
-            data_source="MSCI_SUSTAINALYTICS",
-            observation_date=datetime.now()
-        )
+        for category, signals in category_signals.items():
+            score, available, total = self.calculate_category_score(signals, category)
+            category_scores[category] = score
+            total_available += available
+            total_possible += total
+            if available > 0:
+                weighted_composite += score * self.CATEGORY_WEIGHTS[category]
+                weight_sum += self.CATEGORY_WEIGHTS[category]
+        
+        composite = (weighted_composite / weight_sum * 10) if weight_sum > 0 else 0.0
+        coverage = total_available / total_possible if total_possible > 0 else 0
+        
+        if coverage >= 0.85: confidence = 0.95
+        elif coverage >= 0.70: confidence = 0.75 + (coverage - 0.70) * (0.20 / 0.15)
+        elif coverage >= 0.55: confidence = 0.60 + (coverage - 0.55) * (0.15 / 0.15)
+        else: confidence = coverage / 0.55 * 0.60
+        
+        return composite, confidence, category_scores
     
-    def score_employee_sentiment(self, sentiment_data: Dict) -> DOSignal:
-        """
-        Score employee sentiment from Glassdoor/Indeed.
+    def apply_direct_inquiry_adjustment(self, score: float, inquiry: DirectInquirySignals) -> Tuple[float, List[str]]:
+        adjustment, notes = 0.0, []
         
-        Poor employee sentiment correlates with EPL claims and can
-        indicate cultural issues that lead to broader D&O exposure.
-        """
-        glassdoor_rating = sentiment_data.get("glassdoor_overall", 3.5)
-        ceo_approval = sentiment_data.get("ceo_approval_pct", 70)
-        recommend_pct = sentiment_data.get("recommend_to_friend_pct", 60)
-        culture_rating = sentiment_data.get("culture_rating", 3.5)
-        recent_trend = sentiment_data.get("rating_trend_12m", 0)  # Positive = improving
-        review_count = sentiment_data.get("review_count", 100)
+        if inquiry.pending_claims is True: adjustment -= 200; notes.append("Pending securities claims: -200")
+        if inquiry.regulatory_investigation is True: adjustment -= 100; notes.append("Regulatory investigation: -100")
+        if inquiry.executive_dispute is True: adjustment -= 75; notes.append("Executive dispute: -75")
+        if inquiry.planned_transaction is True: adjustment -= 50; notes.append("Planned transaction: -50")
+        if inquiry.covenant_compliance is False: adjustment -= 100; notes.append("Covenant non-compliance: -100")
+        if inquiry.pending_claims is False: adjustment += 25; notes.append("No pending claims confirmed: +25")
         
-        # Low review count = low confidence
-        confidence = min(review_count / 200, 1.0)
-        
-        if glassdoor_rating < 2.5 or ceo_approval < 40:
-            score = 25
-            evidence = f"Poor sentiment: {glassdoor_rating}/5 Glassdoor, {ceo_approval}% CEO approval"
-        elif glassdoor_rating < 3.0:
-            score = 40
-            evidence = f"Below average: {glassdoor_rating}/5 Glassdoor"
-        elif glassdoor_rating < 3.5 or recommend_pct < 50:
-            score = 55
-            evidence = f"Mixed sentiment: {glassdoor_rating}/5, {recommend_pct}% recommend"
-        elif glassdoor_rating < 4.0:
-            score = 72
-            evidence = f"Acceptable sentiment: {glassdoor_rating}/5, {ceo_approval}% CEO approval"
-        elif recent_trend < -0.3:
-            score = 65
-            evidence = f"Good rating ({glassdoor_rating}/5) but declining trend"
-        else:
-            score = 88
-            evidence = f"Strong sentiment: {glassdoor_rating}/5, {recommend_pct}% recommend"
-        
-        return DOSignal(
-            signal_name="employee_sentiment",
-            raw_value=sentiment_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["employee_sentiment"],
-            evidence=evidence,
-            data_source="GLASSDOOR_INDEED",
-            observation_date=datetime.now(),
-            confidence=confidence
-        )
-    
-    def score_short_interest(self, market_data: Dict) -> DOSignal:
-        """
-        Score short interest as litigation predictor.
-        
-        High short interest indicates market skepticism and often
-        precedes securities class actions when shorts are proven right.
-        """
-        short_interest_pct = market_data.get("short_interest_pct_float", 0)
-        short_interest_ratio = market_data.get("days_to_cover", 1)
-        short_interest_change_30d = market_data.get("short_interest_change_30d_pct", 0)
-        on_short_squeeze_lists = market_data.get("on_short_squeeze_watch", False)
-        
-        if short_interest_pct > 25:
-            score = 20
-            evidence = f"CRITICAL: Extreme short interest {short_interest_pct:.1f}% of float"
-        elif short_interest_pct > 15:
-            score = 35
-            evidence = f"Very high short interest: {short_interest_pct:.1f}% of float"
-        elif short_interest_pct > 10:
-            score = 50
-            evidence = f"Elevated short interest: {short_interest_pct:.1f}% of float"
-        elif short_interest_change_30d > 50:
-            score = 55
-            evidence = f"Rapidly increasing short interest: +{short_interest_change_30d:.0f}% in 30d"
-        elif short_interest_pct > 5:
-            score = 70
-            evidence = f"Moderate short interest: {short_interest_pct:.1f}% of float"
-        elif on_short_squeeze_lists:
-            score = 60
-            evidence = f"On short squeeze watchlists"
-        else:
-            score = 90
-            evidence = f"Low short interest: {short_interest_pct:.1f}% of float"
-        
-        return DOSignal(
-            signal_name="short_interest",
-            raw_value=market_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["short_interest"],
-            evidence=evidence,
-            data_source="FINRA_SHORT_INTEREST",
-            observation_date=datetime.now()
-        )
+        return max(0, min(1000, score + adjustment)), notes
 
 
-class DOPricingModel:
-    """
-    DSI-based D&O insurance pricing model.
-    
-    Combines digital signals with traditional D&O underwriting factors
-    to produce risk-adjusted pricing.
-    """
-    
-    # Base rates per $1M of coverage by company type
-    BASE_RATES_PER_MILLION = {
-        CompanyType.PUBLIC_LARGE_CAP: 3500,
-        CompanyType.PUBLIC_MID_CAP: 5500,
-        CompanyType.PUBLIC_SMALL_CAP: 8500,
-        CompanyType.PUBLIC_MICRO_CAP: 15000,
-        CompanyType.PRE_IPO: 25000,
-        CompanyType.SPAC: 45000,
-        CompanyType.PRIVATE_PE_BACKED: 4000,
-        CompanyType.PRIVATE_VC_BACKED: 6000,
-        CompanyType.PRIVATE_FAMILY: 2500,
-        CompanyType.NONPROFIT: 2000,
+# =============================================================================
+# TIER ASSIGNMENT
+# =============================================================================
+
+class DOTierAssignment:
+    TIER_THRESHOLDS = {1: 800, 2: 650, 3: 500, 4: 350, 5: 0}
+    TIER_LABELS = {1: "Preferred", 2: "Standard", 3: "Elevated", 4: "High Risk", 5: "Critical"}
+    TIER_ACTIONS = {
+        1: "Auto-approve at preferred pricing", 2: "Auto-approve at standard pricing",
+        3: "Auto-approve with conditions", 4: "Manual review required", 5: "Decline or senior review required",
     }
     
-    # DSI tier pricing adjustments
-    TIER_ADJUSTMENTS = {
-        1: 0.70,   # Preferred: 30% discount
-        2: 1.00,   # Standard: no adjustment
-        3: 1.50,   # Elevated: 50% surcharge
-        4: 2.50,   # High Risk: 150% surcharge (if bound at all)
+    @classmethod
+    def assign_tier(cls, score: float) -> Tuple[int, str, str]:
+        for tier in range(1, 6):
+            if score >= cls.TIER_THRESHOLDS[tier]:
+                return tier, cls.TIER_LABELS[tier], cls.TIER_ACTIONS[tier]
+        return 5, cls.TIER_LABELS[5], cls.TIER_ACTIONS[5]
+    
+    @classmethod
+    def check_critical_overrides(cls, company: DOCompanyProfile, tier: int) -> Tuple[int, Optional[str]]:
+        lit, fin = company.litigation, company.financial
+        
+        if lit.securities_litigation_score > 0 and lit.securities_litigation_score < 40 and tier < 4:
+            return 4, "Active or recent securities litigation"
+        if lit.sec_enforcement_score > 0 and lit.sec_enforcement_score < 40 and tier < 4:
+            return 4, "SEC enforcement history"
+        if fin.internal_controls_score > 0 and fin.internal_controls_score < 40 and tier < 3:
+            return 3, "Material weakness in internal controls"
+        if fin.restatement_score > 0 and fin.restatement_score < 50 and tier < 3:
+            return 3, "Financial restatement history"
+        if fin.audit_opinion_score > 0 and fin.audit_opinion_score < 30 and tier < 4:
+            return 4, "Qualified audit opinion or going concern"
+        if company.direct_inquiry.pending_claims is True and tier < 4:
+            return 4, "Pending securities claims disclosed"
+        if company.direct_inquiry.regulatory_investigation is True and tier < 3:
+            return 3, "Regulatory investigation disclosed"
+        
+        return tier, None
+
+
+# =============================================================================
+# PRICING ENGINE
+# =============================================================================
+
+class DOPricingEngine:
+    TIER_BASE_PREMIUM = {1: 4000, 2: 6000, 3: 9000, 4: 15000, 5: 25000}
+    
+    COMPANY_TYPE_MULTIPLIERS = {
+        CompanyType.PUBLIC_LARGE_CAP: 2.50, CompanyType.PUBLIC_MID_CAP: 1.50,
+        CompanyType.PUBLIC_SMALL_CAP: 1.00, CompanyType.PUBLIC_MICRO_CAP: 1.25,
+        CompanyType.PRE_IPO: 2.00, CompanyType.SPAC: 3.50,
+        CompanyType.PRIVATE_BACKED: 0.60, CompanyType.PRIVATE_OTHER: 0.50, CompanyType.NONPROFIT: 0.40,
     }
     
-    def __init__(self):
-        self.signal_scorer = DOSignalScorer()
+    INDUSTRY_MULTIPLIERS = {
+        IndustryClassification.CRYPTO_DIGITAL: 2.50, IndustryClassification.CANNABIS: 2.00,
+        IndustryClassification.HEALTHCARE_PHARMA: 1.60, IndustryClassification.FINANCIAL_SERVICES: 1.40,
+        IndustryClassification.TECHNOLOGY: 1.25, IndustryClassification.ENERGY: 1.15,
+        IndustryClassification.REAL_ESTATE: 1.10, IndustryClassification.RETAIL_CONSUMER: 1.00,
+        IndustryClassification.MANUFACTURING: 0.90, IndustryClassification.OTHER: 1.00,
+    }
     
-    def calculate_composite_score(self, signals: Dict[str, DOSignal]) -> Tuple[float, float]:
-        """Calculate weighted composite DSI score."""
-        weighted_sum = 0
-        weight_sum = 0
-        confidence_sum = 0
-        
-        for signal_name, signal in signals.items():
-            weighted_sum += signal.normalized_score * signal.weight * signal.confidence
-            weight_sum += signal.weight
-            confidence_sum += signal.confidence * signal.weight
-        
-        if weight_sum > 0:
-            raw_score = weighted_sum / weight_sum
-            composite = raw_score * 10  # Scale to 0-1000
-            confidence = confidence_sum / weight_sum
-        else:
-            composite = 500
-            confidence = 0.5
-        
-        return composite, confidence
+    LIMIT_FACTORS = {
+        1_000_000: 1.00, 2_000_000: 1.65, 5_000_000: 2.80, 10_000_000: 4.20,
+        25_000_000: 7.50, 50_000_000: 11.00, 100_000_000: 16.00,
+    }
     
-    def determine_tier(self, composite_score: float) -> int:
-        """Determine risk tier from composite score"""
-        if composite_score >= 750:
-            return 1
-        elif composite_score >= 600:
-            return 2
-        elif composite_score >= 450:
-            return 3
-        else:
-            return 4
+    @classmethod
+    def calculate_premium(cls, tier: int, company_type: CompanyType, industry: IndustryClassification, limit: float) -> Tuple[float, Dict]:
+        base = cls.TIER_BASE_PREMIUM[tier]
+        type_mult = cls.COMPANY_TYPE_MULTIPLIERS.get(company_type, 1.0)
+        industry_mult = cls.INDUSTRY_MULTIPLIERS.get(industry, 1.0)
+        limit_factor = max([f for t, f in cls.LIMIT_FACTORS.items() if limit >= t], default=1.0)
+        
+        premium = max(base * type_mult * industry_mult * limit_factor, 10000)
+        return premium, {"base": base, "type_mult": type_mult, "industry_mult": industry_mult, "limit_factor": limit_factor}
     
-    def calculate_premium(
-        self,
-        submission: DOSubmission,
-        signals: Dict[str, DOSignal],
-        composite_score: float
-    ) -> Dict:
-        """Calculate risk-adjusted premium."""
-        company = submission.company
-        
-        # Base premium
-        base_rate = self.BASE_RATES_PER_MILLION.get(company.company_type, 5000)
-        limit_millions = submission.limit_requested / 1_000_000
-        base_premium = base_rate * limit_millions
-        
-        # Industry adjustment
-        industry_mult = self.signal_scorer.INDUSTRY_RISK_FACTORS.get(company.industry, 1.0)
-        
-        # DSI tier adjustment
-        tier = self.determine_tier(composite_score)
-        dsi_mult = self.TIER_ADJUSTMENTS[tier]
-        
-        # Size adjustment (larger companies = more exposure)
-        if company.market_cap and company.market_cap > 50_000_000_000:
-            size_mult = 1.25
-        elif company.market_cap and company.market_cap > 10_000_000_000:
-            size_mult = 1.10
-        elif company.revenue > 5_000_000_000:
-            size_mult = 1.05
-        else:
-            size_mult = 1.00
-        
-        # ILF (Increased Limit Factor) - premium doesn't scale linearly with limit
-        if limit_millions <= 5:
-            ilf = 1.0
-        elif limit_millions <= 10:
-            ilf = 0.90
-        elif limit_millions <= 25:
-            ilf = 0.80
-        else:
-            ilf = 0.70
-        
-        # Calculate final premium
-        adjusted_premium = base_premium * industry_mult * dsi_mult * size_mult * ilf
-        
-        # Minimum premium
-        minimum_premium = 15000
-        final_premium = max(adjusted_premium, minimum_premium)
-        
-        return {
-            "base_premium": base_premium,
-            "industry_adjustment": industry_mult,
-            "dsi_adjustment": dsi_mult,
-            "size_adjustment": size_mult,
-            "ilf": ilf,
-            "adjusted_premium": adjusted_premium,
-            "final_premium": final_premium,
-            "dsi_tier": tier,
-            "dsi_score": composite_score,
-            "rate_per_million": final_premium / limit_millions,
+    @classmethod
+    def recommend_limit(cls, company_type: CompanyType, market_cap: Optional[float]) -> float:
+        base_limits = {
+            CompanyType.PUBLIC_LARGE_CAP: 100_000_000, CompanyType.PUBLIC_MID_CAP: 50_000_000,
+            CompanyType.PUBLIC_SMALL_CAP: 25_000_000, CompanyType.PUBLIC_MICRO_CAP: 10_000_000,
+            CompanyType.PRE_IPO: 25_000_000, CompanyType.SPAC: 25_000_000,
+            CompanyType.PRIVATE_BACKED: 10_000_000, CompanyType.PRIVATE_OTHER: 5_000_000, CompanyType.NONPROFIT: 2_000_000,
         }
+        base = base_limits.get(company_type, 10_000_000)
+        if market_cap: base = min(base, market_cap * 0.015)
+        
+        standard = [1_000_000, 2_000_000, 5_000_000, 10_000_000, 25_000_000, 50_000_000, 100_000_000]
+        return min(standard, key=lambda x: abs(x - base))
     
-    def generate_underwriting_decision(
-        self,
-        submission: DOSubmission,
-        signals: Dict[str, DOSignal],
-        composite_score: float
-    ) -> Dict:
-        """Generate complete underwriting decision."""
-        tier = self.determine_tier(composite_score)
-        pricing = self.calculate_premium(submission, signals, composite_score)
+    @classmethod
+    def recommend_retention(cls, limit: float, tier: int) -> float:
+        pcts = {1: 0.01, 2: 0.015, 3: 0.02, 4: 0.03, 5: 0.05}
+        retention = max(100_000, min(2_500_000, limit * pcts.get(tier, 0.02)))
+        standard = [100_000, 250_000, 500_000, 1_000_000, 1_500_000, 2_500_000]
+        return min(standard, key=lambda x: abs(x - retention))
+
+
+# =============================================================================
+# DECISION ENGINE
+# =============================================================================
+
+@dataclass
+class DOUnderwritingDecision:
+    company_name: str
+    ticker: Optional[str]
+    company_type: str
+    industry: str
+    composite_score: float
+    confidence: float
+    category_scores: Dict[str, float]
+    tier: int
+    tier_label: str
+    tier_action: str
+    tier_override_reason: Optional[str]
+    recommended_limit: float
+    recommended_retention: float
+    annual_premium: float
+    pricing_components: Dict[str, float]
+    decision: str
+    conditions: List[str]
+    reasoning: str
+    direct_inquiry_applied: bool
+    direct_inquiry_adjustments: List[str]
+    signals_available: int
+    signals_total: int
+    assessment_timestamp: str
+
+
+class DODecisionEngine:
+    @classmethod
+    def generate_conditions(cls, tier: int, company: DOCompanyProfile) -> List[str]:
+        conditions = []
+        if tier >= 2: conditions.append("Annual D&O questionnaire required at renewal")
+        if tier >= 3: conditions.append("Quarterly financial monitoring required")
+        if company.governance.board_independence_score > 0 and company.governance.board_independence_score < 60:
+            conditions.append("Board independence improvement expected within 12 months")
+        if company.financial.internal_controls_score > 0 and company.financial.internal_controls_score < 60:
+            conditions.append("Remediation plan for internal control issues required")
+        if company.direct_inquiry.planned_transaction is True:
+            conditions.extend(["Transaction-specific coverage review required", "Run-off coverage to be quoted separately"])
+        if tier >= 4: conditions.extend(["Senior underwriter approval required", "Claims cooperation clause enhanced"])
+        conditions.append("Prompt notice of claims or circumstances required")
+        return conditions
+    
+    @classmethod
+    def generate_decision(cls, tier: int, confidence: float, score: float, company: DOCompanyProfile) -> Tuple[str, str]:
+        if confidence < 0.60:
+            return "REFER", f"Insufficient signal coverage (confidence: {confidence:.0%}). Manual underwriting required."
         
-        # Identify critical signals
-        critical_signals = [s for s in signals.values() if s.normalized_score < 40]
-        warning_signals = [s for s in signals.values() if 40 <= s.normalized_score < 60]
-        
-        # Check for automatic declinations
-        auto_decline_triggers = [
-            signals.get("securities_litigation_history", DOSignal("", "", 100, 0, "", "", datetime.now())).normalized_score < 20,
-            signals.get("audit_opinion", DOSignal("", "", 100, 0, "", "", datetime.now())).normalized_score < 15,
-            signals.get("accounting_quality", DOSignal("", "", 100, 0, "", "", datetime.now())).normalized_score < 20,
-        ]
-        
-        # Decision logic
-        if any(auto_decline_triggers):
-            decision = "DECLINE"
-            action = "Automatic decline - critical issue identified"
-            conditions = [f"Unacceptable: {s.signal_name} - {s.evidence}" for s in critical_signals]
-        elif tier == 1:
-            decision = "APPROVE"
-            action = "Auto-bind at preferred terms"
-            conditions = []
+        if tier == 1:
+            return "APPROVE", f"Excellent governance profile (score: {score:.0f}/1000). Qualifies for preferred pricing."
         elif tier == 2:
-            decision = "APPROVE"
-            action = "Auto-bind at standard terms"
-            conditions = []
+            return "APPROVE", f"Good governance profile (score: {score:.0f}/1000). Standard pricing applies."
         elif tier == 3:
-            decision = "REFER"
-            action = "Senior underwriter review required"
-            conditions = [f"Review: {s.signal_name} - {s.evidence}" for s in critical_signals + warning_signals]
+            return "APPROVE_WITH_CONDITIONS", f"Moderate risk profile (score: {score:.0f}/1000). Approved with conditions."
+        elif tier == 4:
+            return "REFER", f"High risk profile (score: {score:.0f}/1000). Manual underwriter review required."
         else:
-            decision = "REFER"
-            action = "Management approval required - high risk submission"
-            conditions = [f"Concern: {s.signal_name} - {s.evidence}" for s in critical_signals]
+            return "DECLINE", f"Critical risk profile (score: {score:.0f}/1000). Risk exceeds appetite."
+
+
+# =============================================================================
+# MAIN PRICING MODEL
+# =============================================================================
+
+class DODSIPricingModel:
+    def __init__(self):
+        self.scorer = DODSIScorer()
+    
+    def assess(self, company: DOCompanyProfile, requested_limit: Optional[float] = None) -> DOUnderwritingDecision:
+        composite, confidence, category_scores = self.scorer.calculate_composite_score(company)
+        adjusted, inquiry_notes = self.scorer.apply_direct_inquiry_adjustment(composite, company.direct_inquiry)
+        tier, tier_label, tier_action = DOTierAssignment.assign_tier(adjusted)
+        tier, override = DOTierAssignment.check_critical_overrides(company, tier)
+        if override: tier_label, tier_action = DOTierAssignment.TIER_LABELS[tier], DOTierAssignment.TIER_ACTIONS[tier]
         
-        return {
-            "submission_id": submission.submission_id,
-            "company": {
-                "name": submission.company.company_name,
-                "ticker": submission.company.ticker,
-                "type": submission.company.company_type.value,
-                "industry": submission.company.industry.value,
-            },
-            "dsi_score": composite_score,
-            "tier": tier,
-            "decision": decision,
-            "action": action,
-            "conditions": conditions,
-            "pricing": pricing,
-            "critical_signals": [
-                {"name": s.signal_name, "score": s.normalized_score, "evidence": s.evidence}
-                for s in critical_signals
-            ],
-            "warning_signals": [
-                {"name": s.signal_name, "score": s.normalized_score, "evidence": s.evidence}
-                for s in warning_signals
-            ],
-            "timestamp": datetime.now().isoformat(),
-        }
+        limit = requested_limit or DOPricingEngine.recommend_limit(company.company_type, company.market_cap)
+        retention = DOPricingEngine.recommend_retention(limit, tier)
+        premium, pricing = DOPricingEngine.calculate_premium(tier, company.company_type, company.industry, limit)
+        decision, reasoning = DODecisionEngine.generate_decision(tier, confidence, adjusted, company)
+        conditions = DODecisionEngine.generate_conditions(tier, company)
+        
+        signals_available = sum(1 for cat in [company.network_authority, company.governance, company.financial,
+                                               company.litigation, company.executive, company.corporate_footprint,
+                                               company.structured_data]
+                                for attr in dir(cat) if attr.endswith('_score') and getattr(cat, attr, 0) > 0)
+        
+        return DOUnderwritingDecision(
+            company_name=company.company_name, ticker=company.ticker, company_type=company.company_type.value,
+            industry=company.industry.value, composite_score=adjusted, confidence=confidence,
+            category_scores=category_scores, tier=tier, tier_label=tier_label, tier_action=tier_action,
+            tier_override_reason=override, recommended_limit=limit, recommended_retention=retention,
+            annual_premium=premium, pricing_components=pricing, decision=decision, conditions=conditions,
+            reasoning=reasoning, direct_inquiry_applied=len(inquiry_notes) > 0,
+            direct_inquiry_adjustments=inquiry_notes, signals_available=signals_available, signals_total=42,
+            assessment_timestamp=datetime.now().isoformat(),
+        )
 
 
-# Example usage and testing
+# =============================================================================
+# EXAMPLE USAGE
+# =============================================================================
+
 if __name__ == "__main__":
-    print("=" * 70)
-    print("DSI D&O Insurance Pricing Model - Test Run")
-    print("=" * 70)
+    print("=" * 80)
+    print("DSI D&O INSURANCE PRICING MODEL v2.0")
+    print("=" * 80)
     
-    # Create sample company
-    company = CompanyProfile(
-        company_name="TechCorp Industries Inc.",
-        ticker="TECH",
-        company_type=CompanyType.PUBLIC_MID_CAP,
-        industry=IndustryRisk.TECHNOLOGY,
-        market_cap=5_500_000_000,
-        revenue=2_200_000_000,
-        total_assets=3_800_000_000,
-        employees=8500,
-        headquarters_country="US",
-        stock_exchange="NASDAQ",
-        fiscal_year_end="December",
-        year_founded=2005
+    # Example: Well-governed large-cap
+    company = DOCompanyProfile(
+        company_name="TechGiant Corp", ticker="TGNT", cik="0001234567", primary_domain="techgiant.com",
+        company_type=CompanyType.PUBLIC_LARGE_CAP, industry=IndustryClassification.TECHNOLOGY,
+        country="US", stock_exchange="NASDAQ", market_cap=85_000_000_000, is_index_member=True,
+        
+        network_authority=NetworkAuthoritySignals(
+            auditor_quality_score=95, legal_counsel_score=90, banking_relationship_score=92,
+            investor_quality_score=88, board_network_score=85, index_inclusion_score=100,
+            analyst_coverage_score=90, industry_association_score=80,
+        ),
+        governance=GovernanceSignals(
+            board_independence_score=92, board_diversity_score=85, ceo_chair_separation_score=100,
+            committee_structure_score=95, board_refreshment_score=80, related_party_score=90,
+            compensation_structure_score=85, shareholder_rights_score=82,
+        ),
+        financial=FinancialSignals(
+            audit_opinion_score=100, internal_controls_score=95, restatement_score=100,
+            filing_timeliness_score=100, revenue_recognition_score=85, debt_covenant_score=95,
+            stock_volatility_score=75, short_interest_score=90,
+        ),
+        litigation=LitigationSignals(
+            securities_litigation_score=95, derivative_litigation_score=100, sec_enforcement_score=100,
+            regulatory_action_score=90, pending_litigation_score=85, whistleblower_score=95,
+        ),
+        executive=ExecutiveSignals(
+            executive_stability_score=88, cfo_quality_score=90, insider_trading_score=85,
+            executive_background_score=95, trading_plan_score=90,
+        ),
+        corporate_footprint=CorporateFootprintSignals(
+            investor_relations_score=95, governance_page_score=90, esg_reporting_score=85,
+            press_release_score=80, leadership_visibility_score=88, hiring_signals_score=85,
+        ),
+        structured_data=StructuredDataSignals(
+            credit_rating_score=90, esg_rating_score=82, governance_rating_score=88, iss_governance_score=85,
+        ),
+        direct_inquiry=DirectInquirySignals(pending_claims=False, regulatory_investigation=False),
     )
     
-    board = BoardProfile(
-        board_size=9,
-        independent_directors=7,
-        female_directors=3,
-        minority_directors=2,
-        avg_tenure_years=6.5,
-        avg_age=58,
-        directors_over_75=1,
-        interlocking_directorships=2,
-        audit_committee_financial_experts=2,
-        ceo_is_chairman=False,
-        founder_controlled=False
-    )
+    model = DODSIPricingModel()
+    decision = model.assess(company)
     
-    submission = DOSubmission(
-        submission_id="DO-2025-005678",
-        company=company,
-        board=board,
-        coverage_types=[CoverageType.ABC_COMBINED],
-        policy_period_start=datetime.now(),
-        policy_period_end=datetime.now() + timedelta(days=365),
-        limit_requested=15_000_000,
-        retention=500_000,
-        broker="Aon",
-        expiring_premium=175000,
-        expiring_insurer="AIG"
-    )
-    
-    # Score signals
-    scorer = DOSignalScorer()
-    signals = {}
-    
-    # Board signals
-    signals["board_independence"] = scorer.score_board_independence(board)
-    signals["board_diversity"] = scorer.score_board_diversity(board)
-    
-    # Financial signals
-    financial_data = {
-        "material_weaknesses": 0,
-        "significant_deficiencies": 1,
-        "restatements_3_years": 0,
-        "late_filings_3_years": 0,
-        "non_gaap_vs_gaap_eps_gap_pct": 18,
-        "cfo_changes_3_years": 0,
-        "auditor_changes_3_years": 0
-    }
-    signals["accounting_quality"] = scorer.score_accounting_quality(financial_data)
-    
-    audit_data = {
-        "opinion_type": "unqualified",
-        "going_concern": False,
-        "critical_audit_matters": 2,
-        "auditor_tenure_years": 8,
-        "big4_auditor": True
-    }
-    signals["audit_opinion"] = scorer.score_audit_opinion(audit_data)
-    
-    # Litigation signals
-    litigation_data = {
-        "securities_class_actions_5yr": 0,
-        "pending_class_actions": 0,
-        "sec_enforcement_5yr": 0,
-        "derivative_suits_5yr": 1,
-        "total_settlement_amount_5yr": 0
-    }
-    signals["securities_litigation_history"] = scorer.score_securities_litigation(litigation_data)
-    
-    # Executive signals
-    executive_data = {
-        "ceo_changes_3_years": 0,
-        "cfo_changes_3_years": 1,
-        "coo_changes_3_years": 0,
-        "sudden_departures_3_years": 0,
-        "departures_under_investigation": 0,
-        "avg_c_suite_tenure_years": 4.5
-    }
-    signals["executive_turnover"] = scorer.score_executive_turnover(executive_data)
-    
-    insider_data = {
-        "sell_buy_ratio_12m": 2.1,
-        "clustered_selling_events": 0,
-        "selling_before_price_decline": False,
-        "10b5_1_plan_coverage_pct": 65
-    }
-    signals["insider_trading_patterns"] = scorer.score_insider_trading_patterns(insider_data)
-    
-    # ESG signals
-    esg_data = {
-        "overall_rating": "A",
-        "environmental_score": 62,
-        "social_score": 58,
-        "governance_score": 72,
-        "active_controversies": 0,
-        "severe_controversies": 0
-    }
-    signals["esg_score"] = scorer.score_esg(esg_data)
-    
-    sentiment_data = {
-        "glassdoor_overall": 3.8,
-        "ceo_approval_pct": 78,
-        "recommend_to_friend_pct": 72,
-        "culture_rating": 3.6,
-        "rating_trend_12m": 0.1,
-        "review_count": 450
-    }
-    signals["employee_sentiment"] = scorer.score_employee_sentiment(sentiment_data)
-    
-    market_data = {
-        "short_interest_pct_float": 4.2,
-        "days_to_cover": 2.8,
-        "short_interest_change_30d_pct": 5,
-        "on_short_squeeze_watch": False
-    }
-    signals["short_interest"] = scorer.score_short_interest(market_data)
-    
-    # Calculate composite and generate decision
-    model = DOPricingModel()
-    composite, confidence = model.calculate_composite_score(signals)
-    decision = model.generate_underwriting_decision(submission, signals, composite)
-    
-    print(f"\nCompany: {company.company_name} ({company.ticker})")
-    print(f"Type: {company.company_type.value}")
-    print(f"Industry: {company.industry.value}")
-    print(f"Market Cap: ${company.market_cap:,.0f}")
-    print(f"Limit Requested: ${submission.limit_requested:,.0f}")
-    print()
-    print("Signal Scores:")
-    print("-" * 60)
-    for name, signal in signals.items():
-        evidence_short = signal.evidence[:45] + "..." if len(signal.evidence) > 45 else signal.evidence
-        print(f"  {name:32} {signal.normalized_score:5.0f}/100  ({evidence_short})")
-    print()
-    print(f"DSI Composite Score: {composite:.0f}/1000")
-    print(f"Risk Tier: {decision['tier']}")
-    print(f"Decision: {decision['decision']}")
-    print(f"Action: {decision['action']}")
-    print()
-    print("Pricing:")
-    print(f"  Base Premium: ${decision['pricing']['base_premium']:,.0f}")
-    print(f"  Industry Adjustment: {decision['pricing']['industry_adjustment']:.2f}x")
-    print(f"  DSI Adjustment: {decision['pricing']['dsi_adjustment']:.2f}x")
-    print(f"  Final Premium: ${decision['pricing']['final_premium']:,.0f}")
-    print(f"  Rate per $1M: ${decision['pricing']['rate_per_million']:,.0f}")
-    print(f"  vs Expiring: {((decision['pricing']['final_premium'] / submission.expiring_premium) - 1) * 100:+.1f}%")
+    print(f"\nCompany: {decision.company_name} ({decision.ticker})")
+    print(f"Composite Score: {decision.composite_score:.0f}/1000 | Confidence: {decision.confidence:.0%}")
+    print(f"Tier: {decision.tier} ({decision.tier_label})")
+    print(f"Limit: ${decision.recommended_limit:,.0f} | Premium: ${decision.annual_premium:,.0f}")
+    print(f"Decision: {decision.decision}")
+    print(f"Reasoning: {decision.reasoning}")
