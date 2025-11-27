@@ -17,9 +17,9 @@ This model implements Digital Signal Intelligence (DSI) for cyber insurance pric
 | Network Authority | PageRank-style relationship analysis with deep graph traversal |
 | Behavioral Inference | Technical implementation and digital footprint reveal security culture |
 | Absence as Signal | Missing security page, security.txt, bug bounty are negative signals |
-| Structured Data Utilization | BitSight, ESG scores used as authority signals |
+| Structured Data Utilisation | BitSight, ESG scores used as authority signals |
 | Minimal Direct Inquiry | 8 optional Yes/No questions for critical factors |
-| Organizational Assessment | Company-level signals, not asset-by-asset analysis |
+| Organisational Assessment | Company-level signals, not asset-by-asset analysis |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
 | Agentic Readiness | All components executable by AI without human interpretation |
 
