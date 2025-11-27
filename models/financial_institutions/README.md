@@ -2,7 +2,7 @@
 
 ## Overview
 
-This model implements Digital Signal Intelligence (DSI) for financial institutions insurance pricing, conforming to DSI Principles v1.0. It replaces traditional application-based underwriting with observable signals from regulatory filings, examination records, and compliance databases.
+This model implements Digital Signal Intelligence (DSI) for financial institutions insurance pricing, conforming to Foundational Principles. It replaces traditional application-based underwriting with observable signals from regulatory filings, examination records, and compliance databases.
 
 **Coverage Types:**
 - Financial Institution Bond (Fidelity)
@@ -33,7 +33,7 @@ This model implements Digital Signal Intelligence (DSI) for financial institutio
 | Absence as Signal | Missing security page, no ESG reporting |
 | Structured Data Utilization | Credit ratings, ESG scores |
 | Minimal Direct Inquiry | 6 optional questions |
-| Organizational Assessment | Institution-level, not product-level |
+| Organisational Assessment | Institution-level, not product-level |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
 | Agentic Readiness | All sources API-accessible |
 
