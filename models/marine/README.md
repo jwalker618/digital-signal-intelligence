@@ -2,7 +2,7 @@
 
 ## Overview
 
-This model implements Digital Signal Intelligence (DSI) for marine insurance pricing, conforming to DSI Principles v1.0. It replaces traditional vessel-by-vessel underwriting with operator-level assessment based on observable behavioral patterns.
+This model implements Digital Signal Intelligence (DSI) for marine insurance pricing, conforming to Foundational Principles. It replaces traditional vessel-by-vessel underwriting with operator-level assessment based on observable behavioral patterns.
 
 **Key DSI Principle:** We assess OPERATOR behavior, not individual vessels. A well-managed operator's fleet-wide patterns indicate individual vessel quality. This enables scalable underwriting without vessel-by-vessel analysis.
 
@@ -26,7 +26,7 @@ This model implements Digital Signal Intelligence (DSI) for marine insurance pri
 | Absence as Signal | AIS gaps, missing class notations, no industry membership |
 | Structured Data Utilization | RightShip scores, ESG ratings |
 | Minimal Direct Inquiry | 5 optional questions |
-| Organizational Assessment | Operator-level, not vessel-level |
+| Organisational Assessment | Operator-level, not vessel-level |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
 | Agentic Readiness | All data sources API-accessible |
 
@@ -44,7 +44,7 @@ Traditional marine underwriting prices individual vessels. DSI inverts this:
 | Vessel-specific AIS | Fleet AIS compliance patterns |
 | One vessel, one price | Operator profile → fleet pricing |
 
-**Why this works:** Operators with strong safety cultures don't have random bad vessels. Poor operators don't have random good vessels. Organizational behavior propagates to assets.
+**Why this works:** Operators with strong safety cultures don't have random bad vessels. Poor operators don't have random good vessels. Organisational behavior propagates to assets.
 
 ---
 
