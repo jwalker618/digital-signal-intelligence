@@ -10,7 +10,7 @@ This study examines whether Digital Signal Intelligence (DSI) methodology could 
 
 ### Validation Summary
 
-| Organization | Incident Date | Pre-Incident DSI Score | Tier | What DSI Would Have Detected |
+| Organisation | Incident Date | Pre-Incident DSI Score | Tier | What DSI Would Have Detected |
 |-------------|---------------|------------------------|------|------------------------------|
 | SolarWinds | Dec 2020 | ~420 | 4 (High Risk) | Password hygiene, GitHub credential exposure |
 | Colonial Pipeline | May 2021 | ~380 | 4 (High Risk) | Missing MFA, legacy OT/IT convergence |
