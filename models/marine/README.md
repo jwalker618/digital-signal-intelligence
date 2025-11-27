@@ -24,7 +24,7 @@ This model implements Digital Signal Intelligence (DSI) for marine insurance pri
 | Network Authority | Class society, P&I club, charterer relationships |
 | Behavioral Inference | Fleet AIS patterns reveal operational discipline |
 | Absence as Signal | AIS gaps, missing class notations, no industry membership |
-| Structured Data Utilization | RightShip scores, ESG ratings |
+| Structured Data Utilisation | RightShip scores, ESG ratings |
 | Minimal Direct Inquiry | 5 optional questions |
 | Organisational Assessment | Operator-level, not vessel-level |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
