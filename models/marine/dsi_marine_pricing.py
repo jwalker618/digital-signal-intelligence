@@ -1,980 +1,976 @@
 """
-Digital Signal Intelligence - Marine Insurance Pricing Model
-=============================================================
+Digital Signal Intelligence (DSI) - Marine Insurance Pricing Model
+===================================================================
 
-This module implements DSI-based pricing for Marine insurance, covering:
-- Hull & Machinery (H&M)
-- Cargo
-- Protection & Indemnity (P&I)
-- Marine Liability
+DSI-compliant marine insurance pricing based entirely on externally observable
+signals, network authority analysis, and minimal optional direct inquiry.
 
-Marine insurance presents unique DSI opportunities because vessel operations
-generate extensive digital footprints through AIS tracking, port state control
-databases, classification society records, and regulatory filings.
+This model conforms to DSI Principles v1.0.
 
-Signal Categories:
-1. Vessel Operations (AIS patterns, port calls, trading routes)
-2. Safety & Compliance (PSC detentions, class status, ISM compliance)
-3. Fleet Management (operator reputation, technical management)
-4. Financial Stability (owner/operator financials, sanctions exposure)
-5. Environmental (emissions compliance, environmental incidents)
+Marine insurance is uniquely suited to DSI because vessel operations generate
+extensive digital footprints through AIS tracking, classification society
+databases, port state control records, and regulatory filings - all publicly
+accessible and machine-readable.
+
+Key DSI Principle: We assess OPERATOR behavior patterns, not individual vessel
+pricing. A well-managed operator's fleet behavior indicates individual vessel quality.
+
+Author: John Walker
+Version: 2.0
+Date: November 2025
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
 from enum import Enum
-from datetime import datetime, timedelta
-import json
+from typing import Dict, List, Optional, Tuple
+from datetime import datetime
 
 
-class VesselType(Enum):
-    """Marine vessel classifications"""
+# =============================================================================
+# ENUMERATIONS
+# =============================================================================
+
+class OperatorType(Enum):
+    """Operator classification from observable signals."""
+    MAJOR_LINER = "major_liner"              # Top 20 container lines
+    MAJOR_TANKER = "major_tanker"            # Major tanker operators
+    MAJOR_BULK = "major_bulk"                # Major dry bulk operators
+    REGIONAL_OPERATOR = "regional_operator"  # Regional fleet operators
+    INDEPENDENT = "independent"              # Single/few vessel operators
+    STATE_OWNED = "state_owned"              # Government-owned fleets
+    UNKNOWN = "unknown"
+
+
+class VesselCategory(Enum):
+    """Primary vessel category for fleet."""
     CONTAINER = "container"
-    BULK_CARRIER = "bulk_carrier"
-    TANKER_CRUDE = "tanker_crude"
-    TANKER_PRODUCT = "tanker_product"
-    TANKER_CHEMICAL = "tanker_chemical"
-    LNG_CARRIER = "lng_carrier"
-    LPG_CARRIER = "lpg_carrier"
-    RORO = "roro"
-    GENERAL_CARGO = "general_cargo"
+    TANKER = "tanker"
+    DRY_BULK = "dry_bulk"
+    LNG_LPG = "lng_lpg"
     OFFSHORE = "offshore"
     PASSENGER = "passenger"
-    FISHING = "fishing"
+    GENERAL_CARGO = "general_cargo"
+    MIXED = "mixed"
 
 
-class CoverageType(Enum):
-    """Marine coverage types"""
-    HULL_MACHINERY = "hull_machinery"
-    CARGO = "cargo"
-    PI = "protection_indemnity"
-    MARINE_LIABILITY = "marine_liability"
-    WAR_RISKS = "war_risks"
-    LOSS_OF_HIRE = "loss_of_hire"
+class TradingPattern(Enum):
+    """Trading pattern classification from AIS analysis."""
+    LINER_REGULAR = "liner_regular"          # Fixed routes, schedules
+    SPOT_TRAMP = "spot_tramp"                # Voyage charter, variable routes
+    INDUSTRIAL = "industrial"                 # Dedicated cargo flows
+    MIXED = "mixed"
 
 
-class TradingArea(Enum):
-    """Geographic trading areas with risk profiles"""
-    WORLDWIDE = "worldwide"
-    WORLDWIDE_EXC_WAR = "worldwide_excluding_war_zones"
-    NORTH_ATLANTIC = "north_atlantic"
-    MEDITERRANEAN = "mediterranean"
-    ASIA_PACIFIC = "asia_pacific"
-    MIDDLE_EAST_GULF = "middle_east_gulf"
-    WEST_AFRICA = "west_africa"
-    CARIBBEAN = "caribbean"
-    INLAND_WATERS = "inland_waters"
+# =============================================================================
+# SIGNAL DATA STRUCTURES
+# =============================================================================
+
+@dataclass
+class NetworkAuthoritySignals:
+    """
+    Type 1: Network Authority Signals
+    
+    PageRank-style signals from maritime industry relationships.
+    Who trusts this operator? Who do they work with?
+    """
+    
+    # Classification society quality (IACS vs non-IACS)
+    classification_society_score: float = 0.0
+    classification_society_evidence: str = ""
+    
+    # P&I Club membership (IG clubs vs fixed premium)
+    pi_club_score: float = 0.0
+    pi_club_evidence: str = ""
+    
+    # Major charterer relationships (oil majors, commodity traders)
+    charterer_quality_score: float = 0.0
+    charterer_quality_evidence: str = ""
+    
+    # Banking/finance relationships (ship finance banks)
+    banking_relationship_score: float = 0.0
+    banking_relationship_evidence: str = ""
+    
+    # Flag state quality (Paris MoU white/grey/black list)
+    flag_state_score: float = 0.0
+    flag_state_evidence: str = ""
+    
+    # Industry association membership (BIMCO, Intertanko, etc.)
+    industry_association_score: float = 0.0
+    industry_association_evidence: str = ""
+    
+    # Technical manager quality (if third-party managed)
+    technical_manager_score: float = 0.0
+    technical_manager_evidence: str = ""
+    
+    # Port relationships (preferred ports, terminal agreements)
+    port_relationship_score: float = 0.0
+    port_relationship_evidence: str = ""
 
 
 @dataclass
-class MarineSignal:
-    """Individual marine risk signal"""
-    signal_name: str
-    raw_value: any
-    normalized_score: float  # 0-100
-    weight: float
-    evidence: str
-    data_source: str
-    observation_date: datetime
-    confidence: float = 1.0
-
-
-@dataclass 
-class VesselProfile:
-    """Vessel information for underwriting"""
-    imo_number: str
-    vessel_name: str
-    vessel_type: VesselType
-    flag_state: str
-    gross_tonnage: int
-    deadweight: int
-    year_built: int
-    classification_society: str
-    owner: str
-    operator: str
-    technical_manager: str
-    insured_value: float
-    trading_area: TradingArea
+class OperationalTelemetrySignals:
+    """
+    Type 3: Asset Telemetry Signals
+    
+    From AIS tracking data - behavioral patterns at fleet level.
+    We assess HOW the operator runs their fleet, not individual vessels.
+    """
+    
+    # AIS compliance (transmission consistency across fleet)
+    ais_compliance_score: float = 0.0
+    ais_compliance_evidence: str = ""
+    
+    # Dark activity patterns (AIS gaps in suspicious locations)
+    dark_activity_score: float = 0.0
+    dark_activity_evidence: str = ""
+    
+    # Trading route risk profile (high-risk area exposure)
+    route_risk_score: float = 0.0
+    route_risk_evidence: str = ""
+    
+    # Port state control region exposure
+    psc_region_exposure_score: float = 0.0
+    psc_region_exposure_evidence: str = ""
+    
+    # Speed/fuel efficiency patterns (operational discipline)
+    operational_efficiency_score: float = 0.0
+    operational_efficiency_evidence: str = ""
+    
+    # Seasonal/weather routing (risk management behavior)
+    weather_routing_score: float = 0.0
+    weather_routing_evidence: str = ""
 
 
 @dataclass
-class MarineSubmission:
-    """Complete marine insurance submission"""
-    submission_id: str
-    vessel: VesselProfile
-    coverage_types: List[CoverageType]
-    policy_period_start: datetime
-    policy_period_end: datetime
-    deductible: float
-    limit: float
-    broker: str
-    previous_insurer: Optional[str] = None
-    claims_history: List[Dict] = field(default_factory=list)
-
-
-class MarineSignalScorer:
+class SafetyComplianceSignals:
     """
-    Scores marine-specific digital signals from various data sources.
+    Type 6: Public Record Signals - Safety Component
     
-    Data Sources:
-    - AIS (Automatic Identification System) tracking data
-    - Equasis (vessel/company database)
-    - Paris MoU / Tokyo MoU (Port State Control)
-    - Classification society records
-    - IMO GISIS (Global Integrated Shipping Information System)
-    - Sanctions screening databases
-    - Maritime news and incident databases
+    From port state control databases, classification societies,
+    and regulatory records.
     """
     
-    # Signal weights for marine insurance
+    # Port state control performance (detention ratio)
+    psc_detention_score: float = 0.0
+    psc_detention_evidence: str = ""
+    
+    # PSC deficiency rate
+    psc_deficiency_score: float = 0.0
+    psc_deficiency_evidence: str = ""
+    
+    # Classification society status (class, conditions, recommendations)
+    class_status_score: float = 0.0
+    class_status_evidence: str = ""
+    
+    # ISM/ISPS compliance (Document of Compliance status)
+    ism_compliance_score: float = 0.0
+    ism_compliance_evidence: str = ""
+    
+    # Casualty/incident history
+    casualty_history_score: float = 0.0
+    casualty_history_evidence: str = ""
+    
+    # Total loss history
+    total_loss_score: float = 0.0
+    total_loss_evidence: str = ""
+
+
+@dataclass
+class FleetProfileSignals:
+    """
+    Type 6: Public Record Signals - Fleet Component
+    
+    From Equasis, classification society registries, and maritime databases.
+    """
+    
+    # Fleet age profile
+    fleet_age_score: float = 0.0
+    fleet_age_evidence: str = ""
+    
+    # Fleet size and stability
+    fleet_stability_score: float = 0.0
+    fleet_stability_evidence: str = ""
+    
+    # Vessel quality indicators (class notation, equipment)
+    vessel_quality_score: float = 0.0
+    vessel_quality_evidence: str = ""
+    
+    # Crew nationality/certification patterns
+    crew_certification_score: float = 0.0
+    crew_certification_evidence: str = ""
+    
+    # Technical management consistency
+    management_consistency_score: float = 0.0
+    management_consistency_evidence: str = ""
+
+
+@dataclass
+class SanctionsComplianceSignals:
+    """
+    Type 6: Public Record Signals - Sanctions Component
+    
+    Critical for marine - sanctions violations can void coverage.
+    """
+    
+    # Direct sanctions status
+    sanctions_status_score: float = 0.0
+    sanctions_status_evidence: str = ""
+    
+    # Beneficial ownership transparency
+    ownership_transparency_score: float = 0.0
+    ownership_transparency_evidence: str = ""
+    
+    # High-risk jurisdiction exposure
+    jurisdiction_risk_score: float = 0.0
+    jurisdiction_risk_evidence: str = ""
+    
+    # STS (ship-to-ship) transfer patterns
+    sts_pattern_score: float = 0.0
+    sts_pattern_evidence: str = ""
+    
+    # Historical sanctions connections
+    historical_sanctions_score: float = 0.0
+    historical_sanctions_evidence: str = ""
+
+
+@dataclass
+class EnvironmentalSignals:
+    """
+    Type 6: Public Record Signals - Environmental Component
+    
+    From IMO databases, classification societies, and regulatory records.
+    """
+    
+    # IMO 2020 compliance (sulphur regulations)
+    imo2020_compliance_score: float = 0.0
+    imo2020_compliance_evidence: str = ""
+    
+    # Ballast water management compliance
+    bwm_compliance_score: float = 0.0
+    bwm_compliance_evidence: str = ""
+    
+    # CII rating (Carbon Intensity Indicator)
+    cii_rating_score: float = 0.0
+    cii_rating_evidence: str = ""
+    
+    # Environmental incidents/fines
+    environmental_incident_score: float = 0.0
+    environmental_incident_evidence: str = ""
+
+
+@dataclass
+class CorporateFootprintSignals:
+    """
+    Type 5: Corporate Digital Footprint Signals
+    
+    Observable from operator's digital presence.
+    """
+    
+    # Website quality and transparency
+    website_quality_score: float = 0.0
+    website_quality_evidence: str = ""
+    
+    # Fleet disclosure (published fleet list)
+    fleet_disclosure_score: float = 0.0
+    fleet_disclosure_evidence: str = ""
+    
+    # Sustainability/ESG reporting
+    sustainability_reporting_score: float = 0.0
+    sustainability_reporting_evidence: str = ""
+    
+    # Safety culture communication
+    safety_communication_score: float = 0.0
+    safety_communication_evidence: str = ""
+    
+    # Crew welfare visibility
+    crew_welfare_score: float = 0.0
+    crew_welfare_evidence: str = ""
+    
+    # Industry presence (conferences, publications)
+    industry_presence_score: float = 0.0
+    industry_presence_evidence: str = ""
+
+
+@dataclass
+class StructuredDataSignals:
+    """
+    Type 4: Structured Data Feed Signals
+    
+    Third-party ratings and indices.
+    """
+    
+    # RightShip or similar vetting scores
+    vetting_score: float = 0.0
+    vetting_evidence: str = ""
+    
+    # ESG maritime ratings
+    esg_rating_score: float = 0.0
+    esg_rating_evidence: str = ""
+    
+    # Credit rating (if rated)
+    credit_rating_score: float = 0.0
+    credit_rating_evidence: str = ""
+
+
+@dataclass
+class DirectInquirySignals:
+    """
+    Type 7: Direct Inquiry Signals (Optional)
+    
+    Maximum 5 questions for Marine.
+    """
+    
+    fleet_size: Optional[int] = None
+    # "Total number of vessels in owned/operated fleet?"
+    
+    psc_detentions: Optional[bool] = None
+    # "Any vessels detained by port state control in past 36 months?"
+    
+    total_losses: Optional[bool] = None
+    # "Any total losses or major casualties in past 5 years?"
+    
+    third_party_manager: Optional[bool] = None
+    # "Is the fleet managed by a third-party technical manager?"
+    
+    sanctioned_trade: Optional[bool] = None
+    # "Any vessels currently trading to sanctioned regions?"
+
+
+# =============================================================================
+# OPERATOR PROFILE
+# =============================================================================
+
+@dataclass
+class MarineOperatorProfile:
+    """
+    Operator profile from observable data only.
+    
+    DSI Principle: We assess operators, not individual vessels.
+    Operator behavior indicates fleet-wide risk quality.
+    """
+    
+    # Identifiers
+    operator_name: str
+    imo_company_number: Optional[str]  # IMO unique company ID
+    primary_domain: str
+    
+    # Classification (from observable signals)
+    operator_type: OperatorType
+    vessel_category: VesselCategory
+    trading_pattern: TradingPattern
+    headquarters_country: str
+    
+    # Observable fleet metrics
+    fleet_size_observed: int = 0           # From Equasis/class records
+    average_vessel_age: float = 0.0        # Calculated from registry
+    primary_flag_states: List[str] = field(default_factory=list)
+    
+    # All signal categories
+    network_authority: NetworkAuthoritySignals = field(default_factory=NetworkAuthoritySignals)
+    operational_telemetry: OperationalTelemetrySignals = field(default_factory=OperationalTelemetrySignals)
+    safety_compliance: SafetyComplianceSignals = field(default_factory=SafetyComplianceSignals)
+    fleet_profile: FleetProfileSignals = field(default_factory=FleetProfileSignals)
+    sanctions_compliance: SanctionsComplianceSignals = field(default_factory=SanctionsComplianceSignals)
+    environmental: EnvironmentalSignals = field(default_factory=EnvironmentalSignals)
+    corporate_footprint: CorporateFootprintSignals = field(default_factory=CorporateFootprintSignals)
+    structured_data: StructuredDataSignals = field(default_factory=StructuredDataSignals)
+    direct_inquiry: DirectInquirySignals = field(default_factory=DirectInquirySignals)
+
+
+# =============================================================================
+# SCORING ENGINE
+# =============================================================================
+
+class MarineDSIScorer:
+    """
+    Calculates composite scores from individual signals.
+    
+    Marine weight emphasizes safety compliance and operational telemetry
+    as these directly predict claims.
+    """
+    
+    CATEGORY_WEIGHTS = {
+        "network_authority": 0.15,
+        "operational_telemetry": 0.20,    # AIS behavior patterns
+        "safety_compliance": 0.25,         # PSC, class status - critical
+        "fleet_profile": 0.10,
+        "sanctions_compliance": 0.15,      # Critical - can void coverage
+        "environmental": 0.05,
+        "corporate_footprint": 0.05,
+        "structured_data": 0.05,
+    }
+    
     SIGNAL_WEIGHTS = {
-        # Vessel Operations (25%)
-        "ais_compliance": 0.08,
-        "trading_pattern_risk": 0.08,
-        "port_call_risk": 0.05,
-        "dark_activity": 0.04,
-        
-        # Safety & Compliance (30%)
-        "psc_performance": 0.10,
-        "class_status": 0.08,
-        "ism_compliance": 0.06,
-        "vessel_age_condition": 0.06,
-        
-        # Fleet/Operator (20%)
-        "operator_reputation": 0.08,
-        "technical_manager_quality": 0.06,
-        "fleet_performance": 0.06,
-        
-        # Financial & Sanctions (15%)
-        "owner_financial_stability": 0.06,
-        "sanctions_exposure": 0.05,
-        "beneficial_owner_transparency": 0.04,
-        
-        # Environmental (10%)
-        "environmental_compliance": 0.05,
-        "emissions_performance": 0.03,
-        "environmental_incidents": 0.02,
+        "network_authority": {
+            "classification_society": 0.20, "pi_club": 0.15, "charterer_quality": 0.15,
+            "banking_relationship": 0.10, "flag_state": 0.15, "industry_association": 0.10,
+            "technical_manager": 0.10, "port_relationship": 0.05,
+        },
+        "operational_telemetry": {
+            "ais_compliance": 0.25, "dark_activity": 0.25, "route_risk": 0.20,
+            "psc_region_exposure": 0.10, "operational_efficiency": 0.10, "weather_routing": 0.10,
+        },
+        "safety_compliance": {
+            "psc_detention": 0.25, "psc_deficiency": 0.20, "class_status": 0.20,
+            "ism_compliance": 0.15, "casualty_history": 0.10, "total_loss": 0.10,
+        },
+        "fleet_profile": {
+            "fleet_age": 0.30, "fleet_stability": 0.20, "vessel_quality": 0.20,
+            "crew_certification": 0.15, "management_consistency": 0.15,
+        },
+        "sanctions_compliance": {
+            "sanctions_status": 0.30, "ownership_transparency": 0.20, "jurisdiction_risk": 0.20,
+            "sts_pattern": 0.15, "historical_sanctions": 0.15,
+        },
+        "environmental": {
+            "imo2020_compliance": 0.30, "bwm_compliance": 0.25, "cii_rating": 0.25,
+            "environmental_incident": 0.20,
+        },
+        "corporate_footprint": {
+            "website_quality": 0.15, "fleet_disclosure": 0.20, "sustainability_reporting": 0.20,
+            "safety_communication": 0.20, "crew_welfare": 0.10, "industry_presence": 0.15,
+        },
+        "structured_data": {
+            "vetting": 0.50, "esg_rating": 0.30, "credit_rating": 0.20,
+        },
     }
     
-    # Flag state risk tiers
-    FLAG_STATE_TIERS = {
-        "tier_1": ["GB", "NO", "DK", "NL", "DE", "FR", "SG", "JP", "HK", "AU"],  # White list
-        "tier_2": ["MT", "CY", "GR", "IT", "US", "CA", "KR", "TW"],  # Generally acceptable
-        "tier_3": ["LR", "MH", "PA", "BS"],  # Open registries - scrutiny needed
-        "tier_4": ["KH", "TZ", "TG", "CM"],  # High risk flags
-    }
+    def calculate_category_score(self, signals: object, category: str) -> Tuple[float, int, int]:
+        weights = self.SIGNAL_WEIGHTS.get(category, {})
+        weighted_sum, weight_sum, available = 0.0, 0.0, 0
+        
+        for signal_name, weight in weights.items():
+            score = getattr(signals, f"{signal_name}_score", 0)
+            if score > 0:
+                weighted_sum += score * weight
+                weight_sum += weight
+                available += 1
+        
+        return (weighted_sum / weight_sum if weight_sum > 0 else 0.0, available, len(weights))
     
-    # Classification society tiers
-    CLASS_SOCIETY_TIERS = {
-        "iacs": ["LR", "DNV", "BV", "ABS", "NK", "KR", "CCS", "RINA", "RS", "CRS", "IRS", "PRS"],
-        "recognized": ["IRCLASS", "VR", "HR"],
-        "other": []  # Anything else requires scrutiny
-    }
+    def calculate_composite_score(self, operator: MarineOperatorProfile) -> Tuple[float, float, Dict[str, float]]:
+        category_signals = {
+            "network_authority": operator.network_authority,
+            "operational_telemetry": operator.operational_telemetry,
+            "safety_compliance": operator.safety_compliance,
+            "fleet_profile": operator.fleet_profile,
+            "sanctions_compliance": operator.sanctions_compliance,
+            "environmental": operator.environmental,
+            "corporate_footprint": operator.corporate_footprint,
+            "structured_data": operator.structured_data,
+        }
+        
+        category_scores, total_available, total_possible = {}, 0, 0
+        weighted_composite, weight_sum = 0.0, 0.0
+        
+        for category, signals in category_signals.items():
+            score, available, total = self.calculate_category_score(signals, category)
+            category_scores[category] = score
+            total_available += available
+            total_possible += total
+            if available > 0:
+                weighted_composite += score * self.CATEGORY_WEIGHTS[category]
+                weight_sum += self.CATEGORY_WEIGHTS[category]
+        
+        composite = (weighted_composite / weight_sum * 10) if weight_sum > 0 else 0.0
+        coverage = total_available / total_possible if total_possible > 0 else 0
+        
+        if coverage >= 0.85: confidence = 0.95
+        elif coverage >= 0.70: confidence = 0.75 + (coverage - 0.70) * (0.20 / 0.15)
+        elif coverage >= 0.55: confidence = 0.60 + (coverage - 0.55) * (0.15 / 0.15)
+        else: confidence = coverage / 0.55 * 0.60
+        
+        return composite, confidence, category_scores
     
-    def __init__(self):
-        self.signals: Dict[str, MarineSignal] = {}
-    
-    def score_ais_compliance(self, ais_data: Dict) -> MarineSignal:
-        """
-        Score AIS transmission compliance and patterns.
+    def apply_direct_inquiry_adjustment(self, score: float, inquiry: DirectInquirySignals) -> Tuple[float, List[str]]:
+        adjustment, notes = 0.0, []
         
-        Vessels are required to transmit AIS continuously. Gaps or manipulation
-        indicate potential regulatory evasion or illicit activity.
+        # Fleet size affects confidence but not score directly
+        if inquiry.fleet_size is not None:
+            if inquiry.fleet_size >= 20:
+                notes.append(f"Large fleet ({inquiry.fleet_size} vessels): high data confidence")
+            elif inquiry.fleet_size < 5:
+                notes.append(f"Small fleet ({inquiry.fleet_size} vessels): limited pattern data")
         
-        Scoring:
-        - 95-100: Continuous transmission, no gaps > 1 hour
-        - 80-94: Minor gaps (1-4 hours), explainable
-        - 60-79: Moderate gaps (4-24 hours)
-        - 40-59: Significant gaps (24-72 hours)
-        - 0-39: Extended dark periods or manipulation detected
-        """
-        gaps = ais_data.get("transmission_gaps", [])
-        max_gap_hours = max([g.get("duration_hours", 0) for g in gaps]) if gaps else 0
-        total_gap_hours = sum([g.get("duration_hours", 0) for g in gaps])
-        manipulation_detected = ais_data.get("manipulation_indicators", False)
+        # Negative signals
+        if inquiry.psc_detentions is True:
+            adjustment -= 75
+            notes.append("PSC detentions in past 36 months: -75")
         
-        if manipulation_detected:
-            score = 15
-            evidence = "AIS manipulation indicators detected"
-        elif max_gap_hours > 72:
-            score = 25
-            evidence = f"Extended AIS dark period: {max_gap_hours:.0f} hours"
-        elif max_gap_hours > 24:
-            score = 45
-            evidence = f"Significant AIS gaps detected: max {max_gap_hours:.0f} hours"
-        elif max_gap_hours > 4:
-            score = 65
-            evidence = f"Moderate AIS gaps: {total_gap_hours:.1f} total hours"
-        elif max_gap_hours > 1:
-            score = 85
-            evidence = f"Minor AIS gaps: {total_gap_hours:.1f} total hours"
-        else:
-            score = 98
-            evidence = "Continuous AIS transmission, fully compliant"
+        if inquiry.total_losses is True:
+            adjustment -= 150
+            notes.append("Total losses in past 5 years: -150")
         
-        return MarineSignal(
-            signal_name="ais_compliance",
-            raw_value={"max_gap": max_gap_hours, "total_gaps": total_gap_hours},
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["ais_compliance"],
-            evidence=evidence,
-            data_source="AIS_TRACKING",
-            observation_date=datetime.now()
-        )
-    
-    def score_dark_activity(self, ais_data: Dict, vessel: VesselProfile) -> MarineSignal:
-        """
-        Score vessel dark activity patterns.
+        if inquiry.sanctioned_trade is True:
+            adjustment -= 300  # Critical - may decline
+            notes.append("Trading to sanctioned regions: -300")
         
-        "Going dark" (disabling AIS) near certain locations or during
-        ship-to-ship transfers is a major red flag for sanctions evasion,
-        illegal fishing, or smuggling.
+        # Positive confirmation
+        if inquiry.psc_detentions is False:
+            adjustment += 25
+            notes.append("No PSC detentions confirmed: +25")
         
-        High-risk dark zones:
-        - Near sanctioned country waters (NK, Iran, Syria, Russia)
-        - Known STS transfer areas
-        - Unregulated fishing zones
-        """
-        dark_events = ais_data.get("dark_events", [])
-        high_risk_dark = 0
-        moderate_risk_dark = 0
+        if inquiry.total_losses is False:
+            adjustment += 50
+            notes.append("No total losses confirmed: +50")
         
-        high_risk_zones = ["NK_EEZ", "IRAN_WATERS", "SYRIA_WATERS", "CRIMEA", "STS_HOTSPOT"]
-        
-        for event in dark_events:
-            if event.get("last_known_zone") in high_risk_zones:
-                high_risk_dark += 1
-            elif event.get("duration_hours", 0) > 12:
-                moderate_risk_dark += 1
-        
-        if high_risk_dark > 0:
-            score = 10
-            evidence = f"CRITICAL: {high_risk_dark} dark events near high-risk zones"
-        elif moderate_risk_dark > 2:
-            score = 35
-            evidence = f"Multiple extended dark periods: {moderate_risk_dark} events"
-        elif moderate_risk_dark > 0:
-            score = 55
-            evidence = f"Some extended dark periods detected"
-        elif len(dark_events) > 0:
-            score = 75
-            evidence = f"Minor dark events: {len(dark_events)} total"
-        else:
-            score = 95
-            evidence = "No suspicious dark activity detected"
-        
-        return MarineSignal(
-            signal_name="dark_activity",
-            raw_value={"high_risk": high_risk_dark, "moderate_risk": moderate_risk_dark},
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["dark_activity"],
-            evidence=evidence,
-            data_source="AIS_TRACKING",
-            observation_date=datetime.now()
-        )
-    
-    def score_psc_performance(self, psc_data: Dict) -> MarineSignal:
-        """
-        Score Port State Control inspection performance.
-        
-        PSC inspections are conducted by port authorities worldwide.
-        Detentions and deficiencies are strong predictors of vessel condition.
-        
-        Key metrics:
-        - Detention ratio (detentions / inspections)
-        - Deficiency rate (deficiencies per inspection)
-        - Deficiency types (safety-critical vs administrative)
-        - Trend (improving or deteriorating)
-        """
-        inspections = psc_data.get("inspections_36_months", 0)
-        detentions = psc_data.get("detentions_36_months", 0)
-        deficiencies = psc_data.get("deficiencies_36_months", 0)
-        safety_critical = psc_data.get("safety_critical_deficiencies", 0)
-        
-        if inspections == 0:
-            # No inspection record - could be new vessel or limited trading
-            return MarineSignal(
-                signal_name="psc_performance",
-                raw_value=psc_data,
-                normalized_score=60,
-                weight=self.SIGNAL_WEIGHTS["psc_performance"],
-                evidence="No PSC inspection history available",
-                data_source="PARIS_MOU_TOKYO_MOU",
-                observation_date=datetime.now(),
-                confidence=0.5
-            )
-        
-        detention_ratio = detentions / inspections
-        deficiency_rate = deficiencies / inspections
-        
-        # Scoring matrix
-        if detention_ratio > 0.3 or safety_critical > 2:
-            score = 15
-            evidence = f"CRITICAL: {detentions} detentions in {inspections} inspections, {safety_critical} safety-critical"
-        elif detention_ratio > 0.15:
-            score = 35
-            evidence = f"Poor PSC record: {detention_ratio:.0%} detention rate"
-        elif detention_ratio > 0.05:
-            score = 55
-            evidence = f"Below average PSC: {detention_ratio:.0%} detention rate, {deficiency_rate:.1f} deficiencies/inspection"
-        elif deficiency_rate > 3:
-            score = 65
-            evidence = f"Elevated deficiencies: {deficiency_rate:.1f} per inspection"
-        elif deficiency_rate > 1.5:
-            score = 78
-            evidence = f"Acceptable PSC record: {deficiency_rate:.1f} deficiencies/inspection"
-        elif detentions == 0 and deficiency_rate < 1:
-            score = 95
-            evidence = f"Excellent PSC record: No detentions, {deficiency_rate:.1f} deficiencies/inspection"
-        else:
-            score = 85
-            evidence = f"Good PSC record: {detentions} detentions, {deficiency_rate:.1f} deficiencies/inspection"
-        
-        return MarineSignal(
-            signal_name="psc_performance",
-            raw_value=psc_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["psc_performance"],
-            evidence=evidence,
-            data_source="PARIS_MOU_TOKYO_MOU",
-            observation_date=datetime.now()
-        )
-    
-    def score_class_status(self, class_data: Dict, vessel: VesselProfile) -> MarineSignal:
-        """
-        Score classification society status.
-        
-        Classification societies survey vessels and certify seaworthiness.
-        Key signals:
-        - IACS member vs non-IACS
-        - Class status (in class, suspended, withdrawn)
-        - Outstanding recommendations
-        - Survey status (overdue, completed)
-        - Class changes (flag of convenience indicator)
-        """
-        society = class_data.get("society", "")
-        status = class_data.get("status", "unknown")
-        outstanding_recs = class_data.get("outstanding_recommendations", 0)
-        conditions_of_class = class_data.get("conditions_of_class", 0)
-        survey_overdue = class_data.get("survey_overdue", False)
-        class_changes_5yr = class_data.get("class_changes_5_years", 0)
-        
-        # Determine society tier
-        if society in self.CLASS_SOCIETY_TIERS["iacs"]:
-            society_score = 100
-        elif society in self.CLASS_SOCIETY_TIERS["recognized"]:
-            society_score = 75
-        else:
-            society_score = 40
-        
-        # Status scoring
-        if status == "withdrawn" or status == "suspended":
-            score = 5
-            evidence = f"CRITICAL: Class {status} - vessel not classed"
-        elif survey_overdue:
-            score = 25
-            evidence = f"Class survey overdue - potential unseaworthiness"
-        elif conditions_of_class > 2:
-            score = 40
-            evidence = f"Multiple conditions of class: {conditions_of_class} outstanding"
-        elif outstanding_recs > 5:
-            score = 50
-            evidence = f"Elevated recommendations: {outstanding_recs} outstanding"
-        elif class_changes_5yr > 2:
-            score = 55
-            evidence = f"Frequent class changes: {class_changes_5yr} in 5 years (flag shopping indicator)"
-        elif outstanding_recs > 2:
-            score = 70
-            evidence = f"Some recommendations outstanding: {outstanding_recs}"
-        elif society_score < 75:
-            score = 60
-            evidence = f"Non-IACS classification society: {society}"
-        else:
-            base_score = society_score - (outstanding_recs * 3) - (conditions_of_class * 10)
-            score = max(base_score, 50)
-            evidence = f"In class with {society}, {outstanding_recs} recommendations"
-        
-        return MarineSignal(
-            signal_name="class_status",
-            raw_value=class_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["class_status"],
-            evidence=evidence,
-            data_source="CLASSIFICATION_SOCIETY",
-            observation_date=datetime.now()
-        )
-    
-    def score_vessel_age_condition(self, vessel: VesselProfile, condition_data: Dict) -> MarineSignal:
-        """
-        Score vessel age and condition indicators.
-        
-        Age alone is not determinative - a well-maintained 20-year vessel
-        may be better than a neglected 5-year vessel. DSI combines age with
-        maintenance signals.
-        """
-        current_year = datetime.now().year
-        age = current_year - vessel.year_built
-        
-        # Condition indicators
-        dry_dock_overdue = condition_data.get("dry_dock_overdue", False)
-        major_repairs_pending = condition_data.get("major_repairs_pending", 0)
-        machinery_issues = condition_data.get("machinery_failures_12m", 0)
-        
-        # Age-based baseline
-        if age <= 5:
-            age_score = 95
-        elif age <= 10:
-            age_score = 85
-        elif age <= 15:
-            age_score = 72
-        elif age <= 20:
-            age_score = 58
-        elif age <= 25:
-            age_score = 42
-        else:
-            age_score = 25
-        
-        # Condition adjustments
-        condition_penalty = 0
-        if dry_dock_overdue:
-            condition_penalty += 25
-        condition_penalty += major_repairs_pending * 10
-        condition_penalty += machinery_issues * 8
-        
-        score = max(age_score - condition_penalty, 10)
-        
-        evidence_parts = [f"Vessel age: {age} years"]
-        if dry_dock_overdue:
-            evidence_parts.append("dry dock overdue")
-        if major_repairs_pending:
-            evidence_parts.append(f"{major_repairs_pending} major repairs pending")
-        if machinery_issues:
-            evidence_parts.append(f"{machinery_issues} machinery failures in 12m")
-        
-        return MarineSignal(
-            signal_name="vessel_age_condition",
-            raw_value={"age": age, "condition": condition_data},
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["vessel_age_condition"],
-            evidence="; ".join(evidence_parts),
-            data_source="EQUASIS_CLASS_RECORDS",
-            observation_date=datetime.now()
-        )
-    
-    def score_operator_reputation(self, operator_data: Dict) -> MarineSignal:
-        """
-        Score ship operator/manager reputation.
-        
-        The DOC (Document of Compliance) holder is often more important
-        than the vessel itself. DSI tracks operator performance across
-        their entire fleet.
-        """
-        fleet_size = operator_data.get("fleet_size", 1)
-        fleet_detention_rate = operator_data.get("fleet_detention_rate_36m", 0)
-        total_losses = operator_data.get("total_losses_5yr", 0)
-        major_incidents = operator_data.get("major_incidents_5yr", 0)
-        years_operating = operator_data.get("years_in_operation", 0)
-        
-        # Small fleet penalty (less data, higher uncertainty)
-        if fleet_size < 3:
-            size_factor = 0.85
-        elif fleet_size < 10:
-            size_factor = 0.95
-        else:
-            size_factor = 1.0
-        
-        # Experience factor
-        if years_operating < 3:
-            experience_factor = 0.80
-        elif years_operating < 10:
-            experience_factor = 0.95
-        else:
-            experience_factor = 1.0
-        
-        # Performance scoring
-        if total_losses > 0:
-            score = 20
-            evidence = f"CRITICAL: {total_losses} total losses in 5 years"
-        elif major_incidents > 2:
-            score = 35
-            evidence = f"Multiple major incidents: {major_incidents} in 5 years"
-        elif fleet_detention_rate > 0.15:
-            score = 40
-            evidence = f"Poor fleet performance: {fleet_detention_rate:.0%} detention rate"
-        elif fleet_detention_rate > 0.08:
-            score = 55
-            evidence = f"Below average fleet: {fleet_detention_rate:.0%} detention rate"
-        elif major_incidents > 0:
-            score = 65
-            evidence = f"Some incidents: {major_incidents} major in 5 years"
-        elif fleet_detention_rate > 0.03:
-            score = 78
-            evidence = f"Acceptable fleet performance: {fleet_detention_rate:.0%} detention rate"
-        else:
-            score = 92
-            evidence = f"Excellent operator: {fleet_size} vessels, {fleet_detention_rate:.1%} detention rate"
-        
-        score = score * size_factor * experience_factor
-        
-        return MarineSignal(
-            signal_name="operator_reputation",
-            raw_value=operator_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["operator_reputation"],
-            evidence=evidence,
-            data_source="EQUASIS_FLEET_DATA",
-            observation_date=datetime.now()
-        )
-    
-    def score_sanctions_exposure(self, sanctions_data: Dict, vessel: VesselProfile) -> MarineSignal:
-        """
-        Score sanctions and compliance risk.
-        
-        Sanctions exposure is binary in terms of coverage (sanctioned = no cover)
-        but DSI identifies elevated risk indicators:
-        - Trading patterns near sanctioned regions
-        - Ownership opacity
-        - Historical sanctions connections
-        - STS transfers with flagged vessels
-        """
-        direct_sanctions = sanctions_data.get("direct_sanctions", False)
-        owner_sanctions = sanctions_data.get("owner_sanctioned", False)
-        sts_with_sanctioned = sanctions_data.get("sts_with_sanctioned_vessels", 0)
-        high_risk_port_calls = sanctions_data.get("high_risk_port_calls_12m", 0)
-        ownership_opacity = sanctions_data.get("ownership_layers", 0)
-        
-        if direct_sanctions or owner_sanctions:
-            score = 0
-            evidence = "SANCTIONED - Coverage not available"
-        elif sts_with_sanctioned > 0:
-            score = 10
-            evidence = f"CRITICAL: {sts_with_sanctioned} STS transfers with sanctioned vessels"
-        elif high_risk_port_calls > 3:
-            score = 25
-            evidence = f"Elevated sanctions risk: {high_risk_port_calls} high-risk port calls"
-        elif ownership_opacity > 4:
-            score = 40
-            evidence = f"Opaque ownership: {ownership_opacity} layers - sanctions evasion risk"
-        elif high_risk_port_calls > 0:
-            score = 60
-            evidence = f"Some high-risk exposure: {high_risk_port_calls} port calls"
-        elif ownership_opacity > 2:
-            score = 75
-            evidence = f"Complex ownership: {ownership_opacity} layers"
-        else:
-            score = 95
-            evidence = "Clean sanctions profile, transparent ownership"
-        
-        return MarineSignal(
-            signal_name="sanctions_exposure",
-            raw_value=sanctions_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["sanctions_exposure"],
-            evidence=evidence,
-            data_source="SANCTIONS_SCREENING",
-            observation_date=datetime.now()
-        )
-    
-    def score_environmental_compliance(self, environmental_data: Dict, vessel: VesselProfile) -> MarineSignal:
-        """
-        Score environmental compliance and incidents.
-        
-        Environmental signals include:
-        - IMO 2020 sulphur compliance
-        - Ballast water management
-        - Environmental incidents/fines
-        - EEDI/CII ratings
-        """
-        imo2020_compliant = environmental_data.get("imo2020_compliant", True)
-        bwm_compliant = environmental_data.get("ballast_water_compliant", True)
-        environmental_fines = environmental_data.get("environmental_fines_5yr", 0)
-        oil_spills = environmental_data.get("oil_spills_5yr", 0)
-        cii_rating = environmental_data.get("cii_rating", "C")
-        
-        if oil_spills > 0:
-            score = 20
-            evidence = f"CRITICAL: {oil_spills} oil spill incidents in 5 years"
-        elif not imo2020_compliant:
-            score = 30
-            evidence = "Non-compliant with IMO 2020 sulphur regulations"
-        elif environmental_fines > 2:
-            score = 40
-            evidence = f"Multiple environmental fines: {environmental_fines} in 5 years"
-        elif not bwm_compliant:
-            score = 50
-            evidence = "Ballast water management non-compliant"
-        elif cii_rating in ["D", "E"]:
-            score = 55
-            evidence = f"Poor CII rating: {cii_rating}"
-        elif environmental_fines > 0:
-            score = 65
-            evidence = f"Some environmental issues: {environmental_fines} fines"
-        elif cii_rating == "C":
-            score = 78
-            evidence = f"Acceptable environmental profile, CII: {cii_rating}"
-        else:
-            score = 92
-            evidence = f"Strong environmental compliance, CII: {cii_rating}"
-        
-        return MarineSignal(
-            signal_name="environmental_compliance",
-            raw_value=environmental_data,
-            normalized_score=score,
-            weight=self.SIGNAL_WEIGHTS["environmental_compliance"],
-            evidence=evidence,
-            data_source="IMO_GISIS_ENVIRONMENTAL",
-            observation_date=datetime.now()
-        )
+        return max(0, min(1000, score + adjustment)), notes
 
 
-class MarinePricingModel:
+# =============================================================================
+# TIER ASSIGNMENT
+# =============================================================================
+
+class MarineTierAssignment:
+    TIER_THRESHOLDS = {1: 800, 2: 650, 3: 500, 4: 350, 5: 0}
+    TIER_LABELS = {1: "Preferred", 2: "Standard", 3: "Elevated", 4: "High Risk", 5: "Critical"}
+    TIER_ACTIONS = {
+        1: "Auto-approve at preferred pricing",
+        2: "Auto-approve at standard pricing",
+        3: "Auto-approve with conditions",
+        4: "Manual review required",
+        5: "Decline or senior review required",
+    }
+    
+    @classmethod
+    def assign_tier(cls, score: float) -> Tuple[int, str, str]:
+        for tier in range(1, 6):
+            if score >= cls.TIER_THRESHOLDS[tier]:
+                return tier, cls.TIER_LABELS[tier], cls.TIER_ACTIONS[tier]
+        return 5, cls.TIER_LABELS[5], cls.TIER_ACTIONS[5]
+    
+    @classmethod
+    def check_critical_overrides(cls, operator: MarineOperatorProfile, tier: int) -> Tuple[int, Optional[str]]:
+        # Sanctions issues - critical, may force decline
+        sanc = operator.sanctions_compliance
+        if sanc.sanctions_status_score > 0 and sanc.sanctions_status_score < 30:
+            return 5, "Sanctions exposure detected"
+        
+        if sanc.sts_pattern_score > 0 and sanc.sts_pattern_score < 30:
+            if tier < 4:
+                return 4, "Suspicious STS transfer patterns"
+        
+        # Dark activity - major red flag
+        telem = operator.operational_telemetry
+        if telem.dark_activity_score > 0 and telem.dark_activity_score < 30:
+            if tier < 4:
+                return 4, "Significant dark AIS activity"
+        
+        # PSC detention issues
+        safety = operator.safety_compliance
+        if safety.psc_detention_score > 0 and safety.psc_detention_score < 40:
+            if tier < 3:
+                return 3, "Elevated PSC detention rate"
+        
+        # Total loss history
+        if safety.total_loss_score > 0 and safety.total_loss_score < 50:
+            if tier < 4:
+                return 4, "Total loss history"
+        
+        # Class status issues
+        if safety.class_status_score > 0 and safety.class_status_score < 40:
+            if tier < 4:
+                return 4, "Class status concerns"
+        
+        # Direct inquiry overrides
+        if operator.direct_inquiry.sanctioned_trade is True:
+            return 5, "Trading to sanctioned regions"
+        
+        if operator.direct_inquiry.total_losses is True:
+            if tier < 4:
+                return 4, "Total losses disclosed"
+        
+        return tier, None
+
+
+# =============================================================================
+# PRICING ENGINE
+# =============================================================================
+
+class MarinePricingEngine:
     """
-    DSI-based marine insurance pricing model.
+    Calculates premium based on tier, operator type, and vessel category.
     
-    Combines digital signals with traditional marine underwriting factors
-    to produce risk-adjusted pricing.
+    Base rates per $1M of insured value for fleet coverage.
     """
     
-    # Base rates by vessel type (per $100 of insured value, annual)
-    BASE_RATES = {
-        VesselType.CONTAINER: 0.18,
-        VesselType.BULK_CARRIER: 0.20,
-        VesselType.TANKER_CRUDE: 0.25,
-        VesselType.TANKER_PRODUCT: 0.22,
-        VesselType.TANKER_CHEMICAL: 0.28,
-        VesselType.LNG_CARRIER: 0.15,
-        VesselType.LPG_CARRIER: 0.18,
-        VesselType.RORO: 0.30,
-        VesselType.GENERAL_CARGO: 0.22,
-        VesselType.OFFSHORE: 0.35,
-        VesselType.PASSENGER: 0.40,
-        VesselType.FISHING: 0.45,
+    TIER_BASE_RATE = {  # Per $1M insured value
+        1: 0.0015,   # 0.15%
+        2: 0.0022,   # 0.22%
+        3: 0.0032,   # 0.32%
+        4: 0.0050,   # 0.50%
+        5: 0.0080,   # 0.80%
     }
     
-    # Trading area multipliers
-    TRADING_MULTIPLIERS = {
-        TradingArea.WORLDWIDE: 1.20,
-        TradingArea.WORLDWIDE_EXC_WAR: 1.00,
-        TradingArea.NORTH_ATLANTIC: 0.95,
-        TradingArea.MEDITERRANEAN: 0.90,
-        TradingArea.ASIA_PACIFIC: 1.00,
-        TradingArea.MIDDLE_EAST_GULF: 1.15,
-        TradingArea.WEST_AFRICA: 1.25,
-        TradingArea.CARIBBEAN: 1.10,
-        TradingArea.INLAND_WATERS: 0.85,
+    OPERATOR_TYPE_MULTIPLIERS = {
+        OperatorType.MAJOR_LINER: 0.80,        # Lowest risk, best practices
+        OperatorType.MAJOR_TANKER: 0.90,
+        OperatorType.MAJOR_BULK: 0.95,
+        OperatorType.REGIONAL_OPERATOR: 1.00,
+        OperatorType.INDEPENDENT: 1.25,         # Less data, higher uncertainty
+        OperatorType.STATE_OWNED: 1.10,
+        OperatorType.UNKNOWN: 1.50,
     }
     
-    # DSI tier pricing adjustments
-    TIER_ADJUSTMENTS = {
-        1: 0.75,   # Preferred: 25% discount
-        2: 1.00,   # Standard: no adjustment
-        3: 1.35,   # Elevated: 35% surcharge
-        4: 2.00,   # High Risk: 100% surcharge (if bound at all)
+    VESSEL_CATEGORY_MULTIPLIERS = {
+        VesselCategory.CONTAINER: 0.90,
+        VesselCategory.TANKER: 1.10,           # Pollution risk
+        VesselCategory.DRY_BULK: 1.00,
+        VesselCategory.LNG_LPG: 0.85,          # High standards
+        VesselCategory.OFFSHORE: 1.30,         # Complex operations
+        VesselCategory.PASSENGER: 1.25,        # Life safety
+        VesselCategory.GENERAL_CARGO: 1.10,
+        VesselCategory.MIXED: 1.05,
     }
     
-    def __init__(self):
-        self.signal_scorer = MarineSignalScorer()
+    TRADING_PATTERN_MULTIPLIERS = {
+        TradingPattern.LINER_REGULAR: 0.85,    # Predictable, well-maintained
+        TradingPattern.SPOT_TRAMP: 1.15,       # Variable, opportunistic
+        TradingPattern.INDUSTRIAL: 0.90,       # Dedicated, known routes
+        TradingPattern.MIXED: 1.00,
+    }
     
-    def calculate_composite_score(self, signals: Dict[str, MarineSignal]) -> Tuple[float, float]:
-        """
-        Calculate weighted composite DSI score.
-        
-        Returns:
-            Tuple of (composite_score 0-1000, confidence 0-1)
-        """
-        weighted_sum = 0
-        weight_sum = 0
-        confidence_sum = 0
-        
-        for signal_name, signal in signals.items():
-            weighted_sum += signal.normalized_score * signal.weight * signal.confidence
-            weight_sum += signal.weight
-            confidence_sum += signal.confidence * signal.weight
-        
-        if weight_sum > 0:
-            raw_score = weighted_sum / weight_sum
-            composite = raw_score * 10  # Scale to 0-1000
-            confidence = confidence_sum / weight_sum
-        else:
-            composite = 500
-            confidence = 0.5
-        
-        return composite, confidence
+    AGE_MULTIPLIERS = {
+        (0, 5): 0.85,
+        (5, 10): 0.95,
+        (10, 15): 1.05,
+        (15, 20): 1.20,
+        (20, 25): 1.40,
+        (25, 100): 1.60,
+    }
     
-    def determine_tier(self, composite_score: float) -> int:
-        """Determine risk tier from composite score"""
-        if composite_score >= 750:
-            return 1
-        elif composite_score >= 600:
-            return 2
-        elif composite_score >= 450:
-            return 3
-        else:
-            return 4
+    @classmethod
+    def get_age_multiplier(cls, avg_age: float) -> float:
+        for (low, high), mult in cls.AGE_MULTIPLIERS.items():
+            if low <= avg_age < high:
+                return mult
+        return 1.60
     
+    @classmethod
     def calculate_premium(
-        self,
-        submission: MarineSubmission,
-        signals: Dict[str, MarineSignal],
-        composite_score: float
-    ) -> Dict:
-        """
-        Calculate risk-adjusted premium.
+        cls,
+        tier: int,
+        operator_type: OperatorType,
+        vessel_category: VesselCategory,
+        trading_pattern: TradingPattern,
+        avg_vessel_age: float,
+        total_insured_value: float,
+    ) -> Tuple[float, Dict]:
         
-        Returns complete pricing breakdown.
-        """
-        vessel = submission.vessel
+        base_rate = cls.TIER_BASE_RATE[tier]
+        operator_mult = cls.OPERATOR_TYPE_MULTIPLIERS.get(operator_type, 1.0)
+        category_mult = cls.VESSEL_CATEGORY_MULTIPLIERS.get(vessel_category, 1.0)
+        trading_mult = cls.TRADING_PATTERN_MULTIPLIERS.get(trading_pattern, 1.0)
+        age_mult = cls.get_age_multiplier(avg_vessel_age)
         
-        # Base premium
-        base_rate = self.BASE_RATES.get(vessel.vessel_type, 0.25)
-        base_premium = (vessel.insured_value / 100) * base_rate
-        
-        # Trading area adjustment
-        trading_mult = self.TRADING_MULTIPLIERS.get(vessel.trading_area, 1.0)
-        
-        # DSI tier adjustment
-        tier = self.determine_tier(composite_score)
-        dsi_mult = self.TIER_ADJUSTMENTS[tier]
-        
-        # Age loading
-        age = datetime.now().year - vessel.year_built
-        if age > 20:
-            age_mult = 1.40
-        elif age > 15:
-            age_mult = 1.20
-        elif age > 10:
-            age_mult = 1.10
-        else:
-            age_mult = 1.00
-        
-        # Calculate final premium
-        adjusted_premium = base_premium * trading_mult * dsi_mult * age_mult
+        adjusted_rate = base_rate * operator_mult * category_mult * trading_mult * age_mult
+        premium = total_insured_value * adjusted_rate
         
         # Minimum premium
-        minimum_premium = 25000
-        final_premium = max(adjusted_premium, minimum_premium)
+        minimum = 50000
+        premium = max(premium, minimum)
         
-        return {
-            "base_premium": base_premium,
-            "trading_area_adjustment": trading_mult,
-            "dsi_adjustment": dsi_mult,
-            "age_adjustment": age_mult,
-            "adjusted_premium": adjusted_premium,
-            "final_premium": final_premium,
-            "dsi_tier": tier,
-            "dsi_score": composite_score,
-            "rate_per_100": (final_premium / vessel.insured_value) * 100,
+        components = {
+            "base_rate": base_rate,
+            "operator_multiplier": operator_mult,
+            "category_multiplier": category_mult,
+            "trading_multiplier": trading_mult,
+            "age_multiplier": age_mult,
+            "adjusted_rate": adjusted_rate,
+            "total_insured_value": total_insured_value,
         }
+        
+        return premium, components
     
-    def generate_underwriting_decision(
-        self,
-        submission: MarineSubmission,
-        signals: Dict[str, MarineSignal],
-        composite_score: float
-    ) -> Dict:
-        """
-        Generate complete underwriting decision with recommendations.
-        """
-        tier = self.determine_tier(composite_score)
-        pricing = self.calculate_premium(submission, signals, composite_score)
+    @classmethod
+    def recommend_deductible(cls, tier: int, total_insured_value: float) -> float:
+        """Recommend deductible as percentage of TIV."""
+        deductible_pcts = {1: 0.005, 2: 0.0075, 3: 0.01, 4: 0.015, 5: 0.02}
+        deductible = total_insured_value * deductible_pcts.get(tier, 0.01)
         
-        # Identify critical signals
-        critical_signals = [
-            s for s in signals.values() 
-            if s.normalized_score < 40
-        ]
+        # Round to standard amounts
+        standard = [50_000, 100_000, 150_000, 250_000, 500_000, 1_000_000]
+        return min(standard, key=lambda x: abs(x - deductible))
+
+
+# =============================================================================
+# DECISION ENGINE
+# =============================================================================
+
+@dataclass
+class MarineUnderwritingDecision:
+    """Complete underwriting decision output."""
+    operator_name: str
+    operator_type: str
+    vessel_category: str
+    composite_score: float
+    confidence: float
+    category_scores: Dict[str, float]
+    tier: int
+    tier_label: str
+    tier_action: str
+    tier_override_reason: Optional[str]
+    total_insured_value: float
+    recommended_deductible: float
+    annual_premium: float
+    premium_rate: float
+    pricing_components: Dict[str, float]
+    decision: str
+    conditions: List[str]
+    reasoning: str
+    direct_inquiry_applied: bool
+    direct_inquiry_adjustments: List[str]
+    signals_available: int
+    signals_total: int
+    assessment_timestamp: str
+
+
+class MarineDecisionEngine:
+    @classmethod
+    def generate_conditions(cls, tier: int, operator: MarineOperatorProfile) -> List[str]:
+        conditions = []
         
-        warning_signals = [
-            s for s in signals.values()
-            if 40 <= s.normalized_score < 60
-        ]
+        if tier >= 2:
+            conditions.append("Annual fleet list update required")
         
-        # Decision logic
+        if tier >= 3:
+            conditions.append("PSC inspection results to be reported within 30 days")
+            conditions.append("Any detention to be notified immediately")
+        
+        # Specific signal-driven conditions
+        if operator.safety_compliance.psc_deficiency_score > 0 and operator.safety_compliance.psc_deficiency_score < 60:
+            conditions.append("Quarterly PSC performance reporting required")
+        
+        if operator.operational_telemetry.dark_activity_score > 0 and operator.operational_telemetry.dark_activity_score < 70:
+            conditions.append("Enhanced AIS monitoring required")
+        
+        if operator.fleet_profile.fleet_age_score > 0 and operator.fleet_profile.fleet_age_score < 50:
+            conditions.append("Vessels over 20 years require individual survey")
+        
+        if operator.sanctions_compliance.ownership_transparency_score > 0 and operator.sanctions_compliance.ownership_transparency_score < 60:
+            conditions.append("Beneficial ownership disclosure required")
+        
+        if tier >= 4:
+            conditions.append("Senior underwriter approval required")
+            conditions.append("Named vessel schedule with individual values required")
+            conditions.append("Survey of any vessel over 15 years")
+        
+        # Always
+        conditions.append("Trading warranties apply (excluding war risk areas)")
+        conditions.append("Prompt notice of incidents required")
+        
+        return conditions
+    
+    @classmethod
+    def generate_decision(cls, tier: int, confidence: float, score: float, operator: MarineOperatorProfile) -> Tuple[str, str]:
+        if confidence < 0.60:
+            return "REFER", f"Insufficient signal coverage (confidence: {confidence:.0%}). Manual underwriting required."
+        
+        # Check for sanctions - always decline
+        if operator.direct_inquiry.sanctioned_trade is True:
+            return "DECLINE", "Trading to sanctioned regions. Coverage not available."
+        
+        if operator.sanctions_compliance.sanctions_status_score > 0 and operator.sanctions_compliance.sanctions_status_score < 20:
+            return "DECLINE", "Sanctions exposure identified. Coverage not available."
+        
         if tier == 1:
-            decision = "APPROVE"
-            action = "Auto-bind at preferred terms"
-            conditions = []
+            return "APPROVE", f"Excellent operator profile (score: {score:.0f}/1000). Strong safety record, clean PSC history, transparent operations. Preferred pricing."
         elif tier == 2:
-            decision = "APPROVE"
-            action = "Auto-bind at standard terms"
-            conditions = []
+            return "APPROVE", f"Good operator profile (score: {score:.0f}/1000). Acceptable safety and compliance record. Standard pricing."
         elif tier == 3:
-            decision = "REFER"
-            action = "Manual underwriter review required"
-            conditions = [
-                f"Review {s.signal_name}: {s.evidence}" 
-                for s in critical_signals + warning_signals
-            ]
-        else:  # tier == 4
-            if any(s.normalized_score < 20 for s in signals.values()):
-                decision = "DECLINE"
-                action = "Risk outside appetite"
-                conditions = [
-                    f"Unacceptable: {s.signal_name} - {s.evidence}"
-                    for s in signals.values() if s.normalized_score < 20
-                ]
-            else:
-                decision = "REFER"
-                action = "Senior underwriter approval required"
-                conditions = [
-                    f"Require improvement: {s.signal_name}"
-                    for s in critical_signals
-                ]
+            return "APPROVE_WITH_CONDITIONS", f"Moderate risk profile (score: {score:.0f}/1000). Some concerns require conditions."
+        elif tier == 4:
+            return "REFER", f"High risk profile (score: {score:.0f}/1000). Manual review required."
+        else:
+            return "DECLINE", f"Critical risk profile (score: {score:.0f}/1000). Risk exceeds appetite."
+
+
+# =============================================================================
+# MAIN PRICING MODEL
+# =============================================================================
+
+class MarineDSIPricingModel:
+    """Complete DSI Marine Insurance Pricing Model."""
+    
+    def __init__(self):
+        self.scorer = MarineDSIScorer()
+    
+    def assess(
+        self,
+        operator: MarineOperatorProfile,
+        total_insured_value: float,
+    ) -> MarineUnderwritingDecision:
         
-        return {
-            "submission_id": submission.submission_id,
-            "vessel": {
-                "imo": submission.vessel.imo_number,
-                "name": submission.vessel.vessel_name,
-                "type": submission.vessel.vessel_type.value,
-            },
-            "dsi_score": composite_score,
-            "tier": tier,
-            "decision": decision,
-            "action": action,
-            "conditions": conditions,
-            "pricing": pricing,
-            "critical_signals": [
-                {"name": s.signal_name, "score": s.normalized_score, "evidence": s.evidence}
-                for s in critical_signals
-            ],
-            "warning_signals": [
-                {"name": s.signal_name, "score": s.normalized_score, "evidence": s.evidence}
-                for s in warning_signals
-            ],
-            "timestamp": datetime.now().isoformat(),
-        }
+        # Step 1: Calculate composite score
+        composite, confidence, category_scores = self.scorer.calculate_composite_score(operator)
+        
+        # Step 2: Apply direct inquiry adjustments
+        adjusted, inquiry_notes = self.scorer.apply_direct_inquiry_adjustment(composite, operator.direct_inquiry)
+        
+        # Step 3: Assign tier
+        tier, tier_label, tier_action = MarineTierAssignment.assign_tier(adjusted)
+        
+        # Step 4: Check critical overrides
+        tier, override = MarineTierAssignment.check_critical_overrides(operator, tier)
+        if override:
+            tier_label = MarineTierAssignment.TIER_LABELS[tier]
+            tier_action = MarineTierAssignment.TIER_ACTIONS[tier]
+        
+        # Step 5: Calculate premium
+        premium, pricing = MarinePricingEngine.calculate_premium(
+            tier=tier,
+            operator_type=operator.operator_type,
+            vessel_category=operator.vessel_category,
+            trading_pattern=operator.trading_pattern,
+            avg_vessel_age=operator.average_vessel_age,
+            total_insured_value=total_insured_value,
+        )
+        
+        deductible = MarinePricingEngine.recommend_deductible(tier, total_insured_value)
+        
+        # Step 6: Generate decision
+        decision, reasoning = MarineDecisionEngine.generate_decision(tier, confidence, adjusted, operator)
+        conditions = MarineDecisionEngine.generate_conditions(tier, operator)
+        
+        # Signal count
+        signals_available = sum(
+            1 for cat in [operator.network_authority, operator.operational_telemetry,
+                         operator.safety_compliance, operator.fleet_profile,
+                         operator.sanctions_compliance, operator.environmental,
+                         operator.corporate_footprint, operator.structured_data]
+            for attr in dir(cat) if attr.endswith('_score') and getattr(cat, attr, 0) > 0
+        )
+        
+        return MarineUnderwritingDecision(
+            operator_name=operator.operator_name,
+            operator_type=operator.operator_type.value,
+            vessel_category=operator.vessel_category.value,
+            composite_score=adjusted,
+            confidence=confidence,
+            category_scores=category_scores,
+            tier=tier,
+            tier_label=tier_label,
+            tier_action=tier_action,
+            tier_override_reason=override,
+            total_insured_value=total_insured_value,
+            recommended_deductible=deductible,
+            annual_premium=premium,
+            premium_rate=pricing["adjusted_rate"],
+            pricing_components=pricing,
+            decision=decision,
+            conditions=conditions,
+            reasoning=reasoning,
+            direct_inquiry_applied=len(inquiry_notes) > 0,
+            direct_inquiry_adjustments=inquiry_notes,
+            signals_available=signals_available,
+            signals_total=39,
+            assessment_timestamp=datetime.now().isoformat(),
+        )
 
 
-# Example usage and testing
+# =============================================================================
+# EXAMPLE USAGE
+# =============================================================================
+
 if __name__ == "__main__":
-    print("=" * 70)
-    print("DSI Marine Insurance Pricing Model - Test Run")
-    print("=" * 70)
+    print("=" * 80)
+    print("DSI MARINE INSURANCE PRICING MODEL v2.0")
+    print("=" * 80)
     
-    # Create sample vessel
-    vessel = VesselProfile(
-        imo_number="9876543",
-        vessel_name="ATLANTIC PIONEER",
-        vessel_type=VesselType.BULK_CARRIER,
-        flag_state="MH",  # Marshall Islands
-        gross_tonnage=45000,
-        deadweight=82000,
-        year_built=2015,
-        classification_society="DNV",
-        owner="Oceanic Shipping Ltd",
-        operator="Global Bulk Carriers",
-        technical_manager="Maritime Technical Services",
-        insured_value=35000000,
-        trading_area=TradingArea.WORLDWIDE_EXC_WAR
+    # Example: Major container line with strong profile
+    operator = MarineOperatorProfile(
+        operator_name="Global Container Lines",
+        imo_company_number="1234567",
+        primary_domain="globalcontainer.com",
+        operator_type=OperatorType.MAJOR_LINER,
+        vessel_category=VesselCategory.CONTAINER,
+        trading_pattern=TradingPattern.LINER_REGULAR,
+        headquarters_country="Denmark",
+        fleet_size_observed=85,
+        average_vessel_age=8.5,
+        primary_flag_states=["DK", "SG", "HK"],
+        
+        network_authority=NetworkAuthoritySignals(
+            classification_society_score=95,
+            pi_club_score=92,
+            charterer_quality_score=88,
+            banking_relationship_score=90,
+            flag_state_score=95,
+            industry_association_score=85,
+            technical_manager_score=90,
+            port_relationship_score=85,
+        ),
+        operational_telemetry=OperationalTelemetrySignals(
+            ais_compliance_score=98,
+            dark_activity_score=95,
+            route_risk_score=85,
+            psc_region_exposure_score=80,
+            operational_efficiency_score=88,
+            weather_routing_score=85,
+        ),
+        safety_compliance=SafetyComplianceSignals(
+            psc_detention_score=95,
+            psc_deficiency_score=88,
+            class_status_score=98,
+            ism_compliance_score=95,
+            casualty_history_score=90,
+            total_loss_score=100,
+        ),
+        fleet_profile=FleetProfileSignals(
+            fleet_age_score=85,
+            fleet_stability_score=90,
+            vessel_quality_score=92,
+            crew_certification_score=88,
+            management_consistency_score=95,
+        ),
+        sanctions_compliance=SanctionsComplianceSignals(
+            sanctions_status_score=100,
+            ownership_transparency_score=95,
+            jurisdiction_risk_score=90,
+            sts_pattern_score=100,
+            historical_sanctions_score=100,
+        ),
+        environmental=EnvironmentalSignals(
+            imo2020_compliance_score=95,
+            bwm_compliance_score=92,
+            cii_rating_score=85,
+            environmental_incident_score=95,
+        ),
+        corporate_footprint=CorporateFootprintSignals(
+            website_quality_score=90,
+            fleet_disclosure_score=95,
+            sustainability_reporting_score=88,
+            safety_communication_score=85,
+            crew_welfare_score=82,
+            industry_presence_score=90,
+        ),
+        structured_data=StructuredDataSignals(
+            vetting_score=92,
+            esg_rating_score=85,
+            credit_rating_score=88,
+        ),
+        direct_inquiry=DirectInquirySignals(
+            fleet_size=85,
+            psc_detentions=False,
+            total_losses=False,
+            sanctioned_trade=False,
+        ),
     )
     
-    submission = MarineSubmission(
-        submission_id="MAR-2025-001234",
-        vessel=vessel,
-        coverage_types=[CoverageType.HULL_MACHINERY],
-        policy_period_start=datetime.now(),
-        policy_period_end=datetime.now() + timedelta(days=365),
-        deductible=150000,
-        limit=35000000,
-        broker="Marsh Marine"
-    )
+    model = MarineDSIPricingModel()
+    decision = model.assess(operator, total_insured_value=2_500_000_000)
     
-    # Score signals
-    scorer = MarineSignalScorer()
+    print(f"\nOperator: {decision.operator_name}")
+    print(f"Type: {decision.operator_type} | Category: {decision.vessel_category}")
+    print(f"\nComposite Score: {decision.composite_score:.0f}/1000 | Confidence: {decision.confidence:.0%}")
+    print(f"Tier: {decision.tier} ({decision.tier_label})")
+    print(f"\nTotal Insured Value: ${decision.total_insured_value:,.0f}")
+    print(f"Annual Premium: ${decision.annual_premium:,.0f}")
+    print(f"Rate: {decision.premium_rate:.4%}")
+    print(f"Deductible: ${decision.recommended_deductible:,.0f}")
+    print(f"\nDecision: {decision.decision}")
+    print(f"Reasoning: {decision.reasoning}")
     
-    signals = {}
-    
-    # AIS data
-    ais_data = {
-        "transmission_gaps": [
-            {"duration_hours": 2.5, "location": "SINGAPORE_STRAIT"},
-        ],
-        "manipulation_indicators": False,
-        "dark_events": []
-    }
-    signals["ais_compliance"] = scorer.score_ais_compliance(ais_data)
-    signals["dark_activity"] = scorer.score_dark_activity(ais_data, vessel)
-    
-    # PSC data
-    psc_data = {
-        "inspections_36_months": 8,
-        "detentions_36_months": 0,
-        "deficiencies_36_months": 12,
-        "safety_critical_deficiencies": 0
-    }
-    signals["psc_performance"] = scorer.score_psc_performance(psc_data)
-    
-    # Class data
-    class_data = {
-        "society": "DNV",
-        "status": "in_class",
-        "outstanding_recommendations": 2,
-        "conditions_of_class": 0,
-        "survey_overdue": False,
-        "class_changes_5_years": 0
-    }
-    signals["class_status"] = scorer.score_class_status(class_data, vessel)
-    
-    # Vessel condition
-    condition_data = {
-        "dry_dock_overdue": False,
-        "major_repairs_pending": 0,
-        "machinery_failures_12m": 1
-    }
-    signals["vessel_age_condition"] = scorer.score_vessel_age_condition(vessel, condition_data)
-    
-    # Operator data
-    operator_data = {
-        "fleet_size": 12,
-        "fleet_detention_rate_36m": 0.04,
-        "total_losses_5yr": 0,
-        "major_incidents_5yr": 1,
-        "years_in_operation": 15
-    }
-    signals["operator_reputation"] = scorer.score_operator_reputation(operator_data)
-    
-    # Sanctions
-    sanctions_data = {
-        "direct_sanctions": False,
-        "owner_sanctioned": False,
-        "sts_with_sanctioned_vessels": 0,
-        "high_risk_port_calls_12m": 0,
-        "ownership_layers": 2
-    }
-    signals["sanctions_exposure"] = scorer.score_sanctions_exposure(sanctions_data, vessel)
-    
-    # Environmental
-    environmental_data = {
-        "imo2020_compliant": True,
-        "ballast_water_compliant": True,
-        "environmental_fines_5yr": 0,
-        "oil_spills_5yr": 0,
-        "cii_rating": "B"
-    }
-    signals["environmental_compliance"] = scorer.score_environmental_compliance(environmental_data, vessel)
-    
-    # Calculate composite and generate decision
-    model = MarinePricingModel()
-    composite, confidence = model.calculate_composite_score(signals)
-    decision = model.generate_underwriting_decision(submission, signals, composite)
-    
-    print(f"\nVessel: {vessel.vessel_name} (IMO: {vessel.imo_number})")
-    print(f"Type: {vessel.vessel_type.value}")
-    print(f"Insured Value: ${vessel.insured_value:,.0f}")
-    print()
-    print("Signal Scores:")
-    print("-" * 50)
-    for name, signal in signals.items():
-        print(f"  {name:30} {signal.normalized_score:5.0f}/100  ({signal.evidence[:40]}...)")
-    print()
-    print(f"DSI Composite Score: {composite:.0f}/1000")
-    print(f"Risk Tier: {decision['tier']}")
-    print(f"Decision: {decision['decision']}")
-    print(f"Action: {decision['action']}")
-    print()
-    print("Pricing:")
-    print(f"  Base Premium: ${decision['pricing']['base_premium']:,.0f}")
-    print(f"  DSI Adjustment: {decision['pricing']['dsi_adjustment']:.2f}x")
-    print(f"  Final Premium: ${decision['pricing']['final_premium']:,.0f}")
-    print(f"  Rate per $100: ${decision['pricing']['rate_per_100']:.3f}")
+    print(f"\nCategory Scores:")
+    for cat, score in decision.category_scores.items():
+        print(f"  {cat}: {score:.0f}/100")
