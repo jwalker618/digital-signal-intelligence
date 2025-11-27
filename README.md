@@ -156,6 +156,7 @@ CoverageLineRegistry.register(
 dsi-insurance-pricing/
 │
 ├── api/
+|
 ├── docs/
 │   ├── Executive summary.pdf
 │   ├── The PageRank precedent.pdf
@@ -197,7 +198,6 @@ dsi-insurance-pricing/
 │   │
 │   ├── website_discovery/
 │   │   └── dsi_website_discovery.py   
-│
 │
 └── README.md
 ```
