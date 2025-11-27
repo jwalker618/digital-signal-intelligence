@@ -559,7 +559,7 @@ This validation confirms DSI's honest limitations:
 
 Based on this validation:
 
-1. **Tier 4 organizations require 30-60% premium loading** over standard rates
+1. **Tier 4 organisations require 30-60% premium loading** over standard rates
 2. **Acquisition integration periods** (24 months post-close) warrant elevated pricing
 3. **Software supply chain concentration** must be monitored at portfolio level
 4. **Residual zero-day risk** should be priced into all technology vendor exposures
@@ -568,7 +568,7 @@ Based on this validation:
 
 1. **Concentration limits**: No single software vendor should represent >X% of portfolio exposure
 2. **Sector-level monitoring**: Healthcare, critical infrastructure, financial services require elevated baseline pricing
-3. **Systemic risk tracking**: Organizations like Change Healthcare (50% of claims) require systemic risk consideration
+3. **Systemic risk tracking**: Organisations like Change Healthcare (50% of claims) require systemic risk consideration
 
 ### Continuous Monitoring
 
