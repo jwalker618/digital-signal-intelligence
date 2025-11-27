@@ -1,495 +1,160 @@
-# DSI Corporate Website Discovery Module
+# Website Discovery Module
 
-Automatically discover corporate websites from company names or domains using multi-strategy intelligent discovery.
+## Overview
 
-## 🎯 Purpose
+The `website_discovery` module solves the critical problem of identifying the correct corporate website for an organisation. This is a foundational component of DSI, enabling automated signal collection by first resolving which website to analyse.
 
-This module solves a critical problem in the DSI platform: **automatically identifying the correct corporate website for insurance underwriting analysis**. Given a company name like "Marks and Spencer," it intelligently discovers that the corporate website is `https://corporate.marksandspencer.com/`.
+## Key Capabilities
 
-## ✨ Features
+### 1. Multi-Method Discovery
+- **Direct domain validation** - When domain hints are provided
+- **Name-based generation** - Creates candidate domains from company names
+- **Corporate registry lookup** - Companies House, SEC EDGAR, OpenCorporates
+- **Search engine discovery** - Google/Bing search for official sites
+- **DNS enumeration** - TLD variations and regional variants
 
-- **Multi-Strategy Discovery**: Domain generation, search engines, Wikipedia, LinkedIn
-- **Confidence Scoring**: Ranks results by confidence (0-100)
-- **Corporate Validation**: Identifies genuine corporate sites vs consumer/retail sites
-- **SSL & Security Checks**: Validates SSL certificates and security headers
-- **Batch Processing**: Process multiple companies efficiently
-- **Caching**: Avoid repeated lookups for better performance
-- **API-Ready**: Integrates with Google Custom Search, Bing, and other APIs
-- **Standalone**: Can be used independently or integrated into DSI pricing workflow
+### 2. Corporate Structure Resolution
+- Identifies parent/subsidiary relationships
+- Handles brands within larger companies
+- Maps holding company structures
+- Example: "MS Amlin" → MS&AD Insurance Group Holdings
 
----
+### 3. Confidence Scoring
+- **HIGH** (90%+): Multiple signals align, verified domain
+- **MEDIUM** (70-89%): Some ambiguity, likely correct
+- **LOW** (50-69%): Significant uncertainty
+- **UNVERIFIED** (<50%): Requires manual verification
 
-## 🚀 Quick Start
+### 4. Red Flag Detection
+- Parked/inactive domains
+- Suspicious domain patterns
+- Domain age inconsistencies
+- SSL/registration mismatches
 
-### Basic Usage
+## Usage
 
+### Basic Discovery
 ```python
-from website_discovery import CorporateWebsiteDiscovery
+from website_discovery import WebsiteDiscoveryEngine
 
-# Initialize
-discovery = CorporateWebsiteDiscovery()
+engine = WebsiteDiscoveryEngine()
+result = engine.discover("MS Amlin")
 
-# Discover corporate website
-result = discovery.discover("Marks and Spencer")
-
-# Get best match
-if result.success:
-    print(f"Found: {result.best_match.url}")
-    print(f"Confidence: {result.best_match.confidence_score:.1f}/100")
+print(f"Domain: {result.primary_website.domain}")
+print(f"Confidence: {result.confidence.value}")
+print(f"Manual Review Required: {result.requires_manual_review}")
 ```
 
-### With Domain Hint
-
+### Discovery with Hints
 ```python
-# If you have a hint about the domain
-result = discovery.discover(
-    "Marks and Spencer",
-    domain_hint="corporate.marksandspencer.com"
+result = engine.discover(
+    company_name="Petrobras",
+    domain_hint="petrobras.com.br",
+    country_hint="Brazil",
+    industry_hint="energy"
 )
 ```
 
-### Batch Processing
-
+### Batch Discovery
 ```python
-companies = ["Marks and Spencer", "MS Amlin", "Brit"]
-results = discovery.discover_batch(companies, delay=1.0)
+from website_discovery import BatchWebsiteDiscovery
 
-for company, result in results.items():
-    if result.success:
-        print(f"{company}: {result.best_match.url}")
+batch = BatchWebsiteDiscovery()
+results = batch.discover_batch([
+    {"name": "MS Amlin", "country": "UK", "industry": "insurance"},
+    {"name": "Petrobras", "domain_hint": "petrobras.com.br"},
+    {"name": "Boeing", "country": "US"}
+])
+
+for name, result in results.items():
+    print(f"{name}: {result.primary_website.domain} ({result.confidence.value})")
 ```
 
----
-
-## 📦 Installation
-
-The module is already integrated into the DSI repository. Dependencies are included in `requirements.txt`:
-
-```bash
-pip install -r requirements.txt
-```
-
-### Optional API Keys
-
-For enhanced search capabilities, set environment variables:
-
-```bash
-# Google Custom Search
-export GOOGLE_API_KEY="your_google_api_key"
-export GOOGLE_CX="your_custom_search_engine_id"
-
-# Bing Search
-export BING_API_KEY="your_bing_subscription_key"
-```
-
----
-
-## 🔍 Discovery Strategies
-
-### 1. Domain Generation (No API Required)
-
-Generates potential domain variations and tests them:
-
-```
-marksandspencer.com
-marks-and-spencer.com
-corporate.marksandspencer.com
-investor.marksandspencer.com
-group.marksandspencer.com
-```
-
-**Pros**: Fast, no API costs, works offline
-**Cons**: Limited to common patterns
-
-### 2. Search Engine Discovery (Requires API)
-
-Uses search engines to find official websites:
-
-- Google Custom Search API
-- Bing Search API
-- DuckDuckGo (limited, no API key required)
-
-**Pros**: High accuracy, finds non-standard domains
-**Cons**: Requires API keys, has costs
-
-### 3. Wikipedia (Free)
-
-Extracts official website from Wikipedia pages.
-
-**Pros**: Highly accurate for well-known companies
-**Cons**: Limited to companies with Wikipedia pages
-
-### 4. LinkedIn (Future)
-
-Extract website from LinkedIn company pages.
-
-**Pros**: Very accurate
-**Cons**: Requires LinkedIn API access
-
----
-
-## 📊 Confidence Scoring
-
-Websites are scored 0-100 based on:
-
-| Factor | Points | Description |
-|--------|--------|-------------|
-| SSL Certificate | 20 | Valid HTTPS certificate |
-| HTTP Status | 15 | Returns 200 OK |
-| Company Name Match | 25 | Company name appears in content |
-| Corporate Keywords | 30 | Presence of "investor relations", "corporate", etc. |
-| Corporate URLs | 10 | Links to /investor, /corporate pages |
-
-**Thresholds**:
-- 80-100: High confidence (likely correct)
-- 60-79: Medium confidence (manual review recommended)
-- 40-59: Low confidence (questionable)
-- 0-39: Very low confidence (likely incorrect)
-
----
-
-## 🧪 Testing
-
-Run the comprehensive test suite:
-
-```bash
-# All tests
-pytest models/website_discovery/tests/ -v
-
-# With output (see discovery progress)
-pytest models/website_discovery/tests/ -v -s
-
-# Specific test
-pytest models/website_discovery/tests/test_website_discovery.py::TestRealCompanyDiscovery::test_marks_and_spencer_discovery -v -s
-```
-
-### Test Companies
-
-The tests include real-world examples:
-
-1. **Marks & Spencer**: Retail company with corporate subdomain
-2. **MS Amlin**: Insurance company (Lloyd's syndicate)
-3. **Brit**: Insurance underwriter
-
----
-
-## 📚 Examples
-
-### Example 1: Basic Discovery
-
+### Domain Validation
 ```python
-discovery = CorporateWebsiteDiscovery()
-result = discovery.discover("Microsoft")
+from website_discovery import validate_corporate_domain
 
-print(f"URL: {result.best_match.url}")
-print(f"Confidence: {result.best_match.confidence_score:.1f}/100")
-print(f"Method: {result.best_match.discovery_method.value}")
-```
-
-### Example 2: Detailed Analysis
-
-```python
-result = discovery.discover("Marks and Spencer")
-
-if result.success:
-    candidate = result.best_match
-    print(f"Corporate Indicators Found:")
-    for indicator in candidate.corporate_indicators:
-        print(f"  • {indicator}")
-
-    if candidate.validation_result:
-        print(f"\nValidation:")
-        print(f"  SSL: {candidate.validation_result.ssl_valid}")
-        print(f"  Status: {candidate.validation_result.status_code}")
-        print(f"  Response Time: {candidate.validation_result.response_time:.2f}s")
-```
-
-### Example 3: With Search APIs
-
-```python
-discovery = CorporateWebsiteDiscovery(
-    google_api_key="your_key",
-    google_cx="your_cx"
-)
-
-result = discovery.discover("Rare Company Name", use_search=True)
-```
-
-Run all examples:
-
-```bash
-python models/website_discovery/examples/example_discovery.py
-```
-
----
-
-## 🏗️ Architecture
-
-```
-website_discovery/
-├── dsi_website_discovery.py   # Main discovery engine
-├── strategies.py               # Discovery strategies
-├── validators.py               # Website validation & scoring
-├── utils.py                    # Utility functions
-├── tests/
-│   └── test_website_discovery.py
-├── examples/
-│   └── example_discovery.py
-└── README.md
-```
-
-### Key Classes
-
-**`CorporateWebsiteDiscovery`**: Main orchestrator
-**`DomainGenerationStrategy`**: Domain variation generator
-**`SearchStrategy`**: Search engine integration
-**`WebsiteValidator`**: Validates and scores candidates
-
----
-
-## 🔧 Configuration
-
-### Initialization Options
-
-```python
-discovery = CorporateWebsiteDiscovery(
-    google_api_key=None,        # Google API key
-    google_cx=None,             # Google Custom Search Engine ID
-    bing_api_key=None,          # Bing API key
-    timeout=10,                 # Request timeout (seconds)
-    max_candidates=20,          # Max candidates to evaluate
-    use_cache=True              # Enable result caching
+is_valid, confidence, issues = validate_corporate_domain(
+    domain="petrobras.com.br",
+    expected_company="Petrobras"
 )
 ```
 
-### Environment Variables
+## Data Structures
 
-```bash
-GOOGLE_API_KEY=your_google_api_key
-GOOGLE_CX=your_custom_search_engine_id
-BING_API_KEY=your_bing_api_key
+### DiscoveryResult
+```python
+@dataclass
+class DiscoveryResult:
+    input_name: str                                   # Original search name
+    primary_website: WebsiteCandidate                 # Best match
+    confidence: ConfidenceLevel                       # Overall confidence
+    all_candidates: List[WebsiteCandidate]            # All discovered candidates
+    company_identity: CompanyIdentity                 # Resolved corporate identity
+    related_websites: Dict[str, WebsiteCandidate]     # Parent, subsidiaries, etc.
+    requires_manual_review: bool                      # Flag for human review
+    manual_review_reasons: List[str]                  # Why review needed
 ```
 
----
-
-## 🎯 Use Cases
-
-### 1. Insurance Underwriting
-
-Automatically discover corporate websites for signal analysis:
-
+### WebsiteCandidate
 ```python
-# In pricing workflow
-discovery = CorporateWebsiteDiscovery()
-result = discovery.discover(company_name)
-
-if result.success:
-    # Analyze digital signals from corporate website
-    signals = analyze_website(result.best_match.url)
-    premium = calculate_premium(company_profile, signals)
+@dataclass
+class WebsiteCandidate:
+    url: str                                  # Full URL
+    domain: str                               # Domain only
+    website_type: WebsiteType                 # PRIMARY_CORPORATE, SUBSIDIARY, etc.
+    discovery_method: DiscoveryMethod         # How it was found
+    confidence_score: float                   # 0-100 score
+    evidence: List[str]                       # Supporting evidence
+    red_flags: List[str]                      # Concerns identified
 ```
 
-### 2. Bulk Company Analysis
-
-Process portfolios of companies:
+## Configuration
 
 ```python
-companies = load_portfolio()  # 1000 companies
-results = discovery.discover_batch(companies, delay=1.0)
-
-for company, result in results.items():
-    if result.success:
-        analyze_and_store(company, result.best_match.url)
+engine = WebsiteDiscoveryEngine(config={
+    'search_api_key': 'your_key',
+    'whois_service': 'https://whois.api.com',
+    'timeout': 30,
+    'registry_apis': {
+        'uk': 'https://api.company-information.service.gov.uk',
+        'us': 'https://www.sec.gov/cgi-bin/browse-edgar'
+    }
+})
 ```
 
-### 3. Data Quality Enhancement
+## Integration with Signal Collection
 
-Enrich company databases with corporate URLs:
-
-```python
-for company in database.companies:
-    if not company.corporate_url:
-        result = discovery.discover(company.name)
-        if result.success:
-            company.corporate_url = result.best_match.url
-            company.save()
-```
-
----
-
-## 📈 Performance
-
-### Speed
-
-- **Domain Generation**: ~2-5 seconds per company
-- **With Search APIs**: ~5-10 seconds per company
-- **Cached Lookups**: <0.01 seconds
-
-### Accuracy
-
-Based on testing with 50 major companies:
-
-- **Domain Generation**: 85% accuracy (finds correct domain)
-- **With Search APIs**: 95% accuracy
-- **Combined (both)**: 98% accuracy
-
-### Rate Limiting
-
-Built-in rate limiting to avoid overwhelming services:
+The website_discovery module is designed to integrate with signal_collection:
 
 ```python
-# Batch processing with delays
-results = discovery.discover_batch(
-    companies,
-    delay=1.0  # 1 second between requests
+from website_discovery import WebsiteDiscoveryEngine
+from signal_collection import SignalCollectionEngine
+
+# Discover website first
+discovery = WebsiteDiscoveryEngine()
+website_result = discovery.discover("Target Company")
+
+# Use discovered domain for signal collection
+signals = SignalCollectionEngine()
+signal_result = signals.collect(
+    entity_name="Target Company",
+    domain_hint=website_result.primary_website.domain
 )
 ```
 
----
+## Known Limitations
 
-## 🔐 Security & Privacy
+1. **Private companies**: Limited public information may result in lower confidence
+2. **New companies**: Recent formations may not appear in registries
+3. **Rebranded companies**: May have multiple valid domains
+4. **Regional variants**: May resolve different regional sites
 
-### SSL Validation
+## Future Enhancements
 
-All discovered websites are validated for:
-- Valid SSL certificate
-- Certificate issuer
-- Certificate expiration
+- [ ] Integration with actual APIs (Companies House, SEC, etc.)
+- [ ] Machine learning for logo/content matching
+- [ ] Real-time domain monitoring
+- [ ] Historical domain tracking
+- [ ] Brand/trademark verification
 
-### Data Privacy
-
-- No personal data collected
-- No data stored externally
-- All processing happens locally (except API calls)
-- Caching is optional and local
-
-### Rate Limiting
-
-Respects robots.txt and implements delays to avoid overwhelming servers.
-
----
-
-## 🐛 Troubleshooting
-
-### "No candidates found"
-
-**Cause**: Company name too generic or unusual spelling
-**Solution**: Try with domain hint or full company name
-
-```python
-result = discovery.discover(
-    "Brit",
-    domain_hint="britinsurance.com"
-)
-```
-
-### "All candidates have low scores"
-
-**Cause**: No corporate content detected
-**Solution**: Manual verification may be needed
-
-```python
-# Review all candidates
-for candidate in result.all_candidates:
-    print(f"{candidate.url}: {candidate.confidence_score:.1f}/100")
-```
-
-### "Timeout errors"
-
-**Cause**: Network issues or slow websites
-**Solution**: Increase timeout
-
-```python
-discovery = CorporateWebsiteDiscovery(timeout=20)
-```
-
----
-
-## 🚦 Limitations
-
-1. **Common Names**: Companies with very common names (e.g., "Brit", "Atlas") may have ambiguous results
-2. **New Companies**: Recently founded companies may not have established web presence
-3. **Private Companies**: Smaller private companies may not have corporate websites
-4. **API Costs**: Search API usage incurs costs (Google Custom Search: $5/1000 queries)
-5. **Rate Limits**: Search APIs have rate limits (need to implement delays for large batches)
-
----
-
-## 🛣️ Roadmap
-
-### Phase 1: Core Functionality (Complete ✅)
-- Domain generation strategy
-- Website validation and scoring
-- Search engine integration
-- Comprehensive testing
-
-### Phase 2: Enhanced Accuracy (Future)
-- LinkedIn company page integration
-- Wikipedia data extraction
-- DNS and WHOIS analysis
-- Machine learning for scoring
-
-### Phase 3: Integration (Future)
-- Direct integration into pricing workflow
-- Automatic signal collection
-- Dashboard for manual review
-- API endpoint for external access
-
----
-
-## 🤝 Integration with DSI Platform
-
-### Current Status
-
-**Standalone Module**: Can be used independently
-
-### Future Integration
-
-```python
-# In pricing workflow
-from website_discovery import CorporateWebsiteDiscovery
-from signal_collection import SignalCollector
-
-# Discover website
-discovery = CorporateWebsiteDiscovery()
-result = discovery.discover(company_name)
-
-if result.success:
-    # Collect digital signals
-    collector = SignalCollector()
-    signals = collector.collect(result.best_match.url)
-
-    # Calculate pricing
-    model = CyberInsurancePricingModel()
-    pricing = model.calculate_premium(company_profile, signals)
-```
-
----
-
-## 📞 Support
-
-For issues or questions:
-- Open an issue in the GitHub repository
-- Contact: johnea.walker@outlook.com
-- Phone: 07496 103 591
-
----
-
-## 📄 License
-
-Confidential & Proprietary - John Walker (2025)
-
----
-
-## 🎓 References
-
-- [Google Custom Search API](https://developers.google.com/custom-search)
-- [Bing Web Search API](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api)
-- [SSL Certificate Validation](https://docs.python.org/3/library/ssl.html)
-- DNS Resolution Standards
-
----
-
-**Version**: 1.0
-**Last Updated**: November 2025
-**Status**: Production Ready
