@@ -5,7 +5,7 @@ Digital Signal Intelligence (DSI) - Directors & Officers Insurance Pricing Model
 DSI-compliant D&O insurance pricing based entirely on externally observable
 signals, network authority analysis, and minimal optional direct inquiry.
 
-This model conforms to DSI Principles v1.0.
+This model conforms to Foundational Principles.
 
 D&O insurance is uniquely suited to DSI because corporate governance generates
 extensive public footprints through SEC filings, proxy statements, court records,
