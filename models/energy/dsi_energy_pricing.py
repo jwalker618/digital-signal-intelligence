@@ -5,7 +5,7 @@ Digital Signal Intelligence (DSI) - Energy Insurance Pricing Model
 DSI-compliant energy insurance pricing based entirely on externally observable
 signals, network authority analysis, and minimal optional direct inquiry.
 
-This model conforms to DSI Principles v1.0.
+This model conforms to Foundational Principles.
 
 Energy insurance is well-suited to DSI because:
 - Regulatory filings (EPA, OSHA, state agencies) are public
