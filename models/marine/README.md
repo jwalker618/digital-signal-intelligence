@@ -343,6 +343,3 @@ DSI prices at operator level but conditions may require:
 
 This hybrid maintains DSI efficiency while allowing granularity where needed.
 
----
-
-*Conforms to DSI Principles v1.0*
