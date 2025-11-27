@@ -2,7 +2,7 @@
 
 ## Overview
 
-This model implements Digital Signal Intelligence (DSI) for cyber insurance pricing, conforming to DSI Principles v1.0. It replaces traditional questionnaire-based underwriting with externally observable signals, enabling high straight-through processing rates and autonomous operation.
+This model implements Digital Signal Intelligence (DSI) for cyber insurance pricing, conforming to the Foundational Principles. It replaces traditional questionnaire-based underwriting with externally observable signals, enabling high straight-through processing rates and autonomous operation.
 
 **Key Differentiator:** Unlike traditional cyber underwriting that relies on lengthy security questionnaires, this model derives risk assessment from observable digital behavior - what companies actually do, not what they claim.
 
