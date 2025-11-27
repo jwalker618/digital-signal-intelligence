@@ -2,7 +2,7 @@
 
 ## Overview
 
-This model implements Digital Signal Intelligence (DSI) for D&O insurance pricing, conforming to DSI Principles v1.0. It replaces traditional application-based underwriting with externally observable signals from SEC filings, court records, and public databases.
+This model implements Digital Signal Intelligence (DSI) for D&O insurance pricing, conforming to Foundational Principles. It replaces traditional application-based underwriting with externally observable signals from SEC filings, court records, and public databases.
 
 **Key Differentiator:** D&O is exceptionally suited to DSI because corporate governance creates extensive structured public records - SEC filings are machine-readable, court records are searchable, and governance metrics are quantifiable.
 
@@ -19,7 +19,7 @@ This model implements Digital Signal Intelligence (DSI) for D&O insurance pricin
 | Absence as Signal | Missing governance page, no ESG reporting, limited IR presence |
 | Structured Data Utilization | Credit ratings, ESG scores, ISS governance scores |
 | Minimal Direct Inquiry | 5 optional Yes/No questions for critical factors |
-| Organizational Assessment | Company-level governance assessment |
+| Organisational Assessment | Company-level governance assessment |
 | Simplicity in Scoring | Signal → Score → Tier → Price |
 | Agentic Readiness | All components executable by AI |
 
@@ -143,6 +143,3 @@ Limit: $100,000,000
 Premium: $200,000
 ```
 
----
-
-*Conforms to DSI Principles v1.0*
