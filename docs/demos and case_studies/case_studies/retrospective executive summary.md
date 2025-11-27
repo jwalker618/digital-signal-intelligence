@@ -138,7 +138,7 @@ Correct. DSI cannot predict true zero-days. No methodology can. The MOVEit case 
 
 Yes. Security researcher Vinoth Kumar discovered it and reported it to SolarWinds in 2019. It was publicly accessible on GitHub from June 2018 to November 2019. A DSI implementation with credential monitoring would have flagged this.
 
-### "These are all post-hoc rationalizations."
+### "These are all post-hoc rationalisations."
 
 The evidence cited (GAO reports, GitHub exposure dates, help center documentation) was all publicly available before each incident. We have been conservative—when uncertain whether a signal was observable, we assumed it was not.
 
