@@ -1,461 +1,348 @@
-# DSI Marine Insurance Pricing Model
+# DSI Marine Insurance Pricing Model v2.0
 
 ## Overview
 
-The Marine Insurance pricing model applies Digital Signal Intelligence to hull & machinery, cargo, P&I, and marine liability coverages. Marine insurance is uniquely suited to DSI because vessel operations generate extensive digital footprints through AIS tracking, port state control databases, classification society records, and regulatory filings.
+This model implements Digital Signal Intelligence (DSI) for marine insurance pricing, conforming to DSI Principles v1.0. It replaces traditional vessel-by-vessel underwriting with operator-level assessment based on observable behavioral patterns.
 
-Unlike traditional marine underwriting that relies heavily on physical surveys and questionnaires, DSI continuously monitors observable digital signals that correlate with loss probability.
+**Key DSI Principle:** We assess OPERATOR behavior, not individual vessels. A well-managed operator's fleet-wide patterns indicate individual vessel quality. This enables scalable underwriting without vessel-by-vessel analysis.
 
----
-
-## Coverage Types Supported
-
-| Coverage | Description | Key Risk Factors |
-|----------|-------------|------------------|
-| Hull & Machinery | Physical damage to vessel | Age, condition, operator quality |
-| Cargo | Goods in transit | Trading routes, vessel type |
-| Protection & Indemnity | Third-party liability | PSC record, crew quality |
-| Marine Liability | Pollution, wreck removal | Environmental compliance |
-| War Risks | War, piracy, terrorism | Trading areas, AIS patterns |
-| Loss of Hire | Business interruption | Operator financials, maintenance |
+**Unique Marine Advantage:** Marine insurance is exceptionally suited to DSI because:
+- AIS provides real-time behavioral telemetry
+- Port State Control databases are public and structured
+- Classification society records are accessible
+- IMO databases provide authoritative vessel/company data
+- Sanctions screening is well-established
 
 ---
 
-## Signal Framework
+## DSI Principles Compliance
 
-### Signal Categories & Weights
-
-```
-Vessel Operations (25%)
-├── AIS Compliance (8%)
-├── Trading Pattern Risk (8%)
-├── Port Call Risk (5%)
-└── Dark Activity (4%)
-
-Safety & Compliance (30%)
-├── PSC Performance (10%)
-├── Class Status (8%)
-├── ISM Compliance (6%)
-└── Vessel Age/Condition (6%)
-
-Fleet/Operator (20%)
-├── Operator Reputation (8%)
-├── Technical Manager Quality (6%)
-└── Fleet Performance (6%)
-
-Financial & Sanctions (15%)
-├── Owner Financial Stability (6%)
-├── Sanctions Exposure (5%)
-└── Beneficial Owner Transparency (4%)
-
-Environmental (10%)
-├── Environmental Compliance (5%)
-├── Emissions Performance (3%)
-└── Environmental Incidents (2%)
-```
+| Principle | Implementation |
+|-----------|----------------|
+| External Observability | AIS tracking, PSC databases, classification records |
+| Machine Readability | IMO GISIS, Equasis, Paris/Tokyo MoU are structured |
+| Network Authority | Class society, P&I club, charterer relationships |
+| Behavioral Inference | Fleet AIS patterns reveal operational discipline |
+| Absence as Signal | AIS gaps, missing class notations, no industry membership |
+| Structured Data Utilization | RightShip scores, ESG ratings |
+| Minimal Direct Inquiry | 5 optional questions |
+| Organizational Assessment | Operator-level, not vessel-level |
+| Simplicity in Scoring | Signal → Score → Tier → Price |
+| Agentic Readiness | All data sources API-accessible |
 
 ---
 
-## Signal Definitions
+## The Operator-Level Approach
 
-### Vessel Operations Signals
+Traditional marine underwriting prices individual vessels. DSI inverts this:
 
-#### AIS Compliance (8%)
+| Traditional | DSI |
+|-------------|-----|
+| Vessel survey | Operator behavior patterns |
+| Individual vessel age | Fleet age profile |
+| Single vessel PSC record | Fleet-wide PSC performance |
+| Vessel-specific AIS | Fleet AIS compliance patterns |
+| One vessel, one price | Operator profile → fleet pricing |
 
-**What it measures:** Automatic Identification System transmission patterns and compliance.
+**Why this works:** Operators with strong safety cultures don't have random bad vessels. Poor operators don't have random good vessels. Organizational behavior propagates to assets.
 
-**Why it matters:** Vessels are legally required to transmit AIS continuously. Gaps or manipulation indicate potential regulatory evasion, sanctions violations, or illicit activity.
+---
 
-**Scoring rubric:**
+## Signal Framework (39 Signals)
+
+### Category Weights
+
+| Category | Weight | Rationale |
+|----------|--------|-----------|
+| Network Authority | 15% | Quality of maritime relationships |
+| Operational Telemetry | 20% | AIS behavioral patterns |
+| Safety Compliance | 25% | PSC, class status - direct claims predictors |
+| Fleet Profile | 10% | Age, quality, consistency |
+| Sanctions Compliance | 15% | Critical - can void coverage |
+| Environmental | 5% | Regulatory compliance |
+| Corporate Footprint | 5% | Digital presence |
+| Structured Data | 5% | Third-party ratings |
+
+### Key Signal Categories
+
+#### Operational Telemetry (20%)
+*From AIS tracking - behavioral patterns at fleet level*
+
+| Signal | Weight | What It Measures |
+|--------|--------|------------------|
+| AIS Compliance | 25% | Transmission consistency across fleet |
+| Dark Activity | 25% | AIS gaps in suspicious locations |
+| Route Risk | 20% | High-risk area exposure |
+| Operational Efficiency | 10% | Speed/fuel patterns indicating discipline |
+
+#### Safety Compliance (25%)
+*From PSC databases, classification societies*
+
+| Signal | Weight | What It Measures |
+|--------|--------|------------------|
+| PSC Detention Rate | 25% | Detentions per inspection |
+| PSC Deficiency Rate | 20% | Deficiencies per inspection |
+| Class Status | 20% | In class, conditions, recommendations |
+| ISM Compliance | 15% | Document of Compliance status |
+| Casualty History | 10% | Incidents, groundings, collisions |
+| Total Loss History | 10% | Complete vessel losses |
+
+#### Sanctions Compliance (15%)
+*Critical for marine - violations void coverage*
+
+| Signal | Weight | What It Measures |
+|--------|--------|------------------|
+| Sanctions Status | 30% | Direct OFAC/EU/UN sanctions |
+| Ownership Transparency | 20% | Beneficial owner visibility |
+| Jurisdiction Risk | 20% | High-risk country connections |
+| STS Patterns | 15% | Ship-to-ship transfer activity |
+| Historical Connections | 15% | Past sanctions involvement |
+
+---
+
+## Network Authority Signals
+
+Marine network authority captures who trusts the operator:
+
+### Classification Society Quality
+
+**What it measures:** IACS membership and class society tier.
+
+**Scoring:**
 | Score | Criteria |
 |-------|----------|
-| 95-100 | Continuous transmission, no gaps > 1 hour |
-| 80-94 | Minor gaps (1-4 hours), explainable |
-| 60-79 | Moderate gaps (4-24 hours) |
-| 40-59 | Significant gaps (24-72 hours) |
-| 0-39 | Extended dark periods or manipulation detected |
+| 95-100 | Top IACS members (DNV, Lloyd's, BV, ABS) |
+| 80-94 | Other IACS members |
+| 60-79 | Recognized non-IACS societies |
+| 40-59 | Lesser-known societies |
+| 0-39 | Unknown or no classification |
 
-**Data source:** AIS tracking providers (MarineTraffic, VesselFinder, Spire)
+### P&I Club Membership
 
-#### Dark Activity (4%)
+**What it measures:** International Group membership vs fixed premium.
 
-**What it measures:** Patterns of AIS disabling ("going dark") in suspicious locations.
+**Why it matters:** IG clubs (Gard, Britannia, UK Club, etc.) have rigorous entry standards. Fixed premium markets have lower barriers.
 
-**Why it matters:** Disabling AIS near sanctioned waters, during ship-to-ship transfers, or in unregulated zones is a major red flag for sanctions evasion, illegal fishing, or smuggling.
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Major IG club, long membership |
+| 75-89 | IG club member |
+| 60-74 | Smaller mutual clubs |
+| 40-59 | Fixed premium market |
+| 0-39 | Unknown or concerning coverage |
+
+### Flag State Quality
+
+**What it measures:** Paris MoU white/grey/black list status.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 95-100 | White list flags (DK, NO, GB, SG, HK, JP) |
+| 75-94 | Other white list flags |
+| 50-74 | Grey list flags |
+| 25-49 | Black list flags |
+| 0-24 | Sanctioned or unknown flags |
+
+---
+
+## Operational Telemetry (AIS Behavioral Analysis)
+
+### AIS Compliance
+
+**What it measures:** Fleet-wide AIS transmission consistency.
+
+**Collection method:**
+- Aggregate AIS data for all fleet vessels
+- Calculate transmission gap frequency and duration
+- Identify systematic vs incidental gaps
+
+**Why it matters:** Consistent AIS transmission indicates operational discipline. Systematic gaps suggest evasion.
+
+**Scoring:**
+| Score | Criteria |
+|-------|----------|
+| 95-100 | 99%+ transmission, no unexplained gaps |
+| 85-94 | Minor gaps, all explainable |
+| 70-84 | Moderate gaps, some concerns |
+| 50-69 | Significant gaps |
+| 0-49 | Systematic dark periods or manipulation |
+
+### Dark Activity Patterns
+
+**What it measures:** AIS disabling in suspicious locations.
 
 **High-risk dark zones:**
-- North Korean EEZ
-- Iranian waters
-- Syrian waters
-- Crimea region
-- Known STS transfer hotspots
+- Near sanctioned waters (NK, Iran, Syria, Crimea)
+- Known STS transfer areas
+- Disputed maritime zones
 
-**Scoring rubric:**
+**Scoring:**
 | Score | Criteria |
 |-------|----------|
-| 90-100 | No suspicious dark activity |
-| 70-89 | Minor dark events, explainable |
-| 50-69 | Extended dark periods detected |
-| 30-49 | Multiple extended dark periods |
-| 0-29 | Dark events near high-risk zones |
-
-### Safety & Compliance Signals
-
-#### PSC Performance (10%)
-
-**What it measures:** Port State Control inspection results from Paris MoU, Tokyo MoU, and other regional agreements.
-
-**Why it matters:** PSC inspections are conducted by port authorities worldwide. Detentions and deficiency patterns are strong predictors of vessel condition and operator quality.
-
-**Key metrics:**
-- Detention ratio (detentions / inspections)
-- Deficiency rate (deficiencies per inspection)
-- Safety-critical deficiencies
-- Trend (improving or deteriorating)
-
-**Scoring rubric:**
-| Score | Criteria |
-|-------|----------|
-| 90-100 | No detentions, < 1 deficiency/inspection |
-| 75-89 | No detentions, < 2 deficiencies/inspection |
-| 60-74 | < 5% detention rate |
-| 40-59 | 5-15% detention rate |
-| 20-39 | 15-30% detention rate |
-| 0-19 | > 30% detention rate or safety-critical issues |
-
-**Data source:** Paris MoU, Tokyo MoU, USCG PSC databases, Equasis
-
-#### Class Status (8%)
-
-**What it measures:** Classification society status, outstanding recommendations, and survey compliance.
-
-**Why it matters:** Classification societies certify vessel seaworthiness. Class status is fundamental to insurability.
-
-**Classification society tiers:**
-- **IACS members:** LR, DNV, BV, ABS, NK, KR, CCS, RINA, RS, CRS, IRS, PRS
-- **Recognized:** IRCLASS, VR, HR
-- **Other:** Requires additional scrutiny
-
-**Scoring rubric:**
-| Score | Criteria |
-|-------|----------|
-| 90-100 | IACS class, in class, no conditions |
-| 75-89 | IACS class, minor recommendations |
-| 60-74 | Non-IACS or elevated recommendations |
-| 40-59 | Conditions of class outstanding |
-| 20-39 | Survey overdue |
-| 0-19 | Class suspended or withdrawn |
-
-**Data source:** Classification society records, Equasis
-
-#### Vessel Age/Condition (6%)
-
-**What it measures:** Vessel age combined with maintenance and condition indicators.
-
-**Why it matters:** Age alone is not determinative—a well-maintained 20-year vessel may be better than a neglected 5-year vessel. DSI combines age with observable condition signals.
-
-**Age baseline:**
-| Age | Base Score |
-|-----|------------|
-| 0-5 years | 95 |
-| 6-10 years | 85 |
-| 11-15 years | 72 |
-| 16-20 years | 58 |
-| 21-25 years | 42 |
-| 25+ years | 25 |
-
-**Condition adjustments:**
-- Dry dock overdue: -25 points
-- Major repairs pending: -10 points each
-- Machinery failures (12m): -8 points each
-
-### Fleet/Operator Signals
-
-#### Operator Reputation (8%)
-
-**What it measures:** DOC (Document of Compliance) holder performance across their entire fleet.
-
-**Why it matters:** The operator is often more important than the individual vessel. Poor operators have systemic issues that affect all vessels under their management.
-
-**Key metrics:**
-- Fleet detention rate (36 months)
-- Total losses (5 years)
-- Major incidents (5 years)
-- Years in operation
-- Fleet size (data confidence)
-
-**Scoring rubric:**
-| Score | Criteria |
-|-------|----------|
-| 85-100 | < 3% fleet detention rate, no losses |
-| 70-84 | 3-8% detention rate |
-| 55-69 | 8-15% detention rate or minor incidents |
-| 40-54 | > 15% detention rate |
-| 20-39 | Major incidents in fleet |
-| 0-19 | Total losses in past 5 years |
-
-**Data source:** Equasis fleet data, IMO GISIS
-
-### Financial & Sanctions Signals
-
-#### Sanctions Exposure (5%)
-
-**What it measures:** Direct sanctions status, ownership opacity, and sanctions risk indicators.
-
-**Why it matters:** Sanctions violations can void coverage and expose insurers to regulatory action. DSI identifies elevated risk before violations occur.
-
-**Risk indicators:**
-- Direct sanctions on vessel/owner
-- STS transfers with sanctioned vessels
-- Port calls to high-risk jurisdictions
-- Opaque ownership structures (multiple layers)
-
-**Scoring rubric:**
-| Score | Criteria |
-|-------|----------|
-| 90-100 | Clean profile, transparent ownership |
-| 70-89 | Complex ownership (2-3 layers) |
-| 50-69 | Some high-risk port exposure |
-| 30-49 | Opaque ownership (4+ layers) |
-| 10-29 | Multiple high-risk indicators |
-| 0 | Sanctioned—coverage not available |
-
-**Data source:** OFAC, EU sanctions lists, UN sanctions, ownership databases
-
-### Environmental Signals
-
-#### Environmental Compliance (5%)
-
-**What it measures:** Compliance with environmental regulations and incident history.
-
-**Why it matters:** Environmental incidents create significant liability exposure and indicate operational quality.
-
-**Key regulations:**
-- IMO 2020 (sulphur cap)
-- Ballast Water Management Convention
-- MARPOL Annex I-VI
-- CII (Carbon Intensity Indicator) ratings
-
-**Scoring rubric:**
-| Score | Criteria |
-|-------|----------|
-| 85-100 | Full compliance, CII A/B rating |
-| 70-84 | Compliant, CII C rating |
-| 55-69 | CII D/E rating |
-| 40-54 | Compliance gaps (BWM, IMO 2020) |
-| 20-39 | Environmental fines |
-| 0-19 | Oil spill incidents |
+| 95-100 | No dark activity in high-risk zones |
+| 75-94 | Minimal dark activity, low-risk areas |
+| 50-74 | Some concerning dark patterns |
+| 25-49 | Significant high-risk dark activity |
+| 0-24 | Systematic dark activity near sanctioned zones |
 
 ---
 
-## Risk Tier Classification
+## Direct Inquiry Questions (5 Maximum)
 
-| Tier | Score | Classification | Premium Adjustment | Underwriting Action |
-|------|-------|----------------|-------------------|---------------------|
-| 1 | 750-1000 | Preferred | -25% | Auto-approve preferred |
-| 2 | 600-749 | Standard | Baseline | Auto-approve standard |
-| 3 | 450-599 | Elevated | +35% | Manual review required |
-| 4 | 0-449 | High Risk | +100% | Decline or conditions |
+| Question | Type | Impact |
+|----------|------|--------|
+| Total fleet size? | Number | Confidence adjustment |
+| PSC detentions in past 36 months? | Yes/No | -75 if Yes, +25 if No |
+| Total losses in past 5 years? | Yes/No | -150 if Yes, +50 if No |
+| Third-party technical manager? | Yes/No | Informational |
+| Trading to sanctioned regions? | Yes/No | -300 / DECLINE if Yes |
 
 ---
 
-## Pricing Model
+## Pricing Structure
 
-### Base Rates (per $100 insured value, annual)
+### Base Rate by Tier (per $1M insured value)
 
-| Vessel Type | Base Rate |
-|-------------|-----------|
-| Container | $0.18 |
-| Bulk Carrier | $0.20 |
-| Crude Tanker | $0.25 |
-| Product Tanker | $0.22 |
-| Chemical Tanker | $0.28 |
-| LNG Carrier | $0.15 |
-| LPG Carrier | $0.18 |
-| RoRo | $0.30 |
-| General Cargo | $0.22 |
-| Offshore | $0.35 |
-| Passenger | $0.40 |
-| Fishing | $0.45 |
+| Tier | Score | Rate |
+|------|-------|------|
+| 1 Preferred | 800+ | 0.15% |
+| 2 Standard | 650-799 | 0.22% |
+| 3 Elevated | 500-649 | 0.32% |
+| 4 High Risk | 350-499 | 0.50% |
+| 5 Critical | <350 | 0.80% |
 
-### Trading Area Multipliers
+### Operator Type Multipliers
 
-| Trading Area | Multiplier |
-|--------------|------------|
-| Worldwide | 1.20x |
-| Worldwide excl. War Zones | 1.00x |
-| North Atlantic | 0.95x |
-| Mediterranean | 0.90x |
-| Asia Pacific | 1.00x |
-| Middle East/Gulf | 1.15x |
-| West Africa | 1.25x |
-| Caribbean | 1.10x |
-| Inland Waters | 0.85x |
+| Type | Multiplier |
+|------|------------|
+| Major Liner | 0.80x |
+| Major Tanker | 0.90x |
+| Major Bulk | 0.95x |
+| Regional Operator | 1.00x |
+| Independent | 1.25x |
+| State-Owned | 1.10x |
+| Unknown | 1.50x |
 
-### Premium Calculation
+### Vessel Category Multipliers
 
-```
-Final Premium = Base Premium × Trading Multiplier × DSI Adjustment × Age Loading
+| Category | Multiplier |
+|----------|------------|
+| LNG/LPG | 0.85x |
+| Container | 0.90x |
+| Dry Bulk | 1.00x |
+| Tanker | 1.10x |
+| General Cargo | 1.10x |
+| Passenger | 1.25x |
+| Offshore | 1.30x |
 
-Where:
-- Base Premium = (Insured Value / 100) × Base Rate
-- DSI Adjustment = Tier-based multiplier (0.75x to 2.0x)
-- Age Loading = 1.0x to 1.4x based on vessel age
-```
+### Fleet Age Multipliers
+
+| Average Age | Multiplier |
+|-------------|------------|
+| 0-5 years | 0.85x |
+| 5-10 years | 0.95x |
+| 10-15 years | 1.05x |
+| 15-20 years | 1.20x |
+| 20-25 years | 1.40x |
+| 25+ years | 1.60x |
+
+---
+
+## Critical Overrides
+
+| Condition | Result |
+|-----------|--------|
+| Sanctions status score < 30 | Tier 5 / Decline |
+| Trading to sanctioned regions | Decline |
+| Dark activity score < 30 | Tier 4 minimum |
+| STS pattern score < 30 | Tier 4 minimum |
+| PSC detention score < 40 | Tier 3 minimum |
+| Total loss history | Tier 4 minimum |
+| Class status score < 40 | Tier 4 minimum |
 
 ---
 
 ## Data Sources
 
-| Source | Data Provided | Update Frequency |
-|--------|---------------|------------------|
-| AIS Providers | Position, speed, course, gaps | Real-time |
-| Paris MoU | PSC inspections (Europe) | Monthly |
-| Tokyo MoU | PSC inspections (Asia-Pacific) | Monthly |
-| Equasis | Vessel details, operator, fleet | Weekly |
-| Classification Societies | Class status, surveys, recommendations | On change |
-| IMO GISIS | Ship particulars, ISM, environmental | Monthly |
-| Sanctions Lists | OFAC, EU, UN designations | Daily |
-| Marine News | Incidents, casualties | Daily |
+| Source | Data Provided |
+|--------|---------------|
+| AIS Providers | Position, speed, transmission patterns |
+| Paris MoU | European PSC inspections |
+| Tokyo MoU | Asia-Pacific PSC inspections |
+| Equasis | Vessel details, operator, fleet data |
+| Classification Societies | Class status, surveys, notations |
+| IMO GISIS | Ship particulars, DOC holder |
+| OFAC/EU/UN | Sanctions designations |
+| RightShip | Vetting scores |
 
 ---
 
-## API Integration
-
-### Endpoints
+## Example Output
 
 ```
-POST /api/v2/marine/analyze
-GET /api/v2/marine/score/{imo_number}
-GET /api/v2/marine/signals/{imo_number}
-POST /api/v2/marine/monitor
-GET /api/v2/marine/fleet/{operator_id}
-```
+Operator: Global Container Lines
+Type: MAJOR_LINER | Category: CONTAINER
+Fleet: 85 vessels | Avg Age: 8.5 years
 
-### Sample Request
+Composite Score: 998/1000 | Confidence: 95%
 
-```json
-{
-  "imo_number": "9876543",
-  "coverage_types": ["hull_machinery", "pi"],
-  "insured_value": 35000000,
-  "trading_area": "worldwide_excluding_war_zones",
-  "policy_period_days": 365
-}
-```
+Category Scores:
+  network_authority: 91/100
+  operational_telemetry: 91/100
+  safety_compliance: 94/100
+  fleet_profile: 89/100
+  sanctions_compliance: 97/100
 
-### Sample Response
+Tier: 1 (Preferred)
+Decision: APPROVE
 
-```json
-{
-  "imo_number": "9876543",
-  "vessel_name": "ATLANTIC PIONEER",
-  "composite_score": 848,
-  "tier": 1,
-  "tier_label": "Preferred",
-  "signals": {
-    "ais_compliance": {"score": 85, "evidence": "Minor gaps detected"},
-    "psc_performance": {"score": 92, "evidence": "Excellent record"},
-    "class_status": {"score": 94, "evidence": "In class with DNV"}
-  },
-  "pricing": {
-    "base_premium": 70000,
-    "dsi_adjustment": 0.75,
-    "final_premium": 52500,
-    "rate_per_100": 0.15
-  },
-  "decision": "APPROVE",
-  "action": "Auto-bind at preferred terms"
-}
+Total Insured Value: $2,500,000,000
+Annual Premium: $2,180,250
+Rate: 0.0872%
+Deductible: $1,000,000
 ```
 
 ---
 
-## Usage Example
+## Comparison: DSI vs Traditional Marine Underwriting
 
-```python
-from marine_pricing_model import (
-    MarinePricingModel, 
-    MarineSignalScorer,
-    VesselProfile, 
-    MarineSubmission,
-    VesselType,
-    TradingArea,
-    CoverageType
-)
-from datetime import datetime, timedelta
-
-# Create vessel profile
-vessel = VesselProfile(
-    imo_number="9876543",
-    vessel_name="ATLANTIC PIONEER",
-    vessel_type=VesselType.BULK_CARRIER,
-    flag_state="MH",
-    gross_tonnage=45000,
-    deadweight=82000,
-    year_built=2015,
-    classification_society="DNV",
-    owner="Oceanic Shipping Ltd",
-    operator="Global Bulk Carriers",
-    technical_manager="Maritime Technical Services",
-    insured_value=35000000,
-    trading_area=TradingArea.WORLDWIDE_EXC_WAR
-)
-
-# Create submission
-submission = MarineSubmission(
-    submission_id="MAR-2025-001234",
-    vessel=vessel,
-    coverage_types=[CoverageType.HULL_MACHINERY],
-    policy_period_start=datetime.now(),
-    policy_period_end=datetime.now() + timedelta(days=365),
-    deductible=150000,
-    limit=35000000,
-    broker="Marsh Marine"
-)
-
-# Score signals
-scorer = MarineSignalScorer()
-signals = {}
-
-# Add signal data and score
-ais_data = {"transmission_gaps": [], "manipulation_indicators": False}
-signals["ais_compliance"] = scorer.score_ais_compliance(ais_data)
-
-psc_data = {"inspections_36_months": 8, "detentions_36_months": 0, "deficiencies_36_months": 10}
-signals["psc_performance"] = scorer.score_psc_performance(psc_data)
-
-# Generate decision
-model = MarinePricingModel()
-composite, confidence = model.calculate_composite_score(signals)
-decision = model.generate_underwriting_decision(submission, signals, composite)
-
-print(f"Score: {composite:.0f}, Tier: {decision['tier']}, Premium: ${decision['pricing']['final_premium']:,.0f}")
-```
+| Aspect | Traditional | DSI |
+|--------|-------------|-----|
+| Unit of assessment | Individual vessel | Operator fleet |
+| Primary data | Survey reports, applications | AIS patterns, PSC records |
+| Sanctions check | Vessel name screening | Behavioral pattern analysis |
+| Processing | Days per vessel | Minutes per fleet |
+| Survey requirement | Per vessel | Sample-based for Tier 3+ |
+| Scalability | Linear with fleet size | Constant per operator |
 
 ---
 
-## Flag State Risk Tiers
+## Marine-Specific Considerations
 
-| Tier | Flag States | Treatment |
-|------|-------------|-----------|
-| Tier 1 (White List) | GB, NO, DK, NL, DE, FR, SG, JP, HK, AU | Standard terms |
-| Tier 2 | MT, CY, GR, IT, US, CA, KR, TW | Standard terms |
-| Tier 3 (Open Registry) | LR, MH, PA, BS | Additional scrutiny |
-| Tier 4 (High Risk) | KH, TZ, TG, CM | Manual review required |
+### Sanctions Risk
+
+Sanctions are critical in marine insurance:
+- Can void coverage entirely
+- Create reinsurance issues
+- Expose insurer to regulatory action
+
+DSI addresses this through:
+- Direct sanctions database screening
+- AIS dark activity analysis
+- STS transfer pattern detection
+- Ownership transparency scoring
+
+### Fleet vs Vessel Approach
+
+DSI prices at operator level but conditions may require:
+- Named vessel schedule for Tier 3+
+- Individual surveys for vessels >15-20 years
+- Specific values per vessel
+
+This hybrid maintains DSI efficiency while allowing granularity where needed.
 
 ---
 
-## Validation
-
-The Marine DSI model has been validated against:
-
-- **Historical loss data:** Correlation between DSI scores and claims frequency/severity
-- **PSC detention prediction:** 85% accuracy in predicting vessels that will be detained
-- **Operator performance:** Fleet-level scores correlate with operator loss ratios
-
----
-
-## Contact
-
-For implementation support or API access, contact John Walker.
+*Conforms to DSI Principles v1.0*
