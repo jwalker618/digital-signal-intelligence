@@ -430,6 +430,4 @@ Proprietary - Internal Use Only
 ## Contact
 
 For questions about DSI implementation or methodology:
-- **Technical**: [technical-contact]
-- **Business**: [business-contact]
-- **Actuarial**: [actuarial-contact]
+- John Walker
