@@ -129,6 +129,8 @@ DSI is designed as a multi-line platform. Each coverage type has tailored signal
 | **Energy** | OT/IT convergence, safety culture, operational discipline | Upstream, Midstream, Downstream |
 | **Marine** | Classification society, flag state, operator quality | Hull, Cargo, P&I |
 | **Directors & Officers** | Governance transparency, litigation patterns, ESG | Public companies, PE-backed |
+| **Professional Indemnity** | TBC | TBC |
+| **Aerospace** | TBC | TBC |
 
 ### Extensible Architecture
 
@@ -188,7 +190,13 @@ dsi-insurance-pricing/
 │   │   └── dsi_fi_pricing.py   
 │   │
 │   ├── marine/
-│   │   └── dsi_marine_pricing.py   
+│   │   └── dsi_marine_pricing.py
+│   │
+│   ├── pi/
+│   │   └── dsi_pi_pricing.py
+│   │
+│   ├── aerospace/
+│   │   └── dsi_aerospace_pricing.py
 │   │
 │   ├── portfolio/
 │   │   └── dsi_portfolio_analytics.py   
