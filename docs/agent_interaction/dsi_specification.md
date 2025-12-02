@@ -78,7 +78,7 @@ Specific config     →    Policy period set                instant
                     →    Specific coverage set            instant
                     →    Specific limit set               instant 
                     →    Risk assessment                  instant
-Persist             ←    Capture: Score, Tier, Premium
+Persist             ←    Capture: Score, Tier, Premium    instant
 Workflow - accept   →    Display: "Appetite matched"      instant
                     →    Policy issued                    instant
 Workflow - decline  →    Display: "Appetite unmatched"    instant
@@ -104,11 +104,13 @@ Workflow - decline  →    Display: "Appetite unmatched"    instant
 User Action              System Action                    Time
 ─────────────────────────────────────────────────────────────────
 [Same as Path 1]    →    [Same as Path 1]                 ~<3 min
-Workflow            ←    Display: "Referred for Review"
-                         Underwriter notification
+Workflow            ←    Display: "Referred for Review"   instant
+                         Underwriter notification         instant
 Review              →    Manual assessment                1-4 hrs
-Workflow            ←    Quote or Decline
-                    →    Policy issued
+Workflow - accept   →    Display: "Review successful"     instant
+                    →    Policy issued                    instant
+Workflow - decline  →    Display: "Review declined"       instant
+                    →    Declinature summary provided     instant
 ─────────────────────────────────────────────────────────────────
                          TOTAL TIME: Same day (usually)
 ```
