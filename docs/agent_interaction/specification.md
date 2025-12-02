@@ -8,7 +8,7 @@
 
 ---
 
-**Type:** User Interaction Specification
+# Agent Interaction Specification
 **Sub-title:** Minimum Viable Requirement for Straight-Through Processing
 
 
