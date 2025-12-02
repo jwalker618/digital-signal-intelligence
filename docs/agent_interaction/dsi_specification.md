@@ -136,23 +136,19 @@ Workflow - decline  →    Display: "Review declined"       instant
 **Workflow:**
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│  US DIRECT WORKFLOW                                            │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
-│  │ PORTAL      │ →  │ DSI ENGINE   │ →  │ DECISION        │    │
-│  │             │    │              │    │                 │    │
-│  │ • Entity ID │    │ • Signals    │    │ • APPROVE       │    │
-│  │ • Coverage  │    │ • Score      │    │ • REFER         │    │
-│  │ • Limit     │    │ • Tier       │    │ • DECLINE       │    │
-│  │ • 6 Y/N     │    │ • Premium    │    │                 │    │
-│  └─────────────┘    └──────────────┘    └─────────────────┘    │
-│                                                                │
-│  Auto-bind authority: $10M-$50M depending on coverage line     │
-│  Target straight-through rate: 75%                             │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  US DIRECT WORKFLOW                                      │
+├──────────────────────────────────────────────────────────┤
+│  ┌─────────────┐    ┌─────────────┐    ┌──────────────┐  │
+│  │ PORTAL      │ →  │ DSI ENGINE  │ →  │ DECISION     │  │
+│  │             │    │             │    │              │  │
+│  │ • Entity ID │    │ • Signals   │    │ • APPROVE    │  │
+│  │             │    │ • Score     │    │ • REFER      │  │
+│  │             │    │ • Tier      │    │ • DECLINE    │  │
+│  │             │    │ • Premium   │    │              │  │
+│  └─────────────┘    └─────────────┘    └──────────────┘  │
+│  Auto-bind authority: Configurable by coverage           │
+└──────────────────────────────────────────────────────────┘
 ```
 
 **Regulatory Considerations:**
@@ -170,27 +166,25 @@ Lloyd's broker places on behalf of client → Syndicate underwrites
 **Workflow:**
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│  LLOYD'S WORKFLOW                                              │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
-│  │ BROKER      │ →  │ DSI ENGINE   │ →  │ SYNDICATE       │    │
-│  │ SUBMISSION  │    │              │    │ REVIEW          │    │
-│  │             │    │ Pre-populates│    │                 │    │
-│  │ • Entity ID │    │ risk slip    │    │ • Accept DSI    │    │
-│  │ • Coverage  │    │ with signals │    │   assessment    │    │
-│  │ • Limit     │    │ and score    │    │ • Override      │    │
-│  │ • 6 Y/N     │    │              │    │ • Decline       │    │
-│  └─────────────┘    └──────────────┘    └─────────────────┘    │
-│                                                                │
-│  Tier 1-2: Auto-quote with syndicate stamp                     │
-│  Tier 3-4: Underwriter review before quote                     │
-│  Tier 5: Decline or exceptional referral                       │
-│                                                                │
-│  Integration: PPL (Placing Platform Limited) / Blueprint Two   │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│  LLOYD'S WORKFLOW                                                     │
+├───────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    │
+│  │ SUBMISSION      │ →  │ DSI ENGINE      │ →  │ DECISION        │    │
+│  │                 │    │                 │    │                 │    │
+│  │ • Entity ID     │    │ • Signals       │    │ • APPROVE       │    │
+│  │                 │    │ • Score         │    │ • REFER         │    │
+│  │                 │    │ • Tier          │    │ • DECLINE       │    │
+│  │                 │    │ • Premium       │    │ • Decline       │    │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘    │
+│                                                                       │
+│  Tier 1-2: Auto-quote with syndicate stamp                            │
+│  Tier 3-4: Underwriter review before quote                            │
+│  Tier 5: Decline or exceptional referral                              │
+│                                                                       │
+│  Integration: PPL (Placing Platform Limited) / Blueprint Two          │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 **Lloyd's-Specific Considerations:**
@@ -210,18 +204,14 @@ Mix of direct placement and treaty business for APAC region
 ┌────────────────────────────────────────────────────────────────┐
 │  SINGAPORE WORKFLOW                                            │
 ├────────────────────────────────────────────────────────────────┤
-│                                                                │
 │  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
 │  │ SUBMISSION  │ →  │ DSI ENGINE   │ →  │ DECISION        │    │
-│  │ (Local or   │    │              │    │                 │    │
-│  │  Regional)  │    │ • Regional   │    │ • Direct bind   │    │
-│  │             │    │   signal     │    │ • Cedant to     │    │
-│  │ • Entity ID │    │   sources    │    │   treaty        │    │
-│  │ • Coverage  │    │ • Multi-     │    │ • Facultative   │    │
-│  │ • Limit     │    │   currency   │    │   referral      │    │
-│  │ • 6 Y/N     │    │ • MAS        │    │                 │    │
-│  └─────────────┘    │   compliance │    └─────────────────┘    │
-│                     └──────────────┘                           │
+│  │             │    │              │    │ • Direct bind   │    │
+│  │ • Entity ID │    │ • Signals    │    │ • Cedant to     │    │
+│  │             │    │ • Score      │    │   treaty        │    │
+│  │             │    │ • Tier       │    │ • Facultative   │    │
+│  │             │    │ • Premium    │    │   referral      │    │
+│  └─────────────┘    └──────────────┘    └─────────────────┘    │
 │                                                                │
 │  Regional signal sources: ACRA (SG), ASIC (AU), SSM (MY), etc. │
 │  Currency: SGD, USD, AUD, HKD, CNY, JPY                        │
