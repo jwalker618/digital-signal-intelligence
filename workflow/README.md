@@ -1,6 +1,16 @@
-# DSI Data Persistence Architecture
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## Overview
+## Data Persistence Architecture
+
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Technical Specification|
+
+---
+
+### Overview
 
 The DSI persistence layer provides a comprehensive solution for managing:
 
@@ -12,7 +22,7 @@ This architecture enables the "minimum viable interaction" by ensuring that sign
 
 ---
 
-## Architecture Diagram
+### Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -44,9 +54,9 @@ This architecture enables the "minimum viable interaction" by ensuring that sign
 
 ---
 
-## Signal Caching Strategy
+### Signal Caching Strategy
 
-### TTL by Signal Category
+#### TTL by Signal Category
 
 | Category | TTL | Examples | Rationale |
 |----------|-----|----------|-----------|
@@ -55,7 +65,7 @@ This architecture enables the "minimum viable interaction" by ensuring that sign
 | **DYNAMIC** | 4 hours | Security ratings, vulnerability counts, news | Changes frequently |
 | **REAL_TIME** | 0 (no cache) | Stock price, active incidents | Always fetch fresh |
 
-### Cache Key Schema
+#### Cache Key Schema
 
 ```
 signal:{entity_id}:{signal_type}
@@ -63,7 +73,7 @@ bundle:{bundle_id}
 entity_signals:{entity_id}  (index of all signals for entity)
 ```
 
-### Cache Workflow
+#### Cache Workflow
 
 ```python
 # 1. Check cache first
@@ -82,7 +92,7 @@ if to_extract:
 return {**cached, **new_signals}
 ```
 
-### Example: Requote Efficiency
+#### Example: Requote Efficiency
 
 When a requote is requested (e.g., different limit):
 
@@ -94,9 +104,9 @@ When a requote is requested (e.g., different limit):
 
 ---
 
-## Model Versioning
+### Model Versioning
 
-### Model Lifecycle
+#### Model Lifecycle
 
 ```
 DRAFT ──► TESTING ──► ACTIVE ──► DEPRECATED ──► RETIRED
@@ -107,7 +117,7 @@ DRAFT ──► TESTING ──► ACTIVE ──► DEPRECATED ──► RETIRED
   └── In development
 ```
 
-### Version Control Features
+#### Version Control Features
 
 1. **Semantic Versioning**: Major.Minor.Patch (e.g., 2.1.0)
 2. **Immutable Versions**: Once registered, cannot be modified
@@ -116,7 +126,7 @@ DRAFT ──► TESTING ──► ACTIVE ──► DEPRECATED ──► RETIRED
 5. **Configuration Storage**: Complete model config preserved
 6. **Checksum**: Integrity verification
 
-### Model Registry API
+#### Model Registry API
 
 ```python
 # Register new model
@@ -139,9 +149,9 @@ variant = registry.create_variant(
 
 ---
 
-## Quote Persistence
+### Quote Persistence
 
-### Quote Record Structure
+#### Quote Record Structure
 
 Every quote captures:
 
@@ -192,7 +202,7 @@ Quote(
 )
 ```
 
-### Quote Lineage
+#### Quote Lineage
 
 Track quote modifications:
 
@@ -206,7 +216,7 @@ Original Quote (Q1)
               └──► Further modification (Q4) ──► parent_quote_id = Q3
 ```
 
-### Audit Trail
+#### Audit Trail
 
 Every status change is logged:
 
@@ -225,9 +235,9 @@ QuoteAudit(
 
 ---
 
-## Storage Backend Options
+### Storage Backend Options
 
-### In-Memory (Development/Testing)
+#### In-Memory (Development/Testing)
 
 ```python
 storage = InMemoryStorage()
@@ -236,7 +246,7 @@ service = DSIPersistenceService(storage)
 
 Best for: Unit tests, local development, demos
 
-### Redis (Signal Cache)
+#### Redis (Signal Cache)
 
 ```python
 from redis_storage import create_redis_storage
@@ -257,7 +267,7 @@ Features:
 - Cluster mode for horizontal scaling
 - Built-in metrics collection
 
-### PostgreSQL (Quotes & Models)
+#### PostgreSQL (Quotes & Models)
 
 ```python
 from postgres_storage import create_postgres_storage
@@ -278,7 +288,7 @@ Features:
 - Audit logging
 - Partitioning for time-series data
 
-### Hybrid Architecture (Recommended for Production)
+#### Hybrid Architecture (Recommended for Production)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -298,9 +308,9 @@ Features:
 
 ---
 
-## Integration Example
+### Integration Example
 
-### Complete Workflow
+#### Complete Workflow
 
 ```python
 from dsi_workflow import DSIWorkflow, WorkflowRequest, create_workflow, initialize_models
@@ -315,7 +325,7 @@ workflow = create_workflow(
     }
 )
 
-# 2. Initialize models (once at startup)
+# 2. Initialise models (once at startup)
 initialize_models(workflow)
 
 # 3. Process quote request
@@ -361,9 +371,9 @@ bound_quote = workflow.bind_quote(
 
 ---
 
-## Performance Characteristics
+### Performance Characteristics
 
-### Signal Cache Performance
+#### Signal Cache Performance
 
 | Operation | In-Memory | Redis | PostgreSQL |
 |-----------|-----------|-------|------------|
@@ -371,7 +381,7 @@ bound_quote = workflow.bind_quote(
 | Bulk lookup (10 signals) | <1ms | 2-5ms | 10-20ms |
 | Store signal | <1ms | 1-2ms | 5-10ms |
 
-### Quote Processing Time
+#### Quote Processing Time
 
 | Scenario | Time |
 |----------|------|
@@ -379,7 +389,7 @@ bound_quote = workflow.bind_quote(
 | Requote (all signals cached) | 50-100ms |
 | Cached + partial refresh | 500ms-1s |
 
-### Recommended Monitoring
+#### Recommended Monitoring
 
 ```python
 # Built-in metrics (RedisStorageWithMetrics)
@@ -391,7 +401,7 @@ print(f"Total sets: {metrics['sets']}")
 
 ---
 
-## Files Reference
+### Files Reference
 
 | File | Purpose |
 |------|---------|
@@ -402,7 +412,7 @@ print(f"Total sets: {metrics['sets']}")
 
 ---
 
-## Summary
+### Summary
 
 The DSI persistence layer enables:
 
