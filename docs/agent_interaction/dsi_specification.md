@@ -78,14 +78,14 @@ Specific config     →    Policy period set                instant
                     →    Specific coverage set            instant
                     →    Specific limit set               instant 
                     →    Risk assessment                  instant
-Review              ←    Display: Score, Tier, Premium
-Click "Bind"        →    Policy issued                    instant
+Persist             ←    Capture: Score, Tier, Premium
+Workflow            →    Policy issued                    instant
 ─────────────────────────────────────────────────────────────────
                          TOTAL TIME: ~<3 minutes
 ```
 
 **Criteria for straight-through:**
-- DSI Score ≥ 650 (Tier 1 or 2)
+- DSI Score ≥ 650 (Tier 1 or 2), configurable
 - No red flags triggered
 - No "Yes" answers to critical inquiries
 - Signal coverage ≥ 70%
@@ -95,12 +95,12 @@ Click "Bind"        →    Policy issued                    instant
 ```
 User Action              System Action                    Time
 ─────────────────────────────────────────────────────────────────
-[Same as Path 1]    →    [Same as Path 1]                 3 min
-                    ←    Display: "Referred for Review"
+[Same as Path 1]    →    [Same as Path 1]                 ~<3 min
+Workflow            ←    Display: "Referred for Review"
                          Underwriter notification
-Underwriter review  →    Manual assessment                1-4 hrs
-                    ←    Quote or Decline
-User accepts        →    Policy issued
+Review              →    Manual assessment                1-4 hrs
+Workflow            ←    Quote or Decline
+                    →    Policy issued
 ─────────────────────────────────────────────────────────────────
                          TOTAL TIME: Same day (usually)
 ```
@@ -118,10 +118,10 @@ User accepts        →    Policy issued
 User Action              System Action                    Time
 ─────────────────────────────────────────────────────────────────
 [Same as Path 1]    →    [Same as Path 1]                 3 min
-                    ←    Display: "Unable to offer terms"
+Workflow            ←    Display: "Unable to offer terms"
                          Reason summary provided
 ─────────────────────────────────────────────────────────────────
-                         TOTAL TIME: ~3 minutes
+                         TOTAL TIME: ~<3 minutes
 ```
 
 **Decline triggers:**
