@@ -13,7 +13,7 @@ Architecture:
 - Immutable model versions with semantic versioning
 - Complete quote lineage tracking
 
-Author: DSI Framework
+Author: John Walker
 Version: 1.0.0
 """
 
