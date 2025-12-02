@@ -1,7 +1,7 @@
 # DSI User Interaction Specification
 ## Minimum Viable Requirement for Straight-Through Processing
 
-${\color{blue}how\space do\space you do}$
+${\color{blue}\Digital\space Signal\space Intelligence\space (DSI)}$
 
 **Version:** 1.0  
 **Date:** November 2025  
