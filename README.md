@@ -1,4 +1,14 @@
-# Digital Signal Intelligence (DSI) for Insurance Pricing
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A new method of Technical Pricing in Insurance
+
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Introduction|
+
+---
 
 **A production-ready framework for automated underwriting using digital footprint analysis and network intelligence.**
 
@@ -6,9 +16,9 @@ DSI applies the principles that made Google's PageRank revolutionary—inferring
 
 ---
 
-## The Core Insight
+### The Core Insight
 
-Traditional underwriting relies on what companies *tell us*. DSI focuses on what companies *show us*.
+Traditional underwriting relies on what companies *tell us*, DSI focuses on what companies *show us*.
 
 Every organisation leaves a digital footprint: how they maintain their infrastructure, who they connect with, what they disclose, how they respond to incidents. These observable signals correlate strongly with the operational discipline and risk management maturity that drive loss outcomes.
 
@@ -18,9 +28,9 @@ DSI systematically harvests these signals, scores them consistently, and convert
 
 ---
 
-## Why This Matters
+### Why This Matters
 
-### The Problem with Traditional Underwriting
+#### The Problem with Traditional Underwriting
 
 | Challenge | Traditional Approach | DSI Approach |
 |-----------|---------------------|--------------|
@@ -31,7 +41,7 @@ DSI systematically harvests these signals, scores them consistently, and convert
 | **Limited scalability** | Constrained by headcount | Infinitely scalable |
 | **Adverse selection** | Often invisible | Detected via signal patterns |
 
-### The Business Case
+#### The Business Case
 
 | Metric | Impact |
 |--------|--------|
@@ -43,9 +53,9 @@ DSI systematically harvests these signals, scores them consistently, and convert
 
 ---
 
-## How DSI Works
+### How DSI Works
 
-### The Three-Pillar Model
+#### The Three-Pillar Model
 
 DSI augments (not replaces) traditional underwriting by adding a third analytical dimension:
 
@@ -74,7 +84,7 @@ DSI augments (not replaces) traditional underwriting by adding a third analytica
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### The Seven Signal Types
+#### The Seven Signal Types
 
 DSI organises signals into seven categories, each capturing different aspects of organisational quality:
 
@@ -88,7 +98,7 @@ DSI organises signals into seven categories, each capturing different aspects of
 | **6** | Public Records | What history reveals | Breach history, regulatory actions, litigation |
 | **7** | Direct Inquiry | What they tell us (optional) | Questionnaire responses, attestations |
 
-### Signal → Score → Tier → Price
+#### Signal → Score → Tier → Price
 
 ```
 Raw Signals                 Normalised Scores           Tier Assignment
@@ -104,7 +114,7 @@ Breach History: 1     →      60/100
                                                         Auto-approve
 ```
 
-### Tier Definitions
+#### Tier Definitions
 
 | Tier | Score Range | Risk Level | Recommended Action |
 |------|-------------|------------|-------------------|
@@ -116,11 +126,11 @@ Breach History: 1     →      60/100
 
 ---
 
-## Coverage Lines Supported
+### Coverage Lines Supported
 
 DSI is designed as a multi-line platform. Each coverage type has tailored signal weights and sector adjustments:
 
-### Currently Implemented
+#### Currently Implemented
 
 | Coverage | Key Signal Focus | Primary Use Case |
 |----------|-----------------|------------------|
@@ -132,7 +142,7 @@ DSI is designed as a multi-line platform. Each coverage type has tailored signal
 | **Professional Indemnity** | TBC | TBC |
 | **Aerospace** | TBC | TBC |
 
-### Extensible Architecture
+#### Extensible Architecture
 
 New coverage lines can be added by registering signal weights:
 
@@ -152,7 +162,7 @@ CoverageLineRegistry.register(
 
 ---
 
-## Repository Structure
+### Repository Structure
 
 ```
 dsi-insurance-pricing/
@@ -160,22 +170,27 @@ dsi-insurance-pricing/
 ├── api/
 |
 ├── docs/
-│   ├── Executive summary.pdf
-│   ├── The PageRank precedent.pdf
-|   ├── Foundational Principles.md
-│   ├── An Agentic Future - Global Pricing Methodology.pdf
+│   └── overview/
+|   |   ├──An Agentic Future - Global Technical Pricing.pdf
+|   |   ├──Executive Summary.pdf
+|   |   ├──Foundational Principles.md
+|   |   └──The PageRank precedent.md
 │   │
 │   └── demos and case-studies/
-|       ├──case_studies
-|       |   ├──assessment case_studies.md
-|       |   ├──retrospective case_study validation.md
-|       |   └──retrospective executive summary.md
-|       ├──demos
-|       |   ├──dsi_demo_dashboard.html
-|       |   └──dsi_portfolio_dashboard.html
-|       └──validation
-|           └──dsi_methodology.md
-|
+|   |   ├──case_studies
+|   |   |  ├──dsi_client_assessment_samples.md
+|   |   |  ├──dsi_retrospective_case_study_detail.md
+|   |   |  ├──dsi_retrospective_case_study_executive_summary.md
+|   |   |  └──dsi_retrospective_methodology.md
+|   |   |
+|   |   └── demos
+|   |      ├──dsi_demo_dashboard.html
+|   |      ├──dsi_demo_workflow.html
+|   |      └──dsi_portfolio_dashboard.html
+|   |
+│   └── agent_interaction/
+|       └──dsi_specification.md
+|   
 ├── models/
 │   ├── cyber/
 │   │   └── dsi_cyber_pricing.py   
@@ -204,17 +219,25 @@ dsi-insurance-pricing/
 │   ├── signal_collection/
 │   │   └── dsi_signal_collection.py   
 │   │
-│   ├── website_discovery/
-│   │   └── dsi_website_discovery.py   
+│   └── website_discovery/
+│       └── dsi_website_discovery.py   
 │
+├── workflow/
+│   ├── dsi_persistance.py
+│   ├── dsi_workflow.py
+|   |
+│   └── storage/
+|      ├──postgres.py
+│      └──redis.py
+|  
 └── README.md
 ```
 
 ---
 
-## Core Modules
+### Core Modules
 
-### 1. Website Discovery (`models/website_discovery/dsi_website_discovery.py`)
+#### 1. Website Discovery (`models/website_discovery/dsi_website_discovery.py`)
 
 Resolves the correct corporate website for any entity—a foundational step before signal collection.
 
@@ -235,7 +258,7 @@ print(result.company_identity.parent) # → MS&AD Insurance Group Holdings
 - Confidence scoring with manual review flags
 - Batch processing support
 
-### 2. Signal Collection (`models/signal_collection/dsi_signal_collection.py`)
+#### 2. Signal Collection (`models/signal_collection/dsi_signal_collection.py`)
 
 Harvests and scores signals from multiple sources into a unified DSI assessment.
 
@@ -257,7 +280,7 @@ print(f"Red Flags: {result.red_flags}")        # → Red Flags: []
 - Red flag / green flag detection
 - Quality-adjusted scoring
 
-### 3. Portfolio Management (`models/portfolio/dsi_portfolio_analytics.py`)
+#### 3. Portfolio Management (`models/portfolio/dsi_portfolio_analytics.py`)
 
 The primary human interface—orchestrates all DSI functionality for portfolio-level oversight.
 
@@ -294,11 +317,11 @@ dashboard = manager.generate_dashboard()
 
 ---
 
-## Validation Evidence
+### Validation Evidence
 
 DSI has been validated through retrospective analysis demonstrating predictive power:
 
-### Petrobras vs PEMEX Comparison
+#### Petrobras vs PEMEX Comparison
 
 | Dimension | Petrobras (742) | PEMEX (542) | DSI Correctly Predicted |
 |-----------|-----------------|-------------|------------------------|
@@ -309,7 +332,7 @@ DSI has been validated through retrospective analysis demonstrating predictive p
 
 **Outcome**: Petrobras has had no material governance incidents since 2016. PEMEX has faced ongoing regulatory scrutiny, credit downgrades, and operational challenges. DSI scores from 2020 would have correctly differentiated these risks.
 
-### Statistical Validation
+#### Statistical Validation
 
 Retrospective analysis across multiple sectors shows:
 - **Tier 1-2 companies**: 67% lower loss frequency than Tier 4-5
@@ -318,14 +341,14 @@ Retrospective analysis across multiple sectors shows:
 
 ---
 
-## Getting Started
+### Getting Started
 
-### Prerequisites
+#### Prerequisites
 
 - Python 3.9+
 - Modern web browser (for dashboards)
 
-### Installation
+#### Installation
 
 ```bash
 # Clone repository
@@ -336,7 +359,7 @@ cd dsi-insurance-pricing
 pip install -r requirements.txt
 ```
 
-### Quick Start
+#### Quick Start
 
 ```python
 from signal_collection import create_signal_engine, ModelType
@@ -353,7 +376,7 @@ portfolio.add_risk("Target Company", CoverageType.CYBER, assessment=assessment)
 dashboard = portfolio.generate_dashboard()
 ```
 
-### View Interactive Dashboards
+#### View Interactive Dashboards
 
 Open any `.html` file in `docs/demos and case_studies/demos/` directly in a browser:
 - `DSI_Dashboard_v2.html` - Signal-level analysis
@@ -361,21 +384,21 @@ Open any `.html` file in `docs/demos and case_studies/demos/` directly in a brow
 
 ---
 
-## Implementation Roadmap
+### Implementation Roadmap
 
-### Phase 1: Proof of Concept (6 months)
+#### Phase 1: Proof of Concept (6 months)
 - D&O validation with 5,000+ company retrospective
 - Statistical validation of signal-loss correlation
 - API infrastructure build-out
 - **Investment**: $0.8-1.2M
 
-### Phase 2: Multi-Coverage Expansion (6 months)
+#### Phase 2: Multi-Coverage Expansion (6 months)
 - Extend to Cyber, E&O, Credit
 - Real-time monitoring capabilities
 - System integration with underwriting platforms
 - **Investment**: $1.5-2.2M
 
-### Phase 3: Full Automation (12 months)
+#### Phase 3: Full Automation (12 months)
 - Zero-touch workflow for Tier 1-2 risks
 - Global deployment across all regions
 - ML optimization of signal weights
@@ -386,7 +409,7 @@ Open any `.html` file in `docs/demos and case_studies/demos/` directly in a brow
 
 ---
 
-## Key Documents
+### Key Documents
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
@@ -400,7 +423,7 @@ Open any `.html` file in `docs/demos and case_studies/demos/` directly in a brow
 
 ---
 
-## Frequently Asked Questions
+### Frequently Asked Questions
 
 **Q: Does DSI replace underwriters?**  
 A: No. DSI automates routine decisions (Tier 1-2) so underwriters can focus on complex risks (Tier 3-5) where human judgment adds value.
@@ -419,7 +442,7 @@ A: DSI uses only publicly available data and produces explainable, auditable dec
 
 ---
 
-## Contributing
+### Contributing
 
 We welcome contributions in the following areas:
 - New signal collectors for additional data sources
@@ -429,7 +452,7 @@ We welcome contributions in the following areas:
 
 ---
 
-## License
+### License
 
 Proprietary - Internal Use Only
 
