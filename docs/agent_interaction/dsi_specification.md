@@ -17,12 +17,12 @@ Traditional insurance models require lots of inputs.
 
 **The DSI interaction paradigm:**
 
-| Traditional | DSI |
-|-------------|-----|
-| Tell us everything | We can observe your behavior directly |
-| 50-200 questions | 1 required |
-| Days/weeks to complete | Minutes |
-| Manual review every submission | 75-85% straight-through |
+|Item| Traditional | DSI |
+|-|-|-|
+|**Method**| Tell us everything | We can observe your behavior directly |
+|**Inputs**| 50-200 questions, forms, surverys etc. | 1 required |
+|**Timeframe**| Days/weeks to complete | Minutes |
+|**Process Efficiency**| Manual review every submission | 75-85% straight-through |
 
 ---
 
