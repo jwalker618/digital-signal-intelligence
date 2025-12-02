@@ -9,8 +9,9 @@
 ---
 
 # Agent Interaction Specification
-**Sub-title:** Minimum Viable Requirement for Straight-Through Processing
+**Sub-title:** Minimum Viable Requirements for Processing
 
+---
 
 ## Executive Summary
 
