@@ -10,9 +10,6 @@
 
 *WHAT DOES THIS DO*
 **WHAT DOES THIS DO**
-***WHAT DOES THIS DO***
-****WHAT DOES THIS DO****
-*****WHAT DOES THIS DO*****
 ---
 
 ## Executive Summary
