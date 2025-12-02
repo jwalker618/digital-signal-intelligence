@@ -1,28 +1,30 @@
-# Digital Signal Intelligence (DSI) - Foundational Principles
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## Document Control
+## Foundational Principles
 
-| Version | Date | Status |
-|---------|------|--------|
-| 1.0 | November 2025 | Approved |
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Core Principles|
 
 ---
 
-## Introduction
+### Introduction
 
 Digital Signal Intelligence (DSI) is a methodology for insurance underwriting that replaces traditional document-based analysis with observable digital signals. It is designed for today's market but architected for an Agentic AI future where autonomous systems require structured, predictable, machine-readable inputs.
 
 Traditional insurance underwriting relies on unstructured documentation: application forms, broker submissions, questionnaires, and supporting documents. These vary wildly in format, completeness, and reliability. This variability has created cumbersome operating models with high processing costs and low straight-through processing (STP) rates.
 
-DSI inverts this approach. Rather than asking companies to describe themselves, we observe what they do. Rather than requesting documentation, we analyze their digital footprint. Rather than trusting self-reported data, we verify through external signals.
+DSI inverts this approach. Rather than asking companies to describe themselves, we observe what they do. Rather than requesting documentation, we analyse their digital footprint. Rather than trusting self-reported data, we verify through external signals.
 
 The result is a pricing methodology that can operate autonomously, at scale, with high STP rates and low cost per bind.
 
 ---
 
-## Foundational Concepts
+### Foundational Concepts
 
-### The PageRank Insight
+#### The PageRank Insight
 
 Google's PageRank algorithm transformed web search by recognising that the structure of links between pages revealed more about page quality than the content itself. A page linked to by many authoritative pages was likely authoritative itself, regardless of what it claimed about itself.
 
@@ -30,23 +32,23 @@ DSI applies this insight to insurance underwriting. The network of relationships
 
 This network analysis extends beyond first-degree relationships. Just as PageRank computed authority through multi-hop link analysis, DSI builds deep relationship graphs: customers of customers, suppliers to suppliers, networks of networks. The deeper the quality signal propagates through the graph, the stronger the inference.
 
-### Behavioral Inference
+#### Behavioral Inference
 
-Observable behavior predicts future behavior. How a company maintains its digital infrastructure, what it publishes, how it presents itself, what roles it hires for, and how it engages with regulators and industry bodies reveals organizational culture and risk management maturity.
+Observable behavior predicts future behavior. How a company maintains its digital infrastructure, what it publishes, how it presents itself, what roles it hires for, and how it engages with regulators and industry bodies reveals organisational culture and risk management maturity.
 
 These signals are difficult to fake at scale. A company can claim strong security practices, but its actual TLS configuration, exposed services, and patch discipline are observable. A company can claim strong governance, but its board composition, committee structure, and regulatory filings are public.
 
-### Parent-to-Subsidiary Inference
+#### Parent-to-Subsidiary Inference
 
-The behavior of a parent organization is a reliable proxy for the behavior of its subsidiaries and assets. A shipping company with strong operational discipline across its fleet is unlikely to have rogue vessels operating to different standards. A financial institution with robust governance culture is unlikely to have divisions operating without controls.
+The behavior of a parent organisation is a reliable proxy for the behavior of its subsidiaries and assets. A shipping company with strong operational discipline across its fleet is unlikely to have rogue vessels operating to different standards. A financial institution with robust governance culture is unlikely to have divisions operating without controls.
 
 This principle allows DSI to assess risk at the organisational level without requiring asset-by-asset analysis, enabling scalable underwriting for complex portfolios.
 
 ---
 
-## The Ten Principles of DSI
+### The Ten Principles of DSI
 
-### Principle 1: External Observability
+#### Principle 1: External Observability
 
 **All primary signals must be obtainable without cooperation from the insured.**
 
@@ -54,7 +56,7 @@ DSI signals are collected through external observation: web crawling, API querie
 
 This does not preclude all insured interaction (see Principle 7), but the core risk assessment must be possible through observation alone.
 
-### Principle 2: Machine Readability
+#### Principle 2: Machine Readability
 
 **All signals must be extractable and processable by automated systems without human interpretation.**
 
@@ -62,7 +64,7 @@ Every signal in a DSI model must have a defined collection method, data format, 
 
 This enables autonomous operation and ensures consistency across assessments.
 
-### Principle 3: Network Authority
+#### Principle 3: Network Authority
 
 **Relationship patterns reveal quality.**
 
@@ -76,7 +78,7 @@ Who trusts, references, partners with, certifies, and transacts with an entity i
 
 Network authority signals are particularly valuable because they are difficult to fabricate and represent the aggregated judgment of multiple external parties.
 
-### Principle 4: Behavioral Inference Over Self-Reporting
+#### Principle 4: Behavioral Inference Over Self-Reporting
 
 **Observable behavior is preferred to stated intentions.**
 
@@ -88,7 +90,7 @@ When both a self-reported claim and an observable behavior are available, DSI we
 
 Self-reported information is not excluded but is treated as lower-confidence data requiring corroboration.
 
-### Principle 5: Absence as Signal
+#### Principle 5: Absence as Signal
 
 **What is missing is as informative as what is present.**
 
@@ -102,15 +104,15 @@ The absence of expected digital presence is a valid and important signal:
 
 Absence signals must be carefully calibrated—the expectation must be reasonable for the entity type and industry.
 
-### Principle 6: Structured Data Utilization
+#### Principle 6: Structured Data Utilisation
 
 **Pre-structured authoritative data sources are efficient signals.**
 
 Ratings, scores, and indices from authoritative third-party providers (S&P, Moody's, MSCI, classification societies, regulatory bodies) are valid DSI signals. We use their conclusions as authority signals rather than recreating their analysis.
 
-The principle: if a recognized authority has already assessed an aspect of risk and published a structured output, we can incorporate that output as a signal of network authority (the rating agency's judgment) rather than raw data requiring interpretation.
+The principle: if a recognised authority has already assessed an aspect of risk and published a structured output, we can incorporate that output as a signal of network authority (the rating agency's judgment) rather than raw data requiring interpretation.
 
-### Principle 7: Minimal Direct Inquiry
+#### Principle 7: Minimal Direct Inquiry
 
 **Direct questions are permitted but strictly constrained.**
 
@@ -129,15 +131,15 @@ These questions are optional inputs. A DSI model must be capable of producing a 
 
 Misrepresentation in direct inquiry responses is subject to standard policy terms regarding material misstatement, providing natural enforcement through policy cancellation risk.
 
-### Principle 8: Organizational-Level Assessment
+#### Principle 8: Organisational-Level Assessment
 
 **Parent behavior indicates subsidiary and asset behavior.**
 
-DSI assesses risk at the organizational level. The premise: an organization's culture, governance, and operational discipline propagate throughout its operations. A well-managed parent is likely to have well-managed subsidiaries and assets.
+DSI assesses risk at the organisational level. The premise: an organisation's culture, governance, and operational discipline propagate throughout its operations. A well-managed parent is likely to have well-managed subsidiaries and assets.
 
 This enables scalable assessment without requiring individual analysis of every vessel, facility, subsidiary, or policy. Asset-specific telemetry (AIS, satellite imagery) is used to validate organizational behavior patterns, not to price individual assets.
 
-### Principle 9: Simplicity in Scoring
+#### Principle 9: Simplicity in Scoring
 
 **Signal → Score → Tier → Price**
 
@@ -151,7 +153,7 @@ DSI models must follow a clear, auditable logic flow:
 
 Complex modifier stacks that compound unpredictably are prohibited. Every pricing output must be explainable by reference to the signals that drove it.
 
-### Principle 10: Agentic Readiness
+#### Principle 10: Agentic Readiness
 
 **Design for autonomous operation.**
 
@@ -166,11 +168,11 @@ The goal is not merely automation of current processes but architecture for a fu
 
 ---
 
-## Signal Taxonomy
+### Signal Taxonomy
 
 DSI signals are categorised into seven types. All pricing models must identify which signal types they employ and document the specific signals within each type.
 
-### Type 1: Network Authority Signals
+#### Type 1: Network Authority Signals
 
 Signals derived from an entity's position in networks of trust, partnership, and transaction. These signals should be analysed to maximum practical depth, building relationship graphs that extend beyond first-degree connections.
 
@@ -186,7 +188,7 @@ Signals derived from an entity's position in networks of trust, partnership, and
 | Peer network position | Centrality in industry relationship graph | Computed from aggregated relationship data |
 | Second-degree relationships | Quality of entities connected to direct relationships | Graph traversal of collected network data |
 
-### Type 2: Technical Infrastructure Signals
+#### Type 2: Technical Infrastructure Signals
 
 Signals derived from observable technical implementation.
 
@@ -199,7 +201,7 @@ Signals derived from observable technical implementation.
 | Cloud/hosting infrastructure | Hosting providers, CDN usage | DNS analysis, header inspection |
 | API/integration presence | Public APIs, developer resources | Website crawling, API directory presence |
 
-### Type 3: Asset Telemetry Signals
+#### Type 3: Asset Telemetry Signals
 
 Signals derived from digital telemetry of physical assets, used for behavioral pattern analysis at the organisational level.
 
@@ -212,7 +214,7 @@ Signals derived from digital telemetry of physical assets, used for behavioral p
 
 **Constraint:** Asset telemetry is used to assess organizational behavior patterns, not to price individual assets. The question is "how does this organisation operate its assets?" not "what is this specific asset worth?"
 
-### Type 4: Structured Data Feed Signals
+#### Type 4: Structured Data Feed Signals
 
 Signals derived from authoritative third-party data providers.
 
@@ -226,7 +228,7 @@ Signals derived from authoritative third-party data providers.
 
 **Constraint:** We use published ratings/scores as signals, not underlying documentation. The rating itself is the signal.
 
-### Type 5: Corporate Digital Footprint Signals
+#### Type 5: Corporate Digital Footprint Signals
 
 Signals derived from analysis of an entity's own digital presence.
 
@@ -242,7 +244,7 @@ Signals derived from analysis of an entity's own digital presence.
 
 **Constraint:** We analyse the company's own published content, not third-party commentary about them.
 
-### Type 6: Public Record Signals
+#### Type 6: Public Record Signals
 
 Signals derived from regulatory filings, legal records, and government databases.
 
@@ -256,7 +258,7 @@ Signals derived from regulatory filings, legal records, and government databases
 | Permit/license records | Operating authorizations | Agency databases |
 | Breach/incident disclosures | Required breach notifications | HHS, state AG databases |
 
-### Type 7: Direct Inquiry Signals (Optional)
+#### Type 7: Direct Inquiry Signals (Optional)
 
 Signals derived from minimal, structured questions to the insured.
 
@@ -273,9 +275,9 @@ Direct inquiry signals are optional. Models must function without them, potentia
 
 ---
 
-## News and Media Content
+### News and Media Content
 
-### Permitted Sources
+#### Permitted Sources
 
 | Source Type | Description | Usage |
 |-------------|-------------|-------|
@@ -283,7 +285,7 @@ Direct inquiry signals are optional. Models must function without them, potentia
 | Regulatory news feeds | Official announcements from regulators (SEC, FCA, etc.) | Enforcement and action monitoring |
 | Industry body publications | Announcements from trade associations and standards bodies | Industry context |
 
-### Future Consideration
+#### Future Consideration
 
 General journalistic content may be incorporated in future iterations when:
 
@@ -292,7 +294,7 @@ General journalistic content may be incorporated in future iterations when:
 - Source bias can be adequately characterized and adjusted for
 - Editorial opinion can be distinguished from factual reporting
 
-### Excluded Sources
+#### Excluded Sources
 
 | Source Type | Reason for Exclusion |
 |-------------|---------------------|
@@ -303,13 +305,13 @@ General journalistic content may be incorporated in future iterations when:
 
 ---
 
-## Model Architecture
+### Model Architecture
 
 Every DSI pricing model must conform to the following architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     SIGNAL COLLECTION LAYER                      │
+│                     SIGNAL COLLECTION LAYER                     │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
 │  │ Network  │ │Technical │ │ Corporate│ │  Public  │    ...     │
 │  │Authority │ │  Infra   │ │ Footprint│ │ Records  │            │
@@ -318,45 +320,45 @@ Every DSI pricing model must conform to the following architecture:
         │            │            │            │
         ▼            ▼            ▼            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      SIGNAL SCORING LAYER                        │
-│         Each signal → Normalised score (0-100)                   │
-│         Defined algorithm, no subjective judgment                │
+│                      SIGNAL SCORING LAYER                       │
+│         Each signal → Normalised score (0-100)                  │
+│         Defined algorithm, no subjective judgment               │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    COMPOSITE SCORING LAYER                       │
-│         Weighted combination → Composite score (0-1000)          │
-│         Category weights defined per line of business            │
+│                    COMPOSITE SCORING LAYER                      │
+│         Weighted combination → Composite score (0-1000)         │
+│         Category weights defined per line of business           │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      TIER ASSIGNMENT LAYER                       │
-│         Score thresholds → Risk tier (1-5)                       │
-│         Tier determines underwriting action                      │
+│                      TIER ASSIGNMENT LAYER                      │
+│         Score thresholds → Risk tier (1-5)                      │
+│         Tier determines underwriting action                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                       PRICING LAYER                              │
-│         Tier + Industry + Size → Base price                      │
-│         Limited adjustments for critical factors only            │
+│                       PRICING LAYER                             │
+│         Tier + Industry + Size → Base price                     │
+│         Limited adjustments for critical factors only           │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                       DECISION LAYER                             │
-│         Tier 1-2: Auto-approve                                   │
-│         Tier 3: Auto-approve with conditions                     │
-│         Tier 4: Manual review                                    │
-│         Tier 5: Decline or heavy manual review                   │
+│                       DECISION LAYER                            │
+│         Tier 1-2: Auto-approve                                  │
+│         Tier 3:   Auto-approve with conditions                  │
+│         Tier 4:   Manual review                                 │
+│         Tier 5:   Decline or heavy manual review                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Risk Tiers
+### Risk Tiers
 
 All DSI models use a standardised five-tier risk classification:
 
@@ -372,7 +374,7 @@ Tier thresholds may be adjusted per line of business based on risk characteristi
 
 ---
 
-## Confidence and Data Sufficiency
+### Confidence and Data Sufficiency
 
 Every DSI assessment must include a confidence score reflecting signal availability:
 
@@ -387,9 +389,9 @@ Low confidence does not mean decline—it means the DSI assessment has insuffici
 
 ---
 
-## Implementation Requirements
+### Implementation Requirements
 
-### Model Documentation
+#### Model Documentation
 
 Each DSI pricing model must include documentation covering:
 
@@ -404,7 +406,7 @@ Each DSI pricing model must include documentation covering:
 9. **Direct inquiry questions:** If used, the specific questions and their scoring
 10. **Confidence calculation:** How signal coverage translates to confidence
 
-### Validation Checklist
+#### Validation Checklist
 
 For each DSI pricing model, verify:
 
@@ -425,9 +427,9 @@ For each DSI pricing model, verify:
 
 ---
 
-## Governance
+### Governance
 
-### Model Changes
+#### Model Changes
 
 Changes to DSI pricing models must be documented with:
 
@@ -436,7 +438,7 @@ Changes to DSI pricing models must be documented with:
 - Validation against principles
 - Approval record
 
-### Principle Changes
+#### Principle Changes
 
 Changes to DSI Principles require:
 
@@ -447,7 +449,7 @@ Changes to DSI Principles require:
 
 ---
 
-## Appendix: Line of Business Considerations
+### Appendix: Line of Business Considerations
 
 Different lines of business emphasise different signal types. The following provides guidance on signal type relevance by line:
 
@@ -465,11 +467,11 @@ This guidance informs model design but does not preclude use of any signal type 
 
 ---
 
-## Appendix: Example Direct Inquiry Questions
+### Appendix: Example Direct Inquiry Questions
 
 The following illustrates appropriate direct inquiry questions by line of business. These are examples, not requirements.
 
-### Cyber Insurance (Maximum 10)
+#### Cyber Insurance (Maximum 10)
 
 1. Is multi-factor authentication enabled for all remote access? (Yes/No)
 2. Do all employees complete annual cyber security training? (Yes/No)
@@ -480,7 +482,7 @@ The following illustrates appropriate direct inquiry questions by line of busine
 7. Are backups maintained offline or immutable? (Yes/No)
 8. Have you experienced a material cyber incident in the past 3 years? (Yes/No)
 
-### D&O Insurance (Maximum 5)
+#### D&O Insurance (Maximum 5)
 
 1. Are there any pending or threatened securities claims? (Yes/No)
 2. Any regulatory investigations in the past 24 months? (Yes/No)
@@ -488,7 +490,7 @@ The following illustrates appropriate direct inquiry questions by line of busine
 4. Is the company currently in compliance with all debt covenants? (Yes/No)
 5. Any executive departures under investigation or dispute in past 12 months? (Yes/No)
 
-### Marine Insurance (Maximum 5)
+#### Marine Insurance (Maximum 5)
 
 1. Total number of vessels in owned/operated fleet? (Numeric)
 2. Any vessels detained by port state control in past 36 months? (Yes/No)
@@ -496,7 +498,7 @@ The following illustrates appropriate direct inquiry questions by line of busine
 4. Is the fleet managed by a third-party technical manager? (Yes/No)
 5. Any vessels currently trading to sanctioned regions? (Yes/No)
 
-### Energy Insurance (Maximum 8)
+#### Energy Insurance (Maximum 8)
 
 1. Primary operations type? (Upstream/Midstream/Downstream/Renewable)
 2. Any OSHA recordable incidents in past 12 months? (Yes/No)
@@ -507,7 +509,7 @@ The following illustrates appropriate direct inquiry questions by line of busine
 7. Any current decommissioning obligations? (Yes/No)
 8. Percentage of revenue from renewable/transition energy? (Categorical)
 
-### Financial Institutions (Maximum 6)
+#### Financial Institutions (Maximum 6)
 
 1. Primary institution type? (Bank/Insurance/Asset Management/Other)
 2. Any regulatory enforcement actions in past 3 years? (Yes/No)
@@ -515,6 +517,3 @@ The following illustrates appropriate direct inquiry questions by line of busine
 4. Is the institution systemically important (G-SIB/D-SIB designated)? (Yes/No)
 5. Any senior executive departures related to compliance in past 24 months? (Yes/No)
 6. Has the institution passed all regulatory stress tests? (Yes/No)
-
----
-

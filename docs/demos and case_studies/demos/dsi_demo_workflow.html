@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSI Workflow Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a1628;
+            --bg-secondary: #152238;
+            --bg-tertiary: #1a2a4a;
+            --accent: #00d4aa;
+            --accent-dim: #00b894;
+            --text-primary: #ffffff;
+            --text-secondary: #8899aa;
+            --text-muted: #556677;
+            --danger: #ff6b6b;
+            --warning: #f0ad4e;
+            --success: #00d4aa;
+            --border: #2a3a5a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo-text span {
+            color: var(--accent);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .header-stat {
+            text-align: right;
+        }
+
+        .header-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .header-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        /* Main Layout */
+        .main {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            height: calc(100vh - 73px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Direct Inquiry */
+        .inquiry-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .inquiry-item.critical {
+            border-left: 3px solid var(--danger);
+        }
+
+        .toggle {
+            display: flex;
+            gap: 4px;
+        }
+
+        .toggle-btn {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .toggle-btn.active-yes {
+            background: var(--danger);
+            color: white;
+        }
+
+        .toggle-btn.active-no {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Center Panel */
+        .center-panel {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        /* Signal Extraction Animation */
+        .extraction-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .extraction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .extraction-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .extraction-stats {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .signal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .signal-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .signal-item.extracting {
+            border: 1px solid var(--warning);
+        }
+
+        .signal-item.cached {
+            border: 1px solid var(--accent);
+        }
+
+        .signal-item.extracted {
+            border: 1px solid var(--success);
+        }
+
+        .signal-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .signal-icon.pending {
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+        }
+
+        .signal-icon.loading {
+            background: var(--warning);
+            color: var(--bg-primary);
+            animation: pulse 1s infinite;
+        }
+
+        .signal-icon.cached {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .signal-icon.fresh {
+            background: var(--success);
+            color: var(--bg-primary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .signal-details {
+            flex: 1;
+        }
+
+        .signal-name {
+            font-weight: 500;
+        }
+
+        .signal-source {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .signal-value {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .signal-ttl {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Quote Result */
+        .quote-result {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .quote-result.visible {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quote-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .quote-header.approved {
+            background: linear-gradient(135deg, rgba(0, 212, 170, 0.2) 0%, rgba(0, 184, 148, 0.1) 100%);
+            border-bottom: 2px solid var(--success);
+        }
+
+        .quote-header.referred {
+            background: linear-gradient(135deg, rgba(240, 173, 78, 0.2) 0%, rgba(240, 173, 78, 0.1) 100%);
+            border-bottom: 2px solid var(--warning);
+        }
+
+        .quote-header.declined {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 107, 107, 0.1) 100%);
+            border-bottom: 2px solid var(--danger);
+        }
+
+        .quote-status {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .quote-status.approved { color: var(--success); }
+        .quote-status.referred { color: var(--warning); }
+        .quote-status.declined { color: var(--danger); }
+
+        .quote-entity {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .quote-id {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .quote-score {
+            text-align: right;
+        }
+
+        .score-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .quote-body {
+            padding: 20px;
+        }
+
+        .quote-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .quote-metric {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .metric-value.premium {
+            color: var(--accent);
+        }
+
+        /* Flags */
+        .flags-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .flag-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .flag-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .flag-section-title.green { color: var(--success); }
+        .flag-section-title.amber { color: var(--warning); }
+        .flag-section-title.red { color: var(--danger); }
+
+        .flag-item {
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .flag-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Right Panel - History */
+        .right-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .history-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .history-tab {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-tab.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        /* Quote History Item */
+        .history-item {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .history-item:hover {
+            background: var(--bg-primary);
+        }
+
+        .history-item.approved { border-left-color: var(--success); }
+        .history-item.referred { border-left-color: var(--warning); }
+        .history-item.declined { border-left-color: var(--danger); }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .history-entity {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .history-premium {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .history-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Cache Stats */
+        .cache-stats {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .cache-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+
+        .cache-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .cache-item {
+            text-align: center;
+        }
+
+        .cache-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .cache-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Model Info */
+        .model-info {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .model-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .model-version {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .model-status {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--success);
+            color: var(--bg-primary);
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dim) 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Performance Stats */
+        .perf-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .perf-stat {
+            flex: 1;
+            text-align: center;
+        }
+
+        .perf-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .perf-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Actions */
+        .quote-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .toast-message {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">DSI</div>
+            <div class="logo-text">Digital Signal <span>Intelligence</span></div>
+        </div>
+        <div class="header-stats">
+            <div class="header-stat">
+                <div class="header-stat-value" id="totalQuotes">0</div>
+                <div class="header-stat-label">Quotes Today</div>
+            </div>
+            <div class="header-stat">
+                <div class="header-stat-value" id="cacheHitRate">0%</div>
+                <div class="header-stat-label">Cache Hit Rate</div>
+            </div>
+            <div class="header-stat">
+                <div class="header-stat-value" id="stpRate">0%</div>
+                <div class="header-stat-label">Straight-Through</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Left Sidebar - Input Form -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Entity Information</div>
+                <div class="form-group">
+                    <label class="form-label">Company Name</label>
+                    <input type="text" class="form-input" id="entityName" placeholder="Enter company name" value="Acme Technology Corp">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Entity ID</label>
+                    <input type="text" class="form-input" id="entityId" placeholder="Auto-generated" value="acme-tech-001">
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Coverage Details</div>
+                <div class="form-group">
+                    <label class="form-label">Coverage Type</label>
+                    <select class="form-select" id="coverageType">
+                        <option value="cyber">Cyber Liability</option>
+                        <option value="do">Directors & Officers</option>
+                        <option value="fi">Financial Institutions</option>
+                        <option value="pi">Professional Indemnity</option>
+                        <option value="energy">Energy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Limit ($)</label>
+                    <select class="form-select" id="limit">
+                        <option value="1000000">$1,000,000</option>
+                        <option value="2000000">$2,000,000</option>
+                        <option value="5000000" selected>$5,000,000</option>
+                        <option value="10000000">$10,000,000</option>
+                        <option value="25000000">$25,000,000</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deductible ($)</label>
+                    <select class="form-select" id="deductible">
+                        <option value="10000">$10,000</option>
+                        <option value="25000">$25,000</option>
+                        <option value="50000" selected>$50,000</option>
+                        <option value="100000">$100,000</option>
+                        <option value="250000">$250,000</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Direct Inquiry (6 Questions)</div>
+                <div class="inquiry-item critical">
+                    <span>Pending claims?</span>
+                    <div class="toggle" data-field="pendingClaims">
+                        <button class="toggle-btn active-no" data-value="no">No</button>
+                        <button class="toggle-btn" data-value="yes">Yes</button>
+                    </div>
+                </div>
+                <div class="inquiry-item critical">
+                    <span>Regulatory action?</span>
+                    <div class="toggle" data-field="regulatoryAction">
+                        <button class="toggle-btn active-no" data-value="no">No</button>
+                        <button class="toggle-btn" data-value="yes">Yes</button>
+                    </div>
+                </div>
+                <div class="inquiry-item critical">
+                    <span>Coverage declined?</span>
+                    <div class="toggle" data-field="coverageDeclined">
+                        <button class="toggle-btn active-no" data-value="no">No</button>
+                        <button class="toggle-btn" data-value="yes">Yes</button>
+                    </div>
+                </div>
+                <div class="inquiry-item">
+                    <span>Material change?</span>
+                    <div class="toggle" data-field="materialChange">
+                        <button class="toggle-btn active-no" data-value="no">No</button>
+                        <button class="toggle-btn" data-value="yes">Yes</button>
+                    </div>
+                </div>
+                <div class="inquiry-item">
+                    <span>Ownership change?</span>
+                    <div class="toggle" data-field="ownershipChange">
+                        <button class="toggle-btn active-no" data-value="no">No</button>
+                        <button class="toggle-btn" data-value="yes">Yes</button>
+                    </div>
+                </div>
+                <div class="inquiry-item">
+                    <span>Cyber-specific</span>
+                    <div class="toggle" data-field="coverageSpecific">
+                        <button class="toggle-btn active-no" data-value="no">No</button>
+                        <button class="toggle-btn" data-value="yes">Yes</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="processQuote()">
+                Generate Quote
+            </button>
+        </aside>
+
+        <!-- Center Panel - Processing & Results -->
+        <section class="center-panel">
+            <h2 class="panel-title">Quote Processing</h2>
+
+            <!-- Signal Extraction -->
+            <div class="extraction-container" id="extractionContainer">
+                <div class="extraction-header">
+                    <div class="extraction-title">Signal Extraction</div>
+                    <div class="extraction-stats" id="extractionStats">Ready</div>
+                </div>
+                <div class="signal-grid" id="signalGrid">
+                    <!-- Signals will be populated here -->
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- Quote Result -->
+            <div class="quote-result" id="quoteResult">
+                <div class="quote-header" id="quoteHeader">
+                    <div>
+                        <div class="quote-status" id="quoteStatus">PROCESSING</div>
+                        <div class="quote-entity" id="quoteEntity">-</div>
+                        <div class="quote-id" id="quoteId">-</div>
+                    </div>
+                    <div class="quote-score">
+                        <div class="score-value" id="scoreValue">-</div>
+                        <div class="score-label">Composite Score</div>
+                    </div>
+                </div>
+                <div class="quote-body">
+                    <div class="quote-grid">
+                        <div class="quote-metric">
+                            <div class="metric-label">Gross Premium</div>
+                            <div class="metric-value premium" id="grossPremium">-</div>
+                        </div>
+                        <div class="quote-metric">
+                            <div class="metric-label">Tier</div>
+                            <div class="metric-value" id="tierLabel">-</div>
+                        </div>
+                        <div class="quote-metric">
+                            <div class="metric-label">Decision Path</div>
+                            <div class="metric-value" id="decisionPath">-</div>
+                        </div>
+                    </div>
+
+                    <div class="flags-container">
+                        <div class="flag-section">
+                            <div class="flag-section-title green">✓ Green Flags</div>
+                            <div id="greenFlags">-</div>
+                        </div>
+                        <div class="flag-section">
+                            <div class="flag-section-title amber">⚠ Amber Flags</div>
+                            <div id="amberFlags">-</div>
+                        </div>
+                        <div class="flag-section">
+                            <div class="flag-section-title red">✕ Red Flags</div>
+                            <div id="redFlags">-</div>
+                        </div>
+                    </div>
+
+                    <div class="perf-stats">
+                        <div class="perf-stat">
+                            <div class="perf-value" id="perfTime">-</div>
+                            <div class="perf-label">Processing Time</div>
+                        </div>
+                        <div class="perf-stat">
+                            <div class="perf-value" id="perfCacheHit">-</div>
+                            <div class="perf-label">Cache Hits</div>
+                        </div>
+                        <div class="perf-stat">
+                            <div class="perf-value" id="perfSignals">-</div>
+                            <div class="perf-label">Signals Used</div>
+                        </div>
+                        <div class="perf-stat">
+                            <div class="perf-value" id="perfModel">-</div>
+                            <div class="perf-label">Model Version</div>
+                        </div>
+                    </div>
+
+                    <div class="quote-actions">
+                        <button class="action-btn primary" onclick="bindQuote()">Bind Quote</button>
+                        <button class="action-btn secondary" onclick="requote()">Requote</button>
+                        <button class="action-btn secondary" onclick="newQuote()">New Quote</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel - History & Cache -->
+        <aside class="right-panel">
+            <div class="cache-stats">
+                <div class="cache-title">📊 Signal Cache Status</div>
+                <div class="cache-grid">
+                    <div class="cache-item">
+                        <div class="cache-value" id="cacheTotalSignals">0</div>
+                        <div class="cache-label">Cached Signals</div>
+                    </div>
+                    <div class="cache-item">
+                        <div class="cache-value" id="cacheEntities">0</div>
+                        <div class="cache-label">Entities</div>
+                    </div>
+                    <div class="cache-item">
+                        <div class="cache-value" id="cacheHits">0</div>
+                        <div class="cache-label">Cache Hits</div>
+                    </div>
+                    <div class="cache-item">
+                        <div class="cache-value" id="cacheMisses">0</div>
+                        <div class="cache-label">Cache Misses</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="model-info">
+                <div class="model-title">🔧 Active Model</div>
+                <div class="model-version" id="activeModelName">DSI Cyber Liability Model</div>
+                <div class="model-version" id="activeModelVersion">Version 2.0.0</div>
+                <div class="model-status">ACTIVE</div>
+            </div>
+
+            <div class="sidebar-title" style="margin-bottom: 12px;">Quote History</div>
+            <div id="quoteHistory">
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <div>No quotes yet</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">✓</div>
+        <div class="toast-content">
+            <div class="toast-title" id="toastTitle">Success</div>
+            <div class="toast-message" id="toastMessage">Operation completed</div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // DSI WORKFLOW SIMULATOR
+        // =====================================================================
+
+        // Signal definitions by coverage type
+        const SIGNAL_DEFINITIONS = {
+            cyber: [
+                { type: 'security_rating', name: 'Security Rating', source: 'SecurityScorecard', category: 'dynamic', ttl: '4h' },
+                { type: 'vulnerability_count', name: 'Vulnerabilities', source: 'Vulnerability Scanner', category: 'dynamic', ttl: '4h' },
+                { type: 'breach_history', name: 'Breach History', source: 'Breach Database', category: 'semi_static', ttl: '7d' },
+                { type: 'compliance_status', name: 'Compliance', source: 'Compliance Registry', category: 'semi_static', ttl: '7d' },
+                { type: 'technology_stack', name: 'Tech Stack', source: 'Tech Analyzer', category: 'semi_static', ttl: '7d' },
+                { type: 'phishing_susceptibility', name: 'Phishing Risk', source: 'Phishing Test', category: 'dynamic', ttl: '4h' },
+                { type: 'patch_cadence', name: 'Patch Cadence', source: 'Patch Monitor', category: 'dynamic', ttl: '4h' },
+                { type: 'endpoint_protection', name: 'Endpoint Security', source: 'EDR Status', category: 'semi_static', ttl: '7d' },
+            ],
+            do: [
+                { type: 'financial_strength', name: 'Financial Strength', source: 'D&B', category: 'semi_static', ttl: '7d' },
+                { type: 'executive_turnover', name: 'Executive Turnover', source: 'News/LinkedIn', category: 'dynamic', ttl: '4h' },
+                { type: 'stock_volatility', name: 'Stock Volatility', source: 'Market Data', category: 'real_time', ttl: '0' },
+                { type: 'shareholder_activism', name: 'Shareholder Activism', source: 'SEC Filings', category: 'dynamic', ttl: '4h' },
+                { type: 'board_composition', name: 'Board Composition', source: 'SEC Filings', category: 'semi_static', ttl: '7d' },
+                { type: 'litigation_history', name: 'Litigation History', source: 'Court Records', category: 'semi_static', ttl: '7d' },
+            ],
+            fi: [
+                { type: 'financial_strength', name: 'Financial Strength', source: 'D&B', category: 'semi_static', ttl: '7d' },
+                { type: 'credit_rating', name: 'Credit Rating', source: 'S&P/Moodys', category: 'semi_static', ttl: '7d' },
+                { type: 'regulatory_actions', name: 'Regulatory Actions', source: 'Regulatory DB', category: 'dynamic', ttl: '4h' },
+                { type: 'litigation_history', name: 'Litigation History', source: 'Court Records', category: 'semi_static', ttl: '7d' },
+                { type: 'compliance_status', name: 'Compliance', source: 'Compliance Registry', category: 'semi_static', ttl: '7d' },
+                { type: 'security_rating', name: 'Security Rating', source: 'SecurityScorecard', category: 'dynamic', ttl: '4h' },
+            ],
+            pi: [
+                { type: 'compliance_status', name: 'Compliance', source: 'Compliance Registry', category: 'semi_static', ttl: '7d' },
+                { type: 'litigation_history', name: 'Litigation History', source: 'Court Records', category: 'semi_static', ttl: '7d' },
+                { type: 'years_in_business', name: 'Years in Business', source: 'Company Registry', category: 'static', ttl: '90d' },
+                { type: 'employee_count', name: 'Employee Count', source: 'LinkedIn/D&B', category: 'semi_static', ttl: '7d' },
+                { type: 'revenue_trend', name: 'Revenue Trend', source: 'Financial Filings', category: 'semi_static', ttl: '7d' },
+            ],
+            energy: [
+                { type: 'safety_record', name: 'Safety Record', source: 'OSHA/Industry DB', category: 'semi_static', ttl: '7d' },
+                { type: 'environmental_violations', name: 'Environmental', source: 'EPA/State', category: 'semi_static', ttl: '7d' },
+                { type: 'equipment_age', name: 'Equipment Age', source: 'Asset Registry', category: 'semi_static', ttl: '7d' },
+                { type: 'maintenance_record', name: 'Maintenance', source: 'Inspection Reports', category: 'dynamic', ttl: '4h' },
+                { type: 'compliance_status', name: 'Compliance', source: 'Compliance Registry', category: 'semi_static', ttl: '7d' },
+                { type: 'financial_strength', name: 'Financial Strength', source: 'D&B', category: 'semi_static', ttl: '7d' },
+            ],
+        };
+
+        const MODEL_INFO = {
+            cyber: { name: 'DSI Cyber Liability Model', version: '2.0.0', baseRate: 2500 },
+            do: { name: 'DSI Directors & Officers Model', version: '2.0.0', baseRate: 3500 },
+            fi: { name: 'DSI Financial Institutions Model', version: '2.0.0', baseRate: 1800 },
+            pi: { name: 'DSI Professional Indemnity Model', version: '2.0.0', baseRate: 2000 },
+            energy: { name: 'DSI Energy Model', version: '2.0.0', baseRate: 5000 },
+        };
+
+        // State
+        let signalCache = {};
+        let quoteHistory = [];
+        let currentQuote = null;
+        let cacheStats = { hits: 0, misses: 0, totalSignals: 0, entities: new Set() };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeToggles();
+            updateSignalGrid();
+            updateModelInfo();
+        });
+
+        function initializeToggles() {
+            document.querySelectorAll('.toggle').forEach(toggle => {
+                toggle.querySelectorAll('.toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        toggle.querySelectorAll('.toggle-btn').forEach(b => {
+                            b.classList.remove('active-yes', 'active-no');
+                        });
+                        btn.classList.add(btn.dataset.value === 'yes' ? 'active-yes' : 'active-no');
+                    });
+                });
+            });
+
+            document.getElementById('coverageType').addEventListener('change', () => {
+                updateSignalGrid();
+                updateModelInfo();
+            });
+        }
+
+        function updateSignalGrid() {
+            const coverageType = document.getElementById('coverageType').value;
+            const signals = SIGNAL_DEFINITIONS[coverageType];
+            const grid = document.getElementById('signalGrid');
+
+            grid.innerHTML = signals.map(signal => `
+                <div class="signal-item" id="signal-${signal.type}">
+                    <div class="signal-icon pending">○</div>
+                    <div class="signal-details">
+                        <div class="signal-name">${signal.name}</div>
+                        <div class="signal-source">${signal.source}</div>
+                    </div>
+                    <div>
+                        <div class="signal-value">-</div>
+                        <div class="signal-ttl">TTL: ${signal.ttl}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateModelInfo() {
+            const coverageType = document.getElementById('coverageType').value;
+            const model = MODEL_INFO[coverageType];
+            document.getElementById('activeModelName').textContent = model.name;
+            document.getElementById('activeModelVersion').textContent = `Version ${model.version}`;
+        }
+
+        async function processQuote() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            const startTime = performance.now();
+
+            // Get form data
+            const entityId = document.getElementById('entityId').value;
+            const entityName = document.getElementById('entityName').value;
+            const coverageType = document.getElementById('coverageType').value;
+            const limit = parseInt(document.getElementById('limit').value);
+            const deductible = parseInt(document.getElementById('deductible').value);
+
+            const directInquiry = {
+                pendingClaims: getToggleValue('pendingClaims'),
+                regulatoryAction: getToggleValue('regulatoryAction'),
+                coverageDeclined: getToggleValue('coverageDeclined'),
+                materialChange: getToggleValue('materialChange'),
+                ownershipChange: getToggleValue('ownershipChange'),
+                coverageSpecific: getToggleValue('coverageSpecific'),
+            };
+
+            // Extract signals with caching
+            const signals = SIGNAL_DEFINITIONS[coverageType];
+            const extractedSignals = await extractSignals(entityId, signals);
+
+            // Calculate score
+            const assessment = calculateAssessment(extractedSignals, directInquiry);
+
+            // Calculate pricing
+            const pricing = calculatePricing(coverageType, limit, deductible, assessment);
+
+            // Create quote
+            const endTime = performance.now();
+            const processingTime = Math.round(endTime - startTime);
+
+            currentQuote = {
+                id: generateQuoteId(),
+                entityId,
+                entityName,
+                coverageType,
+                limit,
+                deductible,
+                ...assessment,
+                ...pricing,
+                processingTime,
+                cacheHits: extractedSignals.filter(s => s.cached).length,
+                cacheMisses: extractedSignals.filter(s => !s.cached).length,
+                signals: extractedSignals,
+                directInquiry,
+                timestamp: new Date().toISOString(),
+                modelVersion: MODEL_INFO[coverageType].version,
+            };
+
+            // Display results
+            displayQuoteResult(currentQuote);
+
+            // Add to history
+            quoteHistory.unshift(currentQuote);
+            updateQuoteHistory();
+            updateHeaderStats();
+            updateCacheStats();
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Generate Quote';
+
+            showToast('Quote Generated', `${currentQuote.decisionPath} - Score: ${currentQuote.compositeScore}`);
+        }
+
+        async function extractSignals(entityId, signals) {
+            const progressFill = document.getElementById('progressFill');
+            const extractionStats = document.getElementById('extractionStats');
+            const results = [];
+            let cacheHits = 0;
+
+            cacheStats.entities.add(entityId);
+
+            for (let i = 0; i < signals.length; i++) {
+                const signal = signals[i];
+                const cacheKey = `${entityId}:${signal.type}`;
+                const signalEl = document.getElementById(`signal-${signal.type}`);
+
+                // Check cache
+                if (signalCache[cacheKey] && signal.category !== 'real_time') {
+                    // Cache hit
+                    cacheHits++;
+                    cacheStats.hits++;
+
+                    signalEl.classList.add('cached');
+                    signalEl.querySelector('.signal-icon').className = 'signal-icon cached';
+                    signalEl.querySelector('.signal-icon').textContent = '✓';
+                    signalEl.querySelector('.signal-value').textContent = signalCache[cacheKey].score;
+
+                    results.push({ ...signal, value: signalCache[cacheKey], cached: true });
+                } else {
+                    // Cache miss - extract
+                    cacheStats.misses++;
+
+                    signalEl.classList.add('extracting');
+                    signalEl.querySelector('.signal-icon').className = 'signal-icon loading';
+                    signalEl.querySelector('.signal-icon').textContent = '↻';
+
+                    await delay(100 + Math.random() * 200);
+
+                    const value = generateSignalValue(signal);
+                    
+                    if (signal.category !== 'real_time') {
+                        signalCache[cacheKey] = value;
+                        cacheStats.totalSignals++;
+                    }
+
+                    signalEl.classList.remove('extracting');
+                    signalEl.classList.add('extracted');
+                    signalEl.querySelector('.signal-icon').className = 'signal-icon fresh';
+                    signalEl.querySelector('.signal-icon').textContent = '★';
+                    signalEl.querySelector('.signal-value').textContent = value.score;
+
+                    results.push({ ...signal, value, cached: false });
+                }
+
+                progressFill.style.width = `${((i + 1) / signals.length) * 100}%`;
+                extractionStats.textContent = `${i + 1}/${signals.length} signals | ${cacheHits} cached`;
+            }
+
+            extractionStats.textContent = `Complete | ${cacheHits}/${signals.length} from cache (${Math.round(cacheHits / signals.length * 100)}% hit rate)`;
+
+            return results;
+        }
+
+        function generateSignalValue(signal) {
+            const score = Math.floor(50 + Math.random() * 50);
+            return {
+                score,
+                grade: score >= 80 ? 'A' : score >= 65 ? 'B' : score >= 50 ? 'C' : 'D',
+                source: signal.source,
+                extractedAt: new Date().toISOString(),
+            };
+        }
+
+        function calculateAssessment(signals, directInquiry) {
+            const scores = signals.map(s => s.value.score);
+            const compositeScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10);
+
+            // Determine tier
+            let tier, tierLabel;
+            if (compositeScore >= 800) { tier = 1; tierLabel = 'PREFERRED'; }
+            else if (compositeScore >= 650) { tier = 2; tierLabel = 'STANDARD_PLUS'; }
+            else if (compositeScore >= 500) { tier = 3; tierLabel = 'STANDARD'; }
+            else if (compositeScore >= 350) { tier = 4; tierLabel = 'SUBSTANDARD'; }
+            else { tier = 5; tierLabel = 'DECLINE'; }
+
+            // Categorize flags
+            const greenFlags = signals.filter(s => s.value.score >= 80).map(s => s.name);
+            const amberFlags = signals.filter(s => s.value.score >= 50 && s.value.score < 80).map(s => s.name);
+            const redFlags = signals.filter(s => s.value.score < 50).map(s => s.name);
+
+            // Check direct inquiry for critical issues
+            const hasCriticalIssue = directInquiry.pendingClaims || 
+                                     directInquiry.regulatoryAction || 
+                                     directInquiry.coverageDeclined;
+
+            // Determine decision path
+            let decisionPath;
+            if (tier === 5 || redFlags.length >= 3) {
+                decisionPath = 'DECLINED';
+            } else if (tier <= 2 && redFlags.length === 0 && !hasCriticalIssue) {
+                decisionPath = 'STRAIGHT-THROUGH';
+            } else {
+                decisionPath = 'REFERRED';
+            }
+
+            return {
+                compositeScore,
+                tier,
+                tierLabel,
+                greenFlags,
+                amberFlags,
+                redFlags,
+                decisionPath,
+                confidence: Math.round(85 + Math.random() * 10),
+                signalCoverage: 100,
+            };
+        }
+
+        function calculatePricing(coverageType, limit, deductible, assessment) {
+            const model = MODEL_INFO[coverageType];
+            const tierModifiers = { 1: 0.75, 2: 0.90, 3: 1.00, 4: 1.35, 5: 2.50 };
+
+            const baseRate = model.baseRate;
+            const tierModifier = tierModifiers[assessment.tier];
+            const ratePerMillion = baseRate * tierModifier;
+            const grossPremium = Math.max(5000, (limit / 1000000) * ratePerMillion);
+
+            // Deductible credit
+            const deductibleCredit = Math.min(0.15, deductible / limit);
+            const adjustedPremium = grossPremium * (1 - deductibleCredit);
+
+            return {
+                grossPremium: Math.round(adjustedPremium),
+                ratePerMillion: Math.round(ratePerMillion),
+                tierModifier,
+            };
+        }
+
+        function displayQuoteResult(quote) {
+            const quoteResult = document.getElementById('quoteResult');
+            const quoteHeader = document.getElementById('quoteHeader');
+
+            // Update header class
+            quoteHeader.className = 'quote-header';
+            if (quote.decisionPath === 'STRAIGHT-THROUGH') {
+                quoteHeader.classList.add('approved');
+            } else if (quote.decisionPath === 'REFERRED') {
+                quoteHeader.classList.add('referred');
+            } else {
+                quoteHeader.classList.add('declined');
+            }
+
+            // Update content
+            document.getElementById('quoteStatus').textContent = quote.decisionPath;
+            document.getElementById('quoteStatus').className = `quote-status ${quote.decisionPath === 'STRAIGHT-THROUGH' ? 'approved' : quote.decisionPath === 'REFERRED' ? 'referred' : 'declined'}`;
+            document.getElementById('quoteEntity').textContent = quote.entityName;
+            document.getElementById('quoteId').textContent = `Quote ID: ${quote.id}`;
+            document.getElementById('scoreValue').textContent = quote.compositeScore;
+            document.getElementById('grossPremium').textContent = `$${quote.grossPremium.toLocaleString()}`;
+            document.getElementById('tierLabel').textContent = quote.tierLabel;
+            document.getElementById('decisionPath').textContent = quote.decisionPath;
+
+            // Flags
+            document.getElementById('greenFlags').innerHTML = quote.greenFlags.length > 0 
+                ? quote.greenFlags.map(f => `<div class="flag-item">${f}</div>`).join('')
+                : '<div class="flag-item">None</div>';
+            document.getElementById('amberFlags').innerHTML = quote.amberFlags.length > 0
+                ? quote.amberFlags.map(f => `<div class="flag-item">${f}</div>`).join('')
+                : '<div class="flag-item">None</div>';
+            document.getElementById('redFlags').innerHTML = quote.redFlags.length > 0
+                ? quote.redFlags.map(f => `<div class="flag-item">${f}</div>`).join('')
+                : '<div class="flag-item">None</div>';
+
+            // Performance
+            document.getElementById('perfTime').textContent = `${quote.processingTime}ms`;
+            document.getElementById('perfCacheHit').textContent = `${quote.cacheHits}/${quote.signals.length}`;
+            document.getElementById('perfSignals').textContent = quote.signals.length;
+            document.getElementById('perfModel').textContent = `v${quote.modelVersion}`;
+
+            quoteResult.classList.add('visible');
+        }
+
+        function updateQuoteHistory() {
+            const container = document.getElementById('quoteHistory');
+
+            if (quoteHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <div>No quotes yet</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = quoteHistory.slice(0, 10).map(quote => `
+                <div class="history-item ${quote.decisionPath === 'STRAIGHT-THROUGH' ? 'approved' : quote.decisionPath === 'REFERRED' ? 'referred' : 'declined'}" onclick="viewQuote('${quote.id}')">
+                    <div class="history-item-header">
+                        <div class="history-entity">${quote.entityName}</div>
+                        <div class="history-premium">$${quote.grossPremium.toLocaleString()}</div>
+                    </div>
+                    <div class="history-meta">
+                        <span>${quote.coverageType.toUpperCase()}</span>
+                        <span>Score: ${quote.compositeScore}</span>
+                        <span>${quote.decisionPath}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateHeaderStats() {
+            const totalQuotes = quoteHistory.length;
+            const stpQuotes = quoteHistory.filter(q => q.decisionPath === 'STRAIGHT-THROUGH').length;
+            const totalCacheHits = quoteHistory.reduce((sum, q) => sum + q.cacheHits, 0);
+            const totalSignals = quoteHistory.reduce((sum, q) => sum + q.signals.length, 0);
+
+            document.getElementById('totalQuotes').textContent = totalQuotes;
+            document.getElementById('cacheHitRate').textContent = totalSignals > 0 
+                ? `${Math.round(totalCacheHits / totalSignals * 100)}%` 
+                : '0%';
+            document.getElementById('stpRate').textContent = totalQuotes > 0 
+                ? `${Math.round(stpQuotes / totalQuotes * 100)}%` 
+                : '0%';
+        }
+
+        function updateCacheStats() {
+            document.getElementById('cacheTotalSignals').textContent = cacheStats.totalSignals;
+            document.getElementById('cacheEntities').textContent = cacheStats.entities.size;
+            document.getElementById('cacheHits').textContent = cacheStats.hits;
+            document.getElementById('cacheMisses').textContent = cacheStats.misses;
+        }
+
+        function bindQuote() {
+            if (!currentQuote) return;
+            showToast('Quote Bound', `Policy created for ${currentQuote.entityName}`);
+        }
+
+        function requote() {
+            if (!currentQuote) return;
+            
+            // Change limit to simulate requote
+            const limitSelect = document.getElementById('limit');
+            const currentIndex = limitSelect.selectedIndex;
+            limitSelect.selectedIndex = Math.min(currentIndex + 1, limitSelect.options.length - 1);
+            
+            showToast('Requoting', 'Signals will be retrieved from cache');
+            processQuote();
+        }
+
+        function newQuote() {
+            // Reset signals display
+            updateSignalGrid();
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('extractionStats').textContent = 'Ready';
+            document.getElementById('quoteResult').classList.remove('visible');
+            currentQuote = null;
+        }
+
+        function viewQuote(quoteId) {
+            const quote = quoteHistory.find(q => q.id === quoteId);
+            if (quote) {
+                currentQuote = quote;
+                displayQuoteResult(quote);
+            }
+        }
+
+        function getToggleValue(field) {
+            const toggle = document.querySelector(`.toggle[data-field="${field}"]`);
+            return toggle.querySelector('.active-yes') !== null;
+        }
+
+        function generateQuoteId() {
+            return 'Q-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function showToast(title, message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        }
+    </script>
+</body>
+</html>
