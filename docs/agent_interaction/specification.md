@@ -1,7 +1,7 @@
 # DSI User Interaction Specification
 ## Minimum Viable Requirement for Straight-Through Processing
 
-${\color{blue}how do you do}$
+${\color{blue}how\space do\space you do}$
 
 **Version:** 1.0  
 **Date:** November 2025  
