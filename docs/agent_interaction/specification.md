@@ -10,7 +10,7 @@
 
 ---
 
-## Executive Summary
+### Executive Summary
 
 Traditional insurance applications require lots of inputs. DSI requires **4 data points** and **5 - 10 optional confirmations**. Everything else comes from observable signals.
 
@@ -25,9 +25,9 @@ Traditional insurance applications require lots of inputs. DSI requires **4 data
 
 ---
 
-## The Minimum Viable Interaction
+### The Minimum Viable Interaction
 
-### Required Data (4 items)
+#### Required Data (4 items)
 
 These are the ONLY mandatory inputs:
 
@@ -45,7 +45,7 @@ That's it. Four fields. Everything else is either:
 
 And if required DSI only requires the Entity Identifier and Effective Date and can auto-generate scenarios incorporating all coverage types and limit profiles.
 
-### Direct Inquiry (6 questions maximum)
+#### Direct Inquiry (6 questions maximum)
 
 Questions address ONLY information that cannot be observed externally:
 
@@ -62,9 +62,9 @@ Questions address ONLY information that cannot be observed externally:
 
 ---
 
-## User Journey: Three Paths
+### User Journey: Three Paths
 
-### Path 1: Straight-Through (Target: 75-85%)
+#### Path 1: Straight-Through (Target: 75-85%)
 
 ```
 User Action              System Action                    Time
@@ -86,7 +86,7 @@ Click "Bind"        →    Policy issued                    instant
 - No "Yes" answers to critical inquiries
 - Signal coverage ≥ 70%
 
-### Path 2: Referred for Review (Target: 15-25%)
+#### Path 2: Referred for Review (Target: 15-25%)
 
 ```
 User Action              System Action                    Time
@@ -108,7 +108,7 @@ User accepts        →    Policy issued
 - Signal coverage < 70%
 - Limit exceeds auto-bind authority
 
-### Path 3: Decline (Target: 5-10%)
+#### Path 3: Decline (Target: 5-10%)
 
 ```
 User Action              System Action                    Time
@@ -127,9 +127,9 @@ User Action              System Action                    Time
 
 ---
 
-## Market-Specific Workflows
+### Market-Specific Workflows
 
-### US Market (Direct / Retail)
+#### US Market (Direct / Retail)
 
 **Channel Options:**
 1. **Carrier Direct Portal** — Insured self-service
@@ -163,7 +163,7 @@ User Action              System Action                    Time
 - State-specific policy forms auto-selected
 - Licensing verification automated
 
-### Lloyd's Market (Broker-Intermediated)
+#### Lloyd's Market (Broker-Intermediated)
 
 **Channel:**
 Lloyd's broker places on behalf of client → Syndicate underwrites
@@ -202,7 +202,7 @@ Lloyd's broker places on behalf of client → Syndicate underwrites
 - Following market functionality (leaders set terms)
 - Integration with Lloyd's Bridge / Whitespace
 
-### Singapore Market (Regional Hub)
+#### Singapore Market (Regional Hub)
 
 **Channel:**
 Mix of direct placement and treaty business for APAC region
@@ -242,9 +242,9 @@ Mix of direct placement and treaty business for APAC region
 
 ---
 
-## Technical Architecture
+### Technical Architecture
 
-### API Endpoint Design
+#### API Endpoint Design
 
 ```
 POST /api/v1/quote
@@ -276,7 +276,7 @@ Content-Type: application/json
 }
 ```
 
-### Response Structure
+#### Response Structure
 
 ```json
 {
@@ -323,7 +323,7 @@ Content-Type: application/json
 }
 ```
 
-### Referral Response
+#### Referral Response
 
 ```json
 {
@@ -352,9 +352,9 @@ Content-Type: application/json
 
 ---
 
-## User Interface Specifications
+### User Interface Specifications
 
-### Minimal Input Form
+#### Minimal Input Form
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
@@ -387,7 +387,7 @@ Content-Type: application/json
 └────────────────────────────────────────────────────────────────┘
 ```
 
-### Confirmation Screen (What We Found)
+#### Confirmation Screen (What We Found)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -423,7 +423,7 @@ Content-Type: application/json
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Quote Delivery
+#### Quote Delivery
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -462,9 +462,9 @@ Content-Type: application/json
 
 ---
 
-## Operational Metrics
+### Operational Metrics
 
-### Target Performance
+#### Target Performance
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
@@ -475,7 +475,7 @@ Content-Type: application/json
 | Signal coverage | > 75% average | Signals collected vs. available |
 | Accuracy vs. loss ratio | < 5% deviation | Predicted tier vs. actual loss |
 
-### Efficiency Gains
+#### Efficiency Gains
 
 | Traditional Process | DSI Process | Improvement |
 |--------------------|-------------|-------------|
@@ -485,29 +485,3 @@ Content-Type: application/json
 | Broker-dependent data | Signal-based data | Higher quality |
 | Inconsistent pricing | Algorithmic pricing | Consistent |
 
----
-
-## Implementation Checklist
-
-### Phase 1: Core Platform
-- [ ] Entity resolution service (domain → company → signals)
-- [ ] Signal collection pipeline
-- [ ] DSI scoring engine
-- [ ] Quote API endpoint
-- [ ] Basic UI (4 fields + 6 questions)
-
-### Phase 2: Market Integration
-- [ ] US direct binding capability
-- [ ] Lloyd's PPL/Whitespace integration
-- [ ] Singapore MAS compliance module
-- [ ] Multi-currency support
-
-### Phase 3: Optimisation
-- [ ] Referral workflow automation
-- [ ] Underwriter dashboard
-- [ ] Performance analytics
-- [ ] Model calibration loop
-
----
-
-*This specification defines the minimum viable interaction for DSI-based insurance placement across US, Lloyd's, and Singapore markets.*
