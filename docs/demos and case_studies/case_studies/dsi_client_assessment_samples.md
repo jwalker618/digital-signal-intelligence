@@ -1,6 +1,6 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## Case Studies: Cyber Risk Assessment
+## Case Studies: Client Assessment
 
 | Item | Value |
 |-|-|
