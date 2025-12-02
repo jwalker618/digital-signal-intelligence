@@ -8,8 +8,8 @@
 
 ---
 
-# Agent Interaction Specification
-**Sub-title:** Minimum Viable Requirements for Processing
+#  Agent Interaction Specification
+## Minimum Viable Requirements for Processing
 
 ---
 
