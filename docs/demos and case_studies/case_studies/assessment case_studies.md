@@ -201,7 +201,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 
 ---
 
-### Appendix: DSI Methodology v2.0
+### Appendix
 
 #### Signal Taxonomy
 
