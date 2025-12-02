@@ -5,7 +5,7 @@
 **Classification:** Technical Specification
 **Type:** User Interaction Specification
 **Sub-title:** Minimum Viable Requirement for Straight-Through Processing
----
+
 
 ## Executive Summary
 
