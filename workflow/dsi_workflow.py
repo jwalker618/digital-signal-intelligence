@@ -11,7 +11,7 @@ Complete workflow integration that:
 This module demonstrates production-ready integration
 of the DSI persistence layer with pricing models.
 
-Author: DSI Framework
+Author: John Walker
 Version: 1.0.0
 """
 
