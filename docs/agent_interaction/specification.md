@@ -1,6 +1,6 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-***Document:***
+#### Document:
 ## Agent Interaction: Minimum Viable Requirements
 
 | Item | Value |
