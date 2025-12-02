@@ -1,10 +1,20 @@
-# DSI Case Studies v2.0: Energy Sector Cyber Risk Assessment
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## Executive Summary
+## Case Studies: Cyber Risk Assessment
+
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Technical Specification|
+
+---
+
+### Executive Summary
 
 This document presents comprehensive DSI assessments for three major energy/aerospace companies using only externally observable signals.
 
-### Assessment Summary
+#### Assessment Summary
 
 | Company | DSI Score | Risk Tier | Key Finding | Recommendation |
 |---------|-----------|-----------|-------------|----------------|
@@ -14,15 +24,15 @@ This document presents comprehensive DSI assessments for three major energy/aero
 
 ---
 
-## Case Study 1: Petrobras (Brazil)
+### Case Study 1: Petrobras (Brazil)
 
-### Company Profile
+#### Company Profile
 
 Petróleo Brasileiro S.A. (Petrobras) is Brazil's state-controlled multinational petroleum corporation. Operations in 25+ countries, ~$100B annual revenue, ~45,000 employees.
 
-### Signal Assessment
+#### Signal Assessment
 
-#### Type 1: Network Authority Signals
+##### Type 1: Network Authority Signals
 
 | Signal | Score | Evidence |
 |--------|-------|----------|
@@ -30,7 +40,7 @@ Petróleo Brasileiro S.A. (Petrobras) is Brazil's state-controlled multinational
 | Industry leadership | 80/100 | Participant in OT cybersecurity conferences; digital transformation initiatives |
 | Vendor ecosystem | 70/100 | Partnerships with Claroty, SAP, Deloitte documented |
 
-#### Type 2: Technical Infrastructure Signals
+##### Type 2: Technical Infrastructure Signals
 
 | Signal | Score | Evidence |
 |--------|-------|----------|
@@ -38,7 +48,7 @@ Petróleo Brasileiro S.A. (Petrobras) is Brazil's state-controlled multinational
 | Cloud adoption maturity | 75/100 | SAP cloud implementations; IBM and Azure partnerships observable |
 | Security headers/DNS | 65/100 | Standard enterprise configuration |
 
-#### Type 5: Corporate Digital Footprint
+##### Type 5: Corporate Digital Footprint
 
 | Signal | Score | Evidence |
 |--------|-------|----------|
@@ -46,7 +56,7 @@ Petróleo Brasileiro S.A. (Petrobras) is Brazil's state-controlled multinational
 | Security culture indicators | 75/100 | Active participation in Innovarpel 2025; OT cybersecurity focus |
 | Prior incident history | 80/100 | No major public cyber incidents in past 5 years |
 
-### Composite Score: 685/1000 (Tier 2)
+#### Composite Score: 685/1000 (Tier 2)
 
 | Category | Weight | Score | Weighted |
 |----------|--------|-------|----------|
@@ -57,7 +67,7 @@ Petróleo Brasileiro S.A. (Petrobras) is Brazil's state-controlled multinational
 | Sector Risk Baseline | 25% | 55 | 13.75 |
 | **COMPOSITE** | **100%** | — | **68.5** |
 
-### DSI Assessment
+#### DSI Assessment
 
 - **Risk Tier:** Tier 2 (Standard)
 - **Recommended Action:** Auto-approve at standard pricing
@@ -65,15 +75,15 @@ Petróleo Brasileiro S.A. (Petrobras) is Brazil's state-controlled multinational
 
 ---
 
-## Case Study 2: PEMEX (Mexico)
+### Case Study 2: PEMEX (Mexico)
 
-### Company Profile
+#### Company Profile
 
 Petróleos Mexicanos (PEMEX) is Mexico's state-owned petroleum company. 100% state-owned, ~$85B annual revenue, ~120,000 employees, $106B+ debt burden.
 
-### CRITICAL FINDING: Prior Ransomware Incident
+#### CRITICAL FINDING: Prior Ransomware Incident
 
-#### November 2019 DoppelPaymer Attack
+##### November 2019 DoppelPaymer Attack
 
 - **Ransom demanded:** 565 BTC (~$4.9M)
 - **Attack vector:** Emotet → Dridex → DoppelPaymer infection chain
@@ -81,15 +91,15 @@ Petróleos Mexicanos (PEMEX) is Mexico's state-owned petroleum company. 100% sta
 - **PEMEX claimed:** <5% of computers affected
 - **Ransom:** NOT paid
 
-#### Additional Incidents (2022-2024)
+##### Additional Incidents (2022-2024)
 
 - December 2022: Cyberattack resulting in employee data exposure
 - January 2024: Server network hack reported by security researchers
 - **Pattern indicates persistent security posture gaps**
 
-### Signal Assessment
+#### Signal Assessment
 
-#### Type 6: Public Records (Incident History)
+##### Type 6: Public Records (Incident History)
 
 | Signal | Score | Evidence |
 |--------|-------|----------|
@@ -97,7 +107,7 @@ Petróleos Mexicanos (PEMEX) is Mexico's state-owned petroleum company. 100% sta
 | Incident pattern | 30/100 | Multiple incidents 2019-2024 indicate systemic issues |
 | Regulatory findings | 40/100 | Limited public audit findings |
 
-#### Type 5: Corporate Digital Footprint
+##### Type 5: Corporate Digital Footprint
 
 | Signal | Score | Evidence |
 |--------|-------|----------|
@@ -105,7 +115,7 @@ Petróleos Mexicanos (PEMEX) is Mexico's state-owned petroleum company. 100% sta
 | Security leadership visibility | 40/100 | Limited public CISO/security leadership presence |
 | Financial stress indicators | 30/100 | $106B debt burden may constrain security investments |
 
-### Composite Score: 385/1000 (Tier 4)
+#### Composite Score: 385/1000 (Tier 4)
 
 | Category | Weight | Score | Weighted |
 |----------|--------|-------|----------|
@@ -116,7 +126,7 @@ Petróleos Mexicanos (PEMEX) is Mexico's state-owned petroleum company. 100% sta
 | Sector Risk Baseline | 25% | 45 | 11.25 |
 | **COMPOSITE** | **100%** | — | **38.5** |
 
-### DSI Assessment
+#### DSI Assessment
 
 - **Risk Tier:** Tier 4 (High Risk) ⚠️
 - **Recommended Action:** Manual review required; +45% premium loading minimum
@@ -124,15 +134,15 @@ Petróleos Mexicanos (PEMEX) is Mexico's state-owned petroleum company. 100% sta
 
 ---
 
-## Case Study 3: Boeing (USA)
+### Case Study 3: Boeing (USA)
 
-### Company Profile
+#### Company Profile
 
 The Boeing Company is an American multinational aerospace corporation. ~$78B annual revenue, 140,000+ employees, operations in 65+ countries, defense and government contracts.
 
-### CRITICAL FINDING: October 2023 LockBit Attack
+#### CRITICAL FINDING: October 2023 LockBit Attack
 
-#### LockBit 3.0 Ransomware Attack via Citrix Bleed (CVE-2023-4966)
+##### LockBit 3.0 Ransomware Attack via Citrix Bleed (CVE-2023-4966)
 
 - **Ransom demanded:** $200M (one of largest ever)
 - **Attack vector:** CVE-2023-4966 (Citrix Bleed) vulnerability
@@ -140,7 +150,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 - **Ransom:** NOT paid
 - **Affected:** Boeing Distribution Inc. (parts and distribution business)
 
-#### Attack Timeline
+##### Attack Timeline
 
 - Oct 10, 2023: Citrix released patch for CVE-2023-4966
 - Oct 18, 2023: CISA warned of active exploitation
@@ -148,15 +158,15 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 - Nov 2, 2023: Boeing confirms "cyber incident"
 - Nov 13, 2023: 43GB data published after negotiations fail
 
-### Observable Pre-Incident Signals
+#### Observable Pre-Incident Signals
 
 - Citrix NetScaler devices were internet-facing (detectable via scanning)
 - **17 days between patch release and breach announcement**
 - Active exploitation of CVE-2023-4966 was warned by CISA on Oct 18
 
-### Signal Assessment
+#### Signal Assessment
 
-#### Type 6: Public Records (Incident History)
+##### Type 6: Public Records (Incident History)
 
 | Signal | Score | Evidence |
 |--------|-------|----------|
@@ -164,7 +174,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 | Patch management | 45/100 | 17 days between CVE-2023-4966 patch and breach |
 | Post-breach response | 65/100 | Did not pay ransom; shared IOCs with FBI/CISA |
 
-#### Type 2: Technical Infrastructure Signals
+##### Type 2: Technical Infrastructure Signals
 
 | Signal | Score | Evidence |
 |--------|-------|----------|
@@ -172,7 +182,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 | Network segmentation | 60/100 | Distribution business was isolated (positive) |
 | Vulnerability management | 50/100 | Citrix Bleed exploitation suggests patching delays |
 
-### Composite Score: 520/1000 (Tier 3)
+#### Composite Score: 520/1000 (Tier 3)
 
 | Category | Weight | Score | Weighted |
 |----------|--------|-------|----------|
@@ -183,7 +193,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 | Sector Risk Baseline | 25% | 40 | 10.00 |
 | **COMPOSITE** | **100%** | — | **52.0** |
 
-### DSI Assessment
+#### DSI Assessment
 
 - **Risk Tier:** Tier 3 (Elevated Risk) ⚠️
 - **Recommended Action:** Manual review required; +25% premium loading
@@ -191,9 +201,9 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 
 ---
 
-## Appendix: DSI Methodology v2.0
+### Appendix: DSI Methodology v2.0
 
-### Signal Taxonomy
+#### Signal Taxonomy
 
 | Type | Category | Example Signals |
 |------|----------|-----------------|
@@ -205,7 +215,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 | 6 | Public Records | Prior incidents, regulatory filings, litigation history |
 | 7 | Direct Inquiry | Security questionnaires, attestations (not automated) |
 
-### Tier Classification
+#### Tier Classification
 
 | Tier | Score Range | Risk Level | Recommended Action |
 |------|-------------|------------|-------------------|
@@ -215,7 +225,7 @@ The Boeing Company is an American multinational aerospace corporation. ~$78B ann
 | 4 | 350-499 | High Risk | Manual review required; +30-60% premium loading |
 | 5 | <350 | Critical | Decline or special terms only |
 
-### Validation Principle
+#### Validation Principle
 
 All signals used in these assessments were externally observable at the time of assessment. DSI does not claim to predict specific breaches, but rather to identify elevated risk based on observable organisational behavior patterns.
 
