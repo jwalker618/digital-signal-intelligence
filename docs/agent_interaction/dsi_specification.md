@@ -68,7 +68,7 @@ For example,
 
 ### User Journey: Three Paths
 
-#### Path 1: Straight-Through (Target: 75-85%)
+#### Path 1 & 3: Straight-Through (Target: 75-85%)
 
 ```
 User Action              System Action                    Time
@@ -79,16 +79,24 @@ Specific config     →    Policy period set                instant
                     →    Specific limit set               instant 
                     →    Risk assessment                  instant
 Persist             ←    Capture: Score, Tier, Premium
-Workflow            →    Policy issued                    instant
+Workflow - accept   →    Display: "Appetite matched"      instant
+                    →    Policy issued                    instant
+Workflow - decline  →    Display: "Appetite unmatched"    instant
+                    →    Declinature summary provided     instant
 ─────────────────────────────────────────────────────────────────
                          TOTAL TIME: ~<3 minutes
 ```
 
-**Criteria for straight-through:**
+**Criteria for straight-through acceptance:**
 - DSI Score ≥ 650 (Tier 1 or 2), configurable
 - No red flags triggered
 - No "Yes" answers to critical inquiries
 - Signal coverage ≥ 70%
+
+**Criteria for straight-through declinatures:**
+- DSI Score < 350 (Tier 5)
+- Critical red flag (e.g., EU Safety List for aerospace)
+- Automatic decline override triggered
 
 #### Path 2: Referred for Review (Target: 15-25%)
 
@@ -111,23 +119,6 @@ Workflow            ←    Quote or Decline
 - "Yes" to critical inquiry
 - Signal coverage < 70%
 - Limit exceeds auto-bind authority
-
-#### Path 3: Decline (Target: 5-10%)
-
-```
-User Action              System Action                    Time
-─────────────────────────────────────────────────────────────────
-[Same as Path 1]    →    [Same as Path 1]                 3 min
-Workflow            ←    Display: "Unable to offer terms"
-                         Reason summary provided
-─────────────────────────────────────────────────────────────────
-                         TOTAL TIME: ~<3 minutes
-```
-
-**Decline triggers:**
-- DSI Score < 350 (Tier 5)
-- Critical red flag (e.g., EU Safety List for aerospace)
-- Automatic decline override triggered
 
 ---
 
