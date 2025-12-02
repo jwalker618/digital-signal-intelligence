@@ -12,7 +12,7 @@
 
 ### Executive Summary
 
-This document presents comprehensive DSI assessments for three major energy/aerospace companies using only externally observable signals.
+This document presents comprehensive DSI assessments for three major clients, two within Energy and one in Aerospace, using only externally observable signals.
 
 #### Assessment Summary
 
