@@ -12,14 +12,15 @@
 
 ### Executive Summary
 
-Traditional insurance applications require lots of inputs. DSI requires **4 data points** and **5 - 10 optional confirmations**. Everything else comes from observable signals.
+Traditional insurance models require lots of inputs. 
+**DSI can operate using only one: the Entity (Client) Identifier.** Using this value a prospective premium across multiple coverages and limit bandings is generated for review. Everything else comes from observable signals.
 
 **The DSI interaction paradigm:**
 
 | Traditional | DSI |
 |-------------|-----|
-| "Tell us everything" | "We already know. Confirm these 6 things." |
-| 50-200 questions | 4 required + 5 - 10 optional |
+| Tell us everything | We can observe your behavior directly |
+| 50-200 questions | 1 required |
 | Days/weeks to complete | Minutes |
 | Manual review every submission | 75-85% straight-through |
 
@@ -27,28 +28,31 @@ Traditional insurance applications require lots of inputs. DSI requires **4 data
 
 ### The Minimum Viable Interaction
 
-#### Required Data (4 items)
+#### Required Data (1 item)
 
-These are the ONLY mandatory inputs:
-
+There is ONLY ONE mandatory input: 
 | Data Point | Format | Purpose |
 |------------|--------|---------|
 | **1. Entity Identifier** | Company name OR domain OR registration number | Triggers signal collection |
+
+That's it. One field. Everything else is either:
+- **Observable** (we find it ourselves)
+- **Confirmable** (we show them what we found, they confirm)
+- **Configurable** (we preset limit-bandings by coverage to be auto-generated)
+- **Optional** (questions for the few things we genuinely can't observe or specific limit requirements)
+
+The three optional inputs are:
+| Data Point | Format | Purpose |
+|------------|--------|---------|
 | **2. Coverage Type** | Dropdown selection | Routes to appropriate model |
 | **3. Desired Limit** | Currency + amount | Calculates premium |
 | **4. Effective Date** | Date | Policy period |
 
-That's it. Four fields. Everything else is either:
-- **Observable** (we find it ourselves)
-- **Confirmable** (we show them what we found, they confirm)
-- **Optional inquiry** (6 questions max for things we genuinely can't observe)
-
-And if required DSI only requires the Entity Identifier and Effective Date and can auto-generate scenarios incorporating all coverage types and limit profiles.
-
-#### Direct Inquiry (6 questions maximum)
+#### Direct Inquiry (5 - 10 questions maximum)
 
 Questions address ONLY information that cannot be observed externally:
 
+For example, 
 | Question | Why We Ask | Auto-Trigger |
 |----------|------------|--------------|
 | 1. Pending/threatened claims? | Not public until filed | Always |
@@ -70,14 +74,14 @@ Questions address ONLY information that cannot be observed externally:
 User Action              System Action                    Time
 ─────────────────────────────────────────────────────────────────
 Enter company name  →    Signal collection begins         2 sec
-Select coverage     →    Route to model                   instant
-Enter limit         →    Premium calculation              instant
-Enter date          →    Policy period set                instant
-Answer 6 Y/N        →    Risk assessment                  instant
-                    ←    Display: Score, Tier, Premium
+Specific config     →    Policy period set                instant
+                    →    Specific coverage set            instant
+                    →    Specific limit set               instant 
+                    →    Risk assessment                  instant
+Review              ←    Display: Score, Tier, Premium
 Click "Bind"        →    Policy issued                    instant
 ─────────────────────────────────────────────────────────────────
-                         TOTAL TIME: ~3 minutes
+                         TOTAL TIME: ~<3 minutes
 ```
 
 **Criteria for straight-through:**
