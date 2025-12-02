@@ -390,10 +390,10 @@ Open any `.html` file in `docs/demos and case_studies/demos/` directly in a brow
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [Executive One-Pagers](docs/Executive%20summary.pdf ) | Board-level summary | C-Suite, Board |
-| [PageRank Precedent](docs/The%20PageRank%20precedent.pdf) | Board-level summary | C-Suite, Board |
-| [White Paper](docs/An%20Agentic%20Future%20-%20Global%20Technical%20Pricing.pdf) | Detailed Explanation | Technical leadership |
-| [DSI Principles](docs/Foundational%20Principles.md) | Core methodology | Technical leadership |
+| [Executive One-Pagers](docs/overview/Executive%20summary.pdf ) | Board-level summary | C-Suite, Board |
+| [PageRank Precedent](docs/overview/The%20PageRank%20precedent.pdf) | Board-level summary | C-Suite, Board |
+| [White Paper](docs/overview/An%20Agentic%20Future%20-%20Global%20Technical%20Pricing.pdf) | Detailed Explanation | Technical leadership |
+| [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
 | [Methodology Defense](docs/demos%20and%20case_studies/validation/dsi_methodology.md) | Actuarial Q&A | Actuaries, Risk |
 | [Case Studies](docs/demos%20and%20case_studies/case-studies/) | Worked examples | Underwriters |
 | [Demos](docs/demos%20and%20case_studies/demos/) | Examples | All stakeholders |
