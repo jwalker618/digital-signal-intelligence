@@ -1,8 +1,13 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-**Version:** 1.0  
-**Date:** November 2025  
-**Classification:** Technical Specification
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Technical Specification|
+
+---
+
 **Type:** User Interaction Specification
 **Sub-title:** Minimum Viable Requirement for Straight-Through Processing
 
