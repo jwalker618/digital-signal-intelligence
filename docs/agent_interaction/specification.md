@@ -1,6 +1,7 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
 **Agent Interaction**
+
 *Minimum Viable Requirements for Processing*
 
 | Item | Value |
