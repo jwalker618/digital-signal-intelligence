@@ -1,6 +1,6 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-****Agent Interaction Specification****
+*****Agent Interaction Specification*****
 
 *Minimum Viable Requirements for Processing*
 
