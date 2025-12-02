@@ -1,11 +1,7 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-***Agent Interaction***
-*Agent Interaction Specification*
-
-*****Agent Interaction Specification*****
-
-*Minimum Viable Requirements for Processing*
+# Agent Interaction
+**Minimum Viable Requirements for Processing**
 
 | Item | Value |
 |-|-|
@@ -13,8 +9,6 @@
 |Date|November 2025|
 |Classification|Technical Specification|
 
-*WHAT DOES THIS DO*
-**WHAT DOES THIS DO**
 ---
 
 ## Executive Summary
