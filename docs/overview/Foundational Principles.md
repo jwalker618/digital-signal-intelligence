@@ -16,7 +16,7 @@ Digital Signal Intelligence (DSI) is a methodology for insurance underwriting th
 
 Traditional insurance underwriting relies on unstructured documentation: application forms, broker submissions, questionnaires, and supporting documents. These vary wildly in format, completeness, and reliability. This variability has created cumbersome operating models with high processing costs and low straight-through processing (STP) rates.
 
-DSI inverts this approach. Rather than asking companies to describe themselves, we observe what they do. Rather than requesting documentation, we analyze their digital footprint. Rather than trusting self-reported data, we verify through external signals.
+DSI inverts this approach. Rather than asking companies to describe themselves, we observe what they do. Rather than requesting documentation, we analyse their digital footprint. Rather than trusting self-reported data, we verify through external signals.
 
 The result is a pricing methodology that can operate autonomously, at scale, with high STP rates and low cost per bind.
 
@@ -34,13 +34,13 @@ This network analysis extends beyond first-degree relationships. Just as PageRan
 
 #### Behavioral Inference
 
-Observable behavior predicts future behavior. How a company maintains its digital infrastructure, what it publishes, how it presents itself, what roles it hires for, and how it engages with regulators and industry bodies reveals organizational culture and risk management maturity.
+Observable behavior predicts future behavior. How a company maintains its digital infrastructure, what it publishes, how it presents itself, what roles it hires for, and how it engages with regulators and industry bodies reveals organisational culture and risk management maturity.
 
 These signals are difficult to fake at scale. A company can claim strong security practices, but its actual TLS configuration, exposed services, and patch discipline are observable. A company can claim strong governance, but its board composition, committee structure, and regulatory filings are public.
 
 #### Parent-to-Subsidiary Inference
 
-The behavior of a parent organization is a reliable proxy for the behavior of its subsidiaries and assets. A shipping company with strong operational discipline across its fleet is unlikely to have rogue vessels operating to different standards. A financial institution with robust governance culture is unlikely to have divisions operating without controls.
+The behavior of a parent organisation is a reliable proxy for the behavior of its subsidiaries and assets. A shipping company with strong operational discipline across its fleet is unlikely to have rogue vessels operating to different standards. A financial institution with robust governance culture is unlikely to have divisions operating without controls.
 
 This principle allows DSI to assess risk at the organisational level without requiring asset-by-asset analysis, enabling scalable underwriting for complex portfolios.
 
@@ -104,13 +104,13 @@ The absence of expected digital presence is a valid and important signal:
 
 Absence signals must be carefully calibrated—the expectation must be reasonable for the entity type and industry.
 
-#### Principle 6: Structured Data Utilization
+#### Principle 6: Structured Data Utilisation
 
 **Pre-structured authoritative data sources are efficient signals.**
 
 Ratings, scores, and indices from authoritative third-party providers (S&P, Moody's, MSCI, classification societies, regulatory bodies) are valid DSI signals. We use their conclusions as authority signals rather than recreating their analysis.
 
-The principle: if a recognized authority has already assessed an aspect of risk and published a structured output, we can incorporate that output as a signal of network authority (the rating agency's judgment) rather than raw data requiring interpretation.
+The principle: if a recognised authority has already assessed an aspect of risk and published a structured output, we can incorporate that output as a signal of network authority (the rating agency's judgment) rather than raw data requiring interpretation.
 
 #### Principle 7: Minimal Direct Inquiry
 
@@ -131,11 +131,11 @@ These questions are optional inputs. A DSI model must be capable of producing a 
 
 Misrepresentation in direct inquiry responses is subject to standard policy terms regarding material misstatement, providing natural enforcement through policy cancellation risk.
 
-#### Principle 8: Organizational-Level Assessment
+#### Principle 8: Organisational-Level Assessment
 
 **Parent behavior indicates subsidiary and asset behavior.**
 
-DSI assesses risk at the organizational level. The premise: an organization's culture, governance, and operational discipline propagate throughout its operations. A well-managed parent is likely to have well-managed subsidiaries and assets.
+DSI assesses risk at the organisational level. The premise: an organisation's culture, governance, and operational discipline propagate throughout its operations. A well-managed parent is likely to have well-managed subsidiaries and assets.
 
 This enables scalable assessment without requiring individual analysis of every vessel, facility, subsidiary, or policy. Asset-specific telemetry (AIS, satellite imagery) is used to validate organizational behavior patterns, not to price individual assets.
 
@@ -311,7 +311,7 @@ Every DSI pricing model must conform to the following architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     SIGNAL COLLECTION LAYER                      │
+│                     SIGNAL COLLECTION LAYER                     │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
 │  │ Network  │ │Technical │ │ Corporate│ │  Public  │    ...     │
 │  │Authority │ │  Infra   │ │ Footprint│ │ Records  │            │
@@ -320,39 +320,39 @@ Every DSI pricing model must conform to the following architecture:
         │            │            │            │
         ▼            ▼            ▼            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      SIGNAL SCORING LAYER                        │
-│         Each signal → Normalised score (0-100)                   │
-│         Defined algorithm, no subjective judgment                │
+│                      SIGNAL SCORING LAYER                       │
+│         Each signal → Normalised score (0-100)                  │
+│         Defined algorithm, no subjective judgment               │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    COMPOSITE SCORING LAYER                       │
-│         Weighted combination → Composite score (0-1000)          │
-│         Category weights defined per line of business            │
+│                    COMPOSITE SCORING LAYER                      │
+│         Weighted combination → Composite score (0-1000)         │
+│         Category weights defined per line of business           │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      TIER ASSIGNMENT LAYER                       │
-│         Score thresholds → Risk tier (1-5)                       │
-│         Tier determines underwriting action                      │
+│                      TIER ASSIGNMENT LAYER                      │
+│         Score thresholds → Risk tier (1-5)                      │
+│         Tier determines underwriting action                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                       PRICING LAYER                              │
-│         Tier + Industry + Size → Base price                      │
-│         Limited adjustments for critical factors only            │
+│                       PRICING LAYER                             │
+│         Tier + Industry + Size → Base price                     │
+│         Limited adjustments for critical factors only           │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                       DECISION LAYER                             │
-│         Tier 1-2: Auto-approve                                   │
-│         Tier 3: Auto-approve with conditions                     │
-│         Tier 4: Manual review                                    │
-│         Tier 5: Decline or heavy manual review                   │
+│                       DECISION LAYER                            │
+│         Tier 1-2: Auto-approve                                  │
+│         Tier 3:   Auto-approve with conditions                  │
+│         Tier 4:   Manual review                                 │
+│         Tier 5:   Decline or heavy manual review                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
