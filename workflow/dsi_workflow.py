@@ -15,12 +15,21 @@ Author: John Walker
 Version: 1.0.0
 """
 
+import argparse 
+import json 
+import yaml 
+import os 
+import sys 
+from pathlib import Path 
 import uuid
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Callable, Any, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dsi_persistence import (
     DSIPersistenceService,
@@ -68,7 +77,7 @@ class LimitBandingConfig:
     def __init__(self, config_path: Optional[str] = None):
         if config_path is None:
             # Default to file in same directory as this script
-            config_path = Path(__file__).parent / "dsi_coverage_limit_bands.yaml"
+            config_path = Path(__file__).parent /"config" / "dsi_coverage_limit_bands.yaml"
 
         self.config_path = Path(config_path)
         self.config = self._load_config()
