@@ -1,6 +1,16 @@
-# DSI Test Framework
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## Overview
+## Testing Framework
+
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Core functionality|
+
+---
+
+### Overview
 
 Comprehensive test suite for Digital Signal Intelligence covering:
 
@@ -8,7 +18,7 @@ Comprehensive test suite for Digital Signal Intelligence covering:
 2. **Functional Tests** - Pricing logic, tier assignment, calculations
 3. **Actuarial Validity Tests** - Risk differentiation, pricing relativities
 
-## Architecture
+### Architecture
 
 ```
 tests/
@@ -27,14 +37,14 @@ tests/
     └── ... (other models)
 ```
 
-## Running Tests
+### Running Tests
 
-### Run All Tests
+#### Run All Tests
 ```bash
 pytest -v
 ```
 
-### Run Specific Coverage
+#### Run Specific Coverage
 ```bash
 # Cyber only
 pytest models/cyber/tests/ -v
@@ -46,12 +56,12 @@ pytest -v -k "actuarial"
 pytest -v -k "structure"
 ```
 
-### Run with Coverage
+#### Run with Coverage
 ```bash
 pytest --cov=models --cov-report=html --cov-report=term
 ```
 
-### Run Markers
+#### Run Markers
 ```bash
 # Integration tests
 pytest -v -m integration
@@ -60,9 +70,9 @@ pytest -v -m integration
 pytest -v -m "not slow"
 ```
 
-## Test Categories
+### Test Categories
 
-### 1. Structural Tests
+#### 1. Structural Tests
 
 **Purpose:** Ensure models instantiate correctly and have expected structure
 
@@ -79,7 +89,7 @@ def test_engine_instantiates(self):
     assert engine is not None
 ```
 
-### 2. Functional Tests
+#### 2. Functional Tests
 
 **Purpose:** Verify pricing logic works correctly
 
@@ -96,7 +106,7 @@ def test_premium_scales_with_limit(self, average_cyber_entity, limit):
     # Test doubling limit doubles premium (roughly)
 ```
 
-### 3. Actuarial Validity Tests
+#### 3. Actuarial Validity Tests
 
 **Purpose:** Ensure pricing differentiates risk appropriately
 
@@ -112,9 +122,9 @@ def test_poor_security_costs_more(self, excellent_cyber_entity, poor_cyber_entit
     # Poor security should cost at least 30% more
 ```
 
-## Test Fixtures
+### Test Fixtures
 
-### Entity Profiles
+#### Entity Profiles
 
 Pre-defined test entities with known characteristics:
 
@@ -138,7 +148,7 @@ def excellent_cyber_entity():
 - `WELL_CAPITALIZED` - For FI testing
 - `UNDERCAPITALIZED` - For FI testing
 
-### Test Data Generator
+#### Test Data Generator
 
 Creates consistent test signals:
 
@@ -149,9 +159,9 @@ signals = TestDataGenerator.generate_cyber_signals(
 # Returns: {"security_rating": {"score": 42, "grade": "D"}, ...}
 ```
 
-## Base Test Classes
+### Base Test Classes
 
-### BaseStructuralTest
+#### BaseStructuralTest
 
 Helper methods for structural validation:
 
@@ -163,7 +173,7 @@ class MyStructuralTests(BaseStructuralTest):
         self.verify_return_type(value, expected_type)
 ```
 
-### BaseFunctionalTest
+#### BaseFunctionalTest
 
 Helper methods for functional validation:
 
@@ -176,7 +186,7 @@ class MyFunctionalTests(BaseFunctionalTest):
         self.assert_premium_reasonable(premium, limit)
 ```
 
-### BaseActuarialTest
+#### BaseActuarialTest
 
 Helper methods for actuarial validation:
 
@@ -189,9 +199,9 @@ class MyActuarialTests(BaseActuarialTest):
         self.assert_limit_scaling(prem_low, prem_high, limit_low, limit_high)
 ```
 
-## Assertions
+### Assertions
 
-### TestAssertions
+#### TestAssertions
 
 Common validation checks:
 
@@ -203,7 +213,7 @@ TestAssertions.assert_valid_tier_label(tier, label)
 TestAssertions.assert_flags_consistent(score, green, red)
 ```
 
-## Test Coverage Status
+### Test Coverage Status
 
 | Model | Structural | Functional | Actuarial | Total Tests |
 |-------|-----------|------------|-----------|-------------|
@@ -215,7 +225,7 @@ TestAssertions.assert_flags_consistent(score, green, red)
 | PI | 🔄 Pending | 🔄 Pending | 🔄 Pending | 0 |
 | Aerospace | 🔄 Pending | 🔄 Pending | 🔄 Pending | 0 |
 
-## Example Test Output
+### Example Test Output
 
 ```bash
 $ pytest models/cyber/tests/test_dsi_cyber_pricing.py -v
@@ -232,9 +242,9 @@ test_dsi_cyber_pricing.py::TestCyberActuarial::test_breach_history_impact PASSED
 ======================== 26 passed in 2.34s ========================
 ```
 
-## Writing New Tests
+### Writing New Tests
 
-### 1. Structural Test Template
+#### 1. Structural Test Template
 
 ```python
 class TestMyModelStructure(BaseStructuralTest):
@@ -251,7 +261,7 @@ class TestMyModelStructure(BaseStructuralTest):
         self.verify_dataclass_structure(profile, required_fields)
 ```
 
-### 2. Functional Test Template
+#### 2. Functional Test Template
 
 ```python
 class TestMyModelFunctional(BaseFunctionalTest):
@@ -269,7 +279,7 @@ class TestMyModelFunctional(BaseFunctionalTest):
         TestAssertions.assert_valid_tier(result.tier)
 ```
 
-### 3. Actuarial Test Template
+#### 3. Actuarial Test Template
 
 ```python
 class TestMyModelActuarial(BaseActuarialTest):
@@ -287,9 +297,9 @@ class TestMyModelActuarial(BaseActuarialTest):
         )
 ```
 
-## CI/CD Integration
+### CI/CD Integration
 
-### GitHub Actions
+#### GitHub Actions
 
 The test suite runs automatically on:
 - Push to any branch
@@ -306,9 +316,9 @@ The test suite runs automatically on:
   uses: codecov/codecov-action@v3
 ```
 
-## Best Practices
+### Best Practices
 
-### 1. Test Naming
+#### 1. Test Naming
 
 ```python
 def test_<what>_<condition>_<expected>():
@@ -320,7 +330,7 @@ Examples:
 - `test_tier_assignment_follows_score_ranges()`
 - `test_deductible_credit_reduces_premium()`
 
-### 2. Test Independence
+#### 2. Test Independence
 
 Each test should be independent:
 
@@ -334,7 +344,7 @@ def teardown_method(self):
     pass  # Clean up if needed
 ```
 
-### 3. Clear Assertions
+#### 3. Clear Assertions
 
 Use descriptive assertion messages:
 
@@ -343,7 +353,7 @@ assert result.tier == 2, \
     f"Expected tier 2, got {result.tier} with score {result.composite_score}"
 ```
 
-### 4. Parametrized Tests
+#### 4. Parametrized Tests
 
 Test multiple scenarios efficiently:
 
@@ -358,9 +368,9 @@ def test_minimum_premiums(self, limit, expected_min):
     assert result.gross_premium >= expected_min
 ```
 
-## Troubleshooting
+### Troubleshooting
 
-### Import Errors
+#### Import Errors
 
 If you see `ModuleNotFoundError`:
 
@@ -372,11 +382,11 @@ cd /home/user/digital-signal-intelligence
 python -m pytest models/cyber/tests/test_dsi_cyber_pricing.py
 ```
 
-### Fixture Not Found
+#### Fixture Not Found
 
 Ensure `conftest.py` is in the `tests/` directory and pytest can find it.
 
-### Test Failures
+#### Test Failures
 
 Run with verbose output and traceback:
 
@@ -384,7 +394,7 @@ Run with verbose output and traceback:
 pytest -vv --tb=long models/cyber/tests/test_dsi_cyber_pricing.py
 ```
 
-## Future Enhancements
+### Future Enhancements
 
 - [ ] Add property-based testing with Hypothesis
 - [ ] Add mutation testing with mutmut
@@ -393,7 +403,7 @@ pytest -vv --tb=long models/cyber/tests/test_dsi_cyber_pricing.py
 - [ ] Add stress tests for high volumes
 - [ ] Add comparative tests (model vs model)
 
-## Contact
+### Contact
 
 For questions about the test framework:
 - See main CONTRIBUTING.md
