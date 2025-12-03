@@ -540,10 +540,10 @@ class TestComparisons:
 
 
 # =============================================================================
-# PARAMETRIZED TEST DATA
+# PARAMETRISED TEST DATA
 # =============================================================================
 
-# Coverage types for parametrized tests
+# Coverage types for parametrised tests
 COVERAGE_TYPES = ["cyber", "fi", "do", "energy", "marine", "pi", "aerospace"]
 
 # Test limits by coverage type
