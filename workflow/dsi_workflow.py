@@ -68,7 +68,7 @@ class LimitBandingConfig:
     def __init__(self, config_path: Optional[str] = None):
         if config_path is None:
             # Default to file in same directory as this script
-            config_path = Path(__file__).parent / "coverage_limit_bands.yaml"
+            config_path = Path(__file__).parent / "dsi_coverage_limit_bands.yaml"
 
         self.config_path = Path(config_path)
         self.config = self._load_config()
