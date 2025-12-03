@@ -718,7 +718,7 @@ class DSIWorkflow:
         return self.persistence.quote_repo.get_analytics(coverage_type, days)
 
 # =============================================================================
-# ASSESSMENT GENERATOR
+# ENTITY ONLY ASSESSMENT GENERATOR
 # =============================================================================
 
 @dataclass
