@@ -6,7 +6,7 @@ Convenient test runner with presets for different test scenarios.
 
 Usage:
     python tests/run_tests.py --all              # All tests
-    python tests/run_tests.py --cyber            # Cyber model only
+    python tests/run_tests.py --cyber            # Cyber model only, alter by model name
     python tests/run_tests.py --structural       # Structural tests only
     python tests/run_tests.py --actuarial        # Actuarial tests only
     python tests/run_tests.py --coverage         # With coverage report
@@ -41,21 +41,27 @@ def main():
     # Test selection
     parser.add_argument("--all", action="store_true",
                        help="Run all tests")
+    parser.add_argument("--aerospace", action="store_true",
+                       help="Run aerospace model tests only")
     parser.add_argument("--cyber", action="store_true",
                        help="Run cyber model tests only")
-    parser.add_argument("--fi", action="store_true",
-                       help="Run FI model tests only")
     parser.add_argument("--do", action="store_true",
                        help="Run D&O model tests only")
     parser.add_argument("--energy", action="store_true",
                        help="Run energy model tests only")
+    parser.add_argument("--fi", action="store_true",
+                       help="Run FI model tests only")
     parser.add_argument("--marine", action="store_true",
                        help="Run marine model tests only")
     parser.add_argument("--pi", action="store_true",
                        help="Run PI model tests only")
-    parser.add_argument("--aerospace", action="store_true",
-                       help="Run aerospace model tests only")
-
+    parser.add_argument("--portfolio", action="store_true",
+                       help="Run Portfolio model tests only")
+    parser.add_argument("--signal", action="store_true",
+                       help="Run Signal Collection model tests only")
+    parser.add_argument("--website", action="store_true",
+                       help="Run Website Discovery model tests only")
+    
     # Test type selection
     parser.add_argument("--structural", action="store_true",
                        help="Run structural tests only")
@@ -90,20 +96,26 @@ def main():
         pytest_args.append("-v")
 
     # Model selection
-    if args.cyber:
+    if args.aerospace:
+        pytest_args.append("models/aerospace/tests/")
+    elif args.cyber:
         pytest_args.append("models/cyber/tests/")
-    elif args.fi:
-        pytest_args.append("models/financial_institutions/tests/")
     elif args.do:
         pytest_args.append("models/d&o/tests/")
     elif args.energy:
         pytest_args.append("models/energy/tests/")
+    elif args.fi:
+        pytest_args.append("models/financial_insitutions/tests/")
     elif args.marine:
         pytest_args.append("models/marine/tests/")
     elif args.pi:
         pytest_args.append("models/pi/tests/")
-    elif args.aerospace:
-        pytest_args.append("models/aerospace/tests/")
+    elif args.portfolio:
+        pytest_args.append("models/portfolio/tests/")
+    elif args.signal_collection:
+        pytest_args.append("models/signal_collection/tests/")
+    elif args.website_discovery:
+        pytest_args.append("models/website_discovery/tests/")        
     elif args.all:
         pytest_args.append("models/")
     else:
@@ -137,8 +149,26 @@ def main():
 
     # Run tests
     description = "DSI Tests"
-    if args.cyber:
+    if args.aerospace:
+        description = "Aerospace Model Tests"
+    elif args.cyber:
         description = "Cyber Model Tests"
+    elif args.do:
+        description = "DO Model Tests"
+    elif args.energy:
+        description = "Energy Model Tests"
+    elif args.fi:
+        description = "FI Model Tests"
+    elif args.marine:
+        description = "Marine Model Tests"
+    elif args.pi:
+        description = "PI Model Tests"
+    elif args.portfolio:
+        description = "Portfolio Model Tests"
+    elif args.signal:
+        description = "Signal Collection Model Tests"
+    elif args.website:
+        description = "Website Discovery Model Tests"        
     elif args.actuarial:
         description = "Actuarial Validity Tests"
     elif args.structural:
