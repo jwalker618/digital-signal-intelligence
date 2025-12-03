@@ -23,17 +23,13 @@ Comprehensive test suite for Digital Signal Intelligence covering:
 ```
 tests/
 ├── conftest.py                    # Base classes, fixtures, test data generators
-├── README_TEST_FRAMEWORK.md       # This file
+├── README.md                      # This file
 ├── run_tests.py                   # Test runner script
 └── models/
+    ├── aerospace/tests/
+    │   └── dsi_aerospace_cyber_pricing.py    
     ├── cyber/tests/
-    │   └── test_dsi_cyber_pricing.py    # 26 tests
-    ├── fi/tests/
-    │   └── test_dsi_fi_pricing.py
-    ├── do/tests/
-    │   └── test_dsi_do_pricing.py
-    ├── energy/tests/
-    │   └── test_dsi_energy_pricing.py
+    │   └── dsi_test_cyber_pricing.py
     └── ... (other models)
 ```
 
