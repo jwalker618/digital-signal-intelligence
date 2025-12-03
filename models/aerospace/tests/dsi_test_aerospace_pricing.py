@@ -7,7 +7,7 @@ Comprehensive test suite covering:
 2. Functional tests (pricing logic, tier assignment)
 3. Actuarial validity tests (risk differentiation)
 
-Author: DSI Framework
+Author: John Walker
 Version: 1.0.0
 """
 
