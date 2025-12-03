@@ -717,6 +717,126 @@ class DSIWorkflow:
         """Get workflow analytics."""
         return self.persistence.quote_repo.get_analytics(coverage_type, days)
 
+
+# =============================================================================
+# FACTORY AND INITIALIZATION
+# =============================================================================
+
+def create_workflow(storage_type: str = "memory", 
+                    storage_config: Optional[Dict] = None) -> DSIWorkflow:
+    """
+    Factory function to create a configured workflow.
+    
+    Args:
+        storage_type: "memory", "redis", or "postgres"
+        storage_config: Configuration for storage backend
+    
+    Returns:
+        Configured DSIWorkflow instance
+    """
+    # Create storage backend
+    if storage_type == "memory":
+        storage = InMemoryStorage()
+    elif storage_type == "redis":
+        from redis_storage import create_redis_storage
+        storage = create_redis_storage(storage_config or {})
+    elif storage_type == "postgres":
+        from postgres_storage import create_postgres_storage
+        storage = create_postgres_storage(storage_config or {})
+    else:
+        raise ValueError(f"Unknown storage type: {storage_type}")
+    
+    # Create persistence service
+    persistence = DSIPersistenceService(storage)
+    
+    # Create signal extractor
+    extractor = MockSignalExtractor(persistence.signal_cache)
+    
+    # Create workflow
+    return DSIWorkflow(persistence, extractor)
+
+
+def initialize_models(workflow: DSIWorkflow):
+    """Initialize default models for all coverage types."""
+    
+    coverage_configs = {
+        "cyber": {
+            "name": "DSI Cyber Liability Model",
+            "base_rate": 2500,
+            "min_premium": 5000,
+            "signal_requirements": [
+                "security_rating", "vulnerability_count", "breach_history",
+                "compliance_status", "technology_stack", "phishing_susceptibility",
+                "patch_cadence", "endpoint_protection",
+            ],
+        },
+        "fi": {
+            "name": "DSI Financial Institutions Model",
+            "base_rate": 1800,
+            "min_premium": 15000,
+            "signal_requirements": [
+                "financial_strength", "credit_rating", "regulatory_actions",
+                "litigation_history", "compliance_status", "security_rating",
+            ],
+        },
+        "do": {
+            "name": "DSI Directors & Officers Model",
+            "base_rate": 3500,
+            "min_premium": 10000,
+            "signal_requirements": [
+                "financial_strength", "executive_turnover", "stock_volatility",
+                "shareholder_activism", "board_composition", "litigation_history",
+            ],
+        },
+        "energy": {
+            "name": "DSI Energy Model",
+            "base_rate": 5000,
+            "min_premium": 25000,
+            "signal_requirements": [
+                "safety_record", "environmental_violations", "equipment_age",
+                "maintenance_record", "compliance_status", "financial_strength",
+            ],
+        },
+        "pi": {
+            "name": "DSI Professional Indemnity Model",
+            "base_rate": 2000,
+            "min_premium": 3000,
+            "signal_requirements": [
+                "compliance_status", "litigation_history", "years_in_business",
+                "employee_count", "revenue_trend",
+            ],
+        },
+    }
+    
+    for coverage_type, config in coverage_configs.items():
+        model = ModelVersion(
+            model_id=str(uuid.uuid4()),
+            version="2.0.0",
+            coverage_type=coverage_type,
+            name=config["name"],
+            description=f"Production {config['name']} with DSI signals",
+            status=ModelStatus.TESTING,
+            created_at=datetime.utcnow(),
+            created_by="system",
+            config={
+                "base_rate": config["base_rate"],
+                "min_premium": config["min_premium"],
+                "max_tier_modifier": 3.0,
+            },
+            signal_requirements=config["signal_requirements"],
+            thresholds={
+                "tier_1": 800,
+                "tier_2": 650,
+                "tier_3": 500,
+                "tier_4": 350,
+            },
+            checksum="init",
+        )
+        
+        workflow.persistence.model_registry.register_model(model)
+        workflow.persistence.model_registry.activate_model(coverage_type, "2.0.0")
+        logger.info(f"Initialized model: {coverage_type} v2.0.0")
+
 # =============================================================================
 # ENTITY ONLY ASSESSMENT GENERATOR
 # =============================================================================
@@ -1034,125 +1154,6 @@ class EntityAssessmentGenerator:
             logger.info(f"Results exported to: {output_file}")
 
         return output
-
-# =============================================================================
-# FACTORY AND INITIALIZATION
-# =============================================================================
-
-def create_workflow(storage_type: str = "memory", 
-                    storage_config: Optional[Dict] = None) -> DSIWorkflow:
-    """
-    Factory function to create a configured workflow.
-    
-    Args:
-        storage_type: "memory", "redis", or "postgres"
-        storage_config: Configuration for storage backend
-    
-    Returns:
-        Configured DSIWorkflow instance
-    """
-    # Create storage backend
-    if storage_type == "memory":
-        storage = InMemoryStorage()
-    elif storage_type == "redis":
-        from redis_storage import create_redis_storage
-        storage = create_redis_storage(storage_config or {})
-    elif storage_type == "postgres":
-        from postgres_storage import create_postgres_storage
-        storage = create_postgres_storage(storage_config or {})
-    else:
-        raise ValueError(f"Unknown storage type: {storage_type}")
-    
-    # Create persistence service
-    persistence = DSIPersistenceService(storage)
-    
-    # Create signal extractor
-    extractor = MockSignalExtractor(persistence.signal_cache)
-    
-    # Create workflow
-    return DSIWorkflow(persistence, extractor)
-
-
-def initialize_models(workflow: DSIWorkflow):
-    """Initialize default models for all coverage types."""
-    
-    coverage_configs = {
-        "cyber": {
-            "name": "DSI Cyber Liability Model",
-            "base_rate": 2500,
-            "min_premium": 5000,
-            "signal_requirements": [
-                "security_rating", "vulnerability_count", "breach_history",
-                "compliance_status", "technology_stack", "phishing_susceptibility",
-                "patch_cadence", "endpoint_protection",
-            ],
-        },
-        "fi": {
-            "name": "DSI Financial Institutions Model",
-            "base_rate": 1800,
-            "min_premium": 15000,
-            "signal_requirements": [
-                "financial_strength", "credit_rating", "regulatory_actions",
-                "litigation_history", "compliance_status", "security_rating",
-            ],
-        },
-        "do": {
-            "name": "DSI Directors & Officers Model",
-            "base_rate": 3500,
-            "min_premium": 10000,
-            "signal_requirements": [
-                "financial_strength", "executive_turnover", "stock_volatility",
-                "shareholder_activism", "board_composition", "litigation_history",
-            ],
-        },
-        "energy": {
-            "name": "DSI Energy Model",
-            "base_rate": 5000,
-            "min_premium": 25000,
-            "signal_requirements": [
-                "safety_record", "environmental_violations", "equipment_age",
-                "maintenance_record", "compliance_status", "financial_strength",
-            ],
-        },
-        "pi": {
-            "name": "DSI Professional Indemnity Model",
-            "base_rate": 2000,
-            "min_premium": 3000,
-            "signal_requirements": [
-                "compliance_status", "litigation_history", "years_in_business",
-                "employee_count", "revenue_trend",
-            ],
-        },
-    }
-    
-    for coverage_type, config in coverage_configs.items():
-        model = ModelVersion(
-            model_id=str(uuid.uuid4()),
-            version="2.0.0",
-            coverage_type=coverage_type,
-            name=config["name"],
-            description=f"Production {config['name']} with DSI signals",
-            status=ModelStatus.TESTING,
-            created_at=datetime.utcnow(),
-            created_by="system",
-            config={
-                "base_rate": config["base_rate"],
-                "min_premium": config["min_premium"],
-                "max_tier_modifier": 3.0,
-            },
-            signal_requirements=config["signal_requirements"],
-            thresholds={
-                "tier_1": 800,
-                "tier_2": 650,
-                "tier_3": 500,
-                "tier_4": 350,
-            },
-            checksum="init",
-        )
-        
-        workflow.persistence.model_registry.register_model(model)
-        workflow.persistence.model_registry.activate_model(coverage_type, "2.0.0")
-        logger.info(f"Initialized model: {coverage_type} v2.0.0")
 
 
 # =============================================================================
