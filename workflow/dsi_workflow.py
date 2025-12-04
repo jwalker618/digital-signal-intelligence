@@ -760,6 +760,15 @@ def initialize_models(workflow: DSIWorkflow):
     """Initialize default models for all coverage types."""
     
     coverage_configs = {
+        "aerospace": {
+            "name": "DSI Aerospace Model",
+            "base_rate": 5000,
+            "min_premium": 25000,
+            "signal_requirements": [
+                "safety_record", "environmental_violations", "equipment_age",
+                "maintenance_record", "compliance_status", "financial_strength",
+            ],
+        },
         "cyber": {
             "name": "DSI Cyber Liability Model",
             "base_rate": 2500,
@@ -768,15 +777,6 @@ def initialize_models(workflow: DSIWorkflow):
                 "security_rating", "vulnerability_count", "breach_history",
                 "compliance_status", "technology_stack", "phishing_susceptibility",
                 "patch_cadence", "endpoint_protection",
-            ],
-        },
-        "fi": {
-            "name": "DSI Financial Institutions Model",
-            "base_rate": 1800,
-            "min_premium": 15000,
-            "signal_requirements": [
-                "financial_strength", "credit_rating", "regulatory_actions",
-                "litigation_history", "compliance_status", "security_rating",
             ],
         },
         "do": {
@@ -790,6 +790,24 @@ def initialize_models(workflow: DSIWorkflow):
         },
         "energy": {
             "name": "DSI Energy Model",
+            "base_rate": 5000,
+            "min_premium": 25000,
+            "signal_requirements": [
+                "safety_record", "environmental_violations", "equipment_age",
+                "maintenance_record", "compliance_status", "financial_strength",
+            ],
+        },
+        "fi": {
+            "name": "DSI Financial Institutions Model",
+            "base_rate": 1800,
+            "min_premium": 15000,
+            "signal_requirements": [
+                "financial_strength", "credit_rating", "regulatory_actions",
+                "litigation_history", "compliance_status", "security_rating",
+            ],
+        },
+        "marine": {
+            "name": "DSI Marine Model",
             "base_rate": 5000,
             "min_premium": 25000,
             "signal_requirements": [
@@ -1155,9 +1173,8 @@ class EntityAssessmentGenerator:
 
         return output
 
-
 # =============================================================================
-# DEMONSTRATION
+# CREATE DEMONSTRATIONS
 # =============================================================================
 
 if __name__ == "__main__":
