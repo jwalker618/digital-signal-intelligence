@@ -6,16 +6,19 @@ Provides foundational test infrastructure for structural, functional,
 and actuarial validity testing.
 
 Author: John Walker
-Version: 1.0.0
+Version: 1.1.0
+
 """
+
 
 import pytest
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
+from typing import Dict, List, Any, Optional, Tuple
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
+from abs import ABC, abstractmethod
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
