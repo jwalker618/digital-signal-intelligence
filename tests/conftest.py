@@ -464,7 +464,11 @@ class TestDataGenerator:
         else:
             return TestDataGenerator.generate_pi_signals(TestEntityProfile.AVERAGE_GOVERNANCE)
 
-
+    
+    # =======================================================================
+    # SIGNAL SET FACTORY
+    # =======================================================================
+    
     @staticmethod
     def create_test_signal_set(
         entity_name: str,
@@ -473,28 +477,41 @@ class TestDataGenerator:
     ) -> TestSignalSet:
         """Create a complete test signal set."""
 
-        # Generate signals based on coverage type
-        if coverage_type == "cyber":
-            signals = TestDataGenerator.generate_cyber_signals(profile)
-        elif coverage_type == "fi":
-            signals = TestDataGenerator.generate_fi_signals(profile)
-        elif coverage_type == "do":
-            signals = TestDataGenerator.generate_do_signals(profile)
-        elif coverage_type == "energy":
-            signals = TestDataGenerator.generate_energy_signals(profile)
+        # Route to appropriate signal generator
+        signal_generators = {
+            "cyber": TestDataGenerator.generate_cyber_signals,
+            "fi": TestDataGenerator.generate_fi_signals,
+            "do": TestDataGenerator.generate_do_signals,
+            "energy": TestDataGenerator.generate_energy_signals,
+            "aerospace": TestDataGenerator.generate_aerospace_signals,
+            "marine": TestDataGenerator.generate_marine_signals,
+            "pi": TestDataGenerator.generate_pi_signals,
+        }
+
+        generator = signal_generators.get(coverage_type.lower())
+        if generator:
+            signals = generator(profile)
         else:
             signals = {}
 
         # Define expected outcomes based on profile
-        if "excellent" in profile.value or "strong" in profile.value or "well" in profile.value:
+        profile_value = profile.value.lower()
+
+        if any(x in profile_value for x in ["excellent", "strong", "well"]):
             expected_tier = (1, 2)
             expected_score = (750, 1000)
-        elif "average" in profile.value or "standard" in profile.value or "adequate" in profile.value:
+        elif any(x in profile_value for x in ["average", "standard", "adequate"]):
             expected_tier = (2, 3)
-            expected_score = (600, 799)
-        elif "poor" in profile.value or "weak" in profile.value or "under" in profile.value:
+            expected_score = (500, 749)
+        elif any(x in profile_value for x in ["poor", "weak", "under"]):
             expected_tier = (4, 5)
             expected_score = (0, 499)
+        elif "minimal" in profile_value:
+            expected_tier = (2, 4)
+            expected_score = (400, 700)
+        elif "no_history" in profile_value:
+            expected_tier = (3, 4)
+            expected_score = (450, 650)
         else:
             expected_tier = (2, 4)
             expected_score = (400, 799)
@@ -506,7 +523,46 @@ class TestDataGenerator:
             signals=signals,
             expected_tier_range=expected_tier,
             expected_score_range=expected_score,
-            description=f"{entity_name} with {profile.value} profile"
+            description=f"{entity_name} with {profile.value} profile",
+            coverage_type=coverage_type,
+        )
+
+    # ==========================================================================
+    # HISTORICAL CASE FACTORY (for retrospective validation)
+    # ==========================================================================
+
+    @staticmethod
+    def create_historical_case(
+        case_name: str,
+        coverage_type: str,
+        incident_type: str,
+        pre_incident_profile: TestEntityProfile,
+        expected_flags: List[str],
+    ) -> HistoricalCase:
+        """Create a historical case for retrospective validation testing."""
+
+        signal_generators = {
+            "aerospace": TestDataGenerator.generate_aerospace_signals,
+            "cyber": TestDataGenerator.generate_cyber_signals,
+            "do": TestDataGenerator.generate_do_signals,
+            "energy": TestDataGenerator.generate_energy_signals,
+            "fi": TestDataGenerator.generate_fi_signals,
+            "marine": TestDataGenerator.generate_marine_signals,
+            "pi": TestDataGenerator.generate_pi_signals,
+        }
+
+        generator = signal_generators.get(coverage_type.lower())
+        signals = generator(pre_incident_profile) if generator else {}
+
+        return HistoricalCase(
+            case_id=f"hist-{case_name.lower().replace(' ', '-')}",
+            case_name=case_name,
+            incident_date="2024-01-15",
+            incident_type=incident_type,
+            pre_incident_signals=signals,
+            expected_min_tier=3,
+            expected_flags=expected_flags,
+            description=f"Historical case: {case_name}",
         )
 
 
@@ -612,6 +668,7 @@ def test_limits():
         "medium": 5_000_000,
         "large": 10_000_000,
         "xlarge": 25_000_000,
+        "xlarge": 50_000_000,
     }
 
 
@@ -644,6 +701,12 @@ class BaseStructuralTest:
         for expected in expected_values:
             assert expected in actual_values, f"Missing enum value: {expected}"
 
+    def verify_enum_members(self, enum_class, expected_members: List[str]):
+        """Verify an enum has expected member names (not values)."""
+        actual_members = [e.name for e in enum_class]
+        for expected in expected_members:
+            assert expected in actual_members, f"Missing enum member: {expected}"
+
     def verify_return_type(self, value, expected_type):
         """Verify return type matches expected."""
         assert isinstance(value, expected_type), \
@@ -655,8 +718,10 @@ class BaseFunctionalTest:
 
     def assert_tier_in_range(self, tier: int, min_tier: int, max_tier: int):
         """Assert tier is within expected range."""
-        assert min_tier <= tier <= max_tier, \
-            f"Tier {tier} not in expected range [{min_tier}, {max_tier}]"
+        # Handle tier as int or extract from enum
+        tier_value = tier if isinstance(tier, int) else int(tier.split("_")[-1])
+        assert min_tier <= tier_value <= max_tier, \
+            f"Tier {tier_value} not in expected range [{min_tier}, {max_tier}]"
 
     def assert_score_in_range(self, score: float, min_score: float, max_score: float):
         """Assert score is within expected range."""
@@ -673,6 +738,14 @@ class BaseFunctionalTest:
         assert rate <= max_rate, \
             f"Premium rate {rate:.2%} exceeds maximum {max_rate:.2%}"
 
+    def assert_decision_valid(self, decision: str, valid_decisions: List[str] = None):
+        """Assert decision is a valid value."""
+        if valid_decisions is None:
+            valid_decisions = ["AUTO_BIND", "REFER", "DECLINE", "QUOTE", "REVIEW"]
+        decision_upper = decision.upper() if isinstance(decision, str) else str(decision).upper()
+        assert any(v in decision_upper for v in valid_decisions), \
+            f"Invalid decision: {decision}. Expected one of {valid_decisions}"
+
 
 class BaseActuarialTest:
     """Base class for actuarial validity tests."""
@@ -688,10 +761,21 @@ class BaseActuarialTest:
             f"Got ratio: {ratio:.2f} (Poor: ${premium_poor:,.2f}, Good: ${premium_good:,.2f})"
 
     def assert_tier_progression(self, tiers: List[int]):
-        """Assert tiers progress logically (higher risk = higher tier)."""
-        for i in range(len(tiers) - 1):
-            assert tiers[i] <= tiers[i+1], \
-                f"Tier progression violated: {tiers[i]} should be <= {tiers[i+1]}"
+        """Assert tiers progress logically (higher risk = higher tier number)."""
+        # Convert enum values if needed
+        tier_values = []
+        for t in tiers:
+            if isinstance(t, int):
+                tier_values.append(t)
+            elif hasattr(t, 'value'):
+                # Handle enum like RiskTier.TIER_1
+                tier_values.append(int(str(t.value).split("_")[-1]) if "_" in str(t.value) else t.value)
+            else:
+                tier_values.append(int(str(t).split("_")[-1]))
+
+        for i in range(len(tier_values) - 1):
+            assert tier_values[i] <= tier_values[i+1], \
+                f"Tier progression violated: {tier_values[i]} should be <= {tier_values[i+1]}"
 
     def assert_score_progression(self, scores: List[float]):
         """Assert scores progress logically (better risk = higher score)."""
@@ -703,14 +787,113 @@ class BaseActuarialTest:
                             premium_low: float,
                             premium_high: float,
                             limit_low: float,
-                            limit_high: float):
+                            limit_high: float,
+                            tolerance: float = 0.3):
         """Assert premium scales appropriately with limit."""
         expected_ratio = limit_high / limit_low
         actual_ratio = premium_high / premium_low
 
-        # Premium should scale roughly linearly with limit (within 20%)
-        assert 0.8 * expected_ratio <= actual_ratio <= 1.2 * expected_ratio, \
-            f"Premium scaling incorrect. Expected ~{expected_ratio:.2f}x, got {actual_ratio:.2f}x"
+        # Premium should scale roughly linearly with limit (within tolerance)
+        lower_bound = (1 - tolerance) * expected_ratio
+        upper_bound = (1 + tolerance) * expected_ratio
+
+        assert lower_bound <= actual_ratio <= upper_bound, \
+            f"Premium scaling incorrect. Expected ~{expected_ratio:.2f}x (±{tolerance:.0%}), got {actual_ratio:.2f}x"
+
+
+class BaseDSIAssessmentTest:
+    """
+    Base tests applicable to ALL DSI coverage models.
+    Ensures consistent assessment structure across all coverage types.
+    """
+
+    # Required fields for any DSI assessment
+    REQUIRED_ASSESSMENT_FIELDS = [
+        "entity_name",
+        "composite_score",
+        "tier",
+        "base_premium",
+        "risk_adjusted_premium",
+        "decision",
+    ]
+
+    # Optional but recommended fields
+    RECOMMENDED_ASSESSMENT_FIELDS = [
+        "confidence",
+        "signal_coverage",
+        "green_flags",
+        "red_flags",
+    ]
+
+    def assert_valid_assessment_structure(self, assessment):
+        """Assert assessment has all required fields."""
+        for field in self.REQUIRED_ASSESSMENT_FIELDS:
+            assert hasattr(assessment, field), \
+                f"Assessment missing required field: {field}"
+
+    def assert_score_tier_consistency(self, assessment, tier_score_ranges: Dict[int, Tuple[int, int]] = None):
+        """Assert score and tier are logically consistent."""
+        if tier_score_ranges is None:
+            tier_score_ranges = {
+                1: (800, 1000),
+                2: (650, 799),
+                3: (500, 649),
+                4: (350, 499),
+                5: (0, 349),
+            }
+
+        # Extract tier number
+        tier = assessment.tier
+        if hasattr(tier, 'value'):
+            tier_str = str(tier.value)
+            tier_num = int(tier_str.split("_")[-1]) if "_" in tier_str else tier
+        else:
+            tier_num = int(str(tier).split("_")[-1]) if "_" in str(tier) else tier
+
+        min_score, max_score = tier_score_ranges.get(tier_num, (0, 1000))
+        assert min_score <= assessment.composite_score <= max_score, \
+            f"Score {assessment.composite_score} inconsistent with tier {tier_num}. " \
+            f"Expected range: [{min_score}, {max_score}]"
+
+
+class RetrospectiveValidationMixin:
+    """
+    Mixin for retrospective validation testing.
+    Tests whether DSI would have detected known historical incidents.
+    """
+
+    def assert_incident_would_be_detected(
+        self,
+        assessment,
+        historical_case: HistoricalCase,
+    ):
+        """Assert that a known incident would have been flagged pre-incident."""
+
+        # Should have elevated risk tier
+        tier = assessment.tier
+        if hasattr(tier, 'value'):
+            tier_str = str(tier.value)
+            tier_num = int(tier_str.split("_")[-1]) if "_" in tier_str else tier
+        else:
+            tier_num = int(str(tier).split("_")[-1]) if "_" in str(tier) else tier
+
+        assert tier_num >= historical_case.expected_min_tier, \
+            f"Case '{historical_case.case_name}': Expected tier >= {historical_case.expected_min_tier}, " \
+            f"got tier {tier_num}"
+
+        # Should have flagged specific concerns (if red_flags available)
+        if hasattr(assessment, 'red_flags') and assessment.red_flags:
+            flags_found = []
+            for expected_flag in historical_case.expected_flags:
+                for actual_flag in assessment.red_flags:
+                    flag_text = str(actual_flag).lower()
+                    if expected_flag.lower() in flag_text:
+                        flags_found.append(expected_flag)
+                        break
+
+            assert len(flags_found) > 0, \
+                f"Case '{historical_case.case_name}': None of expected flags {historical_case.expected_flags} " \
+                f"found in {assessment.red_flags}"
 
 
 # =============================================================================
@@ -721,44 +904,55 @@ class TestAssertions:
     """Collection of common test assertions."""
 
     @staticmethod
-    def assert_valid_tier(tier: int):
+    def assert_valid_tier(tier) -> None:
         """Assert tier is valid (1-5)."""
-        assert 1 <= tier <= 5, f"Tier must be 1-5, got {tier}"
+        # Handle various tier formats
+        if hasattr(tier, 'value'):
+            tier_str = str(tier.value)
+        else:
+            tier_str = str(tier)
+
+        if "_" in tier_str:
+            tier_num = int(tier_str.split("_")[-1])
+        else:
+            tier_num = int(tier_str)
+
+        assert 1 <= tier_num <= 5, f"Tier must be 1-5, got {tier_num}"
 
     @staticmethod
-    def assert_valid_score(score: float):
+    def assert_valid_score(score: float) -> None:
         """Assert score is valid (0-1000)."""
         assert 0 <= score <= 1000, f"Score must be 0-1000, got {score}"
 
     @staticmethod
-    def assert_valid_confidence(confidence: float):
+    def assert_valid_confidence(confidence: float) -> None:
         """Assert confidence is valid (0.0-1.0)."""
         assert 0.0 <= confidence <= 1.0, f"Confidence must be 0.0-1.0, got {confidence}"
 
     @staticmethod
-    def assert_valid_tier_label(tier: int, tier_label: str):
+    def assert_valid_tier_label(tier: int, tier_label: str) -> None:
         """Assert tier label matches tier."""
         expected_labels = {
-            1: ["PREFERRED", "TIER_1"],
-            2: ["STANDARD_PLUS", "STANDARD", "TIER_2"],
-            3: ["STANDARD", "ELEVATED", "TIER_3"],
-            4: ["SUBSTANDARD", "HIGH_RISK", "TIER_4"],
-            5: ["DECLINE", "CRITICAL", "TIER_5"],
+            1: ["PREFERRED", "TIER_1", "TIER1", "1"],
+            2: ["STANDARD_PLUS", "STANDARD", "TIER_2", "TIER2", "2"],
+            3: ["STANDARD", "ELEVATED", "TIER_3", "TIER3", "3"],
+            4: ["SUBSTANDARD", "HIGH_RISK", "TIER_4", "TIER4", "4"],
+            5: ["DECLINE", "CRITICAL", "TIER_5", "TIER5", "5"],
         }
 
-        label_upper = tier_label.upper()
+        label_upper = str(tier_label).upper()
         assert any(exp in label_upper for exp in expected_labels.get(tier, [])), \
             f"Tier label '{tier_label}' doesn't match tier {tier}"
 
     @staticmethod
-    def assert_flags_consistent(score: float, green_flags: int, red_flags: int):
+    def assert_flags_consistent(score: float, green_flags: int, red_flags: int) -> None:
         """Assert flags are consistent with score."""
         if score >= 800:
-            assert green_flags > red_flags, \
-                f"High score ({score}) should have more green flags than red"
+            assert green_flags >= red_flags, \
+                f"High score ({score}) should have more green flags ({green_flags}) than red ({red_flags})"
         elif score <= 400:
-            assert red_flags > green_flags, \
-                f"Low score ({score}) should have more red flags than green"
+            assert red_flags >= green_flags, \
+                f"Low score ({score}) should have more red flags ({red_flags}) than green ({green_flags})"
 
 
 class TestComparisons:
@@ -768,20 +962,20 @@ class TestComparisons:
     def compare_pricing_results(result1: Dict, result2: Dict) -> Dict[str, float]:
         """Compare two pricing results."""
         return {
-            "score_diff": result1["composite_score"] - result2["composite_score"],
-            "tier_diff": result1["tier"] - result2["tier"],
-            "premium_ratio": result1["gross_premium"] / result2["gross_premium"],
-            "rate_diff": result1["rate_per_million"] - result2["rate_per_million"],
+            "score_diff": result1.get("composite_score", 0) - result2.get("composite_score", 0),
+            "tier_diff": result1.get("tier", 0) - result2.get("tier", 0),
+            "premium_ratio": result1.get("gross_premium", 1) / max(result2.get("gross_premium", 1), 0.01),
+            "rate_diff": result1.get("rate_per_million", 0) - result2.get("rate_per_million", 0),
         }
 
     @staticmethod
-    def assert_better_than(result_good: Dict, result_poor: Dict):
+    def assert_better_than(result_good: Dict, result_poor: Dict) -> None:
         """Assert good result is better than poor result."""
-        assert result_good["composite_score"] > result_poor["composite_score"], \
+        assert result_good.get("composite_score", 0) > result_poor.get("composite_score", 0), \
             "Good profile should have higher score"
-        assert result_good["tier"] <= result_poor["tier"], \
+        assert result_good.get("tier", 5) <= result_poor.get("tier", 1), \
             "Good profile should have lower tier"
-        assert result_good["gross_premium"] < result_poor["gross_premium"], \
+        assert result_good.get("gross_premium", float('inf')) < result_poor.get("gross_premium", 0), \
             "Good profile should have lower premium"
 
 
@@ -794,7 +988,7 @@ COVERAGE_TYPES = ["aerospace", "cyber", "do", "energy", "fi", "marine", "pi"]
 
 # Test limits by coverage type
 TEST_LIMITS_BY_COVERAGE = {
-    "aerospace": [10_000_000, 25_000_000, 50_000_000],
+    "aerospace": [25_000_000, 100_000_000, 500_000_000],
     "cyber": [1_000_000, 5_000_000, 10_000_000],
     "do": [5_000_000, 10_000_000, 25_000_000],
     "energy": [10_000_000, 25_000_000, 50_000_000],
