@@ -790,17 +790,18 @@ class TestComparisons:
 # =============================================================================
 
 # Coverage types for parametrised tests
-COVERAGE_TYPES = ["cyber", "fi", "do", "energy", "marine", "pi", "aerospace"]
+COVERAGE_TYPES = ["aerospace", "cyber", "do", "energy", "fi", "marine", "pi"]
 
 # Test limits by coverage type
 TEST_LIMITS_BY_COVERAGE = {
+    "aerospace": [10_000_000, 25_000_000, 50_000_000],
     "cyber": [1_000_000, 5_000_000, 10_000_000],
-    "fi": [5_000_000, 10_000_000, 25_000_000],
     "do": [5_000_000, 10_000_000, 25_000_000],
     "energy": [10_000_000, 25_000_000, 50_000_000],
+    "fi": [5_000_000, 10_000_000, 25_000_000], 
     "marine": [5_000_000, 10_000_000, 25_000_000],
     "pi": [1_000_000, 5_000_000, 10_000_000],
-    "aerospace": [10_000_000, 25_000_000, 50_000_000],
+    
 }
 
 # Profile combinations for actuarial tests
