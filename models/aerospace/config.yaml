@@ -1,0 +1,185 @@
+# DSI Coverage Limit Bandings Configuration
+# ===========================================
+#
+# This file defines the standard limit bandings for each coverage type.
+# The script will automatically generate quotes for each band.
+#
+# Format:
+#   coverage_type:
+#     enabled: true/false
+#     currency: USD|GBP|EUR|etc...
+#     bands:
+#       - limit: amount
+#         label: description
+#         standard_deductible: amount (optional)
+
+aerospace:
+  enabled: true
+  currency: USD
+  bands:
+    - limit: 10000000
+      label: "Small Charter Operator (1-5 aircraft)"
+      standard_deductible: 500000
+    - limit: 25000000
+      label: "Regional Airline (5-20 aircraft)"
+      standard_deductible: 1000000
+    - limit: 50000000
+      label: "National Carrier (20-100 aircraft)"
+      standard_deductible: 2000000
+    - limit: 100000000
+      label: "Major International Carrier (>100 aircraft)"
+      standard_deductible: 5000000
+    - limit: 250000000
+      label: "Global Legacy Carrier"
+      standard_deductible: 10000000
+
+cyber:
+  enabled: true
+  currency: USD
+  bands:
+    - limit: 1000000
+      label: "Small Tech Startup"
+      standard_deductible: 25000
+    - limit: 5000000
+      label: "Mid-Market SME"
+      standard_deductible: 50000
+    - limit: 10000000
+      label: "Large Enterprise"
+      standard_deductible: 100000
+    - limit: 25000000
+      label: "Fortune 500"
+      standard_deductible: 250000
+    - limit: 50000000
+      label: "Mega Cap"
+      standard_deductible: 500000
+
+do:
+  enabled: true
+  currency: USD
+  name: "Directors & Officers"
+  bands:
+    - limit: 5000000
+      label: "Private Company <$50M Revenue"
+      standard_deductible: 100000
+    - limit: 10000000
+      label: "Private Company $50M-$250M Revenue"
+      standard_deductible: 250000
+    - limit: 25000000
+      label: "Public Company <$1B Market Cap"
+      standard_deductible: 500000
+    - limit: 50000000
+      label: "Public Company $1B-$10B Market Cap"
+      standard_deductible: 1000000
+    - limit: 100000000
+      label: "Large Public Company >$10B Market Cap"
+      standard_deductible: 2000000
+
+
+energy:
+  enabled: true
+  currency: USD
+  bands:
+    - limit: 10000000
+      label: "Small E&P / Midstream Operator"
+      standard_deductible: 500000
+    - limit: 25000000
+      label: "Regional Energy Company"
+      standard_deductible: 1000000
+    - limit: 50000000
+      label: "National Energy Company"
+      standard_deductible: 2000000
+    - limit: 100000000
+      label: "Integrated Energy Majors"
+      standard_deductible: 5000000
+    - limit: 250000000
+      label: "Super Majors (Shell, Exxon, BP)"
+      standard_deductible: 10000000
+
+      
+fi:
+  enabled: true
+  currency: USD
+  name: "Financial Institutions"
+  bands:
+    - limit: 5000000
+      label: "Small RIA/Broker-Dealer"
+      standard_deductible: 100000
+    - limit: 10000000
+      label: "Regional Bank"
+      standard_deductible: 250000
+    - limit: 25000000
+      label: "National Bank"
+      standard_deductible: 500000
+    - limit: 50000000
+      label: "Investment Bank"
+      standard_deductible: 1000000
+    - limit: 100000000
+      label: "Global Financial Institution"
+      standard_deductible: 2000000
+
+
+marine:
+  enabled: true
+  currency: USD
+  bands:
+    - limit: 5000000
+      label: "Small Vessel Operator (1-5 vessels)"
+      standard_deductible: 250000
+    - limit: 10000000
+      label: "Regional Fleet (5-20 vessels)"
+      standard_deductible: 500000
+    - limit: 25000000
+      label: "National Fleet (20-50 vessels)"
+      standard_deductible: 1000000
+    - limit: 50000000
+      label: "International Fleet (50-200 vessels)"
+      standard_deductible: 2000000
+    - limit: 100000000
+      label: "Global Shipping Line (>200 vessels)"
+      standard_deductible: 5000000
+
+pi:
+  enabled: true
+  currency: USD
+  name: "Professional Indemnity"
+  bands:
+    - limit: 1000000
+      label: "Solo Practitioner / Micro Firm"
+      standard_deductible: 10000
+    - limit: 2500000
+      label: "Small Firm (<10 professionals)"
+      standard_deductible: 25000
+    - limit: 5000000
+      label: "Medium Firm (10-50 professionals)"
+      standard_deductible: 50000
+    - limit: 10000000
+      label: "Large Firm (50-200 professionals)"
+      standard_deductible: 100000
+    - limit: 25000000
+      label: "National Firm (>200 professionals)"
+      standard_deductible: 250000
+
+
+# Optional: Custom bandings for specific use cases
+custom_bands:
+  # Example: Technology startups specifically
+  cyber_startup:
+    parent: cyber
+    enabled: false
+    bands:
+      - limit: 500000
+        label: "Seed Stage"
+        standard_deductible: 10000
+      - limit: 1000000
+        label: "Series A"
+        standard_deductible: 25000
+      - limit: 2500000
+        label: "Series B"
+        standard_deductible: 50000
+
+# Global defaults
+defaults:
+  term_months: 12
+  market: "us"
+  submission_channel: "api"
+  currency_fallback: "USD"
