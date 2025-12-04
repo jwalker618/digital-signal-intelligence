@@ -6,16 +6,11 @@
 # Format:
 #   coverage_type:
 #     identifier: unique name for this configuration
-#     direct_queries:
-#     standard_features:
-#     signal_groupings:
-#     signal_features
-#     enabled: true/false
-#     currency: USD|GBP|EUR|etc...
-#     bands:
-#       - limit: amount
-#         label: description
-#         standard_deductible: amount (optional)
+#     direct_queries: the list of yes / no questions that are asked which cannot otherwise be observed
+#     standard_features: the normal model feautures with a indicated modifier
+#     signal_groupings: the groups of signal features, their model weight, plus their excellent, average, and poor scores for testing
+#     signal_features: the underlying features of each signal group and their ttl setting
+
 
 aerospace:
   identifier: "general"
@@ -89,54 +84,54 @@ aerospace:
     ]
   signals_feautures:
     network_authority: [
-      "alliance_membership_score",
-      "codeshare_quality_score",
-      "lessor_quality_score",
-      "oem_relationship_score",
-      "mro_quality_score",
+      {item: "alliance_membership_score", ttl: "dynamic"},
+      {item: "codeshare_quality_score", ttl: "dynamic"},
+      {item: "lessor_quality_score", ttl: "dynamic"},
+      {item: "oem_relationship_score", ttl: "dynamic"},
+      {item: "mro_quality_score", ttl: "dynamic"},
     ]
     safety_record: [
-      "accident_history_score",
-      "incident_history_score",
-      "accident_rate_score",
-      "fatality_history_score",
-      "investigation_findings_score",
+      {item: "accident_history_score", ttl: "dynamic"},
+      {item: "incident_history_score", ttl: "dynamic"},
+      {item: "accident_rate_score", ttl: "dynamic"},
+      {item: "fatality_history_score", ttl: "dynamic"},
+      {item: "investigation_findings_score", ttl: "dynamic"},
     ]
     regulatory_compliance: [
-      "certificate_status_score",
-      "enforcement_actions_score",
-      "ad_compliance_score",
-      "iosa_status_score",
-      "ramp_inspection_score",
-      "eu_safety_list_score",
+      {item: "certificate_status_score", ttl: "dynamic"},
+      {item: "enforcement_actions_score", ttl: "dynamic"},
+      {item: "ad_compliance_score", ttl: "dynamic"},
+      {item: "iosa_status_score", ttl: "dynamic"},
+      {item: "ramp_inspection_score", ttl: "dynamic"},
+      {item: "eu_safety_list_score", ttl: "dynamic"},
     ]
     operational_quality: [
-      "otp_score",
-      "dispatch_reliability_score",
-      "training_program_score",
-      "sms_maturity_score",
-      "crew_experience_score",
+      {item: "otp_score", ttl: "dynamic"},
+      {item: "dispatch_reliability_score", ttl: "dynamic"},
+      {item: "training_program_score", ttl: "dynamic"},
+      {item: "sms_maturity_score", ttl: "dynamic"},
+      {item: "crew_experience_score", ttl: "dynamic"},
     ]
     fleet_quality: [
-      "fleet_age_score",
-      "fleet_homogeneity_score",
-      "aircraft_generation_score",
-      "maintenance_program_score",
-      "heavy_check_currency_score",
+      {item: "fleet_age_score", ttl: "dynamic"},
+      {item: "fleet_homogeneity_score", ttl: "dynamic"},
+      {item: "aircraft_generation_score", ttl: "dynamic"},
+      {item: "maintenance_program_score", ttl: "dynamic"},
+      {item: "heavy_check_currency_score", ttl: "dynamic"},
     ]
     financial_stability: [
-      "credit_rating_score",
-      "liquidity_score",
-      "profitability_score",
-      "load_factor_score",
-      "fleet_renewal_score",
+      {item: "credit_rating_score", ttl: "dynamic"},
+      {item: "liquidity_score", ttl: "dynamic"},
+      {item: "profitability_score", ttl: "dynamic"},
+      {item: "load_factor_score", ttl: "dynamic"},
+      {item: "fleet_renewal_score", ttl: "dynamic"},
     ]
     route_risk: [
-      "high_risk_destination_score",
-      "challenging_airport_score",
-      "overwater_exposure_score",
-      "weather_exposure_score",
-      "conflict_zone_score",
+      {item: "high_risk_destination_score", ttl: "dynamic"},
+      {item: "challenging_airport_score", ttl: "dynamic"},
+      {item: "overwater_exposure_score", ttl: "dynamic"},
+      {item: "weather_exposure_score", ttl: "dynamic"},
+      {item: "conflict_zone_score", ttl: "dynamic"},
     ]
   
   
