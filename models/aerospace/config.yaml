@@ -1,11 +1,15 @@
-# DSI Configuration File
+# DSI Model Coverage Configuration File
 # ===========================================
 #
-# This file defines the standard limit bandings for each coverage type.
-# The script will automatically generate quotes for each band.
-#
+# This file defines the created configurations for the aerospace coverage type.
+
 # Format:
 #   coverage_type:
+#     identifier: unique name for this configuration
+#     direct_queries:
+#     standard_features:
+#     signal_groupings:
+#     signal_features
 #     enabled: true/false
 #     currency: USD|GBP|EUR|etc...
 #     bands:
@@ -14,7 +18,7 @@
 #         standard_deductible: amount (optional)
 
 aerospace:
-  model_version: 1
+  identifier: "general"
   direct_queries: [
     "pending_claims",
     "regulatory_action",
@@ -83,7 +87,7 @@ aerospace:
       "FLIGHT_SCHOOL",
       "PRIVATE_OWNER",
     ]
-  signals_groupings:
+  signals_feautures:
     network_authority: [
       "alliance_membership_score",
       "codeshare_quality_score",
