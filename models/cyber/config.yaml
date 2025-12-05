@@ -1,8 +1,8 @@
 # =============================================================================
-# DSI Model Configuration - Aerospace Coverage
+# DSI Model Configuration
 # =============================================================================
 #
-# This file defines the complete configuration for the aerospace coverage type.
+# This file defines the complete configuration for a coverage type.
 # It is the single source of truth for:
 #   - Model structure and parameters
 #   - Signal definitions and weights
@@ -13,106 +13,84 @@
 # Last Updated: 2025-12
 # =============================================================================
 
-aerospace:
-  identifier: "aerospace_general"
+cyber:
+  identifier: "cyber_general"
     metadata:
-      name: "DSI Aerospace Technical Pricing Model"
-      description: "Aviation hull and liability coverage for airlines and operators"
+      name: "DSI Cyber Technical Pricing Model"
+      description: "Cyber model"
       version: "2.0.0"
       coverage_types:
         - "aviation_hull_liability"
         - "aviation_products_liability"
         - "airport_liability"
       applicable_markets: ["us", "uk", "eu", "apac"]
-      min_premium: 25000
+      min_premium: 5000
       default_currency: "USD"
 
     direct_queries:      # Yes/No questions that cannot be externally observed
-      - id: "pending_claims"
-        question: "Are there any pending claims?"
+      - id: "mfa_enabled"
+        question: "Is multi-factor authentication enabled for all remote access??"
         impact: "referral"
-        weight: 0.0  # Binary - triggers referral, not scored
+        weight: 0.0  
         
-      - id: "regulatory_action"
-        question: "Is there any pending regulatory enforcement action?"
-        impact: "decline"
-        weight: 0.0
-        
-      - id: "coverage_declined"
-        question: "Has coverage been declined or non-renewed in the past 3 years?"
-        impact: "decline"
-        weight: 0.0
-        
-      - id: "fleet_change"
-        question: "Are there planned significant fleet changes (>20%) in the next 12 months?"
+      - id: "security_training"
+        question: "Do all employees complete annual cyber security training?"
         impact: "referral"
         weight: 0.0
         
-      - id: "route_expansion"
-        question: "Is there planned expansion into new high-risk regions?"
+      - id: "phi_handler"
+        question: "Do you process Protected Health Information (PHI)"
         impact: "referral"
         weight: 0.0
         
-      - id: "ownership_change"
-        question: "Has there been a change in ownership or control in the past 12 months?"
+      - id: "pci_scope"
+        question: "Do you store payment card data (PCI scope)"
         impact: "referral"
         weight: 0.0
+        
+      - id: "incident_response_plan"
+        question: "Do you have a documented incident response plan?"
+        impact: "referral"
+        weight: 0.0
+        
+      - id: "edr_deployed"
+        question: "Is endpoint detection and response (EDR) deployed on all endpoints?"
+        impact: "referral"
+        weight: 0.0
+
+      - id: "immutable_backups"
+        question: "Are backups maintained offline or immutable?"
+        impact: "referral"
+        weight: 0.0
+
+       - id: "recent_incident"
+        question: "Have you experienced a material cyber incident in the past 3 years?"
+        impact: "referral"
+        weight: 0.0       
   
     categorical_features: # These define the enum values and their pricing impact
-      operator_type:
-        description: "Type of aviation operator"
+      industry_classification:
+        description: "Industry classification derived from public records (SIC / NAICS)"
         values:
-          - {id: "MAJOR_AIRLINE", label: "Major Airline", modifier: 0.85, description: "Large scheduled carriers with >100 aircraft"}
-          - {id: "REGIONAL_AIRLINE", label: "Regional Airline", modifier: 1.00, description: "Regional scheduled service"}
-          - {id: "LOW_COST_CARRIER", label: "Low Cost Carrier", modifier: 0.95, description: "Budget airlines"}
-          - {id: "CARGO_AIRLINE", label: "Cargo Airline", modifier: 1.10, description: "Freight-only operators"}
-          - {id: "CHARTER_OPERATOR", label: "Charter Operator", modifier: 1.25, description: "Non-scheduled passenger service"}
-          - {id: "CORPORATE_FLIGHT", label: "Corporate Flight Dept", modifier: 1.15, description: "Corporate aviation departments"}
-          - {id: "HELICOPTER_OPERATOR", label: "Helicopter Operator", modifier: 1.40, description: "Rotorcraft operations"}
-          - {id: "FLIGHT_SCHOOL", label: "Flight School", modifier: 1.50, description: "Training organisations"}
-          - {id: "PRIVATE_OWNER", label: "Private Owner", modifier: 1.35, description: "Individual aircraft owners"}
+          - {id: "TECHNOLOGY", label: "technology", modifier: 1.15, description: ""}
+          - {id: "FINANCIAL_SERVICES", label: "financial_services", modifier: 1.40, description: ""}
+          - {id: "HEALTHCARE", label: "healthcare", modifier: 1.5, description: ""}
+          - {id: "RETAIL", label: "retail", modifier: 1.25, description: ""}
+          - {id: "MANUFACTURING", label: "manufacturing", modifier: 0.95, description: ""}
+          - {id: "PROFESSIONAL_SERVICES", label: "professional_services", modifier: 1.1, description: ""}
+          - {id: "EDUCATION", label: "education", modifier: 1.05, description: ""}
+          - {id: "GOVERNMENT", label: "government", modifier: 0.90, description: ""}
+          - {id: "ENERGY", label: "energy", modifier: 1.2, description: ""}
+          - {id: "OTHER", label: "other", modifier: 1, description: ""}
   
-      fleet_category:
-        description: "Primary aircraft type in fleet"
+      size_band:
+        description: "Size classification inferred from observable signals (Linkedin Employee count, Job posting volume, office locations, public filings, website)"
         values:
-          - {id: "WIDEBODY", label: "Widebody", modifier: 1.10, description: "Twin-aisle aircraft (A330, 777, etc.)"}
-          - {id: "NARROWBODY", label: "Narrowbody", modifier: 1.00, description: "Single-aisle jets (A320, 737, etc.)"}
-          - {id: "REGIONAL_JET", label: "Regional Jet", modifier: 1.05, description: "Small jets (E-Jets, CRJ, etc.)"}
-          - {id: "TURBOPROP", label: "Turboprop", modifier: 0.95, description: "Turboprop aircraft (ATR, Dash 8, etc.)"}
-          - {id: "BUSINESS_JET", label: "Business Jet", modifier: 1.15, description: "Corporate jets"}
-          - {id: "HELICOPTER", label: "Helicopter", modifier: 1.30, description: "Rotorcraft"}
-          - {id: "PISTON", label: "Piston", modifier: 1.20, description: "Piston-engine aircraft"}
-  
-      fleet_size:
-        description: "Number of aircraft in fleet"
-        values:
-          - {id: "SINGLE", label: "Single Aircraft", modifier: 1.30, count_range: [1, 1]}
-          - {id: "MICRO", label: "Micro Fleet", modifier: 1.20, count_range: [2, 5]}
-          - {id: "SMALL", label: "Small Fleet", modifier: 1.10, count_range: [6, 20]}
-          - {id: "MEDIUM", label: "Medium Fleet", modifier: 1.00, count_range: [21, 50]}
-          - {id: "LARGE", label: "Large Fleet", modifier: 0.95, count_range: [51, 150]}
-          - {id: "MAJOR", label: "Major Fleet", modifier: 0.90, count_range: [151, null]}
-  
-      regulatory_framework:
-        description: "Primary regulatory authority"
-        values:
-          - {id: "FAA", label: "FAA (United States)", modifier: 1.00, tier: 1}
-          - {id: "EASA", label: "EASA (European Union)", modifier: 1.00, tier: 1}
-          - {id: "CAA_UK", label: "CAA (United Kingdom)", modifier: 1.00, tier: 1}
-          - {id: "TCCA", label: "TCCA (Canada)", modifier: 1.00, tier: 1}
-          - {id: "CASA", label: "CASA (Australia)", modifier: 1.05, tier: 1}
-          - {id: "CAAC", label: "CAAC (China)", modifier: 1.10, tier: 2}
-          - {id: "DGCA_INDIA", label: "DGCA (India)", modifier: 1.15, tier: 2}
-          - {id: "OTHER_ICAO", label: "Other ICAO Compliant", modifier: 1.15, tier: 2}
-          - {id: "NON_ICAO", label: "Non-ICAO Compliant", modifier: 1.40, tier: 3}
-  
-      iosa_status:
-        description: "IATA Operational Safety Audit status"
-        values:
-          - {id: "REGISTERED", label: "IOSA Registered", modifier: 0.90, description: "Current IOSA registration"}
-          - {id: "EXPIRED", label: "IOSA Expired", modifier: 1.15, description: "Registration lapsed <12 months"}
-          - {id: "NEVER_REGISTERED", label: "Never Registered", modifier: 1.25, description: "Never held IOSA"}
-          - {id: "NOT_APPLICABLE", label: "Not Applicable", modifier: 1.00, description: "Operator type not eligible for IOSA"}
+          - {id: "SMALL", label: "small", modifier: 0.60, count_range: [0, 500]}
+          - {id: "MEDIUM", label: "medium", modifier: 1.00, count_range: [501, 5000]}
+          - {id: "LARGE", label: "large", modifier: 2.5, count_range: [5001, 25000]}
+          - {id: "ENTERPRISE", label: "enterprise", modifier: 5, count_range: [25001, null]}
+
   
     # ---------------------------------------------------------------------------
     # SIGNAL GROUPINGS (Categories with Weights)
@@ -124,81 +102,51 @@ aerospace:
       - id: "network_authority"
         name: "Network Authority"
         description: "Industry relationships, alliances, and counterparty quality"
-        weight: 0.10
+        weight: 0.15
         test_scores:
           excellent: 90
           average: 70
           poor: 40
         critical: false
         
-      - id: "safety_record"
-        name: "Safety Record"
-        description: "Historical safety performance, accidents, incidents"
-        weight: 0.25
+      - id: "technical_infrastructure"
+        name: "Technical Infrastructure"
+        description: "Observable technical implementation signals"
+        weight: 0.35
         test_scores:
           excellent: 95
           average: 70
           poor: 35
         critical: true
         
-      - id: "regulatory_compliance"
-        name: "Regulatory Compliance"
-        description: "Certificate status, enforcement actions, audit results"
-        weight: 0.20
+      - id: "corporate_footprint"
+        name: "Corporate Footprint"
+        description: "Signals derived from the company's own digital presence"
+        weight: 0.15
         test_scores:
           excellent: 95
           average: 72
           poor: 38
-        critical: true
+        critical: false
         
-      - id: "operational_quality"
-        name: "Operational Quality"
-        description: "On-time performance, training, crew experience"
-        weight: 0.15
+      - id: "public_record"
+        name: "Public Record"
+        description: "Signals from regulatory filings and public databases."
+        weight: 0.25
         test_scores:
           excellent: 88
           average: 68
           poor: 42
-        critical: false
+        critical: true
         
-      - id: "fleet_quality"
-        name: "Fleet Quality"
-        description: "Aircraft age, maintenance programs, modernization"
-        weight: 0.15
+      - id: "structured_data"
+        name: "Structured Data"
+        description: "Third-party ratings and scores used as authority signals."
+        weight: 0.10
         test_scores:
           excellent: 88
           average: 65
           poor: 32
-        critical: false
-        
-      - id: "financial_stability"
-        name: "Financial Stability"
-        description: "Credit ratings, liquidity, profitability"
-        weight: 0.05
-        test_scores:
-          excellent: 85
-          average: 68
-          poor: 35
-        critical: false
-        
-      - id: "route_risk"
-        name: "Route Risk"
-        description: "Destination risk, terrain, weather exposure"
-        weight: 0.05
-        test_scores:
-          excellent: 92
-          average: 72
-          poor: 42
-        critical: false
-        
-      - id: "corporate_governance"
-        name: "Corporate Governance"
-        description: "Management stability, safety culture, disclosure"
-        weight: 0.05
-        test_scores:
-          excellent: 88
-          average: 65
-          poor: 30
         critical: false
   
     # ---------------------------------------------------------------------------
@@ -212,344 +160,274 @@ aerospace:
     
     signal_features:
       network_authority:
-        - id: "alliance_membership_score"
-          name: "Airline Alliance Membership"
-          description: "Quality and tier of alliance membership (Star, oneworld, SkyTeam)"
+        - id: "customer_quality"
+          name: "Customer quality"
+          description: "Customer quality (inferred from case studies, logos, testimonials)"
           ttl: "semi_static"
           ttl_seconds: 604800  # 7 days
-          sources: ["IATA", "Alliance Registries"]
+          sources: []
           score_range: [0, 100]
           
-        - id: "codeshare_quality_score"
-          name: "Codeshare Partner Quality"
-          description: "Average safety rating of codeshare partners"
+        - id: "partner_quality"
+          name: "Partner quality"
+          description: "Partner network quality (technology partners, alliances)"
           ttl: "semi_static"
           ttl_seconds: 604800
-          sources: ["OAG", "IATA"]
+          sources: []
           score_range: [0, 100]
           
-        - id: "lessor_quality_score"
-          name: "Lessor Relationship Quality"
-          description: "Quality tier of aircraft lessors (AerCap, GECAS tier = high)"
+        - id: "security_vendor"
+          name: "Security vendor"
+          description: "Security vendor relationships (CrowdStrike, Palo Alto, etc.)"
           ttl: "semi_static"
           ttl_seconds: 2592000  # 30 days
-          sources: ["Fleet Data Providers", "Lessor Registries"]
+          sources: []
           score_range: [0, 100]
+          critical: true
+          red_flag_threshold: 50
           
-        - id: "oem_relationship_score"
-          name: "OEM Relationship"
-          description: "Direct relationships with Boeing, Airbus, etc."
+        - id: "industry_body"
+          name: "Industry body"
+          description: "Industry body membership (FS-ISAC, sector ISACs, trade associations)"
           ttl: "static"
           ttl_seconds: 7776000  # 90 days
-          sources: ["OEM Announcements", "Order Books"]
+          sources: []
           score_range: [0, 100]
           
-        - id: "mro_quality_score"
-          name: "MRO Provider Quality"
-          description: "Quality of maintenance providers"
+        - id: "certification_authority"
+          name: "Certification authority"
+          description: "Certification authority (who certifies them - ISO, SOC 2 auditors)"
           ttl: "semi_static"
           ttl_seconds: 2592000
-          sources: ["MRO Directories", "Approval Databases"]
+          sources: []
           score_range: [0, 100]
+
+        - id: "financial_relationship"
+          name: "Financila relationship"
+          description: "Banking/financial relationship quality"
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+
+        - id: "network_centrality"
+          name: "Network centrality"
+          description: "Peer network centrality (position in industry graph)"
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+
+        - id: "second_degree"
+          name: "Second degree"
+          description: "Second-degree relationship quality"
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]          
   
-      safety_record:
-        - id: "accident_history_score"
-          name: "Accident History"
-          description: "Hull loss and major accident history (10-year lookback)"
+      technical_infrastructure:
+        - id: "tls"
+          name: "tls"
+          description: "TLS/SSL configuration (SSL Labs methodology)"
           ttl: "dynamic"
           ttl_seconds: 86400  # 24 hours
-          sources: ["Aviation Safety Network", "NTSB", "ICAO"]
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "security_headers"
+          name: "Security headers"
+          description: "Security headers (HSTS, CSP, X-Frame-Options, etc.)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "email_auth"
+          name: "Email authentication"
+          description: "Email authentication (SPF, DMARC, DKIM)"
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "dnssec"
+          name: "dnssec"
+          description: "DNSSEC implementation"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "exposure"
+          name: "exposure"
+          description: "Network exposure (open ports, exposed services via Shodan/Censys)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          red_flag_threshold: 50
+
+        - id: "software_currency"
+          name: "Software currency"
+          description: "Software currency (version fingerprinting)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+
+        - id: "cve_exposure"
+          name: "CVE exposure"
+          description: "Known vulnerabilities (CVEs for detected software versions)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          red_flag_threshold: 50
+
+         - id: "cloud_infrastructure"
+          name: "Cloud Infrastructure"
+          description: "Cloud infrastructure quality (major providers vs unknown)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]         
+  
+      corporate_footprint:
+        - id: "security_page"
+          name: "Security page"
+          description: "Security page presence and quality"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "privacy_policy"
+          name: "Privacy policy"
+          description: "Privacy policy quality (NLP analysis)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "security_txt"
+          name: "Security txt"
+          description: "Security.txt presence and completeness"
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "bug_bounty"
+          name: "Bug bounty"
+          description: "Bug bounty program presence (HackerOne, Bugcrowd)"
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
           score_range: [0, 100]
           critical: true
           red_flag_threshold: 50
           
-        - id: "incident_history_score"
-          name: "Incident History"
-          description: "Serious incidents, runway excursions, etc."
+        - id: "security_hiring"
+          name: "Security hiring"
+          description: "Security-related job postings (CISO, security engineers)"
           ttl: "dynamic"
           ttl_seconds: 86400
-          sources: ["Aviation Safety Network", "National Authorities"]
-          score_range: [0, 100]
-          red_flag_threshold: 45
-          
-        - id: "accident_rate_score"
-          name: "Accident Rate"
-          description: "Accidents per million departures vs industry average"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["IATA", "Flight Global"]
+          sources: []
           score_range: [0, 100]
           
-        - id: "fatality_history_score"
-          name: "Fatality History"
-          description: "Fatal accident history (10-year lookback)"
+        - id: "technical_content"
+          name: "Technical content"
+          description: "Technical blog/content quality"
           ttl: "dynamic"
           ttl_seconds: 86400
-          sources: ["Aviation Safety Network", "ICAO"]
+          sources: []
+          score_range: [0, 100]
+
+        - id: "developer_resources"
+          name: "Developer resources"
+          description: "Developer/API documentation presence"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+
+        - id: "security_leadership"
+          name: "Security leadership"
+          description: "Leadership visibility (security leadership profiles)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]          
+  
+      public_records:
+        - id: "breach_history"
+          name: "Breach history"
+          description: "Breach history (HHS, state AG, public disclosures)"
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
           score_range: [0, 100]
           critical: true
           red_flag_threshold: 50
           
-        - id: "investigation_findings_score"
-          name: "Investigation Findings"
-          description: "Operator cited in safety investigations"
+        - id: "regulatory_action"
+          name: "Regulatory action"
+          description: "Regulatory actions (FTC, state AG enforcement)"
           ttl: "dynamic"
           ttl_seconds: 86400
-          sources: ["NTSB", "AAIB", "BEA"]
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "litigation_score"
+          name: "Litigation history"
+          description: "Litigation history (data breach lawsuits)"
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "credential_exposure"
+          name: "Credential exposure"
+          description: "Credential exposure (HaveIBeenPwned corporate domain)"
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          
+        - id: "dark_web"
+          name: "Dark web"
+          description: "Dark web exposure (leaked data, credentials for sale)"
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
           score_range: [0, 100]
   
-      regulatory_compliance:
-        - id: "certificate_status_score"
-          name: "Operating Certificate Status"
-          description: "AOC/Part 121/135 certificate status and history"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["FAA", "EASA", "National CAAs"]
-          score_range: [0, 100]
-          critical: true
-          red_flag_threshold: 60
-          
-        - id: "enforcement_actions_score"
-          name: "Enforcement Actions"
-          description: "Fines, penalties, certificate actions (5-year)"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["FAA Enforcement Database", "EASA"]
-          score_range: [0, 100]
-          red_flag_threshold: 50
-          
-        - id: "ad_compliance_score"
-          name: "Airworthiness Directive Compliance"
-          description: "Timeliness of AD compliance"
+      structured_data:
+        - id: "security_rating"
+          name: "Security rating"
+          description: "Security rating (BitSight, SecurityScorecard if available)"
           ttl: "semi_static"
           ttl_seconds: 604800
-          sources: ["FAA AD Database", "Operator Records"]
+          sources: []
           score_range: [0, 100]
           
-        - id: "iosa_status_score"
-          name: "IOSA Audit Status"
-          description: "IOSA registration and audit findings"
+        - id: "esg_cyber"
+          name: "ESG cyber"
+          description: "ESG cyber/privacy component (MSCI, Sustainalytics)"
           ttl: "semi_static"
           ttl_seconds: 604800
-          sources: ["IATA IOSA Registry"]
+          sources: []
           score_range: [0, 100]
           
-        - id: "ramp_inspection_score"
-          name: "Ramp Inspection Results"
-          description: "SAFA/SACA ramp inspection findings"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["EASA SAFA", "FAA IASA"]
-          score_range: [0, 100]
-          
-        - id: "eu_safety_list_score"
-          name: "EU Air Safety List Status"
-          description: "Presence on EU banned carrier list"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["EU Air Safety List"]
-          score_range: [0, 100]
-          critical: true
-          red_flag_threshold: 30
-          auto_decline_threshold: 20
-  
-      operational_quality:
-        - id: "otp_score"
-          name: "On-Time Performance"
-          description: "Departure/arrival punctuality vs industry"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["OAG", "FlightStats", "Cirium"]
-          score_range: [0, 100]
-          
-        - id: "dispatch_reliability_score"
-          name: "Dispatch Reliability"
-          description: "Completion rate and technical dispatch reliability"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["OAG", "Operator Data"]
-          score_range: [0, 100]
-          
-        - id: "training_program_score"
-          name: "Training Program Quality"
-          description: "Pilot training hours, simulator access, recurrent training"
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources: ["Regulatory Filings", "Training Provider Data"]
-          score_range: [0, 100]
-          
-        - id: "sms_maturity_score"
-          name: "Safety Management System Maturity"
-          description: "SMS implementation level (ICAO 4-level scale)"
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources: ["Regulatory Audits", "IOSA"]
-          score_range: [0, 100]
-          
-        - id: "crew_experience_score"
-          name: "Crew Experience"
-          description: "Average PIC hours, crew turnover rate"
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources: ["Operator Data", "LinkedIn Analysis"]
-          score_range: [0, 100]
-  
-      fleet_quality:
-        - id: "fleet_age_score"
-          name: "Fleet Age"
-          description: "Average aircraft age vs category average"
+        - id: "credit_rating"
+          name: "Credit rating"
+          description: "Credit rating (as proxy for organizational quality)"
           ttl: "semi_static"
           ttl_seconds: 604800
-          sources: ["Cirium", "Planespotters", "ch-aviation"]
-          score_range: [0, 100]
-          
-        - id: "fleet_homogeneity_score"
-          name: "Fleet Homogeneity"
-          description: "Number of aircraft types (fewer = better)"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["Cirium", "ch-aviation"]
-          score_range: [0, 100]
-          
-        - id: "aircraft_generation_score"
-          name: "Aircraft Generation"
-          description: "% current-generation aircraft (MAX, NEO, etc.)"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["Cirium", "OEM Delivery Data"]
-          score_range: [0, 100]
-          
-        - id: "maintenance_program_score"
-          name: "Maintenance Program"
-          description: "Maintenance approach (MP, phase, etc.) and compliance"
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources: ["Regulatory Filings", "MRO Data"]
-          score_range: [0, 100]
-          
-        - id: "heavy_check_currency_score"
-          name: "Heavy Check Currency"
-          description: "Timeliness of C/D checks across fleet"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["Maintenance Records", "Lessor Data"]
-          score_range: [0, 100]
-  
-      financial_stability:
-        - id: "credit_rating_score"
-          name: "Credit Rating"
-          description: "S&P/Moody's/Fitch rating translated to score"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["S&P", "Moody's", "Fitch"]
-          score_range: [0, 100]
-          
-        - id: "liquidity_score"
-          name: "Liquidity Position"
-          description: "Months of cash/liquidity runway"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["Financial Filings", "Analyst Reports"]
-          score_range: [0, 100]
-          
-        - id: "profitability_score"
-          name: "Profitability"
-          description: "Operating margin vs industry average"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["Financial Filings"]
-          score_range: [0, 100]
-          
-        - id: "load_factor_score"
-          name: "Load Factor"
-          description: "Passenger/cargo load factor trend"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["IATA", "Operator Reports"]
-          score_range: [0, 100]
-          
-        - id: "fleet_renewal_score"
-          name: "Fleet Renewal Pipeline"
-          description: "Order backlog and delivery schedule"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["OEM Order Books", "Aviation Week"]
-          score_range: [0, 100]
-  
-      route_risk:
-        - id: "high_risk_destination_score"
-          name: "High-Risk Destinations"
-          description: "% of operations to high-risk countries"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["OAG Schedules", "FCO/State Dept Advisories"]
-          score_range: [0, 100]
-          
-        - id: "challenging_airport_score"
-          name: "Challenging Airport Operations"
-          description: "Operations to airports with special requirements"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["OAG", "Airport Data"]
-          score_range: [0, 100]
-          
-        - id: "overwater_exposure_score"
-          name: "Overwater Exposure"
-          description: "% of operations involving extended overwater"
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources: ["Route Analysis", "OAG"]
-          score_range: [0, 100]
-          
-        - id: "weather_exposure_score"
-          name: "Weather Exposure"
-          description: "Operations in severe weather zones (monsoon, hurricane)"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["Weather Data", "Route Analysis"]
-          score_range: [0, 100]
-          
-        - id: "conflict_zone_score"
-          name: "Conflict Zone Exposure"
-          description: "Operations near/through conflict zones"
-          ttl: "real_time"
-          ttl_seconds: 3600  # 1 hour
-          sources: ["NOTAM", "Security Advisories"]
-          score_range: [0, 100]
-          critical: true
-          red_flag_threshold: 40
-  
-      corporate_governance:
-        - id: "management_stability_score"
-          name: "Management Stability"
-          description: "CEO/COO/Safety Director tenure and turnover"
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources: ["News", "LinkedIn", "Filings"]
-          score_range: [0, 100]
-          
-        - id: "safety_culture_score"
-          name: "Safety Culture"
-          description: "Safety reporting rates, just culture indicators"
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources: ["IOSA", "Regulatory Audits"]
-          score_range: [0, 100]
-          
-        - id: "disclosure_quality_score"
-          name: "Disclosure Quality"
-          description: "Transparency in safety and financial reporting"
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources: ["Annual Reports", "Safety Reports"]
-          score_range: [0, 100]
-          
-        - id: "crisis_response_score"
-          name: "Crisis Response History"
-          description: "Historical response to safety events"
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources: ["News Analysis", "Incident Response Records"]
+          sources: []
           score_range: [0, 100]
   
     # ---------------------------------------------------------------------------
@@ -566,6 +444,7 @@ aerospace:
         description: "Excellent risk - automatic approval, preferred pricing"
         auto_approve: true
         auto_decline: false
+        base_premium: 8000
         modifier: 0.75
         
       tier_2:
@@ -576,6 +455,7 @@ aerospace:
         description: "Good risk - automatic approval, standard pricing"
         auto_approve: true
         auto_decline: false
+        base_premium: 12000
         modifier: 1.00
         
       tier_3:
@@ -586,6 +466,7 @@ aerospace:
         description: "Average risk - may require referral"
         auto_approve: false
         auto_decline: false
+        base_premium: 18000
         modifier: 1.35
         
       tier_4:
@@ -596,6 +477,7 @@ aerospace:
         description: "Elevated risk - requires senior review"
         auto_approve: false
         auto_decline: false
+        base_premium: 30000
         modifier: 1.85
         
       tier_5:
@@ -606,49 +488,24 @@ aerospace:
         description: "Unacceptable risk - decline"
         auto_approve: false
         auto_decline: true
+        base_premium: 50000
         modifier: 2.75
   
     # ---------------------------------------------------------------------------
     # PRICING PARAMETERS
     # ---------------------------------------------------------------------------
     
-    pricing:
-      # Base rates per $1M of coverage by operator type
-      hull_rates:
-        MAJOR_AIRLINE: 800
-        REGIONAL_AIRLINE: 1200
-        LOW_COST_CARRIER: 1000
-        CARGO_AIRLINE: 1500
-        CHARTER_OPERATOR: 1800
-        CORPORATE_FLIGHT: 2000
-        HELICOPTER_OPERATOR: 4000
-        FLIGHT_SCHOOL: 3000
-        PRIVATE_OWNER: 2500
-        
-      liability_rates:
-        MAJOR_AIRLINE: 500
-        REGIONAL_AIRLINE: 700
-        LOW_COST_CARRIER: 600
-        CARGO_AIRLINE: 400
-        CHARTER_OPERATOR: 900
-        CORPORATE_FLIGHT: 800
-        HELICOPTER_OPERATOR: 2000
-        FLIGHT_SCHOOL: 1500
-        PRIVATE_OWNER: 1000
-      
       # Increased Limit Factors (ILF)
       ilf_curve:
         base_limit: 1000000  # $1M base
         factors:
           - {limit: 1000000, factor: 1.00}
-          - {limit: 5000000, factor: 1.12}
-          - {limit: 10000000, factor: 1.20}
-          - {limit: 25000000, factor: 1.35}
-          - {limit: 50000000, factor: 1.50}
-          - {limit: 100000000, factor: 1.70}
-          - {limit: 250000000, factor: 2.00}
-          - {limit: 500000000, factor: 2.40}
-          - {limit: 1000000000, factor: 3.00}
+          - {limit: 2000000, factor: 1.7}
+          - {limit: 5000000, factor: 3.2}
+          - {limit: 10000000, factor: 5}
+          - {limit: 25000000, factor: 9}
+          - {limit: 50000000, factor: 14}
+          - {limit: 100000000, factor: 22}
       
       # Deductible credits
       deductible_credits:
@@ -880,36 +737,10 @@ aerospace:
     
     red_flags:
       auto_decline:
-        - condition: "eu_safety_list_score < 30"
-          message: "Operator on EU Air Safety List"
-          
-        - condition: "fatality_history_score < 30 AND accident_history_score < 30"
-          message: "Severe accident/fatality history"
-          
-        - condition: "certificate_status_score < 40"
-          message: "Operating certificate at risk"
-          
-        - condition: "direct_query.coverage_declined == true"
-          message: "Prior coverage declined"
+
       
       auto_referral:
-        - condition: "accident_history_score < 50"
-          message: "Significant accident history"
-          
-        - condition: "enforcement_actions_score < 50"
-          message: "Recent regulatory enforcement"
-          
-        - condition: "iosa_status_score < 40"
-          message: "IOSA registration concerns"
-          
-        - condition: "conflict_zone_score < 50"
-          message: "Conflict zone exposure"
-          
-        - condition: "direct_query.pending_claims == true"
-          message: "Pending aviation claims"
-          
-        - condition: "direct_query.regulatory_action == true"
-          message: "Pending regulatory action"
+
   
     # ---------------------------------------------------------------------------
     # GREEN FLAG DEFINITIONS
@@ -917,20 +748,4 @@ aerospace:
     # Positive indicators that support approval
     
     green_flags:
-      - condition: "alliance_membership_score >= 80"
-        message: "Major airline alliance member"
-        
-      - condition: "accident_history_score >= 95 AND fatality_history_score >= 95"
-        message: "Exceptional safety record"
-        
-      - condition: "iosa_status_score >= 90"
-        message: "Current IOSA registration"
-        
-      - condition: "fleet_age_score >= 85"
-        message: "Young, modern fleet"
-        
-      - condition: "sms_maturity_score >= 85"
-        message: "Mature Safety Management System"
-        
-      - condition: "enforcement_actions_score >= 95"
-        message: "Clean regulatory record"
+
