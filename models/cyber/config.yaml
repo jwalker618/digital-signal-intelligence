@@ -9,6 +9,8 @@
 #   - Pricing factors and thresholds
 #   - Test profiles for actuarial validation
 #
+# Premium calculation follows DSI Foundational Principle 9: Signal - > Score -> Tier -> Price
+#
 # Version: 2.0.0
 # Last Updated: 2025-12
 # =============================================================================
@@ -25,7 +27,7 @@ cyber:
       min_premium: 5000
       default_currency: "USD"
 
-    direct_queries:      # Yes/No questions that cannot be externally observed
+    direct_optional_queries:      # Yes/No questions that cannot be externally observed, future provision for agents
       - id: "mfa_enabled"
         question: "Is multi-factor authentication enabled for all remote access??"
         impact: "referral"
@@ -87,7 +89,7 @@ cyber:
           - {id: "SMALL", label: "small", modifier: 0.60, count_range: [0, 500]}
           - {id: "MEDIUM", label: "medium", modifier: 1.00, count_range: [501, 5000]}
           - {id: "LARGE", label: "large", modifier: 2.5, count_range: [5001, 25000]}
-          - {id: "ENTERPRISE", label: "enterprise", modifier: 5, count_range: [25001, null]}
+          - {id: "ENTERPRISE", label: "enterprise", modifier: 5, count_range: [25001, 999999999]}
 
   
     # ---------------------------------------------------------------------------
@@ -106,6 +108,7 @@ cyber:
           average: 70
           poor: 40
         critical: false
+        condition: null
         
       - id: "technical_infrastructure"
         name: "Technical Infrastructure"
@@ -116,6 +119,7 @@ cyber:
           average: 70
           poor: 35
         critical: true
+        condition: null
         
       - id: "corporate_footprint"
         name: "Corporate Footprint"
@@ -126,6 +130,7 @@ cyber:
           average: 72
           poor: 38
         critical: false
+        condition: null
         
       - id: "public_record"
         name: "Public Record"
@@ -136,6 +141,7 @@ cyber:
           average: 68
           poor: 42
         critical: true
+        condition: null
         
       - id: "structured_data"
         name: "Structured Data"
@@ -146,6 +152,7 @@ cyber:
           average: 65
           poor: 32
         critical: false
+        condition: null
   
     # ---------------------------------------------------------------------------
     # SIGNAL GROUPINGS FEATURES (Individual Signals)
@@ -161,272 +168,358 @@ cyber:
         - id: "customer_quality"
           name: "Customer quality"
           description: "Customer quality (inferred from case studies, logos, testimonials)"
+          weight: 0.15
           ttl: "semi_static"
           ttl_seconds: 604800  # 7 days
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "partner_quality"
           name: "Partner quality"
           description: "Partner network quality (technology partners, alliances)"
+          weight: 0.1
           ttl: "semi_static"
           ttl_seconds: 604800
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "security_vendor"
           name: "Security vendor"
           description: "Security vendor relationships (CrowdStrike, Palo Alto, etc.)"
+          weight: 0.3
           ttl: "semi_static"
           ttl_seconds: 2592000  # 30 days
           sources: []
           score_range: [0, 100]
           critical: true
-          red_flag_threshold: 50
+          condition: security_vendor
           
         - id: "industry_body"
           name: "Industry body"
           description: "Industry body membership (FS-ISAC, sector ISACs, trade associations)"
+          weight: 0.15
           ttl: "static"
           ttl_seconds: 7776000  # 90 days
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "certification_authority"
           name: "Certification authority"
           description: "Certification authority (who certifies them - ISO, SOC 2 auditors)"
+          weight: 0.15
           ttl: "semi_static"
           ttl_seconds: 2592000
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
 
         - id: "financial_relationship"
           name: "Financila relationship"
           description: "Banking/financial relationship quality"
+          weight: 0.05
           ttl: "semi_static"
           ttl_seconds: 2592000
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
 
         - id: "network_centrality"
           name: "Network centrality"
           description: "Peer network centrality (position in industry graph)"
+          weight: 0.1
           ttl: "semi_static"
           ttl_seconds: 2592000
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
 
         - id: "second_degree"
           name: "Second degree"
           description: "Second-degree relationship quality"
+          weight: 0.1
           ttl: "semi_static"
           ttl_seconds: 2592000
           sources: []
-          score_range: [0, 100]          
+          score_range: [0, 100]
+          critical: false
+          condition: null
   
       technical_infrastructure:
         - id: "tls"
           name: "tls"
           description: "TLS/SSL configuration (SSL Labs methodology)"
+          weight: 0.15
           ttl: "dynamic"
           ttl_seconds: 86400  # 24 hours
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "security_headers"
           name: "Security headers"
           description: "Security headers (HSTS, CSP, X-Frame-Options, etc.)"
+          weight: 0.12
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "email_auth"
           name: "Email authentication"
           description: "Email authentication (SPF, DMARC, DKIM)"
+          weight: 0.12
           ttl: "semi_static"
           ttl_seconds: 604800
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "dnssec"
           name: "dnssec"
           description: "DNSSEC implementation"
+          weight: 0.06
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "exposure"
           name: "exposure"
           description: "Network exposure (open ports, exposed services via Shodan/Censys)"
+          weight: 0.2
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
           critical: true
-          red_flag_threshold: 50
+          condition: exposure
 
         - id: "software_currency"
           name: "Software currency"
           description: "Software currency (version fingerprinting)"
+          weight: 0.12
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
 
         - id: "cve_exposure"
           name: "CVE exposure"
           description: "Known vulnerabilities (CVEs for detected software versions)"
+          weight: 0.18
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
           critical: true
-          red_flag_threshold: 50
+          condition: cve_exposure
 
          - id: "cloud_infrastructure"
           name: "Cloud Infrastructure"
           description: "Cloud infrastructure quality (major providers vs unknown)"
+          weight: 0.05
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
-          score_range: [0, 100]         
+          score_range: [0, 100]   
+          critical: false
+          condition: null
   
       corporate_footprint:
         - id: "security_page"
           name: "Security page"
           description: "Security page presence and quality"
+          weight: 0.15
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "privacy_policy"
           name: "Privacy policy"
           description: "Privacy policy quality (NLP analysis)"
+          weight: 0.1
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "security_txt"
           name: "Security txt"
           description: "Security.txt presence and completeness"
+          weight: 0.1
           ttl: "semi_static"
           ttl_seconds: 604800
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "bug_bounty"
           name: "Bug bounty"
           description: "Bug bounty program presence (HackerOne, Bugcrowd)"
+          weight: 0.2
           ttl: "semi_static"
           ttl_seconds: 604800
           sources: []
           score_range: [0, 100]
           critical: true
-          red_flag_threshold: 50
+          condition: bug_bounty
           
         - id: "security_hiring"
           name: "Security hiring"
           description: "Security-related job postings (CISO, security engineers)"
+          weight: 0.15
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "technical_content"
           name: "Technical content"
           description: "Technical blog/content quality"
+          weight: 0.1
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
 
         - id: "developer_resources"
           name: "Developer resources"
           description: "Developer/API documentation presence"
+          weight: 0.05
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
 
         - id: "security_leadership"
           name: "Security leadership"
           description: "Leadership visibility (security leadership profiles)"
+          weight: 0.15
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
-          score_range: [0, 100]          
+          score_range: [0, 100]   
+          critical: false
+          condition: null
   
       public_records:
         - id: "breach_history"
           name: "Breach history"
           description: "Breach history (HHS, state AG, public disclosures)"
+          weight: 0.35
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
           critical: true
-          red_flag_threshold: 50
+          condition: breach_history
           
         - id: "regulatory_action"
           name: "Regulatory action"
           description: "Regulatory actions (FTC, state AG enforcement)"
+          weight: 0.2
           ttl: "dynamic"
           ttl_seconds: 86400
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "litigation_score"
           name: "Litigation history"
           description: "Litigation history (data breach lawsuits)"
+          weight: 0.15
           ttl: "semi_static"
           ttl_seconds: 2592000
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "credential_exposure"
           name: "Credential exposure"
           description: "Credential exposure (HaveIBeenPwned corporate domain)"
+          weight: 0.2
           ttl: "semi_static"
           ttl_seconds: 2592000
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "dark_web"
           name: "Dark web"
           description: "Dark web exposure (leaked data, credentials for sale)"
+          weight: 0.1
           ttl: "semi_static"
           ttl_seconds: 2592000
           sources: []
           score_range: [0, 100]
+          critical: true
+          condition: dark_web
   
       structured_data:
         - id: "security_rating"
           name: "Security rating"
           description: "Security rating (BitSight, SecurityScorecard if available)"
+          weight: 0.5
           ttl: "semi_static"
           ttl_seconds: 604800
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "esg_cyber"
           name: "ESG cyber"
           description: "ESG cyber/privacy component (MSCI, Sustainalytics)"
+          weight: 0.25
           ttl: "semi_static"
           ttl_seconds: 604800
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
           
         - id: "credit_rating"
           name: "Credit rating"
           description: "Credit rating (as proxy for organizational quality)"
+          weight: 0.25
           ttl: "semi_static"
           ttl_seconds: 604800
           sources: []
           score_range: [0, 100]
+          critical: false
+          condition: null
   
     # ---------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -443,7 +536,6 @@ cyber:
         auto_approve: true
         auto_decline: false
         base_premium: 8000
-        modifier: 0.75
         
       tier_2:
         id: 2
@@ -454,7 +546,6 @@ cyber:
         auto_approve: true
         auto_decline: false
         base_premium: 12000
-        modifier: 1.00
         
       tier_3:
         id: 3
@@ -465,7 +556,6 @@ cyber:
         auto_approve: false
         auto_decline: false
         base_premium: 18000
-        modifier: 1.35
         
       tier_4:
         id: 4
@@ -476,7 +566,6 @@ cyber:
         auto_approve: false
         auto_decline: false
         base_premium: 30000
-        modifier: 1.85
         
       tier_5:
         id: 5
@@ -487,7 +576,41 @@ cyber:
         auto_approve: false
         auto_decline: true
         base_premium: 50000
-        modifier: 2.75
+
+    # ---------------------------------------------------------------------------
+    # CONDITION DEFINITIONS
+    # ---------------------------------------------------------------------------
+    # Conditions that trigger automatic actions, these should be linked to signals.
+
+    conditions:
+      - id: technical_infrastructure
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.
+      - id: public_record
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.         
+      - id: cve_exposure
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.
+      - id: exposure
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.        
+      - id: bug_bounty
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.        
+      - id: breach_history
+        bands:
+          - { max: 40, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.    
+      - id: dark_web
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.      
   
     # ---------------------------------------------------------------------------
     # PRICING PARAMETERS
@@ -728,22 +851,3 @@ cyber:
             maintenance_program_score: 75
           # Other groups have no signals (use defaults)
   
-    # ---------------------------------------------------------------------------
-    # RED FLAG DEFINITIONS
-    # ---------------------------------------------------------------------------
-    # Conditions that trigger automatic referral or decline
-    
-    red_flags:
-      auto_decline:
-
-      
-      auto_referral:
-
-  
-    # ---------------------------------------------------------------------------
-    # GREEN FLAG DEFINITIONS
-    # ---------------------------------------------------------------------------
-    # Positive indicators that support approval
-    
-    green_flags:
-
