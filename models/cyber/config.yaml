@@ -9,19 +9,20 @@
 #   - Pricing factors and thresholds
 #   - Test profiles for actuarial validation
 #
-# Premium calculation follows DSI Foundational Principle 9: Signal - > Score -> Tier -> Price
+# Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
+#
+# DSI PRINCIPLES APPLIED:
+#   1. All signals must be externally observable (no application questions required)
+#   2. Direct queries are OPTIONAL - model works without them
+#   3. Categorical features are inferred from observable data
+#   4. Tier determines base premium; modifiers adjust for exposure characteristics
+#   5. All sources must be publicly accessible or through standard data providers
 #
 # Version: 2.0.0
 # Last Updated: 2025-12
 # =============================================================================
 
 cyber:
-
-# ---------------------------------------------------------------------------
-# IDENTIFIER: cyber_general
-# ---------------------------------------------------------------------------
-# Each identifier represents a complete model configuration.
-# Multiple identifiers can exist per coverage type (e.g., cyber_us, cyber_uk)
   cyber_general:
     metadata:
       name: "DSI Cyber Technical Pricing Model"
@@ -88,16 +89,46 @@ cyber:
           confidence_threshold: 0.7          # Minimum confidence to accept classification
           default_on_failure: "OTHER"        # Default if inference fails
         values:
-          - {id: "TECHNOLOGY", label: "Technology", modifier: 1.15, naics_prefixes: ["51", "54"], sic_ranges: [[7370, 7379]]}
-          - {id: "FINANCIAL_SERVICES", label: "Financial Services", modifier: 1.40, naics_prefixes: ["52"], sic_ranges: [[6000, 6799]]}
-          - {id: "HEALTHCARE", label: "Healthcare", modifier: 1.50, naics_prefixes: ["62"], sic_ranges: [[8000, 8099]]}
-          - {id: "RETAIL", label: "Retail", modifier: 1.25, naics_prefixes: ["44", "45"], sic_ranges: [[5200, 5999]]}
-          - {id: "MANUFACTURING", label: "Manufacturing", modifier: 0.95, naics_prefixes: ["31", "32", "33"], sic_ranges: [[2000, 3999]]}
-          - {id: "PROFESSIONAL_SERVICES", label: "Professional Services", modifier: 1.10, naics_prefixes: ["54"], sic_ranges: [[8100, 8999]]}
-          - {id: "EDUCATION", label: "Education", modifier: 1.05, naics_prefixes: ["61"], sic_ranges: [[8200, 8299]]}
-          - {id: "GOVERNMENT", label: "Government", modifier: 0.90, naics_prefixes: ["92"], sic_ranges: [[9100, 9999]]}
-          - {id: "ENERGY", label: "Energy & Utilities", modifier: 1.20, naics_prefixes: ["21", "22"], sic_ranges: [[1300, 1499], [4900, 4999]]}
-          - {id: "OTHER", label: "Other", modifier: 1.00, naics_prefixes: [], sic_ranges: []}
+          - id: "TECHNOLOGY"
+            label: "Technology"
+            modifier: 1.15
+            inference_criteria: {naics_prefixes: ["51", "54"], sic_ranges: [[7370, 7379]]}
+          - id: "FINANCIAL_SERVICES" 
+            label: "Financial Services" 
+            modifier: 1.40
+            inference_criteria: {naics_prefixes: ["52"], sic_ranges: [[6000, 6799]]}
+          - id: "HEALTHCARE"
+            label: "Healthcare"
+            modifier: 1.50
+            inference_criteria: {naics_prefixes: ["62"], sic_ranges: [[8000, 8099]]}
+          - id: "RETAIL"
+            label: "Retail"
+            modifier: 1.25
+            inference_criteria: {naics_prefixes: ["44", "45"], sic_ranges: [[5200, 5999]]}
+          - id: "MANUFACTURING"
+            label: "Manufacturing"
+            modifier: 0.95
+            inference_criteria: {naics_prefixes: ["31", "32", "33"], sic_ranges: [[2000, 3999]]}
+          - id: "PROFESSIONAL_SERVICES"
+            label: "Professional Services"
+            modifier: 1.10
+            inference_criteria: {naics_prefixes: ["54"], sic_ranges: [[8100, 8999]]}
+          - id: "EDUCATION"
+            label: "Education"
+            modifier: 1.05
+            inference_criteria: {naics_prefixes: ["61"], sic_ranges: [[8200, 8299]]}
+          - id: "GOVERNMENT"
+            label: "Government"
+            modifier: 0.90
+            inference_criteria: {naics_prefixes: ["92"], sic_ranges: [[9100, 9999]]}
+          - id: "ENERGY"
+            label: "Energy & Utilities"
+            modifier: 1.20
+            inference_criteria: {naics_prefixes: ["21", "22"], sic_ranges: [[1300, 1499], [4900, 4999]]}
+          - id: "OTHER"
+            label: "Other" 
+            modifier: 1.00
+            inference_criteria: {naics_prefixes: [], sic_ranges: []}
   
       size_band:
         description: "Company size classification"
@@ -117,11 +148,26 @@ cyber:
           confidence_threshold: 0.6
           default_on_failure: "MEDIUM"
         values:
-          - {id: "MICRO", label: "Micro", modifier: 0.40, employee_range: [1, 50], revenue_range: [0, 5000000]}
-          - {id: "SMALL", label: "Small", modifier: 0.60, employee_range: [51, 250], revenue_range: [5000001, 25000000]}
-          - {id: "MEDIUM", label: "Medium", modifier: 1.00, employee_range: [251, 1000], revenue_range: [25000001, 100000000]}
-          - {id: "LARGE", label: "Large", modifier: 2.00, employee_range: [1001, 5000], revenue_range: [100000001, 500000000]}
-          - {id: "ENTERPRISE", label: "Enterprise", modifier: 4.00, employee_range: [5001, 999999999], revenue_range: [500000001, 999999999999]}
+          - id: "MICRO"
+            label: "Micro"
+            modifier: 0.40
+            inference_criteria: {employee_range: [1, 50], revenue_range: [0, 5000000]}
+          - id: "SMALL"
+            label: "Small"
+            modifier: 0.60
+            inference_criteria: {employee_range: [51, 250], revenue_range: [5000001, 25000000]}
+          - id: "MEDIUM"
+            label: "Medium"
+            modifier: 1.00
+            inference_criteria: {employee_range: [251, 1000], revenue_range: [25000001, 100000000]}
+          - id: "LARGE"
+            label: "Large"
+            modifier: 2.00
+            inference_criteria: {employee_range: [1001, 5000], revenue_range: [100000001, 500000000]}
+          - id: "ENTERPRISE"
+            label: "Enterprise"
+            modifier: 4.00 
+            inference_criteria: {employee_range: [5001, 999999999], revenue_range: [500000001, 999999999999]}
 
       geography:
         description: "Primary operational geography"
@@ -135,11 +181,26 @@ cyber:
           confidence_threshold: 0.8
           default_on_failure: "US"
         values:
-          - {id: "US", label: "United States", modifier: 1.00, country_codes: ["US"]}
-          - {id: "UK", label: "United Kingdom", modifier: 1.05, country_codes: ["GB"]}
-          - {id: "EU", label: "European Union", modifier: 1.10, country_codes: ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "IE"]}
-          - {id: "APAC", label: "Asia Pacific", modifier: 1.15, country_codes: ["AU", "NZ", "SG", "JP", "HK"]}
-          - {id: "OTHER", label: "Other", modifier: 1.25, country_codes: []}
+          - id: "US" 
+            label: "United States"
+            modifier: 1.00
+            inference_criteria: {country_codes: ["US"]}
+          - id: "UK"
+            label: "United Kingdom"
+            modifier: 1.05
+            inference_criteria: {country_codes: ["GB"]}
+          - id: "EU"
+            label: "European Union"
+            modifier: 1.10 
+            inference_criteria: {country_codes: ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "IE"]}
+          - id: "APAC"
+            label: "Asia Pacific"
+            modifier: 1.15
+            inference_criteria: {country_codes: ["AU", "NZ", "SG", "JP", "HK"]}
+          - id: "OTHER" 
+            label: "Other"
+            modifier: 1.25
+            inference_criteria: {country_codes: []}
 
   
     # ---------------------------------------------------------------------------
@@ -153,10 +214,7 @@ cyber:
         name: "Network Authority"
         description: "Industry relationships, partnerships, and counterparty quality"
         weight: 0.15
-        test_scores:
-          excellent: 90
-          average: 70
-          poor: 40
+        test_scores: {excellent: 90, average: 70, poor: 40}
         critical: false
         score_condition: null
         
@@ -164,10 +222,7 @@ cyber:
         name: "Technical Infrastructure"
         description: "Observable technical security implementation"
         weight: 0.35
-        test_scores:
-          excellent: 92
-          average: 68
-          poor: 35
+        test_scores: {excellent: 92, average: 68, poor: 35}
         critical: true
         score_condition: technical_infrastructure_critical
         
@@ -175,10 +230,7 @@ cyber:
         name: "Corporate Footprint"
         description: "Signals from company's digital presence and security posture"
         weight: 0.15
-        test_scores:
-          excellent: 88
-          average: 65
-          poor: 38
+        test_scores: {excellent: 88, average: 65, poor: 38}
         critical: false
         score_condition: null
         
@@ -186,10 +238,7 @@ cyber:
         name: "Public Record"
         description: "Breach history, regulatory actions, and public disclosures"
         weight: 0.25
-        test_scores:
-          excellent: 95
-          average: 72
-          poor: 30
+        test_scores: {excellent: 95, average: 72, poor: 30}
         critical: true
         score_condition: public_record_critical
         
@@ -197,10 +246,7 @@ cyber:
         name: "Structured Data"
         description: "Third-party security ratings and scores"
         weight: 0.10
-        test_scores:
-          excellent: 88
-          average: 68
-          poor: 42
+        test_scores: {excellent: 88, average: 68, poor: 42}
         critical: false
         score_condition: null
   
