@@ -1,0 +1,850 @@
+# =============================================================================
+# DSI Model Configuration
+# =============================================================================
+#
+# This file defines the complete configuration for a coverage type.
+# It is the single source of truth for:
+#   - Model structure and parameters
+#   - Signal definitions and weights
+#   - Pricing factors and thresholds
+#   - Test profiles for actuarial validation
+#
+# Premium calculation follows DSI Foundational Principle 9: Signal - > Score -> Tier -> Price
+#
+# Version: 2.0.0
+# Last Updated: 2025-12
+# =============================================================================
+
+cyber:
+  identifier: "cyber_general"
+    metadata:
+      name: "DSI Cyber Technical Pricing Model"
+      description: "Cyber model"
+      version: "2.0.0"
+      coverage_types:
+        - "cyber_liability"
+      applicable_markets: ["us", "uk", "eu", "apac"]
+      min_premium: 5000
+      default_currency: "USD"
+
+    direct_optional_queries:      # Yes/No questions that cannot be externally observed, future provision for agents
+      - id: "mfa_enabled"
+        question: "Is multi-factor authentication enabled for all remote access??"
+        direct_condition: direct_false
+        
+      - id: "security_training"
+        question: "Do all employees complete annual cyber security training?"
+        direct_condition: direct_false
+        
+      - id: "phi_handler"
+        question: "Do you process Protected Health Information (PHI)"
+        direct_condition: direct_false
+        
+      - id: "pci_scope"
+        question: "Do you store payment card data (PCI scope)"
+        direct_condition: direct_false
+        
+      - id: "incident_response_plan"
+        question: "Do you have a documented incident response plan?"
+        direct_condition: direct_false
+        
+      - id: "edr_deployed"
+        question: "Is endpoint detection and response (EDR) deployed on all endpoints?"
+        direct_condition: direct_false
+
+      - id: "immutable_backups"
+        question: "Are backups maintained offline or immutable?"
+        direct_condition: direct_false
+
+       - id: "recent_incident"
+        question: "Have you experienced a material cyber incident in the past 3 years?"
+        direct_condition: direct_false
+  
+    categorical_features: # These define the enum values and their pricing impact
+      industry_classification:
+        description: "Industry classification derived from public records (SIC / NAICS)"
+        values:
+          - {id: "TECHNOLOGY", label: "technology", modifier: 1.15, description: ""}
+          - {id: "FINANCIAL_SERVICES", label: "financial_services", modifier: 1.40, description: ""}
+          - {id: "HEALTHCARE", label: "healthcare", modifier: 1.5, description: ""}
+          - {id: "RETAIL", label: "retail", modifier: 1.25, description: ""}
+          - {id: "MANUFACTURING", label: "manufacturing", modifier: 0.95, description: ""}
+          - {id: "PROFESSIONAL_SERVICES", label: "professional_services", modifier: 1.1, description: ""}
+          - {id: "EDUCATION", label: "education", modifier: 1.05, description: ""}
+          - {id: "GOVERNMENT", label: "government", modifier: 0.90, description: ""}
+          - {id: "ENERGY", label: "energy", modifier: 1.2, description: ""}
+          - {id: "OTHER", label: "other", modifier: 1, description: ""}
+  
+      size_band:
+        description: "Size classification inferred from observable signals (Linkedin Employee count, Job posting volume, office locations, public filings, website)"
+        values:
+          - {id: "SMALL", label: "small", modifier: 0.60, count_range: [0, 500]}
+          - {id: "MEDIUM", label: "medium", modifier: 1.00, count_range: [501, 5000]}
+          - {id: "LARGE", label: "large", modifier: 2.5, count_range: [5001, 25000]}
+          - {id: "ENTERPRISE", label: "enterprise", modifier: 5, count_range: [25001, 999999999]}
+
+  
+    # ---------------------------------------------------------------------------
+    # SIGNAL GROUPINGS (Categories with Weights)
+    # ---------------------------------------------------------------------------
+    # Each group contributes to the composite score
+    # Weights must sum to 1.0
+    
+    signal_groups:
+      - id: "network_authority"
+        name: "Network Authority"
+        description: "Industry relationships, alliances, and counterparty quality"
+        weight: 0.15
+        test_scores:
+          excellent: 90
+          average: 70
+          poor: 40
+        critical: false
+        score_condition: null
+        
+      - id: "technical_infrastructure"
+        name: "Technical Infrastructure"
+        description: "Observable technical implementation signals"
+        weight: 0.35
+        test_scores:
+          excellent: 95
+          average: 70
+          poor: 35
+        critical: true
+        score_condition: null
+        
+      - id: "corporate_footprint"
+        name: "Corporate Footprint"
+        description: "Signals derived from the company's own digital presence"
+        weight: 0.15
+        test_scores:
+          excellent: 95
+          average: 72
+          poor: 38
+        critical: false
+        score_condition: null
+        
+      - id: "public_record"
+        name: "Public Record"
+        description: "Signals from regulatory filings and public databases."
+        weight: 0.25
+        test_scores:
+          excellent: 88
+          average: 68
+          poor: 42
+        critical: true
+        score_condition: null
+        
+      - id: "structured_data"
+        name: "Structured Data"
+        description: "Third-party ratings and scores used as authority signals."
+        weight: 0.10
+        test_scores:
+          excellent: 88
+          average: 65
+          poor: 32
+        critical: false
+        score_condition: null
+  
+    # ---------------------------------------------------------------------------
+    # SIGNAL GROUPINGS FEATURES (Individual Signals)
+    # ---------------------------------------------------------------------------
+    # TTL Categories:
+    #   - real_time: < 1 hour (market data, flight status)
+    #   - dynamic: 1-24 hours (news, regulatory updates)
+    #   - semi_static: 1-30 days (ratings, fleet data)
+    #   - static: > 30 days (company registration, certifications)
+    
+    signal_features:
+      network_authority:
+        - id: "customer_quality"
+          name: "Customer quality"
+          description: "Customer quality (inferred from case studies, logos, testimonials)"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 604800  # 7 days
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "partner_quality"
+          name: "Partner quality"
+          description: "Partner network quality (technology partners, alliances)"
+          weight: 0.1
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "security_vendor"
+          name: "Security vendor"
+          description: "Security vendor relationships (CrowdStrike, Palo Alto, etc.)"
+          weight: 0.3
+          ttl: "semi_static"
+          ttl_seconds: 2592000  # 30 days
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          score_condition: security_vendor
+          
+        - id: "industry_body"
+          name: "Industry body"
+          description: "Industry body membership (FS-ISAC, sector ISACs, trade associations)"
+          weight: 0.15
+          ttl: "static"
+          ttl_seconds: 7776000  # 90 days
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "certification_authority"
+          name: "Certification authority"
+          description: "Certification authority (who certifies them - ISO, SOC 2 auditors)"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "financial_relationship"
+          name: "Financila relationship"
+          description: "Banking/financial relationship quality"
+          weight: 0.05
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "network_centrality"
+          name: "Network centrality"
+          description: "Peer network centrality (position in industry graph)"
+          weight: 0.1
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "second_degree"
+          name: "Second degree"
+          description: "Second-degree relationship quality"
+          weight: 0.1
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+  
+      technical_infrastructure:
+        - id: "tls"
+          name: "tls"
+          description: "TLS/SSL configuration (SSL Labs methodology)"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400  # 24 hours
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "security_headers"
+          name: "Security headers"
+          description: "Security headers (HSTS, CSP, X-Frame-Options, etc.)"
+          weight: 0.12
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "email_auth"
+          name: "Email authentication"
+          description: "Email authentication (SPF, DMARC, DKIM)"
+          weight: 0.12
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "dnssec"
+          name: "dnssec"
+          description: "DNSSEC implementation"
+          weight: 0.06
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "exposure"
+          name: "exposure"
+          description: "Network exposure (open ports, exposed services via Shodan/Censys)"
+          weight: 0.2
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          score_condition: exposure
+
+        - id: "software_currency"
+          name: "Software currency"
+          description: "Software currency (version fingerprinting)"
+          weight: 0.12
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "cve_exposure"
+          name: "CVE exposure"
+          description: "Known vulnerabilities (CVEs for detected software versions)"
+          weight: 0.18
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          score_condition: cve_exposure
+
+         - id: "cloud_infrastructure"
+          name: "Cloud Infrastructure"
+          description: "Cloud infrastructure quality (major providers vs unknown)"
+          weight: 0.05
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]   
+          critical: false
+          score_condition: null
+  
+      corporate_footprint:
+        - id: "security_page"
+          name: "Security page"
+          description: "Security page presence and quality"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "privacy_policy"
+          name: "Privacy policy"
+          description: "Privacy policy quality (NLP analysis)"
+          weight: 0.1
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "security_txt"
+          name: "Security txt"
+          description: "Security.txt presence and completeness"
+          weight: 0.1
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "bug_bounty"
+          name: "Bug bounty"
+          description: "Bug bounty program presence (HackerOne, Bugcrowd)"
+          weight: 0.2
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          score_condition: bug_bounty
+          
+        - id: "security_hiring"
+          name: "Security hiring"
+          description: "Security-related job postings (CISO, security engineers)"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "technical_content"
+          name: "Technical content"
+          description: "Technical blog/content quality"
+          weight: 0.1
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "developer_resources"
+          name: "Developer resources"
+          description: "Developer/API documentation presence"
+          weight: 0.05
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "security_leadership"
+          name: "Security leadership"
+          description: "Leadership visibility (security leadership profiles)"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]   
+          critical: false
+          score_condition: null
+  
+      public_records:
+        - id: "breach_history"
+          name: "Breach history"
+          description: "Breach history (HHS, state AG, public disclosures)"
+          weight: 0.35
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          score_condition: breach_history
+          
+        - id: "regulatory_action"
+          name: "Regulatory action"
+          description: "Regulatory actions (FTC, state AG enforcement)"
+          weight: 0.2
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "litigation_score"
+          name: "Litigation history"
+          description: "Litigation history (data breach lawsuits)"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "credential_exposure"
+          name: "Credential exposure"
+          description: "Credential exposure (HaveIBeenPwned corporate domain)"
+          weight: 0.2
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "dark_web"
+          name: "Dark web"
+          description: "Dark web exposure (leaked data, credentials for sale)"
+          weight: 0.1
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources: []
+          score_range: [0, 100]
+          critical: true
+          score_condition: dark_web
+  
+      structured_data:
+        - id: "security_rating"
+          name: "Security rating"
+          description: "Security rating (BitSight, SecurityScorecard if available)"
+          weight: 0.5
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "esg_cyber"
+          name: "ESG cyber"
+          description: "ESG cyber/privacy component (MSCI, Sustainalytics)"
+          weight: 0.25
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "credit_rating"
+          name: "Credit rating"
+          description: "Credit rating (as proxy for organizational quality)"
+          weight: 0.25
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources: []
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+  
+    # ---------------------------------------------------------------------------
+    # TIER THRESHOLDS
+    # ---------------------------------------------------------------------------
+    # Score ranges for each tier (scores are 0-1000)
+
+    tier_thresholds:
+      tier_1:
+        id: 1
+        label: "PREFERRED"
+        min_score: 800
+        max_score: 1000
+        description: "Excellent risk - automatic approval, preferred pricing"
+        auto_approve: true
+        auto_decline: false
+        base_premium: 8000
+        
+      tier_2:
+        id: 2
+        label: "STANDARD_PLUS"
+        min_score: 650
+        max_score: 799
+        description: "Good risk - automatic approval, standard pricing"
+        auto_approve: true
+        auto_decline: false
+        base_premium: 12000
+        
+      tier_3:
+        id: 3
+        label: "STANDARD"
+        min_score: 500
+        max_score: 649
+        description: "Average risk - may require referral"
+        auto_approve: false
+        auto_decline: false
+        base_premium: 18000
+        
+      tier_4:
+        id: 4
+        label: "SUBSTANDARD"
+        min_score: 350
+        max_score: 499
+        description: "Elevated risk - requires senior review"
+        auto_approve: false
+        auto_decline: false
+        base_premium: 30000
+        
+      tier_5:
+        id: 5
+        label: "DECLINE"
+        min_score: 0
+        max_score: 349
+        description: "Unacceptable risk - decline"
+        auto_approve: false
+        auto_decline: true
+        base_premium: 50000
+
+    # ---------------------------------------------------------------------------
+    # CONDITION DEFINITIONS
+    # ---------------------------------------------------------------------------
+    # Conditions that trigger automatic actions, these should be linked to signals.
+    
+    direct_conditions:
+      - id: direct_false
+        bands:
+          - { return: false, tier: 5, action: "DECLINE", note: "Critical issue"}
+  
+    score_conditions:
+      - id: technical_infrastructure
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.
+      - id: public_record
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.         
+      - id: cve_exposure
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.
+      - id: exposure
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.        
+      - id: bug_bounty
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.        
+      - id: breach_history
+        bands:
+          - { max: 40, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.    
+      - id: dark_web
+        bands:
+          - { max: 30, tier: 5, action: "DECLINE", note: "Critical issue"} 
+        inclusive_max: false # interpret "max" as exclusive (< max). Set true to use <=.      
+  
+    # ---------------------------------------------------------------------------
+    # PRICING PARAMETERS
+    # ---------------------------------------------------------------------------
+    
+      # Increased Limit Factors (ILF)
+      ilf_curve:
+        base_limit: 1000000  # $1M base
+        factors:
+          - {limit: 1000000, factor: 1.00}
+          - {limit: 2000000, factor: 1.7}
+          - {limit: 5000000, factor: 3.2}
+          - {limit: 10000000, factor: 5}
+          - {limit: 25000000, factor: 9}
+          - {limit: 50000000, factor: 14}
+          - {limit: 100000000, factor: 22}
+      
+      # Deductible credits
+      deductible_credits:
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}  # 0.1-0.5% of limit
+        - {min_pct: 0.005, max_pct: 0.01, credit: 0.10}   # 0.5-1% of limit
+        - {min_pct: 0.01, max_pct: 0.02, credit: 0.15}    # 1-2% of limit
+        - {min_pct: 0.02, max_pct: 0, credit: 0.20}    # >2% of limit
+      
+      # Experience modifiers (based on loss history)
+      experience_modifiers:
+        clean_5yr: 0.90          # No losses in 5 years
+        clean_3yr: 0.95          # No losses in 3 years
+        minor_losses: 1.00       # Minor attritional losses only
+        moderate_losses: 1.15    # One moderate loss
+        major_losses: 1.35       # Major loss history
+        
+      taxes_fees_rate: 0.05  # 5% for taxes and fees
+  
+    # ---------------------------------------------------------------------------
+    # TEST PROFILES
+    # ---------------------------------------------------------------------------
+    # Predefined signal sets for actuarial validity testing
+    # These ensure consistent test data generation
+    
+    test_profiles:
+      excellent_safety:
+        description: "Top-tier operator with excellent safety record"
+        expected_tier: [1, 2]
+        expected_score_range: [750, 1000]
+        operator_type: "MAJOR_AIRLINE"
+        fleet_category: "NARROWBODY"
+        fleet_size: "LARGE"
+        regulatory_framework: "FAA"
+        iosa_status: "REGISTERED"
+        signals:
+          network_authority:
+            alliance_membership_score: 90
+            codeshare_quality_score: 85
+            lessor_quality_score: 88
+            oem_relationship_score: 85
+            mro_quality_score: 82
+          safety_record:
+            accident_history_score: 98
+            incident_history_score: 92
+            accident_rate_score: 95
+            fatality_history_score: 100
+            investigation_findings_score: 90
+          regulatory_compliance:
+            certificate_status_score: 98
+            enforcement_actions_score: 95
+            ad_compliance_score: 98
+            iosa_status_score: 95
+            ramp_inspection_score: 92
+            eu_safety_list_score: 100
+          operational_quality:
+            otp_score: 88
+            dispatch_reliability_score: 92
+            training_program_score: 90
+            sms_maturity_score: 88
+            crew_experience_score: 85
+          fleet_quality:
+            fleet_age_score: 85
+            fleet_homogeneity_score: 90
+            aircraft_generation_score: 88
+            maintenance_program_score: 92
+            heavy_check_currency_score: 95
+          financial_stability:
+            credit_rating_score: 85
+            liquidity_score: 82
+            profitability_score: 78
+            load_factor_score: 85
+            fleet_renewal_score: 88
+          route_risk:
+            high_risk_destination_score: 92
+            challenging_airport_score: 88
+            overwater_exposure_score: 95
+            weather_exposure_score: 85
+            conflict_zone_score: 98
+          corporate_governance:
+            management_stability_score: 90
+            safety_culture_score: 92
+            disclosure_quality_score: 85
+            crisis_response_score: 88
+  
+      average_safety:
+        description: "Average operator with typical industry profile"
+        expected_tier: [2, 3]
+        expected_score_range: [500, 749]
+        operator_type: "REGIONAL_AIRLINE"
+        fleet_category: "REGIONAL_JET"
+        fleet_size: "MEDIUM"
+        regulatory_framework: "FAA"
+        iosa_status: "REGISTERED"
+        signals:
+          network_authority:
+            alliance_membership_score: 0  # Not alliance member
+            codeshare_quality_score: 72
+            lessor_quality_score: 70
+            oem_relationship_score: 65
+            mro_quality_score: 68
+          safety_record:
+            accident_history_score: 75
+            incident_history_score: 68
+            accident_rate_score: 72
+            fatality_history_score: 85
+            investigation_findings_score: 70
+          regulatory_compliance:
+            certificate_status_score: 82
+            enforcement_actions_score: 70
+            ad_compliance_score: 85
+            iosa_status_score: 75
+            ramp_inspection_score: 72
+            eu_safety_list_score: 100
+          operational_quality:
+            otp_score: 72
+            dispatch_reliability_score: 78
+            training_program_score: 70
+            sms_maturity_score: 65
+            crew_experience_score: 62
+          fleet_quality:
+            fleet_age_score: 62
+            fleet_homogeneity_score: 75
+            aircraft_generation_score: 55
+            maintenance_program_score: 72
+            heavy_check_currency_score: 78
+          financial_stability:
+            credit_rating_score: 65
+            liquidity_score: 58
+            profitability_score: 55
+            load_factor_score: 72
+            fleet_renewal_score: 50
+          route_risk:
+            high_risk_destination_score: 78
+            challenging_airport_score: 72
+            overwater_exposure_score: 85
+            weather_exposure_score: 70
+            conflict_zone_score: 88
+          corporate_governance:
+            management_stability_score: 68
+            safety_culture_score: 65
+            disclosure_quality_score: 60
+            crisis_response_score: 62
+  
+      poor_safety:
+        description: "High-risk operator with concerning safety indicators"
+        expected_tier: [4, 5]
+        expected_score_range: [0, 499]
+        operator_type: "CHARTER_OPERATOR"
+        fleet_category: "TURBOPROP"
+        fleet_size: "SMALL"
+        regulatory_framework: "OTHER_ICAO"
+        iosa_status: "NEVER_REGISTERED"
+        signals:
+          network_authority:
+            alliance_membership_score: 0
+            codeshare_quality_score: 35
+            lessor_quality_score: 40
+            oem_relationship_score: 30
+            mro_quality_score: 38
+          safety_record:
+            accident_history_score: 35
+            incident_history_score: 38
+            accident_rate_score: 32
+            fatality_history_score: 45
+            investigation_findings_score: 40
+          regulatory_compliance:
+            certificate_status_score: 55
+            enforcement_actions_score: 35
+            ad_compliance_score: 48
+            iosa_status_score: 25
+            ramp_inspection_score: 42
+            eu_safety_list_score: 60
+          operational_quality:
+            otp_score: 45
+            dispatch_reliability_score: 52
+            training_program_score: 38
+            sms_maturity_score: 30
+            crew_experience_score: 42
+          fleet_quality:
+            fleet_age_score: 28
+            fleet_homogeneity_score: 55
+            aircraft_generation_score: 20
+            maintenance_program_score: 45
+            heavy_check_currency_score: 38
+          financial_stability:
+            credit_rating_score: 35
+            liquidity_score: 28
+            profitability_score: 22
+            load_factor_score: 48
+            fleet_renewal_score: 15
+          route_risk:
+            high_risk_destination_score: 42
+            challenging_airport_score: 48
+            overwater_exposure_score: 55
+            weather_exposure_score: 45
+            conflict_zone_score: 50
+          corporate_governance:
+            management_stability_score: 35
+            safety_culture_score: 32
+            disclosure_quality_score: 28
+            crisis_response_score: 30
+  
+      minimal_signals:
+        description: "New operator with limited signal availability"
+        expected_tier: [3, 4]
+        expected_score_range: [400, 600]
+        operator_type: "CHARTER_OPERATOR"
+        fleet_category: "BUSINESS_JET"
+        fleet_size: "MICRO"
+        regulatory_framework: "FAA"
+        iosa_status: "NOT_APPLICABLE"
+        signal_coverage: 0.4  # Only 40% of signals available
+        signals:
+          safety_record:
+            accident_history_score: 70
+            fatality_history_score: 100
+          regulatory_compliance:
+            certificate_status_score: 80
+            enforcement_actions_score: 75
+          fleet_quality:
+            fleet_age_score: 85
+            maintenance_program_score: 75
+          # Other groups have no signals (use defaults)
+  
