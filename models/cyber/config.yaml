@@ -20,9 +20,7 @@ cyber:
       description: "Cyber model"
       version: "2.0.0"
       coverage_types:
-        - "aviation_hull_liability"
-        - "aviation_products_liability"
-        - "airport_liability"
+        - "cyber_liability"
       applicable_markets: ["us", "uk", "eu", "apac"]
       min_premium: 5000
       default_currency: "USD"
