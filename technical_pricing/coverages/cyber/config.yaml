@@ -13,7 +13,7 @@
 #
 # DSI PRINCIPLES APPLIED:
 #   1. All signals must be externally observable (no application questions required)
-#   2. Direct queries are OPTIONAL - model works without them
+#   2. Direct queries are OPTIONAL - model must work without them
 #   3. Categorical features are inferred from observable data
 #   4. Tier determines base premium; modifiers adjust for exposure characteristics
 #   5. All sources must be publicly accessible or through standard data providers
@@ -79,128 +79,78 @@ cyber:
     categorical_features:
       industry_classification:
         description: "Industry classification derived from public records"
-        inference_method:
-          primary: "sic_naics_lookup"        # Primary method: SIC/NAICS code lookup
-          fallback: "website_nlp"            # Fallback: NLP analysis of website content
-          sources:
-            - {type: "api", provider: "dnb", endpoint: "company/sic"}
-            - {type: "api", provider: "opencorporates", endpoint: "companies/search"}
-            - {type: "scrape", target: "company_website", analyzer: "industry_classifier"}
-          confidence_threshold: 0.7          # Minimum confidence to accept classification
-          default_on_failure: "OTHER"        # Default if inference fails
+        inference_utility_function: industry_classification_basefunction
         values:
           - id: "TECHNOLOGY"
             label: "Technology"
             modifier: 1.15
-            inference_criteria: {naics_prefixes: ["51", "54"], sic_ranges: [[7370, 7379]]}
           - id: "FINANCIAL_SERVICES" 
             label: "Financial Services" 
             modifier: 1.40
-            inference_criteria: {naics_prefixes: ["52"], sic_ranges: [[6000, 6799]]}
           - id: "HEALTHCARE"
             label: "Healthcare"
             modifier: 1.50
-            inference_criteria: {naics_prefixes: ["62"], sic_ranges: [[8000, 8099]]}
           - id: "RETAIL"
             label: "Retail"
             modifier: 1.25
-            inference_criteria: {naics_prefixes: ["44", "45"], sic_ranges: [[5200, 5999]]}
           - id: "MANUFACTURING"
             label: "Manufacturing"
             modifier: 0.95
-            inference_criteria: {naics_prefixes: ["31", "32", "33"], sic_ranges: [[2000, 3999]]}
           - id: "PROFESSIONAL_SERVICES"
             label: "Professional Services"
             modifier: 1.10
-            inference_criteria: {naics_prefixes: ["54"], sic_ranges: [[8100, 8999]]}
           - id: "EDUCATION"
             label: "Education"
             modifier: 1.05
-            inference_criteria: {naics_prefixes: ["61"], sic_ranges: [[8200, 8299]]}
           - id: "GOVERNMENT"
             label: "Government"
             modifier: 0.90
-            inference_criteria: {naics_prefixes: ["92"], sic_ranges: [[9100, 9999]]}
           - id: "ENERGY"
             label: "Energy & Utilities"
             modifier: 1.20
-            inference_criteria: {naics_prefixes: ["21", "22"], sic_ranges: [[1300, 1499], [4900, 4999]]}
           - id: "OTHER"
             label: "Other" 
             modifier: 1.00
-            inference_criteria: {naics_prefixes: [], sic_ranges: []}
   
       size_band:
         description: "Company size classification"
-        inference_method:
-          primary: "multi_signal_estimate"   # Combine multiple signals for estimate
-          signals:
-            - {source: "linkedin_employees", weight: 0.4}
-            - {source: "job_posting_volume", weight: 0.2}
-            - {source: "office_locations_count", weight: 0.15}
-            - {source: "revenue_estimate", weight: 0.25}
-          fallback: "website_analysis"
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "company/employees"}
-            - {type: "api", provider: "dnb", endpoint: "company/financials"}
-            - {type: "scrape", target: "job_boards", analyzer: "posting_counter"}
-            - {type: "api", provider: "pitchbook", endpoint: "company/size"}
-          confidence_threshold: 0.6
-          default_on_failure: "MEDIUM"
+        inference_utility_function: company_size_basefunction
         values:
           - id: "MICRO"
             label: "Micro"
             modifier: 0.40
-            inference_criteria: {employee_range: [1, 50], revenue_range: [0, 5000000]}
           - id: "SMALL"
             label: "Small"
             modifier: 0.60
-            inference_criteria: {employee_range: [51, 250], revenue_range: [5000001, 25000000]}
           - id: "MEDIUM"
             label: "Medium"
             modifier: 1.00
-            inference_criteria: {employee_range: [251, 1000], revenue_range: [25000001, 100000000]}
           - id: "LARGE"
             label: "Large"
             modifier: 2.00
-            inference_criteria: {employee_range: [1001, 5000], revenue_range: [100000001, 500000000]}
           - id: "ENTERPRISE"
             label: "Enterprise"
             modifier: 4.00 
-            inference_criteria: {employee_range: [5001, 999999999], revenue_range: [500000001, 999999999999]}
-
+            
       geography:
         description: "Primary operational geography"
-        inference_method:
-          primary: "headquarters_lookup"
-          fallback: "domain_analysis"
-          sources:
-            - {type: "api", provider: "dnb", endpoint: "company/location"}
-            - {type: "whois", target: "primary_domain"}
-            - {type: "scrape", target: "contact_page", analyzer: "address_extractor"}
-          confidence_threshold: 0.8
-          default_on_failure: "US"
+        inference_utility_function: operational_base_basefunction
         values:
           - id: "US" 
             label: "United States"
             modifier: 1.00
-            inference_criteria: {country_codes: ["US"]}
           - id: "UK"
             label: "United Kingdom"
             modifier: 1.05
-            inference_criteria: {country_codes: ["GB"]}
           - id: "EU"
             label: "European Union"
             modifier: 1.10 
-            inference_criteria: {country_codes: ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "IE"]}
           - id: "APAC"
             label: "Asia Pacific"
             modifier: 1.15
-            inference_criteria: {country_codes: ["AU", "NZ", "SG", "JP", "HK"]}
           - id: "OTHER" 
             label: "Other"
             modifier: 1.25
-            inference_criteria: {country_codes: []}
 
   
     # ---------------------------------------------------------------------------
@@ -256,12 +206,7 @@ cyber:
           name: "Customer Quality"
           description: "Customer quality inferred from case studies, logos, testimonials"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800  # 7 days
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/customers", "/case-studies", "/testimonials"]}
-            - {type: "api", provider: "clearbit", endpoint: "company/customers"}
-          score_range: [0, 100]
+          inference_utility_function: customer_quality_basefunction
           critical: false
           score_condition: null
           
@@ -269,12 +214,7 @@ cyber:
           name: "Partner Network Quality"
           description: "Technology partners and alliance quality"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/partners", "/integrations"]}
-            - {type: "api", provider: "crunchbase", endpoint: "company/partnerships"}
-          score_range: [0, 100]
+          inference_utility_function: partner_quality_basefunction
           critical: false
           score_condition: null
           
@@ -282,13 +222,7 @@ cyber:
           name: "Security Vendor Relationships"
           description: "Relationships with tier-1 security vendors (CrowdStrike, Palo Alto, etc.)"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 2592000  # 30 days
-          sources:
-            - {type: "dns", analyzer: "security_vendor_detector"}
-            - {type: "scrape", target: "company_website", pages: ["/security", "/trust"]}
-            - {type: "certificate", analyzer: "issuer_analysis"}
-          score_range: [0, 100]
+          inference_utility_function: security_vendor_basefunction
           critical: true
           score_condition: security_vendor_poor
           
@@ -296,12 +230,7 @@ cyber:
           name: "Industry Body Membership"
           description: "Membership in ISACs, trade associations, security consortiums"
           weight: 0.15
-          ttl: "static"
-          ttl_seconds: 7776000  # 90 days
-          sources:
-            - {type: "api", provider: "isac_registries", endpoint: "members/search"}
-            - {type: "scrape", target: "company_website", pages: ["/about", "/compliance"]}
-          score_range: [0, 100]
+          inference_utility_function: industry_body_basefunction
           critical: false
           score_condition: null
           
@@ -309,12 +238,7 @@ cyber:
           name: "Certification Authority"
           description: "Quality of certification auditors (Big 4, recognized bodies)"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/security", "/compliance", "/trust"]}
-            - {type: "api", provider: "soc2_registry", endpoint: "reports/search"}
-          score_range: [0, 100]
+          inference_utility_function: certification_authority_basefunction
           critical: false
           score_condition: null
 
@@ -322,12 +246,7 @@ cyber:
           name: "Financial Relationship Quality"
           description: "Banking and financial relationship indicators"
           weight: 0.05
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "dnb", endpoint: "company/banking"}
-            - {type: "filing", source: "sec_edgar", document_types: ["10-K", "10-Q"]}
-          score_range: [0, 100]
+          inference_utility_function: financial_relationship_basefunction
           critical: false
           score_condition: null
 
@@ -335,12 +254,7 @@ cyber:
           name: "Peer Network Centrality"
           description: "Position in industry relationship graph"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "graph", provider: "internal", analyzer: "centrality_calculator"}
-            - {type: "api", provider: "crunchbase", endpoint: "company/connections"}
-          score_range: [0, 100]
+          inference_utility_function: network_centrality_basefunction
           critical: false
           score_condition: null
 
@@ -348,11 +262,7 @@ cyber:
           name: "Second-Degree Relationship Quality"
           description: "Quality of partners' partners (supply chain depth)"
           weight: 0.05
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "graph", provider: "internal", analyzer: "second_degree_scorer"}
-          score_range: [0, 100]
+          inference_utility_function: second_degree_basefunction
           critical: false
           score_condition: null
   
@@ -361,12 +271,7 @@ cyber:
           name: "TLS/SSL Configuration"
           description: "TLS configuration quality (SSL Labs methodology)"
           weight: 0.12
-          ttl: "dynamic"
-          ttl_seconds: 86400  # 24 hours
-          sources:
-            - {type: "scan", provider: "ssllabs", endpoint: "analyze"}
-            - {type: "scan", provider: "internal", analyzer: "tls_scanner"}
-          score_range: [0, 100]
+          inference_utility_function: tls_configuration_basefunction
           critical: false
           score_condition: null
           
@@ -374,12 +279,7 @@ cyber:
           name: "Security Headers"
           description: "HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scan", provider: "securityheaders.com", endpoint: "scan"}
-            - {type: "scan", provider: "internal", analyzer: "header_scanner"}
-          score_range: [0, 100]
+          inference_utility_function: security_headers_basefunction
           critical: false
           score_condition: null
           
@@ -387,12 +287,7 @@ cyber:
           name: "Email Authentication"
           description: "Email security (SPF, DMARC, DKIM configuration)"
           weight: 0.12
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "dns", records: ["TXT", "MX"], analyzer: "email_auth_scorer"}
-            - {type: "api", provider: "dmarcian", endpoint: "domain/check"}
-          score_range: [0, 100]
+          inference_utility_function: email_authentication_basefunction
           critical: false
           score_condition: null
           
@@ -400,12 +295,7 @@ cyber:
           name: "DNSSEC Implementation"
           description: "DNS Security Extensions implementation"
           weight: 0.05
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "dns", analyzer: "dnssec_validator"}
-            - {type: "api", provider: "dnsviz", endpoint: "analyze"}
-          score_range: [0, 100]
+          inference_utility_function: dnssec_basefunction
           critical: false
           score_condition: null
           
@@ -413,12 +303,7 @@ cyber:
           name: "Network Exposure"
           description: "Exposed services and open ports (Shodan/Censys analysis)"
           weight: 0.18
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "shodan", endpoint: "host/search"}
-            - {type: "api", provider: "censys", endpoint: "hosts/search"}
-          score_range: [0, 100]
+          inference_utility_function: network_exposure_basefunction
           critical: true
           score_condition: exposure_critical
 
@@ -426,12 +311,7 @@ cyber:
           name: "Software Currency"
           description: "Software version freshness (fingerprinting analysis)"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scan", provider: "internal", analyzer: "version_fingerprinter"}
-            - {type: "api", provider: "wappalyzer", endpoint: "lookup"}
-          score_range: [0, 100]
+          inference_utility_function: software_currency_basefunction
           critical: false
           score_condition: null
 
@@ -439,13 +319,7 @@ cyber:
           name: "CVE Exposure"
           description: "Known vulnerabilities in detected software"
           weight: 0.18
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "nvd", endpoint: "cves/search"}
-            - {type: "api", provider: "vulndb", endpoint: "vulnerabilities/by_product"}
-            - {type: "correlation", analyzer: "version_to_cve_mapper"}
-          score_range: [0, 100]
+          inference_utility_function: cve_exposure_basefunction
           critical: true
           score_condition: cve_exposure_critical
 
@@ -453,12 +327,7 @@ cyber:
           name: "Cloud Infrastructure Quality"
           description: "Cloud provider quality and configuration"
           weight: 0.05
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "dns", analyzer: "cloud_provider_detector"}
-            - {type: "ip", analyzer: "asn_lookup"}
-          score_range: [0, 100]
+          inference_utility_function: cloud_infrastructure_basefunction
           critical: false
           score_condition: null
 
@@ -466,11 +335,7 @@ cyber:
           name: "WAF Presence"
           description: "Web Application Firewall detection"
           weight: 0.05
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scan", provider: "internal", analyzer: "waf_detector"}
-          score_range: [0, 100]
+          inference_utility_function: waf_presence_basefunction
           critical: false
           score_condition: null
 
@@ -478,12 +343,7 @@ cyber:
           name: "CDN Usage"
           description: "Content Delivery Network usage (DDoS protection indicator)"
           weight: 0.05
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "dns", analyzer: "cdn_detector"}
-            - {type: "header", analyzer: "cdn_header_checker"}
-          score_range: [0, 100]
+          inference_utility_function: cdn_usage_basefunction
           critical: false
           score_condition: null
   
@@ -492,12 +352,7 @@ cyber:
           name: "Security Page Presence"
           description: "Dedicated security/trust page presence and quality"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/security", "/trust", "/trust-center"]}
-            - {type: "nlp", analyzer: "security_content_scorer"}
-          score_range: [0, 100]
+          inference_utility_function: security_page_basefunction
           critical: false
           score_condition: null
           
@@ -505,12 +360,7 @@ cyber:
           name: "Privacy Policy Quality"
           description: "Privacy policy comprehensiveness (NLP analysis)"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/privacy", "/privacy-policy"]}
-            - {type: "nlp", analyzer: "privacy_policy_scorer"}
-          score_range: [0, 100]
+          inference_utility_function: privacy_policy_basefunction
           critical: false
           score_condition: null
           
@@ -518,11 +368,7 @@ cyber:
           name: "Security.txt Presence"
           description: "RFC 9116 security.txt file presence and completeness"
           weight: 0.08
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "http", target: "/.well-known/security.txt"}
-          score_range: [0, 100]
+          inference_utility_function: security_txt_basefunction
           critical: false
           score_condition: null
           
@@ -530,13 +376,7 @@ cyber:
           name: "Bug Bounty Program"
           description: "Public bug bounty program presence"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "hackerone", endpoint: "programs/search"}
-            - {type: "api", provider: "bugcrowd", endpoint: "programs/search"}
-            - {type: "scrape", target: "company_website", pages: ["/security", "/bug-bounty"]}
-          score_range: [0, 100]
+          inference_utility_function: bug_bounty_basefunction
           critical: false
           score_condition: null
           
@@ -544,12 +384,7 @@ cyber:
           name: "Security Hiring Activity"
           description: "Security-related job postings (CISO, security engineers)"
           weight: 0.12
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "jobs/search"}
-            - {type: "scrape", target: "job_boards", sites: ["indeed", "glassdoor"]}
-          score_range: [0, 100]
+          inference_utility_function: security_hiring_basefunction
           critical: false
           score_condition: null
           
@@ -557,12 +392,7 @@ cyber:
           name: "Technical Blog Quality"
           description: "Security-focused technical content presence"
           weight: 0.08
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/blog", "/engineering"]}
-            - {type: "nlp", analyzer: "technical_content_scorer"}
-          score_range: [0, 100]
+          inference_utility_function: technical_quality_basefunction
           critical: false
           score_condition: null
 
@@ -570,11 +400,7 @@ cyber:
           name: "Developer Resources"
           description: "API documentation and developer portal presence"
           weight: 0.07
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/developers", "/api", "/docs"]}
-          score_range: [0, 100]
+          inference_utility_function: developer_resources_basefunction
           critical: false
           score_condition: null
 
@@ -582,12 +408,7 @@ cyber:
           name: "Security Leadership Visibility"
           description: "CISO/security leadership public presence"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "people/search", filters: {title: ["CISO", "Chief Information Security", "VP Security"]}}
-            - {type: "scrape", target: "company_website", pages: ["/about", "/team", "/leadership"]}
-          score_range: [0, 100]
+          inference_utility_function: security_leadership_basefunction
           critical: false
           score_condition: null
 
@@ -595,12 +416,7 @@ cyber:
           name: "Compliance Certifications"
           description: "Displayed compliance certifications (SOC 2, ISO 27001, etc.)"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/security", "/compliance", "/trust"]}
-            - {type: "image", analyzer: "certification_badge_detector"}
-          score_range: [0, 100]
+          inference_utility_function: compliance_badges_basefunction
           critical: false
           score_condition: null
   
@@ -609,14 +425,7 @@ cyber:
           name: "Breach History"
           description: "Historical data breaches (HHS, state AG, public disclosures)"
           weight: 0.35
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "hhs_breach_portal", endpoint: "breaches/search"}
-            - {type: "api", provider: "privacyrights", endpoint: "breaches/search"}
-            - {type: "news", provider: "gdelt", query: "data breach {company}"}
-            - {type: "api", provider: "haveibeenpwned", endpoint: "breaches/domain"}
-          score_range: [0, 100]
+          inference_utility_function: breach_history_basefunction
           critical: true
           score_condition: breach_history_critical
           
@@ -624,13 +433,7 @@ cyber:
           name: "Regulatory Actions"
           description: "FTC, state AG, GDPR enforcement actions"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "ftc", endpoint: "cases/search"}
-            - {type: "api", provider: "gdpr_tracker", endpoint: "fines/search"}
-            - {type: "scrape", target: "state_ag_sites", analyzer: "enforcement_finder"}
-          score_range: [0, 100]
+          inference_utility_function: regulatory_action_basefunction
           critical: false
           score_condition: null
           
@@ -638,12 +441,7 @@ cyber:
           name: "Litigation History"
           description: "Data breach and privacy-related lawsuits"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "cases/search"}
-            - {type: "api", provider: "courtlistener", endpoint: "search"}
-          score_range: [0, 100]
+          inference_utility_function: litigation_history_basefunction
           critical: false
           score_condition: null
           
@@ -651,12 +449,7 @@ cyber:
           name: "Credential Exposure"
           description: "Corporate domain credential exposure (HIBP)"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "haveibeenpwned", endpoint: "breachedaccount/domain"}
-            - {type: "api", provider: "spycloud", endpoint: "breach/domain"}
-          score_range: [0, 100]
+          inference_utility_function: credential_exposure_basefunction
           critical: false
           score_condition: null
           
@@ -664,12 +457,7 @@ cyber:
           name: "Dark Web Exposure"
           description: "Leaked data and credentials for sale"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "recorded_future", endpoint: "darkweb/search"}
-            - {type: "api", provider: "flashpoint", endpoint: "exposure/search"}
-          score_range: [0, 100]
+          inference_utility_function: dark_web_basefunction
           critical: true
           score_condition: dark_web_critical
   
@@ -678,13 +466,7 @@ cyber:
           name: "Security Rating"
           description: "Third-party security rating (BitSight, SecurityScorecard)"
           weight: 0.50
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "bitsight", endpoint: "ratings/company"}
-            - {type: "api", provider: "securityscorecard", endpoint: "companies/score"}
-            - {type: "api", provider: "riskrecon", endpoint: "ratings"}
-          score_range: [0, 100]
+          inference_utility_function: security_rating_basefunction
           critical: false
           score_condition: null
           
@@ -692,12 +474,7 @@ cyber:
           name: "ESG Cyber Component"
           description: "Cyber/privacy component of ESG ratings"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "msci", endpoint: "esg/cyber"}
-            - {type: "api", provider: "sustainalytics", endpoint: "cyber_risk"}
-          score_range: [0, 100]
+          inference_utility_function: esg_cyber_basefunction
           critical: false
           score_condition: null
           
@@ -705,12 +482,7 @@ cyber:
           name: "Credit Rating Proxy"
           description: "Credit rating as proxy for organizational quality"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "dnb", endpoint: "company/rating"}
-            - {type: "api", provider: "experian", endpoint: "business/score"}
-          score_range: [0, 100]
+          inference_utility_function: credit_rating_basefunction
           critical: false
           score_condition: null
   
