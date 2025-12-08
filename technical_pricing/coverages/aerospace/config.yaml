@@ -2,7 +2,7 @@
 # DSI Model Configuration
 # =============================================================================
 #
-# This file defines the complete configuration for the aerospace coverage type.
+# This file defines the complete configuration for a coverage type.
 # It is the single source of truth for:
 #   - Model structure and parameters
 #   - Signal definitions and weights
@@ -13,7 +13,7 @@
 #
 # DSI PRINCIPLES APPLIED:
 #   1. All signals must be externally observable (no application questions required)
-#   2. Direct queries are OPTIONAL - model works without them
+#   2. Direct queries are OPTIONAL - model must work without them
 #   3. Categorical features are inferred from observable data
 #   4. Tier determines base premium; modifiers adjust for exposure characteristics
 #   5. All sources must be publicly accessible or through standard data providers
