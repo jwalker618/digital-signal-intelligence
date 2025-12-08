@@ -1,8 +1,8 @@
 # =============================================================================
-# DSI Model Configuration - Directors & Officers Insurance
+# DSI Model Configuration
 # =============================================================================
 #
-# This file defines the complete configuration for the D&O coverage type.
+# This file defines the complete configuration for a coverage type.
 # It is the single source of truth for:
 #   - Model structure and parameters
 #   - Signal definitions and weights
@@ -12,19 +12,11 @@
 # Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
 #
 # DSI PRINCIPLES APPLIED:
-#   1. All signals must be externally observable (SEC filings, court records, market data)
-#   2. Direct queries are OPTIONAL - model works without them
-#   3. Categorical features are inferred from public filings and market data
+#   1. All signals must be externally observable (no application questions required)
+#   2. Direct queries are OPTIONAL - model must work without them
+#   3. Categorical features are inferred from observable data
 #   4. Tier determines base premium; modifiers adjust for exposure characteristics
-#   5. D&O is uniquely suited to DSI due to extensive corporate governance disclosure
-#
-# KEY DATA SOURCES:
-#   - SEC EDGAR (10-K, 10-Q, 8-K, DEF 14A proxy statements)
-#   - PACER (federal court litigation)
-#   - Stanford Securities Class Action Clearinghouse (SCAC)
-#   - ISS, Glass Lewis governance ratings
-#   - Credit rating agencies
-#   - Stock exchanges and market data providers
+#   5. All sources must be publicly accessible or through standard data providers
 #
 # Version: 2.0.0
 # Last Updated: 2025-12
@@ -33,7 +25,7 @@
 directors_officers:
   do_general:
     metadata:
-      name: "DSI Directors & Officers Insurance Model"
+      name: "DSI Directors & Officers Technical Pricing Model"
       description: "D&O liability coverage based on observable governance, financial, and litigation signals"
       version: "2.0.0"
       coverage_types:
@@ -53,191 +45,159 @@ directors_officers:
     direct_optional_queries:
       - id: "pending_claims"
         question: "Are there any pending securities class actions or derivative suits?"
-        direct_condition: pending_claims_true
+        direct_condition: pending_claims_referral
         
       - id: "regulatory_investigation"
         question: "Is the company or any director/officer under regulatory investigation?"
-        direct_condition: regulatory_investigation_true
+        direct_condition: regulatory_investigation_referral
         
       - id: "planned_transaction"
         question: "Is there a planned M&A, IPO, SPAC merger, or material transaction?"
-        direct_condition: planned_transaction_true
+        direct_condition: planned_transaction_referral
         
       - id: "covenant_compliance"
         question: "Is the company in compliance with all debt covenants?"
-        direct_condition: covenant_noncompliance
+        direct_condition: covenant_noncompliance_referral
         
       - id: "executive_dispute"
         question: "Are there any disputes with current or former executives?"
-        direct_condition: executive_dispute_true
+        direct_condition: executive_dispute_referral
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
+    # These define classification values and their pricing impact
+    # inference_method specifies how to automatically determine the value
+
     categorical_features:
       company_type:
         description: "Company classification based on public/private status and market cap"
-        inference_method:
-          primary: "sec_filing_analysis"
-          fallback: "market_data_lookup"
-          sources:
-            - {type: "api", provider: "sec_edgar", endpoint: "cik/lookup"}
-            - {type: "api", provider: "nasdaq", endpoint: "screener/market_cap"}
-            - {type: "api", provider: "nyse", endpoint: "listings/search"}
-            - {type: "api", provider: "pitchbook", endpoint: "companies/funding"}
-            - {type: "api", provider: "crunchbase", endpoint: "organizations/funding"}
-          confidence_threshold: 0.95
-          default_on_failure: "PRIVATE_OTHER"
+        inference_utility_function: company_type_basefunction
         values:
           - id: "PUBLIC_LARGE_CAP"
             label: "Public Large Cap"
             modifier: 2.50
             description: "Market cap >$10B, SEC reporting"
-            inference_criteria: {sec_reporting: true, market_cap_min: 10000000000}
-            
           - id: "PUBLIC_MID_CAP"
             label: "Public Mid Cap"
             modifier: 1.50
             description: "Market cap $2B-$10B"
-            inference_criteria: {sec_reporting: true, market_cap_range: [2000000000, 10000000000]}
-            
           - id: "PUBLIC_SMALL_CAP"
             label: "Public Small Cap"
             modifier: 1.00
             description: "Market cap $300M-$2B"
-            inference_criteria: {sec_reporting: true, market_cap_range: [300000000, 2000000000]}
-            
           - id: "PUBLIC_MICRO_CAP"
             label: "Public Micro Cap"
             modifier: 1.25
             description: "Market cap <$300M (elevated litigation risk)"
-            inference_criteria: {sec_reporting: true, market_cap_max: 300000000}
-            
           - id: "PRE_IPO"
             label: "Pre-IPO"
             modifier: 2.00
             description: "Filed S-1 or planning IPO within 12 months"
-            inference_criteria: {s1_filed: true}
-            
           - id: "SPAC"
             label: "SPAC"
             modifier: 3.50
             description: "Special Purpose Acquisition Company"
-            inference_criteria: {spac_structure: true}
-            
           - id: "PRIVATE_BACKED"
             label: "Private VC/PE Backed"
             modifier: 0.60
             description: "Private company with institutional backing"
-            inference_criteria: {sec_reporting: false, institutional_backing: true}
-            
           - id: "PRIVATE_OTHER"
             label: "Private Other"
             modifier: 0.50
             description: "Private company without institutional backing"
-            inference_criteria: {sec_reporting: false, institutional_backing: false}
-            
           - id: "NONPROFIT"
             label: "Nonprofit"
             modifier: 0.40
             description: "501(c)(3) or equivalent nonprofit"
-            inference_criteria: {nonprofit_status: true}
-
+            
       industry:
         description: "Industry classification from SIC/NAICS codes"
-        inference_method:
-          primary: "sec_sic_lookup"
-          fallback: "website_nlp"
-          sources:
-            - {type: "api", provider: "sec_edgar", endpoint: "cik/sic"}
-            - {type: "api", provider: "dnb", endpoint: "company/naics"}
-            - {type: "scrape", target: "company_website", analyzer: "industry_classifier"}
-          confidence_threshold: 0.85
-          default_on_failure: "OTHER"
+        inference_utility_function: industry_classification_basefunction
         values:
           - id: "CRYPTO_DIGITAL"
             label: "Crypto/Digital Assets"
             modifier: 2.50
             description: "Cryptocurrency, blockchain, digital assets"
-            sic_codes: []
-            keywords: ["crypto", "blockchain", "digital asset", "defi", "web3"]
             
           - id: "CANNABIS"
             label: "Cannabis"
             modifier: 2.00
             description: "Cannabis cultivation, processing, retail"
-            sic_codes: []
-            keywords: ["cannabis", "marijuana", "dispensary"]
             
           - id: "HEALTHCARE_PHARMA"
             label: "Healthcare/Pharma"
             modifier: 1.60
-            description: "Pharmaceuticals, biotech, medical devices, healthcare services"
-            sic_codes: [2833, 2834, 2835, 2836, 3841, 3842, 8000, 8011, 8062]
             
           - id: "FINANCIAL_SERVICES"
             label: "Financial Services"
             modifier: 1.40
             description: "Banks, insurance, investment management, fintech"
-            sic_codes: [6000, 6020, 6021, 6022, 6029, 6035, 6099, 6141, 6159, 6162, 6163, 6200, 6211, 6282, 6311, 6321, 6324, 6331, 6351, 6361, 6399, 6411]
             
           - id: "TECHNOLOGY"
             label: "Technology"
             modifier: 1.25
             description: "Software, hardware, internet, semiconductors"
-            sic_codes: [3571, 3572, 3575, 3576, 3577, 3578, 3661, 3663, 3674, 7370, 7371, 7372, 7373, 7374, 7375, 7379]
             
           - id: "ENERGY"
             label: "Energy"
             modifier: 1.15
             description: "Oil & gas, utilities, renewable energy"
-            sic_codes: [1311, 1381, 1382, 1389, 2911, 4911, 4922, 4923, 4924, 4931, 4932, 4939, 4941]
             
           - id: "REAL_ESTATE"
             label: "Real Estate"
             modifier: 1.10
             description: "REITs, real estate development, property management"
-            sic_codes: [6500, 6510, 6512, 6519, 6531, 6552, 6798]
             
           - id: "RETAIL_CONSUMER"
             label: "Retail/Consumer"
             modifier: 1.00
             description: "Retail, consumer products, restaurants"
-            sic_codes: [5200, 5300, 5400, 5411, 5412, 5600, 5700, 5812, 5900]
             
           - id: "MANUFACTURING"
             label: "Manufacturing"
             modifier: 0.90
             description: "Industrial manufacturing, aerospace, automotive"
-            sic_codes: [2000, 2011, 2013, 2015, 2020, 2024, 2026, 2030, 2033, 2040, 2050, 2060, 2070, 2080, 2090, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400, 3500, 3600, 3700]
             
           - id: "OTHER"
             label: "Other"
             modifier: 1.00
             description: "Other industries"
-            sic_codes: []
-
+            
       stock_exchange:
         description: "Primary stock exchange listing"
-        inference_method:
-          primary: "exchange_listing_lookup"
-          sources:
-            - {type: "api", provider: "nasdaq", endpoint: "listings"}
-            - {type: "api", provider: "nyse", endpoint: "listings"}
-            - {type: "api", provider: "sec_edgar", endpoint: "filings/exchange"}
-          confidence_threshold: 0.99
-          default_on_failure: "NONE"
+        inference_utility_function: stock_exchange_basefunction
         values:
-          - {id: "NYSE", label: "NYSE", modifier: 1.00}
-          - {id: "NASDAQ", label: "NASDAQ", modifier: 1.00}
-          - {id: "NYSE_AMERICAN", label: "NYSE American", modifier: 1.10}
-          - {id: "OTC", label: "OTC Markets", modifier: 1.30}
-          - {id: "FOREIGN", label: "Foreign Exchange", modifier: 1.15}
-          - {id: "NONE", label: "Not Listed", modifier: 0.80}
+          - id: "NYSE"
+            label: "NYSE"
+            modifier: 1.00
+            description: ""  
+          - id: "NASDAQ"
+            label: "NASDAQ"
+            modifier: 1.00
+            description: ""  
+          - id: "NYSE_AMERICAN"
+            label: "NYSE American"
+            modifier: 1.10
+            description: ""  
+          - id: "OTC"
+            label: "OTC Markets"
+            modifier: 1.30
+            description: ""  
+          - id: "FOREIGN"
+            label: "Foreign Exchange"
+            modifier: 1.15
+          - id: "NONE"
+            label: "Not Listed"
+            modifier: 0.80
+            description: ""  
 
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
+    # SIGNAL GROUPINGS (Categories with Weights)
+    # ---------------------------------------------------------------------------
+    # Each group contributes to the composite score
+    # Weights must sum to 1.0
+    
     signal_groups:
       - id: "network_authority"
         name: "Network Authority"
@@ -295,28 +255,13 @@ directors_officers:
         critical: false
         score_condition: null
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # -------------------------------------------------------------------------
     signal_features:
       network_authority:
         - id: "auditor_quality"
           name: "External Auditor Quality"
           description: "Quality tier of external auditor (Big 4, national, regional)"
           weight: 0.20
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-            - {type: "api", provider: "pcaob", endpoint: "firms/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            big_4: 100
-            national_firm: 85
-            large_regional: 70
-            small_regional: 55
-            local_firm: 40
-            no_audit: 20
+          inference_utility_function: auditor_quality_basefunction
           critical: false
           score_condition: null
           
@@ -324,12 +269,7 @@ directors_officers:
           name: "Legal Counsel Quality"
           description: "Quality of securities/corporate counsel"
           weight: 0.15
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "S-1", "DEF 14A"]}
-          score_range: [0, 100]
-          scoring_logic: {amlaw_50: 100, amlaw_100: 85, vault_100: 75, regional_major: 60, other: 45}
+          inference_utility_function: legal_counsel_basefunction
           critical: false
           score_condition: null
           
@@ -337,13 +277,7 @@ directors_officers:
           name: "Investment Banking Relationships"
           description: "Quality of investment banking relationships"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["S-1", "424B"]}
-            - {type: "api", provider: "pitchbook", endpoint: "deals/advisors"}
-          score_range: [0, 100]
-          scoring_logic: {bulge_bracket: 100, major_bank: 85, middle_market: 70, boutique: 55, none: 35}
+          inference_utility_function: bankinbg_relationship_basefunction
           critical: false
           score_condition: null
           
@@ -351,18 +285,7 @@ directors_officers:
           name: "Institutional Investor Quality"
           description: "Quality of institutional investor base"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["13F", "SC 13G", "SC 13D"]}
-            - {type: "api", provider: "nasdaq", endpoint: "institutional_holdings"}
-          score_range: [0, 100]
-          scoring_logic:
-            tier_1_institutions: 100
-            diversified_institutional: 85
-            mixed_base: 70
-            retail_heavy: 55
-            concentrated_activist: 45
+          inference_utility_function: investor_quality_basefunction
           critical: false
           score_condition: null
           
@@ -370,19 +293,7 @@ directors_officers:
           name: "Board Network Quality"
           description: "Quality of director interlocks and board experience"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-            - {type: "api", provider: "boardex", endpoint: "connections"}
-            - {type: "api", provider: "linkedin", endpoint: "people/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            extensive_quality_network: 100
-            good_network: 80
-            adequate: 65
-            limited: 45
-            isolated: 25
+          inference_utility_function: board_network_basefunction
           critical: false
           score_condition: null
           
@@ -390,13 +301,7 @@ directors_officers:
           name: "Index Inclusion"
           description: "Membership in major stock indices"
           weight: 0.05
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "sp_global", endpoint: "indices/constituents"}
-            - {type: "api", provider: "msci", endpoint: "indices/constituents"}
-          score_range: [0, 100]
-          scoring_logic: {sp500: 100, sp400: 90, russell_1000: 85, russell_2000: 70, no_index: 50}
+          inference_utility_function: index_inclusion_basefunction
           critical: false
           score_condition: null
           
@@ -404,18 +309,7 @@ directors_officers:
           name: "Analyst Coverage"
           description: "Number and quality of sell-side analyst coverage"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "refinitiv", endpoint: "estimates/coverage"}
-            - {type: "api", provider: "bloomberg", endpoint: "estimates/analysts"}
-          score_range: [0, 100]
-          scoring_logic:
-            extensive_coverage_10plus: 100
-            good_coverage_5_10: 85
-            moderate_coverage_2_5: 70
-            minimal_coverage_1_2: 50
-            no_coverage: 35
+          inference_utility_function: analyst_coverage_basefunction
           critical: false
           score_condition: null
           
@@ -423,13 +317,7 @@ directors_officers:
           name: "Industry Association Leadership"
           description: "Leadership roles in industry associations"
           weight: 0.05
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/about", "/leadership"]}
-            - {type: "scrape", target: "industry_associations"}
-          score_range: [0, 100]
-          scoring_logic: {board_leadership: 100, active_member: 75, member: 55, none: 35}
+          inference_utility_function: industry_association_basefunction
           critical: false
           score_condition: null
 
@@ -438,19 +326,7 @@ directors_officers:
           name: "Board Independence"
           description: "Percentage of independent directors"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-            - {type: "api", provider: "iss", endpoint: "governance/board"}
-          score_range: [0, 100]
-          scoring_logic:
-            over_80pct_independent: 100
-            over_66pct_independent: 85
-            majority_independent: 70
-            near_majority: 55
-            minority_independent: 35
-            controlled: 20
+          inference_utility_function: board_independance_basefunction
           critical: true
           score_condition: board_independence_critical
           
@@ -458,19 +334,7 @@ directors_officers:
           name: "Board Diversity"
           description: "Gender, ethnic, and experiential diversity"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-            - {type: "api", provider: "iss", endpoint: "governance/diversity"}
-            - {type: "api", provider: "equilar", endpoint: "board/diversity"}
-          score_range: [0, 100]
-          scoring_logic:
-            exceeds_standards: 100
-            meets_standards: 80
-            approaching: 60
-            below_standards: 40
-            minimal: 20
+          inference_utility_function: board_diversity_basefunction
           critical: false
           score_condition: null
           
@@ -478,16 +342,7 @@ directors_officers:
           name: "CEO/Chair Separation"
           description: "Separation of CEO and Board Chair roles"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-          score_range: [0, 100]
-          scoring_logic:
-            independent_chair: 100
-            lead_independent_director: 80
-            combined_with_lead: 60
-            combined_no_lead: 35
+          inference_utility_function: ceo_chairseperation_basefunction
           critical: false
           score_condition: null
           
@@ -495,17 +350,7 @@ directors_officers:
           name: "Committee Structure"
           description: "Quality of audit, compensation, and nominating committees"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-          score_range: [0, 100]
-          scoring_logic:
-            all_independent_expert: 100
-            all_independent: 90
-            mostly_independent: 70
-            partial_independence: 50
-            inadequate: 30
+          inference_utility_function: committee_structure_basefunction
           critical: false
           score_condition: null
           
@@ -513,17 +358,7 @@ directors_officers:
           name: "Board Refreshment"
           description: "Average tenure and refreshment practices"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-            - {type: "api", provider: "iss", endpoint: "governance/tenure"}
-          score_range: [0, 100]
-          scoring_logic:
-            balanced_tenure_mix: 100
-            adequate_refreshment: 80
-            aging_board: 55
-            entrenched: 35
+          inference_utility_function: board_refreshment_basefunction
           critical: false
           score_condition: null
           
@@ -531,17 +366,7 @@ directors_officers:
           name: "Related Party Transactions"
           description: "Quality of related party transaction oversight"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A", "10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            minimal_rpts: 100
-            standard_disclosed: 80
-            elevated_volume: 55
-            concerning_rpts: 30
-            material_undisclosed: 10
+          inference_utility_function: related_party_basefunction
           critical: false
           score_condition: null
           
@@ -549,19 +374,7 @@ directors_officers:
           name: "Executive Compensation Structure"
           description: "Pay-for-performance alignment"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-            - {type: "api", provider: "iss", endpoint: "governance/compensation"}
-            - {type: "api", provider: "equilar", endpoint: "compensation/analysis"}
-          score_range: [0, 100]
-          scoring_logic:
-            strong_pay_performance: 100
-            adequate_alignment: 80
-            mixed_alignment: 60
-            weak_alignment: 40
-            misaligned: 20
+          inference_utility_function: compensation_structure_basefunction
           critical: false
           score_condition: null
           
@@ -569,18 +382,7 @@ directors_officers:
           name: "Shareholder Rights"
           description: "Shareholder-friendly provisions vs takeover defenses"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A", "10-K"]}
-            - {type: "api", provider: "iss", endpoint: "governance/rights"}
-          score_range: [0, 100]
-          scoring_logic:
-            shareholder_friendly: 100
-            balanced: 80
-            some_defenses: 60
-            multiple_defenses: 40
-            heavily_defended: 20
+          inference_utility_function: shareholder_rights_basefunction
           critical: false
           score_condition: null
 
@@ -589,18 +391,7 @@ directors_officers:
           name: "Audit Opinion"
           description: "Type of audit opinion received"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            unqualified_clean: 100
-            unqualified_emphasis: 80
-            qualified: 40
-            adverse: 15
-            disclaimer: 10
-            going_concern: 20
+          inference_utility_function: audit_opinion_basefunction
           critical: true
           score_condition: audit_opinion_critical
           
@@ -608,18 +399,7 @@ directors_officers:
           name: "Internal Controls Assessment"
           description: "SOX 404 internal controls assessment"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            effective_no_issues: 100
-            effective_remediated: 85
-            significant_deficiency: 55
-            material_weakness_remediated: 45
-            material_weakness_active: 20
-            no_assessment: 50
+          inference_utility_function: internal_controls_basefunction
           critical: true
           score_condition: internal_controls_critical
           
@@ -627,18 +407,7 @@ directors_officers:
           name: "Financial Restatement History"
           description: "History of financial restatements (5-year lookback)"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "audit_analytics", endpoint: "restatements/company"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K/A", "8-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            no_restatements: 100
-            immaterial_restatement: 80
-            material_non_fraud: 50
-            multiple_restatements: 30
-            fraud_related: 10
+          inference_utility_function: restatement_basefunction
           critical: true
           score_condition: restatement_critical
           
@@ -646,17 +415,7 @@ directors_officers:
           name: "Filing Timeliness"
           description: "History of timely SEC filings"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "sec_edgar", endpoint: "filings/timeliness"}
-          score_range: [0, 100]
-          scoring_logic:
-            always_timely: 100
-            occasional_nt: 70
-            frequent_nt: 45
-            late_filings: 25
-            delinquent: 10
+          inference_utility_function: filing_timelienness_basefunction
           critical: false
           score_condition: null
           
@@ -664,18 +423,7 @@ directors_officers:
           name: "Revenue Recognition Risk"
           description: "Revenue recognition complexity and risk"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-            - {type: "nlp", analyzer: "revenue_recognition_risk"}
-          score_range: [0, 100]
-          scoring_logic:
-            simple_transparent: 100
-            standard_complexity: 80
-            elevated_complexity: 60
-            high_complexity: 40
-            aggressive_practices: 20
+          inference_utility_function: revenue_recognition_basefunction
           critical: false
           score_condition: null
           
@@ -683,18 +431,7 @@ directors_officers:
           name: "Debt Covenant Compliance"
           description: "Proximity to debt covenant thresholds"
           weight: 0.05
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "10-Q"]}
-          score_range: [0, 100]
-          scoring_logic:
-            no_debt: 100
-            comfortable_cushion: 90
-            adequate_headroom: 75
-            tight_cushion: 50
-            waiver_received: 30
-            violation: 15
+          inference_utility_function: devt_covernent_basefunction
           critical: false
           score_condition: null
           
@@ -702,18 +439,7 @@ directors_officers:
           name: "Stock Price Volatility"
           description: "Historical stock price volatility vs peers"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "yahoo_finance", endpoint: "quote/volatility"}
-            - {type: "api", provider: "bloomberg", endpoint: "security/volatility"}
-          score_range: [0, 100]
-          scoring_logic:
-            low_volatility: 100
-            moderate: 80
-            elevated: 60
-            high: 40
-            extreme: 20
+          inference_utility_function: stock_volaitlity_basefunction
           critical: false
           score_condition: null
           
@@ -721,18 +447,7 @@ directors_officers:
           name: "Short Interest"
           description: "Short interest as percentage of float"
           weight: 0.05
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "nasdaq", endpoint: "short_interest"}
-            - {type: "api", provider: "s3_partners", endpoint: "short_interest"}
-          score_range: [0, 100]
-          scoring_logic:
-            under_3pct: 100
-            3_5pct: 85
-            5_10pct: 65
-            10_20pct: 45
-            over_20pct: 25
+          inference_utility_function: short_interest_basefunction
           critical: false
           score_condition: null
 
@@ -741,20 +456,7 @@ directors_officers:
           name: "Securities Class Action History"
           description: "History of securities class action lawsuits"
           weight: 0.35
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "stanford_scac", endpoint: "filings/company"}
-            - {type: "api", provider: "pacer", endpoint: "cases/search"}
-            - {type: "api", provider: "courtlistener", endpoint: "search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_history: 100
-            dismissed_over_5yr: 90
-            settled_over_5yr: 75
-            settled_recent: 50
-            active_suit: 25
-            multiple_active: 10
+          inference_utility_function: securities_litigation_basefunction
           critical: true
           score_condition: securities_litigation_critical
           
@@ -762,18 +464,7 @@ directors_officers:
           name: "Derivative Litigation History"
           description: "Shareholder derivative suit history"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "cases/search"}
-            - {type: "api", provider: "courtlistener", endpoint: "search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_history: 100
-            dismissed: 85
-            settled_over_5yr: 70
-            settled_recent: 50
-            active: 30
+          inference_utility_function: derivitaive_litigation_basefunction
           critical: false
           score_condition: null
           
@@ -781,19 +472,7 @@ directors_officers:
           name: "SEC Enforcement History"
           description: "SEC enforcement actions and investigations"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "sec", endpoint: "litigation/releases"}
-            - {type: "api", provider: "sec", endpoint: "enforcement/actions"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_history: 100
-            resolved_over_5yr: 85
-            resolved_recent: 60
-            comment_letter_resolved: 75
-            active_investigation: 30
-            active_enforcement: 15
+          inference_utility_function: sec_enforcement_basefunction
           critical: true
           score_condition: sec_enforcement_critical
           
@@ -801,19 +480,7 @@ directors_officers:
           name: "Other Regulatory Actions"
           description: "Non-SEC regulatory enforcement (DOJ, state AG, CFPB)"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "doj", endpoint: "cases/search"}
-            - {type: "api", provider: "cfpb", endpoint: "enforcement/actions"}
-            - {type: "news", provider: "gdelt", query: "{company} regulatory action OR investigation"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_history: 100
-            minor_resolved: 85
-            significant_resolved: 60
-            active_minor: 50
-            active_significant: 25
+          inference_utility_function: regulatory_action_basefunction
           critical: false
           score_condition: null
           
@@ -821,17 +488,7 @@ directors_officers:
           name: "Material Pending Litigation"
           description: "Disclosed material pending litigation"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "10-Q"]}
-          score_range: [0, 100]
-          scoring_logic:
-            no_material_pending: 100
-            routine_only: 90
-            some_material: 65
-            significant_pending: 40
-            existential_threat: 15
+          inference_utility_function: pending_litigation_basefunction
           critical: false
           score_condition: null
           
@@ -839,18 +496,7 @@ directors_officers:
           name: "Whistleblower Activity"
           description: "Whistleblower complaints and SEC tips"
           weight: 0.05
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "news", provider: "gdelt", query: "{company} whistleblower"}
-            - {type: "api", provider: "sec", endpoint: "whistleblower/awards"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_known_activity: 100
-            unsubstantiated: 80
-            resolved_no_finding: 70
-            under_review: 45
-            substantiated: 20
+          inference_utility_function: whistleblower_basefunction
           critical: false
           score_condition: null
 
@@ -859,20 +505,7 @@ directors_officers:
           name: "Executive Team Stability"
           description: "CEO/CFO tenure and turnover patterns"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["8-K", "DEF 14A"]}
-            - {type: "api", provider: "linkedin", endpoint: "people/search"}
-            - {type: "news", provider: "gdelt", query: "{company} CEO CFO appointment departure"}
-          score_range: [0, 100]
-          scoring_logic:
-            long_tenure_stable: 100
-            moderate_tenure: 80
-            recent_planned_transition: 65
-            recent_unexpected: 45
-            frequent_turnover: 25
-            forced_departure: 20
+          inference_utility_function: executive_stability_basefunction
           critical: false
           score_condition: null
           
@@ -880,18 +513,7 @@ directors_officers:
           name: "CFO Quality Indicators"
           description: "CFO experience and credentials"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
-            - {type: "api", provider: "linkedin", endpoint: "people/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            extensive_public_company: 100
-            adequate_experience: 80
-            limited_public_experience: 60
-            first_time_cfo: 45
-            concerning_background: 25
+          inference_utility_function: cfo_quality_basefunction
           critical: false
           score_condition: null
           
@@ -899,19 +521,7 @@ directors_officers:
           name: "Insider Trading Patterns"
           description: "Form 4 insider trading analysis"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["Form 4", "Form 144"]}
-            - {type: "api", provider: "sec", endpoint: "insider_trading/company"}
-          score_range: [0, 100]
-          scoring_logic:
-            balanced_10b5_1: 100
-            net_buyer: 90
-            minimal_activity: 80
-            moderate_selling: 65
-            heavy_selling: 40
-            unusual_patterns: 25
+          inference_utility_function: insider_trading_basefunction
           critical: false
           score_condition: null
           
@@ -919,19 +529,7 @@ directors_officers:
           name: "Executive Background Check"
           description: "Background issues with executives"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A", "10-K"]}
-            - {type: "api", provider: "sec", endpoint: "enforcement/individuals"}
-            - {type: "news", provider: "gdelt", query: "{executive} fraud OR investigation"}
-          score_range: [0, 100]
-          scoring_logic:
-            clean_backgrounds: 100
-            minor_issues_disclosed: 75
-            regulatory_history: 50
-            significant_issues: 25
-            bar_or_ban: 10
+          inference_utility_function: executive_background_basefunction
           critical: true
           score_condition: executive_background_critical
           
@@ -939,17 +537,7 @@ directors_officers:
           name: "10b5-1 Plan Usage"
           description: "Usage of 10b5-1 trading plans"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["Form 4", "8-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            comprehensive_plans: 100
-            partial_coverage: 80
-            minimal_usage: 60
-            no_plans: 45
-            terminated_plans: 35
+          inference_utility_function: trading_plan_basefunction
           critical: false
           score_condition: null
 
@@ -958,17 +546,7 @@ directors_officers:
           name: "Investor Relations Quality"
           description: "Quality of investor communications"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/investors", "/investor-relations"]}
-          score_range: [0, 100]
-          scoring_logic:
-            comprehensive_best_practice: 100
-            good: 80
-            adequate: 60
-            minimal: 40
-            poor: 20
+          inference_utility_function: investor_relations_basefunction
           critical: false
           score_condition: null
           
@@ -976,17 +554,7 @@ directors_officers:
           name: "Governance Page Quality"
           description: "Dedicated governance/board information"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/governance", "/board", "/about/leadership"]}
-          score_range: [0, 100]
-          scoring_logic:
-            comprehensive: 100
-            good: 75
-            basic: 55
-            minimal: 35
-            none: 15
+          inference_utility_function: governance_page_basefunction
           critical: false
           score_condition: null
           
@@ -994,18 +562,7 @@ directors_officers:
           name: "ESG Reporting"
           description: "Environmental, social, governance reporting"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/sustainability", "/esg", "/csr"]}
-            - {type: "api", provider: "cdp", endpoint: "responses/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            comprehensive_sasb_tcfd: 100
-            good_reporting: 80
-            basic_report: 60
-            website_only: 40
-            none: 20
+          inference_utility_function: esg_reporting_basefunction
           critical: false
           score_condition: null
           
@@ -1013,18 +570,7 @@ directors_officers:
           name: "Press Release Quality"
           description: "Quality and consistency of corporate communications"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "businesswire", endpoint: "releases/company"}
-            - {type: "api", provider: "prnewswire", endpoint: "releases/company"}
-          score_range: [0, 100]
-          scoring_logic:
-            consistent_professional: 100
-            good: 80
-            adequate: 60
-            inconsistent: 40
-            problematic: 20
+          inference_utility_function: press_release_basefunction
           critical: false
           score_condition: null
           
@@ -1032,18 +578,7 @@ directors_officers:
           name: "Leadership Visibility"
           description: "Executive visibility and accessibility"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "people/search"}
-            - {type: "news", provider: "gdelt", query: "{company} CEO interview OR conference"}
-          score_range: [0, 100]
-          scoring_logic:
-            high_visibility_positive: 100
-            good_visibility: 80
-            moderate: 60
-            low_visibility: 45
-            problematic_visibility: 25
+          inference_utility_function: leadership_visability_basefunction
           critical: false
           score_condition: null
           
@@ -1051,17 +586,7 @@ directors_officers:
           name: "Risk/Compliance Hiring"
           description: "Legal, compliance, and governance hiring"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "jobs/search"}
-            - {type: "scrape", target: "job_boards"}
-          score_range: [0, 100]
-          scoring_logic:
-            active_investment: 100
-            steady: 75
-            minimal: 50
-            cutbacks: 30
+          inference_utility_function: hiring_signals_basefunction
           critical: false
           score_condition: null
 
@@ -1070,20 +595,7 @@ directors_officers:
           name: "Credit Rating"
           description: "Corporate credit rating"
           weight: 0.30
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "sp_global", endpoint: "ratings"}
-            - {type: "api", provider: "moodys", endpoint: "ratings"}
-            - {type: "api", provider: "fitch", endpoint: "ratings"}
-          score_range: [0, 100]
-          scoring_logic:
-            investment_grade: 100
-            bb_range: 70
-            b_range: 50
-            ccc_below: 30
-            not_rated_strong: 65
-            not_rated_unknown: 50
+          inference_utility_function: credit_rating_basefunction
           critical: false
           score_condition: null
           
@@ -1091,13 +603,7 @@ directors_officers:
           name: "ESG Rating"
           description: "Third-party ESG rating"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "msci", endpoint: "esg/ratings"}
-            - {type: "api", provider: "sustainalytics", endpoint: "ratings"}
-          score_range: [0, 100]
-          scoring_logic: {leader: 100, above_avg: 80, average: 60, below_avg: 40, laggard: 20}
+          inference_utility_function: esg_rating_basefunction
           critical: false
           score_condition: null
           
@@ -1105,18 +611,7 @@ directors_officers:
           name: "Governance Rating"
           description: "Third-party governance quality rating"
           weight: 0.30
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "iss", endpoint: "governance/qscore"}
-            - {type: "api", provider: "glass_lewis", endpoint: "governance/score"}
-          score_range: [0, 100]
-          scoring_logic:
-            top_decile: 100
-            top_quartile: 85
-            above_median: 70
-            below_median: 50
-            bottom_quartile: 30
+          inference_utility_function: governance_rating_basefunction
           critical: false
           score_condition: null
           
@@ -1124,17 +619,7 @@ directors_officers:
           name: "ISS Governance QualityScore"
           description: "ISS Governance QualityScore"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "iss", endpoint: "governance/qscore"}
-          score_range: [0, 100]
-          scoring_logic:
-            score_1_2: 100
-            score_3_4: 80
-            score_5_6: 60
-            score_7_8: 40
-            score_9_10: 20
+          inference_utility_function: iss_governance_basefunction
           critical: false
           score_condition: null
 
@@ -1196,23 +681,23 @@ directors_officers:
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
     direct_conditions:
-      - id: pending_claims_true
+      - id: pending_claims_referral
         bands:
           - {return: true, tier_override: 4, action: "REFER", note: "Pending securities claims"}
       
-      - id: regulatory_investigation_true
+      - id: regulatory_investigation_referral
         bands:
           - {return: true, tier_override: 3, action: "REFER", note: "Regulatory investigation disclosed"}
       
-      - id: planned_transaction_true
+      - id: planned_transaction_referral
         bands:
           - {return: true, tier_override: null, action: "FLAG", note: "Planned transaction - tail coverage needed"}
       
-      - id: covenant_noncompliance
+      - id: covenant_noncompliance_referral
         bands:
           - {return: false, tier_override: null, action: "FLAG", note: "Covenant non-compliance disclosed"}
       
-      - id: executive_dispute_true
+      - id: executive_dispute_referral
         bands:
           - {return: true, tier_override: null, action: "REFER", note: "Executive dispute disclosed"}
   
