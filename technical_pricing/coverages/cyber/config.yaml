@@ -84,33 +84,43 @@ cyber:
           - id: "TECHNOLOGY"
             label: "Technology"
             modifier: 1.15
+            description: ""         
           - id: "FINANCIAL_SERVICES" 
             label: "Financial Services" 
             modifier: 1.40
+            description: ""     
           - id: "HEALTHCARE"
             label: "Healthcare"
             modifier: 1.50
+            description: ""     
           - id: "RETAIL"
             label: "Retail"
             modifier: 1.25
+            description: ""     
           - id: "MANUFACTURING"
             label: "Manufacturing"
             modifier: 0.95
+            description: ""     
           - id: "PROFESSIONAL_SERVICES"
             label: "Professional Services"
             modifier: 1.10
+            description: ""     
           - id: "EDUCATION"
             label: "Education"
             modifier: 1.05
+            description: ""     
           - id: "GOVERNMENT"
             label: "Government"
             modifier: 0.90
+            description: ""     
           - id: "ENERGY"
             label: "Energy & Utilities"
             modifier: 1.20
+            description: ""     
           - id: "OTHER"
             label: "Other" 
             modifier: 1.00
+            description: ""     
   
       size_band:
         description: "Company size classification"
@@ -119,18 +129,23 @@ cyber:
           - id: "MICRO"
             label: "Micro"
             modifier: 0.40
+            description: ""     
           - id: "SMALL"
             label: "Small"
             modifier: 0.60
+            description: ""     
           - id: "MEDIUM"
             label: "Medium"
             modifier: 1.00
+            description: ""     
           - id: "LARGE"
             label: "Large"
+            description: ""     
             modifier: 2.00
           - id: "ENTERPRISE"
             label: "Enterprise"
             modifier: 4.00 
+            description: ""     
             
       geography:
         description: "Primary operational geography"
@@ -139,18 +154,23 @@ cyber:
           - id: "US" 
             label: "United States"
             modifier: 1.00
+            description: ""     
           - id: "UK"
             label: "United Kingdom"
             modifier: 1.05
+            description: ""     
           - id: "EU"
             label: "European Union"
             modifier: 1.10 
+            description: ""     
           - id: "APAC"
             label: "Asia Pacific"
             modifier: 1.15
+            description: ""     
           - id: "OTHER" 
             label: "Other"
             modifier: 1.25
+            description: ""     
 
   
     # ---------------------------------------------------------------------------
