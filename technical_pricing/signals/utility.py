@@ -33,22 +33,40 @@ def register_scorer(cls: Type["DataScorer"]) -> Type["DataScorer"]:
     return cls
 
 # ----------------------------
-# Extractors
+# Extractors (stubbed)
 # ----------------------------
 class DataExtractor(ABC):
     @abstractmethod
-    def extract(self) -> List[Dict[str, Any]]:
+    def extract(self) -> Dict[str, Any]:
         raise NotImplementedError
 
 @register_extractor
-class APIExtractor(DataExtractor):
-    def __init__(self, api_url: str):
-        self.api_url = api_url
+class EquasisAPIExtractor(DataExtractor):
+    """
+    simulates an normalised payload for a marine operator:
+    {
+        "company_name": str,
+        "offers_liner_service": bool,
+        "vessels": List[{"imo": int, "category": str}]
+    }
+    """
 
-    def extract(self) -> List[Dict[str, Any]]:
-        logging.info(f"Extracting data from API: {self.api_url}")
-        # Stub data for demonstration
-        return [{"id": 1, "value": 42}, {"id": 2, "value": 99}]
+    def __init__(self, company_name: str, offers_liner_service: bool, fleet_spec: Dict[str, int]):
+        self.company_name = company_name
+        self.offers_liner_service = offers_liner_service
+        self.fleet_spec = fleet_spec # eg. {"container": 60, "bulk": 10}
+
+    def extract(self) -> Dict[str, Any]:
+        vessels: List [Dict[str, Any]] = []
+        imo_seed  =abs(hash(self.company_name))  % 1000000
+        for cat, count in self.fleet_spec.items():
+            for i in range(count):
+                vessels.append({"imo": imo_seed + i, "category": cat})
+        return {
+            "company_name": self.company_name,
+            "offers_liner_service": self.offers_liner_service,
+            "vessels": vessels
+        }
 
 # ----------------------------
 # Scorers
@@ -58,32 +76,83 @@ class DataScorer(ABC):
     def score(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
         raise NotImplementedError
 
-@register_scorer
-class ThresholdScorer(DataScorer):
-    def __init__(self, threshold: int):
-        self.threshold = threshold
 
-    def score(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
+@register_scorer
+class MajorityVesselCategoryScorer(DataScorer):
+    def score(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        counts: Dict[str, int] = {}
+        for v in data.get("vessels", []):
+            cat = v.get("category")
+            if cat:
+                counts[cat] = counts.get(cat, 0) + 1
+        if not counts:
+            majority = None
+        else:
+            max_count = max(counts.values())
+            max_cats = [c for c, n in counts.items() if n == max_count]
+            majority = max_cats[0] if len(max_cats) == 1 else "mixed"
+        return {"counts": counts, "majority": majority}
+
+@register_scorer
+class FleetSizeScorer(DataScorer):
+    def score(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        size = len(data.get("vessels", []))
+        return {"fleet_size": size}
+
+@register_scorer
+class LinerServiceScorer(DataScorer):
+    def score(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return {"offers_liner_service": bool(data.get("offers_liner_service", False))}
+
+@register_scorer
+class CompanyClassifierScorer(DataScorer):
+    """
+    Implements your classification rules:
+      - "major liner": majority == container AND fleet >= 50 AND offers liner service
+      - "major tanker": majority == tanker AND fleet >= 30
+      - else: "uncategorized" with rationale
+    """
+
+    def score(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        vessels = data.get("vessels", [])
+        fleet_size = len(vessels)
+        offers_liner = bool(data.get("offers_liner_service", False))
+
+        counts: Dict[str, int] = {}
+        for v in vessels:
+            cat = v.get("category")
+            if cat:
+                counts[cat] = counts.get(cat, 0) + 1
+        if not counts:
+            majority = None
+        else:
+            max_count = max(counts.values())
+            max_cats = [c for c, n in counts.items() if n == max_count]
+            majority = max_cats[0] if len(max_cats) == 1 else "mixed"
+
+        label = "uncategorized"
+        reasons: List[str] = []
+
+        if majority == "container" and fleet_size >= 50 and offers_liner:
+            label = "major liner"
+            reasons += ["container-majority", "fleet >= 50", "offers liner service"]
+        elif majority == "tanker" and fleet_size >= 30:
+            label = "major tanker"
+            reasons += ["tanker-majority", "fleet >= 30"]
+        else:
+            reasons += [f"majority={majority}", f"fleet={fleet_size}", f"liner_service={offers_liner}"]
+
         return {
-            "above_threshold": [
-                d for d in data if ("value" in d and d["value"] > self.threshold)
-            ],
-            "below_threshold": [
-                d for d in data if ("value" in d and d["value"] <= self.threshold)
-            ],
-        }
+            "company_name": data.get("company_name"),
+            "classification": label,
+            "features": {
+                "majority_category": majority,
+                "fleet_size": fleet_size,
+                "offers_liner_service": offers_liner,
+            },
+            "reasons": reasons,
+        }      
 
-@register_scorer
-class AverageScorer(DataScorer):
-    def score(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        values = [d["value"] for d in data if "value" in d]
-        return {"average": (sum(values) / len(values)) if values else None}
-
-@register_scorer
-class MaxValueScorer(DataScorer):
-    def score(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        values = [d["value"] for d in data if "value" in d]
-        return {"max_value": (max(values) if values else None)}
 
 # ----------------------------
 # Parallel pipeline
@@ -132,42 +201,55 @@ class ParallelMultiScorerPipeline:
             "output": output,
         }
 
-# ----------------------------
-# Config loader
-# ----------------------------
-def build_pipeline_from_config(config_path: str) -> ParallelMultiScorerPipeline:
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f) or {}
-
-    # Extractor
-    extractor_cfg: Dict[str, Any] = config.get("extractor", {})
-    extractor_type = extractor_cfg.get("type")
-    extractor_params: Dict[str, Any] = extractor_cfg.get("params", {})
-
-    if not extractor_type or extractor_type not in EXTRACTOR_REGISTRY:
-        raise KeyError(f"Unknown or missing extractor type: {extractor_type}")
-
-    extractor_cls = EXTRACTOR_REGISTRY[extractor_type]
-    extractor = extractor_cls(**extractor_params)
-
-    # Scorers
-    scorers: List[DataScorer] = []
-    for scorer_cfg in config.get("scorers", []):
-        scorer_type = scorer_cfg.get("type")
-        params: Dict[str, Any] = scorer_cfg.get("params", {})
-        if not scorer_type or scorer_type not in SCORER_REGISTRY:
-            raise KeyError(f"Unknown or missing scorer type: {scorer_type}")
-        scorer_cls = SCORER_REGISTRY[scorer_type]
-        scorers.append(scorer_cls(**params))
-
-    return ParallelMultiScorerPipeline(extractor, scorers)
 
 # ----------------------------
-# Usage example
+# Demo: three companies
 # ----------------------------
-if __name__ == "__main__":
-    pipeline = build_pipeline_from_config("config.yaml")
+companies = [
+    EquasisAPIExtractor(
+        company_name="Atlas Container Lines",
+        offers_liner_service=True,
+        fleet_spec={"container": 60, "bulk": 10},
+    ),
+    EquasisAPIExtractor(
+        company_name="Marina Tankers Ltd",
+        offers_liner_service=False,
+        fleet_spec={"tanker": 35, "container": 2},
+    ),
+    EquasisAPIExtractor(
+        company_name="Ocean Mix Shipping",
+        offers_liner_service=False,
+        fleet_spec={"container": 20, "tanker": 25, "bulk": 5},
+    ),
+]
+
+scorers = [
+    MajorityVesselCategoryScorer(),
+    FleetSizeScorer(),
+    LinerServiceScorer(),
+    CompanyClassifierScorer(),
+]
+
+all_results = []
+for extractor in companies:
+    pipeline = ParallelMultiScorerPipeline(extractor, scorers)
     results = pipeline.run()
+    all_results.append(results)
 
-    for scorer_name, output in results.items():
-        print(f"{scorer_name} Results:", output)
+# Human-readable summary
+summary = []
+for res in all_results:
+    company_name = res["CompanyClassifierScorer"]["output"]["company_name"]
+    classification = res["CompanyClassifierScorer"]["output"]["classification"]
+    features = res["CompanyClassifierScorer"]["output"]["features"]
+    summary.append({
+        "company": company_name,
+        "classification": classification,
+        "majority_category": features["majority_category"],
+        "fleet_size": features["fleet_size"],
+        "offers_liner_service": features["offers_liner_service"],
+    })
+
+print("\n=== Classification Summary ===")
+for row in summary:
+    print(row)
