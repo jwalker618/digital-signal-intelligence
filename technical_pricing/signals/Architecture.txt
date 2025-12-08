@@ -149,13 +149,13 @@ MARITIME                    E-COMMERCE                  HEALTHCARE
 ---------                   ----------                  ----------
 Fleet Analysis              Store Performance           Patient Risk
 Vessel Classification       Inventory Management        Treatment Outcomes
-Risk Assessment             Revenue Analysis            Resource Utilization
+Risk Assessment             Revenue Analysis            Resource Utilisation
 
 FINANCIAL                   SUPPLY CHAIN                QUALITY CONTROL
 ---------                   ------------                ---------------
 Credit Scoring              Supplier Analysis           Defect Detection
 Portfolio Analysis          Lead Time Tracking          Process Monitoring
-Risk Management             Cost Optimization           Grade Assignment
+Risk Management             Cost Optimisation           Grade Assignment
 
 ==============================================================================
                           BATCH PROCESSING MODE
