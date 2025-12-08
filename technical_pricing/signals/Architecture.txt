@@ -1,0 +1,182 @@
+================================================================================
+                    DATA PROCESSING FRAMEWORK
+                        ARCHITECTURE OVERVIEW
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                            DATA SOURCES LAYER                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │   API    │  │ Database │  │   CSV    │  │   Web    │  │  Stream  │   │
+│  │  (REST)  │  │  (SQL)   │  │  (File)  │  │ (Scrape) │  │ (Kafka)  │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+└───────┼─────────────┼─────────────┼─────────────┼─────────────┼──────────┘
+        │             │             │             │             │
+        ▼             ▼             ▼             ▼             ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                        STAGE 1: EXTRACTION                                  │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  │                    DataExtractor (Abstract)                           │ │
+│  │  • extract() → Dict[str, Any]                                        │ │
+│  │  • get_source_metadata() → Dict[str, str]                            │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│                                   │                                         │
+│    ┌──────────────────────────────┼──────────────────────────────┐        │
+│    │                              │                              │        │
+│    ▼                              ▼                              ▼        │
+│  ┌─────────────┐            ┌─────────────┐            ┌─────────────┐   │
+│  │   Equasis   │            │  Shopify    │            │   Custom    │   │
+│  │     API     │            │     API     │            │  Extractor  │   │
+│  │  Extractor  │            │  Extractor  │            │             │   │
+│  └─────────────┘            └─────────────┘            └─────────────┘   │
+│         │                           │                           │         │
+│         └───────────────────────────┴───────────────────────────┘         │
+│                                     │                                      │
+│                             [Raw Data Dict]                                │
+│                      {source, timestamp, items}                            │
+└────────────────────────────────────┬───────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                    STAGE 2: AGGREGATION (Parallel)                          │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  │                  DataAggregator (Abstract)                            │ │
+│  │  • aggregate(raw_data) → Dict[str, Any]                              │ │
+│  │  • get_aggregator_metadata() → Dict[str, str]                        │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│    ┌─────────────────┬─────────────────┬─────────────────┬──────────────┐ │
+│    │                 │                 │                 │              │ │
+│    ▼                 ▼                 ▼                 ▼              ▼ │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌─────────┐│
+│  │  Fleet   │   │ Service  │   │Inventory │   │ Revenue  │   │ Custom  ││
+│  │Aggregator│   │Capability│   │Aggregator│   │Aggregator│   │Aggregator│
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬────┘│
+│       │              │              │              │              │      │
+│       │  ThreadPoolExecutor (max_workers=N)                       │      │
+│       │              │              │              │              │      │
+│       └──────────────┴──────────────┴──────────────┴──────────────┘      │
+│                                     │                                      │
+│                          [Merge All Outputs]                               │
+│                                     │                                      │
+│              {total_vessels, dominant_category, revenue,                   │
+│               inventory_health, service_capabilities, ...}                 │
+└────────────────────────────────────┬───────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                  STAGE 3: CATEGORIZATION (Parallel)                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  │                 DataCategorizer (Abstract)                            │ │
+│  │  • categorize(aggregated_data) → Dict[str, Any]                      │ │
+│  │  • get_categorizer_metadata() → Dict[str, str]                       │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│    ┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐   │
+│    │          │          │          │          │          │          │   │
+│    ▼          ▼          ▼          ▼          ▼          ▼          ▼   │
+│  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ │
+│  │Company│ │Operator│ │Fleet  │ │ Risk  │ │Inventory│ │Customer│ │Custom│ │
+│  │ Size  │ │ Type  │ │Modern-│ │Profile│ │Health │ │Experie-│ │Catego-│ │
+│  │Catego-│ │Catego- │ │ity    │ │Catego-│ │Scorer │ │nce    │ │rizer │ │
+│  │rizer  │ │rizer  │ │Scorer │ │rizer  │ │       │ │Scorer │ │      │ │
+│  └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ │
+│      │         │         │         │         │         │         │      │
+│      │  ThreadPoolExecutor (max_workers=N)                        │      │
+│      │         │         │         │         │         │         │      │
+│      └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘      │
+│                                     │                                      │
+│                      [Individual Results]                                  │
+│                                     │                                      │
+│     {CompanySizeCategorizer: {...}, OperatorTypeCategorizer: {...},       │
+│      FleetModernityScorer: {...}, RiskProfileCategorizer: {...}, ...}     │
+└────────────────────────────────────┬───────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                          FINAL OUTPUT                                       │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  │ pipeline_metadata:                                                    │ │
+│  │   - company_name                                                      │ │
+│  │   - total_duration_sec                                                │ │
+│  │   - extract_duration_sec                                              │ │
+│  │   - timestamp                                                         │ │
+│  │                                                                        │ │
+│  │ raw_data: {...}                                                       │ │
+│  │                                                                        │ │
+│  │ aggregation_results:                                                  │ │
+│  │   FleetAggregator: {output: {...}, duration_sec: 0.012}              │ │
+│  │   ServiceCapabilityAggregator: {output: {...}, duration_sec: 0.008}  │ │
+│  │   ...                                                                 │ │
+│  │                                                                        │ │
+│  │ categorization_results:                                               │ │
+│  │   CompanySizeCategorizer: {output: {...}, duration_sec: 0.005}       │ │
+│  │   OperatorTypeCategorizer: {output: {...}, duration_sec: 0.007}      │ │
+│  │   FleetModernityScorer: {output: {...}, duration_sec: 0.004}         │ │
+│  │   RiskProfileCategorizer: {output: {...}, duration_sec: 0.006}       │ │
+│  │   ...                                                                 │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                          KEY DESIGN PRINCIPLES
+================================================================================
+
+1. SINGLE RESPONSIBILITY
+   • Extractors: Only fetch data
+   • Aggregators: Only transform/analyze  
+   • Categorizers: Only classify/score
+
+2. COMPOSABILITY
+   • Mix and match components
+   • Reuse aggregators across domains
+   • Add new categorizers without changing aggregators
+
+3. PARALLELISM
+   • Aggregators run in parallel (Stage 2)
+   • Categorizers run in parallel (Stage 3)
+   • ThreadPoolExecutor for I/O-bound operations
+
+4. EXTENSIBILITY
+   • Registry system for component discovery
+   • Abstract base classes enforce contracts
+   • Easy to add new components
+
+5. OBSERVABILITY
+   • Timing metrics for each component
+   • Comprehensive logging
+   • Metadata tracking
+
+================================================================================
+                           EXAMPLE USE CASES
+================================================================================
+
+MARITIME                    E-COMMERCE                  HEALTHCARE
+---------                   ----------                  ----------
+Fleet Analysis              Store Performance           Patient Risk
+Vessel Classification       Inventory Management        Treatment Outcomes
+Risk Assessment             Revenue Analysis            Resource Utilization
+
+FINANCIAL                   SUPPLY CHAIN                QUALITY CONTROL
+---------                   ------------                ---------------
+Credit Scoring              Supplier Analysis           Defect Detection
+Portfolio Analysis          Lead Time Tracking          Process Monitoring
+Risk Management             Cost Optimization           Grade Assignment
+
+================================================================================
+                          BATCH PROCESSING MODE
+================================================================================
+
+Single Pipeline:                Batch Pipeline:
+┌─────────────┐                ┌─────────────┐
+│ Extractor 1 │                │ Extractor 1 │─┐
+└──────┬──────┘                │ Extractor 2 │ ├─→ Same Analysis
+       │                       │ Extractor 3 │─┘   Applied to All
+       ▼                       └─────────────┘
+  [Analysis]                         │
+       │                             ▼
+       ▼                        [Multiple Results]
+   [Result]                          │
+                                     ▼
+                              [Comparative Summary]
+
+================================================================================
