@@ -1,36 +1,22 @@
 # =============================================================================
-# DSI Model Configuration - Energy Insurance
+# DSI Model Configuration
 # =============================================================================
 #
-# This file defines the complete configuration for Energy insurance coverage.
+# This file defines the complete configuration for a coverage type.
 # It is the single source of truth for:
 #   - Model structure and parameters
 #   - Signal definitions and weights
 #   - Pricing factors and thresholds
-#   - Operator type, segment, and geography modifiers
 #   - Test profiles for actuarial validation
 #
 # Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
 #
 # DSI PRINCIPLES APPLIED:
-#   1. All signals must be externally observable (OSHA, EPA, BSEE, satellite data)
-#   2. Direct queries are OPTIONAL - model works without them
-#   3. Categorical features are inferred from regulatory filings and public data
-#   4. Tier determines base rate; modifiers adjust for exposure characteristics
-#   5. Energy is suited to DSI due to extensive regulatory disclosure requirements
-#
-# KEY DSI PRINCIPLE: We assess OPERATOR safety culture and operational patterns,
-# not individual asset characteristics. Good operators maintain all assets well;
-# poor operators have systemic issues across their portfolio.
-#
-# KEY DATA SOURCES:
-#   - OSHA (injury/illness records, violations)
-#   - BSEE (offshore incidents, inspections)
-#   - EPA (violations, spills, emissions)
-#   - State oil/gas commissions
-#   - Satellite imagery (flaring, facility activity)
-#   - SEC filings (public companies)
-#   - Industry databases (IOGP, API)
+#   1. All signals must be externally observable (no application questions required)
+#   2. Direct queries are OPTIONAL - model must work without them
+#   3. Categorical features are inferred from observable data
+#   4. Tier determines base premium; modifiers adjust for exposure characteristics
+#   5. All sources must be publicly accessible or through standard data providers
 #
 # Version: 2.0.0
 # Last Updated: 2025-12
@@ -39,7 +25,7 @@
 energy:
   energy_general:
     metadata:
-      name: "DSI Energy Insurance Model"
+      name: "DSI Energy Technical Pricing Model"
       description: "Energy property and liability coverage based on observable safety, environmental, and operational signals"
       version: "2.0.0"
       coverage_types:
@@ -66,122 +52,95 @@ energy:
       min_premium: 100000
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
     direct_optional_queries:
       - id: "major_incidents"
         question: "Any major incidents (explosion, blowout, major spill) in past 5 years?"
-        direct_condition: major_incidents_true
+        direct_condition: major_incidents_referral
         
       - id: "fatalities"
         question: "Any work-related fatalities in past 3 years?"
-        direct_condition: fatalities_true
+        direct_condition: fatalities_referral
         
       - id: "regulatory_enforcement"
         question: "Any significant regulatory enforcement actions pending?"
-        direct_condition: regulatory_enforcement_true
+        direct_condition: regulatory_enforcement_referral
         
       - id: "decommissioning_obligations"
         question: "Any significant unfunded decommissioning obligations?"
-        direct_condition: decommissioning_obligations_true
+        direct_condition: decommissioning_obligations_referral
         
       - id: "joint_venture_operator"
         question: "Are you the designated operator for JV assets?"
-        direct_condition: jv_operator_info
+        direct_condition: jv_operator_info_referral
         
       - id: "third_party_contractor"
         question: "Do you use third-party contractors for drilling/completions?"
-        direct_condition: contractor_info
+        direct_condition: contractor_info_referral
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
+    # These define classification values and their pricing impact
+    # inference_method specifies how to automatically determine the value
+    
     categorical_features:
       operator_type:
         description: "Operator classification based on size, integration, and ownership"
-        inference_method:
-          primary: "sec_filing_analysis"
-          fallback: "production_database_lookup"
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "20-F"]}
-            - {type: "api", provider: "enverus", endpoint: "operators/profile"}
-            - {type: "api", provider: "rystad", endpoint: "companies/profile"}
-            - {type: "api", provider: "ihs_markit", endpoint: "operators/search"}
-          confidence_threshold: 0.90
-          default_on_failure: "MID_INDEPENDENT"
+        inference_utility_function: operator_type_basefunction
         values:
           - id: "SUPERMAJOR"
             label: "Supermajor"
             modifier: 0.75
             description: "ExxonMobil, Shell, BP, Chevron, TotalEnergies, etc."
-            inference_criteria: {production_min_boed: 2000000, integrated: true, market_cap_min: 100000000000}
             
           - id: "MAJOR_INTEGRATED"
             label: "Major Integrated"
             modifier: 0.85
             description: "Large integrated oil companies"
-            inference_criteria: {production_min_boed: 500000, integrated: true}
             
           - id: "LARGE_INDEPENDENT"
             label: "Large Independent"
             modifier: 0.95
             description: "Large E&P independents (ConocoPhillips, EOG, etc.)"
-            inference_criteria: {production_min_boed: 200000, integrated: false}
             
           - id: "MID_INDEPENDENT"
             label: "Mid-Size Independent"
             modifier: 1.00
             description: "Mid-size E&P companies"
-            inference_criteria: {production_range_boed: [50000, 200000]}
             
           - id: "SMALL_INDEPENDENT"
             label: "Small Independent"
             modifier: 1.20
             description: "Small E&P operators"
-            inference_criteria: {production_max_boed: 50000}
             
           - id: "NATIONAL_OIL"
             label: "National Oil Company"
             modifier: 0.90
             description: "State-owned national oil companies"
-            inference_criteria: {state_owned: true}
             
           - id: "MIDSTREAM_MAJOR"
             label: "Major Midstream"
             modifier: 0.85
             description: "Major pipeline/processing operators"
-            inference_criteria: {midstream_focus: true, market_cap_min: 10000000000}
             
           - id: "DOWNSTREAM_MAJOR"
             label: "Major Downstream"
             modifier: 0.90
             description: "Major refining operators"
-            inference_criteria: {refining_focus: true, capacity_min_bpd: 200000}
             
           - id: "PRIVATE_EQUITY"
             label: "Private Equity Backed"
             modifier: 1.15
             description: "PE-backed operators"
-            inference_criteria: {pe_ownership: true}
             
           - id: "UNKNOWN"
             label: "Unknown/New Operator"
             modifier: 1.40
             description: "New or unclassified operator"
-            inference_criteria: {}
 
       operation_segment:
         description: "Primary operational segment"
-        inference_method:
-          primary: "production_data_analysis"
-          fallback: "asset_registry_lookup"
-          sources:
-            - {type: "api", provider: "enverus", endpoint: "production/summary"}
-            - {type: "api", provider: "bsee", endpoint: "operators/assets"}
-            - {type: "api", provider: "state_commissions", endpoint: "permits/operator"}
-          confidence_threshold: 0.85
-          default_on_failure: "MIXED"
+        inference_utility_function: operation_segment_basefunction
         values:
           - id: "UPSTREAM_CONVENTIONAL"
             label: "Upstream Conventional"
@@ -245,29 +204,55 @@ energy:
 
       geographic_focus:
         description: "Primary geographic focus of operations"
-        inference_method:
-          primary: "asset_location_analysis"
-          sources:
-            - {type: "api", provider: "enverus", endpoint: "assets/geography"}
-            - {type: "api", provider: "rystad", endpoint: "production/geography"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          confidence_threshold: 0.85
-          default_on_failure: "OTHER"
+        inference_utility_function: geographic_focus_basefunction
         values:
-          - {id: "US_ONSHORE", label: "US Onshore", modifier: 1.00}
-          - {id: "US_GULF_SHELF", label: "US Gulf Shelf", modifier: 1.10}
-          - {id: "US_GULF_DEEPWATER", label: "US Gulf Deepwater", modifier: 1.40}
-          - {id: "NORTH_SEA", label: "North Sea", modifier: 1.15}
-          - {id: "WEST_AFRICA", label: "West Africa", modifier: 1.25}
-          - {id: "MIDDLE_EAST", label: "Middle East", modifier: 1.20}
-          - {id: "ASIA_PACIFIC", label: "Asia Pacific", modifier: 1.10}
-          - {id: "LATIN_AMERICA", label: "Latin America", modifier: 1.20}
-          - {id: "GLOBAL_DIVERSIFIED", label: "Global Diversified", modifier: 1.05}
-          - {id: "OTHER", label: "Other", modifier: 1.15}
+          - id: "US_ONSHORE", 
+            label: "US Onshore"
+            modifier: 1.00
+            description: ""     
+          - id: "US_GULF_SHELF"
+            label: "US Gulf Shelf"
+            modifier: 1.10
+            description: ""     
+          - id: "US_GULF_DEEPWATER"
+            label: "US Gulf Deepwater"
+            modifier: 1.40
+            description: ""     
+          - id: "NORTH_SEA"
+            label: "North Sea"
+            modifier: 1.15
+            description: ""     
+          - id: "WEST_AFRICA"
+            label: "West Africa"
+            modifier: 1.25
+            description: ""     
+          - id: "MIDDLE_EAST"
+            label: "Middle East"
+            modifier: 1.20
+            description: ""     
+          - id: "ASIA_PACIFIC"
+            label: "Asia Pacific"
+            modifier: 1.10
+            description: ""     
+          - id: "LATIN_AMERICA" 
+            label: "Latin America"
+            modifier: 1.20
+            description: ""     
+          - id: "GLOBAL_DIVERSIFIED"
+            label: "Global Diversified"
+            modifier: 1.05
+            description: ""     
+          - id: "OTHER"
+            label: "Other"
+            modifier: 1.15
+            description: ""     
 
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
+    # SIGNAL GROUPINGS (Categories with Weights)
+    # ---------------------------------------------------------------------------
+    # Each group contributes to the composite score
+    # Weights must sum to 1.0
+    
     signal_groups:
       - id: "network_authority"
         name: "Network Authority"
@@ -333,28 +318,13 @@ energy:
         critical: false
         score_condition: null
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # -------------------------------------------------------------------------
     signal_features:
       network_authority:
         - id: "partner_quality"
           name: "JV Partner Quality"
           description: "Quality of joint venture partners"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-            - {type: "api", provider: "enverus", endpoint: "joint_ventures"}
-            - {type: "scrape", target: "company_website", pages: ["/operations", "/partners"]}
-          score_range: [0, 100]
-          scoring_logic:
-            supermajor_partners: 100
-            major_quality_partners: 85
-            reputable_independents: 70
-            mixed_quality: 55
-            unknown_partners: 40
+          inference_utility_function: partner_quality_basefunction
           critical: false
           score_condition: null
           
@@ -362,18 +332,7 @@ energy:
           name: "Contractor Relationships"
           description: "Quality of drilling/service contractors"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "rigzone", endpoint: "contractors/search"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            tier_1_contractors: 100
-            major_contractors: 85
-            regional_reputable: 70
-            small_contractors: 55
-            unknown: 40
+          inference_utility_function: contractor_quality_basefunction
           critical: false
           score_condition: null
           
@@ -381,17 +340,7 @@ energy:
           name: "Banking/Financing Relationships"
           description: "Quality of banking relationships"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "8-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            major_banks_syndicate: 100
-            quality_regional_banks: 80
-            specialty_lenders: 65
-            limited_access: 45
-            distressed_financing: 25
+          inference_utility_function: banking_relationship_basefunction
           critical: false
           score_condition: null
           
@@ -399,18 +348,7 @@ energy:
           name: "Insurance Market Reputation"
           description: "Historical insurance placement and claims record"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "internal", provider: "placement_history"}
-            - {type: "api", provider: "insurance_market_data"}
-          score_range: [0, 100]
-          scoring_logic:
-            excellent_history: 100
-            good_history: 85
-            average: 70
-            some_concerns: 50
-            poor_history: 30
+          inference_utility_function: insurance_history_basefunction
           critical: false
           score_condition: null
           
@@ -418,19 +356,7 @@ energy:
           name: "Industry Association Membership"
           description: "API, IOGP, and other association involvement"
           weight: 0.10
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "api", provider: "api", endpoint: "members"}
-            - {type: "api", provider: "iogp", endpoint: "members"}
-            - {type: "scrape", target: "association_websites"}
-          score_range: [0, 100]
-          scoring_logic:
-            leadership_roles: 100
-            active_committee_member: 85
-            regular_member: 70
-            limited_participation: 50
-            non_member: 35
+          inference_utility_function: industry_association_basefunction
           critical: false
           score_condition: null
           
@@ -438,18 +364,7 @@ energy:
           name: "Regulator Relationship Quality"
           description: "Quality of regulatory relationships"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "bsee", endpoint: "operators/compliance"}
-            - {type: "api", provider: "state_commissions", endpoint: "compliance/summary"}
-          score_range: [0, 100]
-          scoring_logic:
-            exemplary_compliance: 100
-            good_standing: 85
-            minor_issues_resolved: 70
-            ongoing_issues: 45
-            adversarial_relationship: 25
+          inference_utility_function: regulator_relationship_basefunction
           critical: false
           score_condition: null
           
@@ -457,17 +372,7 @@ energy:
           name: "Offtake/Customer Quality"
           description: "Quality of product offtake relationships"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            major_creditworthy: 100
-            diversified_quality: 85
-            concentrated_quality: 70
-            mixed: 55
-            weak_counterparties: 35
+          inference_utility_function: offtake_quality_basefunction
           critical: false
           score_condition: null
 
@@ -476,19 +381,7 @@ energy:
           name: "OSHA Total Recordable Incident Rate"
           description: "TRIR vs industry benchmark"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "osha", endpoint: "iir/search"}
-            - {type: "api", provider: "bls", endpoint: "industry_safety"}
-          score_range: [0, 100]
-          scoring_logic:
-            below_50pct_benchmark: 100
-            50_75pct_benchmark: 85
-            75_100pct_benchmark: 70
-            100_150pct_benchmark: 50
-            above_150pct_benchmark: 30
-            above_200pct_benchmark: 15
+          inference_utility_function: osha_trir_basefunction
           critical: true
           score_condition: osha_trir_critical
           
@@ -496,18 +389,7 @@ energy:
           name: "OSHA Serious Violations"
           description: "History of serious/willful OSHA violations"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "osha", endpoint: "violations/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_serious_5yr: 100
-            minor_violations_only: 85
-            serious_over_3yr_ago: 65
-            serious_recent: 40
-            willful_any: 20
-            repeat_violations: 10
+          inference_utility_function: osha_violations_basefunction
           critical: true
           score_condition: osha_violations_critical
           
@@ -515,18 +397,7 @@ energy:
           name: "BSEE Incidents"
           description: "Offshore incidents reported to BSEE"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          applicable_segments: ["upstream_offshore", "upstream_deepwater"]
-          sources:
-            - {type: "api", provider: "bsee", endpoint: "incidents/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_incidents_5yr: 100
-            minor_incidents_only: 80
-            moderate_incidents: 60
-            significant_incidents: 40
-            major_incidents: 20
+          inference_utility_function: bsee_incident_basefunction
           critical: true
           score_condition: bsee_incident_critical
           
@@ -534,20 +405,7 @@ energy:
           name: "Process Safety Events"
           description: "Tier 1 and Tier 2 process safety events"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "api", endpoint: "pse/reports"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-            - {type: "api", provider: "csb", endpoint: "investigations"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_tier_1_5yr: 100
-            tier_2_only: 85
-            tier_1_over_5yr_ago: 70
-            tier_1_recent_isolated: 50
-            tier_1_pattern: 30
-            major_pse: 15
+          inference_utility_function: process_safety_basefunction
           critical: true
           score_condition: process_safety_critical
           
@@ -555,20 +413,7 @@ energy:
           name: "Fatality History"
           description: "Work-related fatality history"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "osha", endpoint: "fatalities/search"}
-            - {type: "api", provider: "bsee", endpoint: "fatalities/search"}
-            - {type: "news", provider: "gdelt", query: "{operator} fatality OR death"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_fatalities_10yr: 100
-            no_fatalities_5yr: 90
-            single_over_5yr_ago: 75
-            single_recent: 50
-            multiple_over_5yr: 40
-            multiple_recent: 20
+          inference_utility_function: fatality_history_basefunction
           critical: true
           score_condition: fatality_critical
           
@@ -576,21 +421,7 @@ energy:
           name: "Major Incident History"
           description: "Explosions, blowouts, major spills"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "csb", endpoint: "incidents/search"}
-            - {type: "api", provider: "nrc", endpoint: "reports/search"}
-            - {type: "api", provider: "bsee", endpoint: "incidents/major"}
-            - {type: "news", provider: "gdelt", query: "{operator} explosion OR blowout OR spill"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_major_10yr: 100
-            no_major_5yr: 85
-            minor_incident_only: 75
-            major_over_5yr_ago: 50
-            major_recent: 25
-            multiple_major: 10
+          inference_utility_function: major_incident_basefunction
           critical: true
           score_condition: major_incident_critical
           
@@ -598,17 +429,7 @@ energy:
           name: "Near-Miss Reporting"
           description: "Near-miss reporting culture (if disclosed)"
           weight: 0.05
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/safety", "/sustainability"]}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            active_reporting_disclosed: 100
-            some_disclosure: 75
-            minimal_disclosure: 50
-            no_disclosure: 40
+          inference_utility_function: nearmiss_reporting_basefunction
           critical: false
           score_condition: null
 
@@ -617,19 +438,7 @@ energy:
           name: "EPA Violations"
           description: "CAA, CWA, RCRA violations"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "epa_echo", endpoint: "violations/search"}
-            - {type: "api", provider: "epa", endpoint: "enforcement/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_violations_5yr: 100
-            minor_violations_resolved: 85
-            moderate_violations: 60
-            significant_violations: 40
-            consent_decree: 25
-            ongoing_enforcement: 15
+          inference_utility_function: epa_violation_basefunction
           critical: true
           score_condition: epa_violation_critical
           
@@ -637,20 +446,7 @@ energy:
           name: "Spill History"
           description: "Oil/chemical spill history from NRC and state records"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "nrc", endpoint: "reports/search"}
-            - {type: "api", provider: "state_commissions", endpoint: "spills/search"}
-            - {type: "api", provider: "epa", endpoint: "spills/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_reportable_5yr: 100
-            minor_spills_only: 85
-            moderate_spills: 65
-            significant_spills: 45
-            major_spill: 25
-            multiple_major: 10
+          inference_utility_function: spill_history_basefunction
           critical: true
           score_condition: spill_history_critical
           
@@ -658,18 +454,7 @@ energy:
           name: "Air Emissions Compliance"
           description: "Air permit compliance and emissions"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "epa_echo", endpoint: "air/compliance"}
-            - {type: "api", provider: "state_env_agencies", endpoint: "air/violations"}
-          score_range: [0, 100]
-          scoring_logic:
-            full_compliance: 100
-            minor_exceedances: 80
-            moderate_issues: 60
-            significant_violations: 40
-            ongoing_noncompliance: 20
+          inference_utility_function: emissions_compliance_basefunction
           critical: false
           score_condition: null
           
@@ -677,20 +462,7 @@ energy:
           name: "Flaring Intensity"
           description: "Flaring intensity from satellite data"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "satellite", provider: "viirs", analyzer: "flaring_detector"}
-            - {type: "api", provider: "skytruth", endpoint: "flaring/operator"}
-            - {type: "api", provider: "world_bank_ggfr", endpoint: "flaring/data"}
-          score_range: [0, 100]
-          scoring_logic:
-            minimal_flaring: 100
-            below_avg_basin: 85
-            at_avg_basin: 70
-            above_avg_basin: 50
-            high_flaring: 30
-            extreme_flaring: 15
+          inference_utility_function: flaring_intensity_basefunction
           critical: false
           score_condition: null
           
@@ -698,20 +470,7 @@ energy:
           name: "Methane Emissions"
           description: "Methane emissions from satellite and ground monitoring"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "satellite", provider: "ghgsat", analyzer: "methane_detector"}
-            - {type: "satellite", provider: "sentinel5p", analyzer: "methane"}
-            - {type: "api", provider: "epa", endpoint: "ghgrp/methane"}
-          score_range: [0, 100]
-          scoring_logic:
-            best_in_class: 100
-            below_peer_avg: 85
-            at_peer_avg: 70
-            above_peer_avg: 50
-            high_emissions: 30
-            super_emitter_events: 15
+          inference_utility_function: methane_emissions_basefunction
           critical: false
           score_condition: null
           
@@ -719,20 +478,7 @@ energy:
           name: "Remediation Obligations"
           description: "Environmental remediation obligations"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "epa", endpoint: "superfund/search"}
-            - {type: "api", provider: "state_env_agencies", endpoint: "brownfields/search"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            no_obligations: 100
-            minor_funded: 85
-            moderate_funded: 70
-            significant_funded: 55
-            significant_unfunded: 35
-            superfund_liability: 20
+          inference_utility_function: remediation_basefunction
           critical: false
           score_condition: null
 
@@ -741,18 +487,7 @@ energy:
           name: "Production Consistency"
           description: "Volatility in reported production"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "enverus", endpoint: "production/history"}
-            - {type: "api", provider: "state_commissions", endpoint: "production/operator"}
-          score_range: [0, 100]
-          scoring_logic:
-            highly_consistent: 100
-            normal_variation: 80
-            elevated_volatility: 60
-            high_volatility: 40
-            erratic: 25
+          inference_utility_function: production_consistency_basefunction
           critical: false
           score_condition: null
           
@@ -760,17 +495,7 @@ energy:
           name: "Facility Activity Patterns"
           description: "Satellite-derived facility activity indicators"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "satellite", provider: "planet", analyzer: "activity_detector"}
-            - {type: "satellite", provider: "sentinel2", analyzer: "change_detection"}
-          score_range: [0, 100]
-          scoring_logic:
-            consistent_normal_activity: 100
-            normal_variation: 80
-            unusual_patterns: 55
-            concerning_patterns: 35
+          inference_utility_function: facility_activity_basefunction
           critical: false
           score_condition: null
           
@@ -778,18 +503,7 @@ energy:
           name: "Well Integrity Indicators"
           description: "Shut-in patterns, workovers, P&A activity"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "state_commissions", endpoint: "wells/status"}
-            - {type: "api", provider: "enverus", endpoint: "wells/integrity"}
-          score_range: [0, 100]
-          scoring_logic:
-            excellent_integrity: 100
-            normal_operations: 80
-            elevated_workovers: 60
-            integrity_concerns: 40
-            significant_issues: 25
+          inference_utility_function: well_integrity_basefunction
           critical: false
           score_condition: null
           
@@ -797,17 +511,7 @@ energy:
           name: "Maintenance Patterns"
           description: "Observable turnarounds and maintenance activity"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "news", provider: "gdelt", query: "{operator} turnaround OR maintenance"}
-            - {type: "api", provider: "industry_intel", endpoint: "turnarounds"}
-          score_range: [0, 100]
-          scoring_logic:
-            regular_scheduled: 100
-            adequate_maintenance: 80
-            deferred_maintenance: 55
-            concerning_patterns: 35
+          inference_utility_function: maintenance_patterm_basefunction
           critical: false
           score_condition: null
           
@@ -815,18 +519,7 @@ energy:
           name: "Operational Efficiency"
           description: "Production per well, utilization metrics"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "enverus", endpoint: "production/efficiency"}
-            - {type: "correlation", analyzer: "peer_efficiency_benchmark"}
-          score_range: [0, 100]
-          scoring_logic:
-            top_quartile: 100
-            above_median: 80
-            at_median: 65
-            below_median: 50
-            bottom_quartile: 35
+          inference_utility_function: operational_efficiency_basefunction
           critical: false
           score_condition: null
 
@@ -835,20 +528,7 @@ energy:
           name: "Credit Rating"
           description: "Corporate credit rating"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "sp_global", endpoint: "ratings"}
-            - {type: "api", provider: "moodys", endpoint: "ratings"}
-            - {type: "api", provider: "fitch", endpoint: "ratings"}
-          score_range: [0, 100]
-          scoring_logic:
-            investment_grade: 100
-            bb_range: 70
-            b_range: 50
-            ccc_below: 30
-            not_rated_strong: 65
-            not_rated_unknown: 45
+          inference_utility_function: credit_rating_basefunction
           critical: false
           score_condition: null
           
@@ -856,18 +536,7 @@ energy:
           name: "Debt/Equity Leverage"
           description: "Leverage ratio vs peer benchmark"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "10-Q"]}
-            - {type: "api", provider: "bloomberg", endpoint: "fundamentals"}
-          score_range: [0, 100]
-          scoring_logic:
-            conservative_leverage: 100
-            moderate_leverage: 80
-            at_peer_avg: 65
-            elevated_leverage: 45
-            high_leverage: 25
+          inference_utility_function: leverage_basefunction
           critical: false
           score_condition: null
           
@@ -875,18 +544,7 @@ energy:
           name: "ARO Coverage"
           description: "Asset retirement obligation funding status"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-            - {type: "api", provider: "bsee", endpoint: "bonds/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            fully_bonded_funded: 100
-            adequate_coverage: 80
-            partial_coverage: 55
-            underfunded: 35
-            significantly_underfunded: 15
+          inference_utility_function: aro_coverage_basefunction
           critical: true
           score_condition: aro_coverage_critical
           
@@ -894,17 +552,7 @@ energy:
           name: "Capex Trends"
           description: "Maintenance vs growth capital trends"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "10-Q"]}
-          score_range: [0, 100]
-          scoring_logic:
-            balanced_investment: 100
-            growth_focused: 80
-            maintenance_focused: 75
-            declining_investment: 50
-            severe_cuts: 30
+          inference_utility_function: capex_trend_basefunction
           critical: false
           score_condition: null
           
@@ -912,18 +560,7 @@ energy:
           name: "Bankruptcy/Restructuring History"
           description: "Bankruptcy or debt restructuring history"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "bankruptcy/search"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["8-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            no_history: 100
-            restructuring_over_10yr: 75
-            restructuring_over_5yr: 55
-            restructuring_recent: 30
-            bankruptcy_recent: 15
+          inference_utility_function: restructuring_basefunction
           critical: true
           score_condition: restructuring_critical
 
@@ -932,19 +569,7 @@ energy:
           name: "Asset Age Profile"
           description: "Weighted average asset age vs peers"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "enverus", endpoint: "assets/age"}
-            - {type: "api", provider: "bsee", endpoint: "platforms/age"}
-            - {type: "api", provider: "eia", endpoint: "refineries/age"}
-          score_range: [0, 100]
-          scoring_logic:
-            modern_assets: 100
-            below_peer_avg_age: 85
-            at_peer_avg: 70
-            above_peer_avg: 50
-            aging_assets: 35
+          inference_utility_function: asset_age_basefunction
           critical: false
           score_condition: null
           
@@ -952,18 +577,7 @@ energy:
           name: "Geographic Concentration"
           description: "Geographic and asset concentration risk"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-            - {type: "api", provider: "enverus", endpoint: "assets/geography"}
-          score_range: [0, 100]
-          scoring_logic:
-            well_diversified: 100
-            moderately_diversified: 80
-            some_concentration: 60
-            high_concentration: 40
-            single_asset_dependency: 20
+          inference_utility_function: concentration_basefunction
           critical: false
           score_condition: null
           
@@ -971,18 +585,7 @@ energy:
           name: "Technology/Complexity Profile"
           description: "Operational complexity and technology risk"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "enverus", endpoint: "assets/profile"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            conventional_low_complexity: 100
-            moderate_complexity: 80
-            high_complexity_managed: 60
-            high_complexity_concerns: 40
-            frontier_technology: 30
+          inference_utility_function: technology_profile_basefunction
           critical: false
           score_condition: null
           
@@ -990,19 +593,7 @@ energy:
           name: "Decommissioning Obligations"
           description: "Decommissioning liability status"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "bsee", endpoint: "decommissioning/obligations"}
-            - {type: "api", provider: "state_commissions", endpoint: "plugging/obligations"}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            minimal_obligations: 100
-            moderate_well_funded: 80
-            significant_funded: 65
-            significant_partial: 45
-            large_unfunded: 25
+          inference_utility_function: decomissioning_basefunction
           critical: false
           score_condition: null
           
@@ -1010,19 +601,7 @@ energy:
           name: "Permit Status"
           description: "Operating permit status and compliance"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "state_commissions", endpoint: "permits/status"}
-            - {type: "api", provider: "bsee", endpoint: "permits/status"}
-            - {type: "api", provider: "epa", endpoint: "permits/status"}
-          score_range: [0, 100]
-          scoring_logic:
-            all_active_current: 100
-            minor_admin_issues: 85
-            pending_renewals: 70
-            expired_permits: 45
-            permit_violations: 25
+          inference_utility_function: permit_status_basefunction
           critical: false
           score_condition: null
 
@@ -1031,18 +610,7 @@ energy:
           name: "Safety Culture Communication"
           description: "Observable safety culture and communication"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/safety", "/hse", "/sustainability"]}
-            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
-          score_range: [0, 100]
-          scoring_logic:
-            comprehensive_disclosure: 100
-            good_disclosure: 80
-            basic_disclosure: 60
-            minimal_disclosure: 40
-            no_disclosure: 25
+          inference_utility_function: safety_comms_basefunction
           critical: false
           score_condition: null
           
@@ -1050,19 +618,7 @@ energy:
           name: "ESG/Sustainability Reporting"
           description: "Quality of ESG and sustainability reporting"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/sustainability", "/esg"]}
-            - {type: "api", provider: "cdp", endpoint: "responses/search"}
-            - {type: "api", provider: "sasb", endpoint: "disclosures"}
-          score_range: [0, 100]
-          scoring_logic:
-            comprehensive_sasb_tcfd: 100
-            good_reporting: 80
-            basic_report: 60
-            website_only: 40
-            none: 20
+          inference_utility_function: esg_reporting_basefunction
           critical: false
           score_condition: null
           
@@ -1070,17 +626,7 @@ energy:
           name: "Technical/HSE Hiring"
           description: "HSE and engineering hiring signals"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "jobs/search"}
-            - {type: "scrape", target: "job_boards"}
-          score_range: [0, 100]
-          scoring_logic:
-            active_hse_hiring: 100
-            steady_technical: 80
-            minimal: 55
-            cutbacks: 35
+          inference_utility_function: technical_hiring_basefunction
           critical: false
           score_condition: null
           
@@ -1088,17 +634,7 @@ energy:
           name: "Industry Conference Presence"
           description: "Presence at industry conferences"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "conference_websites"}
-            - {type: "news", provider: "gdelt", query: "{operator} conference OR presentation"}
-          score_range: [0, 100]
-          scoring_logic:
-            active_presenter: 100
-            regular_attendee: 75
-            occasional: 55
-            minimal: 35
+          inference_utility_function: industry_presence_basefunction
           critical: false
           score_condition: null
           
@@ -1106,18 +642,7 @@ energy:
           name: "Transparency/Disclosure Quality"
           description: "Overall transparency and disclosure quality"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "filing", provider: "sec_edgar", analyzer: "disclosure_quality_scorer"}
-            - {type: "scrape", target: "company_website"}
-          score_range: [0, 100]
-          scoring_logic:
-            exemplary: 100
-            good: 80
-            adequate: 60
-            minimal: 40
-            opaque: 20
+          inference_utility_function: disclosure_quality_basefunction
           critical: false
           score_condition: null
           
@@ -1125,18 +650,7 @@ energy:
           name: "HSE Leadership Visibility"
           description: "HSE leadership profiles and visibility"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/leadership", "/about"]}
-            - {type: "api", provider: "linkedin", endpoint: "people/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            c_suite_hse: 100
-            dedicated_vp_hse: 85
-            senior_hse_role: 70
-            hse_function_exists: 50
-            unclear: 30
+          inference_utility_function: hse_leadership_basefunction
           critical: false
           score_condition: null
 
@@ -1145,19 +659,7 @@ energy:
           name: "ESG Rating"
           description: "Third-party ESG ratings"
           weight: 0.40
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "msci", endpoint: "esg/ratings"}
-            - {type: "api", provider: "sustainalytics", endpoint: "ratings"}
-            - {type: "api", provider: "sp_global", endpoint: "esg/scores"}
-          score_range: [0, 100]
-          scoring_logic:
-            leader: 100
-            above_avg: 80
-            average: 60
-            below_avg: 40
-            laggard: 20
+          inference_utility_function: esg_rating_basefunction
           critical: false
           score_condition: null
           
@@ -1165,18 +667,7 @@ energy:
           name: "Industry Benchmark Data"
           description: "Performance vs industry benchmarks"
           weight: 0.35
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "iogp", endpoint: "safety/benchmarks"}
-            - {type: "api", provider: "api", endpoint: "industry/benchmarks"}
-          score_range: [0, 100]
-          scoring_logic:
-            top_quartile: 100
-            above_median: 80
-            at_median: 60
-            below_median: 40
-            bottom_quartile: 20
+          inference_utility_function: benchmark_basefunction
           critical: false
           score_condition: null
           
@@ -1184,18 +675,7 @@ energy:
           name: "Credit Rating (Structured)"
           description: "Credit rating from structured feed"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "sp_global", endpoint: "ratings"}
-            - {type: "api", provider: "moodys", endpoint: "ratings"}
-          score_range: [0, 100]
-          scoring_logic:
-            investment_grade: 100
-            bb_range: 70
-            b_range: 50
-            ccc_below: 30
-            not_rated: 50
+          inference_utility_function: credit_rating_basefunction
           critical: false
           score_condition: null
 
@@ -1257,27 +737,27 @@ energy:
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
     direct_conditions:
-      - id: major_incidents_true
+      - id: major_incidents_referral
         bands:
           - {return: true, tier_override: 4, action: "REFER", note: "Major incidents disclosed"}
       
-      - id: fatalities_true
+      - id: fatalities_referral
         bands:
           - {return: true, tier_override: 3, action: "REFER", note: "Fatalities disclosed"}
       
-      - id: regulatory_enforcement_true
+      - id: regulatory_enforcement_referral
         bands:
           - {return: true, tier_override: null, action: "REFER", note: "Pending regulatory enforcement"}
       
-      - id: decommissioning_obligations_true
+      - id: decommissioning_obligations_referral
         bands:
           - {return: true, tier_override: null, action: "FLAG", note: "Unfunded decommissioning obligations"}
       
-      - id: jv_operator_info
+      - id: jv_operator_info_referral
         bands:
           - {return: true, tier_override: null, action: "INFO", note: "JV operator status"}
       
-      - id: contractor_info
+      - id: contractor_info_referral
         bands:
           - {return: true, tier_override: null, action: "INFO", note: "Third-party contractor usage"}
   
