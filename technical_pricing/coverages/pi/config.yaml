@@ -1,32 +1,22 @@
 # =============================================================================
-# DSI Model Configuration - Professional Indemnity Insurance
+# DSI Model Configuration
 # =============================================================================
 #
-# This file defines the complete configuration for Professional Indemnity coverage.
+# This file defines the complete configuration for a coverage type.
 # It is the single source of truth for:
 #   - Model structure and parameters
-#   - Signal definitions and weights (profession-specific)
+#   - Signal definitions and weights
 #   - Pricing factors and thresholds
-#   - Practice area risk modifiers
 #   - Test profiles for actuarial validation
 #
 # Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
 #
 # DSI PRINCIPLES APPLIED:
-#   1. All signals must be externally observable (licensing boards, court records, ratings)
-#   2. Direct queries are OPTIONAL - model works without them
-#   3. Categorical features are inferred from regulatory registrations
+#   1. All signals must be externally observable (no application questions required)
+#   2. Direct queries are OPTIONAL - model must work without them
+#   3. Categorical features are inferred from observable data
 #   4. Tier determines base premium; modifiers adjust for exposure characteristics
-#   5. PI is suited to DSI due to extensive regulatory/licensing disclosure
-#
-# KEY DATA SOURCES:
-#   - State bar associations (law firms)
-#   - AICPA peer review database (accounting)
-#   - State licensing boards (all professions)
-#   - PACER and state court records
-#   - Chambers, Legal 500, Best Lawyers rankings
-#   - PCAOB registration (accounting)
-#   - Professional association directories
+#   5. All sources must be publicly accessible or through standard data providers
 #
 # Version: 2.0.0
 # Last Updated: 2025-12
@@ -35,7 +25,7 @@
 professional_indemnity:
   pi_general:
     metadata:
-      name: "DSI Professional Indemnity Insurance Model"
+      name: "DSI Professional Indemnity Technical Pricing Model"
       description: "PI/E&O coverage based on observable regulatory, practice quality, and stability signals"
       version: "2.0.0"
       coverage_types:
@@ -59,231 +49,184 @@ professional_indemnity:
       min_premium: 2500
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
     direct_optional_queries:
       - id: "pending_claims"
         question: "Any pending or threatened malpractice claims?"
-        direct_condition: pending_claims_true
+        direct_condition: pending_claims_referral
         
       - id: "disciplinary_pending"
         question: "Any pending disciplinary proceedings against any professional?"
-        direct_condition: disciplinary_pending_true
+        direct_condition: disciplinary_pending_referral
         
       - id: "coverage_declined"
         question: "Has any PI coverage been declined or non-renewed in past 3 years?"
-        direct_condition: coverage_declined_true
+        direct_condition: coverage_declined_referral
         
       - id: "practice_area_change"
         question: "Any significant change in practice areas in past 2 years?"
-        direct_condition: practice_area_change_true
+        direct_condition: practice_area_change_referral
         
       - id: "merger_activity"
         question: "Any merger, acquisition, or spin-off in past 2 years?"
-        direct_condition: merger_activity_true
+        direct_condition: merger_activity_referral
         
       - id: "major_client_loss"
         question: "Loss of client representing >25% of revenue in past year?"
-        direct_condition: major_client_loss_true
+        direct_condition: major_client_loss_referral
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
+    # These define classification values and their pricing impact
+    # inference_method specifies how to automatically determine the value
+    
     categorical_features:
       profession_type:
         description: "Primary professional classification"
-        inference_method:
-          primary: "license_type_lookup"
-          fallback: "website_nlp_classification"
-          sources:
-            - {type: "api", provider: "state_licensing_boards", endpoint: "license/search"}
-            - {type: "api", provider: "bar_associations", endpoint: "attorney/search"}
-            - {type: "api", provider: "aicpa", endpoint: "member/search"}
-            - {type: "api", provider: "ncarb", endpoint: "certificate/search"}
-            - {type: "api", provider: "ncees", endpoint: "pe/search"}
-            - {type: "scrape", target: "company_website", analyzer: "profession_classifier"}
-          confidence_threshold: 0.90
-          default_on_failure: "OTHER"
+        inference_utility_function: primaryprofessional_classification_basefunction
         values:
           - id: "LAW_FIRM"
             label: "Law Firm"
             base_rate: 8500
             description: "Law firms of all sizes and practice areas"
-            inference_criteria: {bar_license: true}
             
           - id: "ACCOUNTING_FIRM"
             label: "Accounting Firm"
             base_rate: 9000
             description: "CPA firms - audit, tax, advisory"
-            inference_criteria: {cpa_license: true}
             
           - id: "ARCHITECTURE"
             label: "Architecture"
             base_rate: 7500
             description: "Licensed architects"
-            inference_criteria: {architecture_license: true}
             
           - id: "ENGINEERING"
             label: "Engineering"
             base_rate: 8000
             description: "Licensed professional engineers"
-            inference_criteria: {pe_license: true}
             
           - id: "MANAGEMENT_CONSULTING"
             label: "Management Consulting"
             base_rate: 6000
             description: "Strategy, operations, organizational consulting"
-            inference_criteria: {consulting_practice: true, management_focus: true}
             
           - id: "IT_CONSULTING"
             label: "IT Consulting"
             base_rate: 7000
             description: "Technology consulting and implementation"
-            inference_criteria: {consulting_practice: true, it_focus: true}
             
           - id: "HR_CONSULTING"
             label: "HR Consulting"
             base_rate: 5500
             description: "Human resources and benefits consulting"
-            inference_criteria: {consulting_practice: true, hr_focus: true}
             
           - id: "REAL_ESTATE"
             label: "Real Estate"
             base_rate: 5500
             description: "Real estate agents, brokers, property managers"
-            inference_criteria: {real_estate_license: true}
             
           - id: "INSURANCE_BROKER"
             label: "Insurance Broker"
             base_rate: 6500
             description: "Insurance agents and brokers"
-            inference_criteria: {insurance_license: true}
             
           - id: "FINANCIAL_PLANNING"
             label: "Financial Planning"
             base_rate: 7500
             description: "Financial planners and advisers (non-SEC)"
-            inference_criteria: {cfp_designation: true}
             
           - id: "HEALTHCARE_ADMIN"
             label: "Healthcare Administration"
             base_rate: 6000
             description: "Healthcare management and administration"
-            inference_criteria: {healthcare_admin: true}
             
           - id: "APPRAISAL_VALUATION"
             label: "Appraisal/Valuation"
             base_rate: 6500
             description: "Real estate appraisers, business valuators"
-            inference_criteria: {appraisal_license: true}
             
           - id: "ENVIRONMENTAL_CONSULTING"
             label: "Environmental Consulting"
             base_rate: 7000
             description: "Environmental assessment and remediation"
-            inference_criteria: {environmental_practice: true}
             
           - id: "OTHER"
             label: "Other Professional"
             base_rate: 6000
             description: "Other professional services"
-            inference_criteria: {}
-
+            
       firm_size:
         description: "Firm size by professional headcount"
-        inference_method:
-          primary: "linkedin_employee_count"
-          fallback: "website_team_analysis"
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "company/employees"}
-            - {type: "api", provider: "dnb", endpoint: "company/employees"}
-            - {type: "scrape", target: "company_website", pages: ["/team", "/attorneys", "/people", "/about"]}
-          confidence_threshold: 0.80
-          default_on_failure: "SMALL"
+        inference_utility_function: firm_size_basefunction
         values:
           - id: "SOLO"
             label: "Solo Practitioner"
             modifier: 1.20
-            headcount_range: [1, 1]
             description: "Single professional practice"
             
           - id: "MICRO"
             label: "Micro Firm"
             modifier: 1.10
-            headcount_range: [2, 5]
             description: "2-5 professionals"
             
           - id: "SMALL"
             label: "Small Firm"
             modifier: 1.00
-            headcount_range: [6, 20]
             description: "6-20 professionals"
             
           - id: "MEDIUM"
             label: "Medium Firm"
             modifier: 0.95
-            headcount_range: [21, 100]
             description: "21-100 professionals"
             
           - id: "LARGE"
             label: "Large Firm"
             modifier: 0.90
-            headcount_range: [101, 500]
             description: "101-500 professionals"
             
           - id: "MAJOR"
             label: "Major Firm"
             modifier: 0.85
-            headcount_range: [501, 999999]
             description: "500+ professionals"
 
       revenue_size:
         description: "Annual revenue classification"
-        inference_method:
-          primary: "financial_database_lookup"
-          fallback: "headcount_revenue_estimate"
-          sources:
-            - {type: "api", provider: "dnb", endpoint: "company/financials"}
-            - {type: "api", provider: "pitchbook", endpoint: "company/financials"}
-            - {type: "correlation", analyzer: "headcount_to_revenue", inputs: ["headcount", "profession"]}
-          confidence_threshold: 0.70
-          default_on_failure: "R_1M_5M"
+        inference_utility_function: annualrevenue_classification_basefunction
         values:
           - id: "UNDER_500K"
             label: "Under $500K"
             modifier: 0.85
-            revenue_range: [0, 500000]
+            description: ""      
             
           - id: "R_500K_1M"
             label: "$500K - $1M"
             modifier: 0.90
-            revenue_range: [500000, 1000000]
+            description: ""      
             
           - id: "R_1M_5M"
             label: "$1M - $5M"
             modifier: 1.00
-            revenue_range: [1000000, 5000000]
+            description: ""      
             
           - id: "R_5M_25M"
             label: "$5M - $25M"
             modifier: 1.10
-            revenue_range: [5000000, 25000000]
+            description: ""      
             
           - id: "R_25M_100M"
             label: "$25M - $100M"
             modifier: 1.25
-            revenue_range: [25000000, 100000000]
+            description: ""      
             
           - id: "R_100M_500M"
             label: "$100M - $500M"
             modifier: 1.40
-            revenue_range: [100000000, 500000000]
+            description: ""      
             
           - id: "OVER_500M"
             label: "Over $500M"
             modifier: 1.60
-            revenue_range: [500000000, 999999999999]
+            description: ""      
 
     # -------------------------------------------------------------------------
     # PRACTICE AREA MODIFIERS (PROFESSION-SPECIFIC)
@@ -435,9 +378,12 @@ professional_indemnity:
         corporate_footprint: 0.10
         litigation_history: 0.10
 
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
+    # SIGNAL GROUPINGS (Categories with Weights)
+    # ---------------------------------------------------------------------------
+    # Each group contributes to the composite score
+    # Weights must sum to 1.0
+    
     signal_groups:
       - id: "network_authority"
         name: "Network Authority"
@@ -495,31 +441,13 @@ professional_indemnity:
         critical: true
         score_condition: litigation_history_critical
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # -------------------------------------------------------------------------
     signal_features:
       network_authority:
         - id: "peer_ranking"
           name: "Peer Rankings"
           description: "Recognition in Chambers, Legal 500, Best Lawyers, etc."
           weight: 0.25
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "api", provider: "chambers", endpoint: "rankings/search"}
-            - {type: "api", provider: "legal500", endpoint: "rankings/search"}
-            - {type: "api", provider: "bestlawyers", endpoint: "search"}
-            - {type: "api", provider: "martindale", endpoint: "ratings/search"}
-            - {type: "api", provider: "superlawyers", endpoint: "search"}
-          score_range: [0, 100]
-          scoring_logic:
-            band_1_chambers: 100
-            band_2_chambers: 90
-            band_3_chambers: 80
-            ranked_any_tier: 70
-            recognized_not_ranked: 55
-            not_ranked: 40
+          inference_utility_function: peer_ranking_basefunction
           critical: false
           score_condition: null
           
@@ -527,20 +455,7 @@ professional_indemnity:
           name: "Client Quality"
           description: "Quality of client base (public companies, Fortune 500)"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/clients", "/experience", "/representative-matters"]}
-            - {type: "api", provider: "pacer", endpoint: "cases/search"}
-            - {type: "api", provider: "sec_edgar", endpoint: "filings/counsel"}
-          score_range: [0, 100]
-          scoring_logic:
-            fortune_500_clients: 100
-            public_company_clients: 85
-            institutional_clients: 75
-            mid_market_clients: 65
-            small_business_clients: 50
-            individual_clients: 40
+          inference_utility_function: client_quality_basefunction
           critical: false
           score_condition: null
           
@@ -548,18 +463,7 @@ professional_indemnity:
           name: "Referral Network Quality"
           description: "Quality of referring relationships"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "connections"}
-            - {type: "scrape", target: "company_website", pages: ["/about", "/affiliations"]}
-          score_range: [0, 100]
-          scoring_logic:
-            major_firm_referrals: 100
-            quality_referral_network: 80
-            adequate_network: 65
-            limited_network: 45
-            no_apparent_network: 30
+          inference_utility_function: referral_quality_basefunction
           critical: false
           score_condition: null
           
@@ -567,21 +471,7 @@ professional_indemnity:
           name: "Association Leadership"
           description: "Leadership roles in professional associations"
           weight: 0.15
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "api", provider: "aba", endpoint: "leadership/search"}
-            - {type: "api", provider: "aicpa", endpoint: "leadership/search"}
-            - {type: "api", provider: "aia", endpoint: "leadership/search"}
-            - {type: "scrape", target: "association_websites"}
-          score_range: [0, 100]
-          scoring_logic:
-            national_leadership: 100
-            state_leadership: 85
-            committee_chair: 75
-            active_member: 60
-            member: 45
-            non_member: 30
+          inference_utility_function: association_leadership_basefunction
           critical: false
           score_condition: null
           
@@ -589,19 +479,7 @@ professional_indemnity:
           name: "Thought Leadership"
           description: "Publications, speaking, CLE presentations"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/publications", "/news", "/insights"]}
-            - {type: "api", provider: "google_scholar", endpoint: "author/search"}
-            - {type: "api", provider: "ssrn", endpoint: "author/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            extensive_publishing: 100
-            regular_publishing: 80
-            occasional_publishing: 60
-            minimal: 40
-            none: 25
+          inference_utility_function: thought_leadership_basefunction
           critical: false
           score_condition: null
           
@@ -609,17 +487,7 @@ professional_indemnity:
           name: "Panel Membership"
           description: "Insurance defense panels, bank approved lists"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "insurance_panels", endpoint: "search"}
-            - {type: "scrape", target: "company_website", pages: ["/about", "/clients"]}
-          score_range: [0, 100]
-          scoring_logic:
-            major_panels: 100
-            regional_panels: 80
-            some_panel_work: 60
-            no_panel_work: 40
+          inference_utility_function: panel_membership_basefunction
           critical: false
           score_condition: null
 
@@ -628,22 +496,7 @@ professional_indemnity:
           name: "License Status"
           description: "Current status of all professional licenses"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "state_bar", endpoint: "attorney/status"}
-            - {type: "api", provider: "state_cpa_board", endpoint: "license/status"}
-            - {type: "api", provider: "state_architect_board", endpoint: "license/status"}
-            - {type: "api", provider: "state_pe_board", endpoint: "license/status"}
-            - {type: "api", provider: "state_real_estate", endpoint: "license/status"}
-          score_range: [0, 100]
-          scoring_logic:
-            all_active_good_standing: 100
-            active_minor_admin_issue: 80
-            probationary_status: 45
-            suspended: 20
-            revoked: 0
-            inactive: 30
+          inference_utility_function: license_status_basefunction
           critical: true
           score_condition: license_status_critical
           
@@ -651,22 +504,7 @@ professional_indemnity:
           name: "Disciplinary History"
           description: "Sanctions, censures, suspensions, reprimands"
           weight: 0.30
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "state_bar", endpoint: "discipline/search"}
-            - {type: "api", provider: "state_cpa_board", endpoint: "discipline/search"}
-            - {type: "api", provider: "state_pe_board", endpoint: "discipline/search"}
-            - {type: "api", provider: "finra", endpoint: "brokercheck"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_history: 100
-            private_admonition_over_10yr: 90
-            private_admonition_recent: 75
-            public_censure_over_10yr: 60
-            public_censure_recent: 40
-            suspension_any: 20
-            multiple_actions: 10
+          inference_utility_function: disciplianry_history_basefunction
           critical: true
           score_condition: disciplinary_history_critical
           
@@ -674,20 +512,7 @@ professional_indemnity:
           name: "Public Malpractice Record"
           description: "Public judgments and disclosed settlements"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "cases/search"}
-            - {type: "api", provider: "state_courts", endpoint: "judgments/search"}
-            - {type: "api", provider: "westlaw", endpoint: "verdicts/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_record: 100
-            dismissed_only: 90
-            minor_settlement_over_5yr: 75
-            significant_settlement: 50
-            judgment_against: 30
-            multiple_matters: 15
+          inference_utility_function: malpractice_record_basefunction
           critical: true
           score_condition: malpractice_record_critical
           
@@ -695,18 +520,7 @@ professional_indemnity:
           name: "Continuing Education Compliance"
           description: "CLE/CPE/CE requirements current"
           weight: 0.05
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "state_bar", endpoint: "cle/status"}
-            - {type: "api", provider: "nasba", endpoint: "cpe/status"}
-          score_range: [0, 100]
-          scoring_logic:
-            fully_compliant: 100
-            minor_deficiency: 75
-            moderate_deficiency: 50
-            significant_deficiency: 25
-            non_compliant: 10
+          inference_utility_function: ce_compliance_basefunction
           critical: false
           score_condition: null
           
@@ -714,18 +528,7 @@ professional_indemnity:
           name: "Specialty Certifications"
           description: "Board certifications, specialty designations"
           weight: 0.10
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "api", provider: "abota", endpoint: "members"}
-            - {type: "api", provider: "state_bar", endpoint: "certifications"}
-            - {type: "api", provider: "aicpa", endpoint: "credentials"}
-          score_range: [0, 100]
-          scoring_logic:
-            multiple_certifications: 100
-            single_certification: 85
-            certification_eligible: 65
-            no_certification: 50
+          inference_utility_function: speciality_certifications_basefunction
           critical: false
           score_condition: null
           
@@ -733,18 +536,7 @@ professional_indemnity:
           name: "Peer Review Rating"
           description: "AICPA peer review rating (accounting firms)"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          applicable_professions: ["accounting_firm"]
-          sources:
-            - {type: "api", provider: "aicpa", endpoint: "peerreview/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            pass_no_deficiencies: 100
-            pass_with_deficiencies: 60
-            pass_with_significant: 35
-            fail: 10
-            not_enrolled: 40
+          inference_utility_function: peer_review_basefunction
           critical: true
           score_condition: peer_review_critical
           
@@ -752,19 +544,7 @@ professional_indemnity:
           name: "PCAOB/SEC Standing"
           description: "PCAOB registration and inspection results"
           weight: 0.05
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          applicable_professions: ["accounting_firm"]
-          sources:
-            - {type: "api", provider: "pcaob", endpoint: "firms/search"}
-            - {type: "api", provider: "sec", endpoint: "enforcement/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            registered_clean: 100
-            registered_minor_findings: 75
-            registered_significant_findings: 45
-            enforcement_action: 20
-            not_registered: 60
+          inference_utility_function: pcaob_standing_basefunction
           critical: false
           score_condition: null
 
@@ -773,20 +553,7 @@ professional_indemnity:
           name: "Years in Practice"
           description: "Firm establishment and longevity"
           weight: 0.20
-          ttl: "static"
-          ttl_seconds: 7776000
-          sources:
-            - {type: "api", provider: "dnb", endpoint: "company/profile"}
-            - {type: "api", provider: "secretary_of_state", endpoint: "entity/search"}
-            - {type: "scrape", target: "company_website", pages: ["/about", "/history"]}
-          score_range: [0, 100]
-          scoring_logic:
-            over_25_years: 100
-            15_25_years: 90
-            10_15_years: 80
-            5_10_years: 65
-            3_5_years: 50
-            under_3_years: 35
+          inference_utility_function: years_inpractice_basefunction
           critical: false
           score_condition: null
           
@@ -794,20 +561,7 @@ professional_indemnity:
           name: "Partner/Principal Stability"
           description: "Partner retention and turnover patterns"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "linkedin", endpoint: "company/employees"}
-            - {type: "scrape", target: "company_website", pages: ["/attorneys", "/team", "/partners"]}
-            - {type: "news", provider: "gdelt", query: "{firm} partner departure OR lateral"}
-          score_range: [0, 100]
-          scoring_logic:
-            stable_long_tenure: 100
-            mostly_stable: 80
-            normal_turnover: 65
-            elevated_turnover: 45
-            high_turnover: 25
-            mass_departure: 10
+          inference_utility_function: partner_stability_basefunction
           critical: true
           score_condition: partner_stability_critical
           
@@ -815,19 +569,7 @@ professional_indemnity:
           name: "Staff Retention"
           description: "Associate/staff retention signals"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "glassdoor", endpoint: "reviews/company"}
-            - {type: "api", provider: "indeed", endpoint: "reviews/company"}
-            - {type: "api", provider: "linkedin", endpoint: "company/insights"}
-          score_range: [0, 100]
-          scoring_logic:
-            excellent_retention: 100
-            good_retention: 80
-            average_retention: 65
-            below_average: 45
-            poor_retention: 25
+          inference_utility_function: staff_retention_basefunction
           critical: false
           score_condition: null
           
@@ -835,18 +577,7 @@ professional_indemnity:
           name: "Office Stability"
           description: "Office locations and changes"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/contact", "/locations"]}
-            - {type: "api", provider: "google_places", endpoint: "search"}
-          score_range: [0, 100]
-          scoring_logic:
-            long_term_stable: 100
-            stable_with_growth: 90
-            recent_relocation: 70
-            multiple_moves: 50
-            contraction: 40
+          inference_utility_function: office_stability_basefunction
           critical: false
           score_condition: null
           
@@ -854,20 +585,7 @@ professional_indemnity:
           name: "Financial Stability"
           description: "Financial health indicators"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "dnb", endpoint: "company/financials"}
-            - {type: "api", provider: "experian", endpoint: "business/credit"}
-            - {type: "news", provider: "gdelt", query: "{firm} bankruptcy OR layoffs OR financial"}
-          score_range: [0, 100]
-          scoring_logic:
-            strong_financials: 100
-            stable: 80
-            adequate: 65
-            concerns_present: 45
-            distress_signals: 25
-            bankruptcy_risk: 10
+          inference_utility_function: financial_stability_basefunction
           critical: true
           score_condition: financial_stability_critical
           
@@ -875,18 +593,7 @@ professional_indemnity:
           name: "Succession Planning"
           description: "Observable succession planning indicators"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/about", "/leadership"]}
-            - {type: "api", provider: "linkedin", endpoint: "company/employees"}
-          score_range: [0, 100]
-          scoring_logic:
-            clear_succession: 100
-            emerging_leaders: 80
-            adequate_depth: 65
-            key_person_risk: 45
-            significant_risk: 25
+          inference_utility_function: succession_planning_basefunction
           critical: false
           score_condition: null
 
@@ -895,19 +602,7 @@ professional_indemnity:
           name: "Matter Outcome Patterns"
           description: "Case outcomes, transaction completion rates"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "cases/outcomes"}
-            - {type: "api", provider: "westlaw", endpoint: "verdicts/search"}
-            - {type: "scrape", target: "company_website", pages: ["/results", "/victories", "/transactions"]}
-          score_range: [0, 100]
-          scoring_logic:
-            excellent_outcomes: 100
-            above_average: 80
-            average: 65
-            below_average: 45
-            poor_outcomes: 25
+          inference_utility_function: outcome_patterns_basefunction
           critical: false
           score_condition: null
           
@@ -915,21 +610,7 @@ professional_indemnity:
           name: "Client Reviews"
           description: "Client ratings on professional platforms"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "google_reviews", endpoint: "place/reviews"}
-            - {type: "api", provider: "avvo", endpoint: "reviews"}
-            - {type: "api", provider: "martindale", endpoint: "reviews"}
-            - {type: "api", provider: "yelp", endpoint: "reviews"}
-          score_range: [0, 100]
-          scoring_logic:
-            4.5_plus_significant_volume: 100
-            4.0_4.5_good_volume: 85
-            3.5_4.0: 70
-            3.0_3.5: 50
-            below_3.0: 30
-            no_reviews: 55
+          inference_utility_function: client_reviews_basefunction
           critical: false
           score_condition: null
           
@@ -937,18 +618,7 @@ professional_indemnity:
           name: "Work Product Quality"
           description: "Observable work quality indicators"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "documents/quality"}
-            - {type: "api", provider: "westlaw", endpoint: "briefs/citations"}
-          score_range: [0, 100]
-          scoring_logic:
-            exemplary: 100
-            high_quality: 80
-            competent: 65
-            adequate: 50
-            concerns: 30
+          inference_utility_function: work_quality_basefunction
           critical: false
           score_condition: null
           
@@ -956,19 +626,7 @@ professional_indemnity:
           name: "Fee Dispute History"
           description: "Fee arbitrations and disputes"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "state_bar", endpoint: "fee_arbitration/search"}
-            - {type: "api", provider: "bbb", endpoint: "complaints"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_disputes: 100
-            resolved_favorably: 85
-            rare_disputes: 70
-            occasional_disputes: 50
-            frequent_disputes: 30
-            pattern_of_disputes: 15
+          inference_utility_function: fee_dispute_basefunction
           critical: false
           score_condition: null
           
@@ -976,19 +634,7 @@ professional_indemnity:
           name: "Professional Complaints"
           description: "Complaints to professional bodies"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "state_bar", endpoint: "complaints/search"}
-            - {type: "api", provider: "state_boards", endpoint: "complaints/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_complaints: 100
-            dismissed_complaints: 90
-            minor_resolved: 70
-            moderate_resolved: 50
-            serious_resolved: 30
-            pattern: 15
+          inference_utility_function: complaint_history_basefunction
           critical: false
           score_condition: null
 
@@ -997,12 +643,7 @@ professional_indemnity:
           name: "TLS/SSL Configuration"
           description: "Website encryption quality"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scan", provider: "ssllabs", endpoint: "analyze"}
-          score_range: [0, 100]
-          scoring_logic: {grade_a_plus: 100, grade_a: 90, grade_b: 70, grade_c: 45, below_c: 20}
+          inference_utility_function: tls_score_basefunction
           critical: false
           score_condition: null
           
@@ -1010,12 +651,7 @@ professional_indemnity:
           name: "Email Authentication"
           description: "SPF, DMARC, DKIM configuration"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "dns", records: ["TXT", "MX"], analyzer: "email_auth_scorer"}
-          score_range: [0, 100]
-          scoring_logic: {dmarc_reject: 100, dmarc_quarantine: 80, dmarc_none: 60, spf_only: 45, nothing: 20}
+          inference_utility_function: email_authentication_basefunction
           critical: false
           score_condition: null
           
@@ -1023,12 +659,7 @@ professional_indemnity:
           name: "Security Headers"
           description: "HTTP security headers"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scan", provider: "securityheaders.com", endpoint: "scan"}
-          score_range: [0, 100]
-          scoring_logic: {grade_a: 100, grade_b: 75, grade_c: 55, grade_d: 35, grade_f: 15}
+          inference_utility_function: security_headers_basefunction
           critical: false
           score_condition: null
           
@@ -1036,12 +667,7 @@ professional_indemnity:
           name: "Client Portal Security"
           description: "Client portal security if applicable"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "scan", provider: "internal", analyzer: "portal_scanner"}
-          score_range: [0, 100]
-          scoring_logic: {secure_mfa: 100, secure_password: 80, basic_security: 60, weak: 35, no_portal: 50}
+          inference_utility_function: portal_security_basefunction
           critical: false
           score_condition: null
           
@@ -1049,19 +675,7 @@ professional_indemnity:
           name: "Data Breach History"
           description: "Historical data breaches"
           weight: 0.20
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "haveibeenpwned", endpoint: "breaches/domain"}
-            - {type: "api", provider: "privacyrights", endpoint: "breaches/search"}
-            - {type: "news", provider: "gdelt", query: "{firm} data breach"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_breaches: 100
-            minor_resolved: 75
-            significant_resolved: 50
-            recent_breach: 25
-            multiple: 10
+          inference_utility_function: breach_history_basefunction
           critical: true
           score_condition: breach_history_critical
 
@@ -1070,18 +684,7 @@ professional_indemnity:
           name: "Website Professionalism"
           description: "Website quality and completeness"
           weight: 0.25
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", analyzer: "website_quality_scorer"}
-          score_range: [0, 100]
-          scoring_logic:
-            professional_comprehensive: 100
-            professional_adequate: 80
-            basic_functional: 60
-            outdated: 40
-            poor: 20
-            no_website: 15
+          inference_utility_function: website_quality_basefunction
           critical: false
           score_condition: null
           
@@ -1089,17 +692,7 @@ professional_indemnity:
           name: "Professional Bio Quality"
           description: "Attorney/professional bio completeness"
           weight: 0.20
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/attorneys", "/team", "/people"]}
-          score_range: [0, 100]
-          scoring_logic:
-            comprehensive_all: 100
-            detailed_most: 80
-            basic_all: 65
-            incomplete: 45
-            minimal: 25
+          inference_utility_function: bio_completness_basefunction
           critical: false
           score_condition: null
           
@@ -1107,17 +700,7 @@ professional_indemnity:
           name: "Practice Area Clarity"
           description: "Clear description of services"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/services", "/practice-areas"]}
-          score_range: [0, 100]
-          scoring_logic:
-            clear_detailed: 100
-            adequate: 75
-            basic: 55
-            vague: 35
-            missing: 20
+          inference_utility_function: practice_clarity_basefunction
           critical: false
           score_condition: null
           
@@ -1125,17 +708,7 @@ professional_indemnity:
           name: "Publications/Insights"
           description: "Thought leadership content"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 604800
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/news", "/insights", "/publications", "/blog"]}
-          score_range: [0, 100]
-          scoring_logic:
-            extensive_current: 100
-            regular: 80
-            occasional: 60
-            minimal: 40
-            none: 25
+          inference_utility_function: publications_basefunction
           critical: false
           score_condition: null
           
@@ -1143,17 +716,7 @@ professional_indemnity:
           name: "Community Involvement"
           description: "Pro bono, community service"
           weight: 0.15
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/community", "/pro-bono", "/giving-back"]}
-          score_range: [0, 100]
-          scoring_logic:
-            significant_commitment: 100
-            regular_involvement: 75
-            some_involvement: 55
-            minimal: 35
-            none_apparent: 25
+          inference_utility_function: community_involvement_basefunction
           critical: false
           score_condition: null
           
@@ -1161,18 +724,7 @@ professional_indemnity:
           name: "Diversity & Inclusion"
           description: "Diversity signals and commitment"
           weight: 0.10
-          ttl: "semi_static"
-          ttl_seconds: 2592000
-          sources:
-            - {type: "scrape", target: "company_website", pages: ["/diversity", "/dei", "/about"]}
-            - {type: "api", provider: "mansfield_certification", endpoint: "search"}
-          score_range: [0, 100]
-          scoring_logic:
-            certified_leader: 100
-            demonstrated_commitment: 80
-            stated_commitment: 60
-            minimal: 40
-            none: 30
+          inference_utility_function: diversity_basefunction
           critical: false
           score_condition: null
 
@@ -1181,19 +733,7 @@ professional_indemnity:
           name: "Malpractice Suits"
           description: "Professional negligence suits filed"
           weight: 0.35
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "cases/search"}
-            - {type: "api", provider: "state_courts", endpoint: "cases/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_suits: 100
-            dismissed_over_5yr: 90
-            settled_over_5yr: 75
-            settled_recent: 55
-            active_suit: 30
-            multiple_active: 10
+          inference_utility_function: malpractice_suits_basefunction
           critical: true
           score_condition: malpractice_suits_critical
           
@@ -1201,18 +741,7 @@ professional_indemnity:
           name: "Fee Disputes/Arbitration"
           description: "Fee-related litigation and arbitration"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "state_bar", endpoint: "fee_arbitration/search"}
-            - {type: "api", provider: "aaa", endpoint: "arbitrations/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_disputes: 100
-            rare_resolved: 85
-            occasional: 65
-            frequent: 40
-            pattern: 20
+          inference_utility_function: fee_disputes_basefunction
           critical: false
           score_condition: null
           
@@ -1220,19 +749,7 @@ professional_indemnity:
           name: "Regulatory Enforcement"
           description: "Regulatory enforcement actions"
           weight: 0.25
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "state_bar", endpoint: "enforcement/search"}
-            - {type: "api", provider: "state_boards", endpoint: "enforcement/search"}
-            - {type: "api", provider: "sec", endpoint: "enforcement/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_actions: 100
-            minor_resolved_over_5yr: 85
-            significant_resolved: 55
-            recent_action: 30
-            active_action: 10
+          inference_utility_function: regulatory_enforcement_basefunction
           critical: true
           score_condition: regulatory_enforcement_critical
           
@@ -1240,18 +757,7 @@ professional_indemnity:
           name: "Civil Litigation as Defendant"
           description: "Other civil suits as defendant"
           weight: 0.15
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "cases/search"}
-            - {type: "api", provider: "state_courts", endpoint: "cases/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_suits: 100
-            routine_resolved: 85
-            significant_resolved: 65
-            active: 45
-            multiple_active: 25
+          inference_utility_function: civil_litigation_basefunction
           critical: false
           score_condition: null
           
@@ -1259,16 +765,7 @@ professional_indemnity:
           name: "Bankruptcy History"
           description: "Firm or principal bankruptcy"
           weight: 0.10
-          ttl: "dynamic"
-          ttl_seconds: 86400
-          sources:
-            - {type: "api", provider: "pacer", endpoint: "bankruptcy/search"}
-          score_range: [0, 100]
-          scoring_logic:
-            no_history: 100
-            principal_over_10yr: 70
-            principal_recent: 40
-            firm_history: 25
+          inference_utility_function: bankruptcy_basefunction
           critical: true
           score_condition: bankruptcy_critical
 
@@ -1330,27 +827,27 @@ professional_indemnity:
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
     direct_conditions:
-      - id: pending_claims_true
+      - id: pending_claims_referral
         bands:
           - {return: true, tier_override: 4, action: "REFER", note: "Pending malpractice claims disclosed"}
       
-      - id: disciplinary_pending_true
+      - id: disciplinary_pending_referral
         bands:
           - {return: true, tier_override: 4, action: "REFER", note: "Pending disciplinary proceedings"}
       
-      - id: coverage_declined_true
+      - id: coverage_declined_referral
         bands:
           - {return: true, tier_override: 5, action: "DECLINE", note: "Prior PI coverage declined/non-renewed"}
       
-      - id: practice_area_change_true
+      - id: practice_area_change_referral
         bands:
           - {return: true, tier_override: null, action: "FLAG", note: "Significant practice area change"}
       
-      - id: merger_activity_true
+      - id: merger_activity_referral
         bands:
           - {return: true, tier_override: null, action: "FLAG", note: "Recent merger/acquisition activity"}
       
-      - id: major_client_loss_true
+      - id: major_client_loss_referral
         bands:
           - {return: true, tier_override: null, action: "FLAG", note: "Major client loss (>25% revenue)"}
   
