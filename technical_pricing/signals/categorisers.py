@@ -1,52 +1,34 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Type, Optional
+from typing import Any, Dict, List, Optional, Type
+from typing import TypedDict
 
-# ----------------------------
-# Registry
-# ----------------------------
-
+# ---------------- REGISTRY ----------------
 CATEGORIZER_REGISTRY: Dict[str, Type["DataCategorizer"]] = {}
 
 def register_categorizer(cls: Type["DataCategorizer"]) -> Type["DataCategorizer"]:
-    """Register a data categorizer/scorer class."""
+    """Register a data categorizer/scorer class by its class name."""
     CATEGORIZER_REGISTRY[cls.__name__] = cls
     return cls
 
-# ----------------------------
-# Artifacts
-# ----------------------------
+# ---------------- ARTIFACTS ----------------
+class Threshold(TypedDict):
+    label: str
+    value: float  # inclusive lower bound
 
-class Thresholds(TypedDict):
-    Threshold_1: float 
-    Threshold_2: Optional[float] # None indicates no category
-    Threshold_3: Optional[float]
-    Threshold_4: Optional[float]
-    Threshold_5: Optional[float]
-    Threshold_6: Optional[float]
-    Threshold_7: Optional[float]
-    Threshold_8: Optional[float]
-
-# ----------------------------
-# Base Class
-# ----------------------------
-
+# ---------------- BASE CATEGORIZER ----------------
 class DataCategorizer(ABC):
-    """
-    Base class for data categorisers/scorers.
-    Takes aggregated data and produces classifications, scores, or categories.
-    """
+    """Base interface for data categorisers/scorers."""
+    
     @abstractmethod
-    def categorize(self, coverage: str, cov_configuration: Optional[str] = None, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
+    def categorize(self, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Categorise or score the aggregated data.
         
         Args:
-            coverage: the specific coverage handed into the categoriser from technical_pricing/coverages/##/config.yaml
-            cov_configuration: the specific configuration definition under the coverage handed into the categoriser from technical_pricing/coverages/##/config.yaml
-            aggregated_data: Standardised data from an aggregator
+            aggregated_data: standardised data from an aggregator
             
         Returns:
-            Category, score, or classification result
+            A dict with category/score and any supporting fields
         """
         raise NotImplementedError
     
@@ -54,89 +36,295 @@ class DataCategorizer(ABC):
         """Optional: Return metadata about the categorizer."""
         return {
             "categorizer_type": self.__class__.__name__,
-            "version": "1.0"
+            "version": "1.0",
         }
 
+# ---------------- DEFAULTS ----------------
+
+THRESHOLD_DEFAULTS: Dict[str, List[Threshold]] = {
+    # Coverage profiles
+    "aerospace": [
+        {"label": "small",  "value": 10},
+        {"label": "medium", "value": 20},
+        {"label": "large",  "value": 30},
+    ],
+    "aerospace_general": [
+        {"label": "micro",  "value": 10},
+        {"label": "small",  "value": 20},
+        {"label": "medium", "value": 30},
+        {"label": "extra",  "value": 40},
+    ],
+}
+
+# ---------------- SPECIFIC CATEGORIZER ----------------
+@register_categorizer
+class ClientSizeCategorizer(DataCategorizer):
+    """
+    Categorises clients by size using coverage/profile-specific thresholds.
+    
+    Buckets use inclusive lower bounds. The highest matching bucket wins:
+        size >= last_threshold  -> last bucket
+        size >= previous        -> previous bucket
+        ...
+        else                    -> 'uncategorised'
+    
+    Examples:
+        >>> categorizer = ClientSizeCategorizer(coverage="aerospace")
+        >>> result = categorizer.categorize({"client_name": "ABC Corp", "client_size": 25})
+        >>> result["category"]
+        'large'
+        
+        >>> result = categorizer.categorize({"client_name": "XYZ Ltd", "client_size": 5})
+        >>> result["category"]
+        'uncategorised'
+    """
+    
+    def __init__(
+        self,
+        coverage: Optional[str] = None,
+        configuration: Optional[str] = None
+    ):
+        """
+        Args:
+            coverage: e.g., 'aerospace'
+            configuration: underlying coverage configuration, e.g., 'aerospace_general'
+        
+        Raises:
+            ValueError: If neither coverage nor configuration is provided
+            ValueError: If the specified profile doesn't exist in THRESHOLD_DEFAULTS
+        """
+        profile_key = configuration or coverage
+        
+        # Enforce requirement for coverage or configuration
+        if profile_key is None:
+            raise ValueError(
+                "You must specify either coverage or configuration."
+            )
+        
+        # Validate profile exists
+        if profile_key not in THRESHOLD_DEFAULTS:
+            available = ", ".join(THRESHOLD_DEFAULTS.keys())
+            raise ValueError(
+                f"Unknown profile '{profile_key}'. "
+                f"Available profiles: {available}"
+            )
+        
+        # Store profile key and normalise thresholds
+        self.profile_key = profile_key
+        self.thresholds: List[Threshold] = sorted(
+            THRESHOLD_DEFAULTS[profile_key], 
+            key=lambda t: t["value"]
+        )
+        
+        # Optional: Validate thresholds
+        self._validate_thresholds()
+    
+    def _validate_thresholds(self) -> None:
+        """Validate threshold configuration for consistency."""
+        if not self.thresholds:
+            raise ValueError("Thresholds list cannot be empty")
+        
+        # Check for duplicate values
+        values = [t["value"] for t in self.thresholds]
+        if len(values) != len(set(values)):
+            raise ValueError(
+                f"Threshold values must be unique in profile '{self.profile_key}'"
+            )
+        
+        # Check for duplicate labels
+        labels = [t["label"] for t in self.thresholds]
+        if len(labels) != len(set(labels)):
+            raise ValueError(
+                f"Threshold labels must be unique in profile '{self.profile_key}'"
+            )
+    
+    def categorize(self, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Categorise by size based on configured thresholds.
+        
+        Args:
+            aggregated_data: Must contain 'client_size' (numeric) and optionally 'client_name'
+            
+        Returns:
+            Dict containing:
+                - client: client name (if provided)
+                - category: matched category label or 'uncategorised'
+                - criteria: threshold value that was matched (or None)
+                - size: the actual size value
+                - profile: the profile key used for categorization
+        """
+        size = aggregated_data.get("client_size", 0)
+        
+        # Iterate descending: highest threshold first
+        matched_label: Optional[str] = None
+        matched_value: Optional[float] = None
+        
+        for th in reversed(self.thresholds):
+            if size >= th["value"]:
+                matched_label = th["label"]
+                matched_value = th["value"]
+                break
+        
+        if matched_label is None:
+            category = "uncategorised"
+            criteria = None
+        else:
+            category = matched_label
+            criteria = matched_value
+        
+        return {
+            "client": aggregated_data.get("client_name"),
+            "category": category,
+            "criteria": criteria,
+            "size": size,
+            "profile": self.profile_key
+        }
+    
+    def get_categorizer_metadata(self) -> Dict[str, Any]:
+        """Return metadata including threshold configuration."""
+        return {
+            "categorizer_type": self.__class__.__name__,
+            "version": "1.0",
+            "profile": self.profile_key,
+            "num_thresholds": len(self.thresholds),
+            "threshold_range": f"{self.thresholds[0]['value']} - {self.thresholds[-1]['value']}"
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## DEFINE SPECIFIC CATEGORISERS ----------------
+
+@register_categorizer
 class ClientSizeCategorizer:
     """
     Categorises clients by sise using coverage, and potential underlying configuration, specific thresholds.
 
-    Categories are ordered by threshold:  Threshold_8 > Threshold_7 > Threshold_6 ... else 'uncategorised'., and used inclusive lower bounds:
-        - Variable: size >= Threshold_8      
-        - Variable: size >= Threshold_7
-        - Variable: size >= Threshold_6
+    Categories are ordered by threshold:  Threshold_Tuple_8 > Threshold_Tuple_7 > Threshold_Tuple_6 ... else 'uncategorised'., and used inclusive lower bounds:
+        - Variable: size >= Threshold_Tuple_8      
+        - Variable: size >= Threshold_Tuple_7
+        - Variable: size >= Threshold_Tuple_6
         - ...
         - else:   'uncategorised'
 
     The returned 'thresholds' field provides human-readable ranges consistent with the logic.
     """
 
-    DEFAULTS: Dict[str, Thresholds] = {
-        # Example coverage: aerospace has no 'extra' class
-        "aerospace": {"small": 10, "medium": 20, "high": 30, "extra": None},
-        # Default coverage includes an 'extra' class
-        "__default__": {"small": 15, "medium": 25, "high": 35, "extra": 45},
+    THRESHOLD_DEFAULTS: Dict[str, Thresholds] = {
+        "aerospace": {
+            "Threshold_Tuple_1": ("label": "small", "value": 10), 
+            "Threshold_Tuple_2": ("label": "medium", "value": 20), 
+            "Threshold_Tuple_3": ("label": "large", "value": 30), 
+        },
+        "aerospace_general": {
+            "Threshold_Tuple_1": ("label": "micro", "value": 10), 
+            "Threshold_Tuple_2": ("label": "small", "value": 20), 
+            "Threshold_Tuple_3": ("label": "medium", "value": 30), 
+            "Threshold_Tuple_4": ("label": "extra", "value": 40), 
+        },
     }
 
     def __init__(self, coverage: str, cov_configuration: Optional[str] = None):
-        
-        self.small_threshold = small
-        self.medium_threshold = medium
-        self.high_threshold = high
-        self.extra_threshold = extra  # may be None
 
-    def _to_int(self, value: Any, default: int = 0) -> int:
-        """Coerce value to int safely."""
-        if value is None:
-            return default
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return default
-
-    def _ranges(self) -> Dict[str, str]:
-        """
-        Build human-readable ranges consistent with categorisation logic.
-        Uses inclusive lower bounds.
-        """
-        s, m, h, e = self.small_threshold, self.medium_threshold, self.high_threshold, self.extra_threshold
-
-        if e is None:
-            return {
-                # 'uncategorised' is implicitly < small
-                "small": f"{s}–{m - 1}",
-                "medium": f"{m}–{h - 1}",
-                "high": f">= {h}",
-                "extra": "n/a",
-            }
+        if coverage is None && cov_configuration is None:
+            raise TypeError("a coverage or underlying configuration is required")
+        elif cov_configuration:
+            base = self.THRESHOLD_DEFAULTS.get(cov_configuration).copy()
         else:
-            return {
-                "small": f"{s}–{m - 1}",
-                "medium": f"{m}–{h - 1}",
-                "high": f"{h}–{e - 1}",
-                "extra": f">= {e}",
-            }
+            base = self.THRESHOLD_DEFAULTS.get(coverage).copy()
 
     def categorize(self, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
         """Categorise by size based on configured thresholds."""
-        size = self._to_int(aggregated_data.get("client_size"), default=0)
+        
+        size = aggregated_data.get("client_size", 0)
 
-        if self.extra_threshold is not None and size >= self.extra_threshold:
-            category = "extra"
-        elif size >= self.high_threshold:
-            category = "high"
-        elif size >= self.medium_threshold:
-            category = "medium"
-        elif size >= self.small_threshold:
-            category = "small"
+        if self.Threshold_Tuple_8 is not None and size >= self.Threshold_Tuple_8.get("value"):
+            category = self.Threshold_Tuple_8.get("label")
+            criteria = self.Threshold_Tuple_8.get("value")
+        elif self.Threshold_Tuple_7 is not None and size >= self.Threshold_Tuple_7.get("value"):
+            category = self.Threshold_Tuple_7.get("label")
+            criteria = self.Threshold_Tuple_7.get("value")
+        elif self.Threshold_Tuple_6 is not None and size >= self.Threshold_Tuple_6.get("value"):
+            category = self.Threshold_Tuple_6.get("label")
+            criteria = self.Threshold_Tuple_6.get("value")
+        elif self.Threshold_Tuple_5 is not None and size >= self.Threshold_Tuple_5.get("value"):
+            category = self.Threshold_Tuple_5.get("label")
+            criteria = self.Threshold_Tuple_5.get("value")
+        elif self.Threshold_Tuple_4 is not None and size >= self.Threshold_Tuple_4.get("value"):
+            category = self.Threshold_Tuple_4.get("label")
+            criteria = self.Threshold_Tuple_4.get("value")
+        elif self.Threshold_Tuple_3 is not None and size >= self.Threshold_Tuple_3.get("value"):
+            category = self.Threshold_Tuple_3.get("label")
+            criteria = self.Threshold_Tuple_3.get("value")
+        elif self.Threshold_Tuple_2 is not None and size >= self.Threshold_Tuple_2.get("value"):
+            category = self.Threshold_Tuple_2.get("label")
+            criteria = self.Threshold_Tuple_2.get("value")
+        elif self.Threshold_Tuple_1 is not None and size >= self.Threshold_Tuple_1.get("value"):
+            category = self.Threshold_Tuple_1.get("label")
+            criteria = self.Threshold_Tuple_1.get("value")
         else:
-            category = "uncategorised"
-
+            category = "uncategorized"
+            criteria = None
+ 
         return {
             "client": aggregated_data.get("client_name"),
-            "categorisation": category,
+            "category": category,
+            "criteria": criteria,
             "size": size,
-            "thresholds": self._ranges(),
         }
 
 
