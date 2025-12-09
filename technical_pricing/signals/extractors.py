@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Type, Optional
 # ----------------------------
 # Registry
 # ----------------------------
+
 EXTRACTOR_REGISTRY: Dict[str, Type["DataExtractor"]] = {}
 
 def register_extractor(cls: Type["DataExtractor"]) -> Type["DataExtractor"]:
