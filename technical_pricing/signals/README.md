@@ -39,6 +39,7 @@ The three-stage architecture (Extract → Aggregate → Categorise) makes it eas
 
 ✅ **Modular Architecture** - Easy to add new components  
 ✅ **Clear Seperation of Concerns** - Each component has a single, well-defined responsibility.
+
 ✅ **Parallel Execution** - Fast processing with ThreadPoolExecutor  
 ✅ **Type Safety** - Abstract base classes enforce contracts  
 ✅ **Error Handling** - Automatic exception catching and logging  
