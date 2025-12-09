@@ -36,17 +36,18 @@ The three-stage architecture (Extract → Aggregate → Categorise) makes it eas
    - Demonstrates batch processing
 
 ### Key Features
-
-✅ **Modular Architecture** - Easy to add new components  
-✅ **Clear Seperation of Concerns** - Each component has a single, well-defined responsibility
-✅ **Parallel Execution** - Fast processing with ThreadPoolExecutor  
-✅ **Type Safety** - Abstract base classes enforce contracts  
-✅ **Error Handling** - Automatic exception catching and logging  
-✅ **Timing Metrics** - Track performance of each component  
-✅ **Registry System** - Automatic component discovery  
-✅ **Batch Processing** - Handle multiple sources efficiently  
-✅ **Flexible Configuration** - Parameterizable thresholds and rules  
-✅ **Comprehensive Logging** - Track pipeline execution  
+|*|Component|Description|
+|-|-|-|
+|✅|**Modular Architecture**|Easy to add new components|
+|✅|**Clear Seperation of Concerns**|Each component has a single, well-defined responsibility|
+|✅|**Parallel Execution**|Fast processing with ThreadPoolExecutor|  
+|✅|**Type Safety**|Abstract base classes enforce contracts|  
+|✅|**Error Handling**|Automatic exception catching and logging|  
+|✅|**Timing Metrics**|Track performance of each component|  
+|✅|**Registry System**|Automatic component discovery|  
+|✅|**Batch Processing**|Handle multiple sources efficiently|  
+|✅|**Flexible Configuration**|Parameterizable thresholds and rules|  
+|✅|**Comprehensive Logging**|Track pipeline execution|  
 
 ### Architecture Diagram
 
