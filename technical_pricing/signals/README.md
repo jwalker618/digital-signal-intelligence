@@ -34,7 +34,228 @@ The three-stage architecture (Extract → Aggregate → Categorise) makes it eas
 |✅|**Flexible Configuration**|Parameterizable thresholds and rules|  
 |✅|**Comprehensive Logging**|Track pipeline execution|  
 
-### Architecture Diagram
+#### Architecture
+
+The framework follows a clear three-stage architecture:
+
+```
+┌─────────────┐
+│  EXTRACTOR  │  Stage 1: Extract raw data from source
+└──────┬──────┘
+       │ Raw Data
+       ▼
+┌─────────────┐
+│ AGGREGATORS │  Stage 2: Transform & analyzs raw data (parallel)
+└──────┬──────┘
+       │ Aggregated / Analysed Data
+       ▼
+┌─────────────┐
+│CATEGORISERS │  Stage 3: Classify & score (parallel)
+└──────┬──────┘
+       │
+       ▼
+   [Results]
+```
+
+##### Stage 1: Extractors (Data Sources)
+
+**Purpose**: Pull raw data from various sources (APIs, databases, files, etc.)
+
+**Base Class**: `DataExtractor`
+
+**Key Method**: `extract() -> Dict[str, Any]`
+
+**Example Use Cases**:
+- API calls (REST, GraphQL, SOAP)
+- Database queries
+- File reading (CSV, JSON, XML)
+- Web scraping
+- Real-time data streams
+
+**Implementation Pattern**:
+```python
+@register_extractor
+class MyAPIExtractor(DataExtractor):
+    def __init__(self, api_key: str, endpoint: str):
+        self.api_key = api_key
+        self.endpoint = endpoint
+    
+    def extract(self) -> Dict[str, Any]:
+        # Make API call, fetch data
+        raw_data = self._call_api()
+        return {
+            "source": "my_api",
+            "timestamp": datetime.now(),
+            "data": raw_data
+        }
+    
+    def get_source_metadata(self) -> Dict[str, str]:
+        return {
+            "extractor_type": self.__class__.__name__,
+            "source": self.endpoint
+        }
+```
+
+##### Stage 2: Aggregators (Data Transformation & Analysis)
+
+**Purpose**: Transform raw extracted data into standardised, analysed output
+
+**Base Class**: `DataAggregator`
+
+**Key Method**: `aggregate(raw_data: Dict[str, Any]) -> Dict[str, Any]`
+
+**Key Characteristics**:
+- Multiple aggregators can run in parallel
+- Each aggregator focuses on a specific aspect of analysis
+- Outputs are merged for use by categorizers
+
+**Example Use Cases**:
+- Statistical calculations (averages, totals, distributions)
+- Data normalization and standardization
+- Derived metric calculation
+- Time series analysis
+- Pattern detection
+
+**Implementation Pattern**:
+```python
+@register_aggregator
+class StatisticalAggregator(DataAggregator):
+    def aggregate(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
+        items = raw_data.get("items", [])
+        
+        return {
+            "total_count": len(items),
+            "average_value": sum(i["value"] for i in items) / len(items),
+            "distribution": self._calculate_distribution(items),
+            "trends": self._analyze_trends(items)
+        }
+```
+
+##### Stage 3: Categorisers (Classification & Scoring)
+
+**Purpose**: Take aggregated data and produce classifications, scores, or categories
+
+**Base Class**: `DataCategorizer`
+
+**Key Method**: `categorize(aggregated_data: Dict[str, Any]) -> Dict[str, Any]`
+
+**Key Characteristics**:
+- Multiple categorizers can run in parallel
+- Each categoriser performs independent classification/scoring
+- Can be parameterised for different thresholds/rules
+
+**Example Use Cases**:
+- Business rule classification
+- Risk scoring
+- Quality assessment
+- Tier/level assignment
+- ML model predictions
+
+**Implementation Pattern**:
+```python
+@register_categorizer
+class RiskScorer(DataCategorizer):
+    def __init__(self, high_risk_threshold: int = 70):
+        self.high_risk_threshold = high_risk_threshold
+    
+    def categorize(self, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
+        risk_score = self._calculate_risk(aggregated_data)
+        
+        if risk_score >= self.high_risk_threshold:
+            risk_level = "high"
+        elif risk_score >= 40:
+            risk_level = "moderate"
+        else:
+            risk_level = "low"
+        
+        return {
+            "risk_score": risk_score,
+            "risk_level": risk_level,
+            "factors": self._get_risk_factors(aggregated_data)
+        }
+```
+
+#### Pipeline Classes
+
+##### AnalysisPipeline
+
+Single extractor with multiple aggregators and categorisers.
+
+```python
+pipeline = AnalysisPipeline(
+    extractor=my_extractor,
+    aggregators=[agg1, agg2, agg3],
+    categorizers=[cat1, cat2, cat3],
+    max_workers=4
+)
+
+results = pipeline.run()
+```
+
+**Output Structure**:
+```python
+{
+    "pipeline_metadata": {
+        "company_name": "...",
+        "total_duration_sec": 0.123,
+        "extract_duration_sec": 0.045,
+        "extractor": "MyExtractor",
+        "timestamp": "2024-12-08 10:30:00"
+    },
+    "raw_data": {...},  # Original extracted data
+    "aggregation_results": {
+        "Aggregator1Name": {
+            "aggregator": "Aggregator1Name",
+            "duration_sec": 0.012,
+            "output": {...}
+        },
+        ...
+    },
+    "categorization_results": {
+        "Categorizer1Name": {
+            "categorizer": "Categorizer1Name",
+            "params": {...},
+            "duration_sec": 0.008,
+            "output": {...}
+        },
+        ...
+    }
+}
+```
+
+##### BatchPipeline
+
+Multiple extractors through the same aggregation/categorisation pipeline.
+
+```python
+batch = BatchPipeline(
+    extractors=[extractor1, extractor2, extractor3],
+    aggregators=[agg1, agg2],
+    categorizers=[cat1, cat2],
+    max_workers=4
+)
+
+all_results = batch.run()
+summary = batch.get_summary(all_results, categorizer_name="PrimaryCategorizerName")
+```
+
+#### Registry System
+
+The framework includes a registry system for easy component discovery and dynamic loading:
+
+```python
+# Registration happens automatically with decorators
+@register_extractor
+class MyExtractor(DataExtractor):
+    pass
+
+# Access registered components
+all_extractors = EXTRACTOR_REGISTRY
+all_aggregators = AGGREGATOR_REGISTRY
+all_categorizers = CATEGORIZER_REGISTRY
+```
+
+### Detailed Architecture Diagram
 
 ```
 ==============================================================================
