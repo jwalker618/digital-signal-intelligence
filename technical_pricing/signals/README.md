@@ -299,7 +299,7 @@ Both examples demonstrate:
    - TreatmentOutcomesAggregator
    - CostAnalysisAggregator
 
-3. **Create Categorizers** for classification:
+3. **Create Categorisers** for classification:
    - RiskStratificationCategorizer
    - TreatmentSuccessScorer
    - ResourceUtilizationCategorizer
