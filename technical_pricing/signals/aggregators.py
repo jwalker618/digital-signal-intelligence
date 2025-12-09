@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Type, Optional
 # ----------------------------
 # Registry
 # ----------------------------
+
 AGGREGATOR_REGISTRY: Dict[str, Type["DataAggregator"]] = {}
 
 def register_aggregator(cls: Type["DataAggregator"]) -> Type["DataAggregator"]:
