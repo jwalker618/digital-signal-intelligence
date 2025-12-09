@@ -1,3 +1,4 @@
+from datetime import datetime
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Type, Optional
 
@@ -19,18 +20,18 @@ def register_aggregator(cls: Type["DataAggregator"]) -> Type["DataAggregator"]:
 class DataAggregator(ABC):
     """
     Base class for data aggregators/analyzers.
-    Transforms raw extracted data into standardized, analyzed output.
+    Transforms raw extracted data into standardised, analysed output.
     """
     @abstractmethod
     def aggregate(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Transform and analyze raw data.
+        Transform and analyse raw data.
         
         Args:
             raw_data: Raw data from an extractor
             
         Returns:
-            Standardized, aggregated/analyzed data
+            Standardised, aggregated/analysed data
         """
         raise NotImplementedError
     
@@ -81,7 +82,7 @@ class FleetAggregator(DataAggregator):
                 dominance_ratio = max_count / len(vessels) if vessels else 0.0
         
         # Calculate fleet age
-        current_year = 2024
+        current_year = datetime.now().year
         ages = [current_year - v.get("year_built", current_year) for v in vessels if "year_built" in v]
         avg_age = sum(ages) / len(ages) if ages else 0.0
         
