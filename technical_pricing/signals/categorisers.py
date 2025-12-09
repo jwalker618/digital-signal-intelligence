@@ -12,7 +12,6 @@ def register_categorizer(cls: Type["DataCategorizer"]) -> Type["DataCategorizer"
     CATEGORIZER_REGISTRY[cls.__name__] = cls
     return cls
 
-
 # ----------------------------
 # Base Class
 # ----------------------------
