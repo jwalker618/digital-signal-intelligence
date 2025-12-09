@@ -1,0 +1,1270 @@
+# =============================================================================
+# DSI Model Configuration
+# =============================================================================
+#
+# This file defines the complete configuration for a coverage type.
+# It is the single source of truth for:
+#   - Model structure and parameters
+#   - Signal definitions and weights
+#   - Pricing factors and thresholds
+#   - Test profiles for actuarial validation
+#
+# Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
+#
+# DSI PRINCIPLES APPLIED:
+#   1. All signals must be externally observable (no application questions required)
+#   2. Direct queries are OPTIONAL - model must work without them
+#   3. Categorical features are inferred from observable data
+#   4. Tier determines base premium; modifiers adjust for exposure characteristics
+#   5. All sources must be publicly accessible or through standard data providers
+#
+# Version: 2.0.0
+# Last Updated: 2025-12
+# =============================================================================
+
+professional_indemnity:
+  pi_general:
+    metadata:
+      name: "DSI Professional Indemnity Technical Pricing Model"
+      description: "PI/E&O coverage based on observable regulatory, practice quality, and stability signals"
+      version: "2.0.0"
+      coverage_types:
+        - "professional_liability"
+        - "errors_omissions"
+        - "malpractice"
+      applicable_professions:
+        - "law_firm"
+        - "accounting_firm"
+        - "architecture"
+        - "engineering"
+        - "management_consulting"
+        - "it_consulting"
+        - "real_estate"
+        - "insurance_broker"
+        - "financial_planning"
+        - "healthcare_admin"
+        - "appraisal_valuation"
+        - "environmental_consulting"
+      applicable_markets: ["us", "uk", "eu", "apac"]
+      min_premium: 2500
+      default_currency: "USD"
+
+    direct_optional_queries:
+      - id: "pending_claims"
+        question: "Any pending or threatened malpractice claims?"
+        direct_condition: pending_claims_referral
+        
+      - id: "disciplinary_pending"
+        question: "Any pending disciplinary proceedings against any professional?"
+        direct_condition: disciplinary_pending_referral
+        
+      - id: "coverage_declined"
+        question: "Has any PI coverage been declined or non-renewed in past 3 years?"
+        direct_condition: coverage_declined_referral
+        
+      - id: "practice_area_change"
+        question: "Any significant change in practice areas in past 2 years?"
+        direct_condition: practice_area_change_referral
+        
+      - id: "merger_activity"
+        question: "Any merger, acquisition, or spin-off in past 2 years?"
+        direct_condition: merger_activity_referral
+        
+      - id: "major_client_loss"
+        question: "Loss of client representing >25% of revenue in past year?"
+        direct_condition: major_client_loss_referral
+
+    # -------------------------------------------------------------------------
+    # CATEGORICAL FEATURES
+    # -------------------------------------------------------------------------
+    # These define classification values and their pricing impact
+    # inference_method specifies how to automatically determine the value
+    
+    categorical_features:
+      profession_type:
+        description: "Primary professional classification"
+        inference_utility_function: primaryprofessional_classification_basefunction
+        values:
+          - id: "LAW_FIRM"
+            label: "Law Firm"
+            base_rate: 8500
+            description: "Law firms of all sizes and practice areas"
+            
+          - id: "ACCOUNTING_FIRM"
+            label: "Accounting Firm"
+            base_rate: 9000
+            description: "CPA firms - audit, tax, advisory"
+            
+          - id: "ARCHITECTURE"
+            label: "Architecture"
+            base_rate: 7500
+            description: "Licensed architects"
+            
+          - id: "ENGINEERING"
+            label: "Engineering"
+            base_rate: 8000
+            description: "Licensed professional engineers"
+            
+          - id: "MANAGEMENT_CONSULTING"
+            label: "Management Consulting"
+            base_rate: 6000
+            description: "Strategy, operations, organizational consulting"
+            
+          - id: "IT_CONSULTING"
+            label: "IT Consulting"
+            base_rate: 7000
+            description: "Technology consulting and implementation"
+            
+          - id: "HR_CONSULTING"
+            label: "HR Consulting"
+            base_rate: 5500
+            description: "Human resources and benefits consulting"
+            
+          - id: "REAL_ESTATE"
+            label: "Real Estate"
+            base_rate: 5500
+            description: "Real estate agents, brokers, property managers"
+            
+          - id: "INSURANCE_BROKER"
+            label: "Insurance Broker"
+            base_rate: 6500
+            description: "Insurance agents and brokers"
+            
+          - id: "FINANCIAL_PLANNING"
+            label: "Financial Planning"
+            base_rate: 7500
+            description: "Financial planners and advisers (non-SEC)"
+            
+          - id: "HEALTHCARE_ADMIN"
+            label: "Healthcare Administration"
+            base_rate: 6000
+            description: "Healthcare management and administration"
+            
+          - id: "APPRAISAL_VALUATION"
+            label: "Appraisal/Valuation"
+            base_rate: 6500
+            description: "Real estate appraisers, business valuators"
+            
+          - id: "ENVIRONMENTAL_CONSULTING"
+            label: "Environmental Consulting"
+            base_rate: 7000
+            description: "Environmental assessment and remediation"
+            
+          - id: "OTHER"
+            label: "Other Professional"
+            base_rate: 6000
+            description: "Other professional services"
+            
+      firm_size:
+        description: "Firm size by professional headcount"
+        inference_utility_function: firm_size_basefunction
+        values:
+          - id: "SOLO"
+            label: "Solo Practitioner"
+            modifier: 1.20
+            description: "Single professional practice"
+            
+          - id: "MICRO"
+            label: "Micro Firm"
+            modifier: 1.10
+            description: "2-5 professionals"
+            
+          - id: "SMALL"
+            label: "Small Firm"
+            modifier: 1.00
+            description: "6-20 professionals"
+            
+          - id: "MEDIUM"
+            label: "Medium Firm"
+            modifier: 0.95
+            description: "21-100 professionals"
+            
+          - id: "LARGE"
+            label: "Large Firm"
+            modifier: 0.90
+            description: "101-500 professionals"
+            
+          - id: "MAJOR"
+            label: "Major Firm"
+            modifier: 0.85
+            description: "500+ professionals"
+
+      revenue_size:
+        description: "Annual revenue classification"
+        inference_utility_function: annualrevenue_classification_basefunction
+        values:
+          - id: "UNDER_500K"
+            label: "Under $500K"
+            modifier: 0.85
+            description: ""      
+            
+          - id: "R_500K_1M"
+            label: "$500K - $1M"
+            modifier: 0.90
+            description: ""      
+            
+          - id: "R_1M_5M"
+            label: "$1M - $5M"
+            modifier: 1.00
+            description: ""      
+            
+          - id: "R_5M_25M"
+            label: "$5M - $25M"
+            modifier: 1.10
+            description: ""      
+            
+          - id: "R_25M_100M"
+            label: "$25M - $100M"
+            modifier: 1.25
+            description: ""      
+            
+          - id: "R_100M_500M"
+            label: "$100M - $500M"
+            modifier: 1.40
+            description: ""      
+            
+          - id: "OVER_500M"
+            label: "Over $500M"
+            modifier: 1.60
+            description: ""      
+
+    # -------------------------------------------------------------------------
+    # PRACTICE AREA MODIFIERS (PROFESSION-SPECIFIC)
+    # -------------------------------------------------------------------------
+    practice_area_modifiers:
+      law_firm:
+        - {id: "SECURITIES", label: "Securities Law", modifier: 1.40}
+        - {id: "CORPORATE_MA", label: "Corporate M&A", modifier: 1.25}
+        - {id: "TRUSTS_ESTATES", label: "Trusts & Estates", modifier: 1.20}
+        - {id: "ENVIRONMENTAL", label: "Environmental Law", modifier: 1.20}
+        - {id: "TAX", label: "Tax Law", modifier: 1.15}
+        - {id: "BANKRUPTCY", label: "Bankruptcy", modifier: 1.15}
+        - {id: "HEALTHCARE", label: "Healthcare Law", modifier: 1.15}
+        - {id: "INTELLECTUAL_PROPERTY", label: "Intellectual Property", modifier: 1.15}
+        - {id: "LITIGATION_PLAINTIFF", label: "Plaintiff Litigation", modifier: 1.15}
+        - {id: "PERSONAL_INJURY_PLAINTIFF", label: "PI Plaintiff", modifier: 1.30}
+        - {id: "REAL_ESTATE", label: "Real Estate Law", modifier: 1.10}
+        - {id: "EMPLOYMENT", label: "Employment Law", modifier: 1.10}
+        - {id: "INSURANCE_COVERAGE", label: "Insurance Coverage", modifier: 1.05}
+        - {id: "GENERAL_PRACTICE", label: "General Practice", modifier: 1.05}
+        - {id: "LITIGATION_GENERAL", label: "General Litigation", modifier: 1.00}
+        - {id: "PERSONAL_INJURY_DEFENSE", label: "PI Defense", modifier: 0.95}
+        - {id: "FAMILY", label: "Family Law", modifier: 0.90}
+        - {id: "CRIMINAL", label: "Criminal Defense", modifier: 0.85}
+        
+      accounting_firm:
+        - {id: "AUDIT_PUBLIC", label: "Public Company Audit", modifier: 1.50}
+        - {id: "ADVISORY_VALUATION", label: "Valuation Advisory", modifier: 1.35}
+        - {id: "ADVISORY_MA", label: "M&A Advisory", modifier: 1.30}
+        - {id: "FORENSIC", label: "Forensic Accounting", modifier: 1.25}
+        - {id: "AUDIT_PRIVATE", label: "Private Company Audit", modifier: 1.25}
+        - {id: "TAX_ESTATE", label: "Estate Tax", modifier: 1.20}
+        - {id: "TAX_CORPORATE", label: "Corporate Tax", modifier: 1.10}
+        - {id: "GENERAL_PRACTICE", label: "General Practice", modifier: 1.00}
+        - {id: "TAX_INDIVIDUAL", label: "Individual Tax", modifier: 0.90}
+        - {id: "BOOKKEEPING", label: "Bookkeeping", modifier: 0.80}
+        
+      architecture:
+        - {id: "STRUCTURAL", label: "Structural Design", modifier: 1.35}
+        - {id: "HEALTHCARE_FACILITIES", label: "Healthcare Facilities", modifier: 1.25}
+        - {id: "HIGH_RISE", label: "High-Rise Construction", modifier: 1.20}
+        - {id: "COMMERCIAL", label: "Commercial", modifier: 1.10}
+        - {id: "INSTITUTIONAL", label: "Institutional", modifier: 1.05}
+        - {id: "RESIDENTIAL_MULTI", label: "Multi-Family Residential", modifier: 1.00}
+        - {id: "RESIDENTIAL_SINGLE", label: "Single-Family Residential", modifier: 0.90}
+        - {id: "INTERIOR_DESIGN", label: "Interior Design", modifier: 0.85}
+        
+      engineering:
+        - {id: "STRUCTURAL", label: "Structural Engineering", modifier: 1.40}
+        - {id: "GEOTECHNICAL", label: "Geotechnical Engineering", modifier: 1.35}
+        - {id: "ENVIRONMENTAL", label: "Environmental Engineering", modifier: 1.25}
+        - {id: "CIVIL", label: "Civil Engineering", modifier: 1.15}
+        - {id: "MECHANICAL", label: "Mechanical Engineering", modifier: 1.10}
+        - {id: "ELECTRICAL", label: "Electrical Engineering", modifier: 1.05}
+        - {id: "SURVEYING", label: "Surveying", modifier: 1.00}
+        - {id: "CONSULTING", label: "Consulting Only", modifier: 0.90}
+
+    # -------------------------------------------------------------------------
+    # PROFESSION-SPECIFIC SIGNAL WEIGHTS
+    # -------------------------------------------------------------------------
+    profession_weights:
+      law_firm:
+        network_authority: 0.20
+        regulatory_standing: 0.25
+        firm_stability: 0.15
+        practice_quality: 0.15
+        technical_infrastructure: 0.05
+        corporate_footprint: 0.10
+        litigation_history: 0.10
+        
+      accounting_firm:
+        network_authority: 0.15
+        regulatory_standing: 0.30  # Peer review critical
+        firm_stability: 0.15
+        practice_quality: 0.15
+        technical_infrastructure: 0.05
+        corporate_footprint: 0.10
+        litigation_history: 0.10
+        
+      architecture:
+        network_authority: 0.15
+        regulatory_standing: 0.20
+        firm_stability: 0.15
+        practice_quality: 0.20  # Project outcomes critical
+        technical_infrastructure: 0.05
+        corporate_footprint: 0.10
+        litigation_history: 0.15  # Construction defects common
+        
+      engineering:
+        network_authority: 0.15
+        regulatory_standing: 0.25  # PE license critical
+        firm_stability: 0.15
+        practice_quality: 0.20
+        technical_infrastructure: 0.05
+        corporate_footprint: 0.05
+        litigation_history: 0.15
+        
+      management_consulting:
+        network_authority: 0.25  # Reputation-driven
+        regulatory_standing: 0.10  # Less regulated
+        firm_stability: 0.15
+        practice_quality: 0.20
+        technical_infrastructure: 0.10
+        corporate_footprint: 0.15
+        litigation_history: 0.05
+        
+      it_consulting:
+        network_authority: 0.15
+        regulatory_standing: 0.10
+        firm_stability: 0.15
+        practice_quality: 0.20
+        technical_infrastructure: 0.20  # Core competency
+        corporate_footprint: 0.10
+        litigation_history: 0.10
+        
+      real_estate:
+        network_authority: 0.15
+        regulatory_standing: 0.25  # License critical
+        firm_stability: 0.15
+        practice_quality: 0.15
+        technical_infrastructure: 0.05
+        corporate_footprint: 0.10
+        litigation_history: 0.15
+        
+      insurance_broker:
+        network_authority: 0.20
+        regulatory_standing: 0.25
+        firm_stability: 0.15
+        practice_quality: 0.15
+        technical_infrastructure: 0.10
+        corporate_footprint: 0.05
+        litigation_history: 0.10
+        
+      financial_planning:
+        network_authority: 0.15
+        regulatory_standing: 0.30  # Regulatory critical
+        firm_stability: 0.15
+        practice_quality: 0.15
+        technical_infrastructure: 0.10
+        corporate_footprint: 0.05
+        litigation_history: 0.10
+        
+      default:
+        network_authority: 0.15
+        regulatory_standing: 0.25
+        firm_stability: 0.15
+        practice_quality: 0.15
+        technical_infrastructure: 0.10
+        corporate_footprint: 0.10
+        litigation_history: 0.10
+
+    # ---------------------------------------------------------------------------
+    # SIGNAL GROUPINGS (Categories with Weights)
+    # ---------------------------------------------------------------------------
+    # Each group contributes to the composite score
+    # Weights must sum to 1.0
+    
+    signal_groups:
+      - id: "network_authority"
+        name: "Network Authority"
+        description: "Peer recognition, client quality, professional relationships"
+        weight: 0.15  # Default, overridden by profession_weights
+        test_scores: {excellent: 85, average: 65, poor: 35}
+        critical: false
+        score_condition: null
+        
+      - id: "regulatory_standing"
+        name: "Regulatory Standing"
+        description: "License status, disciplinary history, certifications"
+        weight: 0.25
+        test_scores: {excellent: 95, average: 75, poor: 35}
+        critical: true
+        score_condition: regulatory_standing_critical
+        
+      - id: "firm_stability"
+        name: "Firm Stability"
+        description: "Tenure, partner retention, financial health"
+        weight: 0.15
+        test_scores: {excellent: 88, average: 68, poor: 38}
+        critical: false
+        score_condition: firm_stability_critical
+        
+      - id: "practice_quality"
+        name: "Practice Quality"
+        description: "Client reviews, outcomes, complaint history"
+        weight: 0.15
+        test_scores: {excellent: 90, average: 70, poor: 35}
+        critical: false
+        score_condition: null
+        
+      - id: "technical_infrastructure"
+        name: "Technical Infrastructure"
+        description: "Digital security posture for client confidentiality"
+        weight: 0.10
+        test_scores: {excellent: 88, average: 65, poor: 40}
+        critical: false
+        score_condition: null
+        
+      - id: "corporate_footprint"
+        name: "Corporate Footprint"
+        description: "Website quality, thought leadership, transparency"
+        weight: 0.10
+        test_scores: {excellent: 82, average: 60, poor: 35}
+        critical: false
+        score_condition: null
+        
+      - id: "litigation_history"
+        name: "Litigation History"
+        description: "Malpractice suits, fee disputes, regulatory enforcement"
+        weight: 0.10
+        test_scores: {excellent: 95, average: 78, poor: 35}
+        critical: true
+        score_condition: litigation_history_critical
+
+    signal_features:
+      network_authority:
+        - id: "peer_ranking"
+          name: "Peer Rankings"
+          description: "Recognition in Chambers, Legal 500, Best Lawyers, etc."
+          weight: 0.25
+          inference_utility_function: peer_ranking_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "client_quality"
+          name: "Client Quality"
+          description: "Quality of client base (public companies, Fortune 500)"
+          weight: 0.20
+          inference_utility_function: client_quality_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "referral_network"
+          name: "Referral Network Quality"
+          description: "Quality of referring relationships"
+          weight: 0.15
+          inference_utility_function: referral_quality_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "association_leadership"
+          name: "Association Leadership"
+          description: "Leadership roles in professional associations"
+          weight: 0.15
+          inference_utility_function: association_leadership_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "thought_leadership"
+          name: "Thought Leadership"
+          description: "Publications, speaking, CLE presentations"
+          weight: 0.15
+          inference_utility_function: thought_leadership_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "panel_membership"
+          name: "Panel Membership"
+          description: "Insurance defense panels, bank approved lists"
+          weight: 0.10
+          inference_utility_function: panel_membership_basefunction
+          critical: false
+          score_condition: null
+
+      regulatory_standing:
+        - id: "license_status"
+          name: "License Status"
+          description: "Current status of all professional licenses"
+          weight: 0.25
+          inference_utility_function: license_status_basefunction
+          critical: true
+          score_condition: license_status_critical
+          
+        - id: "disciplinary_history"
+          name: "Disciplinary History"
+          description: "Sanctions, censures, suspensions, reprimands"
+          weight: 0.30
+          inference_utility_function: disciplianry_history_basefunction
+          critical: true
+          score_condition: disciplinary_history_critical
+          
+        - id: "malpractice_record"
+          name: "Public Malpractice Record"
+          description: "Public judgments and disclosed settlements"
+          weight: 0.15
+          inference_utility_function: malpractice_record_basefunction
+          critical: true
+          score_condition: malpractice_record_critical
+          
+        - id: "ce_compliance"
+          name: "Continuing Education Compliance"
+          description: "CLE/CPE/CE requirements current"
+          weight: 0.05
+          inference_utility_function: ce_compliance_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "specialty_certification"
+          name: "Specialty Certifications"
+          description: "Board certifications, specialty designations"
+          weight: 0.10
+          inference_utility_function: speciality_certifications_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "peer_review"
+          name: "Peer Review Rating"
+          description: "AICPA peer review rating (accounting firms)"
+          weight: 0.10
+          inference_utility_function: peer_review_basefunction
+          critical: true
+          score_condition: peer_review_critical
+          
+        - id: "pcaob_standing"
+          name: "PCAOB/SEC Standing"
+          description: "PCAOB registration and inspection results"
+          weight: 0.05
+          inference_utility_function: pcaob_standing_basefunction
+          critical: false
+          score_condition: null
+
+      firm_stability:
+        - id: "tenure"
+          name: "Years in Practice"
+          description: "Firm establishment and longevity"
+          weight: 0.20
+          inference_utility_function: years_inpractice_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "partner_stability"
+          name: "Partner/Principal Stability"
+          description: "Partner retention and turnover patterns"
+          weight: 0.25
+          inference_utility_function: partner_stability_basefunction
+          critical: true
+          score_condition: partner_stability_critical
+          
+        - id: "staff_retention"
+          name: "Staff Retention"
+          description: "Associate/staff retention signals"
+          weight: 0.15
+          inference_utility_function: staff_retention_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "office_stability"
+          name: "Office Stability"
+          description: "Office locations and changes"
+          weight: 0.10
+          inference_utility_function: office_stability_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "financial_stability"
+          name: "Financial Stability"
+          description: "Financial health indicators"
+          weight: 0.20
+          inference_utility_function: financial_stability_basefunction
+          critical: true
+          score_condition: financial_stability_critical
+          
+        - id: "succession_planning"
+          name: "Succession Planning"
+          description: "Observable succession planning indicators"
+          weight: 0.10
+          inference_utility_function: succession_planning_basefunction
+          critical: false
+          score_condition: null
+
+      practice_quality:
+        - id: "outcome_patterns"
+          name: "Matter Outcome Patterns"
+          description: "Case outcomes, transaction completion rates"
+          weight: 0.20
+          inference_utility_function: outcome_patterns_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "client_reviews"
+          name: "Client Reviews"
+          description: "Client ratings on professional platforms"
+          weight: 0.25
+          inference_utility_function: client_reviews_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "work_quality"
+          name: "Work Product Quality"
+          description: "Observable work quality indicators"
+          weight: 0.15
+          inference_utility_function: work_quality_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "fee_dispute"
+          name: "Fee Dispute History"
+          description: "Fee arbitrations and disputes"
+          weight: 0.15
+          inference_utility_function: fee_dispute_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "complaint_history"
+          name: "Professional Complaints"
+          description: "Complaints to professional bodies"
+          weight: 0.25
+          inference_utility_function: complaint_history_basefunction
+          critical: false
+          score_condition: null
+
+      technical_infrastructure:
+        - id: "tls_score"
+          name: "TLS/SSL Configuration"
+          description: "Website encryption quality"
+          weight: 0.25
+          inference_utility_function: tls_score_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "email_auth"
+          name: "Email Authentication"
+          description: "SPF, DMARC, DKIM configuration"
+          weight: 0.25
+          inference_utility_function: email_authentication_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "security_headers"
+          name: "Security Headers"
+          description: "HTTP security headers"
+          weight: 0.15
+          inference_utility_function: security_headers_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "portal_security"
+          name: "Client Portal Security"
+          description: "Client portal security if applicable"
+          weight: 0.15
+          inference_utility_function: portal_security_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "breach_history"
+          name: "Data Breach History"
+          description: "Historical data breaches"
+          weight: 0.20
+          inference_utility_function: breach_history_basefunction
+          critical: true
+          score_condition: breach_history_critical
+
+      corporate_footprint:
+        - id: "website_quality"
+          name: "Website Professionalism"
+          description: "Website quality and completeness"
+          weight: 0.25
+          inference_utility_function: website_quality_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "bio_completeness"
+          name: "Professional Bio Quality"
+          description: "Attorney/professional bio completeness"
+          weight: 0.20
+          inference_utility_function: bio_completness_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "practice_clarity"
+          name: "Practice Area Clarity"
+          description: "Clear description of services"
+          weight: 0.15
+          inference_utility_function: practice_clarity_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "publications"
+          name: "Publications/Insights"
+          description: "Thought leadership content"
+          weight: 0.15
+          inference_utility_function: publications_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "community_involvement"
+          name: "Community Involvement"
+          description: "Pro bono, community service"
+          weight: 0.15
+          inference_utility_function: community_involvement_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "diversity"
+          name: "Diversity & Inclusion"
+          description: "Diversity signals and commitment"
+          weight: 0.10
+          inference_utility_function: diversity_basefunction
+          critical: false
+          score_condition: null
+
+      litigation_history:
+        - id: "malpractice_suits"
+          name: "Malpractice Suits"
+          description: "Professional negligence suits filed"
+          weight: 0.35
+          inference_utility_function: malpractice_suits_basefunction
+          critical: true
+          score_condition: malpractice_suits_critical
+          
+        - id: "fee_disputes_litigation"
+          name: "Fee Disputes/Arbitration"
+          description: "Fee-related litigation and arbitration"
+          weight: 0.15
+          inference_utility_function: fee_disputes_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "regulatory_enforcement"
+          name: "Regulatory Enforcement"
+          description: "Regulatory enforcement actions"
+          weight: 0.25
+          inference_utility_function: regulatory_enforcement_basefunction
+          critical: true
+          score_condition: regulatory_enforcement_critical
+          
+        - id: "civil_litigation"
+          name: "Civil Litigation as Defendant"
+          description: "Other civil suits as defendant"
+          weight: 0.15
+          inference_utility_function: civil_litigation_basefunction
+          critical: false
+          score_condition: null
+          
+        - id: "bankruptcy"
+          name: "Bankruptcy History"
+          description: "Firm or principal bankruptcy"
+          weight: 0.10
+          inference_utility_function: bankruptcy_basefunction
+          critical: true
+          score_condition: bankruptcy_critical
+
+    # -------------------------------------------------------------------------
+    # TIER THRESHOLDS
+    # -------------------------------------------------------------------------
+    tier_thresholds:
+      tier_1:
+        id: 1
+        label: "PREFERRED"
+        min_score: 800
+        max_score: 1000
+        description: "Excellent firm - auto-approve at preferred pricing"
+        auto_approve: true
+        auto_decline: false
+        tier_modifier: 0.75
+        
+      tier_2:
+        id: 2
+        label: "STANDARD"
+        min_score: 650
+        max_score: 799
+        description: "Good firm - auto-approve at standard pricing"
+        auto_approve: true
+        auto_decline: false
+        tier_modifier: 1.00
+        
+      tier_3:
+        id: 3
+        label: "ELEVATED"
+        min_score: 500
+        max_score: 649
+        description: "Moderate risk - manual review recommended"
+        auto_approve: false
+        auto_decline: false
+        tier_modifier: 1.30
+        
+      tier_4:
+        id: 4
+        label: "HIGH_RISK"
+        min_score: 350
+        max_score: 499
+        description: "High risk - senior underwriter review with loading"
+        auto_approve: false
+        auto_decline: false
+        tier_modifier: 1.75
+        
+      tier_5:
+        id: 5
+        label: "CRITICAL"
+        min_score: 0
+        max_score: 349
+        description: "Critical risk - decline recommended"
+        auto_approve: false
+        auto_decline: true
+        tier_modifier: 2.50
+
+    # -------------------------------------------------------------------------
+    # CONDITION DEFINITIONS
+    # -------------------------------------------------------------------------
+    direct_conditions:
+      - id: pending_claims_referral
+        bands:
+          - {return: true, tier_override: 4, action: "REFER", note: "Pending malpractice claims disclosed"}
+      
+      - id: disciplinary_pending_referral
+        bands:
+          - {return: true, tier_override: 4, action: "REFER", note: "Pending disciplinary proceedings"}
+      
+      - id: coverage_declined_referral
+        bands:
+          - {return: true, tier_override: 5, action: "DECLINE", note: "Prior PI coverage declined/non-renewed"}
+      
+      - id: practice_area_change_referral
+        bands:
+          - {return: true, tier_override: null, action: "FLAG", note: "Significant practice area change"}
+      
+      - id: merger_activity_referral
+        bands:
+          - {return: true, tier_override: null, action: "FLAG", note: "Recent merger/acquisition activity"}
+      
+      - id: major_client_loss_referral
+        bands:
+          - {return: true, tier_override: null, action: "FLAG", note: "Major client loss (>25% revenue)"}
+  
+    score_conditions:
+      - id: regulatory_standing_critical
+        bands:
+          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical regulatory issues"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Significant regulatory concerns"}
+        inclusive_max: false
+      
+      - id: litigation_history_critical
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Severe litigation history"}
+          - {max: 40, tier_override: 4, action: "REFER", note: "Significant litigation concerns"}
+        inclusive_max: false
+      
+      - id: license_status_critical
+        bands:
+          - {max: 35, tier_override: 5, action: "DECLINE", note: "License status critical"}
+          - {max: 50, tier_override: 4, action: "REFER", note: "License status concerns"}
+        inclusive_max: false
+      
+      - id: disciplinary_history_critical
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Severe disciplinary history"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Significant disciplinary history"}
+        inclusive_max: false
+      
+      - id: malpractice_record_critical
+        bands:
+          - {max: 35, tier_override: 4, action: "REFER", note: "Malpractice record concerns"}
+        inclusive_max: false
+      
+      - id: peer_review_critical
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Failed peer review"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Peer review deficiencies"}
+        inclusive_max: false
+      
+      - id: partner_stability_critical
+        bands:
+          - {max: 30, tier_override: 4, action: "REFER", note: "Partner stability concerns"}
+        inclusive_max: false
+      
+      - id: financial_stability_critical
+        bands:
+          - {max: 30, tier_override: 4, action: "REFER", note: "Financial stability concerns"}
+        inclusive_max: false
+      
+      - id: firm_stability_critical
+        bands:
+          - {max: 35, tier_override: 4, action: "REFER", note: "Firm stability concerns"}
+        inclusive_max: false
+      
+      - id: breach_history_critical
+        bands:
+          - {max: 35, tier_override: 4, action: "REFER", note: "Data breach history concerns"}
+        inclusive_max: false
+      
+      - id: malpractice_suits_critical
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Multiple active malpractice suits"}
+          - {max: 40, tier_override: 4, action: "REFER", note: "Active malpractice litigation"}
+        inclusive_max: false
+      
+      - id: regulatory_enforcement_critical
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Active regulatory enforcement"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Regulatory enforcement history"}
+        inclusive_max: false
+      
+      - id: bankruptcy_critical
+        bands:
+          - {max: 40, tier_override: 4, action: "REFER", note: "Bankruptcy history concerns"}
+        inclusive_max: false
+
+    # -------------------------------------------------------------------------
+    # PRICING PARAMETERS
+    # -------------------------------------------------------------------------
+    pricing:
+      limit_ilf:
+        base_limit: 1000000
+        factors:
+          - {limit: 250000, factor: 0.50}
+          - {limit: 500000, factor: 0.75}
+          - {limit: 1000000, factor: 1.00}
+          - {limit: 2000000, factor: 1.60}
+          - {limit: 3000000, factor: 2.10}
+          - {limit: 5000000, factor: 2.80}
+          - {limit: 10000000, factor: 4.20}
+      
+      retention_credits:
+        - {min_retention: 5000, max_retention: 10000, credit: 0.00}
+        - {min_retention: 10000, max_retention: 25000, credit: 0.05}
+        - {min_retention: 25000, max_retention: 50000, credit: 0.10}
+        - {min_retention: 50000, max_retention: 100000, credit: 0.15}
+        - {min_retention: 100000, max_retention: null, credit: 0.20}
+      
+      experience_modifiers:
+        clean_10yr: 0.85
+        clean_5yr: 0.90
+        clean_3yr: 0.95
+        minor_losses: 1.00
+        moderate_losses: 1.20
+        significant_losses: 1.40
+        
+      taxes_fees_rate: 0.05
+
+    # -------------------------------------------------------------------------
+    # TEST PROFILES
+    # -------------------------------------------------------------------------
+    test_profiles:
+      excellent_law_firm:
+        description: "Well-established mid-size law firm with excellent standing"
+        expected_tier: [1, 2]
+        expected_score_range: [780, 950]
+        profession_type: "LAW_FIRM"
+        firm_size: "MEDIUM"
+        revenue_size: "R_5M_25M"
+        practice_area: "CORPORATE_MA"
+        signals:
+          network_authority:
+            peer_ranking: 80
+            client_quality: 85
+            referral_network: 75
+            association_leadership: 70
+            thought_leadership: 75
+            panel_membership: 65
+          regulatory_standing:
+            license_status: 100
+            disciplinary_history: 95
+            malpractice_record: 90
+            ce_compliance: 100
+            specialty_certification: 75
+          firm_stability:
+            tenure: 90
+            partner_stability: 85
+            staff_retention: 78
+            office_stability: 95
+            financial_stability: 85
+            succession_planning: 70
+          practice_quality:
+            outcome_patterns: 80
+            client_reviews: 85
+            work_quality: 80
+            fee_dispute: 95
+            complaint_history: 98
+          technical_infrastructure:
+            tls_score: 90
+            email_auth: 85
+            security_headers: 75
+            portal_security: 80
+            breach_history: 100
+          corporate_footprint:
+            website_quality: 85
+            bio_completeness: 90
+            practice_clarity: 85
+            publications: 75
+            community_involvement: 70
+            diversity: 65
+          litigation_history:
+            malpractice_suits: 90
+            fee_disputes_litigation: 95
+            regulatory_enforcement: 100
+            civil_litigation: 95
+            bankruptcy: 100
+
+      average_accounting_firm:
+        description: "Typical small CPA firm with standard profile"
+        expected_tier: [2, 3]
+        expected_score_range: [550, 720]
+        profession_type: "ACCOUNTING_FIRM"
+        firm_size: "SMALL"
+        revenue_size: "R_1M_5M"
+        practice_area: "GENERAL_PRACTICE"
+        signals:
+          network_authority:
+            peer_ranking: 55
+            client_quality: 65
+            referral_network: 60
+            association_leadership: 50
+            thought_leadership: 45
+          regulatory_standing:
+            license_status: 100
+            disciplinary_history: 95
+            malpractice_record: 90
+            ce_compliance: 95
+            specialty_certification: 50
+            peer_review: 85
+            pcaob_standing: 60
+          firm_stability:
+            tenure: 75
+            partner_stability: 70
+            staff_retention: 65
+            office_stability: 80
+            financial_stability: 72
+            succession_planning: 55
+          practice_quality:
+            outcome_patterns: 70
+            client_reviews: 72
+            work_quality: 70
+            fee_dispute: 90
+            complaint_history: 95
+          technical_infrastructure:
+            tls_score: 75
+            email_auth: 70
+            security_headers: 60
+            breach_history: 100
+          corporate_footprint:
+            website_quality: 65
+            bio_completeness: 70
+            practice_clarity: 70
+            publications: 40
+            community_involvement: 55
+          litigation_history:
+            malpractice_suits: 95
+            fee_disputes_litigation: 90
+            regulatory_enforcement: 100
+            civil_litigation: 95
+            bankruptcy: 100
+
+      high_risk_solo:
+        description: "Solo practitioner with disciplinary history"
+        expected_tier: [4, 5]
+        expected_score_range: [250, 450]
+        profession_type: "LAW_FIRM"
+        firm_size: "SOLO"
+        revenue_size: "UNDER_500K"
+        practice_area: "PERSONAL_INJURY_PLAINTIFF"
+        signals:
+          network_authority:
+            peer_ranking: 30
+            client_quality: 40
+            referral_network: 35
+            association_leadership: 25
+            thought_leadership: 20
+          regulatory_standing:
+            license_status: 80
+            disciplinary_history: 45
+            malpractice_record: 50
+            ce_compliance: 70
+            specialty_certification: 30
+          firm_stability:
+            tenure: 60
+            partner_stability: 50
+            staff_retention: 45
+            office_stability: 55
+            financial_stability: 45
+            succession_planning: 20
+          practice_quality:
+            outcome_patterns: 50
+            client_reviews: 55
+            work_quality: 50
+            fee_dispute: 60
+            complaint_history: 55
+          technical_infrastructure:
+            tls_score: 50
+            email_auth: 40
+            security_headers: 35
+            breach_history: 85
+          corporate_footprint:
+            website_quality: 45
+            bio_completeness: 50
+            practice_clarity: 45
+            publications: 20
+            community_involvement: 30
+          litigation_history:
+            malpractice_suits: 50
+            fee_disputes_litigation: 60
+            regulatory_enforcement: 55
+            civil_litigation: 70
+            bankruptcy: 90
+
+      engineering_firm:
+        description: "Mid-size structural engineering firm"
+        expected_tier: [2, 3]
+        expected_score_range: [580, 750]
+        profession_type: "ENGINEERING"
+        firm_size: "MEDIUM"
+        revenue_size: "R_5M_25M"
+        practice_area: "STRUCTURAL"
+        signals:
+          network_authority:
+            peer_ranking: 70
+            client_quality: 75
+            referral_network: 70
+            association_leadership: 60
+            thought_leadership: 55
+          regulatory_standing:
+            license_status: 100
+            disciplinary_history: 95
+            malpractice_record: 80
+            ce_compliance: 100
+            specialty_certification: 70
+          firm_stability:
+            tenure: 80
+            partner_stability: 75
+            staff_retention: 70
+            office_stability: 85
+            financial_stability: 78
+            succession_planning: 65
+          practice_quality:
+            outcome_patterns: 75
+            client_reviews: 78
+            work_quality: 80
+            fee_dispute: 88
+            complaint_history: 92
+          technical_infrastructure:
+            tls_score: 80
+            email_auth: 75
+            security_headers: 65
+            breach_history: 100
+          corporate_footprint:
+            website_quality: 75
+            bio_completeness: 80
+            practice_clarity: 80
+            publications: 50
+            community_involvement: 55
+          litigation_history:
+            malpractice_suits: 75
+            fee_disputes_litigation: 90
+            regulatory_enforcement: 100
+            civil_litigation: 85
+            bankruptcy: 100
+
+      it_consulting:
+        description: "Growing IT consulting firm"
+        expected_tier: [2, 3]
+        expected_score_range: [550, 720]
+        profession_type: "IT_CONSULTING"
+        firm_size: "SMALL"
+        revenue_size: "R_1M_5M"
+        signals:
+          network_authority:
+            peer_ranking: 50
+            client_quality: 70
+            referral_network: 65
+            association_leadership: 45
+            thought_leadership: 60
+          regulatory_standing:
+            license_status: 100
+            disciplinary_history: 100
+            malpractice_record: 95
+            ce_compliance: 90
+          firm_stability:
+            tenure: 55
+            partner_stability: 70
+            staff_retention: 68
+            office_stability: 75
+            financial_stability: 72
+            succession_planning: 50
+          practice_quality:
+            client_reviews: 80
+            work_quality: 75
+            fee_dispute: 92
+            complaint_history: 95
+          technical_infrastructure:
+            tls_score: 95
+            email_auth: 92
+            security_headers: 88
+            portal_security: 85
+            breach_history: 100
+          corporate_footprint:
+            website_quality: 80
+            bio_completeness: 75
+            practice_clarity: 82
+            publications: 65
+            community_involvement: 45
+          litigation_history:
+            malpractice_suits: 100
+            fee_disputes_litigation: 95
+            regulatory_enforcement: 100
+            civil_litigation: 95
+            bankruptcy: 100
+
+      real_estate_brokerage:
+        description: "Real estate brokerage with recent claims"
+        expected_tier: [3, 4]
+        expected_score_range: [420, 600]
+        profession_type: "REAL_ESTATE"
+        firm_size: "MICRO"
+        revenue_size: "R_500K_1M"
+        direct_queries:
+          pending_claims: true
+        signals:
+          network_authority:
+            peer_ranking: 45
+            client_quality: 55
+            referral_network: 60
+            association_leadership: 40
+          regulatory_standing:
+            license_status: 95
+            disciplinary_history: 80
+            malpractice_record: 65
+            ce_compliance: 90
+          firm_stability:
+            tenure: 70
+            partner_stability: 65
+            staff_retention: 60
+            office_stability: 75
+            financial_stability: 65
+          practice_quality:
+            client_reviews: 68
+            fee_dispute: 75
+            complaint_history: 70
+          technical_infrastructure:
+            tls_score: 70
+            email_auth: 60
+            security_headers: 50
+            breach_history: 95
+          corporate_footprint:
+            website_quality: 65
+            bio_completeness: 60
+            practice_clarity: 70
+          litigation_history:
+            malpractice_suits: 55
+            fee_disputes_litigation: 80
+            regulatory_enforcement: 90
+            civil_litigation: 85
+            bankruptcy: 100
