@@ -15,6 +15,7 @@ def register_extractor(cls: Type["DataExtractor"]) -> Type["DataExtractor"]:
 # ----------------------------
 # Base Class
 # ----------------------------
+
 class DataExtractor(ABC):
     """
     Base class for data extractors (sources).
