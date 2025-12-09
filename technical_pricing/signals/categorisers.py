@@ -22,12 +22,14 @@ class DataCategorizer(ABC):
     Takes aggregated data and produces classifications, scores, or categories.
     """
     @abstractmethod
-    def categorize(self, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
+    def categorize(self, coverage, cov_configuration, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Categorize or score the aggregated data.
         
         Args:
-            aggregated_data: Standardized data from an aggregator
+            coverage: the specific coverage handed into the categoriser from technical_pricing/coverages/##/config.yaml
+            cov_configuration: the specific configuration definition under the coverage handed into the categoriser from technical_pricing/coverages/##/config.yaml
+            aggregated_data: Standardised data from an aggregator
             
         Returns:
             Category, score, or classification result
