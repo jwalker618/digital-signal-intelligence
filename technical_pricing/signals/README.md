@@ -107,11 +107,11 @@ class MyAPIExtractor(DataExtractor):
 **Key Characteristics**:
 - Multiple aggregators can run in parallel
 - Each aggregator focuses on a specific aspect of analysis
-- Outputs are merged for use by categorizers
+- Outputs are merged for use by categorisers
 
 **Example Use Cases**:
 - Statistical calculations (averages, totals, distributions)
-- Data normalization and standardization
+- Data normalisation and standardisation
 - Derived metric calculation
 - Time series analysis
 - Pattern detection
@@ -140,7 +140,7 @@ class StatisticalAggregator(DataAggregator):
 **Key Method**: `categorize(aggregated_data: Dict[str, Any]) -> Dict[str, Any]`
 
 **Key Characteristics**:
-- Multiple categorizers can run in parallel
+- Multiple categorisers can run in parallel
 - Each categoriser performs independent classification/scoring
 - Can be parameterised for different thresholds/rules
 
