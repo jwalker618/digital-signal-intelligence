@@ -1,19 +1,5 @@
-from __future__ import annotations
-
-import logging
-import time
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Type, Optional
-
-# ----------------------------
-# Logging
-# ----------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
-)
 
 # ----------------------------
 # Registries
