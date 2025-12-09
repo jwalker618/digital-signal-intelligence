@@ -34,7 +34,7 @@ The three-stage architecture (Extract → Aggregate → Categorise) makes it eas
 |✅|**Flexible Configuration**|Parameterizable thresholds and rules|  
 |✅|**Comprehensive Logging**|Track pipeline execution|  
 
-#### Architecture
+### Architecture
 
 The framework follows a clear three-stage architecture:
 
@@ -57,7 +57,7 @@ The framework follows a clear three-stage architecture:
    [Results]
 ```
 
-##### Stage 1: Extractors (Data Sources)
+#### Stage 1: Extractors (Data Sources)
 
 **Purpose**: Pull raw data from various sources (APIs, databases, files, etc.)
 
@@ -96,7 +96,7 @@ class MyAPIExtractor(DataExtractor):
         }
 ```
 
-##### Stage 2: Aggregators (Data Transformation & Analysis)
+#### Stage 2: Aggregators (Data Transformation & Analysis)
 
 **Purpose**: Transform raw extracted data into standardised, analysed output
 
@@ -131,7 +131,7 @@ class StatisticalAggregator(DataAggregator):
         }
 ```
 
-##### Stage 3: Categorisers (Classification & Scoring)
+#### Stage 3: Categorisers (Classification & Scoring)
 
 **Purpose**: Take aggregated data and produce classifications, scores, or categories
 
@@ -175,9 +175,9 @@ class RiskScorer(DataCategorizer):
         }
 ```
 
-#### Pipeline Classes
+### Pipeline Classes
 
-##### AnalysisPipeline
+#### AnalysisPipeline
 
 Single extractor with multiple aggregators and categorisers.
 
@@ -223,7 +223,7 @@ results = pipeline.run()
 }
 ```
 
-##### BatchPipeline
+#### BatchPipeline
 
 Multiple extractors through the same aggregation/categorisation pipeline.
 
@@ -239,7 +239,7 @@ all_results = batch.run()
 summary = batch.get_summary(all_results, categorizer_name="PrimaryCategorizerName")
 ```
 
-#### Registry System
+### Registry System
 
 The framework includes a registry system for easy component discovery and dynamic loading:
 
