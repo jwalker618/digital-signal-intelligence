@@ -5,15 +5,24 @@ Example: E-Commerce Product Analysis
 This example demonstrates how to extend the framework for a different domain.
 Shows how to analyze products from an e-commerce platform.
 """
+from signals.extractors import (
+    DataExtractor, register_extractor
+)
 
-from utility import (
-    DataExtractor, DataAggregator, DataCategorizer,
-    register_extractor, register_aggregator, register_categorizer,
+from signals.aggregators import (
+    DataAggregator, register_aggregator
+)
+
+from signals.categorisers import (
+    DataCategorizer, register_categorizer
+)
+
+from signals.utility import (
     AnalysisPipeline, BatchPipeline
 )
+
 from typing import Dict, Any, List
 import random
-
 
 # ============================================================================
 # EXTRACTORS: Data Sources
