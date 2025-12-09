@@ -13,18 +13,32 @@ def register_categorizer(cls: Type["DataCategorizer"]) -> Type["DataCategorizer"
     return cls
 
 # ----------------------------
+# Artifacts
+# ----------------------------
+
+class Thresholds(TypedDict):
+    Threshold_1: float 
+    Threshold_2: Optional[float] # None indicates no category
+    Threshold_3: Optional[float]
+    Threshold_4: Optional[float]
+    Threshold_5: Optional[float]
+    Threshold_6: Optional[float]
+    Threshold_7: Optional[float]
+    Threshold_8: Optional[float]
+
+# ----------------------------
 # Base Class
 # ----------------------------
 
 class DataCategorizer(ABC):
     """
-    Base class for data categorizers/scorers.
+    Base class for data categorisers/scorers.
     Takes aggregated data and produces classifications, scores, or categories.
     """
     @abstractmethod
-    def categorize(self, coverage, cov_configuration, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
+    def categorize(self, coverage: str, cov_configuration: Optional[str] = None, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Categorize or score the aggregated data.
+        Categorise or score the aggregated data.
         
         Args:
             coverage: the specific coverage handed into the categoriser from technical_pricing/coverages/##/config.yaml
@@ -43,15 +57,102 @@ class DataCategorizer(ABC):
             "version": "1.0"
         }
 
+class ClientSizeCategorizer:
+    """
+    Categorises clients by sise using coverage, and potential underlying configuration, specific thresholds.
+
+    Categories are ordered by threshold:  Threshold_8 > Threshold_7 > Threshold_6 ... else 'uncategorised'., and used inclusive lower bounds:
+        - Variable: size >= Threshold_8      
+        - Variable: size >= Threshold_7
+        - Variable: size >= Threshold_6
+        - ...
+        - else:   'uncategorised'
+
+    The returned 'thresholds' field provides human-readable ranges consistent with the logic.
+    """
+
+    DEFAULTS: Dict[str, Thresholds] = {
+        # Example coverage: aerospace has no 'extra' class
+        "aerospace": {"small": 10, "medium": 20, "high": 30, "extra": None},
+        # Default coverage includes an 'extra' class
+        "__default__": {"small": 15, "medium": 25, "high": 35, "extra": 45},
+    }
+
+    def __init__(self, coverage: str, cov_configuration: Optional[str] = None):
+        
+        self.small_threshold = small
+        self.medium_threshold = medium
+        self.high_threshold = high
+        self.extra_threshold = extra  # may be None
+
+    def _to_int(self, value: Any, default: int = 0) -> int:
+        """Coerce value to int safely."""
+        if value is None:
+            return default
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _ranges(self) -> Dict[str, str]:
+        """
+        Build human-readable ranges consistent with categorisation logic.
+        Uses inclusive lower bounds.
+        """
+        s, m, h, e = self.small_threshold, self.medium_threshold, self.high_threshold, self.extra_threshold
+
+        if e is None:
+            return {
+                # 'uncategorised' is implicitly < small
+                "small": f"{s}–{m - 1}",
+                "medium": f"{m}–{h - 1}",
+                "high": f">= {h}",
+                "extra": "n/a",
+            }
+        else:
+            return {
+                "small": f"{s}–{m - 1}",
+                "medium": f"{m}–{h - 1}",
+                "high": f"{h}–{e - 1}",
+                "extra": f">= {e}",
+            }
+
+    def categorize(self, aggregated_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Categorise by size based on configured thresholds."""
+        size = self._to_int(aggregated_data.get("client_size"), default=0)
+
+        if self.extra_threshold is not None and size >= self.extra_threshold:
+            category = "extra"
+        elif size >= self.high_threshold:
+            category = "high"
+        elif size >= self.medium_threshold:
+            category = "medium"
+        elif size >= self.small_threshold:
+            category = "small"
+        else:
+            category = "uncategorised"
+
+        return {
+            "client": aggregated_data.get("client_name"),
+            "categorisation": category,
+            "size": size,
+            "thresholds": self._ranges(),
+        }
+
+
+
+
+
+
 # ----------------------------
 # Implementations: Maritime Domain
 # ----------------------------
 
 # CATEGORIZERS
 @register_categorizer
-class CompanySizeCategorizer(DataCategorizer):
+class ClientSizeCategorizer(DataCategorizer):
     """
-    Categorizes companies by fleet size.
+    Categorises clients by size.
     """
     
     def __init__(self, small_threshold: int = 10, medium_threshold: int = 30, large_threshold: int = 50):
