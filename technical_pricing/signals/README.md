@@ -32,7 +32,7 @@ The three-stage architecture (Extract → Aggregate → Categorise) makes it eas
 2. **example_ecommerce.py** - Complete working example
    - E-commerce store analysis
    - Shows how to adapt framework to new domains
-   - Multiple extractors, aggregators, and categorizers
+   - Multiple extractors, aggregators, and categorisers
    - Demonstrates batch processing
 
 ### Key Features
