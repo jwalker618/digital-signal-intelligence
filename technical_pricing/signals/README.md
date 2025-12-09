@@ -436,56 +436,6 @@ Single Pipeline:                Batch Pipeline:
 
 ```
 
-### Usage Example
-
-```python
-from utility import AnalysisPipeline, BatchPipeline
-
-# Single source analysis
-pipeline = AnalysisPipeline(
-    extractor=MyExtractor(),
-    aggregators=[Aggregator1(), Aggregator2()],
-    categorizers=[Categorizer1(), Categorizer2(), Categorizer3()]
-)
-results = pipeline.run()
-
-# Multiple sources, same analysis
-batch = BatchPipeline(
-    extractors=[Extractor1(), Extractor2(), Extractor3()],
-    aggregators=[Aggregator1(), Aggregator2()],
-    categorizers=[Categorizer1(), Categorizer2()]
-)
-all_results = batch.run()
-```
-
-### Extending the Framework
-
-#### Add a New Domain (e.g., Healthcare)
-
-1. **Create Extractors** for your data sources:
-   - EHRExtractor (Electronic Health Records)
-   - LabResultsExtractor
-   - PatientSurveyExtractor
-
-2. **Create Aggregators** for analysis:
-   - ClinicalMetricsAggregator
-   - TreatmentOutcomesAggregator
-   - CostAnalysisAggregator
-
-3. **Create Categorisers** for classification:
-   - RiskStratificationCategorizer
-   - TreatmentSuccessScorer
-   - ResourceUtilizationCategorizer
-
-4. **Run the Pipeline**:
-```python
-pipeline = AnalysisPipeline(
-    extractor=EHRExtractor(patient_id="12345"),
-    aggregators=[ClinicalMetricsAggregator(), TreatmentOutcomesAggregator()],
-    categorizers=[RiskStratificationCategorizer(), TreatmentSuccessScorer()]
-)
-```
-
 ### Quick Start Guide
 
 This guide will help you get started with the data processing framework in 5 minutes.
