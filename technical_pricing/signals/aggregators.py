@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Type, Optional
 
 # ----------------------------
-# Registries
+# Registry
 # ----------------------------
 AGGREGATOR_REGISTRY: Dict[str, Type["DataAggregator"]] = {}
 
