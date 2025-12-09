@@ -237,39 +237,6 @@ batch = BatchPipeline(
 all_results = batch.run()
 ```
 
-### Testing the Framework
-
-#### Run Maritime Example
-```bash
-python utility.py
-```
-
-#### Run E-Commerce Example
-```bash
-python example_ecommerce.py
-```
-
-Both examples demonstrate:
-- Multiple extractors (different companies/stores)
-- Parallel aggregation (different analytical dimensions)
-- Parallel categorization (multiple classification schemes)
-- Summary report generation
-
-### When to Use This Framework
-
-#### Perfect For:
-- Analysing data from multiple similar sources
-- Applying consistent analysis across datasets
-- Building classification/scoring systems
-- Processing batch data with standardized logic
-- Creating reusable analysis components
-
-#### Not Ideal For:
-- One-off data processing scripts
-- Simple single-source analysis
-- Real-time streaming (though adaptable)
-- When sources require completely different analysis
-
 ### Extending the Framework
 
 #### Add a New Domain (e.g., Healthcare)
