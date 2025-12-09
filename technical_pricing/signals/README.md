@@ -38,7 +38,7 @@ The three-stage architecture (Extract → Aggregate → Categorise) makes it eas
 ### Key Features
 
 ✅ **Modular Architecture** - Easy to add new components  
-✅ **Clear Seperation of Concerns** - Each component has a single, well-defined responsibility: Extractors don't analyse, Aggregators don't classify, Categorisers work with pre-analysed data  
+✅ **Clear Seperation of Concerns** - Each component has a single, well-defined responsibility. 
 ✅ **Parallel Execution** - Fast processing with ThreadPoolExecutor  
 ✅ **Type Safety** - Abstract base classes enforce contracts  
 ✅ **Error Handling** - Automatic exception catching and logging  
