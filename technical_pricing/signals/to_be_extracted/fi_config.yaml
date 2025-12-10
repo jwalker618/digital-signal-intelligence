@@ -1,0 +1,1622 @@
+# =============================================================================
+# DSI Model Configuration - Financial Institutions Insurance
+# =============================================================================
+#
+# This file defines the complete configuration for the financial institutions coverage type.
+# It is the single source of truth for:
+#   - Model structure and parameters
+#   - Signal definitions and weights
+#   - Pricing factors and thresholds
+#   - Test profiles for actuarial validation
+#
+# Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
+#
+# DSI PRINCIPLES APPLIED:
+#   1. All signals must be externally observable (regulatory filings, public databases)
+#   2. Direct queries are OPTIONAL - model works without them
+#   3. Categorical features are inferred from charter/regulatory data
+#   4. Tier determines base premium; modifiers adjust for exposure characteristics
+#   5. FI is exceptionally suited to DSI due to comprehensive regulatory disclosure
+#
+# KEY DATA SOURCES:
+#   - FFIEC (Federal Financial Institutions Examination Council)
+#   - Call Reports (FDIC, OCC, Fed)
+#   - SEC EDGAR (10-K, 10-Q, Proxy Statements)
+#   - CFPB Consumer Complaint Database
+#   - NCUA Credit Union Data
+#   - State regulatory databases
+#
+# Version: 2.0.0
+# Last Updated: 2025-12
+# =============================================================================
+
+financial_institutions:
+  fi_general:
+    metadata:
+      name: "DSI Financial Institutions Insurance Model"
+      description: "FI bond, professional liability, D&O, cyber coverage based on observable regulatory and financial signals"
+      version: "2.0.0"
+      coverage_types:
+        - "financial_institution_bond"
+        - "professional_liability"
+        - "directors_officers"
+        - "cyber_liability"
+        - "employment_practices"
+        - "fiduciary_liability"
+      applicable_markets: ["us"]
+      min_premium: 25000
+      default_currency: "USD"
+
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_optional_queries:
+      - id: "regulatory_action"
+        question: "Any pending or recent (3 years) regulatory enforcement actions?"
+        direct_condition: regulatory_action_true
+        
+      - id: "examination_issues"
+        question: "Any MRAs/MRIAs outstanding from most recent examination?"
+        direct_condition: examination_issues_true
+        
+      - id: "litigation_pending"
+        question: "Any material litigation pending (class action, regulatory)?"
+        direct_condition: litigation_pending_true
+        
+      - id: "cyber_incident"
+        question: "Any reportable cyber incidents in past 24 months?"
+        direct_condition: cyber_incident_true
+        
+      - id: "significant_growth"
+        question: "Asset growth >20% in past 12 months?"
+        direct_condition: significant_growth_true
+        
+      - id: "new_product_line"
+        question: "Any significant new product lines launched in past 12 months?"
+        direct_condition: new_product_true
+
+    # -------------------------------------------------------------------------
+    # CATEGORICAL FEATURES
+    # -------------------------------------------------------------------------
+    categorical_features:
+      institution_type:
+        description: "Type of financial institution from charter/registration"
+        inference_method:
+          primary: "charter_type_lookup"
+          fallback: "regulatory_filing_analysis"
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "institutions/profile"}
+            - {type: "api", provider: "fdic", endpoint: "institutions/search"}
+            - {type: "api", provider: "ncua", endpoint: "credit_unions/search"}
+            - {type: "api", provider: "sec", endpoint: "cik/search"}
+            - {type: "api", provider: "finra", endpoint: "brokercheck/firm"}
+          confidence_threshold: 0.95
+          default_on_failure: "OTHER"
+        values:
+          - id: "MONEY_CENTER_BANK"
+            label: "Money Center Bank"
+            modifier: 1.50
+            description: "G-SIB or major national bank (>$250B assets)"
+            inference_criteria: {asset_min: 250000000000, gsib_list: true}
+            
+          - id: "REGIONAL_BANK"
+            label: "Regional Bank"
+            modifier: 1.20
+            description: "Regional bank ($10B-$250B assets)"
+            inference_criteria: {asset_range: [10000000000, 250000000000]}
+            
+          - id: "COMMUNITY_BANK"
+            label: "Community Bank"
+            modifier: 1.00
+            description: "Community bank (<$10B assets)"
+            inference_criteria: {asset_max: 10000000000, bank_charter: true}
+            
+          - id: "CREDIT_UNION"
+            label: "Credit Union"
+            modifier: 0.85
+            description: "Federally or state-chartered credit union"
+            inference_criteria: {ncua_charter: true}
+            
+          - id: "SAVINGS_INSTITUTION"
+            label: "Savings Institution"
+            modifier: 0.90
+            description: "Thrift or savings bank"
+            inference_criteria: {ots_charter: true}
+            
+          - id: "BROKER_DEALER"
+            label: "Broker-Dealer"
+            modifier: 1.40
+            description: "SEC/FINRA registered broker-dealer"
+            inference_criteria: {finra_registered: true, broker_dealer: true}
+            
+          - id: "INVESTMENT_ADVISER"
+            label: "Investment Adviser"
+            modifier: 1.25
+            description: "SEC or state registered investment adviser"
+            inference_criteria: {adv_filed: true}
+            
+          - id: "INSURANCE_COMPANY"
+            label: "Insurance Company"
+            modifier: 1.10
+            description: "State-licensed insurance company"
+            inference_criteria: {naic_registered: true}
+            
+          - id: "ASSET_MANAGER"
+            label: "Asset Manager"
+            modifier: 1.30
+            description: "Investment company or fund manager"
+            inference_criteria: {investment_company_act: true}
+            
+          - id: "FINTECH"
+            label: "Fintech"
+            modifier: 1.50
+            description: "Technology-focused financial services"
+            inference_criteria: {fintech_classification: true}
+            
+          - id: "MORTGAGE_COMPANY"
+            label: "Mortgage Company"
+            modifier: 1.35
+            description: "Mortgage lender or servicer"
+            inference_criteria: {nmls_registered: true, mortgage_primary: true}
+            
+          - id: "PAYMENT_PROCESSOR"
+            label: "Payment Processor"
+            modifier: 1.40
+            description: "Payment processing or money transmission"
+            inference_criteria: {money_transmitter_license: true}
+            
+          - id: "OTHER"
+            label: "Other Financial Institution"
+            modifier: 1.20
+            description: "Other regulated financial entity"
+            inference_criteria: {}
+
+      regulatory_framework:
+        description: "Primary regulatory authority"
+        inference_method:
+          primary: "charter_regulator_lookup"
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "institutions/regulator"}
+            - {type: "api", provider: "fdic", endpoint: "institutions/regulator"}
+            - {type: "registry", provider: "occ", endpoint: "institutions/list"}
+          confidence_threshold: 0.99
+          default_on_failure: "STATE"
+        values:
+          - {id: "OCC", label: "OCC (National Banks)", modifier: 1.00, description: "Office of the Comptroller of the Currency"}
+          - {id: "FDIC", label: "FDIC (State Non-Member)", modifier: 1.00, description: "State banks not Fed members"}
+          - {id: "FED", label: "Federal Reserve", modifier: 1.00, description: "State member banks, BHCs, FHCs"}
+          - {id: "NCUA", label: "NCUA (Credit Unions)", modifier: 0.95, description: "National Credit Union Administration"}
+          - {id: "SEC", label: "SEC", modifier: 1.10, description: "Securities and Exchange Commission"}
+          - {id: "FINRA", label: "FINRA", modifier: 1.10, description: "Financial Industry Regulatory Authority"}
+          - {id: "STATE", label: "State Regulated", modifier: 1.15, description: "State banking/insurance department"}
+          - {id: "MULTI", label: "Multiple Regulators", modifier: 1.05, description: "Subject to multiple regulatory bodies"}
+
+      asset_size_band:
+        description: "Total asset size classification"
+        inference_method:
+          primary: "call_report_assets"
+          fallback: "sec_filing_assets"
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/summary"}
+            - {type: "api", provider: "fdic", endpoint: "financials/summary"}
+            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "10-Q"]}
+            - {type: "api", provider: "ncua", endpoint: "call_reports/summary"}
+          confidence_threshold: 0.99
+          default_on_failure: "SMALL"
+        values:
+          - id: "MEGA"
+            label: "Mega (>$250B)"
+            modifier: 2.50
+            asset_range: [250000000000, 999999999999999]
+            
+          - id: "LARGE"
+            label: "Large ($50B-$250B)"
+            modifier: 1.80
+            asset_range: [50000000000, 250000000000]
+            
+          - id: "MID"
+            label: "Mid-Size ($10B-$50B)"
+            modifier: 1.30
+            asset_range: [10000000000, 50000000000]
+            
+          - id: "SMALL"
+            label: "Small ($1B-$10B)"
+            modifier: 1.00
+            asset_range: [1000000000, 10000000000]
+            
+          - id: "COMMUNITY"
+            label: "Community (<$1B)"
+            modifier: 0.80
+            asset_range: [0, 1000000000]
+
+      publicly_traded:
+        description: "Whether institution is publicly traded"
+        inference_method:
+          primary: "sec_filing_check"
+          sources:
+            - {type: "api", provider: "sec_edgar", endpoint: "cik/lookup"}
+            - {type: "api", provider: "nasdaq", endpoint: "screener"}
+          confidence_threshold: 0.99
+          default_on_failure: "PRIVATE"
+        values:
+          - {id: "PUBLIC", label: "Publicly Traded", modifier: 1.10, description: "SEC reporting company"}
+          - {id: "PRIVATE", label: "Private", modifier: 1.00, description: "Non-SEC reporting"}
+
+    # -------------------------------------------------------------------------
+    # SIGNAL GROUPS
+    # -------------------------------------------------------------------------
+    signal_groups:
+      - id: "network_authority"
+        name: "Network Authority"
+        description: "Quality of institutional relationships and counterparties"
+        weight: 0.10
+        test_scores: {excellent: 88, average: 68, poor: 38}
+        critical: false
+        score_condition: null
+        
+      - id: "regulatory_compliance"
+        name: "Regulatory Compliance"
+        description: "Examination results, enforcement actions, compliance ratings"
+        weight: 0.25
+        test_scores: {excellent: 95, average: 72, poor: 35}
+        critical: true
+        score_condition: regulatory_compliance_critical
+        
+      - id: "financial_condition"
+        name: "Financial Condition"
+        description: "Capital, asset quality, liquidity, earnings (CAMELS proxies)"
+        weight: 0.20
+        test_scores: {excellent: 92, average: 70, poor: 38}
+        critical: true
+        score_condition: financial_condition_critical
+        
+      - id: "governance"
+        name: "Corporate Governance"
+        description: "Board composition, executive stability, committee quality"
+        weight: 0.15
+        test_scores: {excellent: 88, average: 65, poor: 35}
+        critical: false
+        score_condition: null
+        
+      - id: "operational_risk"
+        name: "Operational Risk"
+        description: "Complaints, litigation, breach history, incidents"
+        weight: 0.10
+        test_scores: {excellent: 90, average: 68, poor: 32}
+        critical: false
+        score_condition: operational_risk_critical
+        
+      - id: "cyber_security"
+        name: "Cyber Security"
+        description: "Observable technical security posture"
+        weight: 0.10
+        test_scores: {excellent: 88, average: 65, poor: 35}
+        critical: false
+        score_condition: cyber_security_critical
+        
+      - id: "corporate_footprint"
+        name: "Corporate Footprint"
+        description: "Transparency, disclosure, investor relations"
+        weight: 0.05
+        test_scores: {excellent: 85, average: 62, poor: 35}
+        critical: false
+        score_condition: null
+        
+      - id: "structured_data"
+        name: "Structured Data"
+        description: "Third-party ratings and benchmarks"
+        weight: 0.05
+        test_scores: {excellent: 85, average: 65, poor: 40}
+        critical: false
+        score_condition: null
+
+    # -------------------------------------------------------------------------
+    # SIGNAL FEATURES
+    # -------------------------------------------------------------------------
+    signal_features:
+      network_authority:
+        - id: "correspondent_quality"
+          name: "Correspondent Banking Quality"
+          description: "Quality of correspondent banking relationships"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "correspondent/relationships"}
+            - {type: "filing", provider: "call_report", schedule: "RC-E"}
+          score_range: [0, 100]
+          scoring_logic: {tier_1_correspondents: 100, major_regional: 85, community_network: 70, limited: 50}
+          critical: false
+          score_condition: null
+          
+        - id: "fhlb_membership"
+          name: "FHLB Membership"
+          description: "Federal Home Loan Bank membership and standing"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "api", provider: "fhlbanks", endpoint: "members/search"}
+          score_range: [0, 100]
+          scoring_logic: {active_member_good_standing: 100, member_limited_access: 70, non_member_eligible: 50, non_member: 30}
+          critical: false
+          score_condition: null
+          
+        - id: "clearing_relationship"
+          name: "Clearing Relationships"
+          description: "Quality of clearing and settlement relationships"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "api", provider: "dtcc", endpoint: "participants"}
+            - {type: "api", provider: "fed", endpoint: "fedwire/participants"}
+          score_range: [0, 100]
+          scoring_logic: {direct_fed_access: 100, major_clearing: 85, indirect_access: 60}
+          critical: false
+          score_condition: null
+          
+        - id: "auditor_quality"
+          name: "External Auditor Quality"
+          description: "Quality tier of external auditor"
+          weight: 0.20
+          ttl: "static"
+          ttl_seconds: 7776000
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
+            - {type: "api", provider: "pcaob", endpoint: "firms/search"}
+          score_range: [0, 100]
+          scoring_logic: {big_4: 100, national_firm: 85, large_regional: 70, small_regional: 55, local: 40}
+          critical: false
+          score_condition: null
+          
+        - id: "legal_counsel"
+          name: "Legal Counsel Quality"
+          description: "Quality of primary legal counsel"
+          weight: 0.10
+          ttl: "static"
+          ttl_seconds: 7776000
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "DEF 14A"]}
+          score_range: [0, 100]
+          scoring_logic: {amlaw_50: 100, amlaw_100: 85, regional_major: 70, local: 50}
+          critical: false
+          score_condition: null
+          
+        - id: "industry_association"
+          name: "Industry Association Membership"
+          description: "Active membership in industry associations"
+          weight: 0.10
+          ttl: "static"
+          ttl_seconds: 7776000
+          sources:
+            - {type: "api", provider: "aba", endpoint: "members"}
+            - {type: "api", provider: "icba", endpoint: "members"}
+            - {type: "api", provider: "cuna", endpoint: "members"}
+            - {type: "api", provider: "sifma", endpoint: "members"}
+          score_range: [0, 100]
+          scoring_logic: {multiple_active: 100, single_major: 80, regional_only: 60, none: 35}
+          critical: false
+          score_condition: null
+          
+        - id: "credit_rating"
+          name: "Credit Rating"
+          description: "Credit rating from major agencies"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "sp_global", endpoint: "ratings/banks"}
+            - {type: "api", provider: "moodys", endpoint: "ratings/banks"}
+            - {type: "api", provider: "fitch", endpoint: "ratings/banks"}
+          score_range: [0, 100]
+          scoring_logic: {aa_or_above: 100, a_range: 85, bbb_range: 70, bb_range: 50, below_bb: 30, not_rated: 55}
+          critical: false
+          score_condition: null
+
+      regulatory_compliance:
+        - id: "examination_rating"
+          name: "Examination Rating Proxy"
+          description: "Inferred examination quality from observable indicators"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "correlation", analyzer: "camels_proxy", inputs: ["capital", "asset_quality", "earnings", "liquidity"]}
+            - {type: "api", provider: "fdic", endpoint: "problem_bank_list"}
+          score_range: [0, 100]
+          scoring_logic:
+            strong_all_metrics: 100
+            satisfactory_all: 85
+            mixed_results: 65
+            weak_single_area: 45
+            weak_multiple: 25
+            problem_list: 10
+          critical: true
+          score_condition: examination_rating_critical
+          
+        - id: "enforcement_action"
+          name: "Enforcement Actions"
+          description: "Formal enforcement actions (C&D, CMPs, consent orders)"
+          weight: 0.25
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "occ", endpoint: "enforcement/actions"}
+            - {type: "api", provider: "fdic", endpoint: "enforcement/actions"}
+            - {type: "api", provider: "fed", endpoint: "enforcement/actions"}
+            - {type: "api", provider: "cfpb", endpoint: "enforcement/actions"}
+            - {type: "api", provider: "sec", endpoint: "litigation/releases"}
+          score_range: [0, 100]
+          scoring_logic:
+            no_actions_10yr: 100
+            no_actions_5yr: 90
+            minor_resolved: 70
+            significant_resolved: 50
+            active_cmp: 30
+            active_cd: 15
+            multiple_active: 0
+          critical: true
+          score_condition: enforcement_action_critical
+          
+        - id: "informal_action"
+          name: "Informal Actions"
+          description: "MOUs, board resolutions, informal agreements"
+          weight: 0.10
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "fdic", endpoint: "enforcement/informal"}
+            - {type: "filing", provider: "sec_edgar", document_types: ["8-K"]}
+          score_range: [0, 100]
+          scoring_logic: {no_actions: 100, historic_resolved: 80, recent_resolved: 60, active_mou: 40}
+          critical: false
+          score_condition: null
+          
+        - id: "cra_rating"
+          name: "CRA Rating"
+          description: "Community Reinvestment Act examination rating"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "cra/ratings"}
+          score_range: [0, 100]
+          scoring_logic: {outstanding: 100, satisfactory: 80, needs_improvement: 40, substantial_noncompliance: 10}
+          critical: false
+          score_condition: null
+          
+        - id: "bsa_aml"
+          name: "BSA/AML Compliance"
+          description: "Bank Secrecy Act / Anti-Money Laundering compliance"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "fincen", endpoint: "enforcement/actions"}
+            - {type: "api", provider: "occ", endpoint: "enforcement/bsa"}
+            - {type: "api", provider: "ofac", endpoint: "sanctions/search"}
+          score_range: [0, 100]
+          scoring_logic:
+            no_issues: 100
+            minor_findings_resolved: 80
+            significant_findings: 55
+            enforcement_resolved: 35
+            active_enforcement: 10
+          critical: true
+          score_condition: bsa_aml_critical
+          
+        - id: "fair_lending"
+          name: "Fair Lending Compliance"
+          description: "Fair lending and ECOA compliance history"
+          weight: 0.10
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "cfpb", endpoint: "enforcement/fair_lending"}
+            - {type: "api", provider: "doj", endpoint: "cases/fair_lending"}
+            - {type: "api", provider: "ffiec", endpoint: "hmda/analysis"}
+          score_range: [0, 100]
+          scoring_logic: {no_issues: 100, minor_resolved: 75, significant_resolved: 50, active_investigation: 25}
+          critical: false
+          score_condition: null
+          
+        - id: "consumer_compliance"
+          name: "Consumer Compliance"
+          description: "UDAP/UDAAP and consumer protection compliance"
+          weight: 0.10
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "cfpb", endpoint: "enforcement/udaap"}
+            - {type: "api", provider: "ftc", endpoint: "cases/consumer"}
+          score_range: [0, 100]
+          scoring_logic: {no_issues: 100, minor_resolved: 75, cfpb_action_resolved: 45, active_action: 20}
+          critical: false
+          score_condition: null
+
+      financial_condition:
+        - id: "capital_ratio"
+          name: "Capital Adequacy"
+          description: "CET1, Tier 1, Total capital ratios vs requirements"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/capital"}
+            - {type: "api", provider: "fdic", endpoint: "financials/capital"}
+            - {type: "api", provider: "ncua", endpoint: "call_reports/capital"}
+          score_range: [0, 100]
+          scoring_logic:
+            well_capitalized_buffer: 100
+            well_capitalized: 85
+            adequately_capitalized: 60
+            undercapitalized: 25
+            significantly_under: 10
+            critically_under: 0
+          critical: true
+          score_condition: capital_ratio_critical
+          
+        - id: "asset_quality"
+          name: "Asset Quality"
+          description: "NPL ratio, charge-off rates, classified assets"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/asset_quality"}
+            - {type: "api", provider: "fdic", endpoint: "financials/asset_quality"}
+          score_range: [0, 100]
+          scoring_logic:
+            npl_under_1pct: 100
+            npl_1_2pct: 80
+            npl_2_3pct: 60
+            npl_3_5pct: 40
+            npl_over_5pct: 20
+          critical: true
+          score_condition: asset_quality_critical
+          
+        - id: "liquidity"
+          name: "Liquidity Position"
+          description: "Liquidity coverage, funding stability"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/liquidity"}
+            - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "10-Q"]}
+          score_range: [0, 100]
+          scoring_logic: {strong_lcr: 100, adequate_lcr: 80, satisfactory: 65, tight: 45, stressed: 25}
+          critical: false
+          score_condition: null
+          
+        - id: "earnings"
+          name: "Earnings Quality"
+          description: "ROA, ROE, net interest margin stability"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/income"}
+            - {type: "api", provider: "fdic", endpoint: "financials/income"}
+          score_range: [0, 100]
+          scoring_logic:
+            consistent_profitable: 100
+            profitable_volatile: 80
+            breakeven: 55
+            loss_making_one_year: 40
+            chronic_losses: 20
+          critical: false
+          score_condition: null
+          
+        - id: "concentration"
+          name: "Loan Concentration"
+          description: "Portfolio concentration risk (CRE, single borrower)"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/loans"}
+            - {type: "api", provider: "fdic", endpoint: "financials/concentration"}
+          score_range: [0, 100]
+          scoring_logic:
+            well_diversified: 100
+            moderate_concentration: 75
+            elevated_cre: 55
+            high_concentration: 35
+            extreme_concentration: 15
+          critical: false
+          score_condition: null
+          
+        - id: "interest_rate_risk"
+          name: "Interest Rate Risk"
+          description: "Sensitivity to interest rate changes"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/irr"}
+            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
+          score_range: [0, 100]
+          scoring_logic: {low_sensitivity: 100, moderate: 75, elevated: 50, high: 30}
+          critical: false
+          score_condition: null
+          
+        - id: "growth_rate"
+          name: "Growth Rate"
+          description: "Asset and loan growth rate (rapid growth = risk)"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "call_reports/trends"}
+            - {type: "api", provider: "fdic", endpoint: "financials/trends"}
+          score_range: [0, 100]
+          scoring_logic:
+            stable_0_10pct: 100
+            moderate_10_15pct: 85
+            elevated_15_20pct: 65
+            rapid_20_30pct: 45
+            hypergrowth_over_30pct: 25
+            contraction: 60
+          critical: false
+          score_condition: null
+
+      governance:
+        - id: "board_independence"
+          name: "Board Independence"
+          description: "Independent director ratio and quality"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
+            - {type: "scrape", target: "company_website", pages: ["/about/board", "/governance"]}
+          score_range: [0, 100]
+          scoring_logic:
+            over_75pct_independent: 100
+            majority_independent: 85
+            near_majority: 65
+            minority_independent: 40
+            controlled_board: 25
+          critical: false
+          score_condition: null
+          
+        - id: "board_expertise"
+          name: "Board Expertise"
+          description: "Banking, risk, audit, and regulatory expertise on board"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
+            - {type: "api", provider: "linkedin", endpoint: "people/search"}
+          score_range: [0, 100]
+          scoring_logic:
+            comprehensive_expertise: 100
+            good_coverage: 80
+            adequate: 65
+            gaps_present: 45
+            significant_gaps: 25
+          critical: false
+          score_condition: null
+          
+        - id: "executive_stability"
+          name: "Executive Stability"
+          description: "CEO and executive team tenure and turnover"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["8-K", "DEF 14A"]}
+            - {type: "api", provider: "linkedin", endpoint: "people/search"}
+            - {type: "news", provider: "gdelt", query: "{institution} CEO appointment"}
+          score_range: [0, 100]
+          scoring_logic:
+            long_tenure_stable: 100
+            moderate_tenure: 80
+            recent_planned_transition: 65
+            recent_unexpected: 45
+            frequent_turnover: 25
+          critical: false
+          score_condition: null
+          
+        - id: "risk_committee"
+          name: "Risk Committee Quality"
+          description: "Board risk committee presence and composition"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
+          score_range: [0, 100]
+          scoring_logic:
+            dedicated_expert_committee: 100
+            dedicated_committee: 85
+            combined_committee: 65
+            no_formal_committee: 40
+          critical: false
+          score_condition: null
+          
+        - id: "audit_committee"
+          name: "Audit Committee Quality"
+          description: "Audit committee independence and expertise"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A"]}
+          score_range: [0, 100]
+          scoring_logic:
+            fully_independent_expert: 100
+            fully_independent: 85
+            majority_independent: 65
+            not_fully_independent: 40
+          critical: false
+          score_condition: null
+          
+        - id: "related_party"
+          name: "Related Party Transactions"
+          description: "Quality of related party transaction oversight"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["DEF 14A", "10-K"]}
+          score_range: [0, 100]
+          scoring_logic:
+            minimal_rpts: 100
+            standard_rpts_disclosed: 80
+            elevated_rpts: 55
+            concerning_rpts: 30
+          critical: false
+          score_condition: null
+
+      operational_risk:
+        - id: "cfpb_complaint"
+          name: "CFPB Complaint Volume"
+          description: "Consumer complaints vs peer benchmark"
+          weight: 0.25
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "cfpb", endpoint: "complaints/company"}
+            - {type: "correlation", analyzer: "peer_benchmark", inputs: ["complaints", "assets"]}
+          score_range: [0, 100]
+          scoring_logic:
+            below_peer_avg: 100
+            at_peer_avg: 75
+            above_peer_avg: 50
+            significantly_elevated: 30
+            extreme_volume: 10
+          critical: false
+          score_condition: null
+          
+        - id: "bbb_complaint"
+          name: "BBB Complaint Patterns"
+          description: "Better Business Bureau complaint history"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "bbb", endpoint: "business/search"}
+          score_range: [0, 100]
+          scoring_logic: {a_plus_rating: 100, a_rating: 85, b_rating: 65, c_rating: 45, below_c: 25}
+          critical: false
+          score_condition: null
+          
+        - id: "litigation"
+          name: "Litigation History"
+          description: "Class actions, regulatory suits, significant litigation"
+          weight: 0.25
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "pacer", endpoint: "cases/search"}
+            - {type: "api", provider: "courtlistener", endpoint: "search"}
+            - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
+          score_range: [0, 100]
+          scoring_logic:
+            no_material_litigation: 100
+            minor_resolved: 85
+            significant_resolved: 60
+            active_material: 35
+            class_action_pending: 15
+          critical: true
+          score_condition: litigation_critical
+          
+        - id: "breach_history"
+          name: "Data Breach History"
+          description: "Historical data breaches and security incidents"
+          weight: 0.25
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "privacyrights", endpoint: "breaches/search"}
+            - {type: "api", provider: "haveibeenpwned", endpoint: "breaches/domain"}
+            - {type: "news", provider: "gdelt", query: "{institution} data breach"}
+          score_range: [0, 100]
+          scoring_logic:
+            no_breaches: 100
+            minor_resolved: 80
+            significant_resolved: 55
+            recent_significant: 30
+            multiple_breaches: 15
+          critical: true
+          score_condition: breach_history_critical
+          
+        - id: "operational_incident"
+          name: "Operational Incidents"
+          description: "Disclosed operational failures and outages"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "filing", provider: "sec_edgar", document_types: ["8-K", "10-K"]}
+            - {type: "news", provider: "gdelt", query: "{institution} outage OR system failure"}
+          score_range: [0, 100]
+          scoring_logic: {no_incidents: 100, minor_resolved: 80, significant_resolved: 55, recent_significant: 35}
+          critical: false
+          score_condition: null
+
+      cyber_security:
+        - id: "tls_score"
+          name: "TLS/SSL Configuration"
+          description: "TLS configuration quality (SSL Labs methodology)"
+          weight: 0.20
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scan", provider: "ssllabs", endpoint: "analyze"}
+            - {type: "scan", provider: "internal", analyzer: "tls_scanner"}
+          score_range: [0, 100]
+          scoring_logic: {grade_a_plus: 100, grade_a: 90, grade_b: 70, grade_c: 45, below_c: 20}
+          critical: false
+          score_condition: null
+          
+        - id: "email_auth"
+          name: "Email Authentication"
+          description: "SPF, DMARC, DKIM configuration"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "dns", records: ["TXT", "MX"], analyzer: "email_auth_scorer"}
+            - {type: "api", provider: "dmarcian", endpoint: "domain/check"}
+          score_range: [0, 100]
+          scoring_logic: {dmarc_reject: 100, dmarc_quarantine: 80, dmarc_none: 60, spf_only: 45, nothing: 20}
+          critical: false
+          score_condition: null
+          
+        - id: "security_headers"
+          name: "Security Headers"
+          description: "HTTP security headers implementation"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scan", provider: "securityheaders.com", endpoint: "scan"}
+          score_range: [0, 100]
+          scoring_logic: {grade_a: 100, grade_b: 75, grade_c: 55, grade_d: 35, grade_f: 15}
+          critical: false
+          score_condition: null
+          
+        - id: "network_exposure"
+          name: "Network Exposure"
+          description: "Exposed services and ports"
+          weight: 0.20
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "shodan", endpoint: "host/search"}
+            - {type: "api", provider: "censys", endpoint: "hosts/search"}
+          score_range: [0, 100]
+          scoring_logic: {minimal_exposure: 100, standard_services: 80, elevated_exposure: 55, high_exposure: 30}
+          critical: false
+          score_condition: null
+          
+        - id: "vulnerability"
+          name: "Known Vulnerabilities"
+          description: "CVE exposure in detected software"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "nvd", endpoint: "cves/search"}
+            - {type: "correlation", analyzer: "version_to_cve_mapper"}
+          score_range: [0, 100]
+          scoring_logic: {no_known_cves: 100, low_severity: 80, medium_severity: 55, high_severity: 30, critical_cves: 10}
+          critical: true
+          score_condition: vulnerability_critical
+          
+        - id: "security_rating"
+          name: "Third-Party Security Rating"
+          description: "BitSight, SecurityScorecard, or similar"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "bitsight", endpoint: "ratings/company"}
+            - {type: "api", provider: "securityscorecard", endpoint: "companies/score"}
+          score_range: [0, 100]
+          scoring_logic: {above_800: 100, 700_800: 80, 600_700: 60, 500_600: 40, below_500: 20}
+          critical: false
+          score_condition: null
+
+      corporate_footprint:
+        - id: "investor_relations"
+          name: "Investor Relations Quality"
+          description: "Quality of investor communications and transparency"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/investor-relations", "/investors"]}
+            - {type: "filing", provider: "sec_edgar", document_types: ["8-K"]}
+          score_range: [0, 100]
+          scoring_logic: {comprehensive: 100, good: 80, adequate: 60, minimal: 40, none: 20}
+          critical: false
+          score_condition: null
+          
+        - id: "disclosure_quality"
+          name: "Disclosure Quality"
+          description: "Quality and timeliness of regulatory disclosures"
+          weight: 0.20
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "filing", provider: "sec_edgar", analyzer: "disclosure_quality_scorer"}
+          score_range: [0, 100]
+          scoring_logic: {exemplary: 100, good: 80, adequate: 65, minimal: 45, late_filings: 25}
+          critical: false
+          score_condition: null
+          
+        - id: "security_page"
+          name: "Security Page Presence"
+          description: "Dedicated security/trust page"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/security", "/trust", "/privacy"]}
+          score_range: [0, 100]
+          scoring_logic: {comprehensive: 100, basic: 70, minimal: 45, none: 20}
+          critical: false
+          score_condition: null
+          
+        - id: "hiring_signals"
+          name: "Risk/Compliance Hiring"
+          description: "Risk, compliance, and security hiring activity"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "linkedin", endpoint: "jobs/search"}
+            - {type: "scrape", target: "job_boards", sites: ["indeed", "glassdoor"]}
+          score_range: [0, 100]
+          scoring_logic: {active_investment: 100, steady: 75, minimal: 50, cutbacks: 30}
+          critical: false
+          score_condition: null
+          
+        - id: "esg_reporting"
+          name: "ESG Reporting"
+          description: "Environmental, social, governance reporting"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/sustainability", "/esg", "/csr"]}
+            - {type: "api", provider: "cdp", endpoint: "responses/search"}
+          score_range: [0, 100]
+          scoring_logic: {comprehensive_report: 100, basic_report: 75, website_only: 50, none: 25}
+          critical: false
+          score_condition: null
+          
+        - id: "community_presence"
+          name: "Community Presence"
+          description: "Community involvement and local presence"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/community", "/foundation"]}
+            - {type: "api", provider: "ffiec", endpoint: "cra/public_file"}
+          score_range: [0, 100]
+          scoring_logic: {strong_presence: 100, moderate: 75, minimal: 50, none: 30}
+          critical: false
+          score_condition: null
+
+      structured_data:
+        - id: "credit_rating_structured"
+          name: "Credit Rating (Structured)"
+          description: "Credit rating from rating agencies"
+          weight: 0.40
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "sp_global", endpoint: "ratings"}
+            - {type: "api", provider: "moodys", endpoint: "ratings"}
+            - {type: "api", provider: "kroll", endpoint: "ratings"}
+          score_range: [0, 100]
+          scoring_logic: {aa_above: 100, a_range: 85, bbb_range: 70, bb_range: 50, below_bb: 30, not_rated: 55}
+          critical: false
+          score_condition: null
+          
+        - id: "esg_rating"
+          name: "ESG Rating"
+          description: "ESG rating from major providers"
+          weight: 0.30
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "msci", endpoint: "esg/ratings"}
+            - {type: "api", provider: "sustainalytics", endpoint: "ratings"}
+          score_range: [0, 100]
+          scoring_logic: {leader: 100, above_avg: 80, average: 60, below_avg: 40, laggard: 20}
+          critical: false
+          score_condition: null
+          
+        - id: "peer_benchmark"
+          name: "Peer Benchmarking"
+          description: "Performance vs peer group benchmarks"
+          weight: 0.30
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "ffiec", endpoint: "ubpr/peer_group"}
+            - {type: "api", provider: "fdic", endpoint: "peer_comparison"}
+          score_range: [0, 100]
+          scoring_logic: {top_quartile: 100, above_median: 80, at_median: 60, below_median: 40, bottom_quartile: 20}
+          critical: false
+          score_condition: null
+
+    # -------------------------------------------------------------------------
+    # TIER THRESHOLDS
+    # -------------------------------------------------------------------------
+    tier_thresholds:
+      tier_1:
+        id: 1
+        label: "PREFERRED"
+        min_score: 800
+        max_score: 1000
+        description: "Excellent institution - auto-approve at preferred pricing"
+        auto_approve: true
+        auto_decline: false
+        base_premium: 1500  # Per $1M combined limit
+        
+      tier_2:
+        id: 2
+        label: "STANDARD"
+        min_score: 650
+        max_score: 799
+        description: "Good institution - auto-approve at standard pricing"
+        auto_approve: true
+        auto_decline: false
+        base_premium: 2200
+        
+      tier_3:
+        id: 3
+        label: "ELEVATED"
+        min_score: 500
+        max_score: 649
+        description: "Moderate risk - auto-approve with conditions"
+        auto_approve: false
+        auto_decline: false
+        base_premium: 3200
+        
+      tier_4:
+        id: 4
+        label: "HIGH_RISK"
+        min_score: 350
+        max_score: 499
+        description: "High risk - manual review required"
+        auto_approve: false
+        auto_decline: false
+        base_premium: 5000
+        
+      tier_5:
+        id: 5
+        label: "CRITICAL"
+        min_score: 0
+        max_score: 349
+        description: "Critical risk - decline or senior review"
+        auto_approve: false
+        auto_decline: true
+        base_premium: 8000
+
+    # -------------------------------------------------------------------------
+    # CONDITION DEFINITIONS
+    # -------------------------------------------------------------------------
+    direct_conditions:
+      - id: regulatory_action_true
+        bands:
+          - {return: true, tier_override: 4, action: "REFER", note: "Regulatory enforcement disclosed"}
+      
+      - id: examination_issues_true
+        bands:
+          - {return: true, tier_override: 3, action: "REFER", note: "Outstanding MRAs/MRIAs"}
+      
+      - id: litigation_pending_true
+        bands:
+          - {return: true, tier_override: null, action: "REFER", note: "Material litigation pending"}
+      
+      - id: cyber_incident_true
+        bands:
+          - {return: true, tier_override: null, action: "REFER", note: "Recent cyber incident"}
+      
+      - id: significant_growth_true
+        bands:
+          - {return: true, tier_override: null, action: "FLAG", note: "Rapid growth >20%"}
+      
+      - id: new_product_true
+        bands:
+          - {return: true, tier_override: null, action: "FLAG", note: "New product line risk"}
+  
+    score_conditions:
+      - id: regulatory_compliance_critical
+        bands:
+          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical regulatory deficiencies"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Significant regulatory concerns"}
+        inclusive_max: false
+      
+      - id: financial_condition_critical
+        bands:
+          - {max: 35, tier_override: 5, action: "DECLINE", note: "Critical financial condition"}
+          - {max: 50, tier_override: 4, action: "REFER", note: "Material financial concerns"}
+        inclusive_max: false
+      
+      - id: examination_rating_critical
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Critically weak examination indicators"}
+          - {max: 40, tier_override: 4, action: "REFER", note: "Weak examination indicators"}
+        inclusive_max: false
+      
+      - id: enforcement_action_critical
+        bands:
+          - {max: 20, tier_override: 5, action: "DECLINE", note: "Active enforcement actions"}
+          - {max: 40, tier_override: 4, action: "REFER", note: "Recent enforcement history"}
+        inclusive_max: false
+      
+      - id: bsa_aml_critical
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Critical BSA/AML issues"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "BSA/AML compliance concerns"}
+        inclusive_max: false
+      
+      - id: capital_ratio_critical
+        bands:
+          - {max: 30, tier_override: 5, action: "DECLINE", note: "Capital adequacy crisis"}
+          - {max: 50, tier_override: 4, action: "REFER", note: "Capital adequacy concerns"}
+        inclusive_max: false
+      
+      - id: asset_quality_critical
+        bands:
+          - {max: 30, tier_override: 4, action: "REFER", note: "Asset quality concerns"}
+        inclusive_max: false
+      
+      - id: operational_risk_critical
+        bands:
+          - {max: 35, tier_override: 4, action: "REFER", note: "Elevated operational risk"}
+        inclusive_max: false
+      
+      - id: litigation_critical
+        bands:
+          - {max: 25, tier_override: 4, action: "REFER", note: "Significant litigation exposure"}
+        inclusive_max: false
+      
+      - id: breach_history_critical
+        bands:
+          - {max: 35, tier_override: 4, action: "REFER", note: "Data breach history concerns"}
+        inclusive_max: false
+      
+      - id: cyber_security_critical
+        bands:
+          - {max: 35, tier_override: 4, action: "REFER", note: "Cyber security deficiencies"}
+        inclusive_max: false
+      
+      - id: vulnerability_critical
+        bands:
+          - {max: 25, tier_override: 4, action: "REFER", note: "Critical vulnerabilities detected"}
+        inclusive_max: false
+
+    # -------------------------------------------------------------------------
+    # PRICING PARAMETERS
+    # -------------------------------------------------------------------------
+    pricing:
+      limit_ilf:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.00}
+          - {limit: 2000000, factor: 1.70}
+          - {limit: 5000000, factor: 3.00}
+          - {limit: 10000000, factor: 4.50}
+          - {limit: 25000000, factor: 8.00}
+          - {limit: 50000000, factor: 12.00}
+          - {limit: 100000000, factor: 18.00}
+      
+      deductible_credits:
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
+        - {min_pct: 0.010, max_pct: 0.015, credit: 0.10}
+        - {min_pct: 0.015, max_pct: 0.020, credit: 0.15}
+        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+      
+      experience_modifiers:
+        clean_5yr: 0.90
+        clean_3yr: 0.95
+        minor_losses: 1.00
+        moderate_losses: 1.15
+        major_losses: 1.35
+        
+      taxes_fees_rate: 0.05
+
+    # -------------------------------------------------------------------------
+    # TEST PROFILES
+    # -------------------------------------------------------------------------
+    test_profiles:
+      excellent_regional:
+        description: "Well-managed regional bank with strong metrics"
+        expected_tier: [1, 2]
+        expected_score_range: [780, 1000]
+        institution_type: "REGIONAL_BANK"
+        regulatory_framework: "OCC"
+        asset_size_band: "MID"
+        publicly_traded: "PUBLIC"
+        signals:
+          network_authority:
+            correspondent_quality: 88
+            fhlb_membership: 100
+            clearing_relationship: 85
+            auditor_quality: 92
+            legal_counsel: 85
+            industry_association: 80
+            credit_rating: 82
+          regulatory_compliance:
+            examination_rating: 85
+            enforcement_action: 100
+            informal_action: 95
+            cra_rating: 90
+            bsa_aml: 88
+            fair_lending: 90
+            consumer_compliance: 85
+          financial_condition:
+            capital_ratio: 90
+            asset_quality: 85
+            liquidity: 88
+            earnings: 82
+            concentration: 78
+            interest_rate_risk: 80
+            growth_rate: 85
+          governance:
+            board_independence: 88
+            board_expertise: 85
+            executive_stability: 90
+            risk_committee: 85
+            audit_committee: 90
+            related_party: 95
+          operational_risk:
+            cfpb_complaint: 82
+            bbb_complaint: 85
+            litigation: 90
+            breach_history: 95
+            operational_incident: 88
+          cyber_security:
+            tls_score: 92
+            email_auth: 88
+            security_headers: 85
+            network_exposure: 90
+            vulnerability: 85
+            security_rating: 82
+          corporate_footprint:
+            investor_relations: 88
+            disclosure_quality: 85
+            security_page: 80
+            hiring_signals: 82
+            esg_reporting: 78
+            community_presence: 90
+          structured_data:
+            credit_rating_structured: 82
+            esg_rating: 78
+            peer_benchmark: 85
+
+      average_community:
+        description: "Typical community bank"
+        expected_tier: [2, 3]
+        expected_score_range: [550, 720]
+        institution_type: "COMMUNITY_BANK"
+        regulatory_framework: "FDIC"
+        asset_size_band: "COMMUNITY"
+        publicly_traded: "PRIVATE"
+        signals:
+          network_authority:
+            correspondent_quality: 70
+            fhlb_membership: 85
+            clearing_relationship: 60
+            auditor_quality: 65
+            legal_counsel: 60
+            industry_association: 70
+            credit_rating: 55
+          regulatory_compliance:
+            examination_rating: 72
+            enforcement_action: 90
+            informal_action: 85
+            cra_rating: 80
+            bsa_aml: 75
+            fair_lending: 80
+            consumer_compliance: 75
+          financial_condition:
+            capital_ratio: 78
+            asset_quality: 70
+            liquidity: 72
+            earnings: 68
+            concentration: 60
+            interest_rate_risk: 70
+            growth_rate: 75
+          governance:
+            board_independence: 60
+            board_expertise: 58
+            executive_stability: 75
+            risk_committee: 55
+            audit_committee: 65
+            related_party: 70
+          operational_risk:
+            cfpb_complaint: 72
+            bbb_complaint: 75
+            litigation: 85
+            breach_history: 90
+            operational_incident: 82
+          cyber_security:
+            tls_score: 75
+            email_auth: 68
+            security_headers: 62
+            network_exposure: 70
+            vulnerability: 72
+            security_rating: 65
+          corporate_footprint:
+            investor_relations: 50
+            disclosure_quality: 55
+            security_page: 45
+            hiring_signals: 55
+            esg_reporting: 40
+            community_presence: 80
+          structured_data:
+            credit_rating_structured: 55
+            esg_rating: 50
+            peer_benchmark: 65
+
+      distressed_bank:
+        description: "Bank with regulatory and financial concerns"
+        expected_tier: [4, 5]
+        expected_score_range: [200, 450]
+        institution_type: "COMMUNITY_BANK"
+        regulatory_framework: "FDIC"
+        asset_size_band: "SMALL"
+        publicly_traded: "PRIVATE"
+        signals:
+          network_authority:
+            correspondent_quality: 45
+            fhlb_membership: 50
+            clearing_relationship: 40
+            auditor_quality: 55
+            legal_counsel: 45
+            industry_association: 35
+            credit_rating: 30
+          regulatory_compliance:
+            examination_rating: 35
+            enforcement_action: 40
+            informal_action: 45
+            cra_rating: 50
+            bsa_aml: 42
+            fair_lending: 55
+            consumer_compliance: 48
+          financial_condition:
+            capital_ratio: 45
+            asset_quality: 35
+            liquidity: 42
+            earnings: 30
+            concentration: 35
+            interest_rate_risk: 40
+            growth_rate: 50
+          governance:
+            board_independence: 45
+            board_expertise: 40
+            executive_stability: 35
+            risk_committee: 30
+            audit_committee: 45
+            related_party: 50
+          operational_risk:
+            cfpb_complaint: 40
+            bbb_complaint: 45
+            litigation: 35
+            breach_history: 50
+            operational_incident: 55
+          cyber_security:
+            tls_score: 50
+            email_auth: 45
+            security_headers: 40
+            network_exposure: 45
+            vulnerability: 42
+            security_rating: 40
+          corporate_footprint:
+            investor_relations: 35
+            disclosure_quality: 40
+            security_page: 30
+            hiring_signals: 35
+            esg_reporting: 25
+            community_presence: 50
+          structured_data:
+            credit_rating_structured: 30
+            esg_rating: 35
+            peer_benchmark: 35
+
+      credit_union_strong:
+        description: "Well-run credit union with member focus"
+        expected_tier: [1, 2]
+        expected_score_range: [720, 900]
+        institution_type: "CREDIT_UNION"
+        regulatory_framework: "NCUA"
+        asset_size_band: "SMALL"
+        publicly_traded: "PRIVATE"
+        signals:
+          network_authority:
+            correspondent_quality: 75
+            fhlb_membership: 90
+            clearing_relationship: 70
+            auditor_quality: 72
+            legal_counsel: 65
+            industry_association: 88
+            credit_rating: 60
+          regulatory_compliance:
+            examination_rating: 88
+            enforcement_action: 100
+            informal_action: 98
+            cra_rating: 0  # N/A for CUs
+            bsa_aml: 85
+            fair_lending: 92
+            consumer_compliance: 90
+          financial_condition:
+            capital_ratio: 92
+            asset_quality: 88
+            liquidity: 85
+            earnings: 80
+            concentration: 82
+            interest_rate_risk: 78
+            growth_rate: 85
+          governance:
+            board_independence: 85
+            board_expertise: 70
+            executive_stability: 88
+            risk_committee: 75
+            audit_committee: 80
+            related_party: 95
+          operational_risk:
+            cfpb_complaint: 90
+            bbb_complaint: 92
+            litigation: 95
+            breach_history: 88
+            operational_incident: 90
+          cyber_security:
+            tls_score: 82
+            email_auth: 78
+            security_headers: 72
+            network_exposure: 85
+            vulnerability: 80
+            security_rating: 75
+          corporate_footprint:
+            investor_relations: 40
+            disclosure_quality: 60
+            security_page: 65
+            hiring_signals: 70
+            esg_reporting: 55
+            community_presence: 95
+          structured_data:
+            credit_rating_structured: 60
+            esg_rating: 70
+            peer_benchmark: 85
+
+      broker_dealer:
+        description: "Mid-size broker-dealer with typical profile"
+        expected_tier: [2, 3]
+        expected_score_range: [550, 720]
+        institution_type: "BROKER_DEALER"
+        regulatory_framework: "FINRA"
+        asset_size_band: "SMALL"
+        publicly_traded: "PUBLIC"
+        signals:
+          network_authority:
+            correspondent_quality: 75
+            fhlb_membership: 0
+            clearing_relationship: 85
+            auditor_quality: 82
+            legal_counsel: 78
+            industry_association: 72
+            credit_rating: 70
+          regulatory_compliance:
+            examination_rating: 75
+            enforcement_action: 82
+            informal_action: 80
+            cra_rating: 0
+            bsa_aml: 78
+            fair_lending: 0
+            consumer_compliance: 75
+          financial_condition:
+            capital_ratio: 80
+            asset_quality: 75
+            liquidity: 82
+            earnings: 72
+            concentration: 70
+            interest_rate_risk: 78
+            growth_rate: 70
+          governance:
+            board_independence: 75
+            board_expertise: 78
+            executive_stability: 72
+            risk_committee: 80
+            audit_committee: 82
+            related_party: 78
+          operational_risk:
+            cfpb_complaint: 70
+            bbb_complaint: 72
+            litigation: 65
+            breach_history: 78
+            operational_incident: 75
+          cyber_security:
+            tls_score: 85
+            email_auth: 80
+            security_headers: 75
+            network_exposure: 78
+            vulnerability: 75
+            security_rating: 72
+          corporate_footprint:
+            investor_relations: 78
+            disclosure_quality: 75
+            security_page: 72
+            hiring_signals: 70
+            esg_reporting: 60
+            community_presence: 50
+          structured_data:
+            credit_rating_structured: 70
+            esg_rating: 62
+            peer_benchmark: 70
+
+      fintech_startup:
+        description: "Growth-stage fintech with limited history"
+        expected_tier: [3, 4]
+        expected_score_range: [420, 600]
+        institution_type: "FINTECH"
+        regulatory_framework: "STATE"
+        asset_size_band: "COMMUNITY"
+        publicly_traded: "PRIVATE"
+        signal_coverage: 0.55
+        signals:
+          network_authority:
+            correspondent_quality: 60
+            auditor_quality: 70
+            legal_counsel: 75
+            industry_association: 55
+          regulatory_compliance:
+            enforcement_action: 100
+            bsa_aml: 72
+            consumer_compliance: 68
+          financial_condition:
+            capital_ratio: 85
+            liquidity: 70
+            earnings: 45
+            growth_rate: 35
+          governance:
+            board_expertise: 75
+            executive_stability: 55
+          operational_risk:
+            cfpb_complaint: 65
+            breach_history: 85
+          cyber_security:
+            tls_score: 92
+            email_auth: 88
+            security_headers: 85
+            network_exposure: 78
+            vulnerability: 82
+            security_rating: 80
+          corporate_footprint:
+            security_page: 85
+            hiring_signals: 90
+          structured_data:
+            peer_benchmark: 55
