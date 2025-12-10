@@ -1,0 +1,1144 @@
+# =============================================================================
+# DSI Model Configuration - Cyber Liability
+# =============================================================================
+#
+# This file defines the complete configuration for the cyber coverage type.
+# It is the single source of truth for:
+#   - Model structure and parameters
+#   - Signal definitions and weights
+#   - Pricing factors and thresholds
+#   - Test profiles for actuarial validation
+#
+# Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
+#
+# Version: 2.0.0
+# Last Updated: 2025-12
+# =============================================================================
+
+cyber:
+  # ---------------------------------------------------------------------------
+  # IDENTIFIER: cyber_general
+  # ---------------------------------------------------------------------------
+  # Each identifier represents a complete model configuration.
+  # Multiple identifiers can exist per coverage type (e.g., cyber_us, cyber_uk)
+  
+  cyber_general:
+    metadata:
+      name: "DSI Cyber Technical Pricing Model"
+      description: "Cyber liability model based on externally observable technical signals"
+      version: "2.0.0"
+      coverage_types:
+        - "cyber_liability"
+        - "network_security"
+        - "privacy_liability"
+        - "cyber_extortion"
+      applicable_markets: ["us", "uk", "eu", "apac"]
+      min_premium: 5000
+      default_currency: "USD"
+
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    # Yes/No questions that cannot be externally observed
+    # These are optional but can trigger conditions if answered
+    
+    direct_optional_queries:
+      - id: "mfa_enabled"
+        question: "Is multi-factor authentication enabled for all remote access?"
+        direct_condition: mfa_false
+        
+      - id: "security_training"
+        question: "Do all employees complete annual cyber security training?"
+        direct_condition: training_false
+        
+      - id: "phi_handler"
+        question: "Do you process Protected Health Information (PHI)?"
+        direct_condition: phi_true
+        
+      - id: "pci_scope"
+        question: "Do you store payment card data (PCI scope)?"
+        direct_condition: pci_true
+        
+      - id: "incident_response_plan"
+        question: "Do you have a documented incident response plan?"
+        direct_condition: irp_false
+        
+      - id: "edr_deployed"
+        question: "Is endpoint detection and response (EDR) deployed on all endpoints?"
+        direct_condition: edr_false
+
+      - id: "immutable_backups"
+        question: "Are backups maintained offline or immutable?"
+        direct_condition: backup_false
+
+      - id: "recent_incident"
+        question: "Have you experienced a material cyber incident in the past 3 years?"
+        direct_condition: recent_incident_true
+
+    # -------------------------------------------------------------------------
+    # CATEGORICAL FEATURES
+    # -------------------------------------------------------------------------
+    # These define classification values and their pricing impact
+    # inference_method specifies how to automatically determine the value
+    
+    categorical_features:
+      industry_classification:
+        description: "Industry classification derived from public records"
+        inference_method:
+          primary: "sic_naics_lookup"        # Primary method: SIC/NAICS code lookup
+          fallback: "website_nlp"            # Fallback: NLP analysis of website content
+          sources:
+            - {type: "api", provider: "dnb", endpoint: "company/sic"}
+            - {type: "api", provider: "opencorporates", endpoint: "companies/search"}
+            - {type: "scrape", target: "company_website", analyzer: "industry_classifier"}
+          confidence_threshold: 0.7          # Minimum confidence to accept classification
+          default_on_failure: "OTHER"        # Default if inference fails
+        values:
+          - {id: "TECHNOLOGY", label: "Technology", modifier: 1.15, naics_prefixes: ["51", "54"], sic_ranges: [[7370, 7379]]}
+          - {id: "FINANCIAL_SERVICES", label: "Financial Services", modifier: 1.40, naics_prefixes: ["52"], sic_ranges: [[6000, 6799]]}
+          - {id: "HEALTHCARE", label: "Healthcare", modifier: 1.50, naics_prefixes: ["62"], sic_ranges: [[8000, 8099]]}
+          - {id: "RETAIL", label: "Retail", modifier: 1.25, naics_prefixes: ["44", "45"], sic_ranges: [[5200, 5999]]}
+          - {id: "MANUFACTURING", label: "Manufacturing", modifier: 0.95, naics_prefixes: ["31", "32", "33"], sic_ranges: [[2000, 3999]]}
+          - {id: "PROFESSIONAL_SERVICES", label: "Professional Services", modifier: 1.10, naics_prefixes: ["54"], sic_ranges: [[8100, 8999]]}
+          - {id: "EDUCATION", label: "Education", modifier: 1.05, naics_prefixes: ["61"], sic_ranges: [[8200, 8299]]}
+          - {id: "GOVERNMENT", label: "Government", modifier: 0.90, naics_prefixes: ["92"], sic_ranges: [[9100, 9999]]}
+          - {id: "ENERGY", label: "Energy & Utilities", modifier: 1.20, naics_prefixes: ["21", "22"], sic_ranges: [[1300, 1499], [4900, 4999]]}
+          - {id: "OTHER", label: "Other", modifier: 1.00, naics_prefixes: [], sic_ranges: []}
+  
+      size_band:
+        description: "Company size classification"
+        inference_method:
+          primary: "multi_signal_estimate"   # Combine multiple signals for estimate
+          signals:
+            - {source: "linkedin_employees", weight: 0.4}
+            - {source: "job_posting_volume", weight: 0.2}
+            - {source: "office_locations_count", weight: 0.15}
+            - {source: "revenue_estimate", weight: 0.25}
+          fallback: "website_analysis"
+          sources:
+            - {type: "api", provider: "linkedin", endpoint: "company/employees"}
+            - {type: "api", provider: "dnb", endpoint: "company/financials"}
+            - {type: "scrape", target: "job_boards", analyzer: "posting_counter"}
+            - {type: "api", provider: "pitchbook", endpoint: "company/size"}
+          confidence_threshold: 0.6
+          default_on_failure: "MEDIUM"
+        values:
+          - {id: "MICRO", label: "Micro", modifier: 0.40, employee_range: [1, 50], revenue_range: [0, 5000000]}
+          - {id: "SMALL", label: "Small", modifier: 0.60, employee_range: [51, 250], revenue_range: [5000001, 25000000]}
+          - {id: "MEDIUM", label: "Medium", modifier: 1.00, employee_range: [251, 1000], revenue_range: [25000001, 100000000]}
+          - {id: "LARGE", label: "Large", modifier: 2.00, employee_range: [1001, 5000], revenue_range: [100000001, 500000000]}
+          - {id: "ENTERPRISE", label: "Enterprise", modifier: 4.00, employee_range: [5001, 999999999], revenue_range: [500000001, 999999999999]}
+
+      geography:
+        description: "Primary operational geography"
+        inference_method:
+          primary: "headquarters_lookup"
+          fallback: "domain_analysis"
+          sources:
+            - {type: "api", provider: "dnb", endpoint: "company/location"}
+            - {type: "whois", target: "primary_domain"}
+            - {type: "scrape", target: "contact_page", analyzer: "address_extractor"}
+          confidence_threshold: 0.8
+          default_on_failure: "US"
+        values:
+          - {id: "US", label: "United States", modifier: 1.00, country_codes: ["US"]}
+          - {id: "UK", label: "United Kingdom", modifier: 1.05, country_codes: ["GB"]}
+          - {id: "EU", label: "European Union", modifier: 1.10, country_codes: ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "IE"]}
+          - {id: "APAC", label: "Asia Pacific", modifier: 1.15, country_codes: ["AU", "NZ", "SG", "JP", "HK"]}
+          - {id: "OTHER", label: "Other", modifier: 1.25, country_codes: []}
+
+    # -------------------------------------------------------------------------
+    # SIGNAL GROUPS (Categories with Weights)
+    # -------------------------------------------------------------------------
+    # Each group contributes to the composite score
+    # Weights must sum to 1.0
+    
+    signal_groups:
+      - id: "network_authority"
+        name: "Network Authority"
+        description: "Industry relationships, partnerships, and counterparty quality"
+        weight: 0.15
+        test_scores:
+          excellent: 90
+          average: 70
+          poor: 40
+        critical: false
+        score_condition: null
+        
+      - id: "technical_infrastructure"
+        name: "Technical Infrastructure"
+        description: "Observable technical security implementation"
+        weight: 0.35
+        test_scores:
+          excellent: 92
+          average: 68
+          poor: 35
+        critical: true
+        score_condition: technical_infrastructure_critical
+        
+      - id: "corporate_footprint"
+        name: "Corporate Footprint"
+        description: "Signals from company's digital presence and security posture"
+        weight: 0.15
+        test_scores:
+          excellent: 88
+          average: 65
+          poor: 38
+        critical: false
+        score_condition: null
+        
+      - id: "public_record"
+        name: "Public Record"
+        description: "Breach history, regulatory actions, and public disclosures"
+        weight: 0.25
+        test_scores:
+          excellent: 95
+          average: 72
+          poor: 30
+        critical: true
+        score_condition: public_record_critical
+        
+      - id: "structured_data"
+        name: "Structured Data"
+        description: "Third-party security ratings and scores"
+        weight: 0.10
+        test_scores:
+          excellent: 88
+          average: 68
+          poor: 42
+        critical: false
+        score_condition: null
+
+    # -------------------------------------------------------------------------
+    # SIGNAL FEATURES (Individual Signals)
+    # -------------------------------------------------------------------------
+    # TTL Categories:
+    #   - real_time: < 1 hour (active threats, live scans)
+    #   - dynamic: 1-24 hours (configuration changes, news)
+    #   - semi_static: 1-30 days (ratings, certifications)
+    #   - static: > 30 days (company registration)
+    
+    signal_features:
+      network_authority:
+        - id: "customer_quality"
+          name: "Customer Quality"
+          description: "Customer quality inferred from case studies, logos, testimonials"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 604800  # 7 days
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/customers", "/case-studies", "/testimonials"]}
+            - {type: "api", provider: "clearbit", endpoint: "company/customers"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "partner_quality"
+          name: "Partner Network Quality"
+          description: "Technology partners and alliance quality"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/partners", "/integrations"]}
+            - {type: "api", provider: "crunchbase", endpoint: "company/partnerships"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "security_vendor"
+          name: "Security Vendor Relationships"
+          description: "Relationships with tier-1 security vendors (CrowdStrike, Palo Alto, etc.)"
+          weight: 0.25
+          ttl: "semi_static"
+          ttl_seconds: 2592000  # 30 days
+          sources:
+            - {type: "dns", analyzer: "security_vendor_detector"}
+            - {type: "scrape", target: "company_website", pages: ["/security", "/trust"]}
+            - {type: "certificate", analyzer: "issuer_analysis"}
+          score_range: [0, 100]
+          critical: true
+          score_condition: security_vendor_poor
+          
+        - id: "industry_body"
+          name: "Industry Body Membership"
+          description: "Membership in ISACs, trade associations, security consortiums"
+          weight: 0.15
+          ttl: "static"
+          ttl_seconds: 7776000  # 90 days
+          sources:
+            - {type: "api", provider: "isac_registries", endpoint: "members/search"}
+            - {type: "scrape", target: "company_website", pages: ["/about", "/compliance"]}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "certification_authority"
+          name: "Certification Authority"
+          description: "Quality of certification auditors (Big 4, recognized bodies)"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/security", "/compliance", "/trust"]}
+            - {type: "api", provider: "soc2_registry", endpoint: "reports/search"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "financial_relationship"
+          name: "Financial Relationship Quality"
+          description: "Banking and financial relationship indicators"
+          weight: 0.05
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "api", provider: "dnb", endpoint: "company/banking"}
+            - {type: "filing", source: "sec_edgar", document_types: ["10-K", "10-Q"]}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "network_centrality"
+          name: "Peer Network Centrality"
+          description: "Position in industry relationship graph"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "graph", provider: "internal", analyzer: "centrality_calculator"}
+            - {type: "api", provider: "crunchbase", endpoint: "company/connections"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "second_degree"
+          name: "Second-Degree Relationship Quality"
+          description: "Quality of partners' partners (supply chain depth)"
+          weight: 0.05
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "graph", provider: "internal", analyzer: "second_degree_scorer"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+  
+      technical_infrastructure:
+        - id: "tls_score"
+          name: "TLS/SSL Configuration"
+          description: "TLS configuration quality (SSL Labs methodology)"
+          weight: 0.12
+          ttl: "dynamic"
+          ttl_seconds: 86400  # 24 hours
+          sources:
+            - {type: "scan", provider: "ssllabs", endpoint: "analyze"}
+            - {type: "scan", provider: "internal", analyzer: "tls_scanner"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "security_headers"
+          name: "Security Headers"
+          description: "HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)"
+          weight: 0.10
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scan", provider: "securityheaders.com", endpoint: "scan"}
+            - {type: "scan", provider: "internal", analyzer: "header_scanner"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "email_auth"
+          name: "Email Authentication"
+          description: "Email security (SPF, DMARC, DKIM configuration)"
+          weight: 0.12
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "dns", records: ["TXT", "MX"], analyzer: "email_auth_scorer"}
+            - {type: "api", provider: "dmarcian", endpoint: "domain/check"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "dnssec"
+          name: "DNSSEC Implementation"
+          description: "DNS Security Extensions implementation"
+          weight: 0.05
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "dns", analyzer: "dnssec_validator"}
+            - {type: "api", provider: "dnsviz", endpoint: "analyze"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "exposure"
+          name: "Network Exposure"
+          description: "Exposed services and open ports (Shodan/Censys analysis)"
+          weight: 0.18
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "shodan", endpoint: "host/search"}
+            - {type: "api", provider: "censys", endpoint: "hosts/search"}
+          score_range: [0, 100]
+          critical: true
+          score_condition: exposure_critical
+
+        - id: "software_currency"
+          name: "Software Currency"
+          description: "Software version freshness (fingerprinting analysis)"
+          weight: 0.10
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scan", provider: "internal", analyzer: "version_fingerprinter"}
+            - {type: "api", provider: "wappalyzer", endpoint: "lookup"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "cve_exposure"
+          name: "CVE Exposure"
+          description: "Known vulnerabilities in detected software"
+          weight: 0.18
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "nvd", endpoint: "cves/search"}
+            - {type: "api", provider: "vulndb", endpoint: "vulnerabilities/by_product"}
+            - {type: "correlation", analyzer: "version_to_cve_mapper"}
+          score_range: [0, 100]
+          critical: true
+          score_condition: cve_exposure_critical
+
+        - id: "cloud_infrastructure"
+          name: "Cloud Infrastructure Quality"
+          description: "Cloud provider quality and configuration"
+          weight: 0.05
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "dns", analyzer: "cloud_provider_detector"}
+            - {type: "ip", analyzer: "asn_lookup"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "waf_presence"
+          name: "WAF Presence"
+          description: "Web Application Firewall detection"
+          weight: 0.05
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scan", provider: "internal", analyzer: "waf_detector"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "cdn_usage"
+          name: "CDN Usage"
+          description: "Content Delivery Network usage (DDoS protection indicator)"
+          weight: 0.05
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "dns", analyzer: "cdn_detector"}
+            - {type: "header", analyzer: "cdn_header_checker"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+  
+      corporate_footprint:
+        - id: "security_page"
+          name: "Security Page Presence"
+          description: "Dedicated security/trust page presence and quality"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/security", "/trust", "/trust-center"]}
+            - {type: "nlp", analyzer: "security_content_scorer"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "privacy_policy"
+          name: "Privacy Policy Quality"
+          description: "Privacy policy comprehensiveness (NLP analysis)"
+          weight: 0.10
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/privacy", "/privacy-policy"]}
+            - {type: "nlp", analyzer: "privacy_policy_scorer"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "security_txt"
+          name: "Security.txt Presence"
+          description: "RFC 9116 security.txt file presence and completeness"
+          weight: 0.08
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "http", target: "/.well-known/security.txt"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "bug_bounty"
+          name: "Bug Bounty Program"
+          description: "Public bug bounty program presence"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "hackerone", endpoint: "programs/search"}
+            - {type: "api", provider: "bugcrowd", endpoint: "programs/search"}
+            - {type: "scrape", target: "company_website", pages: ["/security", "/bug-bounty"]}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "security_hiring"
+          name: "Security Hiring Activity"
+          description: "Security-related job postings (CISO, security engineers)"
+          weight: 0.12
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "linkedin", endpoint: "jobs/search"}
+            - {type: "scrape", target: "job_boards", sites: ["indeed", "glassdoor"]}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "technical_content"
+          name: "Technical Blog Quality"
+          description: "Security-focused technical content presence"
+          weight: 0.08
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/blog", "/engineering"]}
+            - {type: "nlp", analyzer: "technical_content_scorer"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "developer_resources"
+          name: "Developer Resources"
+          description: "API documentation and developer portal presence"
+          weight: 0.07
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/developers", "/api", "/docs"]}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "security_leadership"
+          name: "Security Leadership Visibility"
+          description: "CISO/security leadership public presence"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "linkedin", endpoint: "people/search", filters: {title: ["CISO", "Chief Information Security", "VP Security"]}}
+            - {type: "scrape", target: "company_website", pages: ["/about", "/team", "/leadership"]}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+        - id: "compliance_badges"
+          name: "Compliance Certifications"
+          description: "Displayed compliance certifications (SOC 2, ISO 27001, etc.)"
+          weight: 0.10
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "scrape", target: "company_website", pages: ["/security", "/compliance", "/trust"]}
+            - {type: "image", analyzer: "certification_badge_detector"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+  
+      public_record:
+        - id: "breach_history"
+          name: "Breach History"
+          description: "Historical data breaches (HHS, state AG, public disclosures)"
+          weight: 0.35
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "hhs_breach_portal", endpoint: "breaches/search"}
+            - {type: "api", provider: "privacyrights", endpoint: "breaches/search"}
+            - {type: "news", provider: "gdelt", query: "data breach {company}"}
+            - {type: "api", provider: "haveibeenpwned", endpoint: "breaches/domain"}
+          score_range: [0, 100]
+          critical: true
+          score_condition: breach_history_critical
+          
+        - id: "regulatory_action"
+          name: "Regulatory Actions"
+          description: "FTC, state AG, GDPR enforcement actions"
+          weight: 0.20
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "ftc", endpoint: "cases/search"}
+            - {type: "api", provider: "gdpr_tracker", endpoint: "fines/search"}
+            - {type: "scrape", target: "state_ag_sites", analyzer: "enforcement_finder"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "litigation_history"
+          name: "Litigation History"
+          description: "Data breach and privacy-related lawsuits"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "api", provider: "pacer", endpoint: "cases/search"}
+            - {type: "api", provider: "courtlistener", endpoint: "search"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "credential_exposure"
+          name: "Credential Exposure"
+          description: "Corporate domain credential exposure (HIBP)"
+          weight: 0.15
+          ttl: "semi_static"
+          ttl_seconds: 2592000
+          sources:
+            - {type: "api", provider: "haveibeenpwned", endpoint: "breachedaccount/domain"}
+            - {type: "api", provider: "spycloud", endpoint: "breach/domain"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "dark_web"
+          name: "Dark Web Exposure"
+          description: "Leaked data and credentials for sale"
+          weight: 0.15
+          ttl: "dynamic"
+          ttl_seconds: 86400
+          sources:
+            - {type: "api", provider: "recorded_future", endpoint: "darkweb/search"}
+            - {type: "api", provider: "flashpoint", endpoint: "exposure/search"}
+          score_range: [0, 100]
+          critical: true
+          score_condition: dark_web_critical
+  
+      structured_data:
+        - id: "security_rating"
+          name: "Security Rating"
+          description: "Third-party security rating (BitSight, SecurityScorecard)"
+          weight: 0.50
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "bitsight", endpoint: "ratings/company"}
+            - {type: "api", provider: "securityscorecard", endpoint: "companies/score"}
+            - {type: "api", provider: "riskrecon", endpoint: "ratings"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "esg_cyber"
+          name: "ESG Cyber Component"
+          description: "Cyber/privacy component of ESG ratings"
+          weight: 0.25
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "msci", endpoint: "esg/cyber"}
+            - {type: "api", provider: "sustainalytics", endpoint: "cyber_risk"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+          
+        - id: "credit_rating"
+          name: "Credit Rating Proxy"
+          description: "Credit rating as proxy for organizational quality"
+          weight: 0.25
+          ttl: "semi_static"
+          ttl_seconds: 604800
+          sources:
+            - {type: "api", provider: "dnb", endpoint: "company/rating"}
+            - {type: "api", provider: "experian", endpoint: "business/score"}
+          score_range: [0, 100]
+          critical: false
+          score_condition: null
+
+    # -------------------------------------------------------------------------
+    # TIER THRESHOLDS
+    # -------------------------------------------------------------------------
+    # Score ranges for each tier (scores are 0-1000)
+    # base_premium is the starting premium for that tier before modifiers
+    
+    tier_thresholds:
+      tier_1:
+        id: 1
+        label: "PREFERRED"
+        min_score: 800
+        max_score: 1000
+        description: "Excellent cyber posture - automatic approval, preferred pricing"
+        auto_approve: true
+        auto_decline: false
+        base_premium: 8000
+        
+      tier_2:
+        id: 2
+        label: "STANDARD_PLUS"
+        min_score: 650
+        max_score: 799
+        description: "Good cyber posture - automatic approval, standard pricing"
+        auto_approve: true
+        auto_decline: false
+        base_premium: 12000
+        
+      tier_3:
+        id: 3
+        label: "STANDARD"
+        min_score: 500
+        max_score: 649
+        description: "Average cyber posture - may require referral"
+        auto_approve: false
+        auto_decline: false
+        base_premium: 18000
+        
+      tier_4:
+        id: 4
+        label: "SUBSTANDARD"
+        min_score: 350
+        max_score: 499
+        description: "Below average - requires underwriter review"
+        auto_approve: false
+        auto_decline: false
+        base_premium: 30000
+        
+      tier_5:
+        id: 5
+        label: "DECLINE"
+        min_score: 0
+        max_score: 349
+        description: "Unacceptable cyber risk - decline"
+        auto_approve: false
+        auto_decline: true
+        base_premium: 50000
+
+    # -------------------------------------------------------------------------
+    # CONDITION DEFINITIONS
+    # -------------------------------------------------------------------------
+    # Conditions that trigger automatic actions
+    
+    direct_conditions:
+      - id: mfa_false
+        description: "No MFA for remote access"
+        bands:
+          - {return: false, tier_override: null, action: "FLAG", note: "MFA not enabled - increased ransomware risk"}
+      
+      - id: training_false
+        description: "No security training program"
+        bands:
+          - {return: false, tier_override: null, action: "FLAG", note: "No security training - increased phishing risk"}
+      
+      - id: phi_true
+        description: "Handles PHI data"
+        bands:
+          - {return: true, tier_override: null, action: "MODIFIER", modifier: 1.25, note: "PHI handler - HIPAA exposure"}
+      
+      - id: pci_true
+        description: "PCI scope"
+        bands:
+          - {return: true, tier_override: null, action: "MODIFIER", modifier: 1.15, note: "PCI scope - card data exposure"}
+      
+      - id: irp_false
+        description: "No incident response plan"
+        bands:
+          - {return: false, tier_override: null, action: "FLAG", note: "No IR plan - extended breach impact likely"}
+      
+      - id: edr_false
+        description: "No EDR deployed"
+        bands:
+          - {return: false, tier_override: null, action: "FLAG", note: "No EDR - reduced threat detection"}
+      
+      - id: backup_false
+        description: "No immutable backups"
+        bands:
+          - {return: false, tier_override: null, action: "FLAG", note: "No immutable backups - ransomware recovery risk"}
+      
+      - id: recent_incident_true
+        description: "Recent cyber incident"
+        bands:
+          - {return: true, tier_override: 4, action: "REFER", note: "Recent incident - requires manual review"}
+  
+    score_conditions:
+      - id: technical_infrastructure_critical
+        description: "Critical technical infrastructure score"
+        bands:
+          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical technical deficiencies"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Significant technical concerns"}
+        inclusive_max: false
+      
+      - id: public_record_critical
+        description: "Critical public record score"
+        bands:
+          - {max: 30, tier_override: 5, action: "DECLINE", note: "Severe breach/regulatory history"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Material breach history"}
+        inclusive_max: false
+      
+      - id: cve_exposure_critical
+        description: "Critical CVE exposure"
+        bands:
+          - {max: 25, tier_override: 5, action: "DECLINE", note: "Critical unpatched vulnerabilities"}
+          - {max: 40, tier_override: 4, action: "REFER", note: "Significant vulnerability exposure"}
+        inclusive_max: false
+      
+      - id: exposure_critical
+        description: "Critical network exposure"
+        bands:
+          - {max: 30, tier_override: 5, action: "DECLINE", note: "Dangerous network exposure"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Elevated network exposure"}
+        inclusive_max: false
+      
+      - id: breach_history_critical
+        description: "Critical breach history"
+        bands:
+          - {max: 35, tier_override: 5, action: "DECLINE", note: "Severe or recent breach history"}
+          - {max: 50, tier_override: 4, action: "REFER", note: "Material breach history"}
+        inclusive_max: false
+      
+      - id: dark_web_critical
+        description: "Critical dark web exposure"
+        bands:
+          - {max: 30, tier_override: 5, action: "DECLINE", note: "Active dark web exposure"}
+          - {max: 45, tier_override: 4, action: "REFER", note: "Dark web data presence"}
+        inclusive_max: false
+      
+      - id: security_vendor_poor
+        description: "No security vendor relationships"
+        bands:
+          - {max: 25, tier_override: null, action: "FLAG", note: "No tier-1 security vendors detected"}
+        inclusive_max: false
+
+    # -------------------------------------------------------------------------
+    # PRICING PARAMETERS
+    # -------------------------------------------------------------------------
+    
+    pricing:
+      # Increased Limit Factors (ILF)
+      ilf_curve:
+        base_limit: 1000000  # $1M base
+        factors:
+          - {limit: 1000000, factor: 1.00}
+          - {limit: 2000000, factor: 1.70}
+          - {limit: 5000000, factor: 3.20}
+          - {limit: 10000000, factor: 5.00}
+          - {limit: 25000000, factor: 9.00}
+          - {limit: 50000000, factor: 14.00}
+          - {limit: 100000000, factor: 22.00}
+      
+      # Deductible credits (as percentage of limit)
+      deductible_credits:
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}   # 0.1-0.5% of limit
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}   # 0.5-1% of limit
+        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}   # 1-2% of limit
+        - {min_pct: 0.020, max_pct: null, credit: 0.20}    # >2% of limit
+      
+      # Experience modifiers
+      experience_modifiers:
+        clean_5yr: 0.90
+        clean_3yr: 0.95
+        minor_losses: 1.00
+        moderate_losses: 1.15
+        major_losses: 1.35
+        
+      taxes_fees_rate: 0.05
+
+    # -------------------------------------------------------------------------
+    # TEST PROFILES
+    # -------------------------------------------------------------------------
+    # Predefined signal sets for actuarial validity testing
+    
+    test_profiles:
+      excellent_security:
+        description: "Enterprise with mature security program"
+        expected_tier: [1, 2]
+        expected_score_range: [750, 1000]
+        industry_classification: "TECHNOLOGY"
+        size_band: "LARGE"
+        geography: "US"
+        signals:
+          network_authority:
+            customer_quality: 88
+            partner_quality: 85
+            security_vendor: 92
+            industry_body: 85
+            certification_authority: 90
+            financial_relationship: 82
+            network_centrality: 78
+            second_degree: 75
+          technical_infrastructure:
+            tls_score: 95
+            security_headers: 90
+            email_auth: 92
+            dnssec: 85
+            exposure: 95
+            software_currency: 88
+            cve_exposure: 92
+            cloud_infrastructure: 90
+            waf_presence: 95
+            cdn_usage: 90
+          corporate_footprint:
+            security_page: 95
+            privacy_policy: 88
+            security_txt: 90
+            bug_bounty: 85
+            security_hiring: 80
+            technical_content: 78
+            developer_resources: 85
+            security_leadership: 90
+            compliance_badges: 92
+          public_record:
+            breach_history: 100
+            regulatory_action: 98
+            litigation_history: 95
+            credential_exposure: 88
+            dark_web: 92
+          structured_data:
+            security_rating: 88
+            esg_cyber: 82
+            credit_rating: 85
+
+      average_security:
+        description: "Mid-market company with basic security controls"
+        expected_tier: [2, 3]
+        expected_score_range: [500, 749]
+        industry_classification: "PROFESSIONAL_SERVICES"
+        size_band: "MEDIUM"
+        geography: "US"
+        signals:
+          network_authority:
+            customer_quality: 65
+            partner_quality: 60
+            security_vendor: 55
+            industry_body: 45
+            certification_authority: 50
+            financial_relationship: 68
+            network_centrality: 55
+            second_degree: 50
+          technical_infrastructure:
+            tls_score: 75
+            security_headers: 65
+            email_auth: 70
+            dnssec: 40
+            exposure: 72
+            software_currency: 65
+            cve_exposure: 68
+            cloud_infrastructure: 75
+            waf_presence: 60
+            cdn_usage: 55
+          corporate_footprint:
+            security_page: 55
+            privacy_policy: 70
+            security_txt: 30
+            bug_bounty: 20
+            security_hiring: 45
+            technical_content: 40
+            developer_resources: 50
+            security_leadership: 60
+            compliance_badges: 55
+          public_record:
+            breach_history: 80
+            regulatory_action: 85
+            litigation_history: 82
+            credential_exposure: 65
+            dark_web: 75
+          structured_data:
+            security_rating: 68
+            esg_cyber: 62
+            credit_rating: 70
+
+      poor_security:
+        description: "Company with significant security gaps"
+        expected_tier: [4, 5]
+        expected_score_range: [0, 499]
+        industry_classification: "RETAIL"
+        size_band: "SMALL"
+        geography: "US"
+        signals:
+          network_authority:
+            customer_quality: 40
+            partner_quality: 35
+            security_vendor: 25
+            industry_body: 15
+            certification_authority: 20
+            financial_relationship: 45
+            network_centrality: 30
+            second_degree: 25
+          technical_infrastructure:
+            tls_score: 45
+            security_headers: 30
+            email_auth: 35
+            dnssec: 10
+            exposure: 38
+            software_currency: 35
+            cve_exposure: 32
+            cloud_infrastructure: 50
+            waf_presence: 20
+            cdn_usage: 25
+          corporate_footprint:
+            security_page: 20
+            privacy_policy: 45
+            security_txt: 0
+            bug_bounty: 0
+            security_hiring: 15
+            technical_content: 10
+            developer_resources: 20
+            security_leadership: 25
+            compliance_badges: 15
+          public_record:
+            breach_history: 45
+            regulatory_action: 55
+            litigation_history: 50
+            credential_exposure: 35
+            dark_web: 40
+          structured_data:
+            security_rating: 42
+            esg_cyber: 38
+            credit_rating: 48
+
+      minimal_signals:
+        description: "New company with limited observable signals"
+        expected_tier: [3, 4]
+        expected_score_range: [400, 600]
+        industry_classification: "TECHNOLOGY"
+        size_band: "MICRO"
+        geography: "US"
+        signal_coverage: 0.35
+        signals:
+          technical_infrastructure:
+            tls_score: 70
+            security_headers: 60
+            email_auth: 65
+            exposure: 70
+          corporate_footprint:
+            privacy_policy: 60
+          public_record:
+            breach_history: 100  # No history = good
+            credential_exposure: 75
+
+      healthcare_high_risk:
+        description: "Healthcare entity with PHI exposure"
+        expected_tier: [2, 3]
+        expected_score_range: [550, 750]
+        industry_classification: "HEALTHCARE"
+        size_band: "MEDIUM"
+        geography: "US"
+        direct_queries:
+          phi_handler: true
+        signals:
+          network_authority:
+            customer_quality: 70
+            partner_quality: 65
+            security_vendor: 72
+            industry_body: 75
+            certification_authority: 78
+            financial_relationship: 70
+            network_centrality: 55
+            second_degree: 50
+          technical_infrastructure:
+            tls_score: 80
+            security_headers: 72
+            email_auth: 78
+            dnssec: 55
+            exposure: 75
+            software_currency: 68
+            cve_exposure: 72
+            cloud_infrastructure: 78
+            waf_presence: 70
+            cdn_usage: 65
+          corporate_footprint:
+            security_page: 75
+            privacy_policy: 85
+            security_txt: 50
+            bug_bounty: 30
+            security_hiring: 60
+            technical_content: 45
+            developer_resources: 55
+            security_leadership: 72
+            compliance_badges: 80
+          public_record:
+            breach_history: 72
+            regulatory_action: 78
+            litigation_history: 75
+            credential_exposure: 68
+            dark_web: 72
+          structured_data:
+            security_rating: 72
+            esg_cyber: 68
+            credit_rating: 75
+
+      recent_breach:
+        description: "Company with recent material breach"
+        expected_tier: [4, 5]
+        expected_score_range: [250, 450]
+        industry_classification: "RETAIL"
+        size_band: "LARGE"
+        geography: "US"
+        direct_queries:
+          recent_incident: true
+        signals:
+          network_authority:
+            customer_quality: 60
+            partner_quality: 55
+            security_vendor: 65
+            industry_body: 50
+            certification_authority: 55
+            financial_relationship: 58
+            network_centrality: 62
+            second_degree: 55
+          technical_infrastructure:
+            tls_score: 72
+            security_headers: 65
+            email_auth: 70
+            dnssec: 45
+            exposure: 55
+            software_currency: 58
+            cve_exposure: 52
+            cloud_infrastructure: 70
+            waf_presence: 60
+            cdn_usage: 55
+          corporate_footprint:
+            security_page: 70
+            privacy_policy: 72
+            security_txt: 40
+            bug_bounty: 35
+            security_hiring: 75  # Hiring post-breach
+            technical_content: 45
+            developer_resources: 55
+            security_leadership: 78  # New CISO likely
+            compliance_badges: 60
+          public_record:
+            breach_history: 25   # Recent breach tanks this
+            regulatory_action: 45
+            litigation_history: 40
+            credential_exposure: 35
+            dark_web: 30
+          structured_data:
+            security_rating: 48
+            esg_cyber: 42
+            credit_rating: 65
