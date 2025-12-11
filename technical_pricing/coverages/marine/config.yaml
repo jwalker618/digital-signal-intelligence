@@ -48,26 +48,45 @@ marine:
       min_premium: 50000
       default_currency: "USD"
 
-    direct_optional_queries:
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:
       - id: "fleet_size"
         question: "Total number of vessels in owned/operated fleet?"
-        direct_condition: fleet_size_info_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "INFO"
+            note: "Fleet size recorded"
       - id: "psc_detentions"
         question: "Any vessels detained by port state control in past 36 months?"
-        direct_condition: psc_detentions_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "PSC detentions in past 36 months"
       - id: "total_losses"
         question: "Any total losses or major casualties in past 5 years?"
-        direct_condition: total_losses_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Total losses in past 5 years"
       - id: "third_party_manager"
         question: "Is the fleet managed by a third-party technical manager?"
-        direct_condition: third_party_manager_info_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "INFO"
+            note: "Third-party technical management"
       - id: "sanctioned_trade"
         question: "Any vessels currently trading to sanctioned regions?"
-        direct_condition: sanctioned_trade_referral
+        bands:
+          - return: true
+            override: 5
+            action: "DECLINE"
+            note: "Trading to sanctioned regions - coverage not available"
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -705,26 +724,6 @@ marine:
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: fleet_size_info_referral
-        bands:
-          - {return: true, tier_override: null, action: "INFO", note: "Fleet size recorded"}
-      
-      - id: psc_detentions_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "PSC detentions in past 36 months"}
-      
-      - id: total_losses_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Total losses in past 5 years"}
-      
-      - id: third_party_manager_info_referral
-        bands:
-          - {return: true, tier_override: null, action: "INFO", note: "Third-party technical management"}
-      
-      - id: sanctioned_trade_referral
-        bands:
-          - {return: true, tier_override: 5, action: "DECLINE", note: "Trading to sanctioned regions - coverage not available"}
   
     score_conditions:
       - id: operational_telemetry_critical
