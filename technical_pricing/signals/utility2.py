@@ -1,5 +1,5 @@
 """
-categorisers.py - DSI Technical Pricing Categorization Framework
+Signal Categorization Framework
 
 11 categorizer types:
 1. ThresholdBucketCategorizer - Numeric values to categories
@@ -859,6 +859,7 @@ if __name__ == "__main__":
     print("CATEGORISERS MODULE - DEMONSTRATION")
     print("=" * 60)
 
+    ### DELETE - THIS IS A CATEGORISER
     # 1. ThresholdBucketCategorizer
     print("\n1. ThresholdBucketCategorizer (Marine Fleet Size)")
     cat = get_categorizer("threshold_bucket", "marine", "fleet_size")
@@ -866,6 +867,7 @@ if __name__ == "__main__":
         result = cat.categorize({"value": size})
         print(f"   Fleet size {size}: {result.category} (score={result.score}, modifier={result.modifier})")
 
+    ### DELETE = THIS IS A CATEGORISER
     # 2. EnumerationCategorizer
     print("\n2. EnumerationCategorizer (Marine Operator Type)")
     cat = get_categorizer("enumeration", "marine", "operator_type")
@@ -873,6 +875,7 @@ if __name__ == "__main__":
     result = cat.categorize(test_data)
     print(f"   Inferred: {result.category} (score={result.score})")
 
+    ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
     # 3. TierCategorizer
     print("\n3. TierCategorizer (Score to Tier)")
     cat = get_categorizer("tier", "marine", "default")
@@ -880,6 +883,7 @@ if __name__ == "__main__":
         result = cat.categorize({"score": score})
         print(f"   Score {score}: {result.category} (action={result.action})")
 
+    ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
     # 4. ConditionEvaluator
     print("\n4. ConditionEvaluator (Safety Record)")
     cat = get_categorizer("condition", "marine", "safety_record_critical")
@@ -887,6 +891,7 @@ if __name__ == "__main__":
         result = cat.categorize({"value": val})
         print(f"   Safety score {val}: action={result.action}")
 
+    ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
     # 5. ModifierCalculator
     print("\n5. ModifierCalculator (Composite Marine Modifier)")
     cat = get_categorizer("modifier", "marine", "composite")
@@ -895,12 +900,14 @@ if __name__ == "__main__":
     print(f"   Features: {data}")
     print(f"   Composite modifier: {result.modifier}")
 
+    ### DELETE = THIS IS A AGGREGATOR
     # 6. MajorityCategorizer
     print("\n6. MajorityCategorizer (Vessel Category)")
     cat = get_categorizer("majority", "marine", "vessel_category")
     result = cat.categorize({"distribution": {"container": 45, "bulk": 15, "tanker": 10}})
     print(f"   Majority: {result.category} ({result.score:.1f}%)")
 
+    #### I DONT KNOW ABOUT THIS ONE YET
     # 7. QualityTierCategorizer
     print("\n7. QualityTierCategorizer (Auditor)")
     cat = get_categorizer("quality_tier", "financial_institutions", "auditor")
@@ -908,6 +915,7 @@ if __name__ == "__main__":
         result = cat.categorize({"entity": entity})
         print(f"   '{entity}': {result.category} (score={result.score})")
 
+    ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
     # 8. CompositeScoreCategorizer
     print("\n8. CompositeScoreCategorizer (Marine Signals)")
     cat = get_categorizer("composite_score", "marine", "default")
@@ -915,6 +923,7 @@ if __name__ == "__main__":
     result = cat.categorize({"signals": signals})
     print(f"   Composite score: {result.score}")
 
+    ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
     # 9. BooleanFlagCategorizer
     print("\n9. BooleanFlagCategorizer (IOSA Registered)")
     cat = get_categorizer("boolean_flag", "aerospace", "iosa_registered")
@@ -922,17 +931,10 @@ if __name__ == "__main__":
         result = cat.categorize({"flag": val})
         print(f"   IOSA registered={val}: score={result.score}, modifier={result.modifier}")
 
+    ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
     # 10. ScoringLogicCategorizer
     print("\n10. ScoringLogicCategorizer (PSC Detention)")
     cat = get_categorizer("scoring_logic", "marine", "psc_detention_status")
     for state in ["NONE_3YR", "DETAINED_1_3YR", "DETAINED_3_PLUS_3YR"]:
         result = cat.categorize({"state": state})
         print(f"    State '{state}': score={result.score}")
-
-    # List profiles
-    print("\n" + "=" * 60)
-    print("AVAILABLE PROFILES")
-    print("=" * 60)
-    profiles = list_available_profiles()
-    for profile_type, configs in profiles.items():
-        print(f"\n{profile_type}: {configs}")
