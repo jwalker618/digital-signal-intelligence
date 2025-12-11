@@ -282,6 +282,7 @@ class BooleanFlagCategorizer(UtilityFunction):
                         UtilityResult(
                             category: query_def["id]
                             modifier: query_def["modifier"]
+                            criteria: resp
                             action: query_def["action"]
                             override: query_def["override"]
                             confidence: float = 1.0
