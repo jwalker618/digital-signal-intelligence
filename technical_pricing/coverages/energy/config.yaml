@@ -52,30 +52,52 @@ energy:
       min_premium: 100000
       default_currency: "USD"
 
-    direct_optional_queries:
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:
       - id: "major_incidents"
         question: "Any major incidents (explosion, blowout, major spill) in past 5 years?"
-        direct_condition: major_incidents_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Major incidents disclosed"
       - id: "fatalities"
         question: "Any work-related fatalities in past 3 years?"
-        direct_condition: fatalities_referral
-        
+        bands:
+          - return: true
+            override: 3
+            action: "REFER"
+            note: "Fatalities disclosed"
       - id: "regulatory_enforcement"
         question: "Any significant regulatory enforcement actions pending?"
-        direct_condition: regulatory_enforcement_referral
-        
+        bands:
+          - return: true
+            override: null 
+            action: "REFER"
+            note: "Pending regulatory enforcement"
       - id: "decommissioning_obligations"
         question: "Any significant unfunded decommissioning obligations?"
-        direct_condition: decommissioning_obligations_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "FLAG" 
+            note: "Unfunded decommissioning obligations"
       - id: "joint_venture_operator"
         question: "Are you the designated operator for JV assets?"
-        direct_condition: jv_operator_info_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "INFO"
+            note: "JV operator status"
       - id: "third_party_contractor"
         question: "Do you use third-party contractors for drilling/completions?"
-        direct_condition: contractor_info_referral
+        bands:
+          - return: true
+            override: null
+            action: "INFO"
+            note: "Third-party contractor usage"
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -728,30 +750,7 @@ energy:
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: major_incidents_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Major incidents disclosed"}
-      
-      - id: fatalities_referral
-        bands:
-          - {return: true, tier_override: 3, action: "REFER", note: "Fatalities disclosed"}
-      
-      - id: regulatory_enforcement_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Pending regulatory enforcement"}
-      
-      - id: decommissioning_obligations_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Unfunded decommissioning obligations"}
-      
-      - id: jv_operator_info_referral
-        bands:
-          - {return: true, tier_override: null, action: "INFO", note: "JV operator status"}
-      
-      - id: contractor_info_referral
-        bands:
-          - {return: true, tier_override: null, action: "INFO", note: "Third-party contractor usage"}
+
   
     score_conditions:
       - id: safety_performance_critical
