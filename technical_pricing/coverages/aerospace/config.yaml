@@ -39,34 +39,57 @@ aerospace:
     # -------------------------------------------------------------------------
     # DIRECT OPTIONAL QUERIES
     # -------------------------------------------------------------------------
-    direct_optional_queries:
+    direct_queries:
       - id: "pending_claims"
         question: "Are there any pending aviation liability claims exceeding $1M?"
-        direct_condition: pending_claims_referral
-        
+        bands:
+          - return: true
+            override: null #tier override
+            action: "REFER"
+            note: "Pending claims >$1M"
       - id: "regulatory_action"
         question: "Is there any pending regulatory enforcement action against the operator?"
-        direct_condition: regulatory_action_referral
-        
+        bands:
+          - return: true
+            override: 5
+            action: "DECLINE"
+            note: "Pending regulatory enforcement"
       - id: "coverage_declined"
         question: "Has aviation coverage been declined or non-renewed in the past 3 years?"
-        direct_condition: coverage_declined_referral
-        
+        bands:
+          - return: true
+            override: 5
+            action: "DECLINE"
+            note: "Prior declination"
       - id: "fleet_change"
         question: "Are there planned fleet changes exceeding 20% in the next 12 months?"
-        direct_condition: fleet_change_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "Major fleet change planned"
       - id: "route_expansion"
         question: "Is there planned expansion into conflict zones or sanctioned regions?"
-        direct_condition: route_expansion_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Conflict zone expansion"
       - id: "ownership_change"
         question: "Has there been a change in majority ownership in the past 12 months?"
-        direct_condition: ownership_change_referral
-
+        bands:
+          - return: true
+            override: null
+            action: "FLAG"
+            note: "Recent ownership change"
       - id: "wet_lease_operations"
         question: "Do you operate aircraft under wet lease arrangements?"
-        direct_condition: wet_lease_referral
+        bands:
+          - return: true
+            tier_override: null
+            action: "MODIFIER"
+            modifier: 1.15
+            note: "Wet lease operations"
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -694,34 +717,6 @@ aerospace:
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: pending_claims_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Pending claims >$1M"}
-      
-      - id: regulatory_action_referral
-        bands:
-          - {return: true, tier_override: 5, action: "DECLINE", note: "Pending regulatory enforcement"}
-      
-      - id: coverage_declined_referral
-        bands:
-          - {return: true, tier_override: 5, action: "DECLINE", note: "Prior declination"}
-      
-      - id: fleet_change_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Major fleet change planned"}
-      
-      - id: route_expansion_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Conflict zone expansion"}
-      
-      - id: ownership_change_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Recent ownership change"}
-      
-      - id: wet_lease_referral
-        bands:
-          - {return: true, tier_override: null, action: "MODIFIER", modifier: 1.15, note: "Wet lease operations"}
   
     score_conditions:
       - id: safety_record_critical
