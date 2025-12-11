@@ -773,55 +773,47 @@ professional_indemnity:
     # TIER THRESHOLDS
     # -------------------------------------------------------------------------
     tier_thresholds:
-      tier_1:
-        id: 1
-        label: "PREFERRED"
-        min_score: 800
-        max_score: 1000
-        description: "Excellent firm - auto-approve at preferred pricing"
-        auto_approve: true
-        auto_decline: false
-        tier_modifier: 0.75
-        
-      tier_2:
-        id: 2
-        label: "STANDARD"
-        min_score: 650
-        max_score: 799
-        description: "Good firm - auto-approve at standard pricing"
-        auto_approve: true
-        auto_decline: false
-        tier_modifier: 1.00
-        
-      tier_3:
-        id: 3
-        label: "ELEVATED"
-        min_score: 500
-        max_score: 649
-        description: "Moderate risk - manual review recommended"
-        auto_approve: false
-        auto_decline: false
-        tier_modifier: 1.30
-        
-      tier_4:
-        id: 4
-        label: "HIGH_RISK"
-        min_score: 350
-        max_score: 499
-        description: "High risk - senior underwriter review with loading"
-        auto_approve: false
-        auto_decline: false
-        tier_modifier: 1.75
-        
-      tier_5:
-        id: 5
-        label: "CRITICAL"
-        min_score: 0
-        max_score: 349
-        description: "Critical risk - decline recommended"
-        auto_approve: false
-        auto_decline: true
-        tier_modifier: 2.50
+      tiers:
+        - id: 1
+          label: "PREFERRED"
+          min_score: 800
+          max_score: 1000
+          description: "Excellent firm - auto-approve at preferred pricing"
+          auto_approve: true
+          auto_decline: false
+          tier_modifier: 0.75
+        - id: 2     
+          label: "STANDARD"
+          min_score: 650
+          max_score: 799
+          description: "Good firm - auto-approve at standard pricing"
+          auto_approve: true
+          auto_decline: false
+          tier_modifier: 1.00
+        - id: 3     
+          label: "ELEVATED"
+          min_score: 500
+          max_score: 649
+          description: "Moderate risk - manual review recommended"
+          auto_approve: false
+          auto_decline: false
+          tier_modifier: 1.30
+        - id: 4      
+          label: "HIGH_RISK"
+          min_score: 350
+          max_score: 499
+          description: "High risk - senior underwriter review with loading"
+          auto_approve: false
+          auto_decline: false
+          tier_modifier: 1.75
+        - id: 5        
+          label: "CRITICAL"
+          min_score: 0
+          max_score: 349
+          description: "Critical risk - decline recommended"
+          auto_approve: false
+          auto_decline: true
+          tier_modifier: 2.50
 
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
