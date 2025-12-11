@@ -37,38 +37,69 @@ cyber:
       min_premium: 5000
       default_currency: "USD"
 
-    direct_optional_queries:      # Yes/No questions that cannot be externally observed, future provision for agents
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:      # Yes/No questions that cannot be externally observed, future provision for agents
       - id: "mfa_enabled"
         question: "Is multi-factor authentication enabled for all remote access??"
-        direct_condition: mfa_referral
-        
+        bands:
+          - return: false
+            override: null
+            action: "FLAG"
+            note: "MFA not enabled - increased ransomware risk" 
       - id: "security_training"
         question: "Do all employees complete annual cyber security training?"
-        direct_condition: training_referral
-        
+        bands:
+          - return: false
+            override: null
+            action: "FLAG"
+            note: "No security training - increased phishing risk"
       - id: "phi_handler"
         question: "Do you process Protected Health Information (PHI)"
-        direct_condition: phi_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "MODIFIER"
+            modifier: 1.25
+            note: "PHI handler - HIPAA exposure"
       - id: "pci_scope"
         question: "Do you store payment card data (PCI scope)"
-        direct_condition: pci_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "MODIFIER"
+            modifier: 1.15
+            note: "PCI scope - card data exposure"
       - id: "incident_response_plan"
         question: "Do you have a documented incident response plan?"
-        direct_condition: irp_referral
-        
+        bands:
+          - return: false 
+            override: null
+            action: "FLAG" 
+            note: "No IR plan - extended breach impact likely"
       - id: "edr_deployed"
         question: "Is endpoint detection and response (EDR) deployed on all endpoints?"
-        direct_condition: edr_referral
-
+        bands:
+          - return: false 
+            override: null
+            action: "FLAG"
+            note: "No EDR - reduced threat detection"
       - id: "immutable_backups"
         question: "Are backups maintained offline or immutable?"
-        direct_condition: backup_referral
-
+        bands:
+          - return: false
+            override: null
+            action: "FLAG"
+            note: "No immutable backups - ransomware recovery risk"
        - id: "recent_incident"
         question: "Have you experienced a material cyber incident in the past 3 years?"
-        direct_condition: recent_incident_referral
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Recent incident - requires manual review"
+
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -559,47 +590,6 @@ cyber:
     # -------------------------------------------------------------------------
     # Conditions that trigger automatic actions
     
-    direct_conditions:
-      - id: mfa_referral
-        description: "No MFA for remote access"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "MFA not enabled - increased ransomware risk"}
-      
-      - id: training_referral
-        description: "No security training program"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No security training - increased phishing risk"}
-      
-      - id: phi_referral
-        description: "Handles PHI data"
-        bands:
-          - {return: true, tier_override: null, action: "MODIFIER", modifier: 1.25, note: "PHI handler - HIPAA exposure"}
-      
-      - id: pci_referral
-        description: "PCI scope"
-        bands:
-          - {return: true, tier_override: null, action: "MODIFIER", modifier: 1.15, note: "PCI scope - card data exposure"}
-      
-      - id: irp_referral
-        description: "No incident response plan"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No IR plan - extended breach impact likely"}
-      
-      - id: edr_referral
-        description: "No EDR deployed"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No EDR - reduced threat detection"}
-      
-      - id: backup_referral
-        description: "No immutable backups"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No immutable backups - ransomware recovery risk"}
-      
-      - id: recent_incident_referral
-        description: "Recent cyber incident"
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Recent incident - requires manual review"}
-  
     score_conditions:
       - id: technical_infrastructure_critical
         description: "Critical technical infrastructure score"
