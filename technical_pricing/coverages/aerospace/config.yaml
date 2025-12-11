@@ -649,55 +649,47 @@ aerospace:
     # TIER THRESHOLDS
     # -------------------------------------------------------------------------
     tier_thresholds:
-      tier_1:
-        id: 1
-        label: "PREFERRED"
-        min_score: 800
-        max_score: 1000
-        description: "Excellent safety profile - automatic approval"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 1200  # Per $1M hull value
-        
-      tier_2:
-        id: 2
-        label: "STANDARD_PLUS"
-        min_score: 650
-        max_score: 799
-        description: "Good safety profile - automatic approval"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 1800
-        
-      tier_3:
-        id: 3
-        label: "STANDARD"
-        min_score: 500
-        max_score: 649
-        description: "Average profile - may require referral"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 2800
-        
-      tier_4:
-        id: 4
-        label: "SUBSTANDARD"
-        min_score: 350
-        max_score: 499
-        description: "Elevated risk - requires senior review"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 4500
-        
-      tier_5:
-        id: 5
-        label: "DECLINE"
-        min_score: 0
-        max_score: 349
-        description: "Unacceptable risk - decline"
-        auto_approve: false
-        auto_decline: true
-        base_premium: 8000
+      tiers:
+        - id: 1
+          label: "PREFERRED"
+          min_score: 800
+          max_score: 1000
+          description: "Excellent safety profile - automatic approval"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 1200  # Per $1M hull value
+        - id: 2
+          label: "STANDARD_PLUS"
+          min_score: 650
+          max_score: 799
+          description: "Good safety profile - automatic approval"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 1800
+        - id: 3        
+          label: "STANDARD"
+          min_score: 500
+          max_score: 649
+          description: "Average profile - may require referral"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 2800
+        - id: 4           
+          label: "SUBSTANDARD"
+          min_score: 350
+          max_score: 499
+          description: "Elevated risk - requires senior review"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 4500
+        - id: 5        
+          label: "DECLINE"
+          min_score: 0
+          max_score: 349
+          description: "Unacceptable risk - decline"
+          auto_approve: false
+          auto_decline: true
+          base_premium: 8000
 
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
