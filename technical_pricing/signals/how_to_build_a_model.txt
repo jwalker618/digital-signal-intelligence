@@ -13,10 +13,11 @@ Consolidate Signal Scores into Groups ->
 Create Pure Composite Score - >
 
 Check optional query responses -> UtilityFunction: BooleanFlagCategorizer
-  note: this will either a) override the tier completely, b) outline a modifier, c) create a note for referral, 
+  note: this will either a) override the tier completely, b) outline a modifier, c) create a note for referral, d) create a note for the file
   if a) this impacts Identify Tier
   if b) this impacts Modify Premium
   if c) this impacts Output.
+  if d) this requires no action.
           
 Identify Tier -> Utility Function: TierCategorizer
 
