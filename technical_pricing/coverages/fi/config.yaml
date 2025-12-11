@@ -39,30 +39,53 @@ financial_institutions:
       min_premium: 25000
       default_currency: "USD"
 
-    direct_optional_queries:
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:
       - id: "regulatory_action"
         question: "Any pending or recent (3 years) regulatory enforcement actions?"
-        direct_condition: regulatory_action_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Regulatory enforcement disclosed"
       - id: "examination_issues"
         question: "Any MRAs/MRIAs outstanding from most recent examination?"
-        direct_condition: examination_issues_referral
-        
+        bands:
+          - return: true
+            override: 3
+            action: "REFER"
+            note: "Outstanding MRAs/MRIAs"
       - id: "litigation_pending"
         question: "Any material litigation pending (class action, regulatory)?"
-        direct_condition: litigation_pending_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "Material litigation pending"
       - id: "cyber_incident"
         question: "Any reportable cyber incidents in past 24 months?"
-        direct_condition: cyber_incident_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "Recent cyber incident"
       - id: "significant_growth"
         question: "Asset growth >20% in past 12 months?"
-        direct_condition: significant_growth_referral
-        
+        bands:
+          - return: true 
+            override: null
+            action: "FLAG"
+            note: "Rapid growth >20%"
       - id: "new_product_line"
         question: "Any significant new product lines launched in past 12 months?"
-        direct_condition: new_product_referral
+        bands:
+          - return: true
+            override: null
+            action: "FLAG"
+            note: "New product line risk"
+        
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -724,30 +747,7 @@ financial_institutions:
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: regulatory_action_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Regulatory enforcement disclosed"}
-      
-      - id: examination_issues_referral
-        bands:
-          - {return: true, tier_override: 3, action: "REFER", note: "Outstanding MRAs/MRIAs"}
-      
-      - id: litigation_pending_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Material litigation pending"}
-      
-      - id: cyber_incident_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Recent cyber incident"}
-      
-      - id: significant_growth_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Rapid growth >20%"}
-      
-      - id: new_product_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "New product line risk"}
+
   
     score_conditions:
       - id: regulatory_compliance_critical
