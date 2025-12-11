@@ -42,26 +42,42 @@ directors_officers:
     # -------------------------------------------------------------------------
     # DIRECT OPTIONAL QUERIES
     # -------------------------------------------------------------------------
-    direct_optional_queries:
+    direct_queries:
       - id: "pending_claims"
         question: "Are there any pending securities class actions or derivative suits?"
-        direct_condition: pending_claims_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Pending securities claims"
       - id: "regulatory_investigation"
         question: "Is the company or any director/officer under regulatory investigation?"
-        direct_condition: regulatory_investigation_referral
-        
+        bands:
+          - return: true
+            override: 3
+            action: "REFER" 
+            note: "Regulatory investigation disclosed"
       - id: "planned_transaction"
         question: "Is there a planned M&A, IPO, SPAC merger, or material transaction?"
-        direct_condition: planned_transaction_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "FLAG"
+            note: "Planned transaction - tail coverage needed"
       - id: "covenant_compliance"
         question: "Is the company in compliance with all debt covenants?"
-        direct_condition: covenant_noncompliance_referral
-        
+        bands:
+          - return: false 
+            override: null
+            action: "FLAG"
+            note: "Covenant non-compliance disclosed"
       - id: "executive_dispute"
         question: "Are there any disputes with current or former executives?"
-        direct_condition: executive_dispute_referral
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "Executive dispute disclosed"
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -672,26 +688,7 @@ directors_officers:
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: pending_claims_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Pending securities claims"}
-      
-      - id: regulatory_investigation_referral
-        bands:
-          - {return: true, tier_override: 3, action: "REFER", note: "Regulatory investigation disclosed"}
-      
-      - id: planned_transaction_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Planned transaction - tail coverage needed"}
-      
-      - id: covenant_noncompliance_referral
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "Covenant non-compliance disclosed"}
-      
-      - id: executive_dispute_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Executive dispute disclosed"}
+
   
     score_conditions:
       - id: governance_critical
