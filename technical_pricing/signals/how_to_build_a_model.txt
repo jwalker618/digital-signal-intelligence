@@ -1,9 +1,12 @@
 DSI Model Process
 
 Receive Data ->
+  note: I want to define in configuration what must be received to work.
+
 Load Model Configuration ->
   note: could this be very clever? Could it run multiple models all at the same time, seeing where it got a company hit and outputting premium values?
   and could this be done across all coverages simutaneously?
+
 Extract signals ->
 Check specific signal conditions ->
 Consolidate Signal Scores into Groups ->
