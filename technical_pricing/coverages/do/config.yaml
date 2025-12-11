@@ -627,55 +627,47 @@ directors_officers:
     # TIER THRESHOLDS
     # -------------------------------------------------------------------------
     tier_thresholds:
-      tier_1:
-        id: 1
-        label: "PREFERRED"
-        min_score: 800
-        max_score: 1000
-        description: "Excellent governance - auto-approve at preferred pricing"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 4000  # Per $1M limit
-        
-      tier_2:
-        id: 2
-        label: "STANDARD"
-        min_score: 650
-        max_score: 799
-        description: "Good governance - auto-approve at standard pricing"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 6000
-        
-      tier_3:
-        id: 3
-        label: "ELEVATED"
-        min_score: 500
-        max_score: 649
-        description: "Moderate risk - auto-approve with conditions"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 9000
-        
-      tier_4:
-        id: 4
-        label: "HIGH_RISK"
-        min_score: 350
-        max_score: 499
-        description: "High risk - manual review required"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 15000
-        
-      tier_5:
-        id: 5
-        label: "CRITICAL"
-        min_score: 0
-        max_score: 349
-        description: "Critical risk - decline or senior review"
-        auto_approve: false
-        auto_decline: true
-        base_premium: 25000
+      tiers:
+        - id: 1
+          label: "PREFERRED"
+          min_score: 800
+          max_score: 1000
+          description: "Excellent governance - auto-approve at preferred pricing"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 4000  # Per $1M limit
+        - id: 2      
+          label: "STANDARD"
+          min_score: 650
+          max_score: 799
+          description: "Good governance - auto-approve at standard pricing"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 6000
+        - id: 3        
+          label: "ELEVATED"
+          min_score: 500
+          max_score: 649
+          description: "Moderate risk - auto-approve with conditions"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 9000
+        - id: 4       
+          label: "HIGH_RISK"
+          min_score: 350
+          max_score: 499
+          description: "High risk - manual review required"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 15000
+        - id: 5        
+          label: "CRITICAL"
+          min_score: 0
+          max_score: 349
+          description: "Critical risk - decline or senior review"
+          auto_approve: false
+          auto_decline: true
+          base_premium: 25000
 
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
