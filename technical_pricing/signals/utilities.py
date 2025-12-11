@@ -3,11 +3,12 @@ Model utility functions
 These are standard functionalities required by all models - for example, how to allocate to a tier.
 
 9 utility function types:
-8. BooleanFlagCategorizer - Yes/no responses to queries ##REVIEWED AND COMPLETED.
+8. BooleanEvaluator - Yes/no responses to queries ##REVIEWED AND COMPLETED.
+2. ConditionEvaluator - Band-based signal evaluation
 1. TierCategorizer - Score to tier mapping ##REVIEWED AND COMPLETED.
 
 
-2. ConditionEvaluator - Band-based threshold evaluation
+
 3. ModifierCalculator - Composite modifier from features
 4. MajorityCategorizer - Dominant category from distribution
 5. RateBenchmarkCategorizer - Compare rates vs benchmarks
@@ -118,45 +119,6 @@ QUALITY_TIER_PROFILES: Dict[str, List[Dict[str, Any]]] = {
     ],
 }
 
-CONDITION_BANDS: Dict[str, List[Dict[str, Any]]] = {
-    "safety_record_critical": [
-        {"min_value": 0, "max_value": 20, "action": "DECLINE", "modifier": None, "message": "Unacceptable safety record"},
-        {"min_value": 21, "max_value": 40, "action": "REFER", "modifier": None, "message": "Poor safety record requires review"},
-        {"min_value": 41, "max_value": 60, "action": "FLAG", "modifier": 1.15, "message": "Below average safety record"},
-        {"min_value": 61, "max_value": 100, "action": "INFO", "modifier": None, "message": "Safety record acceptable"},
-    ],
-    "regulatory_compliance_critical": [
-        {"min_value": 0, "max_value": 25, "action": "DECLINE", "modifier": None, "message": "Severe regulatory issues"},
-        {"min_value": 26, "max_value": 45, "action": "REFER", "modifier": None, "message": "Significant regulatory concerns"},
-        {"min_value": 46, "max_value": 65, "action": "FLAG", "modifier": 1.12, "message": "Regulatory concerns noted"},
-        {"min_value": 66, "max_value": 100, "action": "INFO", "modifier": None, "message": "Regulatory standing acceptable"},
-    ],
-    "sanctions_compliance_critical": [
-        {"min_value": 0, "max_value": 10, "action": "DECLINE", "modifier": None, "message": "Active sanctions exposure"},
-        {"min_value": 11, "max_value": 30, "action": "REFER", "modifier": None, "message": "Sanctions concerns identified"},
-        {"min_value": 31, "max_value": 60, "action": "FLAG", "modifier": 1.15, "message": "Historical sanctions involvement"},
-        {"min_value": 61, "max_value": 100, "action": "INFO", "modifier": None, "message": "Sanctions compliance acceptable"},
-    ],
-    "financial_condition_critical": [
-        {"min_value": 0, "max_value": 25, "action": "DECLINE", "modifier": None, "message": "Severe financial distress"},
-        {"min_value": 26, "max_value": 45, "action": "REFER", "modifier": None, "message": "Financial concerns require review"},
-        {"min_value": 46, "max_value": 65, "action": "FLAG", "modifier": 1.10, "message": "Financial metrics below target"},
-        {"min_value": 66, "max_value": 100, "action": "INFO", "modifier": None, "message": "Financial condition acceptable"},
-    ],
-    "breach_history_critical": [
-        {"min_value": 0, "max_value": 30, "action": "DECLINE", "modifier": None, "message": "Recent significant breaches"},
-        {"min_value": 31, "max_value": 50, "action": "REFER", "modifier": None, "message": "Breach history requires review"},
-        {"min_value": 51, "max_value": 70, "action": "FLAG", "modifier": 1.08, "message": "Prior breach incidents noted"},
-        {"min_value": 71, "max_value": 100, "action": "INFO", "modifier": None, "message": "Breach history acceptable"},
-    ],
-    "litigation_critical": [
-        {"min_value": 0, "max_value": 20, "action": "DECLINE", "modifier": None, "message": "Severe litigation exposure"},
-        {"min_value": 21, "max_value": 40, "action": "REFER", "modifier": None, "message": "Significant litigation pending"},
-        {"min_value": 41, "max_value": 60, "action": "FLAG", "modifier": 1.12, "message": "Active litigation noted"},
-        {"min_value": 61, "max_value": 100, "action": "INFO", "modifier": None, "message": "Litigation exposure acceptable"},
-    ],
-}
-
 SIGNAL_WEIGHT_PROFILES: Dict[str, Dict[str, SignalWeight]] = {
     "marine": {
         "safety_compliance": {"weight": 0.25, "critical": True, "critical_threshold": 40},
@@ -262,22 +224,22 @@ class UtilityFunction(ABC):
 # =============================================================================
 
 @register_utility
-class BooleanFlagCategorizer(UtilityFunction):
+class BooleanEvaluator(UtilityFunction):
     """Evaluates boolean returns."""
 
     def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> List[UtilityResult]:
 
         results: List[UtilityResult] = []
         
-        # grab the models tier definition from the config file.
+        # grab the configurations direct query definition
         booleanqueries = configuration.get("direct_queries",[])
 
         for query_def in booleanqueries:
             resp = data.get(query_def["id]) #if the query has been answered it will be in the data dict.
             if resp is None:
-                pass
+                print("no check")
             else:
-                if resp = query_def["return"]:
+                if resp == query_def["return"]:
                     results.append(
                         UtilityResult(
                             category: query_def["id]
@@ -293,6 +255,56 @@ class BooleanFlagCategorizer(UtilityFunction):
         return results
 
 @register_utility
+class ConditionEvaluator(UtilityFunction):
+    """Evaluates signal values against condition bands."""
+
+    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> List[UtilityResult]:
+
+        results: List[UtilityResult] = []
+
+        #grab the configurations signal group and signal feature definitions
+        groupqueries = configuration.get("signal_groups",[]) ####HMM THESE CAN BE IN EITHER SIGNAL GROUPS OR IN UNDERLYING SIGNAL FEATURES
+        featurequeries = configuration.get("signal_features, {})
+
+        for group_def in groupqueries:
+            group_resp = data.get(group_def["id]) #if the query has been answered it will be in the data dict. ##CHECK THIS
+            if group_resp is None:
+                print("no check, pass to feature check")
+            else:
+                if group_resp == group_def["return"]:  ##CHECK THIS
+                    results.append(
+                        UtilityResult(
+                            category: group_def["id]
+                            modifier: group_def["modifier"]
+                            criteria: group_resp
+                            action: group_def["action"]
+                            override: group_def["override"]
+                            confidence: float = 1.0
+                            metadata: {"group_def": group_def}  
+                        )
+                    )
+
+            for feature_def in featurequeries["group_def["id]]:
+                feature_resp = data.get("feature_def["id"]) #if the query has been answered it will be in the data dict. ##CHECK THIS
+                if feature_resp is None:
+                    print("no check, pass to next signal")
+                else:
+                    if feature_resp == feature_def["return"]: ##CHECK THIS
+                        results.append(
+                            UtilityResult(
+                                category: feature_def["id]
+                                modifier: feature_def["modifier"]
+                                criteria: feature_resp
+                                action: feature_def["action"]
+                                override: feature_def["override"]
+                                confidence: float = 1.0
+                                metadata: {"feature_def": feature_def}  
+                            )
+                        )
+                    
+        return results
+
+@register_utility
 class TierCategorizer(UtilityFunction):
     """Maps composite scores to tier assignments."""
 
@@ -301,7 +313,7 @@ class TierCategorizer(UtilityFunction):
         if score is None:
             return UtilityResult(category="UNKNOWN", action="REFER", criteria=["No score provided"], confidence=0.0)
 
-        # grab the models tier definition from the config file.
+        # grab the models tier definition
         tiers = configuration.get("tier_thresholds",{}).get("tiers", [])
 
         for tier_def in tiers:
@@ -315,29 +327,6 @@ class TierCategorizer(UtilityFunction):
                 )
                 
         return UtiltyResult(category="UNKNOWN", score=score, criteria=[f"Score {score} outside defined tiers"], confidence=0.5, metadata={})
-
-
-@register_utility
-class ConditionEvaluator(UtilityFunction):
-    """Evaluates values against condition bands to determine actions."""
-
-    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> UtilityResult:
-        value = data.get("value")
-        if value is None:
-            return UtilityResult(action="REFER", criteria=["No value provided"], confidence=0.0)
-
-        bands = CONDITION_BANDS.get(self.configuration)
-        if not bands:
-            return UtilityResult(action="INFO", criteria=[f"No condition bands for {self.configuration}"], confidence=0.0)
-
-        for band in bands:
-            if band["min_value"] <= value <= band["max_value"]:
-                return UtilityResult(
-                    action=band["action"], modifier=band.get("modifier"), criteria=[band["message"]], confidence=1.0,
-                    metadata={"band": band, "value": value, "condition": self.configuration}
-                )
-        return UtilityResult(action="INFO", criteria=[f"Value {value} outside defined bands"], confidence=0.5)
-
 
 @register_utility
 class ModifierCalculator(UtilityFunction):
