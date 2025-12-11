@@ -3,7 +3,7 @@ Model utility functions
 These are standard functionalities required by all models - for example, how to allocate to a tier.
 
 9 utility function types:
-1. TierCategorizer - Score to tier mapping
+1. TierCategorizer - Score to tier mapping ##REVIEWED AND COMPLETED.
 2. ConditionEvaluator - Band-based threshold evaluation
 3. ModifierCalculator - Composite modifier from features
 4. MajorityCategorizer - Dominant category from distribution
