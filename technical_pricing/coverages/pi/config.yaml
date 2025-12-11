@@ -49,30 +49,53 @@ professional_indemnity:
       min_premium: 2500
       default_currency: "USD"
 
-    direct_optional_queries:
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:
       - id: "pending_claims"
         question: "Any pending or threatened malpractice claims?"
-        direct_condition: pending_claims_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Pending malpractice claims disclosed"
       - id: "disciplinary_pending"
         question: "Any pending disciplinary proceedings against any professional?"
-        direct_condition: disciplinary_pending_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Pending disciplinary proceedings"
       - id: "coverage_declined"
         question: "Has any PI coverage been declined or non-renewed in past 3 years?"
-        direct_condition: coverage_declined_referral
-        
+        bands:
+          - return: true
+            override: 5
+            action: "DECLINE"
+            note: "Prior PI coverage declined/non-renewed"
       - id: "practice_area_change"
         question: "Any significant change in practice areas in past 2 years?"
-        direct_condition: practice_area_change_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "FLAG"
+            note: "Significant practice area change"    
       - id: "merger_activity"
         question: "Any merger, acquisition, or spin-off in past 2 years?"
-        direct_condition: merger_activity_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "FLAG"
+            note: "Recent merger/acquisition activity"    
       - id: "major_client_loss"
         question: "Loss of client representing >25% of revenue in past year?"
-        direct_condition: major_client_loss_referral
+        bands:
+          - return: true
+            override: null
+            action: "FLAG"
+            note: "Major client loss (>25% revenue)"
+
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -818,30 +841,7 @@ professional_indemnity:
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: pending_claims_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Pending malpractice claims disclosed"}
-      
-      - id: disciplinary_pending_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Pending disciplinary proceedings"}
-      
-      - id: coverage_declined_referral
-        bands:
-          - {return: true, tier_override: 5, action: "DECLINE", note: "Prior PI coverage declined/non-renewed"}
-      
-      - id: practice_area_change_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Significant practice area change"}
-      
-      - id: merger_activity_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Recent merger/acquisition activity"}
-      
-      - id: major_client_loss_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Major client loss (>25% revenue)"}
+
   
     score_conditions:
       - id: regulatory_standing_critical
