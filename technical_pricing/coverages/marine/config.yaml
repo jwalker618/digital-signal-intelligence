@@ -660,55 +660,47 @@ marine:
     # TIER THRESHOLDS
     # -------------------------------------------------------------------------
     tier_thresholds:
-      tier_1:
-        id: 1
-        label: "PREFERRED"
-        min_score: 800
-        max_score: 1000
-        description: "Excellent operator - auto-approve at preferred pricing"
-        auto_approve: true
-        auto_decline: false
-        base_rate: 0.0015  # 0.15% of insured value
-        
-      tier_2:
-        id: 2
-        label: "STANDARD"
-        min_score: 650
-        max_score: 799
-        description: "Good operator - auto-approve at standard pricing"
-        auto_approve: true
-        auto_decline: false
-        base_rate: 0.0022  # 0.22% of insured value
-        
-      tier_3:
-        id: 3
-        label: "ELEVATED"
-        min_score: 500
-        max_score: 649
-        description: "Moderate risk - auto-approve with conditions"
-        auto_approve: false
-        auto_decline: false
-        base_rate: 0.0032  # 0.32% of insured value
-        
-      tier_4:
-        id: 4
-        label: "HIGH_RISK"
-        min_score: 350
-        max_score: 499
-        description: "High risk - manual review required"
-        auto_approve: false
-        auto_decline: false
-        base_rate: 0.0050  # 0.50% of insured value
-        
-      tier_5:
-        id: 5
-        label: "CRITICAL"
-        min_score: 0
-        max_score: 349
-        description: "Critical risk - decline or senior review"
-        auto_approve: false
-        auto_decline: true
-        base_rate: 0.0080  # 0.80% of insured value
+      tiers:
+        - id: 1
+          label: "PREFERRED"
+          min_score: 800
+          max_score: 1000
+          description: "Excellent operator - auto-approve at preferred pricing"
+          auto_approve: true
+          auto_decline: false
+          base_rate: 0.0015  # 0.15% of insured value
+        - id: 2    
+          label: "STANDARD"
+          min_score: 650
+          max_score: 799
+          description: "Good operator - auto-approve at standard pricing"
+          auto_approve: true
+          auto_decline: false
+          base_rate: 0.0022  # 0.22% of insured value
+        - id: 3      
+          label: "ELEVATED"
+          min_score: 500
+          max_score: 649
+          description: "Moderate risk - auto-approve with conditions"
+          auto_approve: false
+          auto_decline: false
+          base_rate: 0.0032  # 0.32% of insured value
+        - id: 4        
+          label: "HIGH_RISK"
+          min_score: 350
+          max_score: 499
+          description: "High risk - manual review required"
+          auto_approve: false
+          auto_decline: false
+          base_rate: 0.0050  # 0.50% of insured value
+        - id: 5        
+          label: "CRITICAL"
+          min_score: 0
+          max_score: 349
+          description: "Critical risk - decline or senior review"
+          auto_approve: false
+          auto_decline: true
+          base_rate: 0.0080  # 0.80% of insured value
 
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
