@@ -105,173 +105,178 @@ aerospace:
             note: "Wet lease operations"
 
     # -------------------------------------------------------------------------
+    # CATEGORICAL GROUPS
+    # -------------------------------------------------------------------------
+    categorical_groups:
+      - id: "operator_type"
+        name: "Operator Type"
+        description: "Type of aviation operator - inferred from regulatory filings and operational data"
+      - id: "fleet_category"
+        name: "Fleet Category"
+        description: "Primary aircraft category in fleet"
+      - id: "fleet_size"
+        name: "Fleet Size"
+        description: "Number of aircraft in operator's fleet"
+      - id: "regulatory_framework"
+        name: "Regulatory Framework"
+        description: "Primary regulatory authority governing operations"        
+      - id: "iosa_status"
+        name: "IOSA Status"
+        description: "IATA Operational Safety Audit registration status"      
+
+    # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
-    categorical_features:
+    categorical_features:     
       operator_type:
-        description: "Type of aviation operator - inferred from regulatory filings and operational data"
-        inference_utility_function: operator_type_basefunction
-        values:
-          - id: "MAJOR_AIRLINE"
-            label: "Major Airline"
-            modifier: 0.85
-            description: "Scheduled carrier with >100 aircraft, alliance member"         
-          - id: "REGIONAL_AIRLINE"
-            label: "Regional Airline"
-            modifier: 1.00
-            description: "Scheduled regional service, typically code-share"
-          - id: "LOW_COST_CARRIER"
-            label: "Low Cost Carrier"
-            modifier: 0.95
-            description: "Point-to-point budget airline"
-          - id: "CARGO_AIRLINE"
-            label: "Cargo Airline"
-            modifier: 1.10
-            description: "Freight-only operations"
-          - id: "CHARTER_OPERATOR"
-            label: "Charter Operator"
-            modifier: 1.25
-            description: "Non-scheduled passenger service"
-          - id: "CORPORATE_FLIGHT"
-            label: "Corporate Flight Department"
-            modifier: 1.15
-            description: "In-house corporate aviation"
-          - id: "HELICOPTER_OPERATOR"
-            label: "Helicopter Operator"
-            modifier: 1.40
-            description: "Rotorcraft operations (EMS, offshore, utility)"
-          - id: "FLIGHT_SCHOOL"
-            label: "Flight Training Organization"
-            modifier: 1.50
-            description: "Primary and advanced flight training"
-          - id: "PRIVATE_OWNER"
-            label: "Private Owner/Operator"
-            modifier: 1.35
-            description: "Individual aircraft owner"
+        - cat: "MAJOR_AIRLINE"
+          label: "Major Airline"
+          modifier: 0.85
+          description: "Scheduled carrier with >100 aircraft, alliance member"         
+        - cat: "REGIONAL_AIRLINE"
+          label: "Regional Airline"
+          modifier: 1.00
+          description: "Scheduled regional service, typically code-share"
+        - cat: "LOW_COST_CARRIER"
+          label: "Low Cost Carrier"
+          modifier: 0.95
+          description: "Point-to-point budget airline"
+        - cat: "CARGO_AIRLINE"
+          label: "Cargo Airline"
+          modifier: 1.10
+          description: "Freight-only operations"
+        - cat: "CHARTER_OPERATOR"
+          label: "Charter Operator"
+          modifier: 1.25
+          description: "Non-scheduled passenger service"
+        - cat: "CORPORATE_FLIGHT"
+          label: "Corporate Flight Department"
+          modifier: 1.15
+          description: "In-house corporate aviation"
+        - cat: "HELICOPTER_OPERATOR"
+          label: "Helicopter Operator"
+          modifier: 1.40
+          description: "Rotorcraft operations (EMS, offshore, utility)"
+        - cat: "FLIGHT_SCHOOL"
+          label: "Flight Training Organization"
+          modifier: 1.50
+          description: "Primary and advanced flight training"
+        - cat: "PRIVATE_OWNER"
+          label: "Private Owner/Operator"
+          modifier: 1.35
+          description: "Individual aircraft owner"
 
       fleet_category:
-        description: "Primary aircraft category in fleet"
-        inference_utility_function: fleet_category_basefunction
-        values:
-          - id: "WIDEBODY"
-            label: "Widebody"
-            modifier: 1.15
-            description: "Twin-aisle aircraft (A330, A350, 777, 787)"
-          - id: "NARROWBODY"
-            label: "Narrowbody"
-            modifier: 1.00
-            description: "Single-aisle jets (A320 family, 737)"
-          - id: "REGIONAL_JET"
-            label: "Regional Jet"
-            modifier: 1.05
-            description: "Small jets (E-Jets, CRJ, ARJ)"
-          - id: "TURBOPROP"
-            label: "Turboprop"
-            modifier: 0.95
-            description: "Turboprop aircraft (ATR, Dash 8)"
-          - id: "BUSINESS_JET"
-            label: "Business Jet"
-            modifier: 1.20
-            description: "Corporate jets (Gulfstream, Global, Falcon)"
-          - id: "HELICOPTER"
-            label: "Helicopter"
-            modifier: 1.35
-            description: "Rotorcraft"
-          - id: "PISTON"
-            label: "Piston Aircraft"
-            modifier: 1.25
-            description: "Piston-engine aircraft"
+        - cat: "WIDEBODY"
+          label: "Widebody"
+          modifier: 1.15
+          description: "Twin-aisle aircraft (A330, A350, 777, 787)"
+        - cat: "NARROWBODY"
+          label: "Narrowbody"
+          modifier: 1.00
+          description: "Single-aisle jets (A320 family, 737)"
+        - cat: "REGIONAL_JET"
+          label: "Regional Jet"
+          modifier: 1.05
+          description: "Small jets (E-Jets, CRJ, ARJ)"
+        - cat: "TURBOPROP"
+          label: "Turboprop"
+          modifier: 0.95
+          description: "Turboprop aircraft (ATR, Dash 8)"
+        - cat: "BUSINESS_JET"
+          label: "Business Jet"
+          modifier: 1.20
+          description: "Corporate jets (Gulfstream, Global, Falcon)"
+        - cat: "HELICOPTER"
+          label: "Helicopter"
+          modifier: 1.35
+          description: "Rotorcraft"
+        - cat: "PISTON"
+          label: "Piston Aircraft"
+          modifier: 1.25
+          description: "Piston-engine aircraft"
 
       fleet_size:
-        description: "Number of aircraft in operator's fleet"
-        inference_utility_function: fleet_size_basefunction
-        values:
-          - id: "SINGLE"
-            label: "Single Aircraft"
-            modifier: 1.30
-            description: ""         
-          - id: "MICRO"
-            label: "Micro Fleet (2-5)"
-            modifier: 1.20
-            description: ""         
-          - id: "SMALL"
-            label: "Small Fleet (6-20)"
-            modifier: 1.10
-            description: ""         
-          - id: "MEDIUM"
-            label: "Medium Fleet (21-50)"
-            modifier: 1.00
-            description: ""         
-          - id: "LARGE"
-            label: "Large Fleet (51-150)"
-            modifier: 0.95
-            description: ""         
-          - id: "MAJOR"
-            label: "Major Fleet (150+)"
-            modifier: 0.90
-            description: ""         
+        - cat: "SINGLE"
+          label: "Single Aircraft"
+          modifier: 1.30
+          description: ""         
+        - cat: "MICRO"
+          label: "Micro Fleet (2-5)"
+          modifier: 1.20
+          description: ""         
+        - cat: "SMALL"
+          label: "Small Fleet (6-20)"
+          modifier: 1.10
+          description: ""         
+        - cat: "MEDIUM"
+          label: "Medium Fleet (21-50)"
+          modifier: 1.00
+          description: ""         
+        - cat: "LARGE"
+          label: "Large Fleet (51-150)"
+          modifier: 0.95
+          description: ""         
+        - cat: "MAJOR"
+          label: "Major Fleet (150+)"
+          modifier: 0.90
+          description: ""         
 
       regulatory_framework:
-        description: "Primary regulatory authority governing operations"
-        inference_utility_function: regulatory_framework_basefunction
-        values:
-          - id: "FAA"
-            label: "FAA (United States)"
-            modifier: 1.00
-            description: ""       
-          - id: "EASA"
-            label: "EASA (European Union)"
-            modifier: 1.00
-            description: ""       
-          - id: "CAA_UK"
-            label: "CAA (United Kingdom)"
-            modifier: 1.00
-            description: ""       
-          - id: "TCCA"
-            label: "TCCA (Canada)"
-            modifier: 1.00
-            description: ""       
-          - id: "CASA"
-            label: "CASA (Australia)"
-            modifier: 1.05
-            description: ""       
-          - id: "CAAC"
-            label: "CAAC (China)"
-            modifier: 1.15
-            description: ""       
-          - id: "DGCA_INDIA"
-            label: "DGCA (India)"
-            modifier: 1.15
-            description: ""       
-          - id: "OTHER_ICAO"
-            label: "Other ICAO Compliant"
-            modifier: 1.20
-            description: ""       
-          - id: "NON_ICAO"
-            label: "Non-ICAO Compliant"
-            modifier: 1.50
-            description: ""       
+        - cat: "FAA"
+          label: "FAA (United States)"
+          modifier: 1.00
+          description: ""       
+        - cat: "EASA"
+          label: "EASA (European Union)"
+          modifier: 1.00
+          description: ""       
+        - cat: "CAA_UK"
+          label: "CAA (United Kingdom)"
+          modifier: 1.00
+          description: ""       
+        - cat: "TCCA"
+          label: "TCCA (Canada)"
+          modifier: 1.00
+          description: ""       
+        - cat: "CASA"
+          label: "CASA (Australia)"
+          modifier: 1.05
+          description: ""       
+        - cat: "CAAC"
+          label: "CAAC (China)"
+          modifier: 1.15
+          description: ""       
+        - cat: "DGCA_INDIA"
+          label: "DGCA (India)"
+          modifier: 1.15
+          description: ""       
+        - cat: "OTHER_ICAO"
+          label: "Other ICAO Compliant"
+          modifier: 1.20
+          description: ""       
+        - cat: "NON_ICAO"
+          label: "Non-ICAO Compliant"
+          modifier: 1.50
+          description: ""       
 
       iosa_status:
-        description: "IATA Operational Safety Audit registration status"
-        inference_utility_function: iosa_status_basefunction
-        values:
-          - id: "REGISTERED"
-            label: "IOSA Registered"
-            modifier: 0.90
-            description: ""  
-          - id: "EXPIRED"
-            label: "IOSA Expired"
-            modifier: 1.15
-            description: ""  
-          - id: "NEVER_REGISTERED"
-            label: "Never Registered"
-            modifier: 1.25
-            description: ""  
-          - id: "NOT_APPLICABLE"
-            label: "Not Applicable"
-            modifier: 1.00
-            description: ""  
+        - cat: "REGISTERED"
+          label: "IOSA Registered"
+          modifier: 0.90
+          description: ""  
+        - cat: "EXPIRED"
+          label: "IOSA Expired"
+          modifier: 1.15
+          description: ""  
+        - cat: "NEVER_REGISTERED"
+          label: "Never Registered"
+          modifier: 1.25
+          description: ""  
+        - cat: "NOT_APPLICABLE"
+          label: "Not Applicable"
+          modifier: 1.00
+          description: ""  
 
     # ---------------------------------------------------------------------------
     # SIGNAL GROUPINGS (Categories with Weights)
