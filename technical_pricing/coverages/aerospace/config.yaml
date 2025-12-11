@@ -46,6 +46,7 @@ aerospace:
           - return: true
             override: null #tier override
             action: "REFER"
+            modifier: null
             note: "Pending claims >$1M"
       - id: "regulatory_action"
         question: "Is there any pending regulatory enforcement action against the operator?"
@@ -53,6 +54,7 @@ aerospace:
           - return: true
             override: 5
             action: "DECLINE"
+            modifier: null
             note: "Pending regulatory enforcement"
       - id: "coverage_declined"
         question: "Has aviation coverage been declined or non-renewed in the past 3 years?"
@@ -60,6 +62,7 @@ aerospace:
           - return: true
             override: 5
             action: "DECLINE"
+            modifier: null
             note: "Prior declination"
       - id: "fleet_change"
         question: "Are there planned fleet changes exceeding 20% in the next 12 months?"
@@ -67,6 +70,7 @@ aerospace:
           - return: true
             override: null
             action: "REFER"
+            modifier: null
             note: "Major fleet change planned"
       - id: "route_expansion"
         question: "Is there planned expansion into conflict zones or sanctioned regions?"
@@ -74,6 +78,7 @@ aerospace:
           - return: true
             override: 4
             action: "REFER"
+            modifier: null
             note: "Conflict zone expansion"
       - id: "ownership_change"
         question: "Has there been a change in majority ownership in the past 12 months?"
@@ -81,6 +86,7 @@ aerospace:
           - return: true
             override: null
             action: "FLAG"
+            modifier: null
             note: "Recent ownership change"
       - id: "wet_lease_operations"
         question: "Do you operate aircraft under wet lease arrangements?"
