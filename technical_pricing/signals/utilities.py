@@ -3,14 +3,17 @@ Model utility functions
 These are standard functionalities required by all models - for example, how to allocate to a tier.
 
 9 utility function types:
+8. BooleanFlagCategorizer - Yes/no responses to queries ##REVIEWED AND COMPLETED.
 1. TierCategorizer - Score to tier mapping ##REVIEWED AND COMPLETED.
+
+
 2. ConditionEvaluator - Band-based threshold evaluation
 3. ModifierCalculator - Composite modifier from features
 4. MajorityCategorizer - Dominant category from distribution
 5. RateBenchmarkCategorizer - Compare rates vs benchmarks
 6. QualityTierCategorizer - Quality tier assignment
 7. CompositeScoreCategorizer - Weighted composite scores
-8. BooleanFlagCategorizer - Yes/no flags
+
 9. ScoringLogicCategorizer - Discrete state to score mapping
 """
 
@@ -32,6 +35,7 @@ class UtilityResult:
     modifier: Optional[float] = None
     criteria: List[str] = field(default_factory=list)
     action: Optional[str] = None
+    override: Optional[str] = None
     confidence: float = 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -254,8 +258,38 @@ class UtilityFunction(ABC):
 
 
 # =============================================================================
-# CATEGORIZER IMPLEMENTATIONS
+# UTILITY IMPLEMENTATIONS
 # =============================================================================
+
+@register_utility
+class BooleanFlagCategorizer(UtilityFunction):
+    """Evaluates boolean returns."""
+
+    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> List[UtilityResult]:
+
+        results: List[UtilityResult] = []
+        
+        # grab the models tier definition from the config file.
+        booleanqueries = configuration.get("direct_queries",[])
+
+        for query_def in booleanqueries:
+            resp = data.get(query_def["id]) #if the query has been answered it will be in the data dict.
+            if resp is None:
+                pass
+            else:
+                if resp = query_def["return"]:
+                    results.append(
+                        UtilityResult(
+                            category: query_def["id]
+                            modifier: query_def["modifier"]
+                            action: query_def["action"]
+                            override: query_def["override"]
+                            confidence: float = 1.0
+                            metadata: {"query_def": query_def} 
+                        )
+                    )
+
+        return results
 
 @register_utility
 class TierCategorizer(UtilityFunction):
@@ -286,7 +320,7 @@ class TierCategorizer(UtilityFunction):
 class ConditionEvaluator(UtilityFunction):
     """Evaluates values against condition bands to determine actions."""
 
-    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
+    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> UtilityResult:
         value = data.get("value")
         if value is None:
             return UtilityResult(action="REFER", criteria=["No value provided"], confidence=0.0)
@@ -470,54 +504,6 @@ class CompositeScoreCategorizer(UtilityFunction):
             score=round(composite_score, 2), action=action, criteria=criteria, confidence=1.0 if total_weight >= 0.8 else 0.7,
             metadata={"signal_contributions": signal_contributions, "critical_failures": critical_failures, "total_weight_applied": total_weight}
         )
-
-
-@register_utility
-class BooleanFlagCategorizer(UtilityFunction):
-    """Evaluates boolean flags with associated consequences."""
-    
-    FLAG_DEFINITIONS: Dict[str, Dict[str, Dict[str, Any]]] = {
-        "iosa_registered": {
-            "true": {"score": 95, "modifier": 0.90, "message": "IOSA registered"},
-            "false": {"score": 65, "modifier": 1.12, "message": "Not IOSA registered"},
-        },
-        "bug_bounty_program": {
-            "true": {"score": 85, "modifier": 0.95, "message": "Bug bounty program active"},
-            "false": {"score": 70, "modifier": 1.05, "message": "No bug bounty program"},
-        },
-        "offers_liner_service": {
-            "true": {"score": 85, "modifier": 0.95, "message": "Offers liner service"},
-            "false": {"score": 75, "modifier": 1.00, "message": "No liner service"},
-        },
-        "sanctioned_country_exposure": {
-            "true": {"score": 20, "modifier": 1.50, "action": "REFER", "message": "Sanctioned country exposure"},
-            "false": {"score": 90, "modifier": 1.00, "message": "No sanctioned exposure"},
-        },
-        "prior_bankruptcy": {
-            "true": {"score": 45, "modifier": 1.25, "action": "REFER", "message": "Prior bankruptcy"},
-            "false": {"score": 85, "modifier": 1.00, "message": "No bankruptcy history"},
-        },
-    }
-
-    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
-        flag_value = data.get("flag")
-        if flag_value is None:
-            return UtilityResult(category="UNKNOWN", score=50, criteria=["No flag value provided"], confidence=0.0)
-
-        flag_def = self.FLAG_DEFINITIONS.get(self.configuration)
-        if not flag_def:
-            bool_val = bool(flag_value)
-            return UtilityResult(category="TRUE" if bool_val else "FALSE", score=75, modifier=1.0, criteria=[f"{self.configuration} = {bool_val}"], confidence=0.7)
-
-        key = "true" if flag_value else "false"
-        consequence = flag_def.get(key, {})
-
-        return UtilityResult(
-            category=key.upper(), score=consequence.get("score", 75), modifier=consequence.get("modifier", 1.0),
-            action=consequence.get("action"), criteria=[consequence.get("message", f"{self.configuration} = {flag_value}")],
-            confidence=1.0, metadata={"flag_definition": consequence}
-        )
-
 
 @register_utility
 class ScoringLogicCategorizer(UtilityFunction):
