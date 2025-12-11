@@ -1,37 +1,32 @@
 """
-Signal Categorization Framework
+Model utility functions
+These are standard functionalities required by all models - for example, how to allocate to a tier.
 
-11 categorizer types:
-#1. ThresholdBucketCategorizer - Numeric values to categories
-#2. EnumerationCategorizer - Attribute mapping  
-3. TierCategorizer - Score to tier mapping
-4. ConditionEvaluator - Band-based threshold evaluation
-5. ModifierCalculator - Composite modifier from features
-6. MajorityCategorizer - Dominant category from distribution
-7. RateBenchmarkCategorizer - Compare rates vs benchmarks
-8. QualityTierCategorizer - Quality tier assignment
-9. CompositeScoreCategorizer - Weighted composite scores
-10. BooleanFlagCategorizer - Yes/no flags
-11. ScoringLogicCategorizer - Discrete state to score mapping
+11 utility function types:
+1. TierCategorizer - Score to tier mapping
+2. ConditionEvaluator - Band-based threshold evaluation
+3. ModifierCalculator - Composite modifier from features
+4. MajorityCategorizer - Dominant category from distribution
+5. RateBenchmarkCategorizer - Compare rates vs benchmarks
+6. QualityTierCategorizer - Quality tier assignment
+7. CompositeScoreCategorizer - Weighted composite scores
+8. BooleanFlagCategorizer - Yes/no flags
+9. ScoringLogicCategorizer - Discrete state to score mapping
 """
 
-from __future__ import annotations
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Type, TypedDict
 
-logger = logging.getLogger(__name__)
+UTILITY_REGISTRY: Dict[str, Type["UtilityFunction"]] = {}
 
-CATEGORIZER_REGISTRY: Dict[str, Type["DataCategorizer"]] = {}
-
-def register_categorizer(cls: Type["DataCategorizer"]) -> Type["DataCategorizer"]:
-    CATEGORIZER_REGISTRY[cls.__name__] = cls
+def register_utility(cls: Type["UtilityFunction"]) -> Type["UtilityFunction"]:
+    UTILITY_REGISTRY[cls.__name__] = cls
     return cls
 
 @dataclass
-class CategorizationResult:
-    """Standardized result from any categorizer."""
+class UtilityResult:
+    """Standardised result from any utility function."""
     category: Optional[str] = None
     score: Optional[float] = None
     modifier: Optional[float] = None
@@ -39,13 +34,6 @@ class CategorizationResult:
     action: Optional[str] = None
     confidence: float = 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
-
-class ThresholdBucket(TypedDict):
-    min_value: float
-    max_value: float
-    category: str
-    score: float
-    modifier: float
 
 class SignalWeight(TypedDict):
     weight: float
@@ -263,10 +251,10 @@ SCORING_LOGIC_PROFILES: Dict[str, Dict[str, float]] = {
 }
 
 # =============================================================================
-# BASE CATEGORIZER CLASS
+# BASE UTILITY CLASS
 # =============================================================================
 
-class DataCategorizer(ABC):
+class UtilityFunction(ABC):
     """Abstract base class for all categorizers."""
 
     def __init__(self, coverage: str, configuration: str, **kwargs: Any):
@@ -275,7 +263,7 @@ class DataCategorizer(ABC):
         self.kwargs = kwargs
 
     @abstractmethod
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         raise NotImplementedError
 
     def _get_profile(self, profiles: Dict[str, Any], config_key: str, coverage_key: Optional[str] = None) -> Any:
@@ -290,14 +278,14 @@ class DataCategorizer(ABC):
 # CATEGORIZER IMPLEMENTATIONS
 # =============================================================================
 
-@register_categorizer
-class TierCategorizer(DataCategorizer):
+@register_utility
+class TierCategorizer(UtilityFunction):
     """Maps composite scores to tier assignments."""
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         score = data.get("score")
         if score is None:
-            return CategorizationResult(category="UNKNOWN", action="REFER", criteria=["No score provided"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", action="REFER", criteria=["No score provided"], confidence=0.0)
 
         profile = self._get_profile(TIER_PROFILES, self.coverage) or TIER_PROFILES["default"]
         tiers = profile.get("tiers", [])
@@ -305,44 +293,44 @@ class TierCategorizer(DataCategorizer):
         for tier_def in tiers:
             if tier_def["min_score"] <= score <= tier_def["max_score"]:
                 action = "DECLINE" if tier_def.get("auto_decline") else ("APPROVE" if tier_def.get("auto_approve") else "REFER")
-                return CategorizationResult(
+                return UtilityResult(
                     category=tier_def["tier"], score=score, action=action,
                     criteria=[f"Score {score} in tier {tier_def['tier']}"], confidence=1.0,
                     metadata={"tier_def": tier_def}
                 )
-        return CategorizationResult(category="UNKNOWN", score=score, action="REFER", criteria=[f"Score {score} outside defined tiers"], confidence=0.5)
+        return UtiltyResult(category="UNKNOWN", score=score, action="REFER", criteria=[f"Score {score} outside defined tiers"], confidence=0.5)
 
 
-@register_categorizer
-class ConditionEvaluator(DataCategorizer):
+@register_utility
+class ConditionEvaluator(UtilityFunction):
     """Evaluates values against condition bands to determine actions."""
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         value = data.get("value")
         if value is None:
-            return CategorizationResult(action="REFER", criteria=["No value provided"], confidence=0.0)
+            return UtilityResult(action="REFER", criteria=["No value provided"], confidence=0.0)
 
         bands = CONDITION_BANDS.get(self.configuration)
         if not bands:
-            return CategorizationResult(action="INFO", criteria=[f"No condition bands for {self.configuration}"], confidence=0.0)
+            return UtilityResult(action="INFO", criteria=[f"No condition bands for {self.configuration}"], confidence=0.0)
 
         for band in bands:
             if band["min_value"] <= value <= band["max_value"]:
-                return CategorizationResult(
+                return UtilityResult(
                     action=band["action"], modifier=band.get("modifier"), criteria=[band["message"]], confidence=1.0,
                     metadata={"band": band, "value": value, "condition": self.configuration}
                 )
-        return CategorizationResult(action="INFO", criteria=[f"Value {value} outside defined bands"], confidence=0.5)
+        return UtilityResult(action="INFO", criteria=[f"Value {value} outside defined bands"], confidence=0.5)
 
 
-@register_categorizer
-class ModifierCalculator(DataCategorizer):
+@register_utility
+class ModifierCalculator(UtilityFunction):
     """Calculates composite modifier from multiple categorical features."""
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         coverage_modifiers = MODIFIER_PROFILES.get(self.coverage, {})
         if not coverage_modifiers:
-            return CategorizationResult(modifier=1.0, criteria=[f"No modifier profile for {self.coverage}"], confidence=0.0)
+            return UtilityResult(modifier=1.0, criteria=[f"No modifier profile for {self.coverage}"], confidence=0.0)
 
         composite_modifier = 1.0
         applied_modifiers = []
@@ -357,21 +345,21 @@ class ModifierCalculator(DataCategorizer):
                     applied_modifiers.append({"feature": feature_name, "value": feature_value, "modifier": mod})
                     criteria.append(f"{feature_name}={feature_value} -> {mod}")
 
-        return CategorizationResult(modifier=round(composite_modifier, 4), criteria=criteria, confidence=1.0 if applied_modifiers else 0.5, metadata={"applied_modifiers": applied_modifiers})
+        return UtilityResult(modifier=round(composite_modifier, 4), criteria=criteria, confidence=1.0 if applied_modifiers else 0.5, metadata={"applied_modifiers": applied_modifiers})
 
 
-@register_categorizer
-class MajorityCategorizer(DataCategorizer):
+@register_utility
+class MajorityCategorizer(UtilityFunction):
     """Determines the dominant category from a distribution."""
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         distribution = data.get("distribution", {})
         if not distribution:
-            return CategorizationResult(category="UNKNOWN", criteria=["No distribution provided"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", criteria=["No distribution provided"], confidence=0.0)
 
         total = sum(distribution.values())
         if total == 0:
-            return CategorizationResult(category="EMPTY", criteria=["Distribution sums to zero"], confidence=0.0)
+            return UtilityResult(category="EMPTY", criteria=["Distribution sums to zero"], confidence=0.0)
 
         max_count = max(distribution.values())
         max_categories = [cat for cat, count in distribution.items() if count == max_count]
@@ -379,18 +367,18 @@ class MajorityCategorizer(DataCategorizer):
         if len(max_categories) == 1:
             majority_category = max_categories[0]
             majority_pct = (max_count / total) * 100
-            return CategorizationResult(
+            return UtilityResult(
                 category=majority_category, score=majority_pct,
                 criteria=[f"{majority_category} is majority with {majority_pct:.1f}%"],
                 confidence=1.0 if majority_pct > 50 else 0.8,
                 metadata={"distribution": distribution, "total": total, "majority_pct": majority_pct}
             )
         else:
-            return CategorizationResult(category="MIXED", criteria=[f"Tie between: {', '.join(max_categories)}"], confidence=0.7, metadata={"tied_categories": max_categories})
+            return UtilityResult(category="MIXED", criteria=[f"Tie between: {', '.join(max_categories)}"], confidence=0.7, metadata={"tied_categories": max_categories})
 
 
-@register_categorizer
-class RateBenchmarkCategorizer(DataCategorizer):
+@register_utility
+class RateBenchmarkCategorizer(UtilityFunction):
     """Compares rates against industry benchmarks."""
     
     BENCHMARK_BANDS = [
@@ -402,45 +390,45 @@ class RateBenchmarkCategorizer(DataCategorizer):
         {"max_pct": float("inf"), "score": 15, "label": "CRITICAL"},
     ]
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         actual = data.get("actual_rate")
         benchmark = data.get("benchmark_rate")
 
         if actual is None or benchmark is None:
-            return CategorizationResult(category="UNKNOWN", score=50, criteria=["Missing actual_rate or benchmark_rate"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", score=50, criteria=["Missing actual_rate or benchmark_rate"], confidence=0.0)
 
         if benchmark == 0:
-            return CategorizationResult(category="UNKNOWN", score=50, criteria=["Benchmark rate is zero"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", score=50, criteria=["Benchmark rate is zero"], confidence=0.0)
 
         pct_of_benchmark = (actual / benchmark) * 100
 
         for band in self.BENCHMARK_BANDS:
             if pct_of_benchmark <= band["max_pct"]:
-                return CategorizationResult(
+                return UtilityResult(
                     category=band["label"], score=band["score"],
                     criteria=[f"Rate is {pct_of_benchmark:.1f}% of benchmark ({band['label']})"],
                     confidence=1.0, metadata={"actual_rate": actual, "benchmark_rate": benchmark, "pct_of_benchmark": pct_of_benchmark}
                 )
-        return CategorizationResult(category="UNKNOWN", score=50, criteria=["Unable to categorize rate"], confidence=0.0)
+        return UtilityResult(category="UNKNOWN", score=50, criteria=["Unable to categorize rate"], confidence=0.0)
 
 
-@register_categorizer
-class QualityTierCategorizer(DataCategorizer):
+@register_utility
+class QualityTierCategorizer(UtilityFunction):
     """Assigns quality tiers based on entity identification."""
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         entity = data.get("entity", "").lower().strip()
         if not entity:
-            return CategorizationResult(category="UNKNOWN", score=50, criteria=["No entity provided"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", score=50, criteria=["No entity provided"], confidence=0.0)
 
         profile = QUALITY_TIER_PROFILES.get(self.configuration)
         if not profile:
-            return CategorizationResult(category="UNKNOWN", score=50, criteria=[f"No quality tier profile for {self.configuration}"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", score=50, criteria=[f"No quality tier profile for {self.configuration}"], confidence=0.0)
 
         for tier_def in profile:
             for known_entity in tier_def["entities"]:
                 if known_entity.lower() in entity or entity in known_entity.lower():
-                    return CategorizationResult(
+                    return UtilityResult(
                         category=tier_def["tier"], score=tier_def["score"],
                         criteria=[f"Entity '{entity}' matched to {tier_def['tier']}"],
                         confidence=0.95, metadata={"matched_entity": known_entity}
@@ -448,22 +436,22 @@ class QualityTierCategorizer(DataCategorizer):
 
         lowest_tier = profile[-1] if profile else None
         if lowest_tier:
-            return CategorizationResult(category=lowest_tier["tier"], score=lowest_tier["score"], criteria=[f"Entity '{entity}' assigned default tier"], confidence=0.6)
-        return CategorizationResult(category="UNKNOWN", score=50, criteria=[f"Unable to categorize entity '{entity}'"], confidence=0.0)
+            return UtilityResult(category=lowest_tier["tier"], score=lowest_tier["score"], criteria=[f"Entity '{entity}' assigned default tier"], confidence=0.6)
+        return UtilityResult(category="UNKNOWN", score=50, criteria=[f"Unable to categorize entity '{entity}'"], confidence=0.0)
 
 
-@register_categorizer
-class CompositeScoreCategorizer(DataCategorizer):
+@register_utility
+class CompositeScoreCategorizer(UtilityFunction):
     """Calculates weighted composite scores from signal groups with critical signal override."""
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         signals = data.get("signals", {})
         if not signals:
-            return CategorizationResult(score=50, criteria=["No signals provided"], confidence=0.0)
+            return UtilityResult(score=50, criteria=["No signals provided"], confidence=0.0)
 
         weights = SIGNAL_WEIGHT_PROFILES.get(self.coverage, {})
         if not weights:
-            return CategorizationResult(score=50, criteria=[f"No signal weight profile for {self.coverage}"], confidence=0.0)
+            return UtilityResult(score=50, criteria=[f"No signal weight profile for {self.coverage}"], confidence=0.0)
 
         weighted_sum = 0.0
         total_weight = 0.0
@@ -485,7 +473,7 @@ class CompositeScoreCategorizer(DataCategorizer):
                         critical_failures.append({"signal": signal_name, "score": signal_score, "threshold": threshold})
 
         if total_weight == 0:
-            return CategorizationResult(score=50, criteria=["No matching signals found in profile"], confidence=0.0)
+            return UtilityResult(score=50, criteria=["No matching signals found in profile"], confidence=0.0)
 
         composite_score = weighted_sum / total_weight if total_weight > 0 else 50
         action = None
@@ -497,14 +485,14 @@ class CompositeScoreCategorizer(DataCategorizer):
             for failure in critical_failures:
                 criteria.append(f"CRITICAL: {failure['signal']} ({failure['score']}) below threshold ({failure['threshold']})")
 
-        return CategorizationResult(
+        return UtilityResult(
             score=round(composite_score, 2), action=action, criteria=criteria, confidence=1.0 if total_weight >= 0.8 else 0.7,
             metadata={"signal_contributions": signal_contributions, "critical_failures": critical_failures, "total_weight_applied": total_weight}
         )
 
 
-@register_categorizer
-class BooleanFlagCategorizer(DataCategorizer):
+@register_utility
+class BooleanFlagCategorizer(UtilityFunction):
     """Evaluates boolean flags with associated consequences."""
     
     FLAG_DEFINITIONS: Dict[str, Dict[str, Dict[str, Any]]] = {
@@ -530,56 +518,54 @@ class BooleanFlagCategorizer(DataCategorizer):
         },
     }
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         flag_value = data.get("flag")
         if flag_value is None:
-            return CategorizationResult(category="UNKNOWN", score=50, criteria=["No flag value provided"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", score=50, criteria=["No flag value provided"], confidence=0.0)
 
         flag_def = self.FLAG_DEFINITIONS.get(self.configuration)
         if not flag_def:
             bool_val = bool(flag_value)
-            return CategorizationResult(category="TRUE" if bool_val else "FALSE", score=75, modifier=1.0, criteria=[f"{self.configuration} = {bool_val}"], confidence=0.7)
+            return UtilityResult(category="TRUE" if bool_val else "FALSE", score=75, modifier=1.0, criteria=[f"{self.configuration} = {bool_val}"], confidence=0.7)
 
         key = "true" if flag_value else "false"
         consequence = flag_def.get(key, {})
 
-        return CategorizationResult(
+        return UtilityResult(
             category=key.upper(), score=consequence.get("score", 75), modifier=consequence.get("modifier", 1.0),
             action=consequence.get("action"), criteria=[consequence.get("message", f"{self.configuration} = {flag_value}")],
             confidence=1.0, metadata={"flag_definition": consequence}
         )
 
 
-@register_categorizer
-class ScoringLogicCategorizer(DataCategorizer):
+@register_utility
+class ScoringLogicCategorizer(UtilityFunction):
     """Maps discrete states to scores based on predefined logic profiles."""
 
-    def categorize(self, data: Dict[str, Any]) -> CategorizationResult:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         state = data.get("state", "").upper()
         if not state:
-            return CategorizationResult(category="UNKNOWN", score=50, criteria=["No state provided"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", score=50, criteria=["No state provided"], confidence=0.0)
 
         profile = SCORING_LOGIC_PROFILES.get(self.configuration)
         if not profile:
-            return CategorizationResult(category="UNKNOWN", score=50, criteria=[f"No scoring logic profile for {self.configuration}"], confidence=0.0)
+            return UtilityResult(category="UNKNOWN", score=50, criteria=[f"No scoring logic profile for {self.configuration}"], confidence=0.0)
 
         score = profile.get(state)
         if score is not None:
-            return CategorizationResult(category=state, score=score, criteria=[f"{self.configuration} state '{state}' -> score {score}"], confidence=1.0, metadata={"profile": self.configuration, "state": state})
+            return UtilityResult(category=state, score=score, criteria=[f"{self.configuration} state '{state}' -> score {score}"], confidence=1.0, metadata={"profile": self.configuration, "state": state})
 
         available_states = list(profile.keys())
-        return CategorizationResult(category="UNKNOWN", score=50, criteria=[f"State '{state}' not found. Available: {available_states}"], confidence=0.0)
+        return UtilityResult(category="UNKNOWN", score=50, criteria=[f"State '{state}' not found. Available: {available_states}"], confidence=0.0)
 
 
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
 
-def get_categorizer(categorizer_type: str, coverage: str, configuration: str, **kwargs: Any) -> DataCategorizer:
-    """Factory function to instantiate categorizers."""
+def get_categorizer(categorizer_type: str, coverage: str, configuration: str, **kwargs: Any) -> UtilityFunction:
+    """Factory function to instantiate utility functions."""
     type_mapping = {
-        "threshold_bucket": ThresholdBucketCategorizer,
-        "enumeration": EnumerationCategorizer,
         "tier": TierCategorizer,
         "condition": ConditionEvaluator,
         "modifier": ModifierCalculator,
@@ -601,14 +587,12 @@ def get_categorizer(categorizer_type: str, coverage: str, configuration: str, **
 def list_available_profiles() -> Dict[str, List[str]]:
     """List all available configuration profiles."""
     return {
-        "threshold_profiles": list(THRESHOLD_PROFILES.keys()),
         "modifier_profiles": list(MODIFIER_PROFILES.keys()),
         "tier_profiles": list(TIER_PROFILES.keys()),
         "quality_tier_profiles": list(QUALITY_TIER_PROFILES.keys()),
         "condition_bands": list(CONDITION_BANDS.keys()),
         "signal_weight_profiles": list(SIGNAL_WEIGHT_PROFILES.keys()),
         "scoring_logic_profiles": list(SCORING_LOGIC_PROFILES.keys()),
-        "enumeration_profiles": list(ENUMERATION_PROFILES.keys()),
     }
 
 
@@ -621,24 +605,8 @@ if __name__ == "__main__":
     print("CATEGORISERS MODULE - DEMONSTRATION")
     print("=" * 60)
 
-    ### DELETE - THIS IS A CATEGORISER
-    # 1. ThresholdBucketCategorizer
-    print("\n1. ThresholdBucketCategorizer (Marine Fleet Size)")
-    cat = get_categorizer("threshold_bucket", "marine", "fleet_size")
-    for size in [3, 25, 75, 150]:
-        result = cat.categorize({"value": size})
-        print(f"   Fleet size {size}: {result.category} (score={result.score}, modifier={result.modifier})")
-
-    ### DELETE = THIS IS A CATEGORISER
-    # 2. EnumerationCategorizer
-    print("\n2. EnumerationCategorizer (Marine Operator Type)")
-    cat = get_categorizer("enumeration", "marine", "operator_type")
-    test_data = {"vessel_majority": "container", "fleet_size": 60, "offers_liner_service": True}
-    result = cat.categorize(test_data)
-    print(f"   Inferred: {result.category} (score={result.score})")
-
     ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
-    # 3. TierCategorizer
+    # 1. TierCategorizer
     print("\n3. TierCategorizer (Score to Tier)")
     cat = get_categorizer("tier", "marine", "default")
     for score in [900, 750, 600, 450, 300]:
@@ -646,7 +614,7 @@ if __name__ == "__main__":
         print(f"   Score {score}: {result.category} (action={result.action})")
 
     ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
-    # 4. ConditionEvaluator
+    # 2. ConditionEvaluator
     print("\n4. ConditionEvaluator (Safety Record)")
     cat = get_categorizer("condition", "marine", "safety_record_critical")
     for val in [15, 35, 55, 80]:
@@ -654,7 +622,7 @@ if __name__ == "__main__":
         print(f"   Safety score {val}: action={result.action}")
 
     ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
-    # 5. ModifierCalculator
+    # 3. ModifierCalculator
     print("\n5. ModifierCalculator (Composite Marine Modifier)")
     cat = get_categorizer("modifier", "marine", "composite")
     data = {"operator_type": "MAJOR_LINER", "fleet_size": "LARGE", "flag_state_quality": "WHITE"}
@@ -663,14 +631,14 @@ if __name__ == "__main__":
     print(f"   Composite modifier: {result.modifier}")
 
     ### DELETE = THIS IS A AGGREGATOR
-    # 6. MajorityCategorizer
+    # 4. MajorityCategorizer
     print("\n6. MajorityCategorizer (Vessel Category)")
     cat = get_categorizer("majority", "marine", "vessel_category")
     result = cat.categorize({"distribution": {"container": 45, "bulk": 15, "tanker": 10}})
     print(f"   Majority: {result.category} ({result.score:.1f}%)")
 
     #### I DONT KNOW ABOUT THIS ONE YET
-    # 7. QualityTierCategorizer
+    # 6. QualityTierCategorizer
     print("\n7. QualityTierCategorizer (Auditor)")
     cat = get_categorizer("quality_tier", "financial_institutions", "auditor")
     for entity in ["Deloitte", "BDO USA", "Smith CPA"]:
@@ -678,7 +646,7 @@ if __name__ == "__main__":
         print(f"   '{entity}': {result.category} (score={result.score})")
 
     ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
-    # 8. CompositeScoreCategorizer
+    # 7. CompositeScoreCategorizer
     print("\n8. CompositeScoreCategorizer (Marine Signals)")
     cat = get_categorizer("composite_score", "marine", "default")
     signals = {"safety_compliance": 85, "operational_telemetry": 78, "sanctions_compliance": 92, "financial_stability": 70}
@@ -686,7 +654,7 @@ if __name__ == "__main__":
     print(f"   Composite score: {result.score}")
 
     ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
-    # 9. BooleanFlagCategorizer
+    # 8. BooleanFlagCategorizer
     print("\n9. BooleanFlagCategorizer (IOSA Registered)")
     cat = get_categorizer("boolean_flag", "aerospace", "iosa_registered")
     for val in [True, False]:
@@ -694,7 +662,7 @@ if __name__ == "__main__":
         print(f"   IOSA registered={val}: score={result.score}, modifier={result.modifier}")
 
     ### KEEP - THIS NEEDS ADJUSTMENT TO TAKE IN VALUES FROM CONFIG, BUT IS REQUIRED
-    # 10. ScoringLogicCategorizer
+    # 9. ScoringLogicCategorizer
     print("\n10. ScoringLogicCategorizer (PSC Detention)")
     cat = get_categorizer("scoring_logic", "marine", "psc_detention_status")
     for state in ["NONE_3YR", "DETAINED_1_3YR", "DETAINED_3_PLUS_3YR"]:
