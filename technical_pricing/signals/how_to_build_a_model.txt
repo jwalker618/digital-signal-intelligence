@@ -1,0 +1,15 @@
+DSI Model Process
+
+Receive Data ->
+Load Model Configuration ->
+  note: could this be very clever? Could it run multiple models all at the same time, seeing where it got a company hit and outputting premium values?
+  and could this be done across all coverages simutaneously?
+Extract signals ->
+Consolidate Signal Scores into Groups ->
+Create Final Composite Score - > 
+Identify Tier -> Utility Function: TierCategorizer
+Generate Base Premium -> 
+  note: this will either be a pure value or generated from a metric, for example: TIV * %
+Modify Premium ->
+Scale to Limit etc ->
+Output ->
