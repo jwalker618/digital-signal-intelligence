@@ -79,27 +79,6 @@ MODIFIER_PROFILES: Dict[str, Dict[str, Dict[str, float]]] = {
     },
 }
 
-TIER_PROFILES: Dict[str, Dict[str, Any]] = {
-    "default": {
-        "tiers": [
-            {"min_score": 800, "max_score": 1000, "tier": "PREFERRED", "auto_approve": True, "auto_decline": False},
-            {"min_score": 650, "max_score": 799, "tier": "STANDARD_PLUS", "auto_approve": True, "auto_decline": False},
-            {"min_score": 500, "max_score": 649, "tier": "STANDARD", "auto_approve": False, "auto_decline": False},
-            {"min_score": 350, "max_score": 499, "tier": "SUBSTANDARD", "auto_approve": False, "auto_decline": False},
-            {"min_score": 0, "max_score": 349, "tier": "DECLINE", "auto_approve": False, "auto_decline": True},
-        ],
-    },
-    "marine": {
-        "tiers": [
-            {"min_score": 850, "max_score": 1000, "tier": "PREFERRED", "auto_approve": True, "auto_decline": False},
-            {"min_score": 700, "max_score": 849, "tier": "STANDARD_PLUS", "auto_approve": True, "auto_decline": False},
-            {"min_score": 550, "max_score": 699, "tier": "STANDARD", "auto_approve": False, "auto_decline": False},
-            {"min_score": 400, "max_score": 549, "tier": "SUBSTANDARD", "auto_approve": False, "auto_decline": False},
-            {"min_score": 0, "max_score": 399, "tier": "DECLINE", "auto_approve": False, "auto_decline": True},
-        ],
-    },
-}
-
 QUALITY_TIER_PROFILES: Dict[str, List[Dict[str, Any]]] = {
     "auditor": [
         {"tier": "BIG_4", "score": 95, "entities": ["deloitte", "pwc", "pricewaterhousecoopers", "ey", "ernst & young", "kpmg"]},
