@@ -282,23 +282,25 @@ class UtilityFunction(ABC):
 class TierCategorizer(UtilityFunction):
     """Maps composite scores to tier assignments."""
 
-    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
+    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> UtilityResult:
         score = data.get("score")
         if score is None:
             return UtilityResult(category="UNKNOWN", action="REFER", criteria=["No score provided"], confidence=0.0)
 
-        profile = self._get_profile(TIER_PROFILES, self.coverage) or TIER_PROFILES["default"]
-        tiers = profile.get("tiers", [])
+        # grab the models tier definition from the config file.
+        tiers = configuration.get("tier_thresholds",{}).get("tiers", [])
 
         for tier_def in tiers:
             if tier_def["min_score"] <= score <= tier_def["max_score"]:
-                action = "DECLINE" if tier_def.get("auto_decline") else ("APPROVE" if tier_def.get("auto_approve") else "REFER")
                 return UtilityResult(
-                    category=tier_def["tier"], score=score, action=action,
-                    criteria=[f"Score {score} in tier {tier_def['tier']}"], confidence=1.0,
-                    metadata={"tier_def": tier_def}
+                    category=tier_def["label"],
+                    score=score, 
+                    criteria=[f"Score {score} in tier {tier_def['tier']}"], 
+                    confidence=1.0,
+                    metadata={"tier_def": tier_def}     
                 )
-        return UtiltyResult(category="UNKNOWN", score=score, action="REFER", criteria=[f"Score {score} outside defined tiers"], confidence=0.5)
+                
+        return UtiltyResult(category="UNKNOWN", score=score, criteria=[f"Score {score} outside defined tiers"], confidence=0.5, metadata={})
 
 
 @register_utility
