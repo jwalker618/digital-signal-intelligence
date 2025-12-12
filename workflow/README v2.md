@@ -36,10 +36,13 @@ Specifically, the implementation is as follows:
 This approach means there will inevitably be more metatdata records than payloads: ie. it ensures maximum efficiency.
 
 #### Why this is the "Best" Method:
-• **Immutable Audit Trail**: In technical pricing, you must prove exactly what parameters were used to generate a rate. This method guarantees that Run A used Config Hash X. You can download Config Hash X 5 years later and know for a fact it hasn't been tampered with (because the hash would no longer match).
+• **Immutable Audit Trail**: 
+In technical pricing, you must prove exactly what parameters were used to generate a rate. This method guarantees that Run A used Config Hash X. You can download Config Hash X 5 years later and know for a fact it hasn't been tampered with (because the hash would no longer match).
 
-• **Storage Efficiency**: Insurance teams often run "sensitivity tests" changing only one small factor. You avoid storing duplicates of the YAML configuration.
+• **Storage Efficiency**: 
+Insurance teams often run "sensitivity tests" changing only one small factor. You avoid storing duplicates of the YAML configuration.
 
-• **Searchability**: You can add columns to your structured storage table for high-level tags (e.g., LineOfBusiness, Region) to easily find "All UK Motor models built in 2024," without parsing thousands of YAML files.
+• **Searchability**: 
+You can add columns to your structured storage table for high-level tags (e.g., LineOfBusiness, Region) to easily find "All UK Motor models built in 2024," without parsing thousands of YAML files.
 
 ### Treatment of model interactions
