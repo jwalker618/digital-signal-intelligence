@@ -281,7 +281,7 @@ class CompositeScoreCategorizer(UtilityFunction):
             group_sum = 0.0
 
         return UtilityResult(
-            score=round(total_sum, 2),
+            composite_score=round(total_sum, 2),
             metadata={"signal_contributions": signal_contributions}
         )
 
