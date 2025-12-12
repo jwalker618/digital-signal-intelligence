@@ -11,11 +11,11 @@ Extract signals ->
 Consolidate Signal Scores into Groups -
 
 Check specific signal group and signal feature conditions -> ConditionEvaluator
-  note: this will either a) override the tier completely, b) outline a modifier, c) create a note for referral, d) create a note for the file
+  note: this will either a) override the tier completely, b) create a note for referral, c) create a note for the file
   if a) this impacts Identify Tier
-  if b) this impacts Modify Premium
-  if c) this impacts Output.
-  if d) this requires no action.
+  if b) this impacts Output.
+  if c) this requires no action.
+  - Signal conditions cannot modify premium, this can only be done via categorial features.
 
 Create Pure Composite Score - >
 
