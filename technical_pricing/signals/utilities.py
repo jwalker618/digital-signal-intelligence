@@ -21,8 +21,7 @@ These are standard functionalities required by all models - for example, how to 
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type, TypedDict
-from operator import attrgetter
+from typing import Any, Dict, List, Optional, Type, TypedDict, Iterable, Union
 
 UTILITY_REGISTRY: Dict[str, Type["UtilityFunction"]] = {}
 
@@ -493,30 +492,89 @@ class ScoringLogicCategorizer(UtilityFunction):
 # FACTORY FUNCTION
 # =============================================================================
 
-def iter_results(data: Dict[str, Any]) -> Iterable[UtilityResult]:
+def _iter_results(data: Dict[str, Any]) -> Iterable[Any]:
     """
-    Yield all UtilityResult items from any list-like value in the dict.
-    Ignores non-iterables and non-UtilityResult members inside lists.
+    Yield all result-like items (UtilityResult or dict-like) from any list in `data`.
+    Ignores non-lists and non-result items.
     """
     for value in data.values():
         if isinstance(value, list):
             for item in value:
+                # Accept UtilityResult or dict-like with expected keys
                 if isinstance(item, UtilityResult):
                     yield item
+                elif isinstance(item, dict):
+                    yield item
+                else:
+                    # add more types here as required
+                    pass
 
-def max_override(data: Dict[str, Any]) -> Optional[int]:
+def summarize_data(data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Return the highest (max) override across all UtilityResults in `data`.
-    Ignores None overrides. Returns None if no valid overrides exist.
+    single-pass summary:
+      - max_override: int | None
+      - declines:    List[Dict[str, Any]]  (category, action, note)
+      - refers:      List[Dict[str, Any]]  (category, action, override, note)
+      - infos:       List[Dict[str, Any]]  (category, action, note)
+      - modifiers:   List[Dict[str, Any]]  (category, action, note)
     """
-    # Generator over overrides, skipping None
-    overrides = (r.override for r in iter_results(data) if r.override is not None)
-    try:
-        return max(overrides)
-    except ValueError:
-        # raised when the generator is empty (i.e., no valid overrides)
-        return None
+    max_override: Optional[int] = None
+    declines: List[Dict[str, Any]] = []
+    refers: List[Dict[str, Any]] = []
+    infos: List[Dict[str, Any]] = []
+    modifiers: List[Dict[str, Any]] = []
 
+    for raw in _iter_results(data):
+
+        # update max_override
+        ov = data["override"]
+        if isinstance(ov, int):
+            if max_override is None or ov > max_override:
+                max_override = ov
+
+        action = data["action"]
+        if not isinstance(action, str):
+            # If action isn't present, skip classification into action buckets.
+            continue
+
+        action_lower = action.lower()
+
+        if action_lower == "decline":
+            declines.append({
+                "category": data["category"],
+                "action": action,
+                "note": data["note"],
+            })
+        elif action_lower == "refer":
+            refers.append({
+                "category": data["category"],
+                "action": action,
+                "override": ov,   # include override specifically for REFER
+                "note": data["note"],
+            })
+        elif action_lower == "info":
+            infos.append({
+                "category": data["category"],
+                "action": action,
+                "note": data["note"],
+            })
+        elif action_lower == "modifier":
+            modifiers.append({
+                "category": data["category"],
+                "action": action,
+                "note": data["note"],
+            })
+        else:
+            # Unknown or unneeded actions: ignore (or collect under 'others' if desired)
+            pass
+
+    return {
+        "max_override": max_override,
+        "declines": declines,
+        "refers": refers,
+        "infos": infos,
+        "modifiers": modifiers,
+        
 def get_categorizer(categorizer_type: str, coverage: str, configuration: str, **kwargs: Any) -> UtilityFunction:
     """Factory function to instantiate utility functions."""
     type_mapping = {
