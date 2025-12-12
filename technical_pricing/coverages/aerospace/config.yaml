@@ -278,12 +278,12 @@ aerospace:
           modifier: 1.00
           description: ""  
 
-    # ---------------------------------------------------------------------------
-    # SIGNAL GROUPINGS (Categories with Weights)
-    # ---------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # SIGNAL GROUPS
+    # Each group is the product of its underlying features
     # Each group contributes to the composite score
-    # Weights must sum to 1.0---------------------------------------------------------------
-    
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
     signal_groups:
       - id: "network_authority"
         name: "Network Authority"
@@ -359,7 +359,13 @@ aerospace:
         weight: 0.05
         test_scores: {excellent: 92, average: 72, poor: 40}
         critical: false
-        score_condition: route_risk_critical
+        score_condition: true
+        bands:
+          - max: 30
+            override: 4
+            action: "REFER"
+            note: "Elevated route risk"
+        inclusive_max: false
         
       - id: "corporate_governance"
         name: "Corporate Governance"
@@ -369,6 +375,12 @@ aerospace:
         critical: false
         score_condition: null
 
+    # -------------------------------------------------------------------------
+    # SIGNAL FEATURES
+    # Each is a underlying feature for the previously defined groups
+    # Each group contributes to the group score
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
     signal_features:
       network_authority:
         - id: "alliance_membership"
@@ -452,7 +464,17 @@ aerospace:
           weight: 0.20
           inference_utility_function: fatality_history_basefunction
           critical: true
-          score_condition: fatality_history_critical
+          score_condition: true
+          bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Recent fatal accidents"
+          - max: 50
+            override: 4
+            action: "REFER"
+            note: "Fatal accident history"
+          inclusive_max: false
           
         - id: "investigation_findings"
           name: "Investigation Findings"
@@ -469,7 +491,17 @@ aerospace:
           weight: 0.25
           inference_utility_function: certifcate_status_basefunction
           critical: true
-          score_condition: certificate_status_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 5
+              action: "DECLINE"
+              note: "Certificate at risk"
+            - max: 50
+              override: 4
+              action: "REFER"
+              note: "Certificate concerns"
+          inclusive_max: false
           
         - id: "enforcement_actions"
           name: "Enforcement Actions"
@@ -477,7 +509,17 @@ aerospace:
           weight: 0.20
           inference_utility_function: enforcement_action_basefunction
           critical: true
-          score_condition: enforcement_actions_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Severe enforcement history"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Material enforcement actions"
+          inclusive_max: false
           
         - id: "iosa_audit_status"
           name: "IOSA Audit Status"
@@ -501,7 +543,17 @@ aerospace:
           weight: 0.15
           inference_utility_function: eu_safetylist_basefunction
           critical: true
-          score_condition: eu_safety_list_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 5
+              action: "DECLINE"
+              note: "On EU Air Safety List"
+            - max: 70
+              override: 4
+              action: "REFER"
+              note: "EU safety restrictions"
+          inclusive_max: false
           
         - id: "state_safety_rating"
           name: "State of Registry Safety Rating"
@@ -641,7 +693,17 @@ aerospace:
           weight: 0.30
           inference_utility_function: conflict_zone_basefunction
           critical: true
-          score_condition: conflict_zone_critical
+          score_condition: true
+          bands:
+            - max: 20
+              override: 5
+              action: "DECLINE"
+              note: "Direct conflict zone ops"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Significant conflict exposure"
+          inclusive_max: false
           
         - id: "challenging_airports"
           name: "Challenging Airport Operations"
@@ -761,47 +823,6 @@ aerospace:
           auto_approve: false
           auto_decline: true
           base_premium: 8000
-
-    # -------------------------------------------------------------------------
-    # CONDITION DEFINITIONS
-    # -------------------------------------------------------------------------
-  
-    score_conditions:
-      
-      - id: fatality_history_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Recent fatal accidents"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "Fatal accident history"}
-        inclusive_max: false
-      
-      - id: certificate_status_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Certificate at risk"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "Certificate concerns"}
-        inclusive_max: false
-      
-      - id: enforcement_actions_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Severe enforcement history"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Material enforcement actions"}
-        inclusive_max: false
-      
-      - id: eu_safety_list_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "On EU Air Safety List"}
-          - {max: 70, tier_override: 4, action: "REFER", note: "EU safety restrictions"}
-        inclusive_max: false
-      
-      - id: conflict_zone_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Direct conflict zone ops"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Significant conflict exposure"}
-        inclusive_max: false
-      
-      - id: route_risk_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Elevated route risk"}
-        inclusive_max: false
 
     # -------------------------------------------------------------------------
     # PRICING PARAMETERS
