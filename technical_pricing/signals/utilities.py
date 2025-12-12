@@ -224,117 +224,122 @@ class BooleanEvaluator(UtilityFunction):
 
         results: List[UtilityResult] = []
     
-        booleanqueries = self.configuration.get("direct_queries",[])
+        queries: List[Dict[str, Any]] = self.configuration.get("direct_queries",[])
 
-        for query_def in booleanqueries:
-            resp = data.get(query_def["id]) # if the query has been answered it will be in the data dict.
+        for q in queries:
+            qid: Optional[str] = q.get("id")
+            if not qid:
+                continue #malformed
+
+            resp = data.get(qid)
             if resp is None:
-                print("no check")
-            else:
-                if resp == query_def["return"]:
-                    results.append(
-                        UtilityResult(
-                            category: query_def["id]
-                            modifier: query_def["modifier"]
-                            criteria: resp
-                            action: query_def["action"]
-                            override: query_def["override"]
-                            confidence: float = 1.0
-                            metadata: {"query_def": query_def} 
-                        )
-                    )
+                continue
+            if not isinstance(resp, bool):
+                continue
 
+            bands: List[Dict[str, Any]] = q.get("bands",[])
+
+            matched_band: Optional[Dict[str, Any]] = next(
+                (b for b in bands if b.get("return") is resp),
+                None
+            )
+
+            if matched_band:
+                results.append(
+                    UtilityResult(
+                        category: qid
+                        modifier: matched_band.get("modifier")
+                        criteria: resp
+                        action: matched_band.get("action", "UNKNOWN")
+                        override: matched_band.get("override")
+                        confidence: float = 1.0
+                        metadata: {"query_def": q}   
+                    )
+                )
         return results
 
 @register_utility
 class ConditionEvaluator(UtilityFunction):
-    """Evaluates signal values against condition bands."""
+    # Evaluates signal values against condition bands.
 
     def categorize(self, data: Dict[str, Any]) -> List[UtilityResult]:
-
         results: List[UtilityResult] = []
 
-        groupqueries = self.configuration.get("signal_groups",[]) ####HMM THESE CAN BE IN EITHER SIGNAL GROUPS OR IN UNDERLYING SIGNAL FEATURES
-        featurequeries = self.configuration.get("signal_features, {})
+        group_defs: List[Dict[str, Any]] = self.configuration.get("signal_groups", [])
+        feature_defs_map: Dict[str, List[Dict[str, Any]]] = self.configuration.get("signal_features", {})
 
-        for group_def in groupqueries:
-            groupresp = data.get(group_def["id]) # if the query has been answered it will be in the data dict.
-            if group_resp is None:
-                print("no signal")
-            #check if group has a conditional query
-            elif group_def["score_condition") is None:
-                print("no group check, proceed to underlying features")
-            else:
-                bands = group_def.get("bands",[])
-                incmax = group_def["inclusive_max")
-                for band_def in bands:
-                    if incmax == true:
-                        if band_def["max"] <= group_resp:
-                            results.append(
-                                UtilityResult(
-                                    category: group_def["id]
-                                    modifier: group_def["modifier"]
-                                    criteria: group_resp
-                                    action: group_def["action"]
-                                    override: group_def["override"]
-                                    confidence: float = 1.0
-                                    metadata: {"group_def": group_def} 
-                                )
-                            )
-                        elif band_def < group_resp:
-                            results.append(
-                                UtilityResult(
-                                    category: group_def["id]
-                                    modifier: group_def["modifier"]
-                                    criteria: group_resp
-                                    action: group_def["action"]
-                                    override: group_def["override"]
-                                    confidence: float = 1.0
-                                    metadata: {"group_def": group_def} 
-                                )
-                            )
-                        else:
-                            print("signal result not in bands")
+        def match_band(score: Any, bands: List[Dict[str, Any]], inclusive_max: bool) -> Optional[Dict[str, Any]]:
+            """Return the first matching band for the given score, honoring inclusive/exclusive max."""
+            if score is None or not isinstance(score, (int, float)):
+                return None
 
-            for feature_def in featurequeries["group_def["id]]:
-                feature_resp = data.get("feature_def["id"]) # if the query has been answered it will be in the data dict. 
-                if feature_resp is None:
-                    print("no signal")
-                #check if group has a conditional query
-                elif feature_def["score_condition") is None:
-                    print("no signal check")
+            # Sort bands by 'max' ascending for deterministic behavior.
+            sorted_bands = sorted(bands, key=lambda b: b.get("max", float("inf")))
+            for b in sorted_bands:
+                max_val = b.get("max")
+                if max_val is None:
+                    return b
+                if inclusive_max:
+                    if score <= max_val:
+                        return b
                 else:
-                    bands = feature_def.get("bands",[])
-                    incmax = feature_def["inclusive_max")
-                    for band_def in bands:
-                        if incmax == true:
-                            if band_def["max"] <= feature_resp:
-                                results.append(
-                                    UtilityResult(
-                                        category: feature_def["id]
-                                        modifier: feature_def["modifier"]
-                                        criteria: feature_resp
-                                        action: feature_def["action"]
-                                        override: feature_def["override"]
-                                        confidence: float = 1.0
-                                        metadata: {"feature_def": feature_def} 
-                                    )
-                                )
-                            elif band_def < feature_resp:
-                                results.append(
-                                    UtilityResult(
-                                        category: feature_def["id]
-                                        modifier: feature_def["modifier"]
-                                        criteria: feature_resp
-                                        action: feature_def["action"]
-                                        override: feature_def["override"]
-                                        confidence: float = 1.0
-                                        metadata: {"feature_def": feature_def} 
-                                    )
-                                )
-                            else:
-                                pass
-                    
+                    if score < max_val:
+                        return b
+            return None
+
+        # Evaluate group-level signals 
+        for group_def in group_defs:
+            group_id = group_def.get("id")
+            if not group_id:
+                continue  # skip malformed entries
+
+            score_condition = group_def.get("score_condition")
+            # Only evaluate when the score_condition is explicitly True
+            if score_condition is True:
+                group_score = data.get(group_id)  # score is under the same ID in data
+                bands = group_def.get("bands", [])
+                inclusive_max = bool(group_def.get("inclusive_max", False))
+
+                band = match_band(group_score, bands, inclusive_max)
+                if band:
+                    results.append(
+                        UtilityResult(
+                            category: group_id,
+                            modifier: band.get("modifier"),
+                            criteria: group_score,
+                            action: band.get("action", "UNKNOWN),
+                            override: band.get("override"),
+                            confidence: float = 1.0,
+                            metadata: {"group_def": bands}       
+                        )
+                    )
+
+            # Always proceed to evaluate underlying features for this group (if any)
+            for feature_def in feature_defs_map.get(group_id, []):
+                feat_id = feature_def.get("id")
+                if not feat_id:
+                    continue
+
+                feat_score_condition = feature_def.get("score_condition")
+                if feat_score_condition is True:
+                    feat_score = data.get(feat_id)
+                    feat_bands = feature_def.get("bands", [])
+                    feat_inclusive_max = bool(feature_def.get("inclusive_max", False))
+
+                    feat_band = match_band(feat_score, feat_bands, feat_inclusive_max)
+                    if feat_band:
+                        results.append(
+                            UtilityResult(
+                                category: feat_id,
+                                modifier: feat_band.get("modifier"),
+                                criteria: feat_score,
+                                action: feat_band.get("action", "UNKNOWN),
+                                override: feat_band.get("override"),
+                                confidence: float = 1.0,
+                                metadata: {"group_def": feat_band} 
+                            )
+                        )
+
         return results
 
 @register_utility
