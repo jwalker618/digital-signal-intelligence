@@ -8,7 +8,7 @@ Load Model Configuration ->
   and could this be done across all coverages simutaneously?
 
 Extract signals ->
-Consolidate Signal Scores into Groups -
+Create Pure Composite Score - > CompositeScoreCategorizer
 
 Check specific signal group and signal feature conditions -> ConditionEvaluator
   note: this will either a) override the tier completely, b) create a note for referral, c) create a note for the file
@@ -16,8 +16,6 @@ Check specific signal group and signal feature conditions -> ConditionEvaluator
   if b) this impacts Output.
   if c) this requires no action.
   - Signal conditions cannot modify premium, this can only be done via categorial features.
-
-Create Pure Composite Score - >
 
 Check optional query responses -> UtilityFunction: BooleanEvaluator
   note: this will either a) override the tier completely, b) outline a modifier, c) create a note for referral, d) create a note for the file
