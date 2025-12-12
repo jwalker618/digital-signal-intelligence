@@ -3,8 +3,9 @@ Model utility functions
 These are standard functionalities required by all models - for example, how to allocate to a tier.
 
 9 utility function types:
-8. BooleanEvaluator - Yes/no responses to queries ##REVIEWED AND COMPLETED.
 2. ConditionEvaluator - Band-based signal evaluation ##REVIEWED AND COMPLETED.
+7. CompositeScoreCategorizer - Weighted composite scores
+8. BooleanEvaluator - Yes/no responses to queries ##REVIEWED AND COMPLETED.
 1. TierCategorizer - Score to tier mapping ##REVIEWED AND COMPLETED.
 
 
@@ -13,7 +14,7 @@ These are standard functionalities required by all models - for example, how to 
 4. MajorityCategorizer - Dominant category from distribution
 5. RateBenchmarkCategorizer - Compare rates vs benchmarks
 6. QualityTierCategorizer - Quality tier assignment
-7. CompositeScoreCategorizer - Weighted composite scores
+
 
 9. ScoringLogicCategorizer - Discrete state to score mapping
 """
@@ -217,48 +218,6 @@ class UtilityFunction(ABC):
 # =============================================================================
 
 @register_utility
-class BooleanEvaluator(UtilityFunction):
-    """Evaluates boolean returns."""
-
-    def categorize(self, data: Dict[str, Any]) -> List[UtilityResult]:
-
-        results: List[UtilityResult] = []
-    
-        queries: List[Dict[str, Any]] = self.configuration.get("direct_queries",[])
-
-        for q in queries:
-            qid: Optional[str] = q.get("id")
-            if not qid:
-                continue #malformed
-
-            resp = data.get(qid)
-            if resp is None:
-                continue
-            if not isinstance(resp, bool):
-                continue
-
-            bands: List[Dict[str, Any]] = q.get("bands",[])
-
-            matched_band: Optional[Dict[str, Any]] = next(
-                (b for b in bands if b.get("return") is resp),
-                None
-            )
-
-            if matched_band:
-                results.append(
-                    UtilityResult(
-                        category: qid
-                        modifier: matched_band.get("modifier")
-                        criteria: resp
-                        action: matched_band.get("action", "UNKNOWN")
-                        override: matched_band.get("override")
-                        confidence: float = 1.0
-                        metadata: {"query_def": q}   
-                    )
-                )
-        return results
-
-@register_utility
 class ConditionEvaluator(UtilityFunction):
     # Evaluates signal values against condition bands.
 
@@ -340,6 +299,98 @@ class ConditionEvaluator(UtilityFunction):
                             )
                         )
 
+        return results
+
+@register_utility
+class CompositeScoreCategorizer(UtilityFunction):
+    """Calculates weighted composite scores from signal groups with critical signal override."""
+
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
+        signals = data.get("signals", {})
+        if not signals:
+            return UtilityResult(score=50, criteria=["No signals provided"], confidence=0.0)
+
+        weights = SIGNAL_WEIGHT_PROFILES.get(self.coverage, {})
+        if not weights:
+            return UtilityResult(score=50, criteria=[f"No signal weight profile for {self.coverage}"], confidence=0.0)
+
+        weighted_sum = 0.0
+        total_weight = 0.0
+        signal_contributions = []
+        critical_failures = []
+
+        for signal_name, signal_score in signals.items():
+            if signal_name in weights:
+                weight_def = weights[signal_name]
+                weight = weight_def["weight"]
+                contribution = signal_score * weight
+                weighted_sum += contribution
+                total_weight += weight
+                signal_contributions.append({"signal": signal_name, "score": signal_score, "weight": weight, "contribution": contribution})
+
+                if weight_def.get("critical", False):
+                    threshold = weight_def.get("critical_threshold", 40)
+                    if signal_score < threshold:
+                        critical_failures.append({"signal": signal_name, "score": signal_score, "threshold": threshold})
+
+        if total_weight == 0:
+            return UtilityResult(score=50, criteria=["No matching signals found in profile"], confidence=0.0)
+
+        composite_score = weighted_sum / total_weight if total_weight > 0 else 50
+        action = None
+        criteria = [f"Weighted composite score: {composite_score:.1f}"]
+
+        if critical_failures:
+            composite_score = min(composite_score, 499)
+            action = "REFER"
+            for failure in critical_failures:
+                criteria.append(f"CRITICAL: {failure['signal']} ({failure['score']}) below threshold ({failure['threshold']})")
+
+        return UtilityResult(
+            score=round(composite_score, 2), action=action, criteria=criteria, confidence=1.0 if total_weight >= 0.8 else 0.7,
+            metadata={"signal_contributions": signal_contributions, "critical_failures": critical_failures, "total_weight_applied": total_weight}
+        )
+
+@register_utility
+class BooleanEvaluator(UtilityFunction):
+    """Evaluates boolean returns."""
+
+    def categorize(self, data: Dict[str, Any]) -> List[UtilityResult]:
+
+        results: List[UtilityResult] = []
+    
+        queries: List[Dict[str, Any]] = self.configuration.get("direct_queries",[])
+
+        for q in queries:
+            qid: Optional[str] = q.get("id")
+            if not qid:
+                continue #malformed
+
+            resp = data.get(qid)
+            if resp is None:
+                continue
+            if not isinstance(resp, bool):
+                continue
+
+            bands: List[Dict[str, Any]] = q.get("bands",[])
+
+            matched_band: Optional[Dict[str, Any]] = next(
+                (b for b in bands if b.get("return") is resp),
+                None
+            )
+
+            if matched_band:
+                results.append(
+                    UtilityResult(
+                        category: qid
+                        modifier: matched_band.get("modifier")
+                        criteria: resp
+                        action: matched_band.get("action", "UNKNOWN")
+                        override: matched_band.get("override")
+                        confidence: float = 1.0
+                        metadata: {"query_def": q}   
+                    )
+                )
         return results
 
 @register_utility
@@ -481,57 +532,6 @@ class QualityTierCategorizer(UtilityFunction):
         if lowest_tier:
             return UtilityResult(category=lowest_tier["tier"], score=lowest_tier["score"], criteria=[f"Entity '{entity}' assigned default tier"], confidence=0.6)
         return UtilityResult(category="UNKNOWN", score=50, criteria=[f"Unable to categorize entity '{entity}'"], confidence=0.0)
-
-
-@register_utility
-class CompositeScoreCategorizer(UtilityFunction):
-    """Calculates weighted composite scores from signal groups with critical signal override."""
-
-    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
-        signals = data.get("signals", {})
-        if not signals:
-            return UtilityResult(score=50, criteria=["No signals provided"], confidence=0.0)
-
-        weights = SIGNAL_WEIGHT_PROFILES.get(self.coverage, {})
-        if not weights:
-            return UtilityResult(score=50, criteria=[f"No signal weight profile for {self.coverage}"], confidence=0.0)
-
-        weighted_sum = 0.0
-        total_weight = 0.0
-        signal_contributions = []
-        critical_failures = []
-
-        for signal_name, signal_score in signals.items():
-            if signal_name in weights:
-                weight_def = weights[signal_name]
-                weight = weight_def["weight"]
-                contribution = signal_score * weight
-                weighted_sum += contribution
-                total_weight += weight
-                signal_contributions.append({"signal": signal_name, "score": signal_score, "weight": weight, "contribution": contribution})
-
-                if weight_def.get("critical", False):
-                    threshold = weight_def.get("critical_threshold", 40)
-                    if signal_score < threshold:
-                        critical_failures.append({"signal": signal_name, "score": signal_score, "threshold": threshold})
-
-        if total_weight == 0:
-            return UtilityResult(score=50, criteria=["No matching signals found in profile"], confidence=0.0)
-
-        composite_score = weighted_sum / total_weight if total_weight > 0 else 50
-        action = None
-        criteria = [f"Weighted composite score: {composite_score:.1f}"]
-
-        if critical_failures:
-            composite_score = min(composite_score, 499)
-            action = "REFER"
-            for failure in critical_failures:
-                criteria.append(f"CRITICAL: {failure['signal']} ({failure['score']}) below threshold ({failure['threshold']})")
-
-        return UtilityResult(
-            score=round(composite_score, 2), action=action, criteria=criteria, confidence=1.0 if total_weight >= 0.8 else 0.7,
-            metadata={"signal_contributions": signal_contributions, "critical_failures": critical_failures, "total_weight_applied": total_weight}
-        )
 
 @register_utility
 class ScoringLogicCategorizer(UtilityFunction):
