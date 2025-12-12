@@ -299,7 +299,17 @@ aerospace:
         weight: 0.30
         test_scores: {excellent: 98, average: 75, poor: 35}
         critical: true
-        score_condition: safety_record_critical
+        score_condition: true
+        bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Unacceptable safety record"
+          - max: 45
+            override: 4
+            action: "REFER"
+            note: "Significant safety concerns"
+        inclusive_max: false
         
       - id: "regulatory_compliance"
         name: "Regulatory Compliance"
@@ -307,7 +317,17 @@ aerospace:
         weight: 0.20
         test_scores: {excellent: 95, average: 72, poor: 38}
         critical: true
-        score_condition: regulatory_compliance_critical
+        score_condition: true
+        bands:
+          - max: 35
+            override: 5
+            action: "DECLINE"
+            note: "Severe regulatory deficiencies"
+          - max: 50
+            override: 4
+            action: "REFER"
+            note: "Material regulatory concerns"
+        inclusive_max: false
         
       - id: "operational_quality"
         name: "Operational Quality"
@@ -398,7 +418,17 @@ aerospace:
           weight: 0.30
           inference_utility_function: accident_history_basefunction
           critical: true
-          score_condition: accident_history_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Severe accident history"
+            - max: 40
+              override: 4 
+              action: "REFER"
+              note: "Material accident history"
+          inclusive_max: false
           
         - id: "incident_history"
           name: "Incident History"
@@ -737,23 +767,6 @@ aerospace:
     # -------------------------------------------------------------------------
   
     score_conditions:
-      - id: safety_record_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Unacceptable safety record"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant safety concerns"}
-        inclusive_max: false
-      
-      - id: regulatory_compliance_critical
-        bands:
-          - {max: 35, tier_override: 5, action: "DECLINE", note: "Severe regulatory deficiencies"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "Material regulatory concerns"}
-        inclusive_max: false
-      
-      - id: accident_history_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Severe accident history"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Material accident history"}
-        inclusive_max: false
       
       - id: fatality_history_critical
         bands:
