@@ -92,7 +92,7 @@ aerospace:
         bands:
           - return: true
             override: null
-            action: "FLAG"
+            action: "REFER"
             modifier: null
             note: "Recent ownership change"
       - id: "wet_lease_operations"
