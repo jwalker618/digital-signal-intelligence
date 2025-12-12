@@ -290,15 +290,13 @@ aerospace:
         description: "Industry relationships and counterparty quality"
         weight: 0.10
         test_scores: {excellent: 90, average: 65, poor: 35}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "safety_record"
         name: "Safety Record"
         description: "Historical safety performance from public databases"
         weight: 0.30
         test_scores: {excellent: 98, average: 75, poor: 35}
-        critical: true
         score_condition: true
         bands:
           - max: 30
@@ -316,7 +314,6 @@ aerospace:
         description: "Certificate status, enforcement actions, audit results"
         weight: 0.20
         test_scores: {excellent: 95, average: 72, poor: 38}
-        critical: true
         score_condition: true
         bands:
           - max: 35
@@ -334,31 +331,27 @@ aerospace:
         description: "Observable operational metrics"
         weight: 0.15
         test_scores: {excellent: 88, average: 68, poor: 42}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "fleet_quality"
         name: "Fleet Quality"
         description: "Aircraft age, composition, maintenance indicators"
         weight: 0.10
         test_scores: {excellent: 88, average: 65, poor: 32}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "financial_stability"
         name: "Financial Stability"
         description: "Public financial indicators"
         weight: 0.05
         test_scores: {excellent: 85, average: 65, poor: 35}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "route_risk"
         name: "Route Risk"
         description: "Geographic and operational risk exposure"
         weight: 0.05
         test_scores: {excellent: 92, average: 72, poor: 40}
-        critical: false
         score_condition: true
         bands:
           - max: 30
@@ -372,8 +365,7 @@ aerospace:
         description: "Management quality and safety culture indicators"
         weight: 0.05
         test_scores: {excellent: 88, average: 65, poor: 30}
-        critical: false
-        score_condition: null
+        score_condition: false
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -388,40 +380,35 @@ aerospace:
           description: "Membership in Star Alliance, oneworld, SkyTeam"
           weight: 0.25
           inference_utility_function: alliance_membership_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "codeshare_quality"
           name: "Codeshare Partner Quality"
           description: "Average safety rating of codeshare partners"
           weight: 0.20
           inference_utility_function: codeshare_partner_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "lessor_quality"
           name: "Aircraft Lessor Quality"
           description: "Quality tier of aircraft lessors"
           weight: 0.20
           inference_utility_function: aircraft_lessor_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "oem_relationship"
           name: "OEM Relationship"
           description: "Direct relationships with Boeing, Airbus, Embraer"
           weight: 0.15
           inference_utility_function: oem_relationship_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "mro_quality"
           name: "MRO Provider Quality"
           description: "Quality of maintenance providers"
           weight: 0.20
           inference_utility_function: mro_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       safety_record:
         - id: "accident_history"
@@ -429,7 +416,6 @@ aerospace:
           description: "Hull loss and major accidents (10-year lookback)"
           weight: 0.30
           inference_utility_function: accident_history_basefunction
-          critical: true
           score_condition: true
           bands:
             - max: 25
@@ -447,23 +433,20 @@ aerospace:
           description: "Serious incidents, runway excursions, near-misses"
           weight: 0.20
           inference_utility_function: incident_history_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "accident_rate"
           name: "Accident Rate vs Industry"
           description: "Accidents per million departures vs industry average"
           weight: 0.20
           inference_utility_function: accident_rate_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "fatality_history"
           name: "Fatality History"
           description: "Fatal accident history (10-year lookback)"
           weight: 0.20
           inference_utility_function: fatality_history_basefunction
-          critical: true
           score_condition: true
           bands:
           - max: 30
@@ -481,8 +464,7 @@ aerospace:
           description: "Operator cited as causal factor in investigations"
           weight: 0.10
           inference_utility_function: investigation_finding_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       regulatory_compliance:
         - id: "certificate_status"
@@ -490,7 +472,6 @@ aerospace:
           description: "AOC/Part 121/135 certificate status"
           weight: 0.25
           inference_utility_function: certifcate_status_basefunction
-          critical: true
           score_condition: true
           bands:
             - max: 30
@@ -508,7 +489,6 @@ aerospace:
           description: "Regulatory fines, penalties (5-year lookback)"
           weight: 0.20
           inference_utility_function: enforcement_action_basefunction
-          critical: true
           score_condition: true
           bands:
             - max: 25
@@ -526,23 +506,20 @@ aerospace:
           description: "IOSA registration and audit findings"
           weight: 0.15
           inference_utility_function: iosa_audit_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "ramp_inspection"
           name: "Ramp Inspection Results"
           description: "SAFA/SACA ramp inspection findings rate"
           weight: 0.15
           inference_utility_function: ramp_inspection_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "eu_safety_list"
           name: "EU Air Safety List Status"
           description: "Presence on EU banned carrier list"
           weight: 0.15
           inference_utility_function: eu_safetylist_basefunction
-          critical: true
           score_condition: true
           bands:
             - max: 30
@@ -560,8 +537,7 @@ aerospace:
           description: "ICAO USOAP audit results for state"
           weight: 0.10
           inference_utility_function: state_safety_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       operational_quality:
         - id: "otp_score"
@@ -569,48 +545,42 @@ aerospace:
           description: "Departure/arrival punctuality vs benchmarks"
           weight: 0.20
           inference_utility_function: otp_score_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "dispatch_reliability"
           name: "Dispatch Reliability"
           description: "Completion rate and technical dispatch"
           weight: 0.20
           inference_utility_function: dispatch_reliability_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "crew_experience"
           name: "Crew Experience Indicators"
           description: "Average experience from public hiring data"
           weight: 0.15
           inference_utility_function: crew_experience_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "training_indicators"
           name: "Training Program Indicators"
           description: "Training investment signals"
           weight: 0.15
           inference_utility_function: training_indicators_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "operational_complexity"
           name: "Operational Complexity"
           description: "Fleet diversity and route network complexity"
           weight: 0.15
           inference_utility_function: operational_complexity_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "growth_rate"
           name: "Fleet/Capacity Growth Rate"
           description: "Year-over-year growth (rapid growth = higher risk)"
           weight: 0.15
           inference_utility_function: growth_rate_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       fleet_quality:
         - id: "fleet_age"
@@ -618,40 +588,35 @@ aerospace:
           description: "Average aircraft age vs benchmarks"
           weight: 0.30
           inference_utility_function: fleet_age_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "fleet_homogeneity"
           name: "Fleet Homogeneity"
           description: "Fleet type standardization"
           weight: 0.20
           inference_utility_function: fleet_homgenity_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "aircraft_generation"
           name: "Aircraft Generation"
           description: "Percentage of current-generation aircraft"
           weight: 0.25
           inference_utility_function: aircraft_generation_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "order_backlog"
           name: "Fleet Renewal Pipeline"
           description: "Order backlog indicating investment"
           weight: 0.15
           inference_utility_function: order_backlog_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "maintenance_indicators"
           name: "Maintenance Quality Indicators"
           description: "Inferred maintenance quality"
           weight: 0.10
           inference_utility_function: maintenece_indicators_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       financial_stability:
         - id: "credit_rating"
@@ -659,32 +624,28 @@ aerospace:
           description: "Credit rating from major agencies"
           weight: 0.35
           inference_utility_function: credit_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "public_financials"
           name: "Public Financial Health"
           description: "Financial metrics from public filings"
           weight: 0.30
           inference_utility_function: public_financials_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "market_position"
           name: "Market Position"
           description: "Market share and competitive position"
           weight: 0.20
           inference_utility_function: market_position_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "government_support"
           name: "Government Support/Ownership"
           description: "State ownership or support indicators"
           weight: 0.15
           inference_utility_function: goverment_support_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       route_risk:
         - id: "conflict_zone_exposure"
@@ -692,7 +653,6 @@ aerospace:
           description: "Operations through/near conflict zones"
           weight: 0.30
           inference_utility_function: conflict_zone_basefunction
-          critical: true
           score_condition: true
           bands:
             - max: 20
@@ -710,32 +670,28 @@ aerospace:
           description: "Operations to special requirement airports"
           weight: 0.20
           inference_utility_function: challenging_aiports_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "high_risk_destinations"
           name: "High-Risk Country Exposure"
           description: "Operations to elevated risk countries"
           weight: 0.25
           inference_utility_function: highrisk_exposure_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "weather_exposure"
           name: "Severe Weather Exposure"
           description: "Route exposure to severe weather"
           weight: 0.15
           inference_utility_function: weather_exposure_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "terrain_exposure"
           name: "Challenging Terrain Exposure"
           description: "Operations in mountainous terrain"
           weight: 0.10
           inference_utility_function: terrain_exposure_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       corporate_governance:
         - id: "management_stability"
@@ -743,40 +699,35 @@ aerospace:
           description: "CEO/COO tenure and turnover"
           weight: 0.25
           inference_utility_function: management_stability_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "safety_leadership"
           name: "Safety Leadership Visibility"
           description: "Dedicated safety leadership presence"
           weight: 0.25
           inference_utility_function: safety_leadership_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "safety_reporting"
           name: "Safety Transparency"
           description: "Public safety reporting and disclosure"
           weight: 0.20
           inference_utility_function: saefty_reporting_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "corporate_structure"
           name: "Corporate Structure Clarity"
           description: "Transparency of structure and ownership"
           weight: 0.15
           inference_utility_function: corporate_structure_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "industry_engagement"
           name: "Industry Safety Engagement"
           description: "Participation in FSF, IATA Safety Group"
           weight: 0.15
           inference_utility_function: industry_enngagement_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
     # -------------------------------------------------------------------------
     # TIER THRESHOLDS
