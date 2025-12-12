@@ -6,6 +6,7 @@ Receive Data ->
 Load Model Configuration ->
   note: could this be very clever? Could it run multiple models all at the same time, seeing where it got a company hit and outputting premium values?
   and could this be done across all coverages simutaneously?
+  if this was enabled it'd need to be configuration based as it carries a cost.
 
 Extract signals ->
 Create Pure Composite Score - > CompositeScoreCategorizer
@@ -23,7 +24,10 @@ Check optional query responses -> UtilityFunction: BooleanEvaluator
   if b) this impacts Modify Premium
   if c) this impacts Output.
   if d) this requires no action.
-          
+
+Apply all overrides ->
+  note: modifiers cannot be applied yet, they can only occur after base premium has been generated.
+
 Identify Tier -> Utility Function: TierCategorizer
 
 Generate Base Premium -> 
