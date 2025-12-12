@@ -22,6 +22,7 @@ These are standard functionalities required by all models - for example, how to 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Type, TypedDict
+from operator import attrgetter
 
 UTILITY_REGISTRY: Dict[str, Type["UtilityFunction"]] = {}
 
@@ -491,6 +492,30 @@ class ScoringLogicCategorizer(UtilityFunction):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
+def iter_results(data: Dict[str, Any]) -> Iterable[UtilityResult]:
+    """
+    Yield all UtilityResult items from any list-like value in the dict.
+    Ignores non-iterables and non-UtilityResult members inside lists.
+    """
+    for value in data.values():
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, UtilityResult):
+                    yield item
+
+def max_override(data: Dict[str, Any]) -> Optional[int]:
+    """
+    Return the highest (max) override across all UtilityResults in `data`.
+    Ignores None overrides. Returns None if no valid overrides exist.
+    """
+    # Generator over overrides, skipping None
+    overrides = (r.override for r in iter_results(data) if r.override is not None)
+    try:
+        return max(overrides)
+    except ValueError:
+        # raised when the generator is empty (i.e., no valid overrides)
+        return None
 
 def get_categorizer(categorizer_type: str, coverage: str, configuration: str, **kwargs: Any) -> UtilityFunction:
     """Factory function to instantiate utility functions."""
