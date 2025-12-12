@@ -200,24 +200,17 @@ SCORING_LOGIC_PROFILES: Dict[str, Dict[str, float]] = {
 # =============================================================================
 
 class UtilityFunction(ABC):
-    """Abstract base class for all categorizers."""
+    """Abstract base class for all categorisers."""
 
-    def __init__(self, coverage: str, configuration: str, **kwargs: Any):
-        self.coverage = coverage
-        self.configuration = configuration
+    def __init__(self, coverage: str, cov_configuration: str, configuration: Dict[str, Any], **kwargs: Any):
+        self.coverage = coverage                     # the actual coverage cohort, eg aerospace. 
+        self.cov_configuration = cov_configuration   # the specific configuration file header under that coverage, eg aerospace_general
+        self.configuration = configuration           # the specific configuration under the file header
         self.kwargs = kwargs
 
     @abstractmethod
     def categorize(self, data: Dict[str, Any]) -> UtilityResult:
         raise NotImplementedError
-
-    def _get_profile(self, profiles: Dict[str, Any], config_key: str, coverage_key: Optional[str] = None) -> Any:
-        cov = coverage_key or self.coverage
-        config_data = profiles.get(config_key, {})
-        if isinstance(config_data, dict):
-            return config_data.get(cov) or config_data.get("default")
-        return config_data
-
 
 # =============================================================================
 # UTILITY IMPLEMENTATIONS
@@ -227,15 +220,14 @@ class UtilityFunction(ABC):
 class BooleanEvaluator(UtilityFunction):
     """Evaluates boolean returns."""
 
-    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> List[UtilityResult]:
+    def categorize(self, data: Dict[str, Any]) -> List[UtilityResult]:
 
         results: List[UtilityResult] = []
-        
-        # grab the configurations direct query definition
-        booleanqueries = configuration.get("direct_queries",[])
+    
+        booleanqueries = self.configuration.get("direct_queries",[])
 
         for query_def in booleanqueries:
-            resp = data.get(query_def["id]) #if the query has been answered it will be in the data dict.
+            resp = data.get(query_def["id]) # if the query has been answered it will be in the data dict.
             if resp is None:
                 print("no check")
             else:
@@ -258,49 +250,90 @@ class BooleanEvaluator(UtilityFunction):
 class ConditionEvaluator(UtilityFunction):
     """Evaluates signal values against condition bands."""
 
-    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> List[UtilityResult]:
+    def categorize(self, data: Dict[str, Any]) -> List[UtilityResult]:
 
         results: List[UtilityResult] = []
 
-        #grab the configurations signal group and signal feature definitions
-        groupqueries = configuration.get("signal_groups",[]) ####HMM THESE CAN BE IN EITHER SIGNAL GROUPS OR IN UNDERLYING SIGNAL FEATURES
-        featurequeries = configuration.get("signal_features, {})
+        groupqueries = self.configuration.get("signal_groups",[]) ####HMM THESE CAN BE IN EITHER SIGNAL GROUPS OR IN UNDERLYING SIGNAL FEATURES
+        featurequeries = self.configuration.get("signal_features, {})
 
         for group_def in groupqueries:
-            group_resp = data.get(group_def["id]) #if the query has been answered it will be in the data dict. ##CHECK THIS
+            groupresp = data.get(group_def["id]) # if the query has been answered it will be in the data dict.
             if group_resp is None:
-                print("no check, pass to feature check")
+                print("no signal")
+            #check if group has a conditional query
+            elif group_def["score_condition") is None:
+                print("no group check, proceed to underlying features")
             else:
-                if group_resp == group_def["return"]:  ##CHECK THIS
-                    results.append(
-                        UtilityResult(
-                            category: group_def["id]
-                            modifier: group_def["modifier"]
-                            criteria: group_resp
-                            action: group_def["action"]
-                            override: group_def["override"]
-                            confidence: float = 1.0
-                            metadata: {"group_def": group_def}  
-                        )
-                    )
+                bands = group_def.get("bands",[])
+                incmax = group_def["inclusive_max")
+                for band_def in bands:
+                    if incmax == true:
+                        if band_def["max"] <= group_resp:
+                            results.append(
+                                UtilityResult(
+                                    category: group_def["id]
+                                    modifier: group_def["modifier"]
+                                    criteria: group_resp
+                                    action: group_def["action"]
+                                    override: group_def["override"]
+                                    confidence: float = 1.0
+                                    metadata: {"group_def": group_def} 
+                                )
+                            )
+                        elif band_def < group_resp:
+                            results.append(
+                                UtilityResult(
+                                    category: group_def["id]
+                                    modifier: group_def["modifier"]
+                                    criteria: group_resp
+                                    action: group_def["action"]
+                                    override: group_def["override"]
+                                    confidence: float = 1.0
+                                    metadata: {"group_def": group_def} 
+                                )
+                            )
+                        else:
+                            print("signal result not in bands")
 
             for feature_def in featurequeries["group_def["id]]:
-                feature_resp = data.get("feature_def["id"]) #if the query has been answered it will be in the data dict. ##CHECK THIS
+                feature_resp = data.get("feature_def["id"]) # if the query has been answered it will be in the data dict. 
                 if feature_resp is None:
-                    print("no check, pass to next signal")
+                    print("no signal")
+                #check if group has a conditional query
+                elif feature_def["score_condition") is None:
+                    print("no signal check")
                 else:
-                    if feature_resp == feature_def["return"]: ##CHECK THIS
-                        results.append(
-                            UtilityResult(
-                                category: feature_def["id]
-                                modifier: feature_def["modifier"]
-                                criteria: feature_resp
-                                action: feature_def["action"]
-                                override: feature_def["override"]
-                                confidence: float = 1.0
-                                metadata: {"feature_def": feature_def}  
-                            )
-                        )
+                    bands = feature_def.get("bands",[])
+                    incmax = feature_def["inclusive_max")
+                    for band_def in bands:
+                        if incmax == true:
+                            if band_def["max"] <= feature_resp:
+                                results.append(
+                                    UtilityResult(
+                                        category: feature_def["id]
+                                        modifier: feature_def["modifier"]
+                                        criteria: feature_resp
+                                        action: feature_def["action"]
+                                        override: feature_def["override"]
+                                        confidence: float = 1.0
+                                        metadata: {"feature_def": feature_def} 
+                                    )
+                                )
+                            elif band_def < feature_resp:
+                                results.append(
+                                    UtilityResult(
+                                        category: feature_def["id]
+                                        modifier: feature_def["modifier"]
+                                        criteria: feature_resp
+                                        action: feature_def["action"]
+                                        override: feature_def["override"]
+                                        confidence: float = 1.0
+                                        metadata: {"feature_def": feature_def} 
+                                    )
+                                )
+                            else:
+                                pass
                     
         return results
 
@@ -308,25 +341,25 @@ class ConditionEvaluator(UtilityFunction):
 class TierCategorizer(UtilityFunction):
     """Maps composite scores to tier assignments."""
 
-    def categorize(self, data: Dict[str, Any], configuration: Dict[str, Any]) -> UtilityResult:
-        score = data.get("score")
-        if score is None:
+    def categorize(self, data: Dict[str, Any]) -> UtilityResult:
+        composite_score = data.get("composite_score")
+        if composite_score is None:
             return UtilityResult(category="UNKNOWN", action="REFER", criteria=["No score provided"], confidence=0.0)
 
         # grab the models tier definition
         tiers = configuration.get("tier_thresholds",{}).get("tiers", [])
 
         for tier_def in tiers:
-            if tier_def["min_score"] <= score <= tier_def["max_score"]:
+            if tier_def["min_score"] <= composite_score <= tier_def["max_score"]:
                 return UtilityResult(
                     category=tier_def["label"],
-                    score=score, 
-                    criteria=[f"Score {score} in tier {tier_def['tier']}"], 
+                    score=composite_score, 
+                    criteria=[f"Composite Score {composite_score} in tier {tier_def['tier']}"], 
                     confidence=1.0,
                     metadata={"tier_def": tier_def}     
                 )
                 
-        return UtiltyResult(category="UNKNOWN", score=score, criteria=[f"Score {score} outside defined tiers"], confidence=0.5, metadata={})
+        return UtiltyResult(category="UNKNOWN", score=composite_score, criteria=[f"Composite Score {composite_score} outside defined tiers"], confidence=0.5, metadata={})
 
 @register_utility
 class ModifierCalculator(UtilityFunction):
