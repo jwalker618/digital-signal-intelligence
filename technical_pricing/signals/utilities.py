@@ -4,7 +4,7 @@ These are standard functionalities required by all models - for example, how to 
 
 9 utility function types:
 8. BooleanEvaluator - Yes/no responses to queries ##REVIEWED AND COMPLETED.
-2. ConditionEvaluator - Band-based signal evaluation
+2. ConditionEvaluator - Band-based signal evaluation ##REVIEWED AND COMPLETED.
 1. TierCategorizer - Score to tier mapping ##REVIEWED AND COMPLETED.
 
 
