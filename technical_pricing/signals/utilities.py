@@ -37,7 +37,7 @@ class UtilityResult:
     modifier: Optional[float] = None
     criteria: List[str] = field(default_factory=list)
     action: Optional[str] = None
-    override: Optional[str] = None
+    override: Optional[int] = None
     confidence: float = 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
