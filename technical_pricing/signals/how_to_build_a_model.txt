@@ -8,8 +8,15 @@ Load Model Configuration ->
   and could this be done across all coverages simutaneously?
 
 Extract signals ->
-Check specific signal conditions ->
-Consolidate Signal Scores into Groups ->
+Consolidate Signal Scores into Groups -
+
+Check specific signal group and signal feature conditions -> ConditionEvaluator
+  note: this will either a) override the tier completely, b) outline a modifier, c) create a note for referral, d) create a note for the file
+  if a) this impacts Identify Tier
+  if b) this impacts Modify Premium
+  if c) this impacts Output.
+  if d) this requires no action.
+
 Create Pure Composite Score - >
 
 Check optional query responses -> UtilityFunction: BooleanEvaluator
