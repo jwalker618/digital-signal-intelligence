@@ -25,7 +25,9 @@ Check optional query responses -> UtilityFunction: BooleanEvaluator
   if c) this impacts Output.
   if d) this requires no action.
 
-Apply all overrides ->
+Extract all actions, overrides, notes etc. -> def summarize_data
+
+Apply all overrides -> 
   note: modifiers cannot be applied yet, they can only occur after base premium has been generated.
 
 Identify Tier -> Utility Function: TierCategorizer
