@@ -4,7 +4,7 @@ These are standard functionalities required by all models - for example, how to 
 
 9 utility function types:
 2. ConditionEvaluator - Band-based signal evaluation ##REVIEWED AND COMPLETED.
-7. CompositeScoreCategorizer - Weighted composite scores
+7. CompositeScoreCategorizer - Weighted composite scores ##REVIEWED AND COMPLETED
 8. BooleanEvaluator - Yes/no responses to queries ##REVIEWED AND COMPLETED.
 1. TierCategorizer - Score to tier mapping ##REVIEWED AND COMPLETED.
 
@@ -118,70 +118,6 @@ QUALITY_TIER_PROFILES: Dict[str, List[Dict[str, Any]]] = {
         {"tier": "REGIONAL", "score": 68, "entities": []},
         {"tier": "UNKNOWN", "score": 55, "entities": []},
     ],
-}
-
-SIGNAL_WEIGHT_PROFILES: Dict[str, Dict[str, SignalWeight]] = {
-    "marine": {
-        "safety_compliance": {"weight": 0.25, "critical": True, "critical_threshold": 40},
-        "operational_telemetry": {"weight": 0.20, "critical": True, "critical_threshold": 40},
-        "sanctions_compliance": {"weight": 0.15, "critical": True, "critical_threshold": 40},
-        "financial_stability": {"weight": 0.12, "critical": False, "critical_threshold": 30},
-        "fleet_quality": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "classification_quality": {"weight": 0.08, "critical": False, "critical_threshold": 30},
-        "p_and_i_quality": {"weight": 0.05, "critical": False, "critical_threshold": 30},
-        "management_quality": {"weight": 0.05, "critical": False, "critical_threshold": 30},
-    },
-    "aerospace": {
-        "safety_record": {"weight": 0.30, "critical": True, "critical_threshold": 40},
-        "regulatory_compliance": {"weight": 0.20, "critical": True, "critical_threshold": 40},
-        "operational_quality": {"weight": 0.15, "critical": False, "critical_threshold": 35},
-        "fleet_quality": {"weight": 0.12, "critical": False, "critical_threshold": 30},
-        "financial_stability": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "maintenance_quality": {"weight": 0.08, "critical": False, "critical_threshold": 30},
-        "crew_quality": {"weight": 0.05, "critical": False, "critical_threshold": 25},
-    },
-    "cyber": {
-        "technical_infrastructure": {"weight": 0.35, "critical": True, "critical_threshold": 40},
-        "public_record": {"weight": 0.25, "critical": True, "critical_threshold": 40},
-        "governance": {"weight": 0.18, "critical": False, "critical_threshold": 35},
-        "vendor_management": {"weight": 0.12, "critical": False, "critical_threshold": 30},
-        "incident_response": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-    },
-    "d_and_o": {
-        "governance": {"weight": 0.25, "critical": True, "critical_threshold": 40},
-        "litigation": {"weight": 0.25, "critical": True, "critical_threshold": 40},
-        "financial": {"weight": 0.20, "critical": True, "critical_threshold": 40},
-        "regulatory": {"weight": 0.12, "critical": False, "critical_threshold": 35},
-        "public_company_factors": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "industry_factors": {"weight": 0.08, "critical": False, "critical_threshold": 30},
-    },
-    "financial_institutions": {
-        "regulatory_compliance": {"weight": 0.25, "critical": True, "critical_threshold": 40},
-        "financial_condition": {"weight": 0.20, "critical": True, "critical_threshold": 40},
-        "credit_quality": {"weight": 0.15, "critical": False, "critical_threshold": 35},
-        "operational_risk": {"weight": 0.12, "critical": False, "critical_threshold": 30},
-        "cybersecurity": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "governance": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "litigation": {"weight": 0.08, "critical": False, "critical_threshold": 30},
-    },
-    "energy": {
-        "safety_performance": {"weight": 0.30, "critical": True, "critical_threshold": 40},
-        "environmental_compliance": {"weight": 0.20, "critical": True, "critical_threshold": 40},
-        "regulatory_standing": {"weight": 0.15, "critical": False, "critical_threshold": 35},
-        "operational_quality": {"weight": 0.12, "critical": False, "critical_threshold": 30},
-        "financial_stability": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "asset_quality": {"weight": 0.08, "critical": False, "critical_threshold": 30},
-        "esg_factors": {"weight": 0.05, "critical": False, "critical_threshold": 25},
-    },
-    "professional_indemnity": {
-        "regulatory_standing": {"weight": 0.25, "critical": True, "critical_threshold": 40},
-        "claims_history": {"weight": 0.20, "critical": True, "critical_threshold": 40},
-        "network_authority": {"weight": 0.15, "critical": False, "critical_threshold": 35},
-        "peer_review": {"weight": 0.12, "critical": False, "critical_threshold": 30},
-        "quality_management": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "client_quality": {"weight": 0.10, "critical": False, "critical_threshold": 30},
-        "professional_development": {"weight": 0.08, "critical": False, "critical_threshold": 25},
-    },
 }
 
 SCORING_LOGIC_PROFILES: Dict[str, Dict[str, float]] = {
@@ -303,52 +239,50 @@ class ConditionEvaluator(UtilityFunction):
 
 @register_utility
 class CompositeScoreCategorizer(UtilityFunction):
-    """Calculates weighted composite scores from signal groups with critical signal override."""
+    # Calculates weighted composite scores from signal groups.
 
     def categorize(self, data: Dict[str, Any]) -> UtilityResult:
-        signals = data.get("signals", {})
-        if not signals:
-            return UtilityResult(score=50, criteria=["No signals provided"], confidence=0.0)
 
-        weights = SIGNAL_WEIGHT_PROFILES.get(self.coverage, {})
-        if not weights:
-            return UtilityResult(score=50, criteria=[f"No signal weight profile for {self.coverage}"], confidence=0.0)
+        group_defs: List[Dict[str, Any]] = self.configuration.get("signal_groups", [])
+        feature_defs_map: Dict[str, List[Dict[str, Any]]] = self.configuration.get("signal_features", {})
 
-        weighted_sum = 0.0
-        total_weight = 0.0
+        total_sum = 0.0
+        group_sum = 0.0
         signal_contributions = []
-        critical_failures = []
+        
+        # Evaluate group-level signals
+        for group_def in group_defs:
+            group_id = group_def.get("id")
+    
+            for feature_def in feature_defs_map.get(group_id, []):
+                signal_contributions.append(
+                    {
+                        "signal_group": group_id,
+                        "signal_feature": feature_def.get("id"), 
+                        "score": data.get("id"), 
+                        "weight": feature_def.get("weight"), 
+                        "contribution": data.get("id") * feature_def.get("weight")
+                    }
+                )
+                #update running total 
+                group_sum += ( data.get("id") * feature_def.get("weight") )
 
-        for signal_name, signal_score in signals.items():
-            if signal_name in weights:
-                weight_def = weights[signal_name]
-                weight = weight_def["weight"]
-                contribution = signal_score * weight
-                weighted_sum += contribution
-                total_weight += weight
-                signal_contributions.append({"signal": signal_name, "score": signal_score, "weight": weight, "contribution": contribution})
-
-                if weight_def.get("critical", False):
-                    threshold = weight_def.get("critical_threshold", 40)
-                    if signal_score < threshold:
-                        critical_failures.append({"signal": signal_name, "score": signal_score, "threshold": threshold})
-
-        if total_weight == 0:
-            return UtilityResult(score=50, criteria=["No matching signals found in profile"], confidence=0.0)
-
-        composite_score = weighted_sum / total_weight if total_weight > 0 else 50
-        action = None
-        criteria = [f"Weighted composite score: {composite_score:.1f}"]
-
-        if critical_failures:
-            composite_score = min(composite_score, 499)
-            action = "REFER"
-            for failure in critical_failures:
-                criteria.append(f"CRITICAL: {failure['signal']} ({failure['score']}) below threshold ({failure['threshold']})")
+            #capture final group value
+            signal.contributions.append(
+                {
+                    "signal_group": group_id,
+                    "signal_feature": null,
+                    "score": group_sum,
+                    "weight": group_def.get("weight"),
+                    "contribution": group_sum * group_def.get("weight")
+                }
+            )
+            total_sum += ( group_sum * group_def.get("weight") )
+            group_sum = 0.0
 
         return UtilityResult(
-            score=round(composite_score, 2), action=action, criteria=criteria, confidence=1.0 if total_weight >= 0.8 else 0.7,
-            metadata={"signal_contributions": signal_contributions, "critical_failures": critical_failures, "total_weight_applied": total_weight}
+            score=round(total_sum, 2),
+            metadata={"signal_contributions": signal_contributions}
         )
 
 @register_utility
