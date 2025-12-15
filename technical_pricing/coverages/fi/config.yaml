@@ -1,25 +1,32 @@
 # =============================================================================
 # DSI Model Configuration
-# =============================================================================
-#
-# This file defines the complete configuration for a coverage type.
-# It is the single source of truth for:
-#   - Model structure and parameters
-#   - Signal definitions and weights
-#   - Pricing factors and thresholds
-#   - Test profiles for actuarial validation
-#
-# Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
-#
-# DSI PRINCIPLES APPLIED:
-#   1. All signals must be externally observable (no application questions required)
-#   2. Direct queries are OPTIONAL - model must work without them
-#   3. Categorical features are inferred from observable data
-#   4. Tier determines base premium; modifiers adjust for exposure characteristics
-#   5. All sources must be publicly accessible or through standard data providers
-#
-# Version: 2.0.0
-# Last Updated: 2025-12
+# 
+# This file holds all the relvant configuration types for a single coverage.
+# For example,
+# coverage:         the actual coverage cohort, eg aerospace
+#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# 
+# There can be multiple configurations saved under a coverage.
+# 
+# A configuration is the single source of truth for:
+#   - 1) direct (optional) queries
+#   - 2) categorical features
+#   - 3) signal groups and underlying features
+#   - the source and impact of 1- 3
+#   - tier definitions
+#   - other pricing parameters
+#   - test profiles for validation
+# 
+# When a technical model is generated:
+# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
+# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
+# 
+# All DSI principles must be adhered to, specifically:
+# 1. All signals must be externally observable (no application questions required)
+# 2. Direct queries are OPTIONAL - model must work without them
+# 3. Categorical features are inferred from observable data
+# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
+# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 financial_institutions:
@@ -39,30 +46,53 @@ financial_institutions:
       min_premium: 25000
       default_currency: "USD"
 
-    direct_optional_queries:
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:
       - id: "regulatory_action"
         question: "Any pending or recent (3 years) regulatory enforcement actions?"
-        direct_condition: regulatory_action_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Regulatory enforcement disclosed"
       - id: "examination_issues"
         question: "Any MRAs/MRIAs outstanding from most recent examination?"
-        direct_condition: examination_issues_referral
-        
+        bands:
+          - return: true
+            override: 3
+            action: "REFER"
+            note: "Outstanding MRAs/MRIAs"
       - id: "litigation_pending"
         question: "Any material litigation pending (class action, regulatory)?"
-        direct_condition: litigation_pending_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "Material litigation pending"
       - id: "cyber_incident"
         question: "Any reportable cyber incidents in past 24 months?"
-        direct_condition: cyber_incident_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "Recent cyber incident"
       - id: "significant_growth"
         question: "Asset growth >20% in past 12 months?"
-        direct_condition: significant_growth_referral
-        
+        bands:
+          - return: true 
+            override: null
+            action: "FLAG"
+            note: "Rapid growth >20%"
       - id: "new_product_line"
         question: "Any significant new product lines launched in past 12 months?"
-        direct_condition: new_product_referral
+        bands:
+          - return: true
+            override: null
+            action: "FLAG"
+            note: "New product line risk"
+        
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -679,83 +709,52 @@ financial_institutions:
     # TIER THRESHOLDS
     # -------------------------------------------------------------------------
     tier_thresholds:
-      tier_1:
-        id: 1
-        label: "PREFERRED"
-        min_score: 800
-        max_score: 1000
-        description: "Excellent institution - auto-approve at preferred pricing"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 1500  # Per $1M combined limit
-        
-      tier_2:
-        id: 2
-        label: "STANDARD"
-        min_score: 650
-        max_score: 799
-        description: "Good institution - auto-approve at standard pricing"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 2200
-        
-      tier_3:
-        id: 3
-        label: "ELEVATED"
-        min_score: 500
-        max_score: 649
-        description: "Moderate risk - auto-approve with conditions"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 3200
-        
-      tier_4:
-        id: 4
-        label: "HIGH_RISK"
-        min_score: 350
-        max_score: 499
-        description: "High risk - manual review required"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 5000
-        
-      tier_5:
-        id: 5
-        label: "CRITICAL"
-        min_score: 0
-        max_score: 349
-        description: "Critical risk - decline or senior review"
-        auto_approve: false
-        auto_decline: true
-        base_premium: 8000
+      tiers:
+        - id: 1
+          label: "PREFERRED"
+          min_score: 800
+          max_score: 1000
+          description: "Excellent institution - auto-approve at preferred pricing"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 1500  # Per $1M combined limit
+        - id: 2       
+          label: "STANDARD"
+          min_score: 650
+          max_score: 799
+          description: "Good institution - auto-approve at standard pricing"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 2200
+        - id: 3       
+          label: "ELEVATED"
+          min_score: 500
+          max_score: 649
+          description: "Moderate risk - auto-approve with conditions"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 3200
+        - id: 4        
+          label: "HIGH_RISK"
+          min_score: 350
+          max_score: 499
+          description: "High risk - manual review required"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 5000
+        - id: 5        
+          label: "CRITICAL"
+          min_score: 0
+          max_score: 349
+          description: "Critical risk - decline or senior review"
+          auto_approve: false
+          auto_decline: true
+          base_premium: 8000
 
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: regulatory_action_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Regulatory enforcement disclosed"}
-      
-      - id: examination_issues_referral
-        bands:
-          - {return: true, tier_override: 3, action: "REFER", note: "Outstanding MRAs/MRIAs"}
-      
-      - id: litigation_pending_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Material litigation pending"}
-      
-      - id: cyber_incident_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "Recent cyber incident"}
-      
-      - id: significant_growth_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "Rapid growth >20%"}
-      
-      - id: new_product_referral
-        bands:
-          - {return: true, tier_override: null, action: "FLAG", note: "New product line risk"}
+
   
     score_conditions:
       - id: regulatory_compliance_critical

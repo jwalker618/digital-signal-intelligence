@@ -1,25 +1,32 @@
 # =============================================================================
 # DSI Model Configuration
-# =============================================================================
-#
-# This file defines the complete configuration for a coverage type.
-# It is the single source of truth for:
-#   - Model structure and parameters
-#   - Signal definitions and weights
-#   - Pricing factors and thresholds
-#   - Test profiles for actuarial validation
-#
-# Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
-#
-# DSI PRINCIPLES APPLIED:
-#   1. All signals must be externally observable (no application questions required)
-#   2. Direct queries are OPTIONAL - model must work without them
-#   3. Categorical features are inferred from observable data
-#   4. Tier determines base premium; modifiers adjust for exposure characteristics
-#   5. All sources must be publicly accessible or through standard data providers
-#
-# Version: 2.0.0
-# Last Updated: 2025-12
+# 
+# This file holds all the relvant configuration types for a single coverage.
+# For example,
+# coverage:         the actual coverage cohort, eg aerospace
+#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# 
+# There can be multiple configurations saved under a coverage.
+# 
+# A configuration is the single source of truth for:
+#   - 1) direct (optional) queries
+#   - 2) categorical features
+#   - 3) signal groups and underlying features
+#   - the source and impact of 1- 3
+#   - tier definitions
+#   - other pricing parameters
+#   - test profiles for validation
+# 
+# When a technical model is generated:
+# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
+# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
+# 
+# All DSI principles must be adhered to, specifically:
+# 1. All signals must be externally observable (no application questions required)
+# 2. Direct queries are OPTIONAL - model must work without them
+# 3. Categorical features are inferred from observable data
+# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
+# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 marine:
@@ -48,26 +55,45 @@ marine:
       min_premium: 50000
       default_currency: "USD"
 
-    direct_optional_queries:
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:
       - id: "fleet_size"
         question: "Total number of vessels in owned/operated fleet?"
-        direct_condition: fleet_size_info_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "INFO"
+            note: "Fleet size recorded"
       - id: "psc_detentions"
         question: "Any vessels detained by port state control in past 36 months?"
-        direct_condition: psc_detentions_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "REFER"
+            note: "PSC detentions in past 36 months"
       - id: "total_losses"
         question: "Any total losses or major casualties in past 5 years?"
-        direct_condition: total_losses_referral
-        
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Total losses in past 5 years"
       - id: "third_party_manager"
         question: "Is the fleet managed by a third-party technical manager?"
-        direct_condition: third_party_manager_info_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "INFO"
+            note: "Third-party technical management"
       - id: "sanctioned_trade"
         question: "Any vessels currently trading to sanctioned regions?"
-        direct_condition: sanctioned_trade_referral
+        bands:
+          - return: true
+            override: 5
+            action: "DECLINE"
+            note: "Trading to sanctioned regions - coverage not available"
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -660,79 +686,51 @@ marine:
     # TIER THRESHOLDS
     # -------------------------------------------------------------------------
     tier_thresholds:
-      tier_1:
-        id: 1
-        label: "PREFERRED"
-        min_score: 800
-        max_score: 1000
-        description: "Excellent operator - auto-approve at preferred pricing"
-        auto_approve: true
-        auto_decline: false
-        base_rate: 0.0015  # 0.15% of insured value
-        
-      tier_2:
-        id: 2
-        label: "STANDARD"
-        min_score: 650
-        max_score: 799
-        description: "Good operator - auto-approve at standard pricing"
-        auto_approve: true
-        auto_decline: false
-        base_rate: 0.0022  # 0.22% of insured value
-        
-      tier_3:
-        id: 3
-        label: "ELEVATED"
-        min_score: 500
-        max_score: 649
-        description: "Moderate risk - auto-approve with conditions"
-        auto_approve: false
-        auto_decline: false
-        base_rate: 0.0032  # 0.32% of insured value
-        
-      tier_4:
-        id: 4
-        label: "HIGH_RISK"
-        min_score: 350
-        max_score: 499
-        description: "High risk - manual review required"
-        auto_approve: false
-        auto_decline: false
-        base_rate: 0.0050  # 0.50% of insured value
-        
-      tier_5:
-        id: 5
-        label: "CRITICAL"
-        min_score: 0
-        max_score: 349
-        description: "Critical risk - decline or senior review"
-        auto_approve: false
-        auto_decline: true
-        base_rate: 0.0080  # 0.80% of insured value
+      tiers:
+        - id: 1
+          label: "PREFERRED"
+          min_score: 800
+          max_score: 1000
+          description: "Excellent operator - auto-approve at preferred pricing"
+          auto_approve: true
+          auto_decline: false
+          base_rate: 0.0015  # 0.15% of insured value
+        - id: 2    
+          label: "STANDARD"
+          min_score: 650
+          max_score: 799
+          description: "Good operator - auto-approve at standard pricing"
+          auto_approve: true
+          auto_decline: false
+          base_rate: 0.0022  # 0.22% of insured value
+        - id: 3      
+          label: "ELEVATED"
+          min_score: 500
+          max_score: 649
+          description: "Moderate risk - auto-approve with conditions"
+          auto_approve: false
+          auto_decline: false
+          base_rate: 0.0032  # 0.32% of insured value
+        - id: 4        
+          label: "HIGH_RISK"
+          min_score: 350
+          max_score: 499
+          description: "High risk - manual review required"
+          auto_approve: false
+          auto_decline: false
+          base_rate: 0.0050  # 0.50% of insured value
+        - id: 5        
+          label: "CRITICAL"
+          min_score: 0
+          max_score: 349
+          description: "Critical risk - decline or senior review"
+          auto_approve: false
+          auto_decline: true
+          base_rate: 0.0080  # 0.80% of insured value
 
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
-    direct_conditions:
-      - id: fleet_size_info_referral
-        bands:
-          - {return: true, tier_override: null, action: "INFO", note: "Fleet size recorded"}
-      
-      - id: psc_detentions_referral
-        bands:
-          - {return: true, tier_override: null, action: "REFER", note: "PSC detentions in past 36 months"}
-      
-      - id: total_losses_referral
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Total losses in past 5 years"}
-      
-      - id: third_party_manager_info_referral
-        bands:
-          - {return: true, tier_override: null, action: "INFO", note: "Third-party technical management"}
-      
-      - id: sanctioned_trade_referral
-        bands:
-          - {return: true, tier_override: 5, action: "DECLINE", note: "Trading to sanctioned regions - coverage not available"}
   
     score_conditions:
       - id: operational_telemetry_critical

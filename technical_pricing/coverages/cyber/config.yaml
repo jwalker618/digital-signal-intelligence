@@ -1,25 +1,32 @@
 # =============================================================================
 # DSI Model Configuration
-# =============================================================================
-#
-# This file defines the complete configuration for a coverage type.
-# It is the single source of truth for:
-#   - Model structure and parameters
-#   - Signal definitions and weights
-#   - Pricing factors and thresholds
-#   - Test profiles for actuarial validation
-#
-# Premium calculation follows DSI Foundational Principle 9: Signal -> Score -> Tier -> Price
-#
-# DSI PRINCIPLES APPLIED:
-#   1. All signals must be externally observable (no application questions required)
-#   2. Direct queries are OPTIONAL - model must work without them
-#   3. Categorical features are inferred from observable data
-#   4. Tier determines base premium; modifiers adjust for exposure characteristics
-#   5. All sources must be publicly accessible or through standard data providers
-#
-# Version: 2.0.0
-# Last Updated: 2025-12
+# 
+# This file holds all the relvant configuration types for a single coverage.
+# For example,
+# coverage:         the actual coverage cohort, eg aerospace
+#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# 
+# There can be multiple configurations saved under a coverage.
+# 
+# A configuration is the single source of truth for:
+#   - 1) direct (optional) queries
+#   - 2) categorical features
+#   - 3) signal groups and underlying features
+#   - the source and impact of 1- 3
+#   - tier definitions
+#   - other pricing parameters
+#   - test profiles for validation
+# 
+# When a technical model is generated:
+# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
+# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
+# 
+# All DSI principles must be adhered to, specifically:
+# 1. All signals must be externally observable (no application questions required)
+# 2. Direct queries are OPTIONAL - model must work without them
+# 3. Categorical features are inferred from observable data
+# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
+# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 cyber:
@@ -37,38 +44,69 @@ cyber:
       min_premium: 5000
       default_currency: "USD"
 
-    direct_optional_queries:      # Yes/No questions that cannot be externally observed, future provision for agents
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # -------------------------------------------------------------------------
+    direct_queries:      # Yes/No questions that cannot be externally observed, future provision for agents
       - id: "mfa_enabled"
         question: "Is multi-factor authentication enabled for all remote access??"
-        direct_condition: mfa_referral
-        
+        bands:
+          - return: false
+            override: null
+            action: "FLAG"
+            note: "MFA not enabled - increased ransomware risk" 
       - id: "security_training"
         question: "Do all employees complete annual cyber security training?"
-        direct_condition: training_referral
-        
+        bands:
+          - return: false
+            override: null
+            action: "FLAG"
+            note: "No security training - increased phishing risk"
       - id: "phi_handler"
         question: "Do you process Protected Health Information (PHI)"
-        direct_condition: phi_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "MODIFIER"
+            modifier: 1.25
+            note: "PHI handler - HIPAA exposure"
       - id: "pci_scope"
         question: "Do you store payment card data (PCI scope)"
-        direct_condition: pci_referral
-        
+        bands:
+          - return: true
+            override: null
+            action: "MODIFIER"
+            modifier: 1.15
+            note: "PCI scope - card data exposure"
       - id: "incident_response_plan"
         question: "Do you have a documented incident response plan?"
-        direct_condition: irp_referral
-        
+        bands:
+          - return: false 
+            override: null
+            action: "FLAG" 
+            note: "No IR plan - extended breach impact likely"
       - id: "edr_deployed"
         question: "Is endpoint detection and response (EDR) deployed on all endpoints?"
-        direct_condition: edr_referral
-
+        bands:
+          - return: false 
+            override: null
+            action: "FLAG"
+            note: "No EDR - reduced threat detection"
       - id: "immutable_backups"
         question: "Are backups maintained offline or immutable?"
-        direct_condition: backup_referral
-
+        bands:
+          - return: false
+            override: null
+            action: "FLAG"
+            note: "No immutable backups - ransomware recovery risk"
        - id: "recent_incident"
         question: "Have you experienced a material cyber incident in the past 3 years?"
-        direct_condition: recent_incident_referral
+        bands:
+          - return: true
+            override: 4
+            action: "REFER"
+            note: "Recent incident - requires manual review"
+
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -512,102 +550,53 @@ cyber:
     # Score ranges for each tier (scores are 0-1000)
 
     tier_thresholds:
-      tier_1:
-        id: 1
-        label: "PREFERRED"
-        min_score: 800
-        max_score: 1000
-        description: "Excellent risk - automatic approval, preferred pricing"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 8000
-        
-      tier_2:
-        id: 2
-        label: "STANDARD_PLUS"
-        min_score: 650
-        max_score: 799
-        description: "Good risk - automatic approval, standard pricing"
-        auto_approve: true
-        auto_decline: false
-        base_premium: 12000
-        
-      tier_3:
-        id: 3
-        label: "STANDARD"
-        min_score: 500
-        max_score: 649
-        description: "Average risk - may require referral"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 18000
-        
-      tier_4:
-        id: 4
-        label: "SUBSTANDARD"
-        min_score: 350
-        max_score: 499
-        description: "Elevated risk - requires senior review"
-        auto_approve: false
-        auto_decline: false
-        base_premium: 30000
-        
-      tier_5:
-        id: 5
-        label: "DECLINE"
-        min_score: 0
-        max_score: 349
-        description: "Unacceptable risk - decline"
-        auto_approve: false
-        auto_decline: true
-        base_premium: 50000
+      tiers:
+        - id: 1
+          label: "PREFERRED"
+          min_score: 800
+          max_score: 1000
+          description: "Excellent risk - automatic approval, preferred pricing"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 8000
+        - id: 2        
+          label: "STANDARD_PLUS"
+          min_score: 650
+          max_score: 799
+          description: "Good risk - automatic approval, standard pricing"
+          auto_approve: true
+          auto_decline: false
+          base_premium: 12000
+        - id: 3        
+          label: "STANDARD"
+          min_score: 500
+          max_score: 649
+          description: "Average risk - may require referral"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 18000
+        - id: 4        
+          label: "SUBSTANDARD"
+          min_score: 350
+          max_score: 499
+          description: "Elevated risk - requires senior review"
+          auto_approve: false
+          auto_decline: false
+          base_premium: 30000
+        - id: 5        
+          label: "DECLINE"
+          min_score: 0
+          max_score: 349
+          description: "Unacceptable risk - decline"
+          auto_approve: false
+          auto_decline: true
+          base_premium: 50000
 
     # -------------------------------------------------------------------------
     # CONDITION DEFINITIONS
     # -------------------------------------------------------------------------
     # Conditions that trigger automatic actions
     
-    direct_conditions:
-      - id: mfa_referral
-        description: "No MFA for remote access"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "MFA not enabled - increased ransomware risk"}
-      
-      - id: training_referral
-        description: "No security training program"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No security training - increased phishing risk"}
-      
-      - id: phi_referral
-        description: "Handles PHI data"
-        bands:
-          - {return: true, tier_override: null, action: "MODIFIER", modifier: 1.25, note: "PHI handler - HIPAA exposure"}
-      
-      - id: pci_referral
-        description: "PCI scope"
-        bands:
-          - {return: true, tier_override: null, action: "MODIFIER", modifier: 1.15, note: "PCI scope - card data exposure"}
-      
-      - id: irp_referral
-        description: "No incident response plan"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No IR plan - extended breach impact likely"}
-      
-      - id: edr_referral
-        description: "No EDR deployed"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No EDR - reduced threat detection"}
-      
-      - id: backup_referral
-        description: "No immutable backups"
-        bands:
-          - {return: false, tier_override: null, action: "FLAG", note: "No immutable backups - ransomware recovery risk"}
-      
-      - id: recent_incident_referral
-        description: "Recent cyber incident"
-        bands:
-          - {return: true, tier_override: 4, action: "REFER", note: "Recent incident - requires manual review"}
-  
     score_conditions:
       - id: technical_infrastructure_critical
         description: "Critical technical infrastructure score"

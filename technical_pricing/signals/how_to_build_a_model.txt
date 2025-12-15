@@ -1,0 +1,43 @@
+DSI Model Process
+
+Receive Data ->
+  note: I want to define in configuration what must be received to work.
+
+Load Model Configuration ->
+  note: could this be very clever? Could it run multiple models all at the same time, seeing where it got a company hit and outputting premium values?
+  and could this be done across all coverages simutaneously?
+  if this was enabled it'd need to be configuration based as it carries a cost.
+
+Extract signals ->
+
+Create Pure Composite Score - > CompositeScoreCategorizer
+
+Check specific signal group and signal feature conditions -> ConditionEvaluator
+  note: this will either a) override the tier completely, b) create a note for referral, c) create a note for the file
+  if a) this impacts Identify Tier
+  if b) this impacts Output.
+  if c) this requires no action.
+  - Signal conditions cannot modify premium, this can only be done via categorial features.
+
+Check optional query responses -> UtilityFunction: BooleanEvaluator
+  note: this will either a) override the tier completely, b) outline a modifier, c) create a note for referral, d) create a note for the file
+  if a) this impacts Identify Tier
+  if b) this impacts Modify Premium
+  if c) this impacts Output.
+  if d) this requires no action.
+
+Extract all actions, overrides, notes etc. -> def summarize_data
+
+Apply all overrides -> 
+  note: modifiers cannot be applied yet, they can only occur after base premium has been generated.
+
+Identify Tier -> Utility Function: TierCategorizer
+
+Generate Base Premium -> 
+  note: this will either be a pure value or generated from a metric, for example: TIV * %
+
+Modify Premium ->
+
+Scale to Limit etc ->
+
+Output ->
