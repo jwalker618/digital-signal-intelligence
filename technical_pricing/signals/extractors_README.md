@@ -1,33 +1,32 @@
-# DSI Extractors v2.0 - Comprehensive Analysis
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## Executive Summary
+## Data Processing Framework: Signals Extractors
 
-This document addresses the four key requirements for the extractors module redesign:
-
-1. **Completeness Review** - All signals from config YAML now have viable extractors
-2. **TTL Configuration** - Every extractor has appropriate TTL settings
-3. **Multi-Source Notation** - Alternative data sources documented for fallback
-4. **Missing Signal Handling** - Comprehensive framework for weighted scoring with missing data
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Technical Specification|
 
 ---
 
-## 1. Completeness Analysis: Extractors vs YAML Specification
-
 ### Coverage Summary
 
-| Coverage Line | Signal Groups | Total Signals | Extractors | Coverage Status |
-|--------------|---------------|---------------|------------|-----------------|
-| Marine | 8 | 43 | 18 | ✅ Complete |
-| Aerospace | 8 | 41 | 9 | ✅ Complete |
-| Cyber | 5 | 35 | 12 | ✅ Complete |
-| D&O | 7 | 44 | 6 | ✅ Complete |
-| Financial Institutions | 8 | 46 | 8 | ✅ Complete |
-| Energy | 8 | 44 | 11 | ✅ Complete |
-| Professional Indemnity | 7 | 40 | 12 | ✅ Complete |
-| **Cross-Coverage** | - | - | 3 | ✅ Complete |
-| **TOTAL** | **51** | **293** | **79** | ✅ Complete |
+| Coverage Line | Total Signals | Extractors | 
+|-|-|-|
+| Marine | 43 | 18 | 
+| Aerospace | 41 | 9 | 
+| Cyber | 35 | 12 | 
+| D&O | 44 | 6 | 
+| Financial Institutions | 46 | 8 | 
+| Energy | 44 | 11 | 
+| Professional Indemnity | 40 | 12 | 
+| **Cross-Coverage** | - | - | 3 | 
+| **TOTAL** | **293** | **79** |
 
-### Signal Group Detail
+### Signal Detail by Coverage
+
+**note, it would be incorrect to think as a signal as coverage specific, for example esg rating is agnostic. However, I have shows these as such for ease of presentation.**
 
 #### Marine (43 signals across 8 groups)
 - `network_authority`: classification_society, pi_club, charterer_quality, banking_relationship, flag_state, industry_association, technical_manager, port_relationship
@@ -96,47 +95,6 @@ This document addresses the four key requirements for the extractors module rede
 
 ---
 
-## 2. TTL Configuration Summary
-
-### TTL Categories
-
-| Category | TTL Seconds | Description | Extractor Count |
-|----------|-------------|-------------|-----------------|
-| `real_time` | 3,600 (1 hour) | Sanctions, breaking events | 2 |
-| `dynamic` | 86,400 (24 hours) | Inspections, incidents, violations | 22 |
-| `semi_static` | 604,800 (7 days) | Ratings, certifications, fleet data | 29 |
-| `static` | 7,776,000 (90 days) | Registrations, long-term relationships | 2 |
-
-### TTL by Signal Type
-
-```
-REAL-TIME (1 hour refresh):
-├── SanctionsScreeningExtractor - sanctions_status, ownership_transparency
-└── RouteRiskExtractor - conflict_zone_exposure, high_risk_destinations
-
-DYNAMIC (24 hour refresh):
-├── PSCInspectionExtractor - psc_detention, psc_deficiency
-├── AISTrackingExtractor - ais_compliance, dark_activity
-├── AviationSafetyExtractor - accident_history, incident_history
-├── SecurityScorecardExtractor - security_rating
-├── BreachDatabaseExtractor - breach_history
-├── LitigationDatabaseExtractor - securities_litigation
-├── OSHASafetyExtractor - osha_trir, osha_violations
-└── ... (14 more)
-
-SEMI-STATIC (7 day refresh):
-├── ClassificationSocietyExtractor - class_status
-├── FlagStatePerformanceExtractor - flag_state_quality
-├── AircraftFleetExtractor - fleet_age, fleet_homogeneity
-├── FFIECCallReportExtractor - capital_ratio, asset_quality
-├── ReserveDataExtractor - reserve_life
-└── ... (24 more)
-
-STATIC (90 day refresh):
-├── IndustryAssociationExtractor - industry_association
-└── PINetworkAuthorityExtractor - peer_ranking
-```
-
 ### TTL Implementation
 
 ```python
@@ -154,11 +112,11 @@ class TTLConfig:
 
 ---
 
-## 3. Multi-Source Documentation
+### Alternative-Source Documentation
 
 Every extractor now documents alternative data sources for fallback/validation:
 
-### Example: AIS Tracking (5 Alternative Sources)
+#### Example: AIS Tracking (5 Alternative Sources)
 
 ```python
 class AISTrackingExtractor(DataExtractor):
@@ -200,9 +158,9 @@ class DataSource:
 
 ---
 
-## 4. Missing Signal Handling Framework
+### Missing Signal Handling Framework
 
-### Strategy Options
+#### Strategy Options
 
 ```python
 class MissingSignalStrategy(Enum):
@@ -212,7 +170,7 @@ class MissingSignalStrategy(Enum):
     REQUIRE = "require"           # Fail the entire calculation
 ```
 
-### Signal Weight Configuration
+#### Signal Weight Configuration
 
 ```python
 @dataclass
@@ -224,7 +182,7 @@ class SignalWeightConfig:
     min_confidence: float = 0.5  # Minimum confidence to include
 ```
 
-### Weighted Score Calculation
+#### Weighted Score Calculation
 
 ```python
 def calculate_weighted_score(
@@ -252,9 +210,9 @@ def calculate_weighted_score(
    - Apply weighted average
    - Optionally: confidence-weighted adjustment
 
-### Example Scenarios
+#### Example Scenarios
 
-#### Scenario 1: All Signals Available
+##### Scenario 1: All Signals Available
 ```python
 signal_scores = {
     "psc_detention": (85, 0.95, SignalWeightConfig(0.30)),
@@ -265,7 +223,7 @@ signal_scores = {
 # Result: composite_score = 89.75, weight_coverage = 100%
 ```
 
-#### Scenario 2: One Signal Missing (EXCLUDE strategy)
+##### Scenario 2: One Signal Missing (EXCLUDE strategy)
 ```python
 signal_scores = {
     "psc_detention": (85, 0.95, SignalWeightConfig(0.30)),
@@ -277,7 +235,7 @@ signal_scores = {
 # class_status excluded from calculation, weights renormalized
 ```
 
-#### Scenario 3: One Signal Missing (PENALIZE strategy)
+##### Scenario 3: One Signal Missing (PENALIZE strategy)
 ```python
 signal_scores = {
     "psc_detention": (85, 0.95, SignalWeightConfig(0.30)),
@@ -289,7 +247,7 @@ signal_scores = {
 # class_status = 25 (penalty), all weights included
 ```
 
-#### Scenario 4: Required Signal Missing
+##### Scenario 4: Required Signal Missing
 ```python
 signal_scores = {
     "sanctions_status": (None, 0.0, SignalWeightConfig(0.40, MissingSignalStrategy.REQUIRE)),
@@ -300,7 +258,7 @@ signal_scores = {
 # Error: "Required signals missing: ['sanctions_status']"
 ```
 
-#### Scenario 5: Insufficient Weight Coverage
+##### Scenario 5: Insufficient Weight Coverage
 ```python
 # 5 signals configured, only 2 available
 # weight_coverage = 30% < min_weight_coverage (50%)
@@ -308,7 +266,7 @@ signal_scores = {
 # Error: "Insufficient weight coverage: 30% < 50%"
 ```
 
-### Result Metadata
+#### Result Metadata
 
 Every calculation returns rich metadata:
 
@@ -330,9 +288,9 @@ Every calculation returns rich metadata:
 
 ---
 
-## Recommendations for Production
+### Recommendations for Production
 
-### 1. TTL Cache Layer
+#### 1. TTL Cache Layer
 Implement a caching layer that respects TTL configurations:
 ```python
 class ExtractorCache:
@@ -345,7 +303,7 @@ class ExtractorCache:
         return result
 ```
 
-### 2. Fallback Orchestration
+#### 2. Fallback Orchestration
 ```python
 class FallbackOrchestrator:
     def extract_with_fallback(self, primary: DataExtractor) -> ExtractionResult:
@@ -364,7 +322,7 @@ class FallbackOrchestrator:
             return ExtractionResult.failed(str(e))
 ```
 
-### 3. Missing Signal Policies by Coverage
+#### 3. Missing Signal Policies by Coverage
 
 | Coverage | Recommended Strategy | Rationale |
 |----------|---------------------|-----------|
@@ -376,16 +334,3 @@ class FallbackOrchestrator:
 | Energy | REQUIRE for safety, PENALIZE for environmental | HSE criticality |
 | PI | EXCLUDE for most, REQUIRE for license status | Varied firm sizes |
 
----
-
-## File Outputs
-
-- **`extractors_v2.py`** (4,622 lines) - Complete extractor implementation
-- **`EXTRACTORS_ANALYSIS.md`** - This analysis document
-
-The extractors module now provides:
-- 79 extractors across 7 coverage lines + cross-coverage
-- 293 signals fully covered
-- TTL configuration for every extractor
-- Multi-source fallback documentation
-- Robust missing signal handling framework
