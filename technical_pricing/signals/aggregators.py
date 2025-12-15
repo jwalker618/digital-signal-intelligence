@@ -1,29 +1,21 @@
 """
-aggregators.py - DSI Technical Pricing Data Aggregation Framework
+Signal Data Aggregation Framework
 
-This module transforms raw extractor output into structured input suitable for categorizers.
+This module transforms raw extractor output into structured input suitable for categorisers.
 Each aggregator maps to one or more extractors and produces typed output dictionaries
-that match categorizer input specifications.
+that match categorizsr input specifications.
 
 Architecture:
 - Aggregators receive ExtractionResult objects from extractors
 - Transform raw_data into structured signal inputs
-- Each signal produces a dict matching categorizer expectations:
+- Each signal produces a dict matching categoriser expectations:
   - ThresholdBucket: {"value": <numeric>}
   - ScoringLogic: {"state": "<STATE_NAME>"}
   - Enumeration: {"category": "<CATEGORY>"} or evaluation criteria
   - QualityTier: {"entity": "<entity_name>"}
   - Composite: {"<signal_name>": <score>, ...}
   - Boolean: {"flag": <bool>}
-
-Coverage Lines:
-- Marine: 8 signal groups
-- Aerospace: 7 signal groups
-- Cyber: 5 signal groups
-- D&O: 6 signal groups
-- Financial Institutions: 7 signal groups
-- Energy: 7 signal groups
-- Professional Indemnity: 7 signal groups
+  
 """
 
 from __future__ import annotations
@@ -170,7 +162,7 @@ class MarineSafetyComplianceAggregator(DataAggregator):
     - safety_compliance (Composite)
     """
     
-    required_extractors = ["psc_inspection", "classification_society", "ism_compliance"]
+    required_extractors = ["psc_database", "classification_society", "ism_compliance"]
     optional_extractors = []
 
     def aggregate(self, extractions: Dict[str, Dict[str, Any]]) -> AggregationResult:
@@ -178,10 +170,10 @@ class MarineSafetyComplianceAggregator(DataAggregator):
         composite_scores = {}
         errors = []
         
-        entity_id = self._safe_get(extractions, "psc_inspection", "vessel_imo", default="UNKNOWN")
+        entity_id = self._safe_get(extractions, "psc_database", "vessel_imo", default="UNKNOWN")
         
         # --- PSC Detention Status ---
-        psc_data = extractions.get("psc_inspection", {})
+        psc_data = extractions.get("psc_database", {})
         detentions_3yr = self._safe_get(psc_data, "inspection_summary", "total_detentions_3yr", default=0)
         
         detention_state = self._count_to_state(detentions_3yr, [
@@ -204,7 +196,7 @@ class MarineSafetyComplianceAggregator(DataAggregator):
             categorizer_type="scoring_logic",
             configuration="psc_detention_status",
             data={"state": detention_state},
-            source_extractors=["psc_inspection"],
+            source_extractors=["psc_database"],
             metadata={
                 "detentions_3yr": detentions_3yr,
                 "deficiency_ratio": self._safe_get(psc_data, "inspection_summary", "deficiency_ratio", default=0)
@@ -311,7 +303,7 @@ class MarineSafetyComplianceAggregator(DataAggregator):
                 "ism_doc_status": ism_score
             },
             confidence=1.0,
-            source_extractors=["psc_inspection", "classification_society", "ism_compliance"],
+            source_extractors=["psc_database", "classification_society", "ism_compliance"],
             metadata={"composite_score": safety_composite}
         )
         composite_scores["safety_compliance"] = safety_composite
@@ -583,14 +575,14 @@ class MarineFleetQualityAggregator(DataAggregator):
     - fleet_quality (Composite)
     """
     
-    required_extractors = ["equasis_operator"]
+    required_extractors = ["equasis"]
     optional_extractors = ["vessel_valuation", "flag_state_performance"]
 
     def aggregate(self, extractions: Dict[str, Dict[str, Any]]) -> AggregationResult:
         signals = {}
         composite_scores = {}
         
-        equasis_data = extractions.get("equasis_operator", {})
+        equasis_data = extractions.get("equasis", {})
         entity_id = self._safe_get(equasis_data, "company", "imo_company_number", default="UNKNOWN")
         
         # --- Fleet Size ---
@@ -602,7 +594,7 @@ class MarineFleetQualityAggregator(DataAggregator):
             categorizer_type="threshold_bucket",
             configuration="fleet_size",
             data={"value": fleet_size},
-            source_extractors=["equasis_operator"],
+            source_extractors=["equasis"],
             metadata={"coverage": "marine"}
         )
         
@@ -629,7 +621,7 @@ class MarineFleetQualityAggregator(DataAggregator):
             categorizer_type="threshold_bucket",
             configuration="fleet_age",
             data={"value": avg_age},
-            source_extractors=["equasis_operator"],
+            source_extractors=["equasis"],
             metadata={"coverage": "marine"}
         )
         
@@ -691,7 +683,7 @@ class MarineFleetQualityAggregator(DataAggregator):
                 "vessel_majority": majority_cat.lower().replace(" ", "_"),
                 "fleet_size": fleet_size
             },
-            source_extractors=["equasis_operator"],
+            source_extractors=["equasis"],
             metadata={"majority_percentage": majority_pct}
         )
         
@@ -711,7 +703,7 @@ class MarineFleetQualityAggregator(DataAggregator):
                 "fleet_age": age_score,
                 "flag_state_quality": flag_score
             },
-            source_extractors=["equasis_operator", "flag_state_performance"],
+            source_extractors=["equasis", "flag_state_performance"],
             metadata={"composite_score": fleet_composite}
         )
         composite_scores["fleet_quality"] = fleet_composite
@@ -1112,14 +1104,14 @@ class MarineManagementQualityAggregator(DataAggregator):
     - management_quality (Composite)
     """
     
-    required_extractors = ["equasis_operator", "ism_compliance"]
+    required_extractors = ["equasis", "ism_compliance"]
     optional_extractors = []
 
     def aggregate(self, extractions: Dict[str, Dict[str, Any]]) -> AggregationResult:
         signals = {}
         composite_scores = {}
         
-        equasis_data = extractions.get("equasis_operator", {})
+        equasis_data = extractions.get("equasis", {})
         ism_data = extractions.get("ism_compliance", {})
         entity_id = self._safe_get(equasis_data, "company", "imo_company_number", default="UNKNOWN")
         
@@ -1183,7 +1175,7 @@ class MarineManagementQualityAggregator(DataAggregator):
                 "fleet_size": fleet_size,
                 "offers_liner_service": offers_liner
             },
-            source_extractors=["equasis_operator"],
+            source_extractors=["equasis"],
             metadata={"company_role": company_role}
         )
         composite_scores["operator_type"] = operator_score
@@ -1218,7 +1210,7 @@ class MarineManagementQualityAggregator(DataAggregator):
                 "operator_type": operator_score,
                 "sms_quality": sms_score
             },
-            source_extractors=["equasis_operator", "ism_compliance"],
+            source_extractors=["equasis", "ism_compliance"],
             metadata={"composite_score": mgmt_composite}
         )
         composite_scores["management_quality"] = mgmt_composite
@@ -5346,7 +5338,7 @@ if __name__ == "__main__":
     
     # Simulate extraction data
     sample_extractions = {
-        "psc_inspection": {
+        "psc_database": {
             "vessel_imo": "9876543",
             "inspection_summary": {
                 "total_inspections_3yr": 8,
@@ -5383,7 +5375,7 @@ if __name__ == "__main__":
                 "drills_conducted_12mo": 18
             }
         },
-        "equasis_operator": {
+        "equasis": {
             "company": {
                 "imo_company_number": "IMO1234567",
                 "company_name": "Demo Shipping Ltd"
