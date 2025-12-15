@@ -21,7 +21,7 @@
 | Financial Institutions | 46 | 8 | 
 | Energy | 44 | 11 | 
 | Professional Indemnity | 40 | 12 | 
-| **Cross-Coverage** | - | - | 3 | 
+| **Cross-Coverage** | - | 3 | 
 | **TOTAL** | **293** | **79** |
 
 ### Signal Detail by Coverage
