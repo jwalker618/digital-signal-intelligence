@@ -2,6 +2,137 @@
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
     categorical_features:
+     operator_type:
+        description: "Operator classification based on fleet size and segment"
+        sources:
+          - {type: "api", provider: "equasis", endpoint: "companies/fleet"}
+          - {type: "api", provider: "ihs_markit", endpoint: "ownership/search"}
+          - {type: "api", provider: "clarksons", endpoint: "owners/profile"}
+          - {type: "api", provider: "lloyd_list", endpoint: "companies/search"}
+      vessel_category:
+        description: "Primary vessel category for fleet" 
+        sources:
+          - {type: "api", provider: "equasis", endpoint: "companies/fleet"}
+          - {type: "api", provider: "ihs_markit", endpoint: "vessels/search"}
+      trading_pattern:
+        sources:
+          - {type: "api", provider: "marinetraffic", endpoint: "routes/analysis"}
+          - {type: "api", provider: "spire", endpoint: "vessels/routes"}
+          - {type: "api", provider: "exactearth", endpoint: "patterns/analysis"}
+      flag_state_quality:
+        description: "Flag state quality based on Paris MoU performance"
+        sources:
+          - {type: "api", provider: "paris_mou", endpoint: "performance/flags"}
+          - {type: "api", provider: "tokyo_mou", endpoint: "performance/flags"}
+      fleet_age_band:
+        description: "Average fleet age classification"
+        sources:
+          - {type: "api", provider: "equasis", endpoint: "vessels/age"}
+          - {type: "api", provider: "ihs_markit", endpoint: "vessels/particulars"}
+      profession_type:
+        description: "Primary professional classification"
+        sources:
+          - {type: "api", provider: "state_licensing_boards", endpoint: "license/search"}
+          - {type: "api", provider: "bar_associations", endpoint: "attorney/search"}
+          - {type: "api", provider: "aicpa", endpoint: "member/search"}
+          - {type: "api", provider: "ncarb", endpoint: "certificate/search"}
+          - {type: "api", provider: "ncees", endpoint: "pe/search"}
+          - {type: "scrape", target: "company_website", analyzer: "profession_classifier"}
+       firm_size:
+        description: "Firm size by professional headcount"
+        sources:
+          - {type: "api", provider: "linkedin", endpoint: "company/employees"}
+          - {type: "api", provider: "dnb", endpoint: "company/employees"}
+          - {type: "scrape", target: "company_website", pages: ["/team", "/attorneys", "/people", "/about"]}
+      revenue_size:
+        description: "Annual revenue classification"
+        sources:
+          - {type: "api", provider: "dnb", endpoint: "company/financials"}
+          - {type: "api", provider: "pitchbook", endpoint: "company/financials"}
+          - {type: "correlation", analyzer: "headcount_to_revenue", inputs: ["headcount", "profession"]}         
+      institution_type:
+        sources:
+          - {type: "api", provider: "ffiec", endpoint: "institutions/profile"}
+          - {type: "api", provider: "fdic", endpoint: "institutions/search"}
+          - {type: "api", provider: "ncua", endpoint: "credit_unions/search"}
+          - {type: "api", provider: "sec", endpoint: "cik/search"}
+          - {type: "api", provider: "finra", endpoint: "brokercheck/firm"}
+      regulatory_framework:
+        description: "Primary regulatory authority" 
+        sources:
+          - {type: "api", provider: "ffiec", endpoint: "institutions/regulator"}
+          - {type: "api", provider: "fdic", endpoint: "institutions/regulator"}
+          - {type: "registry", provider: "occ", endpoint: "institutions/list"}
+      asset_size_band:
+        description: "Total asset size classification"
+        sources:
+          - {type: "api", provider: "ffiec", endpoint: "call_reports/summary"}
+          - {type: "api", provider: "fdic", endpoint: "financials/summary"}
+          - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "10-Q"]}
+          - {type: "api", provider: "ncua", endpoint: "call_reports/summary"}      
+      publicly_traded:
+        description: "Whether institution is publicly traded"
+        sources:
+          - {type: "api", provider: "sec_edgar", endpoint: "cik/lookup"}
+          - {type: "api", provider: "nasdaq", endpoint: "screener"}      
+      operator_type:
+        description: "Operator classification based on size, integration, and ownership"
+        sources:
+          - {type: "filing", provider: "sec_edgar", document_types: ["10-K", "20-F"]}
+          - {type: "api", provider: "enverus", endpoint: "operators/profile"}
+          - {type: "api", provider: "rystad", endpoint: "companies/profile"}
+          - {type: "api", provider: "ihs_markit", endpoint: "operators/search"}
+      operation_segment:
+        description: "Primary operational segment"
+        sources:
+          - {type: "api", provider: "enverus", endpoint: "production/summary"}
+          - {type: "api", provider: "bsee", endpoint: "operators/assets"}
+          - {type: "api", provider: "state_commissions", endpoint: "permits/operator"}
+      geographic_focus:
+        description: "Primary geographic focus of operations"
+        sources:
+          - {type: "api", provider: "enverus", endpoint: "assets/geography"}
+          - {type: "api", provider: "rystad", endpoint: "production/geography"}
+          - {type: "filing", provider: "sec_edgar", document_types: ["10-K"]}
+      
+      company_type: 
+        sources:
+          - {type: "api", provider: "sec_edgar", endpoint: "cik/lookup"}
+          - {type: "api", provider: "nasdaq", endpoint: "screener/market_cap"}
+          - {type: "api", provider: "nyse", endpoint: "listings/search"}
+          - {type: "api", provider: "pitchbook", endpoint: "companies/funding"}
+          - {type: "api", provider: "crunchbase", endpoint: "organizations/funding"}
+      industry:
+        description: "Industry classification from SIC/NAICS codes"
+        sources:
+          - {type: "api", provider: "sec_edgar", endpoint: "cik/sic"}
+          - {type: "api", provider: "dnb", endpoint: "company/naics"}
+          - {type: "scrape", target: "company_website", analyzer: "industry_classifier"}
+      stock_exchange:
+        description: "Primary stock exchange listing"
+        sources:
+          - {type: "api", provider: "nasdaq", endpoint: "listings"}
+          - {type: "api", provider: "nyse", endpoint: "listings"}
+          - {type: "api", provider: "sec_edgar", endpoint: "filings/exchange"} 
+     industry_classification:
+        description: "Industry classification derived from public records"
+        sources:
+          - {type: "api", provider: "dnb", endpoint: "company/sic"}
+          - {type: "api", provider: "opencorporates", endpoint: "companies/search"}
+          - {type: "scrape", target: "company_website", analyzer: "industry_classifier"}
+      size_band:
+        description: "Company size classification"
+        sources:
+          - {type: "api", provider: "linkedin", endpoint: "company/employees"}
+          - {type: "api", provider: "dnb", endpoint: "company/financials"}
+          - {type: "scrape", target: "job_boards", analyzer: "posting_counter"}
+          - {type: "api", provider: "pitchbook", endpoint: "company/size"}
+      geography:
+        description: "Primary operational geography"
+        sources:
+          - {type: "api", provider: "dnb", endpoint: "company/location"}
+          - {type: "whois", target: "primary_domain"}
+          - {type: "scrape", target: "contact_page", analyzer: "address_extractor"}
       operator_type:
         description: "Type of aviation operator - inferred from regulatory filings and operational data"
         sources:
