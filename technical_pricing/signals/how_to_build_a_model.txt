@@ -9,6 +9,7 @@ Load Model Configuration ->
   if this was enabled it'd need to be configuration based as it carries a cost.
 
 Extract signals ->
+
 Create Pure Composite Score - > CompositeScoreCategorizer
 
 Check specific signal group and signal feature conditions -> ConditionEvaluator
