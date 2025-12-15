@@ -26,7 +26,7 @@
 
 ### Signal Detail by Coverage
 
-**${\color{red}note, it would be incorrect to think as a signal as coverage specific, for example esg rating is agnostic. However, I have shows these as such for ease of presentation.$**
+${\color{red}**note, it would be incorrect to think as a signal as coverage specific, for example esg rating is agnostic. However, I have shows these as such for ease of presentation.**}$
 
 #### Marine (43 signals across 8 groups)
 - `network_authority`: classification_society, pi_club, charterer_quality, banking_relationship, flag_state, industry_association, technical_manager, port_relationship
