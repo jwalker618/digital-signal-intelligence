@@ -26,8 +26,8 @@
 
 ### Signal Detail by Coverage
 
-**${\color{red} Note:\space it\space would\space be\space incorrect\space to\space think\space as\space a\space signal\space as\space coverage\space specific,\space 
-for\space example\space esg\space rating\space is\space agnostic.\space However,\space I\space have\space shown\space these\space as\space such\space for\space ease\space of\space presentation.\space}$**
+**${\color{red} Note:\space it\space would\space be\space incorrect\space to\space think\space as\space a\space signal\space as\space coverage\space specific,\space}$** 
+**${\color{red} for\space example\space esg\space rating\space is\space agnostic.\space However,\space I\space have\space shown\space these\space as\space such\space for\space ease\space of\space presentation.\space}$**
 
 #### Marine (43 signals across 8 groups)
 - `network_authority`: classification_society, pi_club, charterer_quality, banking_relationship, flag_state, industry_association, technical_manager, port_relationship
