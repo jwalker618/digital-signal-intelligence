@@ -232,7 +232,7 @@ Configuration: aerospace_general
 
 1. INFERENCE PHASE (per signal feature)
    ┌─────────────────────────────────────────────────────────────┐
-   │ alliance_membership_inference("Delta")                       │
+   │ alliance_membership_inference("Delta")                      │
    │   └─ IATARegistryExtractor.extract("Delta")                 │
    │        └─ returns: {alliance: "SkyTeam", status: "active"}  │
    │   └─ AllianceMembershipAggregator.aggregate(iata_result)    │
@@ -254,11 +254,11 @@ Configuration: aerospace_general
    │ ConditionEvaluator.evaluate(signal_scores)                  │
    │   └─ Checks bands from config for score_condition=true      │
    │   └─ returns: [actions, overrides]                          │
-   │                                                              │
+   │                                                             │
    │ CompositeScorer.calculate(signal_scores)                    │
    │   └─ Applies weights from config                            │
    │   └─ returns: composite_score=847                           │
-   │                                                              │
+   │                                                             │
    │ TierAssigner.assign(847)                                    │
    │   └─ Uses tier_thresholds from config                       │
    │   └─ returns: tier=1, label="PREFERRED"                     │
