@@ -113,18 +113,23 @@ aerospace:
       - id: "operator_type"
         name: "Operator Type"
         description: "Type of aviation operator - inferred from regulatory filings and operational data"
+        inference_utility_function: operatortype_basefunction
       - id: "fleet_category"
         name: "Fleet Category"
         description: "Primary aircraft category in fleet"
+        inference_utility_function: fleetcategory_basefunction
       - id: "fleet_size"
         name: "Fleet Size"
         description: "Number of aircraft in operator's fleet"
+        inference_utility_function: fleetsize_basefunction
       - id: "regulatory_framework"
         name: "Regulatory Framework"
-        description: "Primary regulatory authority governing operations"        
+        description: "Primary regulatory authority governing operations" 
+        inference_utility_function: regulatoryframework_basefunction
       - id: "iosa_status"
         name: "IOSA Status"
-        description: "IATA Operational Safety Audit registration status"      
+        description: "IATA Operational Safety Audit registration status" 
+        inference_utility_function: iosastatus_basefunction
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -778,6 +783,26 @@ aerospace:
           base_premium: 8000
 
     # -------------------------------------------------------------------------
+    # LIMIT BANDINGS
+    # -------------------------------------------------------------------------
+    limit_bandings:
+      - id: 1
+        limit: 10000000
+        deductible: 500000
+      - id: 2
+        limit: 25000000
+        deductible: 1000000        
+      - id: 3
+        limit: 50000000
+        deductible: 2000000
+      - id: 4
+        limit: 100000000
+        deductible: 5000000
+      - id: 5
+        limit: 250000000
+        deductible: 10000000
+
+    # -------------------------------------------------------------------------
     # PRICING PARAMETERS
     # -------------------------------------------------------------------------
     pricing:
@@ -813,8 +838,6 @@ aerospace:
         minor_attritional: 1.00
         moderate_loss: 1.20
         major_loss: 1.50
-        
-      taxes_fees_rate: 0.03
 
     # -------------------------------------------------------------------------
     # TEST PROFILES
