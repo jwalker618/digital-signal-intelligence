@@ -40,6 +40,8 @@ aerospace:
         - "aviation_liability"
         - "aviation_hull_liability_combined"
       applicable_markets: ["us", "uk", "eu", "apac", "latam", "mea"]
+      premium_generation: "banding by tier"
+      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
       min_premium: 25000
       default_currency: "USD"
 
