@@ -40,7 +40,6 @@ aerospace:
         - "aviation_liability"
         - "aviation_hull_liability_combined"
       applicable_markets: ["us", "uk", "eu", "apac", "latam", "mea"]
-      premium_generation: "banding by tier"
       minimum_viable_input: ["client name (domain optional)","Limit in USD"]
       min_premium: 25000
       default_currency: "USD"
@@ -748,6 +747,7 @@ aerospace:
           description: "Excellent safety profile - automatic approval"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 1200  # Per $1M hull value
         - id: 2
           label: "STANDARD_PLUS"
@@ -756,6 +756,7 @@ aerospace:
           description: "Good safety profile - automatic approval"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 1800
         - id: 3        
           label: "STANDARD"
@@ -764,6 +765,7 @@ aerospace:
           description: "Average profile - may require referral"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 2800
         - id: 4           
           label: "SUBSTANDARD"
@@ -772,6 +774,7 @@ aerospace:
           description: "Elevated risk - requires senior review"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 4500
         - id: 5        
           label: "DECLINE"
@@ -780,6 +783,7 @@ aerospace:
           description: "Unacceptable risk - decline"
           auto_approve: false
           auto_decline: true
+          premium_generation_method: "base"
           base_premium: 8000
 
     # -------------------------------------------------------------------------
