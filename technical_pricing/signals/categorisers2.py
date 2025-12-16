@@ -1,7 +1,5 @@
 """
-DSI Technical Pricing Categorization Framework v2.0
-
-Production-grade categorization for all 293 signals across 7 coverage lines.
+Signal Data Extraction Framework
 
 Architecture:
 - 11 categorizer types for different signal patterns
