@@ -1,28 +1,238 @@
 """
-DSI Technical Pricing Data Extraction Framework
-
-This module provides stub extractors for ALL signals across all 7 coverage lines.
-Each extractor simulates realistic API/data source outputs with seeded randomisation.
-
-Coverage Lines & Signal Groups:
-- Marine: 8 signal groups → 10+ extractors
-- Aerospace: 7 signal groups → 9+ extractors  
-- Cyber: 5 signal groups → 8+ extractors
-- D&O: 6 signal groups → 8+ extractors
-- Financial Institutions: 7 signal groups → 10+ extractors
-- Energy: 7 signal groups → 9+ extractors
-- Professional Indemnity: 7 signal groups → 9+ extractors
+Signal Data Extraction Framework
 """
 
 from __future__ import annotations
 
 import hashlib
+import logging
 import random
 import string
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Type, Tuple
+from enum import Enum
+from typing import Any, Dict, List, Optional, Type, Tuple, Union
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# TTL CONFIGURATION
+# =============================================================================
+
+class TTLCategory(Enum):
+    """Time-to-live categories for signal freshness requirements."""
+    REAL_TIME = "real_time"      # 1 hour - sanctions, breaking events
+    DYNAMIC = "dynamic"          # 24 hours - inspections, incidents, violations
+    SEMI_STATIC = "semi_static"  # 7 days - ratings, certifications, fleet data
+    STATIC = "static"            # 90 days - registrations, long-term relationships
+
+
+@dataclass
+class TTLConfig:
+    """TTL configuration for an extractor or signal."""
+    category: TTLCategory
+    ttl_seconds: int
+    description: str = ""
+    
+    @classmethod
+    def real_time(cls, description: str = "") -> "TTLConfig":
+        return cls(TTLCategory.REAL_TIME, 3600, description)
+    
+    @classmethod
+    def dynamic(cls, description: str = "") -> "TTLConfig":
+        return cls(TTLCategory.DYNAMIC, 86400, description)
+    
+    @classmethod
+    def semi_static(cls, description: str = "") -> "TTLConfig":
+        return cls(TTLCategory.SEMI_STATIC, 604800, description)
+    
+    @classmethod
+    def static(cls, description: str = "") -> "TTLConfig":
+        return cls(TTLCategory.STATIC, 7776000, description)
+    
+    def is_stale(self, last_fetched: datetime) -> bool:
+        """Check if data needs refresh based on TTL."""
+        age_seconds = (datetime.now() - last_fetched).total_seconds()
+        return age_seconds > self.ttl_seconds
+
+
+@dataclass
+class DataSource:
+    """Represents a single data source for a signal."""
+    source_type: str  # api, scrape, filing, dns, scan, satellite, correlation, registry
+    provider: str
+    endpoint: Optional[str] = None
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    priority: int = 1  # Lower = higher priority for fallback
+    
+    def __str__(self) -> str:
+        return f"{self.source_type}:{self.provider}" + (f"/{self.endpoint}" if self.endpoint else "")
+
+
+# =============================================================================
+# SIGNAL RESULT HANDLING
+# =============================================================================
+
+@dataclass
+class SignalResult:
+    """Result from extracting a single signal."""
+    signal_id: str
+    value: Optional[Any]
+    confidence: float  # 0.0 to 1.0
+    source_used: Optional[DataSource]
+    ttl_config: TTLConfig
+    fetched_at: datetime
+    is_missing: bool = False
+    error: Optional[str] = None
+    all_sources_tried: List[str] = field(default_factory=list)
+    
+    @classmethod
+    def missing(cls, signal_id: str, ttl: TTLConfig, error: str = "Signal not available") -> "SignalResult":
+        """Create a missing signal result."""
+        return cls(
+            signal_id=signal_id,
+            value=None,
+            confidence=0.0,
+            source_used=None,
+            ttl_config=ttl,
+            fetched_at=datetime.now(),
+            is_missing=True,
+            error=error
+        )
+
+
+@dataclass
+class ExtractionResult:
+    """Complete extraction result with all signals."""
+    source: str
+    source_type: str
+    timestamp: str
+    raw_data: Dict[str, Any]
+    signals: Dict[str, SignalResult] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    errors: List[str] = field(default_factory=list)
+    ttl_config: Optional[TTLConfig] = None
+
+
+# =============================================================================
+# MISSING SIGNAL HANDLING STRATEGIES
+# =============================================================================
+
+class MissingSignalStrategy(Enum):
+    """How to handle missing signals in composite calculations."""
+    EXCLUDE = "exclude"           # Remove from weighted calculation
+    USE_DEFAULT = "use_default"   # Use coverage-specific default value
+    PENALIZE = "penalize"         # Apply penalty score
+    REQUIRE = "require"           # Fail the entire calculation
+
+
+@dataclass
+class SignalWeightConfig:
+    """Configuration for signal weighting in composites."""
+    weight: float
+    missing_strategy: MissingSignalStrategy = MissingSignalStrategy.EXCLUDE
+    default_value: Optional[float] = None
+    penalty_value: float = 25.0  # Score to use if PENALIZE strategy
+    min_confidence: float = 0.5  # Minimum confidence to include signal
+
+
+def calculate_weighted_score(
+    signal_scores: Dict[str, Tuple[float, float, SignalWeightConfig]],  # signal_id -> (score, confidence, config)
+    min_signals_required: int = 1,
+    min_weight_coverage: float = 0.5
+) -> Tuple[Optional[float], Dict[str, Any]]:
+    """
+    Calculate weighted composite score with missing signal handling.
+    
+    Args:
+        signal_scores: Dict mapping signal_id to (score, confidence, weight_config)
+        min_signals_required: Minimum number of valid signals required
+        min_weight_coverage: Minimum percentage of total weight that must be covered
+    
+    Returns:
+        Tuple of (composite_score or None, metadata_dict)
+    """
+    valid_signals = []
+    excluded_signals = []
+    penalty_signals = []
+    required_missing = []
+    total_configured_weight = sum(cfg.weight for _, _, cfg in signal_scores.values())
+    
+    for signal_id, (score, confidence, config) in signal_scores.items():
+        # Check if signal is missing or low confidence
+        is_missing = score is None or confidence < config.min_confidence
+        
+        if is_missing:
+            if config.missing_strategy == MissingSignalStrategy.REQUIRE:
+                required_missing.append(signal_id)
+            elif config.missing_strategy == MissingSignalStrategy.EXCLUDE:
+                excluded_signals.append(signal_id)
+            elif config.missing_strategy == MissingSignalStrategy.USE_DEFAULT:
+                if config.default_value is not None:
+                    valid_signals.append((signal_id, config.default_value, config.weight, 0.5))
+                else:
+                    excluded_signals.append(signal_id)
+            elif config.missing_strategy == MissingSignalStrategy.PENALIZE:
+                penalty_signals.append(signal_id)
+                valid_signals.append((signal_id, config.penalty_value, config.weight, 0.3))
+        else:
+            valid_signals.append((signal_id, score, config.weight, confidence))
+    
+    # Check if required signals are missing
+    if required_missing:
+        return None, {
+            "error": f"Required signals missing: {required_missing}",
+            "valid_count": len(valid_signals),
+            "excluded": excluded_signals,
+            "required_missing": required_missing
+        }
+    
+    # Check minimum signal count
+    if len(valid_signals) < min_signals_required:
+        return None, {
+            "error": f"Insufficient signals: {len(valid_signals)} < {min_signals_required}",
+            "valid_count": len(valid_signals),
+            "excluded": excluded_signals
+        }
+    
+    # Check minimum weight coverage
+    covered_weight = sum(w for _, _, w, _ in valid_signals)
+    weight_coverage = covered_weight / total_configured_weight if total_configured_weight > 0 else 0
+    
+    if weight_coverage < min_weight_coverage:
+        return None, {
+            "error": f"Insufficient weight coverage: {weight_coverage:.2%} < {min_weight_coverage:.2%}",
+            "weight_coverage": weight_coverage,
+            "excluded": excluded_signals
+        }
+    
+    # Calculate weighted average (normalize weights to sum to 1)
+    if covered_weight == 0:
+        return None, {"error": "No valid weight coverage"}
+    
+    weighted_sum = sum(score * weight for _, score, weight, _ in valid_signals)
+    composite_score = weighted_sum / covered_weight
+    
+    # Calculate confidence-weighted score (optional refinement)
+    confidence_weighted_sum = sum(score * weight * conf for _, score, weight, conf in valid_signals)
+    total_conf_weight = sum(weight * conf for _, _, weight, conf in valid_signals)
+    confidence_adjusted_score = confidence_weighted_sum / total_conf_weight if total_conf_weight > 0 else composite_score
+    
+    return composite_score, {
+        "composite_score": composite_score,
+        "confidence_adjusted_score": confidence_adjusted_score,
+        "valid_signals": len(valid_signals),
+        "excluded_signals": excluded_signals,
+        "penalty_signals": penalty_signals,
+        "weight_coverage": weight_coverage,
+        "signal_breakdown": {sid: {"score": s, "weight": w, "confidence": c} 
+                           for sid, s, w, c in valid_signals}
+    }
+
 
 # =============================================================================
 # REGISTRY & BASE CLASSES
@@ -32,25 +242,28 @@ EXTRACTOR_REGISTRY: Dict[str, Type["DataExtractor"]] = {}
 
 
 def register_extractor(cls: Type["DataExtractor"]) -> Type["DataExtractor"]:
+    """Decorator to register extractor classes."""
     EXTRACTOR_REGISTRY[cls.__name__] = cls
     return cls
 
 
-@dataclass
-class ExtractionResult:
-    source: str
-    source_type: str
-    timestamp: str
-    raw_data: Dict[str, Any]
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
-
-
 class DataExtractor(ABC):
+    """
+    Base class for all data extractors.
+    
+    Each extractor must define:
+    - source_name: Primary data source identifier
+    - coverage: Coverage line (marine, aerospace, cyber, etc.)
+    - signals: List of signals this extractor provides
+    - ttl_config: Time-to-live configuration
+    - alternative_sources: List of alternative DataSource objects for fallback
+    """
+    
     def __init__(self, seed: Optional[str] = None, **kwargs: Any):
         self.seed = seed
         self.kwargs = kwargs
         self._rng = self._create_rng(seed)
+        self._last_fetch: Optional[datetime] = None
     
     def _create_rng(self, seed: Optional[str]) -> random.Random:
         rng = random.Random()
@@ -69,37 +282,79 @@ class DataExtractor(ABC):
     def _random_id(self, prefix: str = "", length: int = 8) -> str:
         chars = string.ascii_uppercase + string.digits
         return f"{prefix}{''.join(self._rng.choices(chars, k=length))}"
-
+    
+    def _random_company_name(self, industry: str = "Corp") -> str:
+        prefixes = ["Global", "Premier", "Pacific", "Atlantic", "Continental", "United", "Allied", "National"]
+        suffixes = ["Holdings", "Group", "Partners", "Corp", "Ltd", "Inc", "LLC"]
+        return f"{self._rng.choice(prefixes)} {industry} {self._rng.choice(suffixes)}"
+    
+    def needs_refresh(self) -> bool:
+        """Check if data needs refresh based on TTL."""
+        if self._last_fetch is None:
+            return True
+        return self.ttl_config.is_stale(self._last_fetch)
+    
     @abstractmethod
     def extract(self) -> ExtractionResult:
+        """Extract data from source(s). Implement in subclasses."""
         raise NotImplementedError
     
     @property
     @abstractmethod
     def source_name(self) -> str:
+        """Primary source identifier."""
         raise NotImplementedError
     
     @property
     @abstractmethod
     def coverage(self) -> str:
+        """Coverage line this extractor serves."""
         raise NotImplementedError
     
     @property
     @abstractmethod
     def signals(self) -> List[str]:
+        """List of signals this extractor provides."""
         raise NotImplementedError
+    
+    @property
+    @abstractmethod
+    def ttl_config(self) -> TTLConfig:
+        """TTL configuration for this extractor."""
+        raise NotImplementedError
+    
+    @property
+    def alternative_sources(self) -> List[DataSource]:
+        """Alternative data sources for fallback. Override in subclasses."""
+        return []
 
 
 # =============================================================================
-# MARINE EXTRACTORS (10 extractors for 8 signal groups)
+# MARINE EXTRACTORS
 # =============================================================================
 
 @register_extractor
 class EquasisOperatorExtractor(DataExtractor):
-    """Equasis API - fleet composition, ISM, company details. Signals: fleet_quality, management_quality"""
+    """
+    Equasis API - Fleet composition, ISM compliance, company details.
+    
+    Signals: operator_type, vessel_category, fleet_stability, management_consistency
+    
+    Alternative Sources:
+    - IHS Markit: ownership/search
+    - Clarksons: owners/profile
+    - Lloyd's List: companies/search
+    """
     source_name = "equasis"
     coverage = "marine"
-    signals = ["fleet_quality", "management_quality"]
+    signals = ["operator_type", "vessel_category", "fleet_stability", "management_consistency", "fleet_age"]
+    ttl_config = TTLConfig.dynamic("Fleet and company data refreshed daily")
+    
+    alternative_sources = [
+        DataSource("api", "ihs_markit", "ownership/search", priority=2),
+        DataSource("api", "clarksons", "owners/profile", priority=3),
+        DataSource("api", "lloyd_list", "companies/search", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
         fleet_size = self._weighted_choice([
@@ -111,2273 +366,4235 @@ class EquasisOperatorExtractor(DataExtractor):
             build_year = self._rng.randint(1995, 2024)
             vessels.append({
                 "imo_number": str(self._rng.randint(9000000, 9999999)),
-                "vessel_type": self._weighted_choice([("Container Ship", 0.25), ("Oil Tanker", 0.20), ("Bulk Carrier", 0.20), ("Chemical Tanker", 0.12), ("LNG Carrier", 0.08), ("General Cargo", 0.10), ("Other", 0.05)]),
+                "vessel_type": self._weighted_choice([
+                    ("Container Ship", 0.25), ("Oil Tanker", 0.20), ("Bulk Carrier", 0.20),
+                    ("Chemical Tanker", 0.12), ("LNG Carrier", 0.08), ("General Cargo", 0.10), ("Other", 0.05)
+                ]),
                 "gross_tonnage": self._rng.randint(5000, 180000),
                 "build_year": build_year,
                 "age_years": 2024 - build_year,
-                "flag_state": self._weighted_choice([("Panama", 0.18), ("Liberia", 0.15), ("Marshall Islands", 0.14), ("Singapore", 0.10), ("Hong Kong", 0.10), ("Malta", 0.08), ("Bahamas", 0.07), ("Other", 0.18)]),
-                "classification_society": self._weighted_choice([("DNV", 0.22), ("Lloyd's Register", 0.20), ("Bureau Veritas", 0.15), ("ABS", 0.15), ("ClassNK", 0.12), ("Other", 0.16)]),
+                "flag_state": self._weighted_choice([
+                    ("Panama", 0.18), ("Liberia", 0.15), ("Marshall Islands", 0.14),
+                    ("Singapore", 0.10), ("Hong Kong", 0.10), ("Malta", 0.08), ("Bahamas", 0.07), ("Other", 0.18)
+                ]),
+                "classification_society": self._weighted_choice([
+                    ("DNV", 0.22), ("Lloyd's Register", 0.20), ("Bureau Veritas", 0.15),
+                    ("ABS", 0.15), ("ClassNK", 0.12), ("Other", 0.16)
+                ]),
             })
+        
+        # Determine operator type based on fleet characteristics
+        avg_age = sum(v["age_years"] for v in vessels) / len(vessels) if vessels else 0
+        type_counts = {}
+        for v in vessels:
+            t = v["vessel_type"]
+            type_counts[t] = type_counts.get(t, 0) + 1
+        majority_type = max(type_counts, key=type_counts.get) if type_counts else "Unknown"
+        
+        # Operator classification logic
+        if majority_type == "Container Ship" and fleet_size >= 50:
+            operator_type = "major_liner"
+        elif majority_type == "Oil Tanker" and fleet_size >= 30:
+            operator_type = "major_tanker"
+        elif majority_type == "Bulk Carrier" and fleet_size >= 40:
+            operator_type = "major_bulk"
+        elif fleet_size >= 10:
+            operator_type = "regional_operator"
+        else:
+            operator_type = "tramp_operator"
+        
         raw_data = {
             "company": {
                 "imo_company_number": self.kwargs.get("company_id", self._random_id("IMO", 7)),
-                "company_name": self.kwargs.get("company_name", f"Maritime Operator {self._random_id()}"),
+                "company_name": self.kwargs.get("company_name", self._random_company_name("Shipping")),
                 "company_status": self._weighted_choice([("Active", 0.95), ("Inactive", 0.05)]),
                 "role": self._weighted_choice([("Owner", 0.40), ("Operator", 0.35), ("Manager", 0.25)]),
+                "year_established": self._rng.randint(1950, 2020),
             },
-            "fleet": {"total_vessels": fleet_size, "vessels": vessels[:30], "average_age": round(sum(v["age_years"] for v in vessels) / len(vessels), 1) if vessels else 0},
-            "ism_compliance": {
-                "doc_status": self._weighted_choice([("Valid", 0.94), ("Expired", 0.03), ("Suspended", 0.02), ("Withdrawn", 0.01)]),
-                "last_audit_date": self._random_date(365, 30),
-                "audit_findings": self._rng.randint(0, 5) if self._rng.random() < 0.20 else 0,
+            "fleet": {
+                "total_vessels": fleet_size,
+                "vessels": vessels[:30],
+                "average_age": round(avg_age, 1),
+                "majority_type": majority_type,
+                "type_distribution": type_counts,
+            },
+            "classification": {
+                "operator_type": operator_type,
+                "vessel_category": majority_type.lower().replace(" ", "_"),
+            },
+            "management_history": {
+                "years_operating": self._rng.randint(5, 50),
+                "manager_changes_5yr": self._weighted_choice([(0, 0.70), (1, 0.20), (2, 0.10)]),
             },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"fleet_size": fleet_size})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "fleet_size": fleet_size,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class PSCInspectionExtractor(DataExtractor):
-    """Port State Control database - inspections, deficiencies, detentions. Signals: safety_compliance"""
+    """
+    Port State Control Database - Inspection history, deficiencies, detentions.
+    
+    Signals: psc_detention, psc_deficiency, safety_compliance
+    
+    Alternative Sources:
+    - Paris MoU: inspections/search
+    - Tokyo MoU: inspections/search  
+    - US Coast Guard: psc/search
+    """
     source_name = "psc_database"
     coverage = "marine"
-    signals = ["safety_compliance"]
+    signals = ["psc_detention", "psc_deficiency", "safety_compliance"]
+    ttl_config = TTLConfig.dynamic("PSC inspections updated daily")
+    
+    alternative_sources = [
+        DataSource("api", "paris_mou", "inspections/search", priority=1),
+        DataSource("api", "tokyo_mou", "inspections/search", priority=2),
+        DataSource("api", "uscg", "psc/search", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
         num_inspections = self._rng.randint(3, 15)
         inspections = []
         total_deficiencies = 0
         total_detentions = 0
+        
         for _ in range(num_inspections):
-            deficiency_count = self._weighted_choice([(0, 0.35), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 8), 0.20), (self._rng.randint(9, 15), 0.10)])
+            deficiency_count = self._weighted_choice([
+                (0, 0.35), (self._rng.randint(1, 3), 0.35),
+                (self._rng.randint(4, 8), 0.20), (self._rng.randint(9, 15), 0.10)
+            ])
             detained = deficiency_count > 5 and self._rng.random() < 0.15
             total_deficiencies += deficiency_count
             total_detentions += 1 if detained else 0
+            
             inspections.append({
                 "inspection_date": self._random_date(1095, 0),
-                "port": self._weighted_choice([("Rotterdam", 0.08), ("Singapore", 0.10), ("Shanghai", 0.08), ("Houston", 0.07), ("Other", 0.67)]),
-                "psc_regime": self._weighted_choice([("Paris MoU", 0.30), ("Tokyo MoU", 0.25), ("US Coast Guard", 0.20), ("Other", 0.25)]),
+                "port": self._weighted_choice([
+                    ("Rotterdam", 0.08), ("Singapore", 0.10), ("Shanghai", 0.08),
+                    ("Houston", 0.07), ("Antwerp", 0.06), ("Other", 0.61)
+                ]),
+                "psc_regime": self._weighted_choice([
+                    ("Paris MoU", 0.30), ("Tokyo MoU", 0.25),
+                    ("US Coast Guard", 0.20), ("Indian Ocean MoU", 0.10), ("Other", 0.15)
+                ]),
                 "deficiency_count": deficiency_count,
+                "deficiency_categories": self._generate_deficiencies(deficiency_count),
                 "detained": detained,
                 "detention_days": self._rng.randint(1, 10) if detained else 0,
             })
+        
         raw_data = {
             "vessel_imo": self.kwargs.get("vessel_imo", str(self._rng.randint(9000000, 9999999))),
-            "inspection_summary": {"total_inspections_3yr": num_inspections, "total_deficiencies_3yr": total_deficiencies, "total_detentions_3yr": total_detentions, "deficiency_ratio": round(total_deficiencies / num_inspections, 2)},
+            "inspection_summary": {
+                "total_inspections_3yr": num_inspections,
+                "total_deficiencies_3yr": total_deficiencies,
+                "total_detentions_3yr": total_detentions,
+                "deficiency_ratio": round(total_deficiencies / num_inspections, 2) if num_inspections > 0 else 0,
+                "detention_rate": round(total_detentions / num_inspections, 3) if num_inspections > 0 else 0,
+            },
             "inspections": sorted(inspections, key=lambda x: x["inspection_date"], reverse=True),
+            "banned": total_detentions >= 3 and self._rng.random() < 0.10,
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"inspections": num_inspections, "detentions": total_detentions})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="database",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "inspections": num_inspections,
+                "detentions": total_detentions,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+    
+    def _generate_deficiencies(self, count: int) -> List[str]:
+        categories = [
+            "Fire Safety", "Life-Saving Appliances", "Navigation",
+            "Radio Communications", "Cargo Operations", "MARPOL Annex I",
+            "MARPOL Annex II", "ISM", "ISPS", "MLC", "Structural", "Propulsion"
+        ]
+        return self._rng.sample(categories, min(count, len(categories)))
 
 
 @register_extractor
 class AISTrackingExtractor(DataExtractor):
-    """AIS tracking - position history, port calls, dark activity, STS events. Signals: operational_telemetry, sanctions_compliance"""
+    """
+    AIS Tracking Data - Position history, port calls, dark activity, STS events.
+    
+    Signals: ais_compliance, dark_activity, route_risk, operational_efficiency
+    
+    Alternative Sources:
+    - MarineTraffic: vessels/ais_quality, vessels/dark_events
+    - Spire: vessels/transmission
+    - Windward: risk/dark_activity
+    - ExactEarth: coverage/analysis
+    """
     source_name = "ais_tracking"
     coverage = "marine"
-    signals = ["operational_telemetry", "sanctions_compliance"]
+    signals = ["ais_compliance", "dark_activity", "route_risk", "operational_efficiency", "psc_region_exposure"]
+    ttl_config = TTLConfig.dynamic("AIS data updated daily for pattern analysis")
+    
+    alternative_sources = [
+        DataSource("api", "marinetraffic", "vessels/ais_quality", priority=1),
+        DataSource("api", "spire", "vessels/transmission", priority=2),
+        DataSource("api", "windward", "risk/dark_activity", priority=3),
+        DataSource("api", "exactearth", "coverage/analysis", priority=4),
+        DataSource("api", "pole_star", "ais_gaps/analysis", priority=5),
+    ]
 
     def extract(self) -> ExtractionResult:
         num_port_calls = self._rng.randint(10, 40)
-        port_calls = [{"port": f"Port_{self._random_id('', 4)}", "country": self._weighted_choice([("China", 0.15), ("Singapore", 0.10), ("USA", 0.10), ("Netherlands", 0.08), ("Other", 0.57)]), "arrival_date": self._random_date(365, 0)} for _ in range(num_port_calls)]
+        countries = ["China", "Singapore", "USA", "Netherlands", "UAE", "South Korea", 
+                    "Japan", "Germany", "Belgium", "UK", "Brazil", "India"]
         
+        port_calls = []
+        for _ in range(num_port_calls):
+            port_calls.append({
+                "port": f"Port_{self._random_id('', 4)}",
+                "country": self._weighted_choice([(c, 1/len(countries)) for c in countries]),
+                "arrival_date": self._random_date(365, 0),
+                "departure_date": self._random_date(365, 0),
+                "days_in_port": self._rng.randint(1, 7),
+            })
+        
+        # AIS Gap Analysis
         ais_gaps = []
         num_gaps = self._weighted_choice([(0, 0.70), (1, 0.15), (2, 0.10), (self._rng.randint(3, 5), 0.05)])
         for _ in range(num_gaps):
-            ais_gaps.append({"duration_hours": self._rng.randint(6, 168), "location_type": self._weighted_choice([("Coastal", 0.50), ("Open Ocean", 0.35), ("Anchorage", 0.15)]), "risk_level": self._weighted_choice([("Low", 0.60), ("Medium", 0.25), ("High", 0.12), ("Critical", 0.03)])})
+            ais_gaps.append({
+                "start_date": self._random_date(365, 30),
+                "duration_hours": self._rng.randint(6, 168),
+                "location_type": self._weighted_choice([("Coastal", 0.50), ("Open Ocean", 0.35), ("Anchorage", 0.15)]),
+                "last_known_position": {"lat": round(self._rng.uniform(-60, 60), 4), "lon": round(self._rng.uniform(-180, 180), 4)},
+                "risk_level": self._weighted_choice([("Low", 0.60), ("Medium", 0.25), ("High", 0.12), ("Critical", 0.03)]),
+            })
         
+        # STS (Ship-to-Ship) Transfer Events
         sts_events = []
         num_sts = self._weighted_choice([(0, 0.85), (1, 0.10), (2, 0.05)])
         for _ in range(num_sts):
-            sts_events.append({"event_date": self._random_date(365, 0), "location_risk": self._weighted_choice([("Low", 0.70), ("Medium", 0.20), ("High", 0.10)])})
+            sts_events.append({
+                "event_date": self._random_date(365, 0),
+                "location": {"lat": round(self._rng.uniform(-60, 60), 4), "lon": round(self._rng.uniform(-180, 180), 4)},
+                "location_risk": self._weighted_choice([("Low", 0.70), ("Medium", 0.20), ("High", 0.10)]),
+                "counterparty_known": self._rng.random() > 0.3,
+            })
         
+        # Sanctions exposure
+        high_risk_countries = ["Iran", "North Korea", "Syria", "Venezuela", "Russia"]
         sanctioned_exposure = self._rng.random() < 0.03
+        high_risk_transits = self._rng.randint(0, 5)
+        
         raw_data = {
             "vessel_imo": self.kwargs.get("vessel_imo", str(self._rng.randint(9000000, 9999999))),
-            "port_calls": {"total_12mo": num_port_calls, "unique_countries": len(set(p["country"] for p in port_calls)), "calls": port_calls[:20]},
-            "ais_gaps": {"total_gaps_12mo": num_gaps, "high_risk_gaps": sum(1 for g in ais_gaps if g["risk_level"] in ("High", "Critical")), "gaps": ais_gaps},
-            "sts_events": {"total_12mo": num_sts, "events": sts_events},
-            "sanctions_exposure": {"sanctioned_area_visit": sanctioned_exposure, "high_risk_area_transits": self._rng.randint(0, 5)},
+            "port_calls": {
+                "total_12mo": num_port_calls,
+                "unique_countries": len(set(p["country"] for p in port_calls)),
+                "calls": port_calls[:20],
+            },
+            "ais_gaps": {
+                "total_gaps_12mo": num_gaps,
+                "high_risk_gaps": sum(1 for g in ais_gaps if g["risk_level"] in ("High", "Critical")),
+                "total_dark_hours": sum(g["duration_hours"] for g in ais_gaps),
+                "gaps": ais_gaps,
+            },
+            "sts_events": {
+                "total_12mo": num_sts,
+                "high_risk_events": sum(1 for s in sts_events if s["location_risk"] == "High"),
+                "events": sts_events,
+            },
+            "sanctions_exposure": {
+                "sanctioned_area_visit": sanctioned_exposure,
+                "high_risk_area_transits": high_risk_transits,
+                "high_risk_countries_visited": self._rng.sample(high_risk_countries, min(high_risk_transits, len(high_risk_countries))) if high_risk_transits > 0 else [],
+            },
+            "operational_patterns": {
+                "avg_speed_kts": round(self._rng.uniform(10, 18), 1),
+                "utilization_pct": round(self._rng.uniform(60, 95), 1),
+                "weather_routing_detected": self._rng.random() > 0.4,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"gaps": num_gaps, "sts": num_sts})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "gaps": num_gaps,
+                "sts": num_sts,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class SanctionsScreeningExtractor(DataExtractor):
-    """Sanctions screening - OFAC, EU, UN lists. Signals: sanctions_compliance"""
+    """
+    Sanctions Screening - OFAC, EU, UN sanctions list checking.
+    
+    Signals: sanctions_status, ownership_transparency, jurisdiction_risk, historical_sanctions
+    
+    Alternative Sources:
+    - OFAC: sdn/search
+    - EU Sanctions: search
+    - UN Sanctions: search
+    - Windward: sanctions/check
+    - Refinitiv: world_check
+    """
     source_name = "sanctions_screening"
     coverage = "marine"
-    signals = ["sanctions_compliance"]
+    signals = ["sanctions_status", "ownership_transparency", "jurisdiction_risk", "historical_sanctions"]
+    ttl_config = TTLConfig.real_time("Sanctions data requires hourly refresh")
+    
+    alternative_sources = [
+        DataSource("api", "ofac", "sdn/search", priority=1),
+        DataSource("api", "eu_sanctions", "search", priority=1),
+        DataSource("api", "un_sanctions", "search", priority=1),
+        DataSource("api", "windward", "sanctions/check", priority=2),
+        DataSource("api", "refinitiv", "world_check", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        has_hits = self._rng.random() < 0.08
+        # Sanctions screening results
+        is_sanctioned = self._rng.random() < 0.02
+        has_historical = self._rng.random() < 0.05
+        
         hits = []
-        if has_hits:
-            for _ in range(self._rng.randint(1, 3)):
-                hits.append({"list_name": self._weighted_choice([("OFAC SDN", 0.30), ("EU Consolidated", 0.25), ("UN Security Council", 0.20), ("UK Sanctions", 0.15), ("Other", 0.10)]), "match_score": self._rng.randint(60, 100), "status": self._weighted_choice([("Active", 0.80), ("Cleared", 0.15), ("Under Review", 0.05)])})
+        if is_sanctioned or has_historical:
+            num_hits = self._rng.randint(1, 3)
+            for _ in range(num_hits):
+                hits.append({
+                    "list_name": self._weighted_choice([
+                        ("OFAC SDN", 0.40), ("EU Consolidated", 0.30),
+                        ("UN Security Council", 0.20), ("Other", 0.10)
+                    ]),
+                    "match_type": self._weighted_choice([("Exact", 0.30), ("Fuzzy", 0.50), ("Associated", 0.20)]),
+                    "match_score": round(self._rng.uniform(0.75, 0.99), 2),
+                    "status": "Active" if is_sanctioned else "Delisted",
+                    "listed_date": self._random_date(2000, 365),
+                    "reason": self._weighted_choice([
+                        ("WMD Proliferation", 0.15), ("Terrorism", 0.20),
+                        ("Narcotics", 0.15), ("Human Rights", 0.20),
+                        ("Regional Sanctions", 0.30)
+                    ]),
+                })
+        
+        # Ownership transparency
+        ownership_layers = self._weighted_choice([(1, 0.30), (2, 0.35), (3, 0.20), (4, 0.10), (5, 0.05)])
+        
         raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 8)),
-            "screening_result": {"status": "HIT" if hits else "CLEAR", "total_hits": len(hits), "hits": hits},
-            "ownership_flags": {"high_risk_jurisdiction": self._rng.random() < 0.05, "complex_structure": self._rng.random() < 0.10},
-            "risk_score": round(100 - len(hits) * 25 - (10 if self._rng.random() < 0.05 else 0), 1),
+            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
+            "screening_result": {
+                "status": "HIT" if is_sanctioned else ("CLEARED_HISTORICAL" if has_historical else "CLEAR"),
+                "total_hits": len(hits),
+                "active_hits": sum(1 for h in hits if h["status"] == "Active"),
+                "hits": hits,
+                "screened_lists": ["OFAC SDN", "EU Consolidated", "UN Security Council", "OFAC Non-SDN"],
+                "screening_date": datetime.now().isoformat(),
+            },
+            "ownership_flags": {
+                "high_risk_jurisdiction": self._rng.random() < 0.10,
+                "complex_structure": ownership_layers >= 4,
+                "ownership_layers": ownership_layers,
+                "pep_connection": self._rng.random() < 0.05,
+                "beneficial_owner_identified": ownership_layers <= 2,
+            },
+            "jurisdiction_analysis": {
+                "registration_country": self._weighted_choice([
+                    ("Panama", 0.15), ("Liberia", 0.12), ("Marshall Islands", 0.12),
+                    ("British Virgin Islands", 0.08), ("Cyprus", 0.06), ("Other", 0.47)
+                ]),
+                "jurisdiction_risk_level": self._weighted_choice([("Low", 0.60), ("Medium", 0.25), ("High", 0.12), ("Very High", 0.03)]),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"hits": len(hits)})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "is_sanctioned": is_sanctioned,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ClassificationSocietyExtractor(DataExtractor):
-    """Classification society - class status, surveys, conditions. Signals: classification_quality, safety_compliance"""
+    """
+    Classification Society Data - Class status, survey compliance, notations.
+    
+    Signals: class_status, classification_society, vessel_quality, survey_compliance
+    
+    Alternative Sources:
+    - DNV: vessels/search
+    - Lloyd's Register: vessels/search
+    - Bureau Veritas: vessels/search
+    - ABS: vessels/search
+    - ClassNK: vessels/search
+    - IACS: members/search
+    """
     source_name = "classification_society"
     coverage = "marine"
-    signals = ["classification_quality", "safety_compliance"]
+    signals = ["class_status", "classification_society", "vessel_quality", "survey_compliance"]
+    ttl_config = TTLConfig.dynamic("Class status updated daily")
+    
+    alternative_sources = [
+        DataSource("api", "dnv", "vessels/search", priority=1),
+        DataSource("api", "lloyd_register", "vessels/search", priority=1),
+        DataSource("api", "bureau_veritas", "vessels/search", priority=2),
+        DataSource("api", "abs", "vessels/search", priority=2),
+        DataSource("api", "class_nk", "vessels/search", priority=3),
+        DataSource("api", "iacs", "members/search", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
-        class_status = self._weighted_choice([("In Class", 0.92), ("Suspended", 0.03), ("Withdrawn", 0.02), ("Laid Up", 0.03)])
-        num_conditions = self._weighted_choice([(0, 0.70), (1, 0.15), (2, 0.08), (self._rng.randint(3, 6), 0.07)])
-        conditions = [{"category": self._weighted_choice([("Hull", 0.30), ("Machinery", 0.30), ("Safety", 0.20), ("Other", 0.20)]), "severity": self._weighted_choice([("Minor", 0.50), ("Moderate", 0.35), ("Major", 0.15)]), "status": self._weighted_choice([("Outstanding", 0.40), ("Completed", 0.50), ("Overdue", 0.10)])} for _ in range(num_conditions)]
+        society = self._weighted_choice([
+            ("DNV", 0.22), ("Lloyd's Register", 0.20), ("Bureau Veritas", 0.15),
+            ("ABS", 0.15), ("ClassNK", 0.12), ("RINA", 0.05),
+            ("Korean Register", 0.05), ("CCS", 0.04), ("Indian Register", 0.02)
+        ])
         
-        surveys = [{"survey_type": self._weighted_choice([("Annual", 0.40), ("Intermediate", 0.25), ("Special", 0.20), ("Bottom", 0.15)]), "date": self._random_date(1095, 0), "result": self._weighted_choice([("Satisfactory", 0.85), ("Conditional", 0.12), ("Unsatisfactory", 0.03)])} for _ in range(self._rng.randint(3, 10))]
+        is_iacs = society in ["DNV", "Lloyd's Register", "Bureau Veritas", "ABS", "ClassNK", "RINA", "Korean Register", "CCS", "Indian Register"]
+        
+        class_status = self._weighted_choice([
+            ("In Class", 0.92), ("Suspended", 0.04), ("Withdrawn", 0.03), ("Expired", 0.01)
+        ])
+        
+        conditions = self._rng.randint(0, 5) if class_status == "In Class" else 0
+        overdue = self._rng.randint(0, min(conditions, 2)) if conditions > 0 else 0
+        
+        surveys = []
+        survey_types = ["Annual", "Intermediate", "Special", "Bottom", "Docking", "Class Renewal"]
+        for stype in survey_types:
+            if self._rng.random() > 0.3:
+                surveys.append({
+                    "survey_type": stype,
+                    "due_date": self._random_date(-180, 365),
+                    "completed_date": self._random_date(365, 0) if self._rng.random() > 0.15 else None,
+                    "status": self._weighted_choice([("Completed", 0.85), ("Due", 0.10), ("Overdue", 0.05)]),
+                })
         
         raw_data = {
             "vessel_imo": self.kwargs.get("vessel_imo", str(self._rng.randint(9000000, 9999999))),
-            "classification": {"society_name": self._weighted_choice([("DNV", 0.22), ("Lloyd's Register", 0.20), ("Bureau Veritas", 0.15), ("ABS", 0.15), ("ClassNK", 0.12), ("Other", 0.16)]), "class_status": class_status, "entry_date": self._random_date(7300, 365)},
-            "conditions_of_class": {"total": num_conditions, "outstanding": sum(1 for c in conditions if c["status"] == "Outstanding"), "overdue": sum(1 for c in conditions if c["status"] == "Overdue"), "conditions": conditions},
-            "survey_history": {"compliance_rate": round(sum(1 for s in surveys if s["result"] == "Satisfactory") / len(surveys), 3) if surveys else 1.0, "surveys": surveys},
+            "classification": {
+                "society_name": society,
+                "society_code": society[:3].upper(),
+                "is_iacs_member": is_iacs,
+                "class_status": class_status,
+                "class_notation": f"+{self._rng.randint(1, 100)}A1" if class_status == "In Class" else None,
+                "machinery_notation": self._weighted_choice([("+MC", 0.80), ("+UMS", 0.15), (None, 0.05)]),
+            },
+            "conditions_of_class": {
+                "total": conditions,
+                "outstanding": conditions - overdue,
+                "overdue": overdue,
+                "categories": self._rng.sample(["Hull", "Machinery", "Navigation", "Safety", "Environmental"], min(conditions, 5)) if conditions > 0 else [],
+            },
+            "survey_history": {
+                "surveys": surveys,
+                "compliance_rate": round(1 - (overdue / max(len(surveys), 1)), 2),
+                "last_survey_date": surveys[0]["completed_date"] if surveys and surveys[0]["completed_date"] else None,
+            },
+            "additional_notations": {
+                "ice_class": self._weighted_choice([(None, 0.85), ("1A", 0.08), ("1A Super", 0.04), ("1B", 0.03)]),
+                "dynamic_positioning": self._weighted_choice([(None, 0.90), ("DP1", 0.05), ("DP2", 0.04), ("DP3", 0.01)]),
+                "green_passport": self._rng.random() > 0.60,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"class_status": class_status, "conditions": num_conditions})
-
-
-@register_extractor
-class PIClubExtractor(DataExtractor):
-    """P&I Club data - membership, claims, coverage. Signals: p_and_i_quality"""
-    source_name = "pi_club"
-    coverage = "marine"
-    signals = ["p_and_i_quality"]
-
-    def extract(self) -> ExtractionResult:
-        is_ig = self._rng.random() < 0.85
-        club_name = self._weighted_choice([("Gard", 0.15), ("Britannia", 0.12), ("UK Club", 0.11), ("North", 0.10), ("Standard", 0.10), ("West of England", 0.09), ("Skuld", 0.08), ("Other IG", 0.10), ("Fixed Premium", 0.15)])
         
-        num_claims = self._weighted_choice([(0, 0.40), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 8), 0.18), (self._rng.randint(9, 15), 0.07)])
-        claims = [{"claim_type": self._weighted_choice([("Cargo", 0.25), ("Personal Injury", 0.20), ("Pollution", 0.10), ("Collision", 0.10), ("Crew", 0.15), ("Other", 0.20)]), "incurred_usd": self._rng.randint(10000, 5000000), "status": self._weighted_choice([("Closed", 0.60), ("Open", 0.30), ("Reserved", 0.10)])} for _ in range(num_claims)]
-        
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("IMO", 7)),
-            "membership": {"club_name": club_name, "club_type": "International Group" if is_ig else "Fixed Premium", "status": self._weighted_choice([("Active", 0.95), ("Suspended", 0.03), ("Terminated", 0.02)]), "member_since": self._random_date(7300, 365)},
-            "claims_history": {"total_claims_5yr": num_claims, "total_incurred_usd": sum(c["incurred_usd"] for c in claims), "claims": claims},
-            "coverage": {"limit_usd": self._weighted_choice([(500000000, 0.30), (1000000000, 0.40), (3000000000, 0.20), (float("inf"), 0.10)]), "deductible_usd": self._weighted_choice([(25000, 0.30), (50000, 0.35), (100000, 0.25), (250000, 0.10)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"club": club_name, "claims": num_claims})
-
-
-@register_extractor
-class MarineFinancialExtractor(DataExtractor):
-    """Marine operator financials. Signals: financial_stability"""
-    source_name = "marine_financial"
-    coverage = "marine"
-    signals = ["financial_stability"]
-
-    def extract(self) -> ExtractionResult:
-        revenue = self._weighted_choice([(self._rng.randint(10_000_000, 100_000_000), 0.35), (self._rng.randint(100_000_001, 500_000_000), 0.30), (self._rng.randint(500_000_001, 2_000_000_000), 0.25), (self._rng.randint(2_000_000_001, 10_000_000_000), 0.10)])
-        ebitda_margin = self._rng.uniform(0.08, 0.30)
-        debt_to_ebitda = self._rng.uniform(2.0, 7.0)
-        
-        has_rating = self._rng.random() < 0.30
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("IMO", 7)),
-            "financials": {"revenue_usd": revenue, "ebitda_usd": int(revenue * ebitda_margin), "ebitda_margin_pct": round(ebitda_margin * 100, 1), "total_debt_usd": int(revenue * ebitda_margin * debt_to_ebitda)},
-            "ratios": {"debt_to_ebitda": round(debt_to_ebitda, 2), "interest_coverage": round(self._rng.uniform(1.5, 5.0), 2), "current_ratio": round(self._rng.uniform(0.9, 2.2), 2)},
-            "credit": {"has_rating": has_rating, "rating": self._weighted_choice([("BBB", 0.25), ("BB+", 0.25), ("BB", 0.25), ("B+", 0.15), ("B", 0.10)]) if has_rating else None},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"revenue": revenue})
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "society": society,
+                "is_iacs": is_iacs,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ISMComplianceExtractor(DataExtractor):
-    """ISM Code compliance - DOC, audits, findings. Signals: management_quality, safety_compliance"""
+    """
+    ISM Compliance Data - DOC status, SMS audits, safety management.
+    
+    Signals: ism_compliance, safety_management
+    
+    Alternative Sources:
+    - IMO GISIS: ism/search
+    - Flag State Databases
+    """
     source_name = "ism_compliance"
     coverage = "marine"
-    signals = ["management_quality", "safety_compliance"]
+    signals = ["ism_compliance", "safety_management"]
+    ttl_config = TTLConfig.semi_static("ISM audits occur periodically")
+    
+    alternative_sources = [
+        DataSource("api", "imo_gisis", "ism/search", priority=1),
+        DataSource("registry", "flag_state_databases", "ism/status", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        doc_status = self._weighted_choice([("Valid", 0.92), ("Expired", 0.04), ("Suspended", 0.02), ("Withdrawn", 0.02)])
+        doc_status = self._weighted_choice([
+            ("Valid", 0.94), ("Expired", 0.03), ("Suspended", 0.02), ("Withdrawn", 0.01)
+        ])
+        
+        # Audit history
         num_audits = self._rng.randint(2, 6)
-        audits = [{"audit_date": self._random_date(1095, 0), "audit_type": self._weighted_choice([("Initial", 0.15), ("Annual", 0.50), ("Intermediate", 0.25), ("Renewal", 0.10)]), "findings": self._weighted_choice([(0, 0.50), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 8), 0.15)]), "major_nonconformities": self._weighted_choice([(0, 0.85), (1, 0.12), (2, 0.03)])} for _ in range(num_audits)]
+        audits = []
+        total_findings = 0
+        major_nc = 0
+        
+        for i in range(num_audits):
+            audit_type = "Initial" if i == 0 else self._weighted_choice([
+                ("Annual", 0.50), ("Intermediate", 0.30), ("Additional", 0.20)
+            ])
+            findings = self._weighted_choice([(0, 0.50), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 8), 0.15)])
+            major = self._rng.randint(0, min(2, findings)) if findings > 2 else 0
+            
+            total_findings += findings
+            major_nc += major
+            
+            audits.append({
+                "audit_type": audit_type,
+                "audit_date": self._random_date(1095, 30 * i),
+                "findings": findings,
+                "major_nonconformities": major,
+                "observations": self._rng.randint(0, 5),
+                "result": "Satisfactory" if major == 0 else "Conditional",
+            })
         
         raw_data = {
             "company_id": self.kwargs.get("company_id", self._random_id("IMO", 7)),
-            "doc_status": {"status": doc_status, "issuing_authority": self._weighted_choice([("Panama", 0.20), ("Liberia", 0.18), ("Marshall Islands", 0.15), ("Singapore", 0.12), ("Other", 0.35)]), "expiry_date": self._random_date(-30, -730)},
-            "audit_history": {"total_audits_3yr": num_audits, "total_findings": sum(a["findings"] for a in audits), "major_nonconformities": sum(a["major_nonconformities"] for a in audits), "audits": audits},
-            "sms_status": {"documented": True, "last_review_date": self._random_date(365, 0), "drills_conducted_12mo": self._rng.randint(6, 24)},
+            "doc_status": {
+                "status": doc_status,
+                "issue_date": self._random_date(1825, 365),
+                "expiry_date": self._random_date(-365, -30) if doc_status == "Expired" else self._random_date(-30, 730),
+                "issuing_authority": self._weighted_choice([
+                    ("Panama Maritime Authority", 0.20), ("Liberia Maritime Authority", 0.15),
+                    ("Marshall Islands Maritime", 0.15), ("Other", 0.50)
+                ]),
+            },
+            "audit_history": {
+                "total_audits_3yr": num_audits,
+                "total_findings": total_findings,
+                "major_nonconformities": major_nc,
+                "audits": sorted(audits, key=lambda x: x["audit_date"], reverse=True),
+            },
+            "sms_status": {
+                "documented": True,
+                "last_review_date": self._random_date(365, 0),
+                "drills_conducted_12mo": self._rng.randint(6, 24),
+                "near_miss_reports_12mo": self._rng.randint(0, 15),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"doc_status": doc_status})
-
-
-@register_extractor
-class VesselValuationExtractor(DataExtractor):
-    """Vessel/fleet valuation - market values, LTV. Signals: fleet_quality, financial_stability"""
-    source_name = "vessel_valuation"
-    coverage = "marine"
-    signals = ["fleet_quality", "financial_stability"]
-
-    def extract(self) -> ExtractionResult:
-        fleet_size = self._rng.randint(1, 50)
-        avg_value = self._rng.randint(15_000_000, 120_000_000)
-        total_value = fleet_size * avg_value
-        total_debt = int(total_value * self._rng.uniform(0.40, 0.75))
         
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("IMO", 7)),
-            "fleet_valuation": {"vessel_count": fleet_size, "total_value_usd": total_value, "average_value_usd": avg_value, "valuation_date": self._random_date(90, 0), "source": self._weighted_choice([("VesselsValue", 0.40), ("Clarksons", 0.35), ("Baltic Exchange", 0.15), ("Internal", 0.10)])},
-            "leverage": {"total_debt_usd": total_debt, "ltv_ratio": round(total_debt / total_value, 3), "unencumbered_vessels": self._rng.randint(0, fleet_size // 3)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"fleet_value": total_value})
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "doc_status": doc_status,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class FlagStatePerformanceExtractor(DataExtractor):
-    """Flag state quality metrics - Paris MoU performance. Signals: fleet_quality"""
+    """
+    Flag State Performance - Paris/Tokyo MoU white/grey/black lists.
+    
+    Signals: flag_state, flag_state_quality
+    
+    Alternative Sources:
+    - Paris MoU: performance/flags
+    - Tokyo MoU: performance/flags
+    - US Coast Guard: qualship21
+    """
     source_name = "flag_state_performance"
     coverage = "marine"
-    signals = ["fleet_quality"]
+    signals = ["flag_state", "flag_state_quality"]
+    ttl_config = TTLConfig.semi_static("Flag state lists updated periodically")
+    
+    alternative_sources = [
+        DataSource("api", "paris_mou", "performance/flags", priority=1),
+        DataSource("api", "tokyo_mou", "performance/flags", priority=2),
+        DataSource("api", "uscg", "qualship21", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        flag_state = self.kwargs.get("flag_state", self._weighted_choice([("Panama", 0.18), ("Liberia", 0.15), ("Marshall Islands", 0.14), ("Singapore", 0.10), ("Hong Kong", 0.10), ("Malta", 0.08), ("Bahamas", 0.07), ("Other", 0.18)]))
+        flag_state = self.kwargs.get("flag_state", self._weighted_choice([
+            ("Panama", 0.18), ("Liberia", 0.15), ("Marshall Islands", 0.14),
+            ("Singapore", 0.10), ("Hong Kong", 0.10), ("Malta", 0.08),
+            ("Bahamas", 0.07), ("Cyprus", 0.05), ("Other", 0.13)
+        ]))
         
-        # Simplified flag state categorization
-        white_flags = ["Singapore", "Hong Kong", "United Kingdom", "Norway", "Denmark", "Netherlands", "Japan"]
-        grey_flags = ["Panama", "Liberia", "Marshall Islands", "Malta", "Bahamas", "Cyprus"]
+        # Determine list color based on flag state
+        white_list_flags = ["Singapore", "Hong Kong", "Denmark", "Norway", "Japan", "UK", "Germany", "Netherlands"]
+        black_list_flags = ["Comoros", "Palau", "Togo", "Moldova", "Sierra Leone"]
         
-        if flag_state in white_flags:
+        if flag_state in white_list_flags:
             list_color = "WHITE"
-            detention_rate = self._rng.uniform(0.5, 2.0)
-        elif flag_state in grey_flags:
-            list_color = "GREY"
-            detention_rate = self._rng.uniform(2.0, 4.0)
+            detention_rate = round(self._rng.uniform(0.5, 2.5), 2)
+        elif flag_state in black_list_flags:
+            list_color = "BLACK"
+            detention_rate = round(self._rng.uniform(8.0, 20.0), 2)
         else:
-            list_color = self._weighted_choice([("WHITE", 0.30), ("GREY", 0.50), ("BLACK", 0.20)])
-            detention_rate = self._rng.uniform(1.0, 6.0)
+            list_color = self._weighted_choice([("WHITE", 0.50), ("GREY", 0.40), ("BLACK", 0.10)])
+            detention_rate = round(self._rng.uniform(1.0, 8.0), 2)
         
         raw_data = {
             "flag_state": flag_state,
-            "paris_mou_status": {"list_color": list_color, "detention_rate_pct": round(detention_rate, 2), "deficiency_rate": round(self._rng.uniform(1.0, 5.0), 2)},
-            "iacs_member_class_required": list_color != "BLACK",
-            "recognized_organizations": self._rng.randint(5, 15),
+            "flag_code": flag_state[:3].upper(),
+            "paris_mou_status": {
+                "list_color": list_color,
+                "detention_rate_pct": detention_rate,
+                "deficiency_ratio": round(detention_rate * 1.5, 2),
+                "inspection_count_3yr": self._rng.randint(100, 5000),
+            },
+            "tokyo_mou_status": {
+                "list_color": list_color,
+                "detention_rate_pct": detention_rate * self._rng.uniform(0.8, 1.2),
+            },
+            "qualship_21": {
+                "eligible": list_color == "WHITE" and self._rng.random() > 0.3,
+            },
+            "imo_audit_status": {
+                "audited": True,
+                "last_audit_date": self._random_date(1825, 365),
+                "significant_findings": self._rng.randint(0, 5),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"flag": flag_state, "list": list_color})
-
-
-# =============================================================================
-# AEROSPACE EXTRACTORS (9 extractors for 7 signal groups)
-# =============================================================================
-
-@register_extractor
-class IATAOperatorExtractor(DataExtractor):
-    """IATA registry - IOSA status, operator profile. Signals: safety_record, regulatory_compliance"""
-    source_name = "iata_registry"
-    coverage = "aerospace"
-    signals = ["safety_record", "regulatory_compliance"]
-
-    def extract(self) -> ExtractionResult:
-        iosa_registered = self._rng.random() < 0.75
-        fleet_size = self._weighted_choice([(self._rng.randint(1, 10), 0.30), (self._rng.randint(11, 50), 0.35), (self._rng.randint(51, 200), 0.25), (self._rng.randint(201, 500), 0.10)])
         
-        raw_data = {
-            "operator": {"operator_id": self.kwargs.get("operator_id", self._random_id("AOC", 6)), "legal_name": self.kwargs.get("operator_name", f"Airways {self._random_id()}"), "iata_code": self._random_id("", 2).upper(), "icao_code": self._random_id("", 3).upper(), "country": self._weighted_choice([("United States", 0.20), ("China", 0.12), ("India", 0.08), ("United Kingdom", 0.06), ("UAE", 0.05), ("Other", 0.49)])},
-            "iosa": {"registered": iosa_registered, "status": self._weighted_choice([("Registered", 0.90), ("Renewal Pending", 0.05), ("Expired", 0.05)]) if iosa_registered else "Not Registered", "last_audit_date": self._random_date(730, 30) if iosa_registered else None, "findings_count": self._rng.randint(0, 15) if iosa_registered else None},
-            "regulatory": {"aoc_status": self._weighted_choice([("Valid", 0.95), ("Suspended", 0.02), ("Revoked", 0.01), ("Pending", 0.02)]), "primary_regulator": self._weighted_choice([("FAA", 0.30), ("EASA", 0.25), ("CAAC", 0.12), ("DGCA", 0.08), ("Other", 0.25)])},
-            "fleet": {"total_aircraft": fleet_size, "average_age": round(self._rng.uniform(5, 18), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"iosa": iosa_registered})
-
-
-@register_extractor
-class AviationSafetyExtractor(DataExtractor):
-    """Aviation safety databases - accidents, incidents, fatalities. Signals: safety_record"""
-    source_name = "aviation_safety"
-    coverage = "aerospace"
-    signals = ["safety_record"]
-
-    def extract(self) -> ExtractionResult:
-        accidents_5yr = self._weighted_choice([(0, 0.82), (1, 0.12), (2, 0.04), (self._rng.randint(3, 5), 0.02)])
-        incidents_5yr = self._weighted_choice([(0, 0.45), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 8), 0.15), (self._rng.randint(9, 15), 0.05)])
-        fatalities = self._rng.randint(0, accidents_5yr * 80) if accidents_5yr > 0 else 0
-        hull_losses = min(accidents_5yr, self._rng.randint(0, accidents_5yr + 1))
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("AOC", 6)),
-            "safety_record_5yr": {"accidents": accidents_5yr, "incidents": incidents_5yr, "fatalities": fatalities, "hull_losses": hull_losses, "serious_incidents": self._rng.randint(0, incidents_5yr)},
-            "rates": {"accident_rate_per_million_flights": round(accidents_5yr / max(1, self._rng.randint(100, 1000)) * 1000000, 4), "incident_rate_per_million_flights": round(incidents_5yr / max(1, self._rng.randint(100, 1000)) * 1000000, 4)},
-            "last_event": {"date": self._random_date(1825, 0) if accidents_5yr > 0 else None, "type": self._weighted_choice([("Ground Damage", 0.30), ("Runway Excursion", 0.20), ("Bird Strike", 0.15), ("Turbulence Injury", 0.15), ("Other", 0.20)]) if accidents_5yr > 0 else None},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"accidents": accidents_5yr, "fatalities": fatalities})
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "flag_state": flag_state,
+                "list_color": list_color,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
-class FAARegistryExtractor(DataExtractor):
-    """FAA registry - aircraft registration, AD compliance, enforcement. Signals: regulatory_compliance, fleet_quality"""
-    source_name = "faa_registry"
-    coverage = "aerospace"
-    signals = ["regulatory_compliance", "fleet_quality"]
+class PIClubExtractor(DataExtractor):
+    """
+    P&I Club Data - Club membership, claims history, coverage.
+    
+    Signals: pi_club, insurance_history
+    
+    Alternative Sources:
+    - International Group: members/search
+    - Individual P&I Club APIs
+    """
+    source_name = "pi_club"
+    coverage = "marine"
+    signals = ["pi_club", "insurance_history"]
+    ttl_config = TTLConfig.semi_static("P&I membership updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "ig_clubs", "members/search", priority=1),
+        DataSource("scrape", "pi_club_websites", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_aircraft = self._rng.randint(1, 150)
-        enforcement_actions = self._weighted_choice([(0, 0.75), (1, 0.15), (self._rng.randint(2, 5), 0.08), (self._rng.randint(6, 10), 0.02)])
+        ig_clubs = [
+            "Gard", "Britannia", "North P&I", "Standard Club", "UK P&I Club",
+            "West of England", "Skuld", "American Club", "Japan P&I", "London P&I Club",
+            "Swedish Club", "Steamship Mutual", "Shipowners' Club"
+        ]
+        
+        is_ig_member = self._rng.random() > 0.15
+        club_name = self._rng.choice(ig_clubs) if is_ig_member else f"Fixed Premium Insurer {self._random_id()}"
+        club_type = "International Group" if is_ig_member else "Fixed Premium"
+        
+        # Claims history
+        num_claims = self._weighted_choice([(0, 0.50), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 10), 0.15)])
+        total_incurred = 0
+        claims = []
+        
+        for _ in range(num_claims):
+            claim_amount = self._weighted_choice([
+                (self._rng.randint(10000, 100000), 0.60),
+                (self._rng.randint(100000, 500000), 0.25),
+                (self._rng.randint(500000, 2000000), 0.10),
+                (self._rng.randint(2000000, 10000000), 0.05),
+            ])
+            total_incurred += claim_amount
+            claims.append({
+                "claim_type": self._weighted_choice([
+                    ("Cargo", 0.30), ("Personal Injury", 0.25), ("Collision", 0.15),
+                    ("Pollution", 0.10), ("Wreck Removal", 0.08), ("Other", 0.12)
+                ]),
+                "claim_date": self._random_date(1825, 0),
+                "incurred_amount_usd": claim_amount,
+                "status": self._weighted_choice([("Open", 0.30), ("Closed", 0.70)]),
+            })
         
         raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 8)),
-            "registrations": {"total_aircraft": num_aircraft, "average_age": round(self._rng.uniform(5, 20), 1)},
-            "airworthiness_directives": {"total_applicable": self._rng.randint(50, 300), "complied": self._rng.randint(48, 298), "overdue": self._weighted_choice([(0, 0.85), (self._rng.randint(1, 3), 0.12), (self._rng.randint(4, 8), 0.03)])},
-            "enforcement": {"total_actions_5yr": enforcement_actions, "total_penalties_usd": enforcement_actions * self._rng.randint(5000, 75000), "certificate_actions": self._rng.randint(0, enforcement_actions // 2 + 1)},
+            "company_id": self.kwargs.get("company_id", self._random_id("IMO", 7)),
+            "membership": {
+                "club_name": club_name,
+                "club_type": club_type,
+                "is_ig_member": is_ig_member,
+                "member_since": self._random_date(7300, 365),
+                "tonnage_entered": self._rng.randint(100000, 5000000),
+            },
+            "claims_history": {
+                "total_claims_5yr": num_claims,
+                "total_incurred_usd": total_incurred,
+                "claims": sorted(claims, key=lambda x: x["claim_date"], reverse=True)[:10],
+                "loss_ratio": round(total_incurred / max(self._rng.randint(500000, 5000000), 1), 3),
+            },
+            "coverage": {
+                "p_and_i_limit_usd": 3_000_000_000 if is_ig_member else self._rng.randint(100_000_000, 500_000_000),
+                "fdp_limit_usd": self._rng.randint(50_000_000, 500_000_000),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"aircraft": num_aircraft, "enforcement": enforcement_actions})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "is_ig_member": is_ig_member,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class MarineFinancialExtractor(DataExtractor):
+    """
+    Marine Financial Data - Revenue, leverage, credit metrics.
+    
+    Signals: credit_rating, leverage, financial_stability
+    
+    Alternative Sources:
+    - SEC Edgar (if public)
+    - Bloomberg
+    - D&B
+    - Marine Money
+    """
+    source_name = "marine_financial"
+    coverage = "marine"
+    signals = ["credit_rating", "leverage", "financial_stability"]
+    ttl_config = TTLConfig.semi_static("Financial data updated weekly")
+    
+    alternative_sources = [
+        DataSource("filing", "sec_edgar", "10-K", priority=1),
+        DataSource("api", "bloomberg", "financials", priority=2),
+        DataSource("api", "dnb", "company/financials", priority=3),
+        DataSource("api", "marine_money", "transactions", priority=4),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        revenue = self._weighted_choice([
+            (self._rng.randint(10, 100) * 1_000_000, 0.40),
+            (self._rng.randint(100, 500) * 1_000_000, 0.35),
+            (self._rng.randint(500, 2000) * 1_000_000, 0.20),
+            (self._rng.randint(2000, 10000) * 1_000_000, 0.05),
+        ])
+        
+        ebitda_margin = self._rng.uniform(0.15, 0.45)
+        ebitda = revenue * ebitda_margin
+        
+        debt_to_ebitda = self._weighted_choice([
+            (self._rng.uniform(1.0, 3.0), 0.40),
+            (self._rng.uniform(3.0, 5.0), 0.35),
+            (self._rng.uniform(5.0, 8.0), 0.20),
+            (self._rng.uniform(8.0, 12.0), 0.05),
+        ])
+        
+        total_debt = ebitda * debt_to_ebitda
+        
+        raw_data = {
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 8)),
+            "financials": {
+                "revenue_usd": revenue,
+                "ebitda_usd": ebitda,
+                "ebitda_margin_pct": round(ebitda_margin * 100, 1),
+                "net_income_usd": ebitda * self._rng.uniform(0.3, 0.7),
+                "total_assets_usd": revenue * self._rng.uniform(2, 5),
+                "fiscal_year_end": "2024-12-31",
+            },
+            "leverage": {
+                "total_debt_usd": total_debt,
+                "cash_usd": revenue * self._rng.uniform(0.05, 0.20),
+                "net_debt_usd": total_debt - (revenue * self._rng.uniform(0.05, 0.20)),
+            },
+            "ratios": {
+                "debt_to_ebitda": round(debt_to_ebitda, 2),
+                "interest_coverage": round(self._rng.uniform(1.5, 8.0), 2),
+                "current_ratio": round(self._rng.uniform(0.8, 2.5), 2),
+            },
+            "credit_profile": {
+                "is_public": self._rng.random() > 0.70,
+                "has_rating": self._rng.random() > 0.50,
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class VesselValuationExtractor(DataExtractor):
+    """
+    Vessel Valuation Data - Market values, LTV ratios.
+    
+    Signals: fleet_value, ltv_ratio
+    
+    Alternative Sources:
+    - VesselsValue
+    - Clarksons: valuations
+    - Baltic Exchange
+    """
+    source_name = "vessel_valuation"
+    coverage = "marine"
+    signals = ["fleet_value", "ltv_ratio"]
+    ttl_config = TTLConfig.semi_static("Valuations updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "vesselsvalue", "valuations/fleet", priority=1),
+        DataSource("api", "clarksons", "valuations", priority=2),
+        DataSource("api", "baltic_exchange", "indices", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        num_vessels = self._rng.randint(1, 50)
+        vessels = []
+        total_value = 0
+        total_debt = 0
+        
+        for _ in range(num_vessels):
+            vessel_type = self._weighted_choice([
+                ("Container Ship", 0.25), ("Oil Tanker", 0.20), ("Bulk Carrier", 0.20),
+                ("Chemical Tanker", 0.15), ("LNG Carrier", 0.10), ("Other", 0.10)
+            ])
+            
+            # Value based on vessel type and age
+            base_values = {
+                "Container Ship": (30, 150), "Oil Tanker": (25, 120),
+                "Bulk Carrier": (15, 60), "Chemical Tanker": (20, 80),
+                "LNG Carrier": (150, 300), "Other": (10, 50)
+            }
+            low, high = base_values.get(vessel_type, (20, 80))
+            market_value = self._rng.randint(low, high) * 1_000_000
+            
+            debt_pct = self._rng.uniform(0.40, 0.85)
+            vessel_debt = market_value * debt_pct
+            
+            total_value += market_value
+            total_debt += vessel_debt
+            
+            vessels.append({
+                "vessel_type": vessel_type,
+                "market_value_usd": market_value,
+                "debt_usd": vessel_debt,
+                "ltv_ratio": round(debt_pct, 3),
+                "last_valuation_date": self._random_date(90, 0),
+            })
+        
+        raw_data = {
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 8)),
+            "fleet_valuation": {
+                "total_vessels": num_vessels,
+                "total_fleet_value_usd": total_value,
+                "average_vessel_value_usd": total_value // num_vessels,
+                "valuation_date": self._random_date(30, 0),
+            },
+            "leverage": {
+                "total_fleet_debt_usd": total_debt,
+                "ltv_ratio": round(total_debt / total_value, 3) if total_value > 0 else 0,
+            },
+            "vessels": vessels[:20],
+            "market_outlook": {
+                "market_trend": self._weighted_choice([("Improving", 0.30), ("Stable", 0.45), ("Declining", 0.25)]),
+                "value_change_12mo_pct": round(self._rng.uniform(-20, 30), 1),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "num_vessels": num_vessels,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class TradingPatternExtractor(DataExtractor):
+    """
+    Trading Pattern Analysis - Routes, regions, cargo types.
+    
+    Signals: trading_pattern, route_risk, geographic_exposure
+    
+    Alternative Sources:
+    - MarineTraffic: routes/analysis
+    - Spire: vessels/routes
+    - ExactEarth: patterns/analysis
+    """
+    source_name = "trading_pattern"
+    coverage = "marine"
+    signals = ["trading_pattern", "route_risk", "geographic_exposure"]
+    ttl_config = TTLConfig.dynamic("Trading patterns analyzed daily")
+    
+    alternative_sources = [
+        DataSource("api", "marinetraffic", "routes/analysis", priority=1),
+        DataSource("api", "spire", "vessels/routes", priority=2),
+        DataSource("api", "exactearth", "patterns/analysis", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        trading_regions = ["Asia-Pacific", "Europe", "Americas", "Middle East", "Africa", "Global"]
+        primary_region = self._weighted_choice([
+            ("Asia-Pacific", 0.30), ("Europe", 0.20), ("Global", 0.20),
+            ("Americas", 0.15), ("Middle East", 0.10), ("Africa", 0.05)
+        ])
+        
+        route_types = ["Liner", "Tramp", "Industrial", "Mixed"]
+        primary_route = self._weighted_choice([
+            ("Liner", 0.25), ("Tramp", 0.40), ("Industrial", 0.20), ("Mixed", 0.15)
+        ])
+        
+        # High risk area exposure
+        high_risk_areas = ["Gulf of Aden", "Gulf of Guinea", "Strait of Malacca", "South China Sea"]
+        exposed_areas = self._rng.sample(high_risk_areas, self._rng.randint(0, 3))
+        
+        raw_data = {
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 8)),
+            "trading_pattern": {
+                "primary_region": primary_region,
+                "secondary_regions": self._rng.sample([r for r in trading_regions if r != primary_region], 2),
+                "route_type": primary_route,
+                "seasonal_pattern": self._weighted_choice([("Consistent", 0.60), ("Seasonal", 0.30), ("Opportunistic", 0.10)]),
+            },
+            "geographic_exposure": {
+                "high_risk_areas": exposed_areas,
+                "sanctioned_country_exposure": self._rng.random() < 0.05,
+                "piracy_zone_transits_12mo": self._rng.randint(0, 20) if exposed_areas else 0,
+            },
+            "cargo_profile": {
+                "primary_cargo": self._weighted_choice([
+                    ("Containers", 0.25), ("Crude Oil", 0.15), ("Dry Bulk", 0.20),
+                    ("Chemicals", 0.15), ("LNG", 0.10), ("General Cargo", 0.15)
+                ]),
+                "cargo_diversity": self._weighted_choice([("Single", 0.30), ("Diverse", 0.50), ("Specialized", 0.20)]),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "primary_region": primary_region,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor  
+class MarineVettingExtractor(DataExtractor):
+    """
+    Third-Party Vetting Data - RightShip, SIRE, CDI.
+    
+    Signals: vetting_score, inspection_quality
+    
+    Alternative Sources:
+    - RightShip: vessels/score
+    - OCIMF SIRE: reports/search
+    - CDI: vessel_inspection/search
+    """
+    source_name = "vetting_scores"
+    coverage = "marine"
+    signals = ["vetting_score", "inspection_quality"]
+    ttl_config = TTLConfig.semi_static("Vetting scores updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "rightship", "vessels/score", priority=1),
+        DataSource("api", "ocimf_sire", "reports/search", priority=2),
+        DataSource("api", "cdp", "vessel_inspection/search", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        # RightShip score (0.5 to 5.0 stars)
+        rightship_score = round(self._weighted_choice([
+            (self._rng.uniform(4.0, 5.0), 0.30), (self._rng.uniform(3.0, 4.0), 0.40),
+            (self._rng.uniform(2.0, 3.0), 0.20), (self._rng.uniform(0.5, 2.0), 0.10)
+        ]), 1)
+        
+        # SIRE inspection
+        sire_inspected = self._rng.random() > 0.30
+        sire_observations = self._rng.randint(0, 25) if sire_inspected else None
+        
+        raw_data = {
+            "vessel_imo": self.kwargs.get("vessel_imo", str(self._rng.randint(9000000, 9999999))),
+            "rightship": {
+                "score": rightship_score,
+                "star_rating": int(rightship_score),
+                "last_update": self._random_date(90, 0),
+                "ghg_rating": self._weighted_choice([("A", 0.15), ("B", 0.25), ("C", 0.35), ("D", 0.20), ("E", 0.05)]),
+            },
+            "sire": {
+                "inspected": sire_inspected,
+                "last_inspection_date": self._random_date(365, 0) if sire_inspected else None,
+                "total_observations": sire_observations,
+                "negative_observations": self._rng.randint(0, min(10, sire_observations or 0)) if sire_observations else None,
+            },
+            "cdi": {
+                "inspected": self._rng.random() > 0.50,
+                "last_inspection_date": self._random_date(365, 0),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "rightship_score": rightship_score,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class MarineEnvironmentalExtractor(DataExtractor):
+    """
+    Environmental Compliance Data - CII, BWM, IMO 2020.
+    
+    Signals: cii_rating, bwm_compliance, imo2020_compliance, environmental_incident
+    
+    Alternative Sources:
+    - IMO DCS: emissions/cii
+    - Class Societies: vessels/cii
+    - PSC databases
+    """
+    source_name = "marine_environmental"
+    coverage = "marine"
+    signals = ["cii_rating", "bwm_compliance", "imo2020_compliance", "environmental_incident"]
+    ttl_config = TTLConfig.semi_static("Environmental data updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "imo_dcs", "emissions/cii", priority=1),
+        DataSource("api", "class_societies", "vessels/cii", priority=2),
+        DataSource("api", "psc_databases", "deficiencies/marpol", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        cii_rating = self._weighted_choice([("A", 0.15), ("B", 0.25), ("C", 0.35), ("D", 0.20), ("E", 0.05)])
+        
+        bwm_compliant = self._rng.random() > 0.15
+        imo2020_compliant = self._rng.random() > 0.05
+        
+        num_incidents = self._weighted_choice([(0, 0.85), (1, 0.10), (2, 0.04), (3, 0.01)])
+        incidents = []
+        for _ in range(num_incidents):
+            incidents.append({
+                "incident_date": self._random_date(1825, 0),
+                "type": self._weighted_choice([
+                    ("Oil Spill", 0.40), ("Chemical Discharge", 0.20),
+                    ("Garbage Violation", 0.25), ("Air Emission", 0.15)
+                ]),
+                "severity": self._weighted_choice([("Minor", 0.60), ("Moderate", 0.30), ("Major", 0.10)]),
+                "fine_usd": self._rng.randint(0, 500000) if self._rng.random() > 0.50 else 0,
+            })
+        
+        raw_data = {
+            "vessel_imo": self.kwargs.get("vessel_imo", str(self._rng.randint(9000000, 9999999))),
+            "cii": {
+                "rating": cii_rating,
+                "attained_cii": round(self._rng.uniform(3, 15), 2),
+                "required_cii": round(self._rng.uniform(5, 12), 2),
+                "year": 2024,
+                "trajectory": self._weighted_choice([("Improving", 0.40), ("Stable", 0.40), ("Declining", 0.20)]),
+            },
+            "bwm_compliance": {
+                "compliant": bwm_compliant,
+                "system_type": self._weighted_choice([("UV", 0.40), ("Electrochlorination", 0.35), ("Filtration", 0.25)]) if bwm_compliant else None,
+                "compliance_date": self._random_date(1825, 365) if bwm_compliant else None,
+            },
+            "imo2020_compliance": {
+                "compliant": imo2020_compliant,
+                "method": self._weighted_choice([("LSFO", 0.70), ("Scrubber", 0.20), ("LNG", 0.10)]) if imo2020_compliant else "Non-compliant",
+            },
+            "environmental_incidents": {
+                "total_5yr": num_incidents,
+                "total_fines_usd": sum(i["fine_usd"] for i in incidents),
+                "incidents": incidents,
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "cii_rating": cii_rating,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class IndustryAssociationExtractor(DataExtractor):
+    """
+    Industry Association Membership - BIMCO, Intertanko, Intercargo.
+    
+    Signals: industry_association, charterer_quality
+    
+    Alternative Sources:
+    - BIMCO: members
+    - Intertanko: members
+    - Intercargo: members
+    """
+    source_name = "industry_associations"
+    coverage = "marine"
+    signals = ["industry_association", "charterer_quality"]
+    ttl_config = TTLConfig.static("Association membership changes rarely")
+    
+    alternative_sources = [
+        DataSource("api", "bimco", "members", priority=1),
+        DataSource("api", "intertanko", "members", priority=2),
+        DataSource("api", "intercargo", "members", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        associations = ["BIMCO", "Intertanko", "Intercargo", "IMCA", "ICS"]
+        member_of = [a for a in associations if self._rng.random() > 0.60]
+        
+        # Charterer relationships
+        oil_majors = ["Shell", "BP", "ExxonMobil", "Chevron", "TotalEnergies", "Equinor"]
+        commodity_traders = ["Trafigura", "Vitol", "Glencore", "Cargill", "Louis Dreyfus"]
+        
+        raw_data = {
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 8)),
+            "memberships": {
+                "associations": member_of,
+                "total_memberships": len(member_of),
+                "years_member": {a: self._rng.randint(1, 30) for a in member_of},
+            },
+            "charterer_relationships": {
+                "oil_major_approved": self._rng.random() > 0.40,
+                "approved_by": self._rng.sample(oil_majors, self._rng.randint(0, 3)),
+                "commodity_trader_contracts": self._rng.sample(commodity_traders, self._rng.randint(0, 2)),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "memberships": len(member_of),
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class CasualtyHistoryExtractor(DataExtractor):
+    """
+    Casualty and Incident History - Total losses, major incidents.
+    
+    Signals: casualty_history, total_loss
+    
+    Alternative Sources:
+    - IHS Markit: casualties/search
+    - Lloyd's List: casualties/search
+    - IMO GISIS: casualties/search
+    """
+    source_name = "casualty_history"
+    coverage = "marine"
+    signals = ["casualty_history", "total_loss"]
+    ttl_config = TTLConfig.dynamic("Casualty data updated daily")
+    
+    alternative_sources = [
+        DataSource("api", "ihs_markit", "casualties/search", priority=1),
+        DataSource("api", "lloyd_list", "casualties/search", priority=2),
+        DataSource("api", "imo_gisis", "casualties/search", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        num_casualties = self._weighted_choice([(0, 0.75), (1, 0.15), (2, 0.07), (3, 0.03)])
+        casualties = []
+        
+        casualty_types = [
+            "Collision", "Grounding", "Fire/Explosion", "Machinery Failure",
+            "Hull Failure", "Contact", "Flooding", "Foundering"
+        ]
+        
+        for _ in range(num_casualties):
+            severity = self._weighted_choice([("Minor", 0.50), ("Serious", 0.35), ("Very Serious", 0.12), ("Total Loss", 0.03)])
+            casualties.append({
+                "date": self._random_date(3650, 0),
+                "type": self._rng.choice(casualty_types),
+                "severity": severity,
+                "location": f"{self._rng.uniform(-60, 60):.2f}, {self._rng.uniform(-180, 180):.2f}",
+                "fatalities": self._rng.randint(0, 5) if severity in ("Very Serious", "Total Loss") else 0,
+                "flag_state_investigation": severity != "Minor",
+            })
+        
+        total_losses = sum(1 for c in casualties if c["severity"] == "Total Loss")
+        
+        raw_data = {
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 8)),
+            "casualty_summary": {
+                "total_casualties_10yr": num_casualties,
+                "total_losses": total_losses,
+                "fatalities": sum(c["fatalities"] for c in casualties),
+                "by_severity": {s: sum(1 for c in casualties if c["severity"] == s) 
+                              for s in ["Minor", "Serious", "Very Serious", "Total Loss"]},
+            },
+            "casualties": sorted(casualties, key=lambda x: x["date"], reverse=True),
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "casualties": num_casualties,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class AircraftFleetExtractor(DataExtractor):
-    """Aircraft fleet data - types, ages, engines, ownership. Signals: fleet_quality"""
+    """
+    Aircraft Fleet Data - Fleet composition, age, ownership.
+    
+    Signals: fleet_size, fleet_age, fleet_homogeneity, aircraft_generation, order_backlog
+    
+    Alternative Sources:
+    - Cirium: fleets/aircraft
+    - ch-aviation: fleets/list
+    - Planespotters: operators/fleet
+    - FAA Registry: aircraft/by_owner
+    """
     source_name = "aircraft_fleet"
     coverage = "aerospace"
-    signals = ["fleet_quality"]
+    signals = ["fleet_size", "fleet_age", "fleet_homogeneity", "aircraft_generation", "order_backlog"]
+    ttl_config = TTLConfig.semi_static("Fleet composition changes weekly")
+    
+    alternative_sources = [
+        DataSource("api", "cirium", "fleets/aircraft", priority=1),
+        DataSource("api", "ch_aviation", "fleets/list", priority=2),
+        DataSource("api", "planespotters", "operators/fleet", priority=3),
+        DataSource("registry", "faa_registry", "aircraft/by_owner", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
-        fleet_size = self._weighted_choice([(self._rng.randint(1, 10), 0.30), (self._rng.randint(11, 50), 0.35), (self._rng.randint(51, 150), 0.25), (self._rng.randint(151, 400), 0.10)])
+        fleet_size = self._weighted_choice([
+            (self._rng.randint(1, 10), 0.30), (self._rng.randint(11, 50), 0.35),
+            (self._rng.randint(51, 200), 0.25), (self._rng.randint(201, 800), 0.10)
+        ])
+        
+        aircraft_types = ["B737", "A320", "B777", "A350", "B787", "A330", "E190", "CRJ", "ATR"]
+        primary_type = self._rng.choice(aircraft_types[:4])
+        
         aircraft = []
-        for _ in range(min(fleet_size, 30)):
-            build_year = self._rng.randint(2000, 2024)
+        type_counts = {}
+        total_age = 0
+        
+        for i in range(fleet_size):
+            if i < fleet_size * 0.6:
+                ac_type = primary_type
+            else:
+                ac_type = self._rng.choice(aircraft_types)
+            
+            type_counts[ac_type] = type_counts.get(ac_type, 0) + 1
+            age = self._rng.randint(0, 25)
+            total_age += age
+            
             aircraft.append({
-                "type": self._weighted_choice([("Boeing 737", 0.25), ("Airbus A320", 0.25), ("Boeing 777", 0.10), ("Airbus A330", 0.08), ("Boeing 787", 0.07), ("Embraer E-Jet", 0.08), ("Other", 0.17)]),
-                "build_year": build_year,
-                "age": 2024 - build_year,
-                "engine_type": self._weighted_choice([("CFM56", 0.25), ("CFM LEAP", 0.20), ("PW1000G", 0.15), ("GE90", 0.10), ("Trent", 0.10), ("Other", 0.20)]),
-                "ownership": self._weighted_choice([("Owned", 0.35), ("Operating Lease", 0.45), ("Finance Lease", 0.15), ("Wet Lease", 0.05)]),
-            })
-        avg_age = round(sum(a["age"] for a in aircraft) / len(aircraft), 1) if aircraft else 0
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
-            "fleet_summary": {"total_aircraft": fleet_size, "active": int(fleet_size * 0.92), "average_age": avg_age, "owned_pct": round(sum(1 for a in aircraft if a["ownership"] == "Owned") / len(aircraft) * 100, 1) if aircraft else 0},
-            "aircraft": aircraft,
-            "fleet_composition": {"narrowbody_pct": round(sum(1 for a in aircraft if "737" in a["type"] or "A320" in a["type"]) / len(aircraft) * 100, 1) if aircraft else 0},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"fleet_size": fleet_size, "avg_age": avg_age})
-
-
-@register_extractor
-class MROProviderExtractor(DataExtractor):
-    """MRO provider data - maintenance quality, findings. Signals: maintenance_quality"""
-    source_name = "mro_provider"
-    coverage = "aerospace"
-    signals = ["maintenance_quality"]
-
-    def extract(self) -> ExtractionResult:
-        mro_relationships = []
-        for _ in range(self._rng.randint(1, 4)):
-            mro_relationships.append({
-                "mro_name": self._weighted_choice([("Lufthansa Technik", 0.15), ("ST Aerospace", 0.12), ("HAECO", 0.10), ("AAR Corp", 0.10), ("AFI KLM E&M", 0.08), ("In-House", 0.20), ("Other", 0.25)]),
-                "tier": self._weighted_choice([("OEM Affiliated", 0.20), ("Major Independent", 0.35), ("Regional", 0.30), ("In-House", 0.15)]),
-                "contract_type": self._weighted_choice([("Flight Hour Agreement", 0.30), ("Time & Material", 0.35), ("Power by Hour", 0.20), ("Fixed Price", 0.15)]),
-                "audit_result": self._weighted_choice([("Satisfactory", 0.85), ("Satisfactory with Findings", 0.12), ("Unsatisfactory", 0.03)]),
+                "registration": self._random_id("N", 5) if self._rng.random() > 0.50 else self._random_id("G-", 4),
+                "type": ac_type,
+                "age_years": age,
+                "build_year": 2024 - age,
+                "ownership": self._weighted_choice([("Owned", 0.35), ("Finance Lease", 0.30), ("Operating Lease", 0.35)]),
+                "lessor": self._rng.choice(["AerCap", "SMBC", "Avolon", "BOC Aviation", "GECAS", None]) if self._rng.random() > 0.35 else None,
             })
         
-        num_events = self._rng.randint(20, 150)
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
-            "mro_relationships": mro_relationships,
-            "maintenance_summary": {"events_12mo": num_events, "on_time_rate": round(self._rng.uniform(0.82, 0.98), 3), "avg_findings_per_event": round(self._rng.uniform(0.5, 3.5), 2), "unscheduled_events_pct": round(self._rng.uniform(5, 20), 1)},
-            "quality_metrics": {"aog_events_12mo": self._rng.randint(0, 15), "repeat_discrepancies_pct": round(self._rng.uniform(1, 8), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"mro_count": len(mro_relationships)})
-
-
-@register_extractor
-class CrewTrainingExtractor(DataExtractor):
-    """Crew training and qualifications. Signals: crew_quality"""
-    source_name = "crew_training"
-    coverage = "aerospace"
-    signals = ["crew_quality"]
-
-    def extract(self) -> ExtractionResult:
-        num_pilots = self._weighted_choice([(self._rng.randint(20, 100), 0.40), (self._rng.randint(101, 500), 0.35), (self._rng.randint(501, 2000), 0.20), (self._rng.randint(2001, 10000), 0.05)])
+        avg_age = total_age / fleet_size if fleet_size > 0 else 0
+        homogeneity = max(type_counts.values()) / fleet_size if fleet_size > 0 else 0
         
         raw_data = {
             "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
-            "pilot_roster": {"total_pilots": num_pilots, "captains": int(num_pilots * self._rng.uniform(0.38, 0.48)), "average_total_hours": self._rng.randint(6000, 14000), "average_type_hours": self._rng.randint(1500, 7000), "pilots_under_1500_hrs": int(num_pilots * self._rng.uniform(0.02, 0.12))},
-            "training_compliance": {"recurrent_current_pct": round(self._rng.uniform(96, 100), 1), "line_checks_current_pct": round(self._rng.uniform(95, 100), 1), "medical_current_pct": round(self._rng.uniform(98, 100), 1)},
-            "training_metrics": {"pass_rate_pct": round(self._rng.uniform(92, 99), 1), "additional_training_rate_pct": round(self._rng.uniform(2, 8), 1), "check_airmen_ratio": round(self._rng.uniform(0.05, 0.12), 3)},
+            "fleet_summary": {
+                "total_aircraft": fleet_size,
+                "average_age_years": round(avg_age, 1),
+                "newest_aircraft_age": min(a["age_years"] for a in aircraft) if aircraft else 0,
+                "oldest_aircraft_age": max(a["age_years"] for a in aircraft) if aircraft else 0,
+                "type_count": len(type_counts),
+                "primary_type": primary_type,
+                "homogeneity_score": round(homogeneity, 2),
+            },
+            "type_distribution": type_counts,
+            "ownership_breakdown": {
+                "owned": sum(1 for a in aircraft if a["ownership"] == "Owned"),
+                "finance_lease": sum(1 for a in aircraft if a["ownership"] == "Finance Lease"),
+                "operating_lease": sum(1 for a in aircraft if a["ownership"] == "Operating Lease"),
+            },
+            "order_backlog": {
+                "total_orders": self._rng.randint(0, 100),
+                "deliveries_next_12mo": self._rng.randint(0, 20),
+                "types_ordered": self._rng.sample(["B737 MAX", "A320neo", "A350", "B787"], self._rng.randint(0, 3)),
+            },
+            "aircraft": aircraft[:50],
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"pilots": num_pilots})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "fleet_size": fleet_size,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class OperationalPerformanceExtractor(DataExtractor):
-    """Operational performance - OTP, dispatch reliability. Signals: operational_quality"""
+    """
+    Operational Performance - OTP, dispatch reliability, completion factor.
+    
+    Signals: otp_score, dispatch_reliability, operational_complexity, growth_rate
+    
+    Alternative Sources:
+    - OAG: performance/otp
+    - Cirium: performance/punctuality
+    """
     source_name = "operational_performance"
     coverage = "aerospace"
-    signals = ["operational_quality"]
+    signals = ["otp_score", "dispatch_reliability", "operational_complexity", "growth_rate"]
+    ttl_config = TTLConfig.dynamic("Performance metrics updated daily")
+    
+    alternative_sources = [
+        DataSource("api", "oag", "performance/otp", priority=1),
+        DataSource("api", "cirium", "performance/punctuality", priority=2),
+        DataSource("api", "cirium", "performance/dispatch", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        otp = round(self._rng.uniform(70, 92), 1)
-        dispatch_reliability = round(self._rng.uniform(97, 99.8), 2)
+        otp = round(self._rng.uniform(65, 92), 1)
+        dispatch = round(self._rng.uniform(97, 99.9), 2)
+        completion = round(self._rng.uniform(96, 99.5), 2)
         
         raw_data = {
             "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
-            "performance_12mo": {"on_time_performance_pct": otp, "dispatch_reliability_pct": dispatch_reliability, "completion_factor_pct": round(self._rng.uniform(98, 99.9), 2), "cancellation_rate_pct": round(self._rng.uniform(0.5, 3.0), 2)},
-            "operational_metrics": {"daily_utilization_hours": round(self._rng.uniform(8, 14), 1), "turnaround_time_avg_min": self._rng.randint(25, 55), "flights_per_day": self._rng.randint(50, 1500)},
-            "delays": {"avg_delay_min": self._rng.randint(10, 45), "controllable_delays_pct": round(self._rng.uniform(20, 50), 1)},
+            "performance_metrics": {
+                "on_time_performance_pct": otp,
+                "dispatch_reliability_pct": dispatch,
+                "completion_factor_pct": completion,
+                "average_delay_minutes": self._rng.randint(5, 45),
+                "cancellation_rate_pct": round(100 - completion, 2),
+            },
+            "benchmark_comparison": {
+                "otp_vs_industry": round(otp - 78, 1),
+                "dispatch_vs_industry": round(dispatch - 98.5, 2),
+                "ranking_percentile": self._rng.randint(10, 95),
+            },
+            "operational_complexity": {
+                "fleet_types": self._rng.randint(1, 8),
+                "destinations": self._rng.randint(20, 300),
+                "daily_departures": self._rng.randint(50, 2000),
+                "hub_count": self._rng.randint(1, 10),
+                "complexity_score": self._weighted_choice([("Low", 0.20), ("Medium", 0.50), ("High", 0.30)]),
+            },
+            "growth_metrics": {
+                "asm_growth_yoy_pct": round(self._rng.uniform(-10, 25), 1),
+                "passenger_growth_yoy_pct": round(self._rng.uniform(-5, 20), 1),
+                "route_additions_12mo": self._rng.randint(0, 30),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"otp": otp})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "otp": otp,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class MROProviderExtractor(DataExtractor):
+    """
+    MRO Provider Data - Maintenance quality, approvals, capabilities.
+    
+    Signals: mro_quality, maintenance_indicators
+    
+    Alternative Sources:
+    - FAA: repair_stations/145
+    - EASA: part_145_approvals
+    """
+    source_name = "mro_provider"
+    coverage = "aerospace"
+    signals = ["mro_quality", "maintenance_indicators"]
+    ttl_config = TTLConfig.semi_static("MRO relationships change infrequently")
+    
+    alternative_sources = [
+        DataSource("registry", "faa", "repair_stations/145", priority=1),
+        DataSource("registry", "easa", "part_145_approvals", priority=2),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        mro_tier = self._weighted_choice([
+            ("OEM Affiliated", 0.20), ("Major Independent", 0.30),
+            ("Regional", 0.30), ("In-House", 0.20)
+        ])
+        
+        capabilities = ["Airframe", "Engine", "Component", "Line Maintenance", "Base Maintenance"]
+        
+        raw_data = {
+            "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
+            "primary_mro": {
+                "provider_name": self._random_company_name("Aviation Services"),
+                "tier": mro_tier,
+                "faa_145_certified": True,
+                "easa_145_certified": self._rng.random() > 0.20,
+                "capabilities": self._rng.sample(capabilities, self._rng.randint(2, 5)),
+            },
+            "maintenance_quality": {
+                "audit_findings_12mo": self._rng.randint(0, 15),
+                "repeat_findings": self._rng.randint(0, 5),
+                "ad_compliance_rate_pct": round(self._rng.uniform(98, 100), 1),
+                "unscheduled_maintenance_rate": round(self._rng.uniform(0.5, 5), 2),
+            },
+            "mro_relationship": {
+                "years_with_provider": self._rng.randint(1, 20),
+                "contract_type": self._weighted_choice([("Flight Hour", 0.40), ("Fixed Price", 0.35), ("Time & Materials", 0.25)]),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "mro_tier": mro_tier,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class CrewTrainingExtractor(DataExtractor):
+    """
+    Crew Training Data - Training programs, experience levels.
+    
+    Signals: crew_experience, training_indicators
+    
+    Alternative Sources:
+    - CAE: training/customers
+    - FlightSafety: clients
+    - LinkedIn: people/search
+    """
+    source_name = "crew_training"
+    coverage = "aerospace"
+    signals = ["crew_experience", "training_indicators"]
+    ttl_config = TTLConfig.semi_static("Training data updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "cae", "training/customers", priority=1),
+        DataSource("api", "flightsafety", "clients", priority=2),
+        DataSource("api", "linkedin", "people/search", {"title": ["Captain", "First Officer"]}, priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        avg_captain_hours = self._rng.randint(5000, 20000)
+        avg_fo_hours = self._rng.randint(2000, 8000)
+        
+        raw_data = {
+            "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
+            "crew_experience": {
+                "average_captain_hours": avg_captain_hours,
+                "average_fo_hours": avg_fo_hours,
+                "min_hiring_hours": self._rng.choice([500, 1000, 1500, 2500]),
+                "captain_upgrade_hours": self._rng.choice([3000, 4000, 5000]),
+            },
+            "training_program": {
+                "simulator_provider": self._weighted_choice([("CAE", 0.35), ("FlightSafety", 0.30), ("In-House", 0.25), ("Other", 0.10)]),
+                "recurrent_frequency_months": 6,
+                "advanced_training": {
+                    "upset_recovery": self._rng.random() > 0.20,
+                    "aqa_program": self._rng.random() > 0.30,
+                    "losa_program": self._rng.random() > 0.40,
+                },
+                "training_hours_per_pilot_annual": self._rng.randint(40, 120),
+            },
+            "crew_metrics": {
+                "total_pilots": self._rng.randint(50, 5000),
+                "turnover_rate_pct": round(self._rng.uniform(3, 20), 1),
+                "check_airman_ratio": round(self._rng.uniform(0.05, 0.15), 3),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "avg_captain_hours": avg_captain_hours,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class AviationFinancialExtractor(DataExtractor):
-    """Aviation operator financials. Signals: financial_stability"""
+    """
+    Aviation Financial Data - Revenue, EBITDAR, leverage.
+    
+    Signals: credit_rating, public_financials, market_position
+    
+    Alternative Sources:
+    - SEC Edgar: 10-K, 10-Q, 20-F
+    - Bloomberg: financials
+    """
     source_name = "aviation_financial"
     coverage = "aerospace"
-    signals = ["financial_stability"]
+    signals = ["credit_rating", "public_financials", "market_position", "government_support"]
+    ttl_config = TTLConfig.semi_static("Financial data updated weekly")
+    
+    alternative_sources = [
+        DataSource("filing", "sec_edgar", "10-K", priority=1),
+        DataSource("api", "bloomberg", "financials", priority=2),
+        DataSource("api", "sp_global", "ratings", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        fleet_size = self._rng.randint(5, 200)
-        revenue = fleet_size * self._rng.randint(8_000_000, 25_000_000)
-        ebitdar_margin = self._rng.uniform(0.12, 0.28)
+        revenue = self._weighted_choice([
+            (self._rng.randint(100, 500) * 1_000_000, 0.30),
+            (self._rng.randint(500, 2000) * 1_000_000, 0.35),
+            (self._rng.randint(2000, 10000) * 1_000_000, 0.25),
+            (self._rng.randint(10000, 50000) * 1_000_000, 0.10),
+        ])
+        
+        ebitdar_margin = self._rng.uniform(0.10, 0.30)
+        ebitdar = revenue * ebitdar_margin
+        
+        debt_to_ebitdar = self._weighted_choice([
+            (self._rng.uniform(1.0, 3.0), 0.30),
+            (self._rng.uniform(3.0, 5.0), 0.40),
+            (self._rng.uniform(5.0, 8.0), 0.25),
+            (self._rng.uniform(8.0, 15.0), 0.05),
+        ])
+        
+        ratings = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC"]
+        rating_idx = self._weighted_choice([
+            (2, 0.10), (3, 0.25), (4, 0.35), (5, 0.20), (6, 0.10)
+        ])
         
         raw_data = {
             "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
-            "financials": {"revenue_usd": revenue, "ebitdar_usd": int(revenue * ebitdar_margin), "ebitdar_margin_pct": round(ebitdar_margin * 100, 1)},
-            "leverage": {"total_debt_usd": int(revenue * self._rng.uniform(0.5, 1.5)), "lease_adjusted_debt_usd": int(revenue * self._rng.uniform(1.0, 3.0)), "cash_usd": int(revenue * self._rng.uniform(0.05, 0.20))},
-            "credit": {"has_rating": self._rng.random() < 0.35, "rating": self._weighted_choice([("BB+", 0.20), ("BB", 0.25), ("BB-", 0.20), ("B+", 0.20), ("B", 0.15)]) if self._rng.random() < 0.35 else None},
+            "financials": {
+                "revenue_usd": revenue,
+                "ebitdar_usd": ebitdar,
+                "ebitdar_margin_pct": round(ebitdar_margin * 100, 1),
+                "net_income_usd": ebitdar * self._rng.uniform(-0.2, 0.5),
+                "total_assets_usd": revenue * self._rng.uniform(1.5, 4),
+                "is_public": self._rng.random() > 0.40,
+            },
+            "leverage": {
+                "total_debt_usd": ebitdar * debt_to_ebitdar,
+                "debt_to_ebitdar": round(debt_to_ebitdar, 2),
+                "lease_adjusted_debt_usd": ebitdar * debt_to_ebitdar * 1.3,
+                "cash_usd": revenue * self._rng.uniform(0.05, 0.25),
+            },
+            "credit_rating": {
+                "has_rating": self._rng.random() > 0.30,
+                "rating": ratings[rating_idx] if self._rng.random() > 0.30 else None,
+                "outlook": self._weighted_choice([("Stable", 0.50), ("Positive", 0.20), ("Negative", 0.30)]),
+            },
+            "market_position": {
+                "domestic_market_share_pct": round(self._rng.uniform(1, 40), 1),
+                "primary_hub_slot_share_pct": round(self._rng.uniform(5, 60), 1),
+            },
+            "government_support": {
+                "state_owned_pct": self._rng.randint(0, 100) if self._rng.random() < 0.20 else 0,
+                "received_bailout": self._rng.random() < 0.15,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"revenue": revenue})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "revenue": revenue,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class RouteRiskExtractor(DataExtractor):
+    """
+    Route Risk Analysis - Conflict zones, challenging airports, weather exposure.
+    
+    Signals: conflict_zone_exposure, challenging_airports, high_risk_destinations, weather_exposure
+    
+    Alternative Sources:
+    - OAG: schedules/routes
+    - Osprey Flight Solutions: risk_zones
+    - Eurocontrol: notams/conflict
+    """
+    source_name = "route_risk"
+    coverage = "aerospace"
+    signals = ["conflict_zone_exposure", "challenging_airports", "high_risk_destinations", "weather_exposure"]
+    ttl_config = TTLConfig.real_time("Conflict zone data requires hourly updates")
+    
+    alternative_sources = [
+        DataSource("api", "oag", "schedules/routes", priority=1),
+        DataSource("api", "osprey_flight_solutions", "risk_zones", priority=2),
+        DataSource("api", "eurocontrol", "notams/conflict", priority=3),
+        DataSource("api", "jeppesen", "airport/special_procedures", priority=4),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        conflict_zones = ["Ukraine/Russia", "Middle East", "Horn of Africa", "Myanmar", "Sahel"]
+        high_risk_airports = ["Kathmandu", "Tegucigalpa", "Paro", "Funchal", "Gibraltar"]
+        
+        exposed_conflicts = self._rng.sample(conflict_zones, self._rng.randint(0, 2))
+        challenging_destinations = self._rng.sample(high_risk_airports, self._rng.randint(0, 3))
+        
+        raw_data = {
+            "operator_id": self.kwargs.get("operator_id", self._random_id("OP", 6)),
+            "conflict_exposure": {
+                "active_conflict_zones": exposed_conflicts,
+                "overfly_restrictions": len(exposed_conflicts) > 0,
+                "rerouting_cost_impact_pct": len(exposed_conflicts) * self._rng.uniform(0.5, 2),
+            },
+            "airport_risk": {
+                "challenging_airports_served": challenging_destinations,
+                "special_qualification_required": len(challenging_destinations) > 0,
+                "terrain_exposure_score": self._weighted_choice([("Low", 0.50), ("Medium", 0.35), ("High", 0.15)]),
+            },
+            "destination_risk": {
+                "high_risk_countries": self._rng.sample(
+                    ["Iran", "Iraq", "Afghanistan", "Yemen", "Libya", "Syria"],
+                    self._rng.randint(0, 3)
+                ),
+                "cat_2_3_countries": self._rng.randint(0, 5),
+            },
+            "weather_exposure": {
+                "hurricane_exposed_routes_pct": round(self._rng.uniform(0, 30), 1),
+                "monsoon_exposed_routes_pct": round(self._rng.uniform(0, 40), 1),
+                "winter_weather_hub": self._rng.random() > 0.60,
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "conflict_zones": len(exposed_conflicts),
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 # =============================================================================
-# CYBER EXTRACTORS (8 extractors for 5 signal groups)
+# CYBER EXTRACTORS
 # =============================================================================
 
 @register_extractor
 class SecurityScorecardExtractor(DataExtractor):
-    """External security ratings - overall score, factor scores. Signals: technical_infrastructure"""
+    """
+    SecurityScorecard/BitSight - External security ratings.
+    
+    Signals: security_rating, tls_score, email_auth, exposure
+    
+    Alternative Sources:
+    - BitSight: ratings/company
+    - SecurityScorecard: companies/score
+    - RiskRecon: ratings
+    """
     source_name = "security_scorecard"
     coverage = "cyber"
-    signals = ["technical_infrastructure"]
+    signals = ["security_rating", "tls_score", "email_auth", "exposure", "software_currency"]
+    ttl_config = TTLConfig.semi_static("Security ratings updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "bitsight", "ratings/company", priority=1),
+        DataSource("api", "securityscorecard", "companies/score", priority=1),
+        DataSource("api", "riskrecon", "ratings", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        overall_score = self._weighted_choice([(self._rng.randint(85, 100), 0.15), (self._rng.randint(70, 84), 0.30), (self._rng.randint(55, 69), 0.30), (self._rng.randint(40, 54), 0.18), (self._rng.randint(20, 39), 0.07)])
-        grade = "A" if overall_score >= 85 else "B" if overall_score >= 70 else "C" if overall_score >= 55 else "D" if overall_score >= 40 else "F"
+        overall_score = self._weighted_choice([
+            (self._rng.randint(85, 100), 0.20), (self._rng.randint(70, 84), 0.40),
+            (self._rng.randint(55, 69), 0.25), (self._rng.randint(30, 54), 0.15)
+        ])
         
-        factors = [{"factor": f, "score": max(0, min(100, overall_score + self._rng.randint(-15, 15))), "issues": self._rng.randint(0, 20)} for f in ["Network Security", "DNS Health", "Patching Cadence", "Endpoint Security", "IP Reputation", "Web App Security", "Leaked Credentials", "Hacker Chatter"]]
+        grade_map = {range(90, 101): "A", range(80, 90): "B", range(70, 80): "C", 
+                    range(60, 70): "D", range(0, 60): "F"}
+        grade = next((g for r, g in grade_map.items() if overall_score in r), "F")
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("SSC", 8)),
-            "company_name": self.kwargs.get("company_name", f"Company {self._random_id()}"),
-            "overall_rating": {"score": overall_score, "grade": grade, "percentile": self._rng.randint(max(1, overall_score - 15), min(99, overall_score + 10))},
-            "factor_scores": factors,
-            "trend": self._weighted_choice([("Improving", 0.30), ("Stable", 0.50), ("Declining", 0.20)]),
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "overall_rating": {
+                "score": overall_score,
+                "grade": grade,
+                "trend": self._weighted_choice([("Improving", 0.30), ("Stable", 0.50), ("Declining", 0.20)]),
+                "last_updated": self._random_date(7, 0),
+            },
+            "factor_scores": {
+                "network_security": self._rng.randint(50, 100),
+                "dns_health": self._rng.randint(60, 100),
+                "patching_cadence": self._rng.randint(40, 100),
+                "endpoint_security": self._rng.randint(50, 100),
+                "ip_reputation": self._rng.randint(60, 100),
+                "application_security": self._rng.randint(50, 100),
+                "cubit_score": self._rng.randint(50, 100),
+                "hacker_chatter": self._rng.randint(70, 100),
+                "information_leak": self._rng.randint(60, 100),
+                "social_engineering": self._rng.randint(60, 100),
+            },
+            "issues": {
+                "critical": self._rng.randint(0, 5),
+                "high": self._rng.randint(0, 15),
+                "medium": self._rng.randint(0, 30),
+                "low": self._rng.randint(0, 50),
+            },
+            "peer_comparison": {
+                "industry_rank_pct": self._rng.randint(10, 90),
+                "industry_average_score": self._rng.randint(65, 80),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"score": overall_score, "grade": grade})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "score": overall_score,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class TechnicalScanExtractor(DataExtractor):
+    """
+    Technical Security Scans - TLS, headers, DNS, exposed services.
+    
+    Signals: tls_score, security_headers, dnssec, waf_presence, cdn_usage
+    
+    Alternative Sources:
+    - SSL Labs: analyze
+    - SecurityHeaders.com: scan
+    - Shodan: host/search
+    - Censys: hosts/search
+    """
+    source_name = "technical_scan"
+    coverage = "cyber"
+    signals = ["tls_score", "security_headers", "dnssec", "waf_presence", "cdn_usage", "cloud_infrastructure"]
+    ttl_config = TTLConfig.dynamic("Technical scans refreshed daily")
+    
+    alternative_sources = [
+        DataSource("scan", "ssllabs", "analyze", priority=1),
+        DataSource("scan", "securityheaders.com", "scan", priority=1),
+        DataSource("api", "shodan", "host/search", priority=2),
+        DataSource("api", "censys", "hosts/search", priority=2),
+        DataSource("dns", "internal", "dnssec_validator", priority=1),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        tls_grade = self._weighted_choice([
+            ("A+", 0.15), ("A", 0.30), ("A-", 0.15), ("B", 0.20), ("C", 0.12), ("D", 0.05), ("F", 0.03)
+        ])
+        
+        headers_present = []
+        all_headers = ["HSTS", "X-Content-Type-Options", "X-Frame-Options", "CSP", "X-XSS-Protection", "Referrer-Policy"]
+        for h in all_headers:
+            if self._rng.random() > 0.30:
+                headers_present.append(h)
+        
+        raw_data = {
+            "domain": self.kwargs.get("domain", f"example-{self._random_id().lower()}.com"),
+            "tls_analysis": {
+                "grade": tls_grade,
+                "protocol_support": {
+                    "tls13": self._rng.random() > 0.30,
+                    "tls12": True,
+                    "tls11": self._rng.random() < 0.20,
+                    "tls10": self._rng.random() < 0.10,
+                },
+                "certificate": {
+                    "valid": True,
+                    "days_to_expiry": self._rng.randint(10, 365),
+                    "issuer": self._weighted_choice([
+                        ("Let's Encrypt", 0.40), ("DigiCert", 0.20), ("Comodo", 0.15),
+                        ("GlobalSign", 0.10), ("Other", 0.15)
+                    ]),
+                },
+                "vulnerabilities": {
+                    "heartbleed": False,
+                    "poodle": self._rng.random() < 0.05,
+                    "beast": self._rng.random() < 0.08,
+                },
+            },
+            "security_headers": {
+                "present": headers_present,
+                "missing": [h for h in all_headers if h not in headers_present],
+                "score": len(headers_present) / len(all_headers) * 100,
+            },
+            "dns_security": {
+                "dnssec_enabled": self._rng.random() > 0.60,
+                "caa_record": self._rng.random() > 0.50,
+            },
+            "email_security": {
+                "spf": self._weighted_choice([("Pass", 0.80), ("Softfail", 0.10), ("Fail", 0.05), ("None", 0.05)]),
+                "dkim": self._rng.random() > 0.70,
+                "dmarc": self._weighted_choice([("Reject", 0.25), ("Quarantine", 0.30), ("None", 0.30), ("Not Set", 0.15)]),
+            },
+            "infrastructure": {
+                "waf_detected": self._rng.random() > 0.40,
+                "waf_vendor": self._weighted_choice([
+                    ("Cloudflare", 0.30), ("AWS WAF", 0.20), ("Akamai", 0.15),
+                    ("Imperva", 0.10), ("Other", 0.15), (None, 0.10)
+                ]) if self._rng.random() > 0.40 else None,
+                "cdn_detected": self._rng.random() > 0.50,
+                "cdn_vendor": self._weighted_choice([
+                    ("Cloudflare", 0.35), ("AWS CloudFront", 0.25), ("Akamai", 0.15),
+                    ("Fastly", 0.10), ("Other", 0.15)
+                ]) if self._rng.random() > 0.50 else None,
+                "cloud_provider": self._weighted_choice([
+                    ("AWS", 0.40), ("Azure", 0.25), ("GCP", 0.15),
+                    ("On-Premise", 0.15), ("Other", 0.05)
+                ]),
+            },
+            "exposed_services": {
+                "total_open_ports": self._rng.randint(2, 20),
+                "high_risk_ports": self._rng.randint(0, 3),
+                "exposed_admin_panels": self._rng.random() < 0.10,
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="scan",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "tls_grade": tls_grade,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class CVEExposureExtractor(DataExtractor):
-    """CVE vulnerability scanning. Signals: technical_infrastructure"""
-    source_name = "cve_scanner"
+    """
+    CVE Exposure Analysis - Known vulnerabilities in detected software.
+    
+    Signals: cve_exposure, software_currency
+    
+    Alternative Sources:
+    - NVD: cves/search
+    - VulnDB: vulnerabilities/by_product
+    - Wappalyzer: lookup
+    """
+    source_name = "cve_exposure"
     coverage = "cyber"
-    signals = ["technical_infrastructure"]
+    signals = ["cve_exposure", "software_currency"]
+    ttl_config = TTLConfig.dynamic("CVE data updated daily")
+    
+    alternative_sources = [
+        DataSource("api", "nvd", "cves/search", priority=1),
+        DataSource("api", "vulndb", "vulnerabilities/by_product", priority=2),
+        DataSource("api", "wappalyzer", "lookup", priority=3),
+        DataSource("correlation", "internal", "version_to_cve_mapper", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_vulns = self._weighted_choice([(self._rng.randint(0, 20), 0.35), (self._rng.randint(21, 80), 0.35), (self._rng.randint(81, 200), 0.20), (self._rng.randint(201, 500), 0.10)])
-        critical = int(num_vulns * self._rng.uniform(0.02, 0.10))
-        high = int(num_vulns * self._rng.uniform(0.10, 0.25))
+        num_critical = self._weighted_choice([(0, 0.60), (1, 0.20), (2, 0.12), (self._rng.randint(3, 8), 0.08)])
+        num_high = self._weighted_choice([(0, 0.40), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 15), 0.25)])
+        
+        technologies = [
+            {"name": "Apache", "version": f"2.4.{self._rng.randint(40, 58)}", "category": "Web Server"},
+            {"name": "nginx", "version": f"1.{self._rng.randint(18, 25)}.{self._rng.randint(0, 5)}", "category": "Web Server"},
+            {"name": "PHP", "version": f"{self._rng.choice([7, 8])}.{self._rng.randint(0, 4)}.{self._rng.randint(0, 30)}", "category": "Runtime"},
+            {"name": "WordPress", "version": f"6.{self._rng.randint(0, 4)}", "category": "CMS"},
+            {"name": "jQuery", "version": f"3.{self._rng.randint(5, 7)}.{self._rng.randint(0, 1)}", "category": "JavaScript"},
+        ]
+        
+        detected = self._rng.sample(technologies, self._rng.randint(2, 5))
         
         raw_data = {
-            "target_id": self.kwargs.get("target_id", self._random_id("TGT", 8)),
-            "scan_date": self._random_date(14, 0),
-            "vulnerability_summary": {"total": num_vulns, "critical": critical, "high": high, "medium": int(num_vulns * 0.35), "low": num_vulns - critical - high - int(num_vulns * 0.35)},
-            "exploitability": {"exploitable_count": int(num_vulns * self._rng.uniform(0.15, 0.35)), "actively_exploited": self._rng.randint(0, critical)},
-            "remediation": {"mttr_critical_days": self._rng.randint(5, 45), "mttr_high_days": self._rng.randint(15, 60), "patch_compliance_pct": round(self._rng.uniform(65, 98), 1)},
+            "domain": self.kwargs.get("domain", f"example-{self._random_id().lower()}.com"),
+            "vulnerability_summary": {
+                "critical": num_critical,
+                "high": num_high,
+                "medium": self._rng.randint(0, 20),
+                "low": self._rng.randint(0, 50),
+                "total": num_critical + num_high + self._rng.randint(0, 70),
+            },
+            "detected_technologies": detected,
+            "outdated_software": {
+                "count": self._rng.randint(0, len(detected)),
+                "components": [t["name"] for t in detected if self._rng.random() < 0.30],
+            },
+            "patching_analysis": {
+                "mean_time_to_patch_days": self._rng.randint(7, 90),
+                "unpatched_critical_days": self._rng.randint(0, 60) if num_critical > 0 else 0,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"vulns": num_vulns, "critical": critical})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "critical_cves": num_critical,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class BreachDatabaseExtractor(DataExtractor):
-    """Breach history database. Signals: public_record"""
+    """
+    Breach Database - Historical breaches, regulatory notifications.
+    
+    Signals: breach_history, regulatory_action, credential_exposure
+    
+    Alternative Sources:
+    - HHS Breach Portal: breaches/search
+    - PrivacyRights: breaches/search
+    - HaveIBeenPwned: breaches/domain
+    - GDPR Tracker: fines/search
+    """
     source_name = "breach_database"
     coverage = "cyber"
-    signals = ["public_record"]
+    signals = ["breach_history", "regulatory_action", "credential_exposure"]
+    ttl_config = TTLConfig.dynamic("Breach data updated daily")
+    
+    alternative_sources = [
+        DataSource("api", "hhs_breach_portal", "breaches/search", priority=1),
+        DataSource("api", "privacyrights", "breaches/search", priority=1),
+        DataSource("api", "haveibeenpwned", "breaches/domain", priority=2),
+        DataSource("api", "gdpr_tracker", "fines/search", priority=3),
+        DataSource("news", "gdelt", "data breach {company}", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_breaches = self._weighted_choice([(0, 0.65), (1, 0.20), (2, 0.10), (self._rng.randint(3, 6), 0.05)])
+        num_breaches = self._weighted_choice([(0, 0.70), (1, 0.18), (2, 0.08), (self._rng.randint(3, 5), 0.04)])
+        
         breaches = []
+        total_records = 0
+        
         for _ in range(num_breaches):
-            records = self._weighted_choice([(self._rng.randint(100, 10000), 0.45), (self._rng.randint(10001, 100000), 0.30), (self._rng.randint(100001, 1000000), 0.18), (self._rng.randint(1000001, 50000000), 0.07)])
-            breaches.append({"breach_type": self._weighted_choice([("Hacking", 0.35), ("Ransomware", 0.25), ("Credential Leak", 0.20), ("Insider", 0.10), ("Other", 0.10)]), "records_affected": records, "date": self._random_date(1825, 30), "regulatory_fine_usd": self._weighted_choice([(0, 0.60), (self._rng.randint(10000, 500000), 0.25), (self._rng.randint(500001, 5000000), 0.12), (self._rng.randint(5000001, 50000000), 0.03)])})
+            records = self._weighted_choice([
+                (self._rng.randint(100, 10000), 0.50),
+                (self._rng.randint(10000, 100000), 0.30),
+                (self._rng.randint(100000, 1000000), 0.15),
+                (self._rng.randint(1000000, 10000000), 0.05),
+            ])
+            total_records += records
+            
+            breaches.append({
+                "date": self._random_date(1825, 30),
+                "records_exposed": records,
+                "data_types": self._rng.sample(
+                    ["Email", "Password", "SSN", "Credit Card", "Medical", "Financial", "PII"],
+                    self._rng.randint(1, 4)
+                ),
+                "cause": self._weighted_choice([
+                    ("External Attack", 0.50), ("Insider", 0.15),
+                    ("Lost Device", 0.10), ("Misconfiguration", 0.15), ("Vendor", 0.10)
+                ]),
+                "notification_required": self._rng.random() > 0.30,
+                "regulatory_fine_usd": self._rng.randint(0, 5000000) if self._rng.random() < 0.20 else 0,
+            })
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CMP", 8)),
-            "breach_history": {"total_breaches_5yr": num_breaches, "total_records_exposed": sum(b["records_affected"] for b in breaches), "total_fines_usd": sum(b["regulatory_fine_usd"] for b in breaches), "breaches": breaches},
-            "litigation": {"class_actions": sum(1 for b in breaches if b["records_affected"] > 100000 and self._rng.random() < 0.30), "regulatory_investigations": sum(1 for b in breaches if b["regulatory_fine_usd"] > 0)},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "breach_history": {
+                "total_breaches_5yr": num_breaches,
+                "total_records_exposed": total_records,
+                "breaches": sorted(breaches, key=lambda x: x["date"], reverse=True),
+            },
+            "regulatory_actions": {
+                "total_fines_usd": sum(b["regulatory_fine_usd"] for b in breaches),
+                "consent_decrees": sum(1 for b in breaches if b["regulatory_fine_usd"] > 100000),
+                "ftc_actions": self._rng.randint(0, 1) if num_breaches > 0 else 0,
+                "state_ag_actions": self._rng.randint(0, 2) if num_breaches > 0 else 0,
+            },
+            "credential_exposure": {
+                "domain_in_breach": self._rng.random() < 0.40,
+                "exposed_accounts": self._rng.randint(0, 500) if self._rng.random() < 0.40 else 0,
+                "password_exposure": self._rng.random() < 0.20,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"breaches": num_breaches})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "breaches": num_breaches,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class CyberGovernanceExtractor(DataExtractor):
-    """Cyber governance assessment - CISO, certifications, policies. Signals: governance"""
+    """
+    Cyber Governance Data - CISO, certifications, policies.
+    
+    Signals: security_leadership, compliance_badges, security_page, bug_bounty
+    
+    Alternative Sources:
+    - LinkedIn: people/search (CISO)
+    - SOC2 Registry: reports/search
+    - HackerOne: programs/search
+    - Bugcrowd: programs/search
+    - Company website scraping
+    """
     source_name = "cyber_governance"
     coverage = "cyber"
-    signals = ["governance"]
+    signals = ["security_leadership", "compliance_badges", "security_page", "bug_bounty"]
+    ttl_config = TTLConfig.semi_static("Governance data updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "linkedin", "people/search", {"title": ["CISO", "VP Security"]}, priority=1),
+        DataSource("api", "soc2_registry", "reports/search", priority=2),
+        DataSource("api", "hackerone", "programs/search", priority=3),
+        DataSource("api", "bugcrowd", "programs/search", priority=3),
+        DataSource("scrape", "company_website", "/security", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
-        has_ciso = self._rng.random() < 0.72
+        has_ciso = self._rng.random() > 0.35
+        
         certifications = []
-        for cert in ["SOC 2 Type II", "ISO 27001", "PCI DSS", "HITRUST", "FedRAMP"]:
-            if self._rng.random() < 0.35:
-                certifications.append({"certification": cert, "status": self._weighted_choice([("Current", 0.85), ("Expired", 0.08), ("In Progress", 0.07)]), "scope": self._weighted_choice([("Enterprise-wide", 0.55), ("Specific Systems", 0.35), ("Business Unit", 0.10)])})
+        all_certs = ["SOC 2 Type II", "SOC 2 Type I", "ISO 27001", "PCI DSS", "HIPAA", "FedRAMP", "GDPR"]
+        for cert in all_certs:
+            if self._rng.random() > 0.60:
+                certifications.append({
+                    "certification": cert,
+                    "status": self._weighted_choice([("Current", 0.85), ("Expired", 0.10), ("In Progress", 0.05)]),
+                    "scope": self._weighted_choice([("Enterprise-wide", 0.60), ("Product/Service", 0.30), ("Partial", 0.10)]),
+                    "last_audit": self._random_date(365, 0),
+                })
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CMP", 8)),
-            "leadership": {"has_ciso": has_ciso, "ciso_reports_to": self._weighted_choice([("CEO", 0.30), ("CIO", 0.35), ("CTO", 0.15), ("CFO", 0.10), ("Board", 0.10)]) if has_ciso else None, "security_team_size": self._weighted_choice([(self._rng.randint(1, 5), 0.40), (self._rng.randint(6, 20), 0.35), (self._rng.randint(21, 50), 0.18), (self._rng.randint(51, 200), 0.07)]), "board_cyber_oversight": self._rng.random() < 0.58},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "leadership": {
+                "has_ciso": has_ciso,
+                "ciso_tenure_years": self._rng.randint(1, 10) if has_ciso else None,
+                "ciso_reports_to": self._weighted_choice([("CEO", 0.40), ("CIO", 0.35), ("CFO", 0.15), ("Board", 0.10)]) if has_ciso else None,
+                "board_cyber_oversight": self._rng.random() > 0.50,
+                "security_team_size": self._rng.randint(1, 50) if has_ciso else self._rng.randint(0, 5),
+            },
             "certifications": certifications,
-            "policies": {"incident_response_plan": self._rng.random() < 0.82, "business_continuity_plan": self._rng.random() < 0.78, "security_awareness_training": self._rng.random() < 0.88, "pen_test_frequency": self._weighted_choice([("Annual", 0.35), ("Semi-Annual", 0.30), ("Quarterly", 0.20), ("Continuous", 0.08), ("None", 0.07)])},
-            "maturity": {"level": self._weighted_choice([(1, 0.10), (2, 0.25), (3, 0.40), (4, 0.20), (5, 0.05)]), "framework": self._weighted_choice([("NIST CSF", 0.45), ("ISO 27001", 0.25), ("CIS Controls", 0.15), ("Internal", 0.15)])},
+            "policies": {
+                "security_page_exists": self._rng.random() > 0.40,
+                "privacy_policy_comprehensive": self._rng.random() > 0.60,
+                "security_txt_present": self._rng.random() > 0.25,
+                "bug_bounty_program": self._rng.random() > 0.20,
+                "bug_bounty_platform": self._weighted_choice([
+                    ("HackerOne", 0.40), ("Bugcrowd", 0.30), ("Internal", 0.30)
+                ]) if self._rng.random() > 0.20 else None,
+                "incident_response_plan": self._rng.random() > 0.65,
+                "business_continuity_plan": self._rng.random() > 0.70,
+                "security_awareness_training": self._rng.random() > 0.75,
+            },
+            "maturity": {
+                "level": self._weighted_choice([(1, 0.10), (2, 0.25), (3, 0.40), (4, 0.20), (5, 0.05)]),
+                "framework": self._weighted_choice([
+                    ("NIST CSF", 0.40), ("ISO 27001", 0.25), ("CIS", 0.15), ("Custom", 0.15), ("None", 0.05)
+                ]),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"has_ciso": has_ciso, "certs": len(certifications)})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "has_ciso": has_ciso,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class VendorSecurityExtractor(DataExtractor):
-    """Third-party vendor risk management. Signals: vendor_management"""
+    """
+    Vendor Security / Third-Party Risk - VRM program, vendor assessment.
+    
+    Signals: vendor_risk_program, second_degree risk
+    
+    Alternative Sources:
+    - Company disclosures
+    - Security questionnaires
+    """
     source_name = "vendor_security"
     coverage = "cyber"
-    signals = ["vendor_management"]
+    signals = ["vendor_risk_program", "second_degree_risk"]
+    ttl_config = TTLConfig.semi_static("Vendor risk data updated weekly")
+    
+    alternative_sources = [
+        DataSource("scrape", "company_website", "/security", priority=1),
+        DataSource("api", "clearbit", "company/customers", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_vendors = self._weighted_choice([(self._rng.randint(20, 100), 0.35), (self._rng.randint(101, 300), 0.35), (self._rng.randint(301, 800), 0.20), (self._rng.randint(801, 2000), 0.10)])
-        critical = int(num_vendors * self._rng.uniform(0.05, 0.12))
-        high_risk = int(num_vendors * self._rng.uniform(0.10, 0.22))
+        vrm_exists = self._rng.random() > 0.40
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CMP", 8)),
-            "vendor_inventory": {"total": num_vendors, "critical": critical, "high_risk": high_risk, "medium_risk": int(num_vendors * 0.35), "low_risk": num_vendors - critical - high_risk - int(num_vendors * 0.35)},
-            "assessment_coverage": {"assessed_12mo_pct": round(self._rng.uniform(55, 95), 1), "critical_assessed_pct": round(self._rng.uniform(85, 100), 1), "average_score": self._rng.randint(60, 90)},
-            "risk_metrics": {"vendors_below_threshold": self._rng.randint(0, int(num_vendors * 0.12)), "fourth_party_risk_assessed": self._rng.random() < 0.45, "contractual_security_requirements": self._rng.random() < 0.82},
-            "program_maturity": {"vrm_program_exists": self._rng.random() < 0.78, "automated_monitoring": self._rng.random() < 0.45},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "program_maturity": {
+                "vrm_program_exists": vrm_exists,
+                "dedicated_vrm_team": vrm_exists and self._rng.random() > 0.50,
+                "automated_monitoring": vrm_exists and self._rng.random() > 0.30,
+                "continuous_monitoring": vrm_exists and self._rng.random() > 0.25,
+            },
+            "assessment_coverage": {
+                "vendors_with_data_access": self._rng.randint(20, 200),
+                "assessed_12mo_pct": self._rng.randint(40, 100) if vrm_exists else self._rng.randint(0, 30),
+                "critical_assessed_pct": self._rng.randint(70, 100) if vrm_exists else self._rng.randint(20, 60),
+            },
+            "vendor_inventory": {
+                "total": self._rng.randint(50, 500),
+                "critical": self._rng.randint(5, 30),
+                "high_risk": self._rng.randint(10, 50),
+                "by_category": {
+                    "Cloud/SaaS": self._rng.randint(20, 100),
+                    "Data Processors": self._rng.randint(5, 30),
+                    "Professional Services": self._rng.randint(10, 50),
+                    "Other": self._rng.randint(15, 100),
+                },
+            },
+            "incident_history": {
+                "vendor_breaches_3yr": self._weighted_choice([(0, 0.70), (1, 0.20), (2, 0.10)]),
+                "supply_chain_incidents": self._weighted_choice([(0, 0.80), (1, 0.15), (2, 0.05)]),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"vendors": num_vendors, "critical": critical})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "vrm_exists": vrm_exists,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class IncidentResponseExtractor(DataExtractor):
-    """Incident response capabilities. Signals: incident_response"""
+    """
+    Incident Response Capabilities - IR plan, SOC, retainers.
+    
+    Signals: ir_capabilities, soc_capabilities
+    """
     source_name = "incident_response"
     coverage = "cyber"
-    signals = ["incident_response"]
+    signals = ["ir_capabilities", "soc_capabilities"]
+    ttl_config = TTLConfig.semi_static("IR capabilities assessed periodically")
+    
+    alternative_sources = [
+        DataSource("scrape", "company_website", "/security", priority=1),
+    ]
 
     def extract(self) -> ExtractionResult:
-        has_ir_plan = self._rng.random() < 0.82
-        has_retainer = self._rng.random() < 0.55
+        has_soc = self._rng.random() > 0.45
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CMP", 8)),
-            "ir_capabilities": {"ir_plan_documented": has_ir_plan, "ir_plan_tested_12mo": has_ir_plan and self._rng.random() < 0.65, "tabletop_exercises_12mo": self._rng.randint(0, 4) if has_ir_plan else 0, "ir_retainer": has_retainer, "retainer_provider": self._weighted_choice([("CrowdStrike", 0.20), ("Mandiant", 0.18), ("Secureworks", 0.12), ("Kroll", 0.10), ("Other", 0.40)]) if has_retainer else None},
-            "response_metrics": {"mttd_hours": self._rng.randint(2, 72), "mttr_hours": self._rng.randint(12, 168), "incidents_12mo": self._weighted_choice([(0, 0.40), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 15), 0.20), (self._rng.randint(16, 50), 0.05)])},
-            "soc_capabilities": {"has_soc": self._rng.random() < 0.60, "soc_type": self._weighted_choice([("In-House", 0.30), ("Outsourced", 0.45), ("Hybrid", 0.25)]) if self._rng.random() < 0.60 else None, "24x7_coverage": self._rng.random() < 0.45},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "ir_capabilities": {
+                "ir_plan_documented": self._rng.random() > 0.60,
+                "ir_plan_tested_12mo": self._rng.random() > 0.40,
+                "tabletop_exercises_12mo": self._rng.randint(0, 4),
+                "ir_retainer": self._rng.random() > 0.35,
+                "ir_provider": self._weighted_choice([
+                    ("CrowdStrike", 0.25), ("Mandiant", 0.20), ("Secureworks", 0.15),
+                    ("Kroll", 0.15), ("Other", 0.20), (None, 0.05)
+                ]) if self._rng.random() > 0.35 else None,
+            },
+            "soc_capabilities": {
+                "has_soc": has_soc,
+                "soc_type": self._weighted_choice([
+                    ("In-House", 0.30), ("Managed (MSSP)", 0.50), ("Hybrid", 0.20)
+                ]) if has_soc else None,
+                "24x7_coverage": has_soc and self._rng.random() > 0.40,
+                "siem_deployed": has_soc and self._rng.random() > 0.80,
+                "edr_deployed": self._rng.random() > 0.60,
+                "xdr_deployed": self._rng.random() > 0.25,
+            },
+            "response_metrics": {
+                "mttd_hours": self._rng.randint(1, 168),
+                "mttr_hours": self._rng.randint(4, 336),
+                "incidents_12mo": self._rng.randint(0, 50),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"ir_plan": has_ir_plan, "retainer": has_retainer})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "has_soc": has_soc,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ThreatIntelligenceExtractor(DataExtractor):
-    """Threat intelligence feeds - dark web, hacker chatter. Signals: public_record, technical_infrastructure"""
+    """
+    Threat Intelligence - Dark web monitoring, credential exposure.
+    
+    Signals: dark_web, credential_exposure
+    
+    Alternative Sources:
+    - Recorded Future: darkweb/search
+    - Flashpoint: exposure/search
+    - SpyCloud: breach/domain
+    """
     source_name = "threat_intelligence"
     coverage = "cyber"
-    signals = ["public_record", "technical_infrastructure"]
+    signals = ["dark_web", "credential_exposure"]
+    ttl_config = TTLConfig.dynamic("Threat intel updated daily")
+    
+    alternative_sources = [
+        DataSource("api", "recorded_future", "darkweb/search", priority=1),
+        DataSource("api", "flashpoint", "exposure/search", priority=2),
+        DataSource("api", "spycloud", "breach/domain", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        dark_web_mentions = self._weighted_choice([(0, 0.60), (self._rng.randint(1, 10), 0.25), (self._rng.randint(11, 50), 0.12), (self._rng.randint(51, 200), 0.03)])
-        credential_leaks = self._weighted_choice([(0, 0.45), (self._rng.randint(1, 100), 0.35), (self._rng.randint(101, 1000), 0.15), (self._rng.randint(1001, 10000), 0.05)])
+        mentions = self._weighted_choice([(0, 0.50), (self._rng.randint(1, 20), 0.35), (self._rng.randint(21, 100), 0.15)])
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CMP", 8)),
-            "dark_web_monitoring": {"mentions_90d": dark_web_mentions, "threat_actors_targeting": self._rng.randint(0, 5), "data_for_sale": dark_web_mentions > 20 and self._rng.random() < 0.25},
-            "credential_exposure": {"leaked_credentials_detected": credential_leaks, "unique_accounts": int(credential_leaks * self._rng.uniform(0.3, 0.8)), "sources": self._rng.randint(1, 10) if credential_leaks > 0 else 0},
-            "threat_level": {"current": self._weighted_choice([("Low", 0.50), ("Moderate", 0.35), ("Elevated", 0.12), ("High", 0.03)]), "trend": self._weighted_choice([("Stable", 0.55), ("Increasing", 0.30), ("Decreasing", 0.15)])},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "dark_web_monitoring": {
+                "mentions_90d": mentions,
+                "data_for_sale": self._rng.random() < 0.08,
+                "credential_dumps": self._rng.randint(0, 5) if mentions > 10 else 0,
+                "threat_actor_interest": self._weighted_choice([
+                    ("Low", 0.70), ("Medium", 0.20), ("High", 0.08), ("Critical", 0.02)
+                ]),
+            },
+            "credential_exposure": {
+                "total_exposed_credentials": self._rng.randint(0, 1000),
+                "executives_exposed": self._rng.randint(0, 10),
+                "recent_exposure_30d": self._rng.random() < 0.15,
+            },
+            "brand_monitoring": {
+                "phishing_domains_detected": self._rng.randint(0, 20),
+                "lookalike_domains": self._rng.randint(0, 50),
+                "social_media_impersonation": self._rng.random() < 0.10,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"dark_web": dark_web_mentions, "creds": credential_leaks})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "mentions": mentions,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class CyberInsuranceHistoryExtractor(DataExtractor):
-    """Cyber insurance claims and coverage history. Signals: public_record"""
+    """
+    Cyber Insurance History - Prior coverage, claims.
+    
+    Signals: insurance_history, claims_history
+    """
     source_name = "cyber_insurance_history"
     coverage = "cyber"
-    signals = ["public_record"]
-
-    def extract(self) -> ExtractionResult:
-        has_coverage = self._rng.random() < 0.72
-        num_claims = self._weighted_choice([(0, 0.70), (1, 0.18), (2, 0.08), (self._rng.randint(3, 5), 0.04)]) if has_coverage else 0
-        
-        claims = []
-        for _ in range(num_claims):
-            claims.append({"claim_type": self._weighted_choice([("Ransomware", 0.35), ("Data Breach", 0.30), ("Business Interruption", 0.15), ("Social Engineering", 0.12), ("Other", 0.08)]), "amount_usd": self._weighted_choice([(self._rng.randint(25000, 250000), 0.50), (self._rng.randint(250001, 1000000), 0.30), (self._rng.randint(1000001, 5000000), 0.15), (self._rng.randint(5000001, 20000000), 0.05)]), "year": 2024 - self._rng.randint(0, 4)})
-        
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CMP", 8)),
-            "current_coverage": {"has_cyber_insurance": has_coverage, "limit_usd": self._weighted_choice([(1000000, 0.20), (5000000, 0.30), (10000000, 0.25), (25000000, 0.15), (50000000, 0.10)]) if has_coverage else None, "retention_usd": self._weighted_choice([(25000, 0.25), (50000, 0.30), (100000, 0.25), (250000, 0.15), (500000, 0.05)]) if has_coverage else None},
-            "claims_history": {"total_claims_5yr": num_claims, "total_paid_usd": sum(c["amount_usd"] for c in claims), "claims": claims},
-            "underwriting": {"prior_declinations": self._rng.randint(0, 2), "premium_trend": self._weighted_choice([("Stable", 0.35), ("Increasing", 0.50), ("Decreasing", 0.15)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"has_coverage": has_coverage, "claims": num_claims})
-
-
-# =============================================================================
-# FINANCIAL INSTITUTIONS EXTRACTORS (10 extractors for 7 signal groups)
-# =============================================================================
-
-@register_extractor
-class FFIECCallReportExtractor(DataExtractor):
-    """FFIEC Call Report - capital ratios, asset quality. Signals: financial_condition, credit_quality"""
-    source_name = "ffiec_call_report"
-    coverage = "financial_institutions"
-    signals = ["financial_condition", "credit_quality"]
-
-    def extract(self) -> ExtractionResult:
-        total_assets = self._weighted_choice([(self._rng.randint(100_000_000, 500_000_000), 0.35), (self._rng.randint(500_000_001, 5_000_000_000), 0.30), (self._rng.randint(5_000_000_001, 50_000_000_000), 0.20), (self._rng.randint(50_000_000_001, 500_000_000_000), 0.12), (self._rng.randint(500_000_000_001, 3_000_000_000_000), 0.03)])
-        
-        tier1_ratio = round(self._rng.uniform(9.0, 17.0), 2)
-        npa_ratio = round(self._rng.uniform(0.25, 3.50), 2)
-        
-        raw_data = {
-            "institution": {"rssd_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)), "name": self.kwargs.get("institution_name", f"Bank {self._random_id()}"), "charter_type": self._weighted_choice([("National Bank", 0.25), ("State Member", 0.20), ("State Nonmember", 0.30), ("Savings Assoc", 0.15), ("Credit Union", 0.10)]), "primary_regulator": self._weighted_choice([("OCC", 0.25), ("Federal Reserve", 0.20), ("FDIC", 0.35), ("NCUA", 0.10), ("State", 0.10)])},
-            "balance_sheet": {"total_assets_usd": total_assets, "total_loans_usd": int(total_assets * self._rng.uniform(0.55, 0.75)), "total_deposits_usd": int(total_assets * self._rng.uniform(0.75, 0.90)), "total_equity_usd": int(total_assets * self._rng.uniform(0.08, 0.14))},
-            "capital_ratios": {"tier1_ratio_pct": tier1_ratio, "total_capital_ratio_pct": round(tier1_ratio + self._rng.uniform(1.0, 3.0), 2), "leverage_ratio_pct": round(self._rng.uniform(7.0, 12.0), 2), "cet1_ratio_pct": round(tier1_ratio - self._rng.uniform(0.5, 1.5), 2), "capital_category": "Well Capitalized" if tier1_ratio >= 8.0 else "Adequately Capitalized" if tier1_ratio >= 6.0 else "Undercapitalized"},
-            "asset_quality": {"npa_ratio_pct": npa_ratio, "npl_ratio_pct": round(npa_ratio * self._rng.uniform(0.7, 0.9), 2), "charge_off_ratio_pct": round(self._rng.uniform(0.05, 1.20), 2), "allowance_ratio_pct": round(self._rng.uniform(0.90, 2.20), 2)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"assets": total_assets, "tier1": tier1_ratio})
-
-
-@register_extractor
-class CAMELSRatingExtractor(DataExtractor):
-    """CAMELS examination ratings. Signals: regulatory_compliance"""
-    source_name = "camels_rating"
-    coverage = "financial_institutions"
-    signals = ["regulatory_compliance"]
-
-    def extract(self) -> ExtractionResult:
-        composite = self._weighted_choice([(1, 0.20), (2, 0.55), (3, 0.18), (4, 0.05), (5, 0.02)])
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "camels_rating": {"composite": composite, "capital": self._weighted_choice([(1, 0.25), (2, 0.50), (3, 0.18), (4, 0.05), (5, 0.02)]), "asset_quality": self._weighted_choice([(1, 0.22), (2, 0.52), (3, 0.18), (4, 0.06), (5, 0.02)]), "management": self._weighted_choice([(1, 0.20), (2, 0.55), (3, 0.18), (4, 0.05), (5, 0.02)]), "earnings": self._weighted_choice([(1, 0.25), (2, 0.50), (3, 0.18), (4, 0.05), (5, 0.02)]), "liquidity": self._weighted_choice([(1, 0.28), (2, 0.52), (3, 0.15), (4, 0.04), (5, 0.01)]), "sensitivity": self._weighted_choice([(1, 0.22), (2, 0.55), (3, 0.18), (4, 0.04), (5, 0.01)])},
-            "exam_info": {"last_exam_date": self._random_date(730, 90), "next_exam_expected": self._random_date(-30, -365)},
-            "mras": {"total_mras": self._rng.randint(0, 8) if composite >= 2 else 0, "mrias": self._rng.randint(0, 3) if composite >= 3 else 0},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"camels": composite})
-
-
-@register_extractor
-class BankEnforcementExtractor(DataExtractor):
-    """Bank regulatory enforcement actions. Signals: regulatory_compliance"""
-    source_name = "bank_enforcement"
-    coverage = "financial_institutions"
-    signals = ["regulatory_compliance"]
-
-    def extract(self) -> ExtractionResult:
-        num_actions = self._weighted_choice([(0, 0.82), (1, 0.12), (2, 0.04), (self._rng.randint(3, 5), 0.02)])
-        actions = []
-        for _ in range(num_actions):
-            actions.append({"action_type": self._weighted_choice([("Consent Order", 0.30), ("Cease and Desist", 0.25), ("Civil Money Penalty", 0.20), ("Formal Agreement", 0.15), ("Removal/Prohibition", 0.10)]), "regulator": self._weighted_choice([("OCC", 0.25), ("Federal Reserve", 0.20), ("FDIC", 0.30), ("CFPB", 0.15), ("State", 0.10)]), "issue": self._weighted_choice([("BSA/AML", 0.30), ("Fair Lending", 0.15), ("Consumer Compliance", 0.20), ("Safety & Soundness", 0.20), ("Other", 0.15)]), "penalty_usd": self._weighted_choice([(0, 0.40), (self._rng.randint(50000, 500000), 0.30), (self._rng.randint(500001, 5000000), 0.20), (self._rng.randint(5000001, 50000000), 0.10)]), "date": self._random_date(1825, 0), "status": self._weighted_choice([("Active", 0.40), ("Terminated", 0.50), ("Modified", 0.10)])})
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "enforcement_history": {"total_actions_5yr": num_actions, "active_actions": sum(1 for a in actions if a["status"] == "Active"), "total_penalties_usd": sum(a["penalty_usd"] for a in actions)},
-            "actions": actions,
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"actions": num_actions})
-
-
-@register_extractor
-class FIOperationalRiskExtractor(DataExtractor):
-    """Operational risk metrics for FIs. Signals: operational_risk"""
-    source_name = "fi_operational_risk"
-    coverage = "financial_institutions"
-    signals = ["operational_risk"]
-
-    def extract(self) -> ExtractionResult:
-        op_losses_12mo = self._weighted_choice([(0, 0.40), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 15), 0.18), (self._rng.randint(16, 50), 0.07)])
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "operational_losses": {"events_12mo": op_losses_12mo, "total_loss_usd": op_losses_12mo * self._rng.randint(50000, 2000000), "categories": {"internal_fraud": self._rng.randint(0, op_losses_12mo // 3 + 1), "external_fraud": self._rng.randint(0, op_losses_12mo // 3 + 1), "systems": self._rng.randint(0, op_losses_12mo // 3 + 1), "process": self._rng.randint(0, op_losses_12mo // 3 + 1)}},
-            "risk_management": {"orm_framework": self._rng.random() < 0.85, "rcsa_frequency": self._weighted_choice([("Annual", 0.40), ("Semi-Annual", 0.35), ("Quarterly", 0.25)]), "key_risk_indicators": self._rng.randint(10, 50)},
-            "internal_audit": {"audit_rating": self._weighted_choice([("Satisfactory", 0.75), ("Needs Improvement", 0.20), ("Unsatisfactory", 0.05)]), "open_findings": self._rng.randint(0, 25), "overdue_findings": self._rng.randint(0, 5)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"op_losses": op_losses_12mo})
-
-
-@register_extractor
-class FICyberSecurityExtractor(DataExtractor):
-    """Cyber security for financial institutions. Signals: cybersecurity"""
-    source_name = "fi_cybersecurity"
-    coverage = "financial_institutions"
-    signals = ["cybersecurity"]
-
-    def extract(self) -> ExtractionResult:
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "cyber_program": {"maturity_level": self._weighted_choice([(1, 0.08), (2, 0.22), (3, 0.42), (4, 0.22), (5, 0.06)]), "ffiec_cat_completed": self._rng.random() < 0.85, "has_ciso": self._rng.random() < 0.78},
-            "incidents": {"cyber_incidents_12mo": self._weighted_choice([(0, 0.50), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 15), 0.12), (self._rng.randint(16, 30), 0.03)]), "regulatory_reportable": self._weighted_choice([(0, 0.80), (1, 0.15), (2, 0.05)])},
-            "third_party": {"critical_vendors": self._rng.randint(5, 30), "vendors_assessed_pct": round(self._rng.uniform(70, 100), 1)},
-            "controls": {"pen_test_frequency": self._weighted_choice([("Annual", 0.35), ("Semi-Annual", 0.35), ("Quarterly", 0.25), ("Continuous", 0.05)]), "vulnerability_scan_frequency": self._weighted_choice([("Monthly", 0.40), ("Weekly", 0.35), ("Daily", 0.20), ("Continuous", 0.05)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={})
-
-
-@register_extractor
-class FIGovernanceExtractor(DataExtractor):
-    """Corporate governance for financial institutions. Signals: governance"""
-    source_name = "fi_governance"
-    coverage = "financial_institutions"
-    signals = ["governance"]
-
-    def extract(self) -> ExtractionResult:
-        board_size = self._rng.randint(7, 15)
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "board": {"size": board_size, "independent_pct": round(self._rng.uniform(60, 90), 1), "financial_experts": self._rng.randint(2, board_size // 2), "avg_tenure_years": round(self._rng.uniform(4, 12), 1)},
-            "committees": {"audit_committee": True, "risk_committee": self._rng.random() < 0.85, "compliance_committee": self._rng.random() < 0.70, "technology_committee": self._rng.random() < 0.45},
-            "risk_management": {"cro_exists": self._rng.random() < 0.80, "cro_reports_to": self._weighted_choice([("CEO", 0.35), ("Board", 0.40), ("Risk Committee", 0.25)]) if self._rng.random() < 0.80 else None, "risk_appetite_statement": self._rng.random() < 0.85, "stress_testing_program": self._rng.random() < 0.75},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"board_size": board_size})
-
-
-@register_extractor
-class FILitigationExtractor(DataExtractor):
-    """Litigation for financial institutions. Signals: litigation"""
-    source_name = "fi_litigation"
-    coverage = "financial_institutions"
-    signals = ["litigation"]
-
-    def extract(self) -> ExtractionResult:
-        consumer_complaints = self._rng.randint(10, 500)
-        num_cases = self._weighted_choice([(0, 0.50), (1, 0.25), (self._rng.randint(2, 5), 0.18), (self._rng.randint(6, 15), 0.07)])
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "consumer_complaints": {"cfpb_complaints_12mo": consumer_complaints, "complaint_rate_vs_peers": round(self._rng.uniform(0.5, 2.0), 2), "resolution_rate_pct": round(self._rng.uniform(85, 99), 1)},
-            "litigation": {"active_cases": num_cases, "class_actions": self._rng.randint(0, max(1, num_cases // 3)), "total_exposure_usd": num_cases * self._rng.randint(500000, 10000000), "settlements_3yr_usd": self._rng.randint(0, num_cases * 2000000)},
-            "regulatory_fines": {"total_fines_5yr_usd": self._weighted_choice([(0, 0.60), (self._rng.randint(50000, 500000), 0.25), (self._rng.randint(500001, 5000000), 0.12), (self._rng.randint(5000001, 50000000), 0.03)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"complaints": consumer_complaints, "cases": num_cases})
-
-
-@register_extractor
-class FIEarningsExtractor(DataExtractor):
-    """Earnings and profitability for FIs. Signals: financial_condition"""
-    source_name = "fi_earnings"
-    coverage = "financial_institutions"
-    signals = ["financial_condition"]
-
-    def extract(self) -> ExtractionResult:
-        nim = round(self._rng.uniform(2.50, 4.50), 2)
-        roa = round(self._rng.uniform(0.50, 1.80), 2)
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "earnings": {"net_interest_margin_pct": nim, "roa_pct": roa, "roe_pct": round(self._rng.uniform(6.0, 18.0), 2), "efficiency_ratio_pct": round(self._rng.uniform(50, 80), 1), "pre_provision_net_revenue_usd": self._rng.randint(10_000_000, 500_000_000)},
-            "revenue_mix": {"net_interest_income_pct": round(self._rng.uniform(60, 85), 1), "fee_income_pct": round(self._rng.uniform(15, 40), 1)},
-            "trends": {"nim_yoy_change_bps": self._rng.randint(-30, 30), "roa_yoy_change_bps": self._rng.randint(-20, 20), "efficiency_trend": self._weighted_choice([("Improving", 0.35), ("Stable", 0.45), ("Declining", 0.20)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"nim": nim, "roa": roa})
-
-
-@register_extractor
-class AMLBSAExtractor(DataExtractor):
-    """BSA/AML compliance for FIs. Signals: regulatory_compliance"""
-    source_name = "aml_bsa"
-    coverage = "financial_institutions"
-    signals = ["regulatory_compliance"]
-
-    def extract(self) -> ExtractionResult:
-        sars_filed = self._rng.randint(50, 2000)
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "bsa_program": {"bsa_officer": True, "independent_testing": self._rng.random() < 0.95, "training_program": self._rng.random() < 0.98},
-            "filing_activity": {"sars_filed_12mo": sars_filed, "ctrs_filed_12mo": self._rng.randint(100, 5000), "sar_filing_trend": self._weighted_choice([("Increasing", 0.40), ("Stable", 0.45), ("Decreasing", 0.15)])},
-            "examination_results": {"last_bsa_exam_date": self._random_date(730, 90), "exam_rating": self._weighted_choice([("Satisfactory", 0.78), ("Needs Improvement", 0.18), ("Unsatisfactory", 0.04)]), "open_findings": self._rng.randint(0, 10)},
-            "enforcement": {"bsa_enforcement_actions": self._weighted_choice([(0, 0.90), (1, 0.08), (2, 0.02)]), "lookback_required": self._rng.random() < 0.05},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"sars": sars_filed})
-
-
-# =============================================================================
-# ENERGY EXTRACTORS (9 extractors for 7 signal groups)
-# =============================================================================
-
-@register_extractor
-class OSHASafetyExtractor(DataExtractor):
-    """OSHA safety records - inspections, violations, TRIR. Signals: safety_performance"""
-    source_name = "osha_safety"
-    coverage = "energy"
-    signals = ["safety_performance"]
-
-    def extract(self) -> ExtractionResult:
-        trir = round(self._rng.uniform(0.4, 5.5), 2)
-        num_inspections = self._weighted_choice([(0, 0.30), (self._rng.randint(1, 3), 0.40), (self._rng.randint(4, 8), 0.20), (self._rng.randint(9, 20), 0.10)])
-        total_violations = 0
-        inspections = []
-        for _ in range(num_inspections):
-            violations = self._weighted_choice([(0, 0.35), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 10), 0.20), (self._rng.randint(11, 25), 0.10)])
-            total_violations += violations
-            inspections.append({"date": self._random_date(1095, 0), "type": self._weighted_choice([("Planned", 0.30), ("Complaint", 0.25), ("Accident", 0.15), ("Referral", 0.15), ("Follow-up", 0.15)]), "violations": violations, "serious_violations": int(violations * self._rng.uniform(0.2, 0.5)), "penalty_usd": violations * self._rng.randint(1000, 15000)})
-        
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("EST", 10)),
-            "injury_rates": {"trir": trir, "dart_rate": round(trir * self._rng.uniform(0.4, 0.7), 2), "fatalities_5yr": self._weighted_choice([(0, 0.90), (1, 0.07), (2, 0.03)]), "industry_benchmark_trir": 2.0, "vs_benchmark": round(trir / 2.0, 2)},
-            "inspection_history": {"total_3yr": num_inspections, "total_violations": total_violations, "total_penalties_usd": sum(i["penalty_usd"] for i in inspections), "inspections": inspections},
-            "safety_program": {"vpp_participant": self._rng.random() < 0.12, "iso_45001": self._rng.random() < 0.28, "safety_training_hours": self._rng.randint(20, 80)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"trir": trir, "inspections": num_inspections})
-
-
-@register_extractor
-class EPAComplianceExtractor(DataExtractor):
-    """EPA environmental compliance - permits, violations, spills. Signals: environmental_compliance"""
-    source_name = "epa_compliance"
-    coverage = "energy"
-    signals = ["environmental_compliance"]
-
-    def extract(self) -> ExtractionResult:
-        num_violations = self._weighted_choice([(0, 0.45), (self._rng.randint(1, 3), 0.30), (self._rng.randint(4, 8), 0.18), (self._rng.randint(9, 20), 0.07)])
-        num_spills = self._weighted_choice([(0, 0.55), (self._rng.randint(1, 3), 0.30), (self._rng.randint(4, 8), 0.12), (self._rng.randint(9, 15), 0.03)])
-        
-        violations = [{"program": self._weighted_choice([("Clean Air Act", 0.30), ("Clean Water Act", 0.25), ("RCRA", 0.20), ("SPCC", 0.15), ("Other", 0.10)]), "severity": self._weighted_choice([("Minor", 0.55), ("Significant", 0.30), ("High Priority", 0.15)]), "penalty_usd": self._rng.randint(5000, 500000), "status": self._weighted_choice([("Resolved", 0.60), ("Open", 0.25), ("Enforcement", 0.15)])} for _ in range(num_violations)]
-        
-        spills = [{"material": self._weighted_choice([("Crude Oil", 0.35), ("Produced Water", 0.25), ("NGL", 0.15), ("Diesel", 0.10), ("Chemicals", 0.15)]), "volume_barrels": self._weighted_choice([(self._rng.randint(1, 50), 0.50), (self._rng.randint(51, 500), 0.30), (self._rng.randint(501, 5000), 0.15), (self._rng.randint(5001, 50000), 0.05)]), "media_affected": self._weighted_choice([("Soil", 0.40), ("Water", 0.30), ("Both", 0.20), ("Contained", 0.10)]), "cleanup_complete": self._rng.random() < 0.75} for _ in range(num_spills)]
-        
-        raw_data = {
-            "facility_id": self.kwargs.get("facility_id", self._random_id("EPA", 12)),
-            "compliance_status": {"overall": "In Compliance" if num_violations == 0 else "Minor Violations" if num_violations < 4 else "Significant Noncompliance", "quarters_in_compliance_12mo": 4 - min(num_violations, 3)},
-            "violations": {"total_3yr": num_violations, "high_priority": sum(1 for v in violations if v["severity"] == "High Priority"), "total_penalties_usd": sum(v["penalty_usd"] for v in violations), "violations": violations},
-            "spill_history": {"total_5yr": num_spills, "reportable_spills": sum(1 for s in spills if s["volume_barrels"] > 10), "total_volume_barrels": sum(s["volume_barrels"] for s in spills), "spills": spills},
-            "programs": {"iso_14001": self._rng.random() < 0.38, "environmental_management_system": self._rng.random() < 0.72, "ghg_reporting": self._rng.random() < 0.82},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"violations": num_violations, "spills": num_spills})
-
-
-@register_extractor
-class StateRegulatoryExtractor(DataExtractor):
-    """State regulatory standing - permits, enforcement. Signals: regulatory_standing"""
-    source_name = "state_regulatory"
-    coverage = "energy"
-    signals = ["regulatory_standing"]
-
-    def extract(self) -> ExtractionResult:
-        num_permits = self._rng.randint(5, 50)
-        num_violations = self._weighted_choice([(0, 0.50), (self._rng.randint(1, 5), 0.30), (self._rng.randint(6, 15), 0.15), (self._rng.randint(16, 30), 0.05)])
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OPR", 8)),
-            "permits": {"total_active": num_permits, "pending_applications": self._rng.randint(0, 10), "expired": self._rng.randint(0, 3), "states_operating": self._rng.randint(1, 8)},
-            "violations": {"total_3yr": num_violations, "per_permit": round(num_violations / num_permits, 2) if num_permits > 0 else 0, "penalties_usd": num_violations * self._rng.randint(2000, 25000)},
-            "bonding": {"bonds_posted_usd": num_permits * self._rng.randint(25000, 100000), "bond_claims": self._weighted_choice([(0, 0.90), (1, 0.08), (2, 0.02)])},
-            "orphan_wells": {"operated_orphan_wells": self._rng.randint(0, 5), "plugging_obligations": self._rng.randint(0, 20)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"permits": num_permits, "violations": num_violations})
-
-
-@register_extractor
-class ProductionDataExtractor(DataExtractor):
-    """Production data - volumes, wells, operations. Signals: operational_quality"""
-    source_name = "production_data"
-    coverage = "energy"
-    signals = ["operational_quality"]
-
-    def extract(self) -> ExtractionResult:
-        production_boed = self._weighted_choice([(self._rng.randint(500, 5000), 0.35), (self._rng.randint(5001, 25000), 0.30), (self._rng.randint(25001, 100000), 0.20), (self._rng.randint(100001, 500000), 0.12), (self._rng.randint(500001, 2000000), 0.03)])
-        oil_pct = self._rng.uniform(0.20, 0.80)
-        active_wells = self._weighted_choice([(self._rng.randint(10, 100), 0.40), (self._rng.randint(101, 500), 0.30), (self._rng.randint(501, 2000), 0.20), (self._rng.randint(2001, 10000), 0.10)])
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OPR", 8)),
-            "production": {"total_boed": production_boed, "oil_bopd": int(production_boed * oil_pct), "gas_mcfd": int(production_boed * (1 - oil_pct) * 6), "oil_pct": round(oil_pct * 100, 1), "yoy_change_pct": round(self._rng.uniform(-15, 25), 1)},
-            "wells": {"total_active": active_wells, "producing": int(active_wells * 0.85), "injection": int(active_wells * 0.08), "shut_in": int(active_wells * 0.07), "drilled_ytd": self._rng.randint(0, int(active_wells * 0.15))},
-            "operations": {"loe_per_boe_usd": round(self._rng.uniform(5, 18), 2), "downtime_pct": round(self._rng.uniform(1, 8), 1), "water_cut_pct": round(self._rng.uniform(30, 85), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"production": production_boed, "wells": active_wells})
-
-
-@register_extractor
-class EnergyFinancialExtractor(DataExtractor):
-    """Energy operator financials. Signals: financial_stability"""
-    source_name = "energy_financial"
-    coverage = "energy"
-    signals = ["financial_stability"]
-
-    def extract(self) -> ExtractionResult:
-        production_boed = self._rng.randint(5000, 200000)
-        revenue = production_boed * 365 * self._rng.randint(30, 60)
-        ebitdax_margin = self._rng.uniform(0.35, 0.65)
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OPR", 8)),
-            "financials": {"revenue_usd": revenue, "ebitdax_usd": int(revenue * ebitdax_margin), "ebitdax_margin_pct": round(ebitdax_margin * 100, 1)},
-            "leverage": {"total_debt_usd": int(revenue * self._rng.uniform(0.3, 1.2)), "debt_to_ebitdax": round(self._rng.uniform(1.5, 4.5), 2), "interest_coverage": round(self._rng.uniform(2.0, 8.0), 2)},
-            "hedging": {"oil_hedged_pct_12mo": round(self._rng.uniform(30, 80), 1), "gas_hedged_pct_12mo": round(self._rng.uniform(20, 70), 1), "hedge_floor_price_oil_usd": self._rng.randint(50, 75)},
-            "credit": {"has_rating": self._rng.random() < 0.35, "credit_facility_usd": int(revenue * self._rng.uniform(0.3, 0.8)), "availability_usd": int(revenue * self._rng.uniform(0.1, 0.4))},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"revenue": revenue})
-
-
-@register_extractor
-class ReserveDataExtractor(DataExtractor):
-    """Reserve and asset data. Signals: asset_quality"""
-    source_name = "reserve_data"
-    coverage = "energy"
-    signals = ["asset_quality"]
-
-    def extract(self) -> ExtractionResult:
-        proved_reserves = self._rng.randint(10, 500)  # MMBoe
-        production_boed = self._rng.randint(5000, 100000)
-        reserve_life = round(proved_reserves * 1000000 / (production_boed * 365), 1)
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OPR", 8)),
-            "reserves": {"proved_reserves_mmboe": proved_reserves, "proved_developed_pct": round(self._rng.uniform(55, 80), 1), "pud_pct": round(self._rng.uniform(20, 45), 1), "reserve_life_years": reserve_life},
-            "asset_profile": {"acreage_total": self._rng.randint(50000, 500000), "acreage_undeveloped_pct": round(self._rng.uniform(30, 70), 1), "primary_basins": self._rng.randint(1, 5)},
-            "reserve_replacement": {"replacement_ratio_3yr": round(self._rng.uniform(0.8, 2.0), 2), "finding_cost_per_boe_usd": round(self._rng.uniform(8, 25), 2), "organic_growth_pct": round(self._rng.uniform(60, 100), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"reserves": proved_reserves, "reserve_life": reserve_life})
-
-
-@register_extractor
-class ESGDataExtractor(DataExtractor):
-    """ESG metrics for energy operators. Signals: esg_factors"""
-    source_name = "esg_data"
-    coverage = "energy"
-    signals = ["esg_factors"]
-
-    def extract(self) -> ExtractionResult:
-        ghg_intensity = round(self._rng.uniform(15, 45), 1)  # kg CO2e/boe
-        methane_intensity = round(self._rng.uniform(0.1, 1.5), 2)  # %
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OPR", 8)),
-            "emissions": {"ghg_intensity_kg_co2e_boe": ghg_intensity, "methane_intensity_pct": methane_intensity, "flaring_intensity_mcf_boe": round(self._rng.uniform(0.5, 5.0), 2), "scope_1_tonnes_co2e": self._rng.randint(50000, 2000000)},
-            "environmental": {"water_recycling_pct": round(self._rng.uniform(20, 90), 1), "spill_intensity_bbls_mmboe": round(self._rng.uniform(5, 50), 1), "land_disturbance_acres": self._rng.randint(100, 5000)},
-            "social": {"community_investment_usd": self._rng.randint(100000, 5000000), "local_employment_pct": round(self._rng.uniform(40, 90), 1), "safety_trir": round(self._rng.uniform(0.5, 4.0), 2)},
-            "governance": {"board_independence_pct": round(self._rng.uniform(60, 90), 1), "esg_committee": self._rng.random() < 0.55, "sustainability_report": self._rng.random() < 0.65},
-            "ratings": {"msci_esg_rating": self._weighted_choice([("AAA", 0.05), ("AA", 0.10), ("A", 0.20), ("BBB", 0.30), ("BB", 0.20), ("B", 0.10), ("CCC", 0.05)]) if self._rng.random() < 0.60 else None},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"ghg_intensity": ghg_intensity})
-
-
-@register_extractor
-class WellIntegrityExtractor(DataExtractor):
-    """Well integrity and asset condition. Signals: asset_quality, safety_performance"""
-    source_name = "well_integrity"
-    coverage = "energy"
-    signals = ["asset_quality", "safety_performance"]
-
-    def extract(self) -> ExtractionResult:
-        total_wells = self._rng.randint(50, 2000)
-        integrity_failures = self._weighted_choice([(0, 0.55), (self._rng.randint(1, 5), 0.30), (self._rng.randint(6, 15), 0.12), (self._rng.randint(16, 30), 0.03)])
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OPR", 8)),
-            "well_inventory": {"total_wells": total_wells, "average_age_years": round(self._rng.uniform(8, 25), 1), "wells_over_20_years": int(total_wells * self._rng.uniform(0.15, 0.45))},
-            "integrity_status": {"failures_3yr": integrity_failures, "failure_rate_pct": round(integrity_failures / total_wells * 100, 3), "mits_performed_12mo": self._rng.randint(total_wells // 10, total_wells // 3), "casing_failures": self._rng.randint(0, integrity_failures), "cement_failures": self._rng.randint(0, integrity_failures)},
-            "plugging": {"wells_plugged_12mo": self._rng.randint(0, 20), "plugging_backlog": self._rng.randint(0, 50), "estimated_plugging_liability_usd": self._rng.randint(500000, 10000000)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"wells": total_wells, "failures": integrity_failures})
-
-
-@register_extractor
-class ProcessSafetyExtractor(DataExtractor):
-    """Process safety metrics for energy. Signals: safety_performance"""
-    source_name = "process_safety"
-    coverage = "energy"
-    signals = ["safety_performance"]
-
-    def extract(self) -> ExtractionResult:
-        tier1_events = self._weighted_choice([(0, 0.60), (1, 0.25), (2, 0.10), (self._rng.randint(3, 6), 0.05)])
-        tier2_events = self._weighted_choice([(0, 0.40), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 8), 0.18), (self._rng.randint(9, 15), 0.07)])
-        
-        raw_data = {
-            "operator_id": self.kwargs.get("operator_id", self._random_id("OPR", 8)),
-            "process_safety_events": {"tier1_events_12mo": tier1_events, "tier2_events_12mo": tier2_events, "tier1_rate_per_mmboe": round(tier1_events / max(1, self._rng.randint(1, 50)), 3), "tier2_rate_per_mmboe": round(tier2_events / max(1, self._rng.randint(1, 50)), 3)},
-            "hazard_management": {"process_hazard_analyses_current_pct": round(self._rng.uniform(85, 100), 1), "moc_backlog": self._rng.randint(0, 20), "psi_audits_12mo": self._rng.randint(2, 12)},
-            "emergency_response": {"drills_12mo": self._rng.randint(4, 24), "response_time_target_met_pct": round(self._rng.uniform(85, 100), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"tier1": tier1_events, "tier2": tier2_events})
-
-
-# =============================================================================
-# PROFESSIONAL INDEMNITY EXTRACTORS (9 extractors for 7 signal groups)
-# =============================================================================
-
-@register_extractor
-class StateBarExtractor(DataExtractor):
-    """State bar/licensing board data - license status, disciplinary. Signals: regulatory_standing"""
-    source_name = "state_bar"
-    coverage = "professional_indemnity"
-    signals = ["regulatory_standing"]
-
-    def extract(self) -> ExtractionResult:
-        entity_type = self.kwargs.get("entity_type", "firm")
-        num_professionals = self._weighted_choice([(self._rng.randint(1, 10), 0.40), (self._rng.randint(11, 50), 0.30), (self._rng.randint(51, 200), 0.20), (self._rng.randint(201, 1000), 0.10)]) if entity_type == "firm" else 1
-        
-        num_disciplinary = self._weighted_choice([(0, 0.82), (1, 0.12), (2, 0.04), (self._rng.randint(3, 5), 0.02)])
-        disciplinary_actions = [{"action_type": self._weighted_choice([("Private Reprimand", 0.40), ("Public Reprimand", 0.25), ("Probation", 0.15), ("Suspension", 0.12), ("Disbarment/Revocation", 0.05), ("Resignation", 0.03)]), "date": self._random_date(3650, 0), "basis": self._weighted_choice([("Negligence", 0.30), ("Trust Account", 0.15), ("Conflict of Interest", 0.12), ("Failure to Communicate", 0.10), ("Criminal Conviction", 0.08), ("Fee Dispute", 0.10), ("Other", 0.15)])} for _ in range(num_disciplinary)]
-        
-        raw_data = {
-            "entity": {"entity_id": self.kwargs.get("entity_id", self._random_id("LIC", 10)), "entity_type": entity_type, "name": self.kwargs.get("firm_name", f"Professional Firm {self._random_id()}"), "profession": self._weighted_choice([("Attorney", 0.30), ("CPA", 0.25), ("Architect", 0.15), ("Engineer", 0.15), ("Medical", 0.10), ("Other", 0.05)]), "num_professionals": num_professionals, "states_licensed": self._rng.randint(1, 8)},
-            "license_status": {"status": self._weighted_choice([("Active", 0.92), ("Inactive", 0.04), ("Suspended", 0.02), ("Revoked", 0.01), ("Retired", 0.01)]) if entity_type == "individual" else "Active", "years_licensed": self._rng.randint(2, 40)},
-            "disciplinary_history": {"total_actions": num_disciplinary, "serious_actions": sum(1 for a in disciplinary_actions if a["action_type"] in ("Suspension", "Disbarment/Revocation")), "actions": disciplinary_actions},
-            "standing": {"good_standing": num_disciplinary == 0 or all(a["action_type"] == "Private Reprimand" for a in disciplinary_actions)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"professionals": num_professionals, "disciplinary": num_disciplinary})
-
-
-@register_extractor
-class MalpracticeClaimsExtractor(DataExtractor):
-    """Malpractice claims history. Signals: claims_history"""
-    source_name = "malpractice_claims"
-    coverage = "professional_indemnity"
-    signals = ["claims_history"]
-
-    def extract(self) -> ExtractionResult:
-        num_claims = self._weighted_choice([(0, 0.60), (1, 0.22), (2, 0.10), (self._rng.randint(3, 6), 0.06), (self._rng.randint(7, 12), 0.02)])
-        claims = []
-        for _ in range(num_claims):
-            claimed = self._weighted_choice([(self._rng.randint(50000, 250000), 0.45), (self._rng.randint(250001, 1000000), 0.35), (self._rng.randint(1000001, 5000000), 0.15), (self._rng.randint(5000001, 25000000), 0.05)])
-            status = self._weighted_choice([("Closed - No Payment", 0.35), ("Closed - Settled", 0.30), ("Closed - Judgment", 0.10), ("Open", 0.20), ("Reserved", 0.05)])
-            paid = int(claimed * self._rng.uniform(0, 0.60)) if "Settled" in status or "Judgment" in status else 0
-            claims.append({"claim_type": self._weighted_choice([("Malpractice", 0.50), ("Breach of Fiduciary Duty", 0.15), ("Breach of Contract", 0.12), ("Fraud", 0.08), ("Negligent Misrepresentation", 0.10), ("Other", 0.05)]), "date": self._random_date(1825, 0), "claimed_usd": claimed, "paid_usd": paid, "status": status})
-        
-        raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("LIC", 10)),
-            "claims_history": {"total_claims_5yr": num_claims, "total_claimed_usd": sum(c["claimed_usd"] for c in claims), "total_paid_usd": sum(c["paid_usd"] for c in claims), "open_claims": sum(1 for c in claims if c["status"] == "Open"), "claims": claims},
-            "loss_ratios": {"frequency_per_professional": round(num_claims / max(1, self._rng.randint(1, 50)), 3), "severity_average_usd": round(sum(c["paid_usd"] for c in claims) / max(1, num_claims), 0)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"claims": num_claims})
-
-
-@register_extractor
-class PeerReviewExtractor(DataExtractor):
-    """Peer review results and quality assurance. Signals: peer_review"""
-    source_name = "peer_review"
-    coverage = "professional_indemnity"
-    signals = ["peer_review"]
-
-    def extract(self) -> ExtractionResult:
-        rating = self._weighted_choice([("Pass", 0.70), ("Pass with Deficiencies", 0.20), ("Fail", 0.07), ("No Opinion", 0.03)])
-        num_reviews = self._rng.randint(1, 5)
-        reviews = [{"date": self._random_date(365 * (i + 1), 365 * i), "type": self._weighted_choice([("System Review", 0.50), ("Engagement Review", 0.35), ("Quality Review", 0.15)]), "rating": self._weighted_choice([("Pass", 0.70), ("Pass with Deficiencies", 0.20), ("Fail", 0.10)]) if i > 0 else rating, "findings": self._rng.randint(0, 8) if rating != "Pass" else 0} for i in range(num_reviews)]
-        
-        raw_data = {
-            "firm_id": self.kwargs.get("firm_id", self._random_id("FRM", 8)),
-            "current_status": {"most_recent_rating": rating, "most_recent_date": reviews[0]["date"], "next_review_due": self._random_date(-30, -730), "in_good_standing": rating in ("Pass", "Pass with Deficiencies")},
-            "review_history": {"total_reviews": num_reviews, "consecutive_pass": sum(1 for r in reviews if r["rating"] == "Pass"), "reviews": reviews},
-            "quality_metrics": {"findings_last_review": reviews[0]["findings"], "significant_findings": self._rng.randint(0, reviews[0]["findings"] // 2 + 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"rating": rating})
-
-
-@register_extractor
-class QualityManagementExtractor(DataExtractor):
-    """Quality management systems and certifications. Signals: quality_management"""
-    source_name = "quality_management"
-    coverage = "professional_indemnity"
-    signals = ["quality_management"]
-
-    def extract(self) -> ExtractionResult:
-        has_qms = self._rng.random() < 0.72
-        
-        raw_data = {
-            "firm_id": self.kwargs.get("firm_id", self._random_id("FRM", 8)),
-            "quality_program": {"has_qms": has_qms, "qms_documented": has_qms, "last_review_date": self._random_date(365, 0) if has_qms else None, "responsible_partner": has_qms},
-            "certifications": {"iso_9001": self._rng.random() < 0.25, "industry_specific": self._rng.random() < 0.40, "certifications": [c for c in ["ISO 9001", "ISO 17025", "AICPA QC", "State Board QC"] if self._rng.random() < 0.30]},
-            "procedures": {"engagement_acceptance": self._rng.random() < 0.85, "conflict_checking": self._rng.random() < 0.92, "file_review": self._rng.random() < 0.78, "continuing_education_tracking": self._rng.random() < 0.88},
-            "internal_inspections": {"inspections_12mo": self._rng.randint(0, 10), "findings_per_inspection": round(self._rng.uniform(0.5, 4.0), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"has_qms": has_qms})
-
-
-@register_extractor
-class NetworkAuthorityExtractor(DataExtractor):
-    """Network and panel membership data. Signals: network_authority"""
-    source_name = "network_authority"
-    coverage = "professional_indemnity"
-    signals = ["network_authority"]
-
-    def extract(self) -> ExtractionResult:
-        num_panels = self._weighted_choice([(0, 0.30), (self._rng.randint(1, 3), 0.35), (self._rng.randint(4, 8), 0.25), (self._rng.randint(9, 20), 0.10)])
-        
-        panels = [{"panel_type": self._weighted_choice([("Insurance Carrier", 0.35), ("Corporate", 0.25), ("Government", 0.15), ("Trade Association", 0.15), ("Court Appointed", 0.10)]), "status": self._weighted_choice([("Active", 0.90), ("Probation", 0.05), ("Suspended", 0.03), ("Terminated", 0.02)]), "years_on_panel": self._rng.randint(1, 15)} for _ in range(num_panels)]
-        
-        raw_data = {
-            "firm_id": self.kwargs.get("firm_id", self._random_id("FRM", 8)),
-            "panel_memberships": {"total_panels": num_panels, "active_panels": sum(1 for p in panels if p["status"] == "Active"), "panels": panels},
-            "referral_network": {"referral_sources": self._rng.randint(5, 50), "referral_revenue_pct": round(self._rng.uniform(10, 60), 1)},
-            "certifications": {"specialist_certifications": self._rng.randint(0, 5), "approved_vendor_listings": self._rng.randint(0, 10)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"panels": num_panels})
-
-
-@register_extractor
-class ClientQualityExtractor(DataExtractor):
-    """Client quality and concentration data. Signals: client_quality"""
-    source_name = "client_quality"
-    coverage = "professional_indemnity"
-    signals = ["client_quality"]
-
-    def extract(self) -> ExtractionResult:
-        total_clients = self._weighted_choice([(self._rng.randint(20, 100), 0.35), (self._rng.randint(101, 500), 0.35), (self._rng.randint(501, 2000), 0.20), (self._rng.randint(2001, 10000), 0.10)])
-        top_client_pct = round(self._rng.uniform(5, 35), 1)
-        
-        raw_data = {
-            "firm_id": self.kwargs.get("firm_id", self._random_id("FRM", 8)),
-            "client_base": {"total_clients": total_clients, "new_clients_12mo": int(total_clients * self._rng.uniform(0.10, 0.30)), "client_retention_pct": round(self._rng.uniform(75, 95), 1)},
-            "concentration": {"top_client_revenue_pct": top_client_pct, "top_5_clients_pct": round(top_client_pct + self._rng.uniform(10, 25), 1), "top_10_clients_pct": round(top_client_pct + self._rng.uniform(20, 40), 1)},
-            "client_profile": {"high_risk_clients_pct": round(self._rng.uniform(5, 25), 1), "litigation_clients_pct": round(self._rng.uniform(10, 40), 1), "international_clients_pct": round(self._rng.uniform(0, 30), 1)},
-            "billing": {"average_matter_value_usd": self._rng.randint(5000, 100000), "realization_rate_pct": round(self._rng.uniform(85, 98), 1), "collection_rate_pct": round(self._rng.uniform(90, 99), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"clients": total_clients, "top_concentration": top_client_pct})
-
-
-@register_extractor
-class ProfessionalDevelopmentExtractor(DataExtractor):
-    """CPE and professional development tracking. Signals: professional_development"""
-    source_name = "professional_development"
-    coverage = "professional_indemnity"
-    signals = ["professional_development"]
-
-    def extract(self) -> ExtractionResult:
-        num_professionals = self._rng.randint(5, 200)
-        cpe_compliance = round(self._rng.uniform(90, 100), 1)
-        
-        raw_data = {
-            "firm_id": self.kwargs.get("firm_id", self._random_id("FRM", 8)),
-            "cpe_compliance": {"total_professionals": num_professionals, "compliance_pct": cpe_compliance, "average_hours_per_professional": self._rng.randint(30, 60), "ethics_hours_avg": self._rng.randint(2, 8)},
-            "specializations": {"specialized_credentials": self._rng.randint(0, num_professionals // 3), "board_certifications": self._rng.randint(0, num_professionals // 5), "advanced_degrees": int(num_professionals * self._rng.uniform(0.20, 0.60))},
-            "training_investment": {"training_budget_per_professional_usd": self._rng.randint(500, 5000), "internal_training_hours_avg": self._rng.randint(10, 40), "external_conferences_avg": round(self._rng.uniform(1, 4), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"professionals": num_professionals, "cpe_compliance": cpe_compliance})
-
-
-@register_extractor
-class PIFinancialExtractor(DataExtractor):
-    """PI-specific financial metrics. Signals: claims_history, quality_management"""
-    source_name = "pi_financial"
-    coverage = "professional_indemnity"
-    signals = ["claims_history", "quality_management"]
-
-    def extract(self) -> ExtractionResult:
-        num_professionals = self._rng.randint(5, 200)
-        revenue_per_prof = self._rng.randint(150000, 800000)
-        revenue = num_professionals * revenue_per_prof
-        
-        raw_data = {
-            "firm_id": self.kwargs.get("firm_id", self._random_id("FRM", 8)),
-            "financials": {"revenue_usd": revenue, "revenue_per_professional_usd": revenue_per_prof, "profit_margin_pct": round(self._rng.uniform(15, 45), 1), "revenue_growth_pct": round(self._rng.uniform(-10, 25), 1)},
-            "expenses": {"compensation_pct_revenue": round(self._rng.uniform(45, 65), 1), "insurance_pct_revenue": round(self._rng.uniform(2, 8), 1), "overhead_pct_revenue": round(self._rng.uniform(15, 30), 1)},
-            "insurance": {"pi_coverage_limit_usd": self._weighted_choice([(1000000, 0.25), (2000000, 0.30), (5000000, 0.25), (10000000, 0.15), (25000000, 0.05)]), "retention_usd": self._weighted_choice([(10000, 0.25), (25000, 0.35), (50000, 0.25), (100000, 0.15)]), "premium_usd": int(revenue * self._rng.uniform(0.015, 0.050))},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"revenue": revenue, "professionals": num_professionals})
-
-
-# =============================================================================
-# COMMON/SHARED EXTRACTORS (used across multiple coverages)
-# =============================================================================
-
-@register_extractor
-class CreditRatingExtractor(DataExtractor):
-    """Credit rating agency data. Signals: financial_stability (all coverages)"""
-    source_name = "credit_rating"
-    coverage = "common"
-    signals = ["financial_stability"]
-
-    def extract(self) -> ExtractionResult:
-        is_rated = self._rng.random() < 0.38
-        ratings = []
-        if is_rated:
-            for _ in range(self._rng.randint(1, 3)):
-                agency = self._weighted_choice([("Moody's", 0.35), ("S&P", 0.35), ("Fitch", 0.30)])
-                rating_idx = self._weighted_choice([(self._rng.randint(0, 5), 0.20), (self._rng.randint(6, 9), 0.35), (self._rng.randint(10, 14), 0.30), (self._rng.randint(15, 20), 0.15)])
-                ratings_list = ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-", "BBB+", "BBB", "BBB-", "BB+", "BB", "BB-", "B+", "B", "B-", "CCC+", "CCC", "CCC-", "CC", "C"]
-                ratings.append({"agency": agency, "rating": ratings_list[min(rating_idx, len(ratings_list) - 1)], "outlook": self._weighted_choice([("Stable", 0.60), ("Positive", 0.15), ("Negative", 0.20), ("Watch", 0.05)]), "investment_grade": rating_idx <= 9})
-        
-        raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "rating_status": {"is_rated": is_rated, "investment_grade": any(r["investment_grade"] for r in ratings) if ratings else None},
-            "ratings": ratings,
-            "history": {"upgrades_3yr": self._rng.randint(0, 2) if is_rated else 0, "downgrades_3yr": self._rng.randint(0, 3) if is_rated else 0},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"is_rated": is_rated})
-
-
-@register_extractor
-class NewsMediaExtractor(DataExtractor):
-    """News and media monitoring. Signals: public_record (all coverages)"""
-    source_name = "news_media"
-    coverage = "common"
-    signals = ["public_record"]
-
-    def extract(self) -> ExtractionResult:
-        num_articles = self._weighted_choice([(self._rng.randint(0, 20), 0.35), (self._rng.randint(21, 100), 0.35), (self._rng.randint(101, 500), 0.20), (self._rng.randint(501, 2000), 0.10)])
-        sentiments = [self._weighted_choice([("Positive", 0.30), ("Neutral", 0.45), ("Negative", 0.25)]) for _ in range(num_articles)]
-        
-        raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "coverage_summary": {"total_articles_12mo": num_articles, "by_sentiment": {"positive": sum(1 for s in sentiments if s == "Positive"), "neutral": sum(1 for s in sentiments if s == "Neutral"), "negative": sum(1 for s in sentiments if s == "Negative")}, "average_sentiment_score": round(sum(0.8 if s == "Positive" else 0.5 if s == "Neutral" else 0.2 for s in sentiments) / max(1, len(sentiments)), 3)},
-            "adverse_media": {"adverse_count": sum(1 for s in sentiments if s == "Negative"), "significant_adverse": num_articles > 50 and sum(1 for s in sentiments if s == "Negative") > num_articles * 0.25},
-            "categories": {"regulatory": self._rng.randint(0, num_articles // 10 + 1), "legal": self._rng.randint(0, num_articles // 10 + 1), "financial": self._rng.randint(0, num_articles // 5 + 1), "operational": self._rng.randint(0, num_articles // 5 + 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"articles": num_articles})
-
-
-@register_extractor
-class CompanyProfileExtractor(DataExtractor):
-    """General company profile data. Signals: multiple"""
-    source_name = "company_profile"
-    coverage = "common"
-    signals = ["financial_stability", "governance"]
-
-    def extract(self) -> ExtractionResult:
-        employees = self._weighted_choice([(self._rng.randint(10, 100), 0.30), (self._rng.randint(101, 500), 0.30), (self._rng.randint(501, 2000), 0.25), (self._rng.randint(2001, 50000), 0.15)])
-        revenue = employees * self._rng.randint(100000, 500000)
-        years_in_business = self._rng.randint(2, 100)
-        
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CMP", 10)),
-            "profile": {"name": self.kwargs.get("company_name", f"Company {self._random_id()}"), "years_in_business": years_in_business, "employees": employees, "locations": self._rng.randint(1, 50), "countries_operating": self._rng.randint(1, 30)},
-            "financials": {"revenue_usd": revenue, "revenue_growth_3yr_cagr": round(self._rng.uniform(-5, 25), 1)},
-            "ownership": {"type": self._weighted_choice([("Private", 0.55), ("Public", 0.25), ("PE-Backed", 0.10), ("Family", 0.08), ("Government", 0.02)]), "majority_shareholder": self._weighted_choice([("Founders", 0.30), ("PE Fund", 0.20), ("Public Float", 0.25), ("Family", 0.15), ("Other", 0.10)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"employees": employees, "revenue": revenue})
-
-
-# =============================================================================
-# FACTORY FUNCTIONS AND UTILITIES
-# =============================================================================
-
-def get_extractor(extractor_type: str, seed: Optional[str] = None, **kwargs) -> DataExtractor:
-    """Factory function to instantiate extractors by type name or shorthand."""
-    shorthand_map = {
-        # Marine
-        "equasis_operator": "EquasisOperatorExtractor",
-        "psc_inspection": "PSCInspectionExtractor",
-        "ais_tracking": "AISTrackingExtractor",
-        "sanctions_screening": "SanctionsScreeningExtractor",
-        "classification_society": "ClassificationSocietyExtractor",
-        "pi_club": "PIClubExtractor",
-        "marine_financial": "MarineFinancialExtractor",
-        "ism_compliance": "ISMComplianceExtractor",
-        "vessel_valuation": "VesselValuationExtractor",
-        "flag_state_performance": "FlagStatePerformanceExtractor",
-        # Aerospace
-        "iata_operator": "IATAOperatorExtractor",
-        "aviation_safety": "AviationSafetyExtractor",
-        "faa_registry": "FAARegistryExtractor",
-        "aircraft_fleet": "AircraftFleetExtractor",
-        "mro_provider": "MROProviderExtractor",
-        "crew_training": "CrewTrainingExtractor",
-        "operational_performance": "OperationalPerformanceExtractor",
-        "aviation_financial": "AviationFinancialExtractor",
-        # Cyber
-        "security_scorecard": "SecurityScorecardExtractor",
-        "cve_exposure": "CVEExposureExtractor",
-        "breach_database": "BreachDatabaseExtractor",
-        "cyber_governance": "CyberGovernanceExtractor",
-        "vendor_security": "VendorSecurityExtractor",
-        "incident_response": "IncidentResponseExtractor",
-        "threat_intelligence": "ThreatIntelligenceExtractor",
-        "cyber_insurance_history": "CyberInsuranceHistoryExtractor",
-        # D&O
-        "sec_edgar": "SECEdgarExtractor",
-        "litigation_database": "LitigationDatabaseExtractor",
-        "proxy_statement": "ProxyStatementExtractor",
-        "insider_activity": "InsiderActivityExtractor",
-        "sec_enforcement": "SECEnforcementExtractor",
-        "industry_comparison": "IndustryComparisonExtractor",
-        "do_financial": "DOFinancialExtractor",
-        # Financial Institutions
-        "ffiec_call_report": "FFIECCallReportExtractor",
-        "camels_rating": "CAMELSRatingExtractor",
-        "bank_enforcement": "BankEnforcementExtractor",
-        "fi_operational_risk": "FIOperationalRiskExtractor",
-        "fi_cybersecurity": "FICyberSecurityExtractor",
-        "fi_governance": "FIGovernanceExtractor",
-        "fi_litigation": "FILitigationExtractor",
-        "fi_earnings": "FIEarningsExtractor",
-        "aml_bsa": "AMLBSAExtractor",
-        # Energy
-        "osha_safety": "OSHASafetyExtractor",
-        "epa_compliance": "EPAComplianceExtractor",
-        "state_regulatory": "StateRegulatoryExtractor",
-        "production_data": "ProductionDataExtractor",
-        "energy_financial": "EnergyFinancialExtractor",
-        "reserve_data": "ReserveDataExtractor",
-        "esg_data": "ESGDataExtractor",
-        "well_integrity": "WellIntegrityExtractor",
-        "process_safety": "ProcessSafetyExtractor",
-        # Professional Indemnity
-        "state_bar": "StateBarExtractor",
-        "malpractice_claims": "MalpracticeClaimsExtractor",
-        "peer_review": "PeerReviewExtractor",
-        "quality_management": "QualityManagementExtractor",
-        "network_authority": "NetworkAuthorityExtractor",
-        "client_quality": "ClientQualityExtractor",
-        "professional_development": "ProfessionalDevelopmentExtractor",
-        "pi_financial": "PIFinancialExtractor",
-        # Common
-        "credit_rating": "CreditRatingExtractor",
-        "news_media": "NewsMediaExtractor",
-        "company_profile": "CompanyProfileExtractor",
-    }
+    signals = ["insurance_history", "claims_history"]
+    ttl_config = TTLConfig.semi_static("Insurance history updated periodically")
     
-    class_name = shorthand_map.get(extractor_type.lower(), extractor_type)
-    extractor_class = EXTRACTOR_REGISTRY.get(class_name)
-    
-    if not extractor_class:
-        raise ValueError(f"Unknown extractor type '{extractor_type}'. Available: {list(shorthand_map.keys())}")
-    
-    return extractor_class(seed=seed, **kwargs)
-
-
-def list_extractors_by_coverage() -> Dict[str, List[str]]:
-    """List all extractors organized by coverage line."""
-    coverage_map: Dict[str, List[str]] = {}
-    for name, cls in EXTRACTOR_REGISTRY.items():
-        coverage = getattr(cls, "coverage", "unknown")
-        if coverage not in coverage_map:
-            coverage_map[coverage] = []
-        coverage_map[coverage].append(name)
-    return coverage_map
-
-
-def list_extractors_by_signal() -> Dict[str, List[str]]:
-    """List all extractors organized by signal they contribute to."""
-    signal_map: Dict[str, List[str]] = {}
-    for name, cls in EXTRACTOR_REGISTRY.items():
-        signals = getattr(cls, "signals", [])
-        for signal in signals:
-            if signal not in signal_map:
-                signal_map[signal] = []
-            signal_map[signal].append(name)
-    return signal_map
-
-
-def get_signal_coverage_matrix() -> Dict[str, Dict[str, List[str]]]:
-    """Get a matrix of coverage -> signal -> extractors."""
-    matrix: Dict[str, Dict[str, List[str]]] = {}
-    for name, cls in EXTRACTOR_REGISTRY.items():
-        coverage = getattr(cls, "coverage", "unknown")
-        signals = getattr(cls, "signals", [])
-        if coverage not in matrix:
-            matrix[coverage] = {}
-        for signal in signals:
-            if signal not in matrix[coverage]:
-                matrix[coverage][signal] = []
-            matrix[coverage][signal].append(name)
-    return matrix
-
-
-# =============================================================================
-# DEMO
-# =============================================================================
-
-if __name__ == "__main__":
-    print("=" * 80)
-    print("EXTRACTORS MODULE - COMPREHENSIVE DEMONSTRATION")
-    print("=" * 80)
-    
-    # Summary by coverage
-    print("\n--- EXTRACTORS BY COVERAGE ---")
-    coverage_map = list_extractors_by_coverage()
-    for coverage in sorted(coverage_map.keys()):
-        extractors = coverage_map[coverage]
-        print(f"\n{coverage.upper()}: {len(extractors)} extractors")
-        for ext in extractors:
-            cls = EXTRACTOR_REGISTRY[ext]
-            signals = getattr(cls, "signals", [])
-            print(f"  - {ext}: {signals}")
-    
-    total_extractors = sum(len(e) for e in coverage_map.values())
-    print(f"\n>>> TOTAL EXTRACTORS: {total_extractors}")
-    
-    # Signal coverage matrix
-    print("\n" + "=" * 80)
-    print("SIGNAL COVERAGE MATRIX")
-    print("=" * 80)
-    matrix = get_signal_coverage_matrix()
-    for coverage in sorted(matrix.keys()):
-        if coverage == "common":
-            continue
-        print(f"\n{coverage.upper()}:")
-        for signal, extractors in sorted(matrix[coverage].items()):
-            print(f"  {signal}: {len(extractors)} extractor(s) - {extractors}")
-    
-    # Sample extractions
-    print("\n" + "=" * 80)
-    print("SAMPLE EXTRACTIONS")
-    print("=" * 80)
-    
-    samples = [
-        ("equasis_operator", {"company_name": "Atlas Shipping"}),
-        ("iata_operator", {"operator_name": "Sky Airways"}),
-        ("security_scorecard", {"company_name": "TechCorp"}),
-        ("sec_edgar", {"company_name": "MegaCorp"}),
-        ("ffiec_call_report", {"institution_name": "First Bank"}),
-        ("osha_safety", {"company_name": "Energy LLC"}),
-        ("state_bar", {"firm_name": "Smith & Associates"}),
+    alternative_sources = [
+        DataSource("internal", "placement_history", priority=1),
     ]
-    
-    for ext_type, kwargs in samples:
-        print(f"\n--- {ext_type} ---")
-        ext = get_extractor(ext_type, seed="demo", **kwargs)
-        result = ext.extract()
-        print(f"Coverage: {ext.coverage}, Signals: {ext.signals}")
-        print(f"Data keys: {list(result.raw_data.keys())}")
-
-
-# =============================================================================
-# FINANCIAL INSTITUTIONS EXTRACTORS (10 extractors for 7 signal groups)
-# =============================================================================
-
-@register_extractor
-class FFIECCallReportExtractor(DataExtractor):
-    """FFIEC Call Report - capital ratios, asset quality, earnings. Signals: financial_condition, credit_quality"""
-    source_name = "ffiec_call_report"
-    coverage = "financial_institutions"
-    signals = ["financial_condition", "credit_quality"]
 
     def extract(self) -> ExtractionResult:
-        total_assets = self._weighted_choice([(self._rng.randint(100_000_000, 500_000_000), 0.35), (self._rng.randint(500_000_001, 5_000_000_000), 0.30), (self._rng.randint(5_000_000_001, 50_000_000_000), 0.20), (self._rng.randint(50_000_000_001, 500_000_000_000), 0.12), (self._rng.randint(500_000_000_001, 3_000_000_000_000), 0.03)])
+        years_coverage = self._weighted_choice([(0, 0.20), (self._rng.randint(1, 3), 0.40), (self._rng.randint(4, 10), 0.40)])
         
-        tier1_ratio = round(self._rng.uniform(9.0, 16.0), 2)
-        cet1_ratio = round(tier1_ratio - self._rng.uniform(0.5, 2.0), 2)
-        total_capital_ratio = round(tier1_ratio + self._rng.uniform(1.0, 3.0), 2)
+        claims = []
+        num_claims = self._weighted_choice([(0, 0.75), (1, 0.15), (2, 0.07), (self._rng.randint(3, 5), 0.03)])
         
-        npa_ratio = round(self._rng.uniform(0.20, 3.50), 2)
-        npl_ratio = round(npa_ratio * self._rng.uniform(0.60, 0.90), 2)
-        
-        raw_data = {
-            "institution": {"rssd_id": self.kwargs.get("institution_id", self._random_id("", 10)), "name": self.kwargs.get("institution_name", f"Bank {self._random_id()}"), "charter_type": self._weighted_choice([("National Bank", 0.35), ("State Member", 0.20), ("State Non-Member", 0.25), ("Savings Association", 0.15), ("Credit Union", 0.05)])},
-            "balance_sheet": {"total_assets_usd": total_assets, "total_loans_usd": int(total_assets * self._rng.uniform(0.55, 0.75)), "total_deposits_usd": int(total_assets * self._rng.uniform(0.70, 0.88))},
-            "capital_ratios": {"cet1_ratio_pct": cet1_ratio, "tier1_ratio_pct": tier1_ratio, "total_capital_ratio_pct": total_capital_ratio, "leverage_ratio_pct": round(self._rng.uniform(7.0, 12.0), 2), "capital_category": "Well Capitalized" if tier1_ratio >= 8.0 else "Adequately Capitalized" if tier1_ratio >= 6.0 else "Undercapitalized"},
-            "asset_quality": {"npa_ratio_pct": npa_ratio, "npl_ratio_pct": npl_ratio, "charge_off_ratio_pct": round(self._rng.uniform(0.10, 1.50), 2), "allowance_coverage_pct": round(self._rng.uniform(100, 250), 1)},
-            "earnings": {"roa_pct": round(self._rng.uniform(0.60, 1.40), 2), "roe_pct": round(self._rng.uniform(8.0, 15.0), 2), "nim_pct": round(self._rng.uniform(2.5, 4.2), 2), "efficiency_ratio_pct": round(self._rng.uniform(52, 72), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"assets": total_assets, "tier1": tier1_ratio})
-
-
-@register_extractor
-class BankRegulatoryExtractor(DataExtractor):
-    """Regulatory status - CAMELS, MRAs, enforcement. Signals: regulatory_compliance"""
-    source_name = "bank_regulatory"
-    coverage = "financial_institutions"
-    signals = ["regulatory_compliance"]
-
-    def extract(self) -> ExtractionResult:
-        camels = self._weighted_choice([(1, 0.18), (2, 0.55), (3, 0.18), (4, 0.06), (5, 0.03)])
-        num_mras = self._weighted_choice([(0, 0.40), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 15), 0.18), (self._rng.randint(16, 30), 0.07)])
-        enforcement = self._weighted_choice([(0, 0.85), (1, 0.10), (2, 0.04), (3, 0.01)])
-        
-        mras = [{"category": self._weighted_choice([("Credit Risk", 0.25), ("BSA/AML", 0.20), ("IT/Cyber", 0.18), ("Liquidity", 0.12), ("Compliance", 0.15), ("Operational", 0.10)]), "severity": self._weighted_choice([("MRA", 0.70), ("MRIA", 0.30)]), "status": self._weighted_choice([("Open", 0.55), ("Closed", 0.35), ("Past Due", 0.10)])} for _ in range(num_mras)]
+        for _ in range(num_claims):
+            claims.append({
+                "year": self._rng.randint(2018, 2024),
+                "type": self._weighted_choice([
+                    ("Ransomware", 0.35), ("Data Breach", 0.30),
+                    ("BEC", 0.15), ("System Failure", 0.10), ("Other", 0.10)
+                ]),
+                "incurred_usd": self._weighted_choice([
+                    (self._rng.randint(10000, 100000), 0.50),
+                    (self._rng.randint(100000, 500000), 0.30),
+                    (self._rng.randint(500000, 2000000), 0.15),
+                    (self._rng.randint(2000000, 10000000), 0.05),
+                ]),
+                "status": self._weighted_choice([("Closed", 0.70), ("Open", 0.30)]),
+            })
         
         raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "regulatory_status": {"camels_composite": camels, "camels_components": {"capital": self._rng.randint(max(1, camels - 1), min(5, camels + 1)), "asset_quality": self._rng.randint(max(1, camels - 1), min(5, camels + 1)), "management": self._rng.randint(max(1, camels - 1), min(5, camels + 1)), "earnings": self._rng.randint(max(1, camels - 1), min(5, camels + 1)), "liquidity": self._rng.randint(max(1, camels - 1), min(5, camels + 1)), "sensitivity": self._rng.randint(max(1, camels - 1), min(5, camels + 1))}, "last_exam_date": self._random_date(548, 30)},
-            "mras_mriaas": {"total_open": sum(1 for m in mras if m["status"] == "Open"), "total_mrias": sum(1 for m in mras if m["severity"] == "MRIA"), "past_due": sum(1 for m in mras if m["status"] == "Past Due"), "details": mras[:15]},
-            "enforcement_actions": {"active_actions": enforcement, "action_types": [self._weighted_choice([("Consent Order", 0.35), ("Cease and Desist", 0.25), ("Civil Money Penalty", 0.20), ("Memorandum of Understanding", 0.20)]) for _ in range(enforcement)]},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "coverage_history": {
+                "years_with_coverage": years_coverage,
+                "current_limit_usd": self._rng.choice([1000000, 2000000, 5000000, 10000000, 25000000]) if years_coverage > 0 else 0,
+                "current_retention_usd": self._rng.choice([10000, 25000, 50000, 100000, 250000]) if years_coverage > 0 else 0,
+                "coverage_continuous": years_coverage > 2 and self._rng.random() > 0.10,
+            },
+            "claims_history": {
+                "total_claims_5yr": num_claims,
+                "total_incurred_usd": sum(c["incurred_usd"] for c in claims),
+                "claims": claims,
+                "loss_ratio": round(sum(c["incurred_usd"] for c in claims) / max(years_coverage * 50000, 1), 3),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"camels": camels, "mras": num_mras})
-
-
-@register_extractor
-class FILitigationExtractor(DataExtractor):
-    """Financial institution litigation - consumer, class actions, regulatory fines. Signals: litigation"""
-    source_name = "fi_litigation"
-    coverage = "financial_institutions"
-    signals = ["litigation"]
-
-    def extract(self) -> ExtractionResult:
-        num_cases = self._weighted_choice([(0, 0.45), (self._rng.randint(1, 5), 0.30), (self._rng.randint(6, 15), 0.18), (self._rng.randint(16, 40), 0.07)])
-        cases = []
-        for _ in range(num_cases):
-            cases.append({"case_type": self._weighted_choice([("Consumer Class Action", 0.25), ("CFPB Enforcement", 0.15), ("Fair Lending", 0.12), ("BSA/AML", 0.12), ("Securities", 0.10), ("Employment", 0.10), ("Other", 0.16)]), "amount_usd": self._weighted_choice([(self._rng.randint(100000, 1000000), 0.40), (self._rng.randint(1000001, 10000000), 0.30), (self._rng.randint(10000001, 100000000), 0.20), (self._rng.randint(100000001, 1000000000), 0.10)]), "status": self._weighted_choice([("Active", 0.40), ("Settled", 0.35), ("Dismissed", 0.25)])})
         
-        cfpb_complaints = self._weighted_choice([(self._rng.randint(10, 100), 0.35), (self._rng.randint(101, 500), 0.35), (self._rng.randint(501, 2000), 0.20), (self._rng.randint(2001, 10000), 0.10)])
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "litigation": {"total_cases_5yr": num_cases, "active_cases": sum(1 for c in cases if c["status"] == "Active"), "total_exposure_usd": sum(c["amount_usd"] for c in cases if c["status"] == "Active"), "cases": cases[:15]},
-            "consumer_complaints": {"cfpb_complaints_12mo": cfpb_complaints, "complaint_ratio_per_bn_deposits": round(cfpb_complaints / max(1, self._rng.randint(1, 100)), 2), "top_categories": ["Deposits", "Credit Cards", "Mortgages"][:self._rng.randint(1, 3)]},
-            "regulatory_fines": {"total_fines_5yr_usd": sum(c["amount_usd"] for c in cases if "CFPB" in c["case_type"] or "BSA" in c["case_type"])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"cases": num_cases, "complaints": cfpb_complaints})
-
-
-@register_extractor
-class FIGovernanceExtractor(DataExtractor):
-    """FI governance - board, audit committee, risk management. Signals: governance"""
-    source_name = "fi_governance"
-    coverage = "financial_institutions"
-    signals = ["governance"]
-
-    def extract(self) -> ExtractionResult:
-        board_size = self._rng.randint(7, 15)
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "board": {"size": board_size, "independent_pct": round(self._rng.uniform(60, 90), 1), "financial_expertise_pct": round(self._rng.uniform(40, 70), 1), "avg_tenure_years": round(self._rng.uniform(4, 12), 1), "meetings_per_year": self._rng.randint(8, 15)},
-            "committees": {"audit_meetings": self._rng.randint(6, 12), "risk_committee_exists": self._rng.random() < 0.85, "risk_meetings": self._rng.randint(6, 12) if self._rng.random() < 0.85 else 0, "compliance_committee": self._rng.random() < 0.75},
-            "risk_management": {"cro_exists": self._rng.random() < 0.80, "cro_reports_to_board": self._rng.random() < 0.60, "erm_framework": self._weighted_choice([("COSO", 0.40), ("ISO 31000", 0.20), ("Custom", 0.30), ("None", 0.10)]), "stress_testing_program": self._rng.random() < 0.75},
-            "audit": {"internal_audit_function": True, "external_auditor": self._weighted_choice([("Deloitte", 0.22), ("PwC", 0.20), ("EY", 0.18), ("KPMG", 0.15), ("BDO", 0.10), ("Other", 0.15)]), "audit_findings_open": self._rng.randint(0, 15)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"board_size": board_size})
-
-
-@register_extractor
-class FICyberExtractor(DataExtractor):
-    """FI cybersecurity assessment. Signals: cybersecurity"""
-    source_name = "fi_cyber"
-    coverage = "financial_institutions"
-    signals = ["cybersecurity"]
-
-    def extract(self) -> ExtractionResult:
-        maturity = self._weighted_choice([(1, 0.08), (2, 0.22), (3, 0.42), (4, 0.22), (5, 0.06)])
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "cyber_maturity": {"ffiec_cat_level": maturity, "assessment_date": self._random_date(365, 0), "inherent_risk_profile": self._weighted_choice([("Least", 0.15), ("Minimal", 0.25), ("Moderate", 0.35), ("Significant", 0.18), ("Most", 0.07)])},
-            "security_program": {"ciso_exists": self._rng.random() < 0.78, "security_awareness_training": self._rng.random() < 0.92, "pen_test_frequency": self._weighted_choice([("Annual", 0.40), ("Semi-Annual", 0.30), ("Quarterly", 0.20), ("None", 0.10)]), "vulnerability_scanning": self._weighted_choice([("Continuous", 0.25), ("Weekly", 0.30), ("Monthly", 0.30), ("Quarterly", 0.15)])},
-            "incidents": {"cyber_incidents_12mo": self._weighted_choice([(0, 0.50), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 15), 0.12), (self._rng.randint(16, 30), 0.03)]), "breaches_requiring_notification": self._weighted_choice([(0, 0.85), (1, 0.12), (2, 0.03)])},
-            "vendor_risk": {"critical_vendors": self._rng.randint(5, 30), "vendors_assessed_12mo_pct": round(self._rng.uniform(60, 95), 1)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"maturity": maturity})
-
-
-@register_extractor
-class FIOperationalRiskExtractor(DataExtractor):
-    """FI operational risk - systems, controls, incidents. Signals: operational_risk"""
-    source_name = "fi_operational"
-    coverage = "financial_institutions"
-    signals = ["operational_risk"]
-
-    def extract(self) -> ExtractionResult:
-        num_incidents = self._weighted_choice([(0, 0.35), (self._rng.randint(1, 10), 0.40), (self._rng.randint(11, 30), 0.18), (self._rng.randint(31, 100), 0.07)])
-        
-        raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "operational_incidents": {"total_12mo": num_incidents, "by_category": {"technology": int(num_incidents * 0.35), "process": int(num_incidents * 0.25), "people": int(num_incidents * 0.20), "external": int(num_incidents * 0.20)}, "losses_usd": self._rng.randint(10000, 5000000) if num_incidents > 0 else 0},
-            "systems": {"core_system_age_years": self._rng.randint(3, 20), "system_uptime_pct": round(self._rng.uniform(99.0, 99.99), 3), "disaster_recovery_tested": self._rng.random() < 0.85, "rpo_hours": self._weighted_choice([(1, 0.30), (4, 0.35), (24, 0.25), (72, 0.10)]), "rto_hours": self._weighted_choice([(4, 0.25), (8, 0.35), (24, 0.25), (72, 0.15)])},
-            "controls": {"sox_compliant": self._rng.random() < 0.92, "internal_audit_coverage_pct": round(self._rng.uniform(70, 100), 1), "control_deficiencies_open": self._rng.randint(0, 20)},
-            "bcp": {"business_continuity_plan": True, "last_test_date": self._random_date(365, 0), "test_result": self._weighted_choice([("Successful", 0.75), ("Partial Success", 0.20), ("Failed", 0.05)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"incidents": num_incidents})
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="internal",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "claims": num_claims,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class BSAAMLExtractor(DataExtractor):
-    """BSA/AML compliance program. Signals: regulatory_compliance"""
+    """
+    BSA/AML Compliance - Bank Secrecy Act, Anti-Money Laundering.
+    
+    Signals: bsa_aml, fair_lending, consumer_compliance
+    """
     source_name = "bsa_aml"
     coverage = "financial_institutions"
-    signals = ["regulatory_compliance"]
+    signals = ["bsa_aml", "fair_lending", "consumer_compliance"]
+    ttl_config = TTLConfig.dynamic("BSA/AML monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "fincen", "enforcement/actions", priority=1),
+        DataSource("api", "occ", "enforcement/bsa", priority=2),
+        DataSource("api", "ofac", "sanctions/search", priority=3),
+        DataSource("api", "cfpb", "enforcement/fair_lending", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
-        sars_filed = self._weighted_choice([(self._rng.randint(10, 100), 0.40), (self._rng.randint(101, 500), 0.30), (self._rng.randint(501, 2000), 0.20), (self._rng.randint(2001, 10000), 0.10)])
+        bsa_rating = self._weighted_choice([
+            ("Satisfactory", 0.85), ("Needs Improvement", 0.10), ("Deficient", 0.05)
+        ])
         
         raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "bsa_program": {"bsa_officer": True, "independent_testing": self._rng.random() < 0.92, "training_completion_pct": round(self._rng.uniform(90, 100), 1), "kyc_program": self._weighted_choice([("Enhanced", 0.35), ("Standard", 0.55), ("Basic", 0.10)])},
-            "activity": {"sars_filed_12mo": sars_filed, "ctrs_filed_12mo": self._rng.randint(sars_filed // 2, sars_filed * 3), "high_risk_customers": self._rng.randint(50, 2000), "peps_count": self._rng.randint(0, 100)},
-            "exam_findings": {"bsa_exam_rating": self._weighted_choice([(1, 0.25), (2, 0.50), (3, 0.18), (4, 0.05), (5, 0.02)]), "open_findings": self._rng.randint(0, 10), "enforcement_history": self._weighted_choice([(0, 0.88), (1, 0.10), (2, 0.02)])},
-            "technology": {"transaction_monitoring_system": self._weighted_choice([("Actimize", 0.25), ("Mantas", 0.20), ("SAS", 0.15), ("FICO", 0.15), ("Other", 0.25)]), "automation_level": self._weighted_choice([("High", 0.30), ("Medium", 0.45), ("Low", 0.25)])},
+            "institution_id": self.kwargs.get("rssd_id", self._random_id("", 10)),
+            "bsa_aml": {
+                "exam_rating": bsa_rating,
+                "last_exam_date": self._random_date(365, 30),
+                "sars_filed_12mo": self._rng.randint(10, 500),
+                "ctrs_filed_12mo": self._rng.randint(50, 2000),
+                "enforcement_actions": 1 if bsa_rating == "Deficient" else 0,
+                "lookback_required": bsa_rating == "Deficient" and self._rng.random() < 0.50,
+            },
+            "ofac_compliance": {
+                "screening_program": True,
+                "violations_5yr": self._weighted_choice([(0, 0.95), (1, 0.04), (2, 0.01)]),
+                "penalties_usd": self._rng.randint(0, 1000000) if self._rng.random() < 0.05 else 0,
+            },
+            "fair_lending": {
+                "hmda_issues": self._rng.random() < 0.10,
+                "fair_lending_exam_issues": self._rng.random() < 0.08,
+                "doj_referrals": self._rng.random() < 0.02,
+            },
+            "consumer_compliance": {
+                "cfpb_exams_3yr": self._rng.randint(0, 3),
+                "mras_outstanding": self._rng.randint(0, 5),
+                "udaap_issues": self._rng.random() < 0.08,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"sars": sars_filed})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "bsa_rating": bsa_rating,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
-class LiquidityExtractor(DataExtractor):
-    """Liquidity management and stress testing. Signals: financial_condition"""
-    source_name = "liquidity"
+class FIGovernanceExtractor(DataExtractor):
+    """
+    FI Governance Data - Board, risk committee, audit.
+    
+    Signals: board_independence, board_expertise, risk_committee, audit_committee
+    """
+    source_name = "fi_governance"
     coverage = "financial_institutions"
-    signals = ["financial_condition"]
+    signals = ["board_independence", "board_expertise", "risk_committee", "audit_committee", 
+               "executive_stability", "related_party"]
+    ttl_config = TTLConfig.semi_static("Governance data updated periodically")
+    
+    alternative_sources = [
+        DataSource("filing", "sec_edgar", "DEF 14A", priority=1),
+        DataSource("scrape", "company_website", "/governance", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        lcr = round(self._rng.uniform(100, 180), 1)
-        nsfr = round(self._rng.uniform(100, 150), 1)
+        board_size = self._rng.randint(9, 18)
         
         raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "liquidity_ratios": {"lcr_pct": lcr, "nsfr_pct": nsfr, "loan_to_deposit_ratio_pct": round(self._rng.uniform(70, 95), 1), "liquid_assets_to_total_assets_pct": round(self._rng.uniform(15, 35), 1)},
-            "funding": {"core_deposits_pct": round(self._rng.uniform(60, 90), 1), "wholesale_funding_pct": round(self._rng.uniform(5, 25), 1), "brokered_deposits_pct": round(self._rng.uniform(0, 15), 1), "fhlb_capacity_usd": self._rng.randint(100_000_000, 10_000_000_000)},
-            "stress_testing": {"liquidity_stress_test": self._rng.random() < 0.80, "30_day_survival_days": self._rng.randint(30, 180), "contingency_funding_plan": self._rng.random() < 0.90},
+            "institution_id": self.kwargs.get("rssd_id", self._random_id("", 10)),
+            "board_composition": {
+                "total_directors": board_size,
+                "independent_pct": self._rng.randint(70, 95),
+                "banking_experience_pct": self._rng.randint(40, 80),
+                "risk_expertise_pct": self._rng.randint(30, 60),
+                "audit_expertise_pct": self._rng.randint(40, 70),
+            },
+            "committees": {
+                "risk_committee_exists": True,
+                "risk_committee_independent": self._rng.random() > 0.90,
+                "cro_reports_to_board": self._rng.random() > 0.70,
+                "audit_committee_independent": True,
+                "audit_financial_expert": True,
+            },
+            "management": {
+                "ceo_tenure_years": self._rng.randint(2, 20),
+                "cfo_tenure_years": self._rng.randint(1, 15),
+                "cro_exists": self._rng.random() > 0.80,
+                "management_stability": self._weighted_choice([("High", 0.60), ("Medium", 0.30), ("Low", 0.10)]),
+            },
+            "risk_management": {
+                "erm_framework": self._rng.random() > 0.85,
+                "risk_appetite_statement": self._rng.random() > 0.90,
+                "stress_testing_program": self._rng.random() > 0.80,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"lcr": lcr})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "board_size": board_size,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
-class CreditPortfolioExtractor(DataExtractor):
-    """Credit portfolio composition and quality. Signals: credit_quality"""
-    source_name = "credit_portfolio"
+class FIOperationalRiskExtractor(DataExtractor):
+    """
+    FI Operational Risk - CFPB complaints, incidents, litigation.
+    
+    Signals: cfpb_complaint, operational_incident, litigation
+    """
+    source_name = "fi_operational"
     coverage = "financial_institutions"
-    signals = ["credit_quality"]
+    signals = ["cfpb_complaint", "operational_incident", "litigation", "bbb_complaint"]
+    ttl_config = TTLConfig.dynamic("Operational data monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "cfpb", "complaints/company", priority=1),
+        DataSource("api", "bbb", "business/search", priority=2),
+        DataSource("api", "pacer", "cases/search", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        total_loans = self._rng.randint(500_000_000, 100_000_000_000)
+        complaints_per_billion = self._weighted_choice([
+            (self._rng.randint(10, 50), 0.50),
+            (self._rng.randint(51, 100), 0.30),
+            (self._rng.randint(101, 300), 0.20),
+        ])
         
         raw_data = {
-            "institution_id": self.kwargs.get("institution_id", self._random_id("RSSD", 10)),
-            "portfolio_composition": {"total_loans_usd": total_loans, "cre_pct": round(self._rng.uniform(15, 45), 1), "c_and_i_pct": round(self._rng.uniform(15, 35), 1), "residential_pct": round(self._rng.uniform(10, 35), 1), "consumer_pct": round(self._rng.uniform(5, 20), 1)},
-            "concentration": {"top_10_borrowers_pct": round(self._rng.uniform(8, 25), 1), "cre_to_capital_pct": round(self._rng.uniform(100, 400), 1), "construction_to_capital_pct": round(self._rng.uniform(20, 150), 1)},
-            "risk_grades": {"pass_pct": round(self._rng.uniform(85, 96), 1), "special_mention_pct": round(self._rng.uniform(1, 6), 1), "substandard_pct": round(self._rng.uniform(1, 5), 1), "doubtful_pct": round(self._rng.uniform(0, 1), 2)},
-            "underwriting": {"avg_ltv_cre_pct": round(self._rng.uniform(60, 80), 1), "avg_dscr_cre": round(self._rng.uniform(1.15, 1.50), 2), "exception_rate_pct": round(self._rng.uniform(5, 20), 1)},
+            "institution_id": self.kwargs.get("rssd_id", self._random_id("", 10)),
+            "cfpb_complaints": {
+                "total_12mo": self._rng.randint(50, 5000),
+                "per_billion_deposits": complaints_per_billion,
+                "vs_peer_average": round(self._rng.uniform(0.5, 2.0), 2),
+                "timely_response_pct": self._rng.randint(90, 100),
+                "top_issues": self._rng.sample([
+                    "Mortgage", "Credit Card", "Bank Account", "Debt Collection",
+                    "Credit Reporting", "Student Loans"
+                ], 3),
+            },
+            "operational_incidents": {
+                "system_outages_12mo": self._rng.randint(0, 10),
+                "data_breaches_5yr": self._weighted_choice([(0, 0.70), (1, 0.20), (2, 0.10)]),
+                "fraud_losses_bps": self._rng.randint(5, 50),
+            },
+            "litigation": {
+                "active_class_actions": self._weighted_choice([(0, 0.75), (1, 0.15), (2, 0.10)]),
+                "settlements_5yr_usd": self._rng.randint(0, 50) * 1_000_000,
+            },
+            "control_environment": {
+                "sox_deficiencies": self._rng.randint(0, 3),
+                "audit_findings": self._rng.randint(0, 10),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"total_loans": total_loans})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "complaints_per_billion": complaints_per_billion,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class FICyberExtractor(DataExtractor):
+    """
+    FI Cybersecurity - FFIEC CAT, security program, incidents.
+    
+    Signals: cyber_maturity, security_program, breach_history
+    """
+    source_name = "fi_cyber"
+    coverage = "financial_institutions"
+    signals = ["cyber_maturity", "security_program", "breach_history", "tls_score", "email_auth"]
+    ttl_config = TTLConfig.dynamic("Cyber posture monitored daily")
+    
+    alternative_sources = [
+        DataSource("scan", "ssllabs", "analyze", priority=1),
+        DataSource("api", "bitsight", "ratings/company", priority=2),
+        DataSource("api", "privacyrights", "breaches/search", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        cat_level = self._weighted_choice([(1, 0.05), (2, 0.25), (3, 0.45), (4, 0.20), (5, 0.05)])
+        
+        raw_data = {
+            "institution_id": self.kwargs.get("rssd_id", self._random_id("", 10)),
+            "ffiec_cat": {
+                "maturity_level": cat_level,
+                "inherent_risk": self._weighted_choice([
+                    ("Least", 0.10), ("Minimal", 0.25), ("Moderate", 0.40),
+                    ("Significant", 0.20), ("Most", 0.05)
+                ]),
+                "last_assessment": self._random_date(365, 0),
+            },
+            "security_program": {
+                "ciso_exists": self._rng.random() > 0.70,
+                "24x7_monitoring": self._rng.random() > 0.60,
+                "pen_test_frequency": self._weighted_choice([("Annual", 0.50), ("Semi-Annual", 0.30), ("Quarterly", 0.20)]),
+                "vendor_risk_program": self._rng.random() > 0.75,
+            },
+            "incident_history": {
+                "breaches_5yr": self._weighted_choice([(0, 0.75), (1, 0.18), (2, 0.07)]),
+                "breach_notifications_required": self._rng.random() < 0.20,
+                "regulatory_findings": self._rng.randint(0, 5),
+            },
+            "technical_security": {
+                "tls_grade": self._weighted_choice([("A+", 0.20), ("A", 0.40), ("B", 0.25), ("C", 0.15)]),
+                "mfa_deployed": self._rng.random() > 0.90,
+                "encryption_at_rest": self._rng.random() > 0.95,
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "cat_level": cat_level,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class FILitigationExtractor(DataExtractor):
+    """
+    FI Litigation Data - Class actions, regulatory fines.
+    
+    Signals: litigation_history, regulatory_fines
+    """
+    source_name = "fi_litigation"
+    coverage = "financial_institutions"
+    signals = ["litigation_history", "regulatory_fines"]
+    ttl_config = TTLConfig.dynamic("Litigation monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "pacer", "cases/search", priority=1),
+        DataSource("api", "courtlistener", "search", priority=2),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        active_cases = self._weighted_choice([(0, 0.60), (self._rng.randint(1, 3), 0.30), (self._rng.randint(4, 10), 0.10)])
+        
+        raw_data = {
+            "institution_id": self.kwargs.get("rssd_id", self._random_id("", 10)),
+            "litigation": {
+                "active_class_actions": active_cases,
+                "total_cases_5yr": active_cases + self._rng.randint(0, 10),
+                "total_settlements_usd": self._rng.randint(0, 100) * 1_000_000,
+            },
+            "regulatory_fines": {
+                "total_5yr_usd": self._rng.randint(0, 50) * 1_000_000,
+                "cfpb_penalties": self._rng.randint(0, 10) * 1_000_000,
+                "occ_cmps": self._rng.randint(0, 5) * 1_000_000,
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "active_cases": active_cases,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 # =============================================================================
-# ENERGY EXTRACTORS (9 extractors for 7 signal groups)
+# ENERGY EXTRACTORS
 # =============================================================================
 
 @register_extractor
 class OSHASafetyExtractor(DataExtractor):
-    """OSHA safety records - inspections, violations, injury rates. Signals: safety_performance"""
+    """
+    OSHA Safety Data - TRIR, violations, fatalities.
+    
+    Signals: osha_trir, osha_violations, fatality, process_safety
+    """
     source_name = "osha_safety"
     coverage = "energy"
-    signals = ["safety_performance"]
+    signals = ["osha_trir", "osha_violations", "fatality", "near_miss"]
+    ttl_config = TTLConfig.dynamic("Safety data monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "osha", "iir/search", priority=1),
+        DataSource("api", "osha", "violations/search", priority=2),
+        DataSource("api", "bls", "industry_safety", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        trir = round(self._rng.uniform(0.3, 4.5), 2)
-        dart = round(trir * self._rng.uniform(0.4, 0.7), 2)
-        fatalities = self._weighted_choice([(0, 0.90), (1, 0.07), (2, 0.02), (self._rng.randint(3, 5), 0.01)])
-        
-        num_inspections = self._rng.randint(0, 12)
-        num_violations = self._weighted_choice([(0, 0.40), (self._rng.randint(1, 10), 0.35), (self._rng.randint(11, 30), 0.18), (self._rng.randint(31, 80), 0.07)])
-        
-        violations = [{"type": self._weighted_choice([("Serious", 0.45), ("Other-Than-Serious", 0.35), ("Willful", 0.05), ("Repeat", 0.08), ("Failure to Abate", 0.07)]), "category": self._weighted_choice([("Fall Protection", 0.15), ("Hazard Communication", 0.12), ("Scaffolding", 0.10), ("Lockout/Tagout", 0.12), ("Respiratory", 0.10), ("Machine Guarding", 0.08), ("Other", 0.33)]), "penalty_usd": self._weighted_choice([(0, 0.30), (self._rng.randint(1000, 15000), 0.45), (self._rng.randint(15001, 75000), 0.20), (self._rng.randint(75001, 150000), 0.05)])} for _ in range(num_violations)]
+        trir = round(self._weighted_choice([
+            (self._rng.uniform(0.3, 1.0), 0.30),
+            (self._rng.uniform(1.0, 2.0), 0.40),
+            (self._rng.uniform(2.0, 4.0), 0.25),
+            (self._rng.uniform(4.0, 8.0), 0.05),
+        ]), 2)
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("EST", 10)),
-            "injury_rates": {"trir": trir, "dart": dart, "fatalities_3yr": fatalities, "industry_avg_trir": round(self._rng.uniform(1.5, 2.5), 2)},
-            "inspections": {"total_3yr": num_inspections, "resulting_in_citation": int(num_inspections * self._rng.uniform(0.3, 0.7))},
-            "violations": {"total_3yr": num_violations, "serious": sum(1 for v in violations if v["type"] == "Serious"), "willful_repeat": sum(1 for v in violations if v["type"] in ("Willful", "Repeat")), "total_penalties_usd": sum(v["penalty_usd"] for v in violations), "details": violations[:15]},
-            "safety_program": {"written_program": self._rng.random() < 0.92, "jsa_program": self._rng.random() < 0.85, "behavior_based_safety": self._rng.random() < 0.65, "vpp_participant": self._rng.random() < 0.15},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "safety_metrics": {
+                "trir": trir,
+                "trir_vs_industry": round(trir / 1.5, 2),
+                "dart_rate": round(trir * 0.6, 2),
+                "lwcr": round(trir * 0.3, 2),
+                "fatalities_5yr": self._weighted_choice([(0, 0.85), (1, 0.10), (2, 0.05)]),
+                "hours_worked": self._rng.randint(1, 50) * 1_000_000,
+            },
+            "osha_violations": {
+                "total_5yr": self._weighted_choice([(0, 0.50), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 20), 0.15)]),
+                "serious": self._rng.randint(0, 5),
+                "willful": self._rng.randint(0, 1),
+                "repeat": self._rng.randint(0, 2),
+                "total_penalties_usd": self._rng.randint(0, 500000),
+            },
+            "process_safety": {
+                "tier1_events_3yr": self._weighted_choice([(0, 0.70), (1, 0.20), (2, 0.10)]),
+                "tier2_events_3yr": self._rng.randint(0, 5),
+            },
+            "safety_program": {
+                "vpp_participant": self._rng.random() > 0.80,
+                "iso_45001_certified": self._rng.random() > 0.60,
+                "stop_work_authority": self._rng.random() > 0.95,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"trir": trir, "violations": num_violations})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "trir": trir,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class EPAComplianceExtractor(DataExtractor):
-    """EPA environmental compliance - permits, violations, spills. Signals: environmental_compliance"""
+    """
+    EPA Compliance Data - Violations, spills, emissions.
+    
+    Signals: epa_violation, spill_history, emissions_compliance, flaring, methane
+    """
     source_name = "epa_compliance"
     coverage = "energy"
-    signals = ["environmental_compliance"]
+    signals = ["epa_violation", "spill_history", "emissions_compliance", "flaring", "methane"]
+    ttl_config = TTLConfig.dynamic("Environmental data monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "epa_echo", "violations/search", priority=1),
+        DataSource("api", "nrc", "reports/search", priority=2),
+        DataSource("api", "epa", "ghgrp/methane", priority=3),
+        DataSource("satellite", "viirs", "flaring_detector", priority=4),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_permits = self._rng.randint(3, 25)
-        num_violations = self._weighted_choice([(0, 0.45), (self._rng.randint(1, 8), 0.35), (self._rng.randint(9, 25), 0.15), (self._rng.randint(26, 60), 0.05)])
-        num_spills = self._weighted_choice([(0, 0.60), (self._rng.randint(1, 5), 0.30), (self._rng.randint(6, 15), 0.08), (self._rng.randint(16, 30), 0.02)])
-        
-        violations = [{"program": self._weighted_choice([("Clean Air Act", 0.30), ("Clean Water Act", 0.25), ("RCRA", 0.20), ("CERCLA", 0.08), ("TSCA", 0.07), ("EPCRA", 0.10)]), "severity": self._weighted_choice([("Minor", 0.50), ("Moderate", 0.35), ("Major", 0.15)]), "penalty_usd": self._weighted_choice([(0, 0.40), (self._rng.randint(5000, 50000), 0.35), (self._rng.randint(50001, 500000), 0.18), (self._rng.randint(500001, 5000000), 0.07)])} for _ in range(num_violations)]
-        
-        spills = [{"type": self._weighted_choice([("Oil", 0.45), ("Produced Water", 0.25), ("Chemical", 0.15), ("Other", 0.15)]), "volume_bbls": self._weighted_choice([(self._rng.randint(1, 50), 0.50), (self._rng.randint(51, 500), 0.35), (self._rng.randint(501, 5000), 0.12), (self._rng.randint(5001, 50000), 0.03)]), "reportable": self._rng.random() < 0.70} for _ in range(num_spills)]
+        violations = self._weighted_choice([(0, 0.60), (self._rng.randint(1, 5), 0.30), (self._rng.randint(6, 20), 0.10)])
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("EPA", 10)),
-            "permits": {"total_active": num_permits, "types": {"air": self._rng.randint(1, 10), "npdes": self._rng.randint(0, 5), "rcra": self._rng.randint(0, 3), "uic": self._rng.randint(0, 8)}},
-            "violations": {"total_3yr": num_violations, "by_severity": {"major": sum(1 for v in violations if v["severity"] == "Major"), "moderate": sum(1 for v in violations if v["severity"] == "Moderate"), "minor": sum(1 for v in violations if v["severity"] == "Minor")}, "total_penalties_usd": sum(v["penalty_usd"] for v in violations), "details": violations[:15]},
-            "spills": {"total_5yr": num_spills, "reportable_spills": sum(1 for s in spills if s["reportable"]), "total_volume_bbls": sum(s["volume_bbls"] for s in spills), "details": spills[:10]},
-            "compliance_status": {"overall": "In Compliance" if num_violations < 3 else "Minor Violations" if num_violations < 10 else "Significant Violations", "consent_decrees_active": self._rng.random() < 0.08, "supplemental_environmental_projects": self._rng.random() < 0.12},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "violations": {
+                "total_5yr": violations,
+                "caa_violations": self._rng.randint(0, violations) if violations > 0 else 0,
+                "cwa_violations": self._rng.randint(0, violations) if violations > 0 else 0,
+                "rcra_violations": self._rng.randint(0, max(0, violations - 2)) if violations > 2 else 0,
+                "total_penalties_usd": violations * self._rng.randint(10000, 100000),
+                "consent_decrees_active": self._rng.random() < 0.10,
+            },
+            "spills": {
+                "reportable_spills_5yr": self._weighted_choice([(0, 0.50), (self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 20), 0.15)]),
+                "total_volume_bbls": self._rng.randint(0, 5000),
+                "significant_spills": self._rng.randint(0, 2),
+            },
+            "emissions": {
+                "ghg_intensity_kg_co2e_boe": round(self._rng.uniform(15, 50), 1),
+                "methane_intensity_pct": round(self._rng.uniform(0.1, 2.0), 2),
+                "flaring_intensity_mcf_boe": round(self._rng.uniform(0.01, 0.20), 3),
+                "routine_flaring": self._rng.random() < 0.30,
+            },
+            "remediation": {
+                "active_remediation_sites": self._rng.randint(0, 10),
+                "superfund_sites": self._rng.randint(0, 1),
+                "aro_liability_usd": self._rng.randint(10, 500) * 1_000_000,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"violations": num_violations, "spills": num_spills})
-
-
-@register_extractor
-class StateRegulatoryExtractor(DataExtractor):
-    """State regulatory status - permits, enforcement, bonds. Signals: regulatory_standing"""
-    source_name = "state_regulatory"
-    coverage = "energy"
-    signals = ["regulatory_standing"]
-
-    def extract(self) -> ExtractionResult:
-        num_states = self._rng.randint(1, 12)
-        states = []
-        for _ in range(num_states):
-            states.append({"state": self._weighted_choice([("Texas", 0.25), ("Oklahoma", 0.12), ("New Mexico", 0.10), ("North Dakota", 0.08), ("Colorado", 0.08), ("Louisiana", 0.07), ("Wyoming", 0.06), ("Other", 0.24)]), "permit_status": self._weighted_choice([("Good Standing", 0.85), ("Conditional", 0.10), ("Probation", 0.04), ("Revoked", 0.01)]), "violations_12mo": self._weighted_choice([(0, 0.55), (self._rng.randint(1, 5), 0.30), (self._rng.randint(6, 15), 0.12), (self._rng.randint(16, 30), 0.03)]), "bond_amount_usd": self._rng.randint(50000, 5000000)})
         
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("OP", 8)),
-            "operating_states": {"count": num_states, "details": states},
-            "aggregate_status": {"states_good_standing": sum(1 for s in states if s["permit_status"] == "Good Standing"), "total_violations": sum(s["violations_12mo"] for s in states), "total_bonds_usd": sum(s["bond_amount_usd"] for s in states)},
-            "enforcement": {"notices_of_violation_12mo": self._weighted_choice([(0, 0.55), (self._rng.randint(1, 5), 0.30), (self._rng.randint(6, 15), 0.12), (self._rng.randint(16, 30), 0.03)]), "administrative_orders": self._weighted_choice([(0, 0.85), (1, 0.10), (2, 0.04), (3, 0.01)])},
-        }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"states": num_states})
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "violations": violations,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ProductionDataExtractor(DataExtractor):
-    """Oil & gas production data - volumes, wells, basins. Signals: operational_quality, asset_quality"""
+    """
+    Production Data - Volumes, efficiency, trends.
+    
+    Signals: production_consistency, operational_efficiency
+    """
     source_name = "production_data"
     coverage = "energy"
-    signals = ["operational_quality", "asset_quality"]
+    signals = ["production_consistency", "operational_efficiency"]
+    ttl_config = TTLConfig.semi_static("Production data updated monthly")
+    
+    alternative_sources = [
+        DataSource("api", "enverus", "production/history", priority=1),
+        DataSource("api", "state_commissions", "production/operator", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        production_boed = self._weighted_choice([(self._rng.randint(500, 10000), 0.35), (self._rng.randint(10001, 50000), 0.30), (self._rng.randint(50001, 200000), 0.20), (self._rng.randint(200001, 1000000), 0.12), (self._rng.randint(1000001, 5000000), 0.03)])
-        oil_pct = self._rng.uniform(0.20, 0.80)
-        
-        active_wells = self._weighted_choice([(self._rng.randint(10, 100), 0.35), (self._rng.randint(101, 500), 0.30), (self._rng.randint(501, 2000), 0.20), (self._rng.randint(2001, 10000), 0.12), (self._rng.randint(10001, 50000), 0.03)])
+        boed = self._weighted_choice([
+            (self._rng.randint(5000, 25000), 0.40),
+            (self._rng.randint(25000, 100000), 0.35),
+            (self._rng.randint(100000, 500000), 0.20),
+            (self._rng.randint(500000, 2000000), 0.05),
+        ])
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("OP", 8)),
-            "production": {"total_boed": production_boed, "oil_bopd": int(production_boed * oil_pct), "gas_mcfd": int(production_boed * (1 - oil_pct) * 6), "ngl_boed": int(production_boed * self._rng.uniform(0.05, 0.15)), "pct_oil": round(oil_pct * 100, 1)},
-            "wells": {"total_active": active_wells, "producing": int(active_wells * 0.85), "injection": int(active_wells * 0.10), "shut_in": int(active_wells * 0.05), "average_age_years": round(self._rng.uniform(3, 15), 1)},
-            "basins": {"primary": self._weighted_choice([("Permian", 0.30), ("Eagle Ford", 0.12), ("Bakken", 0.10), ("DJ Basin", 0.08), ("Marcellus", 0.08), ("SCOOP/STACK", 0.07), ("Other", 0.25)]), "diversification_score": self._rng.randint(1, 5)},
-            "operational_metrics": {"production_per_well_boed": round(production_boed / max(1, active_wells), 1), "decline_rate_pct": round(self._rng.uniform(15, 45), 1), "uptime_pct": round(self._rng.uniform(92, 99), 1)},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "production": {
+                "total_boed": boed,
+                "oil_pct": self._rng.randint(30, 80),
+                "gas_pct": 100 - self._rng.randint(30, 80),
+                "yoy_change_pct": round(self._rng.uniform(-15, 25), 1),
+                "production_volatility": self._weighted_choice([("Low", 0.40), ("Medium", 0.40), ("High", 0.20)]),
+            },
+            "efficiency": {
+                "loe_per_boe": round(self._rng.uniform(5, 20), 2),
+                "loe_vs_peers": round(self._rng.uniform(0.7, 1.3), 2),
+                "uptime_pct": round(self._rng.uniform(90, 99), 1),
+            },
+            "wells": {
+                "total_operated": self._rng.randint(100, 5000),
+                "active_pct": self._rng.randint(70, 95),
+                "avg_age_years": self._rng.randint(3, 15),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"production": production_boed, "wells": active_wells})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "boed": boed,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ReserveDataExtractor(DataExtractor):
-    """Reserves and resources data. Signals: asset_quality"""
+    """
+    Reserve Data - Proved reserves, reserve life, quality.
+    
+    Signals: reserve_life, reserve_quality, decommissioning
+    """
     source_name = "reserve_data"
     coverage = "energy"
-    signals = ["asset_quality"]
+    signals = ["reserve_life", "reserve_quality", "decommissioning"]
+    ttl_config = TTLConfig.semi_static("Reserve data updated annually")
+    
+    alternative_sources = [
+        DataSource("api", "enverus", "assets/reserves", priority=1),
+        DataSource("filing", "sec_edgar", "10-K", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        proved_reserves = self._weighted_choice([(self._rng.randint(1_000_000, 10_000_000), 0.35), (self._rng.randint(10_000_001, 100_000_000), 0.30), (self._rng.randint(100_000_001, 500_000_000), 0.20), (self._rng.randint(500_000_001, 2_000_000_000), 0.12), (self._rng.randint(2_000_000_001, 10_000_000_000), 0.03)])
-        
-        production = proved_reserves / self._rng.uniform(6, 15)  # Reserve life calculation
-        reserve_life = proved_reserves / max(1, production)
+        proved_reserves = self._rng.randint(50, 2000) * 1_000_000
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("OP", 8)),
-            "reserves": {"proved_reserves_boe": proved_reserves, "proved_developed_pct": round(self._rng.uniform(50, 85), 1), "proved_undeveloped_pct": round(self._rng.uniform(15, 50), 1), "pv10_usd": int(proved_reserves * self._rng.uniform(8, 18))},
-            "reserve_metrics": {"reserve_life_years": round(reserve_life, 1), "reserve_replacement_ratio": round(self._rng.uniform(0.60, 1.50), 2), "finding_cost_per_boe_usd": round(self._rng.uniform(5, 20), 2)},
-            "resource_potential": {"probable_reserves_boe": int(proved_reserves * self._rng.uniform(0.30, 0.80)), "contingent_resources_boe": int(proved_reserves * self._rng.uniform(0.50, 2.00))},
-            "third_party_audit": {"auditor": self._weighted_choice([("Ryder Scott", 0.25), ("Netherland Sewell", 0.25), ("DeGolyer MacNaughton", 0.20), ("NSAI", 0.15), ("Other", 0.15)]), "audit_date": self._random_date(365, 0)},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "reserves": {
+                "proved_reserves_mmboe": proved_reserves // 1_000_000,
+                "proved_developed_pct": self._rng.randint(50, 85),
+                "proved_undeveloped_pct": 100 - self._rng.randint(50, 85),
+                "pv10_usd": proved_reserves * self._rng.uniform(8, 20),
+            },
+            "reserve_life": {
+                "years": round(self._rng.uniform(5, 25), 1),
+                "reserve_replacement_ratio": round(self._rng.uniform(0.6, 1.5), 2),
+            },
+            "asset_quality": {
+                "avg_well_productivity_boed": self._rng.randint(50, 500),
+                "decline_rate_pct": self._rng.randint(15, 45),
+            },
+            "decommissioning": {
+                "aro_liability_usd": self._rng.randint(50, 500) * 1_000_000,
+                "wells_to_plug": self._rng.randint(100, 2000),
+                "funded_pct": self._rng.randint(20, 80),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"reserves": proved_reserves, "reserve_life": round(reserve_life, 1)})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "proved_reserves": proved_reserves,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class EnergyFinancialExtractor(DataExtractor):
-    """Energy company financials. Signals: financial_stability"""
+    """
+    Energy Financial Data - Leverage, hedging, credit.
+    
+    Signals: credit_rating, leverage, aro_coverage, capex_trend
+    """
     source_name = "energy_financial"
     coverage = "energy"
-    signals = ["financial_stability"]
+    signals = ["credit_rating", "leverage", "aro_coverage", "capex_trend", "restructuring"]
+    ttl_config = TTLConfig.semi_static("Financial data updated quarterly")
+    
+    alternative_sources = [
+        DataSource("filing", "sec_edgar", "10-K", priority=1),
+        DataSource("api", "sp_global", "ratings", priority=2),
+        DataSource("api", "bloomberg", "fundamentals", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        production = self._rng.randint(10000, 500000)
-        price_per_boe = self._rng.uniform(35, 65)
-        revenue = int(production * 365 * price_per_boe)
-        ebitdax_margin = self._rng.uniform(0.35, 0.65)
-        
-        has_hedges = self._rng.random() < 0.80
-        hedge_pct = self._rng.uniform(0.30, 0.80) if has_hedges else 0
+        debt_to_ebitdax = round(self._weighted_choice([
+            (self._rng.uniform(0.5, 1.5), 0.25),
+            (self._rng.uniform(1.5, 3.0), 0.40),
+            (self._rng.uniform(3.0, 5.0), 0.25),
+            (self._rng.uniform(5.0, 8.0), 0.10),
+        ]), 2)
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("OP", 8)),
-            "financials": {"revenue_usd": revenue, "ebitdax_usd": int(revenue * ebitdax_margin), "ebitdax_margin_pct": round(ebitdax_margin * 100, 1), "capex_usd": int(revenue * self._rng.uniform(0.30, 0.70))},
-            "leverage": {"total_debt_usd": int(revenue * self._rng.uniform(0.50, 2.00)), "debt_to_ebitdax": round(self._rng.uniform(1.0, 4.0), 2), "interest_coverage": round(self._rng.uniform(2.0, 8.0), 2), "borrowing_base_usd": int(revenue * self._rng.uniform(0.60, 1.20))},
-            "hedging": {"hedged": has_hedges, "next_12mo_hedged_pct": round(hedge_pct * 100, 1), "avg_hedge_price_oil_usd": round(self._rng.uniform(55, 80), 2) if has_hedges else None, "hedge_value_usd": int(production * 365 * hedge_pct * self._rng.uniform(-5, 10)) if has_hedges else 0},
-            "credit": {"has_rating": self._rng.random() < 0.35, "rating": self._weighted_choice([("BB+", 0.15), ("BB", 0.25), ("BB-", 0.25), ("B+", 0.20), ("B", 0.15)]) if self._rng.random() < 0.35 else None, "rbl_availability_pct": round(self._rng.uniform(30, 80), 1)},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "financials": {
+                "revenue_usd": self._rng.randint(500, 20000) * 1_000_000,
+                "ebitdax_usd": self._rng.randint(200, 8000) * 1_000_000,
+                "capex_usd": self._rng.randint(100, 5000) * 1_000_000,
+            },
+            "leverage": {
+                "total_debt_usd": self._rng.randint(500, 15000) * 1_000_000,
+                "debt_to_ebitdax": debt_to_ebitdax,
+                "interest_coverage": round(self._rng.uniform(2, 10), 1),
+            },
+            "hedging": {
+                "oil_hedged_12mo_pct": self._rng.randint(20, 80),
+                "gas_hedged_12mo_pct": self._rng.randint(20, 80),
+                "hedge_floor_price_wti": self._rng.randint(50, 75),
+            },
+            "liquidity": {
+                "rbl_availability_usd": self._rng.randint(100, 2000) * 1_000_000,
+                "rbl_drawn_pct": self._rng.randint(20, 70),
+                "cash_usd": self._rng.randint(50, 500) * 1_000_000,
+            },
+            "credit": {
+                "has_rating": self._rng.random() > 0.40,
+                "rating": self._weighted_choice([
+                    ("BB+", 0.15), ("BB", 0.25), ("BB-", 0.20),
+                    ("B+", 0.20), ("B", 0.15), ("B-", 0.05)
+                ]) if self._rng.random() > 0.40 else None,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"revenue": revenue})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="filing",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "debt_to_ebitdax": debt_to_ebitdax,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ESGMetricsExtractor(DataExtractor):
-    """ESG metrics - emissions, sustainability, community. Signals: esg_factors"""
+    """
+    ESG Metrics - Emissions, governance, targets.
+    
+    Signals: ghg_intensity, esg_governance, net_zero_commitment
+    """
     source_name = "esg_metrics"
     coverage = "energy"
-    signals = ["esg_factors"]
+    signals = ["ghg_intensity", "esg_governance", "net_zero_commitment"]
+    ttl_config = TTLConfig.semi_static("ESG data updated periodically")
+    
+    alternative_sources = [
+        DataSource("api", "cdp", "responses/search", priority=1),
+        DataSource("api", "msci", "esg/ratings", priority=2),
+        DataSource("scrape", "company_website", "/sustainability", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        ghg_intensity = round(self._rng.uniform(15, 45), 1)  # kg CO2e per BOE
-        methane_intensity = round(self._rng.uniform(0.10, 0.80), 2)  # %
-        flaring_intensity = round(self._rng.uniform(0.5, 5.0), 2)  # mcf per bbl
+        esg_score = self._weighted_choice([
+            ("AAA", 0.05), ("AA", 0.10), ("A", 0.20), ("BBB", 0.30),
+            ("BB", 0.20), ("B", 0.10), ("CCC", 0.05)
+        ])
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("OP", 8)),
-            "emissions": {"ghg_intensity_kg_co2e_boe": ghg_intensity, "methane_intensity_pct": methane_intensity, "flaring_intensity_mcf_bbl": flaring_intensity, "scope_1_emissions_mtco2e": self._rng.randint(10000, 5000000), "scope_2_emissions_mtco2e": self._rng.randint(1000, 500000)},
-            "environmental": {"freshwater_intensity_bbl_boe": round(self._rng.uniform(0.5, 3.0), 2), "recycled_water_pct": round(self._rng.uniform(20, 80), 1), "spill_rate_per_1000_wells": round(self._rng.uniform(0.5, 5.0), 2)},
-            "social": {"employee_safety_trir": round(self._rng.uniform(0.3, 2.5), 2), "diversity_pct": round(self._rng.uniform(15, 45), 1), "community_investment_usd": self._rng.randint(100000, 10000000)},
-            "governance": {"esg_committee": self._rng.random() < 0.65, "sustainability_report": self._rng.random() < 0.70, "climate_disclosure": self._weighted_choice([("TCFD", 0.35), ("CDP", 0.25), ("Both", 0.15), ("None", 0.25)])},
-            "targets": {"net_zero_commitment": self._rng.random() < 0.45, "emissions_reduction_target_pct": self._rng.randint(15, 50) if self._rng.random() < 0.55 else None, "methane_reduction_target": self._rng.random() < 0.60},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "emissions": {
+                "scope1_mtco2e": self._rng.randint(100000, 5000000),
+                "scope2_mtco2e": self._rng.randint(10000, 500000),
+                "ghg_intensity_kg_co2e_boe": round(self._rng.uniform(15, 50), 1),
+                "methane_intensity_pct": round(self._rng.uniform(0.1, 2.0), 2),
+                "yoy_reduction_pct": round(self._rng.uniform(-5, 15), 1),
+            },
+            "governance": {
+                "esg_committee": self._rng.random() > 0.60,
+                "executive_esg_kpis": self._rng.random() > 0.50,
+                "sustainability_report": self._rng.random() > 0.70,
+                "tcfd_disclosure": self._rng.random() > 0.50,
+                "cdp_participant": self._rng.random() > 0.40,
+            },
+            "targets": {
+                "net_zero_commitment": self._rng.random() > 0.40,
+                "net_zero_year": self._rng.choice([2040, 2050]) if self._rng.random() > 0.40 else None,
+                "interim_targets": self._rng.random() > 0.50,
+                "sbti_validated": self._rng.random() > 0.20,
+            },
+            "ratings": {
+                "msci_esg": esg_score,
+                "sustainalytics_risk": self._weighted_choice([
+                    ("Low", 0.15), ("Medium", 0.45), ("High", 0.30), ("Severe", 0.10)
+                ]),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"ghg_intensity": ghg_intensity})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "esg_score": esg_score,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
-class OperationsMetricsExtractor(DataExtractor):
-    """Operational efficiency metrics. Signals: operational_quality"""
-    source_name = "operations_metrics"
+class StateRegulatoryExtractor(DataExtractor):
+    """
+    State Regulatory Data - Permits, NOVs, compliance.
+    
+    Signals: permit_status, regulatory_standing
+    """
+    source_name = "state_regulatory"
     coverage = "energy"
-    signals = ["operational_quality"]
+    signals = ["permit_status", "regulatory_standing"]
+    ttl_config = TTLConfig.dynamic("Regulatory status monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "state_commissions", "permits/status", priority=1),
+        DataSource("api", "bsee", "permits/status", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        loe = round(self._rng.uniform(5, 18), 2)  # $/BOE
+        states_operated = self._rng.sample(
+            ["Texas", "New Mexico", "Oklahoma", "Colorado", "North Dakota", "Louisiana", "Wyoming"],
+            self._rng.randint(1, 5)
+        )
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("OP", 8)),
-            "costs": {"loe_per_boe_usd": loe, "gathering_transport_per_boe_usd": round(self._rng.uniform(1, 5), 2), "production_tax_per_boe_usd": round(self._rng.uniform(2, 8), 2), "total_cash_cost_per_boe_usd": round(loe + self._rng.uniform(5, 15), 2)},
-            "efficiency": {"drilling_days_avg": self._rng.randint(8, 25), "completion_stages_per_day": round(self._rng.uniform(3, 8), 1), "ip_30_boed_avg": self._rng.randint(500, 2500), "well_cost_usd": self._rng.randint(4000000, 12000000)},
-            "reliability": {"uptime_pct": round(self._rng.uniform(92, 99), 1), "unplanned_downtime_pct": round(self._rng.uniform(1, 6), 1), "artificial_lift_pct": round(self._rng.uniform(40, 85), 1)},
-            "capital_efficiency": {"capex_per_flowing_boe_usd": self._rng.randint(15000, 50000), "recycle_ratio": round(self._rng.uniform(1.2, 3.5), 2)},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "operating_states": states_operated,
+            "permit_status": {
+                "active_permits": self._rng.randint(100, 2000),
+                "pending_permits": self._rng.randint(10, 200),
+                "denied_12mo": self._rng.randint(0, 10),
+                "states_in_good_standing": len(states_operated) - self._rng.randint(0, 1),
+            },
+            "violations": {
+                "novs_12mo": self._weighted_choice([(0, 0.50), (self._rng.randint(1, 10), 0.35), (self._rng.randint(11, 50), 0.15)]),
+                "administrative_orders": self._rng.randint(0, 3),
+                "penalties_12mo_usd": self._rng.randint(0, 500000),
+            },
+            "bonding": {
+                "total_bond_usd": self._rng.randint(1, 50) * 1_000_000,
+                "bond_adequacy": self._weighted_choice([("Adequate", 0.80), ("Under Review", 0.15), ("Deficient", 0.05)]),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"loe": loe})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "states": len(states_operated),
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class WellIntegrityExtractor(DataExtractor):
-    """Well integrity and abandonment status. Signals: asset_quality, environmental_compliance"""
+    """
+    Well Integrity Data - Testing, workovers, P&A.
+    
+    Signals: well_integrity, maintenance_pattern
+    """
     source_name = "well_integrity"
     coverage = "energy"
-    signals = ["asset_quality", "environmental_compliance"]
+    signals = ["well_integrity", "maintenance_pattern"]
+    ttl_config = TTLConfig.semi_static("Well data updated monthly")
+    
+    alternative_sources = [
+        DataSource("api", "state_commissions", "wells/status", priority=1),
+        DataSource("api", "enverus", "wells/integrity", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        total_wells = self._rng.randint(50, 5000)
-        orphan_wells = int(total_wells * self._rng.uniform(0.01, 0.08))
+        total_wells = self._rng.randint(200, 5000)
         
         raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("OP", 8)),
-            "well_inventory": {"total_wells": total_wells, "active": int(total_wells * 0.75), "temporarily_abandoned": int(total_wells * 0.15), "permanently_abandoned": int(total_wells * 0.10)},
-            "integrity": {"integrity_tests_passed_pct": round(self._rng.uniform(92, 99.5), 1), "sustained_casing_pressure_wells": self._rng.randint(0, int(total_wells * 0.05)), "remediation_required": self._rng.randint(0, int(total_wells * 0.03))},
-            "abandonment": {"aro_liability_usd": total_wells * self._rng.randint(30000, 150000), "plugging_backlog": self._rng.randint(0, int(total_wells * 0.05)), "orphan_wells": orphan_wells, "aro_funding_pct": round(self._rng.uniform(50, 100), 1)},
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "well_inventory": {
+                "total_operated": total_wells,
+                "producing": int(total_wells * self._rng.uniform(0.60, 0.85)),
+                "shut_in": int(total_wells * self._rng.uniform(0.05, 0.20)),
+                "plugged": int(total_wells * self._rng.uniform(0.05, 0.15)),
+            },
+            "integrity_testing": {
+                "mit_compliance_pct": self._rng.randint(90, 100),
+                "failed_tests_12mo": self._rng.randint(0, total_wells // 50),
+                "remediation_backlog": self._rng.randint(0, total_wells // 100),
+            },
+            "workover_activity": {
+                "workovers_12mo": self._rng.randint(total_wells // 50, total_wells // 10),
+                "avg_workover_cost_usd": self._rng.randint(50000, 500000),
+            },
+            "p_and_a": {
+                "wells_awaiting_pa": self._rng.randint(0, total_wells // 20),
+                "orphan_well_liability": self._rng.random() < 0.05,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"wells": total_wells, "orphan": orphan_wells})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "total_wells": total_wells,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 # =============================================================================
-# PROFESSIONAL INDEMNITY EXTRACTORS (9 extractors for 7 signal groups)
+# PROFESSIONAL INDEMNITY EXTRACTORS
 # =============================================================================
 
 @register_extractor
 class StateBarExtractor(DataExtractor):
-    """State bar/licensing board - license status, disciplinary history. Signals: regulatory_standing"""
+    """
+    State Bar Data - License status, disciplinary history, CLE compliance.
+    
+    Signals: license_status, disciplinary_history, ce_compliance, specialty_certification
+    """
     source_name = "state_bar"
     coverage = "professional_indemnity"
-    signals = ["regulatory_standing"]
+    signals = ["license_status", "disciplinary_history", "ce_compliance", "specialty_certification"]
+    ttl_config = TTLConfig.dynamic("License status monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "state_bar", "attorney/status", priority=1),
+        DataSource("api", "state_bar", "discipline/search", priority=2),
+        DataSource("api", "state_bar", "cle/status", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        entity_type = self.kwargs.get("entity_type", "firm")
-        profession = self._weighted_choice([("Attorney", 0.45), ("CPA", 0.25), ("Architect", 0.12), ("Engineer", 0.10), ("Other", 0.08)])
+        num_attorneys = self._rng.randint(5, 500)
         
-        if entity_type == "firm":
-            num_professionals = self._weighted_choice([(self._rng.randint(1, 5), 0.35), (self._rng.randint(6, 25), 0.30), (self._rng.randint(26, 100), 0.20), (self._rng.randint(101, 500), 0.12), (self._rng.randint(501, 2000), 0.03)])
-            disciplinary_actions = self._weighted_choice([(0, 0.75), (1, 0.15), (self._rng.randint(2, 5), 0.08), (self._rng.randint(6, 12), 0.02)])
-        else:
-            num_professionals = 1
-            disciplinary_actions = self._weighted_choice([(0, 0.88), (1, 0.08), (2, 0.03), (3, 0.01)])
+        license_statuses = {
+            "active": int(num_attorneys * self._rng.uniform(0.90, 0.98)),
+            "inactive": int(num_attorneys * self._rng.uniform(0.01, 0.05)),
+            "suspended": int(num_attorneys * self._rng.uniform(0, 0.02)),
+        }
         
-        actions = [{"action_type": self._weighted_choice([("Private Reprimand", 0.35), ("Public Reprimand", 0.25), ("Suspension", 0.20), ("Probation", 0.12), ("Disbarment/Revocation", 0.08)]), "date": self._random_date(1825, 30), "basis": self._weighted_choice([("Negligence", 0.30), ("Trust Account", 0.15), ("Conflict of Interest", 0.12), ("Failure to Communicate", 0.12), ("Criminal Conviction", 0.08), ("Other", 0.23)])} for _ in range(disciplinary_actions)]
+        disciplinary = self._weighted_choice([(0, 0.80), (1, 0.12), (2, 0.05), (self._rng.randint(3, 5), 0.03)])
         
         raw_data = {
-            "entity": {"entity_type": entity_type, "firm_name": self.kwargs.get("firm_name", f"Professional Firm {self._random_id()}"), "profession_type": profession, "num_professionals": num_professionals, "states_licensed": self._rng.randint(1, 12) if entity_type == "firm" else self._rng.randint(1, 4)},
-            "license_status": {"status": self._weighted_choice([("Active", 0.94), ("Inactive", 0.03), ("Suspended", 0.02), ("Revoked", 0.01)]), "years_licensed": self._rng.randint(3, 40)},
-            "disciplinary_history": {"total_actions": disciplinary_actions, "serious_actions": sum(1 for a in actions if a["action_type"] in ("Suspension", "Disbarment/Revocation")), "actions": actions},
-            "standing": {"good_standing": disciplinary_actions == 0 or all(a["action_type"] == "Private Reprimand" for a in actions)},
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "license_summary": {
+                "total_attorneys": num_attorneys,
+                "by_status": license_statuses,
+                "jurisdictions": self._rng.randint(1, 15),
+                "good_standing_pct": round(license_statuses["active"] / num_attorneys * 100, 1),
+            },
+            "disciplinary_history": {
+                "total_actions_10yr": disciplinary,
+                "by_severity": {
+                    "public_reprimand": self._rng.randint(0, disciplinary),
+                    "suspension": self._rng.randint(0, max(0, disciplinary - 1)),
+                    "disbarment": 0 if disciplinary < 3 else self._rng.randint(0, 1),
+                },
+                "pending_matters": self._rng.randint(0, 1),
+            },
+            "cle_compliance": {
+                "compliance_rate_pct": self._rng.randint(95, 100),
+                "avg_hours_per_attorney": self._rng.randint(20, 40),
+                "delinquent_count": self._rng.randint(0, max(1, num_attorneys // 50)),
+            },
+            "certifications": {
+                "board_certified": self._rng.randint(0, num_attorneys // 10),
+                "specializations": self._rng.sample([
+                    "Civil Trial", "Criminal", "Family", "Real Estate",
+                    "Tax", "Estate Planning", "IP", "Labor", "Health"
+                ], self._rng.randint(1, 5)),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"profession": profession, "disciplinary": disciplinary_actions})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "attorneys": num_attorneys,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class MalpracticeClaimsExtractor(DataExtractor):
-    """Malpractice claims history. Signals: claims_history"""
+    """
+    Malpractice Claims Data - Claims history, settlements, frequency.
+    
+    Signals: malpractice_record, claims_frequency
+    """
     source_name = "malpractice_claims"
     coverage = "professional_indemnity"
-    signals = ["claims_history"]
+    signals = ["malpractice_record", "claims_frequency"]
+    ttl_config = TTLConfig.dynamic("Claims data monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "pacer", "cases/search", priority=1),
+        DataSource("api", "state_courts", "judgments/search", priority=2),
+        DataSource("api", "westlaw", "verdicts/search", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_claims = self._weighted_choice([(0, 0.55), (1, 0.22), (2, 0.12), (self._rng.randint(3, 6), 0.08), (self._rng.randint(7, 15), 0.03)])
+        num_professionals = self._rng.randint(10, 200)
+        claims_5yr = self._weighted_choice([
+            (0, 0.50), (1, 0.25), (2, 0.12), (self._rng.randint(3, 5), 0.08), (self._rng.randint(6, 10), 0.05)
+        ])
         
         claims = []
-        for _ in range(num_claims):
-            claimed = self._weighted_choice([(self._rng.randint(25000, 250000), 0.45), (self._rng.randint(250001, 1000000), 0.30), (self._rng.randint(1000001, 5000000), 0.18), (self._rng.randint(5000001, 25000000), 0.07)])
-            status = self._weighted_choice([("Closed - No Payment", 0.35), ("Closed - Settled", 0.30), ("Closed - Judgment", 0.08), ("Open", 0.22), ("Reserved", 0.05)])
-            paid = int(claimed * self._rng.uniform(0.15, 0.60)) if "Settled" in status or "Judgment" in status else 0
-            claims.append({"claim_type": self._weighted_choice([("Malpractice", 0.50), ("Breach of Fiduciary Duty", 0.15), ("Breach of Contract", 0.12), ("Negligent Misrepresentation", 0.10), ("Fraud", 0.05), ("Other", 0.08)]), "claim_date": self._random_date(1825, 30), "claimed_usd": claimed, "paid_usd": paid, "status": status, "allocated_expense_usd": self._rng.randint(10000, 200000)})
+        for _ in range(claims_5yr):
+            with_payment = self._rng.random() > 0.40
+            claims.append({
+                "claim_date": self._random_date(1825, 0),
+                "status": self._weighted_choice([("Closed", 0.70), ("Open", 0.30)]),
+                "with_payment": with_payment,
+                "payment_usd": self._rng.randint(25000, 500000) if with_payment else 0,
+                "claim_type": self._weighted_choice([
+                    ("Legal Malpractice", 0.40), ("Accounting Malpractice", 0.25),
+                    ("E&O", 0.20), ("Breach of Fiduciary", 0.15)
+                ]),
+            })
         
         raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "claims_summary": {"total_claims_5yr": num_claims, "open_claims": sum(1 for c in claims if c["status"] == "Open"), "claims_with_payment": sum(1 for c in claims if c["paid_usd"] > 0), "total_incurred_usd": sum(c["claimed_usd"] for c in claims), "total_paid_usd": sum(c["paid_usd"] for c in claims), "total_expense_usd": sum(c["allocated_expense_usd"] for c in claims)},
-            "claims": claims,
-            "frequency_metrics": {"claims_per_professional": round(num_claims / max(1, self.kwargs.get("num_professionals", 10)), 3), "avg_claim_size_usd": round(sum(c["claimed_usd"] for c in claims) / max(1, num_claims), 0)},
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "claims_summary_5yr": {
+                "total_claims": claims_5yr,
+                "claims_with_payment": sum(1 for c in claims if c["with_payment"]),
+                "claims_no_payment": sum(1 for c in claims if not c["with_payment"]),
+                "total_paid_usd": sum(c["payment_usd"] for c in claims),
+                "open_claims": sum(1 for c in claims if c["status"] == "Open"),
+            },
+            "claims": sorted(claims, key=lambda x: x["claim_date"], reverse=True),
+            "frequency_metrics": {
+                "claims_per_professional": round(claims_5yr / num_professionals, 3),
+                "vs_industry_average": round(self._rng.uniform(0.5, 2.0), 2),
+            },
+            "loss_history": {
+                "largest_claim_usd": max((c["payment_usd"] for c in claims), default=0),
+                "avg_claim_usd": sum(c["payment_usd"] for c in claims) // max(len([c for c in claims if c["with_payment"]]), 1) if claims else 0,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"claims": num_claims})
-
-
-@register_extractor
-class NetworkAuthorityExtractor(DataExtractor):
-    """Panel memberships and network authority. Signals: network_authority"""
-    source_name = "network_authority"
-    coverage = "professional_indemnity"
-    signals = ["network_authority"]
-
-    def extract(self) -> ExtractionResult:
-        profession = self.kwargs.get("profession", "Attorney")
         
-        # Panel memberships vary by profession
-        if profession == "Attorney":
-            panels = [{"panel_name": self._weighted_choice([("Insurance Defense", 0.25), ("Corporate Counsel", 0.20), ("Litigation", 0.15), ("Real Estate", 0.12), ("Employment", 0.10), ("IP", 0.08), ("Other", 0.10)]), "tier": self._weighted_choice([("Primary", 0.40), ("Secondary", 0.35), ("Approved", 0.25)]), "years_on_panel": self._rng.randint(1, 15)} for _ in range(self._rng.randint(0, 8))]
-        elif profession == "CPA":
-            panels = [{"panel_name": self._weighted_choice([("SEC Audit", 0.20), ("Tax Advisory", 0.25), ("Forensic Accounting", 0.15), ("M&A Due Diligence", 0.15), ("SOX Compliance", 0.15), ("Other", 0.10)]), "tier": self._weighted_choice([("Approved", 0.50), ("Preferred", 0.35), ("Exclusive", 0.15)]), "years_on_panel": self._rng.randint(1, 12)} for _ in range(self._rng.randint(0, 6))]
-        else:
-            panels = [{"panel_name": self._weighted_choice([("Government Contracts", 0.30), ("Commercial", 0.35), ("Industrial", 0.20), ("Other", 0.15)]), "tier": self._weighted_choice([("Approved", 0.55), ("Preferred", 0.30), ("Primary", 0.15)]), "years_on_panel": self._rng.randint(1, 10)} for _ in range(self._rng.randint(0, 5))]
-        
-        raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "panel_memberships": {"total_panels": len(panels), "primary_panels": sum(1 for p in panels if p["tier"] == "Primary"), "panels": panels},
-            "referral_network": {"referral_sources": self._rng.randint(5, 50), "repeat_client_pct": round(self._rng.uniform(30, 75), 1), "client_tenure_avg_years": round(self._rng.uniform(2, 10), 1)},
-            "authority_indicators": {"ranking": self._weighted_choice([("Am Law 100", 0.08), ("Am Law 200", 0.12), ("Regional Leader", 0.25), ("Recognized", 0.30), ("Emerging", 0.25)]) if profession == "Attorney" else self._weighted_choice([("Big 4", 0.05), ("National", 0.15), ("Regional", 0.35), ("Local", 0.45)]), "chambers_ranking": self._rng.random() < 0.25, "industry_awards": self._rng.randint(0, 8)},
-        }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"panels": len(panels)})
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "claims": claims_5yr,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class PeerReviewExtractor(DataExtractor):
-    """Peer review and quality assurance. Signals: peer_review"""
+    """
+    Peer Review Data - AICPA peer review, PCAOB inspection.
+    
+    Signals: peer_review, pcaob_standing
+    """
     source_name = "peer_review"
     coverage = "professional_indemnity"
-    signals = ["peer_review"]
+    signals = ["peer_review", "pcaob_standing"]
+    ttl_config = TTLConfig.semi_static("Peer review results updated periodically")
+    
+    alternative_sources = [
+        DataSource("api", "aicpa", "peerreview/search", priority=1),
+        DataSource("api", "pcaob", "firms/search", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_reviews = self._rng.randint(1, 5)
-        reviews = []
-        for i in range(num_reviews):
-            rating = self._weighted_choice([("Pass", 0.70), ("Pass with Deficiencies", 0.20), ("Fail", 0.07), ("Modified", 0.03)])
-            findings = self._rng.randint(0, 8) if rating != "Pass" else 0
-            reviews.append({"review_date": self._random_date(365 * (i + 1), 365 * i), "review_type": self._weighted_choice([("System Review", 0.45), ("Engagement Review", 0.35), ("Quality Review", 0.20)]), "rating": rating, "findings": findings, "significant_findings": self._rng.randint(0, min(2, findings))})
-        
-        most_recent = max(reviews, key=lambda x: x["review_date"])
+        peer_review_rating = self._weighted_choice([
+            ("Pass", 0.75), ("Pass with Deficiencies", 0.15),
+            ("Fail", 0.05), ("Not Enrolled", 0.05)
+        ])
         
         raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("FRM", 8)),
-            "current_status": {"most_recent_rating": most_recent["rating"], "most_recent_date": most_recent["review_date"], "in_good_standing": most_recent["rating"] in ("Pass", "Pass with Deficiencies")},
-            "review_history": {"total_reviews": num_reviews, "consecutive_pass": sum(1 for r in sorted(reviews, key=lambda x: x["review_date"], reverse=True) if r["rating"] == "Pass"), "reviews": reviews},
-            "quality_indicators": {"findings_last_review": most_recent["findings"], "trend": "Improving" if len(reviews) > 1 and reviews[-1]["findings"] < reviews[-2]["findings"] else "Stable" if len(reviews) > 1 else "N/A"},
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "aicpa_peer_review": {
+                "enrolled": peer_review_rating != "Not Enrolled",
+                "latest_rating": peer_review_rating if peer_review_rating != "Not Enrolled" else None,
+                "review_date": self._random_date(1095, 0) if peer_review_rating != "Not Enrolled" else None,
+                "next_review_due": self._random_date(-365, 365) if peer_review_rating != "Not Enrolled" else None,
+                "findings_count": self._rng.randint(0, 5) if peer_review_rating in ("Pass with Deficiencies", "Fail") else 0,
+            },
+            "pcaob_status": {
+                "registered": self._rng.random() > 0.70,
+                "inspection_count": self._rng.randint(0, 3),
+                "deficiencies_cited": self._rng.randint(0, 10) if self._rng.random() > 0.70 else 0,
+                "quality_control_criticisms": self._rng.randint(0, 3),
+            },
+            "quality_control": {
+                "qc_document_current": peer_review_rating in ("Pass", "Pass with Deficiencies"),
+                "independence_monitoring": self._rng.random() > 0.85,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"rating": most_recent["rating"]})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "rating": peer_review_rating,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class QualityManagementExtractor(DataExtractor):
-    """Quality management systems and certifications. Signals: quality_management"""
+    """
+    Quality Management Data - QMS, certifications, standards.
+    
+    Signals: quality_management_system, iso_certifications
+    """
     source_name = "quality_management"
     coverage = "professional_indemnity"
-    signals = ["quality_management"]
+    signals = ["quality_management_system", "iso_certifications"]
+    ttl_config = TTLConfig.semi_static("QMS data updated periodically")
+    
+    alternative_sources = [
+        DataSource("scrape", "company_website", "/about", priority=1),
+    ]
 
     def extract(self) -> ExtractionResult:
-        has_qms = self._rng.random() < 0.72
+        has_qms = self._rng.random() > 0.40
         
         certifications = []
-        for cert in ["ISO 9001", "ISO 17025", "AICPA QC Standards", "Professional Standards"]:
-            if self._rng.random() < 0.30:
-                certifications.append({"certification": cert, "status": self._weighted_choice([("Current", 0.88), ("Expired", 0.07), ("In Progress", 0.05)]), "scope": self._weighted_choice([("Firm-wide", 0.65), ("Practice Area", 0.25), ("Office", 0.10)])})
+        possible_certs = ["ISO 9001", "ISO 27001", "ISO 14001", "Mansfield Certified"]
+        for cert in possible_certs:
+            if self._rng.random() > 0.70:
+                certifications.append({
+                    "certification": cert,
+                    "status": "Current",
+                    "expiry": self._random_date(-365, 730),
+                })
         
         raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "qms": {"has_documented_qms": has_qms, "qms_type": self._weighted_choice([("ISO-based", 0.30), ("Professional Standard", 0.35), ("Custom", 0.25), ("None", 0.10)]) if has_qms else "None", "last_internal_audit": self._random_date(365, 0) if has_qms else None},
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "qms": {
+                "documented": has_qms,
+                "framework": self._weighted_choice([
+                    ("ISO 9001", 0.30), ("Custom", 0.50), ("None", 0.20)
+                ]) if has_qms else "None",
+                "last_internal_audit": self._random_date(365, 0) if has_qms else None,
+                "continuous_improvement": has_qms and self._rng.random() > 0.60,
+            },
             "certifications": certifications,
-            "quality_metrics": {"engagement_quality_reviews_pct": round(self._rng.uniform(5, 25), 1), "quality_issues_12mo": self._rng.randint(0, 10), "client_complaints_12mo": self._rng.randint(0, 8)},
-            "procedures": {"engagement_acceptance": self._rng.random() < 0.85, "conflict_check": self._rng.random() < 0.95, "supervision_protocols": self._rng.random() < 0.82, "file_review_policy": self._rng.random() < 0.78},
+            "professional_standards": {
+                "ethics_program": self._rng.random() > 0.70,
+                "conflict_checking": self._rng.random() > 0.90,
+                "document_retention": self._rng.random() > 0.85,
+                "client_intake_process": self._rng.random() > 0.80,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"has_qms": has_qms, "certs": len(certifications)})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="scrape",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "has_qms": has_qms,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class PINetworkAuthorityExtractor(DataExtractor):
+    """
+    Network Authority Data - Rankings, panel memberships, reputation.
+    
+    Signals: peer_ranking, client_quality, panel_membership
+    """
+    source_name = "network_authority"
+    coverage = "professional_indemnity"
+    signals = ["peer_ranking", "client_quality", "panel_membership", "thought_leadership"]
+    ttl_config = TTLConfig.static("Rankings updated annually")
+    
+    alternative_sources = [
+        DataSource("api", "chambers", "rankings/search", priority=1),
+        DataSource("api", "legal500", "rankings/search", priority=2),
+        DataSource("api", "bestlawyers", "search", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        firm_tier = self._weighted_choice([
+            ("Am Law 100", 0.10), ("Am Law 200", 0.15), ("Regional Leader", 0.25),
+            ("Boutique", 0.30), ("Small Firm", 0.20)
+        ])
+        
+        raw_data = {
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "rankings": {
+                "firm_tier": firm_tier,
+                "chambers_ranked": self._rng.random() > 0.40,
+                "chambers_bands": self._rng.randint(1, 6) if self._rng.random() > 0.40 else 0,
+                "legal500_ranked": self._rng.random() > 0.35,
+                "best_lawyers_count": self._rng.randint(0, 50),
+                "super_lawyers_count": self._rng.randint(0, 30),
+            },
+            "panel_memberships": {
+                "insurance_panels": self._rng.randint(0, 10),
+                "bank_approved_lists": self._rng.randint(0, 5),
+                "corporate_preferred": self._rng.randint(0, 15),
+                "primary_panel_pct": self._rng.randint(20, 80),
+            },
+            "client_quality": {
+                "fortune_500_clients": self._rng.randint(0, 30) if firm_tier in ("Am Law 100", "Am Law 200") else self._rng.randint(0, 5),
+                "public_company_clients": self._rng.randint(0, 50),
+                "institutional_clients_pct": self._rng.randint(20, 80),
+            },
+            "thought_leadership": {
+                "publications_12mo": self._rng.randint(0, 100),
+                "speaking_engagements": self._rng.randint(0, 50),
+                "cle_presentations": self._rng.randint(0, 30),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "tier": firm_tier,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ClientQualityExtractor(DataExtractor):
-    """Client quality and concentration. Signals: client_quality"""
+    """
+    Client Quality Data - Concentration, retention, risk profile.
+    
+    Signals: client_concentration, client_retention, high_risk_clients
+    """
     source_name = "client_quality"
     coverage = "professional_indemnity"
-    signals = ["client_quality"]
+    signals = ["client_concentration", "client_retention", "high_risk_clients"]
+    ttl_config = TTLConfig.semi_static("Client data updated periodically")
+    
+    alternative_sources = [
+        DataSource("internal", "client_management", priority=1),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_clients = self._weighted_choice([(self._rng.randint(10, 50), 0.35), (self._rng.randint(51, 200), 0.30), (self._rng.randint(201, 500), 0.20), (self._rng.randint(501, 2000), 0.12), (self._rng.randint(2001, 10000), 0.03)])
-        top_client_pct = self._rng.uniform(5, 35)
-        top_10_pct = self._rng.uniform(max(15, top_client_pct), min(80, top_client_pct + 40))
+        top_client_pct = self._rng.randint(5, 40)
         
         raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "client_base": {"total_active_clients": num_clients, "new_clients_12mo": int(num_clients * self._rng.uniform(0.10, 0.30)), "client_retention_pct": round(self._rng.uniform(75, 95), 1)},
-            "concentration": {"top_client_revenue_pct": round(top_client_pct, 1), "top_10_clients_revenue_pct": round(top_10_pct, 1), "single_industry_exposure_pct": round(self._rng.uniform(10, 50), 1)},
-            "client_profile": {"public_company_clients": self._rng.randint(0, int(num_clients * 0.15)), "regulated_industry_pct": round(self._rng.uniform(10, 60), 1), "high_risk_clients_pct": round(self._rng.uniform(2, 15), 1)},
-            "billing": {"realization_rate_pct": round(self._rng.uniform(85, 98), 1), "collection_rate_pct": round(self._rng.uniform(90, 99), 1), "avg_matter_size_usd": self._rng.randint(5000, 500000)},
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "concentration": {
+                "top_client_revenue_pct": top_client_pct,
+                "top_5_clients_pct": min(top_client_pct * 3, 80),
+                "top_10_clients_pct": min(top_client_pct * 5, 95),
+                "single_client_dependency": top_client_pct > 25,
+            },
+            "retention": {
+                "client_retention_rate_pct": self._rng.randint(70, 95),
+                "avg_client_tenure_years": self._rng.randint(3, 15),
+                "new_clients_12mo": self._rng.randint(10, 200),
+                "lost_clients_12mo": self._rng.randint(5, 50),
+            },
+            "risk_profile": {
+                "high_risk_industry_pct": self._rng.randint(5, 40),
+                "contingency_fee_pct": self._rng.randint(0, 50),
+                "class_action_exposure": self._rng.random() < 0.20,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"clients": num_clients, "concentration": round(top_client_pct, 1)})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="internal",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "concentration": top_client_pct,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class ProfessionalDevelopmentExtractor(DataExtractor):
-    """CPE and professional development. Signals: professional_development"""
+    """
+    Professional Development Data - Training, CPE, specializations.
+    
+    Signals: cpe_compliance, specializations, training_program
+    """
     source_name = "professional_development"
     coverage = "professional_indemnity"
-    signals = ["professional_development"]
+    signals = ["cpe_compliance", "specializations", "training_program"]
+    ttl_config = TTLConfig.semi_static("Development data updated periodically")
+    
+    alternative_sources = [
+        DataSource("api", "nasba", "cpe/status", priority=1),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_professionals = self.kwargs.get("num_professionals", self._rng.randint(5, 100))
-        cpe_compliance_pct = round(self._rng.uniform(92, 100), 1)
-        
-        specializations = []
-        for spec in ["Tax", "Audit", "Litigation", "Corporate", "Real Estate", "IP", "Employment", "Healthcare"]:
-            if self._rng.random() < 0.35:
-                specializations.append({"area": spec, "certified_professionals": self._rng.randint(1, max(1, num_professionals // 4)), "credentials": self._weighted_choice([("Board Certified", 0.20), ("Specialized Training", 0.40), ("Experience-based", 0.40)])})
+        cpe_compliance = self._rng.randint(90, 100)
         
         raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "cpe_status": {"compliance_pct": cpe_compliance_pct, "avg_cpe_hours_per_professional": self._rng.randint(30, 60), "ethics_hours_avg": round(self._rng.uniform(2, 6), 1)},
-            "specializations": {"areas": specializations, "board_certified_count": sum(s["certified_professionals"] for s in specializations if s["credentials"] == "Board Certified")},
-            "training": {"internal_training_hours_avg": self._rng.randint(15, 60), "external_conferences_per_year": self._rng.randint(1, 6), "mentorship_program": self._rng.random() < 0.55},
-            "credentials": {"advanced_degrees_pct": round(self._rng.uniform(10, 50), 1), "dual_licensed_pct": round(self._rng.uniform(5, 25), 1)},
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "cpe_compliance": {
+                "compliance_rate_pct": cpe_compliance,
+                "avg_hours_per_professional": self._rng.randint(30, 60),
+                "ethics_hours_completed": self._rng.randint(2, 8),
+            },
+            "specializations": {
+                "board_certifications": self._rng.randint(0, 20),
+                "specialty_areas": self._rng.randint(3, 15),
+                "advanced_degrees": self._rng.randint(0, 30),
+            },
+            "training_program": {
+                "internal_training_hours": self._rng.randint(20, 80),
+                "mentorship_program": self._rng.random() > 0.60,
+                "professional_development_budget": self._rng.random() > 0.70,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"cpe_compliance": cpe_compliance_pct})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "cpe_compliance": cpe_compliance,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+@register_extractor
+class FirmStabilityExtractor(DataExtractor):
+    """
+    Firm Stability Data - Tenure, turnover, financial health.
+    
+    Signals: tenure, partner_stability, staff_retention, financial_stability
+    """
+    source_name = "firm_stability"
+    coverage = "professional_indemnity"
+    signals = ["tenure", "partner_stability", "staff_retention", "financial_stability"]
+    ttl_config = TTLConfig.dynamic("Stability metrics monitored daily")
+    
+    alternative_sources = [
+        DataSource("api", "dnb", "company/profile", priority=1),
+        DataSource("api", "linkedin", "company/employees", priority=2),
+        DataSource("api", "glassdoor", "reviews/company", priority=3),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        years_established = self._rng.randint(5, 100)
+        
+        raw_data = {
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "tenure": {
+                "years_established": years_established,
+                "founding_partners_remaining": self._rng.randint(0, 5) if years_established < 30 else 0,
+            },
+            "partner_stability": {
+                "partner_turnover_12mo_pct": self._rng.randint(2, 20),
+                "lateral_departures_12mo": self._rng.randint(0, 10),
+                "lateral_hires_12mo": self._rng.randint(0, 15),
+                "avg_partner_tenure_years": self._rng.randint(5, 20),
+            },
+            "staff_metrics": {
+                "associate_turnover_pct": self._rng.randint(10, 35),
+                "staff_turnover_pct": self._rng.randint(8, 25),
+                "glassdoor_rating": round(self._rng.uniform(2.5, 4.5), 1),
+            },
+            "financial_health": {
+                "revenue_growth_yoy_pct": round(self._rng.uniform(-10, 20), 1),
+                "rpp_growth_yoy_pct": round(self._rng.uniform(-5, 15), 1),
+                "collection_rate_pct": self._rng.randint(85, 98),
+                "wip_days": self._rng.randint(30, 120),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "years": years_established,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
 class PIFinancialExtractor(DataExtractor):
-    """Professional firm financials. Signals: claims_history (exposure context)"""
+    """
+    PI Financial Data - Revenue, profitability, insurance history.
+    
+    Signals: revenue_size, financial_health, insurance_history
+    """
     source_name = "pi_financial"
     coverage = "professional_indemnity"
-    signals = ["claims_history"]
+    signals = ["revenue_size", "financial_health", "insurance_history"]
+    ttl_config = TTLConfig.semi_static("Financial data updated periodically")
+    
+    alternative_sources = [
+        DataSource("api", "dnb", "company/financials", priority=1),
+        DataSource("internal", "placement_history", priority=2),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_professionals = self.kwargs.get("num_professionals", self._rng.randint(5, 100))
-        revenue_per_professional = self._rng.randint(150000, 800000)
-        revenue = num_professionals * revenue_per_professional
+        revenue = self._weighted_choice([
+            (self._rng.randint(1, 10) * 1_000_000, 0.40),
+            (self._rng.randint(10, 50) * 1_000_000, 0.30),
+            (self._rng.randint(50, 200) * 1_000_000, 0.20),
+            (self._rng.randint(200, 1000) * 1_000_000, 0.10),
+        ])
         
         raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "financials": {"revenue_usd": revenue, "revenue_per_professional_usd": revenue_per_professional, "profit_margin_pct": round(self._rng.uniform(15, 45), 1), "billable_hours_avg": self._rng.randint(1600, 2200)},
-            "staff": {"num_professionals": num_professionals, "leverage_ratio": round(self._rng.uniform(1.0, 3.5), 2), "turnover_pct": round(self._rng.uniform(8, 25), 1)},
-            "insurance": {"current_pi_limit_usd": self._weighted_choice([(1000000, 0.25), (2000000, 0.30), (5000000, 0.25), (10000000, 0.15), (25000000, 0.05)]), "retention_usd": self._weighted_choice([(10000, 0.25), (25000, 0.30), (50000, 0.25), (100000, 0.15), (250000, 0.05)]), "prior_coverage_years": self._rng.randint(5, 30)},
+            "firm_id": self.kwargs.get("firm_id", self._random_id("FIRM", 8)),
+            "revenue": {
+                "total_revenue_usd": revenue,
+                "revenue_per_lawyer_usd": revenue // self._rng.randint(5, 500),
+                "revenue_growth_3yr_cagr_pct": round(self._rng.uniform(-5, 15), 1),
+            },
+            "profitability": {
+                "profit_margin_pct": self._rng.randint(20, 50),
+                "profit_per_equity_partner_usd": self._rng.randint(200000, 3000000),
+                "realization_rate_pct": self._rng.randint(85, 98),
+            },
+            "insurance_history": {
+                "years_continuous_coverage": self._rng.randint(3, 30),
+                "current_limit_usd": self._rng.choice([1000000, 2000000, 5000000, 10000000]),
+                "current_retention_usd": self._rng.choice([25000, 50000, 100000, 250000]),
+                "claims_free_years": self._rng.randint(0, 10),
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="database", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"revenue": revenue})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "revenue": revenue,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 # =============================================================================
-# COMMON/SHARED EXTRACTORS (applicable across coverage lines)
+# CROSS-COVERAGE EXTRACTORS
 # =============================================================================
 
 @register_extractor
 class CreditRatingExtractor(DataExtractor):
-    """Credit rating agency data. Signals: financial_stability (all coverages)"""
+    """
+    Credit Rating Data - S&P, Moody's, Fitch ratings.
+    
+    Signals: credit_rating
+    
+    Used across: Marine, Aerospace, D&O, FI, Energy
+    """
     source_name = "credit_rating"
-    coverage = "common"
-    signals = ["financial_stability"]
+    coverage = "cross_coverage"
+    signals = ["credit_rating"]
+    ttl_config = TTLConfig.semi_static("Credit ratings updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "sp_global", "ratings", priority=1),
+        DataSource("api", "moodys", "ratings", priority=1),
+        DataSource("api", "fitch", "ratings", priority=2),
+        DataSource("api", "kroll", "ratings", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        is_rated = self._rng.random() < 0.40
-        ratings = []
-        if is_rated:
-            for agency in self._rng.sample(["Moody's", "S&P", "Fitch"], k=self._rng.randint(1, 3)):
-                rating_idx = self._weighted_choice([(self._rng.randint(0, 5), 0.20), (self._rng.randint(6, 9), 0.35), (self._rng.randint(10, 14), 0.30), (self._rng.randint(15, 20), 0.15)])
-                ratings_scale = {"Moody's": ["Aaa", "Aa1", "Aa2", "Aa3", "A1", "A2", "A3", "Baa1", "Baa2", "Baa3", "Ba1", "Ba2", "Ba3", "B1", "B2", "B3", "Caa1", "Caa2", "Caa3", "Ca", "C"], "S&P": ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-", "BBB+", "BBB", "BBB-", "BB+", "BB", "BB-", "B+", "B", "B-", "CCC+", "CCC", "CCC-", "CC", "D"], "Fitch": ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-", "BBB+", "BBB", "BBB-", "BB+", "BB", "BB-", "B+", "B", "B-", "CCC+", "CCC", "CCC-", "CC", "D"]}
-                rating = ratings_scale[agency][min(rating_idx, len(ratings_scale[agency]) - 1)]
-                ratings.append({"agency": agency, "rating": rating, "outlook": self._weighted_choice([("Stable", 0.60), ("Positive", 0.15), ("Negative", 0.20), ("Watch", 0.05)]), "investment_grade": rating_idx <= 9})
+        has_rating = self._rng.random() > 0.40
+        
+        sp_scale = ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-", "BBB+", "BBB", "BBB-",
+                   "BB+", "BB", "BB-", "B+", "B", "B-", "CCC+", "CCC", "CCC-", "CC", "C", "D"]
+        moodys_scale = ["Aaa", "Aa1", "Aa2", "Aa3", "A1", "A2", "A3", "Baa1", "Baa2", "Baa3",
+                       "Ba1", "Ba2", "Ba3", "B1", "B2", "B3", "Caa1", "Caa2", "Caa3", "Ca", "C"]
+        
+        rating_idx = self._weighted_choice([
+            (self._rng.randint(0, 3), 0.10),   # AAA to AA-
+            (self._rng.randint(4, 9), 0.35),   # A+ to BBB-
+            (self._rng.randint(10, 15), 0.40), # BB+ to B-
+            (self._rng.randint(16, 21), 0.15), # CCC+ to D
+        ])
         
         raw_data = {
             "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "rating_status": {"is_rated": is_rated, "investment_grade": any(r["investment_grade"] for r in ratings) if ratings else None},
-            "ratings": ratings,
-            "rating_history": {"upgrades_3yr": self._rng.randint(0, 2) if is_rated else 0, "downgrades_3yr": self._rng.randint(0, 3) if is_rated else 0},
+            "has_rating": has_rating,
+            "ratings": {
+                "sp": sp_scale[rating_idx] if has_rating else None,
+                "moodys": moodys_scale[min(rating_idx, len(moodys_scale) - 1)] if has_rating else None,
+                "fitch": sp_scale[rating_idx] if has_rating and self._rng.random() > 0.30 else None,
+            },
+            "outlook": self._weighted_choice([
+                ("Stable", 0.55), ("Positive", 0.15), ("Negative", 0.25), ("Watch Negative", 0.05)
+            ]) if has_rating else None,
+            "investment_grade": rating_idx <= 9 if has_rating else None,
+            "last_action": {
+                "date": self._random_date(365, 0) if has_rating else None,
+                "type": self._weighted_choice([("Affirmed", 0.60), ("Upgraded", 0.15), ("Downgraded", 0.20), ("New", 0.05)]) if has_rating else None,
+            },
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"is_rated": is_rated})
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "has_rating": has_rating,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
 
 
 @register_extractor
+class CompanyProfileExtractor(DataExtractor):
+    """
+    Company Profile Data - Basic company information, D&B data.
+    
+    Signals: company_type, size_band, geography, industry
+    
+    Used across all coverages
+    """
+    source_name = "company_profile"
+    coverage = "cross_coverage"
+    signals = ["company_type", "size_band", "geography", "industry"]
+    ttl_config = TTLConfig.semi_static("Company profile updated weekly")
+    
+    alternative_sources = [
+        DataSource("api", "dnb", "company/profile", priority=1),
+        DataSource("api", "pitchbook", "companies/profile", priority=2),
+        DataSource("api", "linkedin", "company/about", priority=3),
+        DataSource("scrape", "company_website", "/about", priority=4),
+    ]
+
+    def extract(self) -> ExtractionResult:
+        company_type = self._weighted_choice([
+            ("Public", 0.30), ("Private", 0.50), ("PE-Backed", 0.15), ("Non-Profit", 0.05)
+        ])
+        
+        employees = self._weighted_choice([
+            (self._rng.randint(10, 50), 0.25),
+            (self._rng.randint(50, 250), 0.30),
+            (self._rng.randint(250, 1000), 0.25),
+            (self._rng.randint(1000, 10000), 0.15),
+            (self._rng.randint(10000, 100000), 0.05),
+        ])
+        
+        raw_data = {
+            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
+            "basic_info": {
+                "company_name": self.kwargs.get("company_name", self._random_company_name("Corp")),
+                "company_type": company_type,
+                "year_founded": self._rng.randint(1900, 2020),
+                "employees": employees,
+            },
+            "size_classification": {
+                "size_band": self._classify_size(employees),
+                "revenue_band": self._weighted_choice([
+                    ("Under $10M", 0.25), ("$10M-$50M", 0.25), ("$50M-$250M", 0.25),
+                    ("$250M-$1B", 0.15), ("Over $1B", 0.10)
+                ]),
+            },
+            "geography": {
+                "headquarters_country": self._weighted_choice([
+                    ("United States", 0.40), ("United Kingdom", 0.10), ("Germany", 0.08),
+                    ("Canada", 0.07), ("France", 0.05), ("Other", 0.30)
+                ]),
+                "headquarters_state": self._rng.choice(["California", "New York", "Texas", "Florida", "Illinois"]),
+                "operating_countries": self._rng.randint(1, 50),
+            },
+            "industry": {
+                "primary_sic": str(self._rng.randint(1000, 9999)),
+                "primary_naics": str(self._rng.randint(100000, 999999)),
+                "industry_description": self._weighted_choice([
+                    "Technology", "Healthcare", "Financial Services", "Manufacturing",
+                    "Retail", "Energy", "Professional Services", "Transportation"
+                ]),
+            },
+        }
+        
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "company_type": company_type,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+    
+    def _classify_size(self, employees: int) -> str:
+        if employees < 50: return "Small"
+        elif employees < 250: return "Medium"
+        elif employees < 1000: return "Large"
+        else: return "Enterprise"
+
+
+@register_extractor  
 class NewsMediaExtractor(DataExtractor):
-    """News and media monitoring. Signals: public_record (all coverages)"""
+    """
+    News & Media Monitoring - GDELT, news APIs for reputation signals.
+    
+    Signals: media_sentiment, news_mentions
+    
+    Used across all coverages
+    """
     source_name = "news_media"
-    coverage = "common"
-    signals = ["public_record"]
+    coverage = "cross_coverage"
+    signals = ["media_sentiment", "news_mentions"]
+    ttl_config = TTLConfig.dynamic("News monitored continuously")
+    
+    alternative_sources = [
+        DataSource("news", "gdelt", "query", priority=1),
+        DataSource("api", "businesswire", "releases/company", priority=2),
+        DataSource("api", "prnewswire", "releases/company", priority=3),
+    ]
 
     def extract(self) -> ExtractionResult:
-        num_articles = self._weighted_choice([(self._rng.randint(0, 20), 0.40), (self._rng.randint(21, 100), 0.35), (self._rng.randint(101, 500), 0.18), (self._rng.randint(501, 2000), 0.07)])
-        
-        sentiment_scores = [self._weighted_choice([(self._rng.uniform(0.7, 1.0), 0.30), (self._rng.uniform(0.4, 0.7), 0.45), (self._rng.uniform(0.0, 0.4), 0.25)]) for _ in range(min(num_articles, 50))]
-        avg_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.5
-        
-        adverse_count = sum(1 for s in sentiment_scores if s < 0.4)
+        mentions = self._rng.randint(0, 500)
         
         raw_data = {
             "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "coverage_summary": {"total_articles_12mo": num_articles, "avg_sentiment_score": round(avg_sentiment, 3), "positive_pct": round(sum(1 for s in sentiment_scores if s >= 0.7) / max(1, len(sentiment_scores)) * 100, 1), "negative_pct": round(adverse_count / max(1, len(sentiment_scores)) * 100, 1)},
-            "adverse_media": {"adverse_article_count": adverse_count, "significant_adverse_news": adverse_count > num_articles * 0.15 and num_articles > 10, "regulatory_mentions": self._rng.randint(0, num_articles // 10), "litigation_mentions": self._rng.randint(0, num_articles // 15)},
-            "media_risk": {"risk_score": round((1 - avg_sentiment) * 100, 1), "trend": self._weighted_choice([("Improving", 0.25), ("Stable", 0.55), ("Worsening", 0.20)])},
+            "news_coverage": {
+                "mentions_30d": mentions,
+                "mentions_90d": mentions * 3,
+                "trend": self._weighted_choice([("Increasing", 0.30), ("Stable", 0.50), ("Decreasing", 0.20)]),
+            },
+            "sentiment": {
+                "overall": self._weighted_choice([
+                    ("Very Positive", 0.10), ("Positive", 0.30), ("Neutral", 0.40),
+                    ("Negative", 0.15), ("Very Negative", 0.05)
+                ]),
+                "positive_pct": self._rng.randint(20, 60),
+                "negative_pct": self._rng.randint(5, 30),
+            },
+            "key_topics": self._rng.sample([
+                "Financial Results", "Product Launch", "Leadership Change",
+                "Regulatory", "M&A", "Partnership", "Controversy", "Award"
+            ], self._rng.randint(2, 5)),
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"articles": num_articles, "sentiment": round(avg_sentiment, 3)})
-
-
-@register_extractor
-class CorporateRegistryExtractor(DataExtractor):
-    """Corporate registry data - formation, officers, registered agent. Signals: governance (multiple coverages)"""
-    source_name = "corporate_registry"
-    coverage = "common"
-    signals = ["governance"]
-
-    def extract(self) -> ExtractionResult:
-        formation_year = self._rng.randint(1950, 2023)
         
-        raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "entity_details": {"legal_name": self.kwargs.get("company_name", f"Entity {self._random_id()}"), "entity_type": self._weighted_choice([("Corporation", 0.45), ("LLC", 0.35), ("Partnership", 0.10), ("Other", 0.10)]), "state_of_formation": self._weighted_choice([("Delaware", 0.35), ("Nevada", 0.10), ("Wyoming", 0.05), ("Texas", 0.08), ("California", 0.10), ("New York", 0.08), ("Other", 0.24)]), "formation_date": f"{formation_year}-{self._rng.randint(1, 12):02d}-{self._rng.randint(1, 28):02d}"},
-            "status": {"good_standing": self._rng.random() < 0.95, "status": self._weighted_choice([("Active", 0.94), ("Inactive", 0.03), ("Dissolved", 0.02), ("Suspended", 0.01)]), "annual_report_current": self._rng.random() < 0.92},
-            "officers": {"registered_agent": f"Agent Services {self._random_id('', 4)}", "officers_count": self._rng.randint(2, 10), "directors_count": self._rng.randint(3, 12)},
-            "filings": {"recent_amendments": self._rng.randint(0, 5), "ucc_filings": self._rng.randint(0, 10)},
+        self._last_fetch = datetime.now()
+        return ExtractionResult(
+            source=self.source_name,
+            source_type="api",
+            timestamp=datetime.now().isoformat(),
+            raw_data=raw_data,
+            ttl_config=self.ttl_config,
+            metadata={
+                "mentions": mentions,
+                "alternative_sources": [str(s) for s in self.alternative_sources]
+            }
+        )
+
+
+# =============================================================================
+# EXTRACTOR REGISTRY & UTILITIES
+# =============================================================================
+
+# Signal coverage mapping by coverage line
+COVERAGE_SIGNAL_MAP: Dict[str, Dict[str, List[str]]] = {
+    "marine": {
+        "network_authority": ["classification_society", "pi_club", "charterer_quality", "banking_relationship", 
+                            "flag_state", "industry_association", "technical_manager", "port_relationship"],
+        "safety_compliance": ["psc_detention", "psc_deficiency", "class_status", "ism_compliance", 
+                             "casualty_history", "total_loss"],
+        "operational_telemetry": ["ais_compliance", "dark_activity", "route_risk", "psc_region_exposure",
+                                 "operational_efficiency", "weather_routing"],
+        "sanctions_compliance": ["sanctions_status", "ownership_transparency", "jurisdiction_risk",
+                                "sts_pattern", "historical_sanctions"],
+        "fleet_profile": ["fleet_age", "fleet_stability", "vessel_quality", "crew_certification",
+                         "management_consistency"],
+        "environmental": ["imo2020_compliance", "bwm_compliance", "cii_rating", "environmental_incident"],
+        "corporate_footprint": ["website_quality", "fleet_disclosure", "sustainability_reporting",
+                               "safety_communication", "crew_welfare", "industry_presence"],
+        "structured_data": ["vetting_score", "esg_rating", "credit_rating"],
+    },
+    "aerospace": {
+        "safety_record": ["accident_history", "incident_history", "accident_rate", "fatality_history",
+                         "investigation_findings"],
+        "regulatory_compliance": ["certificate_status", "enforcement_actions", "iosa_audit_status",
+                                 "ramp_inspection", "eu_safety_list", "state_safety_rating"],
+        "operational_quality": ["otp_score", "dispatch_reliability", "crew_experience",
+                               "training_indicators", "operational_complexity", "growth_rate"],
+        "fleet_quality": ["fleet_age", "fleet_homogeneity", "aircraft_generation", "order_backlog",
+                         "maintenance_indicators"],
+        "financial_stability": ["credit_rating", "public_financials", "market_position", "government_support"],
+        "network_authority": ["alliance_membership", "codeshare_quality", "lessor_quality",
+                             "oem_relationship", "mro_quality"],
+        "route_risk": ["conflict_zone_exposure", "challenging_airports", "high_risk_destinations",
+                      "weather_exposure", "terrain_exposure"],
+        "corporate_governance": ["management_stability", "safety_leadership", "safety_reporting",
+                                "corporate_structure", "industry_engagement"],
+    },
+    "cyber": {
+        "technical_infrastructure": ["tls_score", "security_headers", "email_auth", "dnssec", "exposure",
+                                    "software_currency", "cve_exposure", "cloud_infrastructure",
+                                    "waf_presence", "cdn_usage"],
+        "corporate_footprint": ["security_page", "privacy_policy", "security_txt", "bug_bounty",
+                               "security_hiring", "technical_content", "developer_resources",
+                               "security_leadership", "compliance_badges"],
+        "public_record": ["breach_history", "regulatory_action", "litigation_history",
+                         "credential_exposure", "dark_web"],
+        "structured_data": ["security_rating", "esg_cyber", "credit_rating"],
+        "network_authority": ["customer_quality", "partner_quality", "security_vendor",
+                             "industry_body", "certification_authority", "financial_relationship",
+                             "network_centrality", "second_degree"],
+    },
+    "d_and_o": {
+        "governance": ["board_independence", "board_diversity", "ceo_chair_separation",
+                      "committee_structure", "board_refreshment", "related_party",
+                      "compensation_structure", "shareholder_rights"],
+        "financial": ["audit_opinion", "internal_controls", "restatement", "filing_timeliness",
+                     "revenue_recognition", "debt_covenant", "stock_volatility", "short_interest"],
+        "litigation": ["securities_litigation", "derivative_litigation", "sec_enforcement",
+                      "regulatory_action", "pending_litigation", "whistleblower"],
+        "executive": ["executive_stability", "cfo_quality", "insider_trading",
+                     "executive_background", "trading_plan"],
+        "network_authority": ["auditor_quality", "legal_counsel", "banking_relationship",
+                             "investor_quality", "board_network", "index_inclusion", "analyst_coverage"],
+        "corporate_footprint": ["investor_relations", "governance_page", "esg_reporting",
+                               "press_release", "leadership_visibility", "hiring_signals"],
+        "structured_data": ["credit_rating", "esg_rating", "governance_rating", "iss_governance"],
+    },
+    "financial_institutions": {
+        "regulatory_compliance": ["examination_rating", "enforcement_action", "informal_action",
+                                 "cra_rating", "bsa_aml", "fair_lending", "consumer_compliance"],
+        "financial_condition": ["capital_ratio", "asset_quality", "liquidity", "earnings",
+                               "concentration", "interest_rate_risk", "growth_rate"],
+        "governance": ["board_independence", "board_expertise", "executive_stability",
+                      "risk_committee", "audit_committee", "related_party"],
+        "operational_risk": ["cfpb_complaint", "bbb_complaint", "litigation", "breach_history",
+                            "operational_incident"],
+        "cyber_security": ["tls_score", "email_auth", "security_headers", "network_exposure",
+                          "vulnerability", "security_rating"],
+        "corporate_footprint": ["investor_relations", "disclosure_quality", "security_page",
+                               "hiring_signals", "esg_reporting", "community_presence"],
+        "structured_data": ["credit_rating", "esg_rating", "peer_benchmark"],
+        "network_authority": ["correspondent_quality", "fhlb_membership", "clearing_relationship",
+                             "auditor_quality", "legal_counsel", "industry_association"],
+    },
+    "energy": {
+        "safety_performance": ["osha_trir", "osha_violations", "bsee_incident", "process_safety",
+                              "fatality", "major_incident", "near_miss"],
+        "environmental_compliance": ["epa_violation", "spill_history", "emissions_compliance",
+                                    "flaring", "methane", "remediation"],
+        "operational_telemetry": ["production_consistency", "facility_activity", "well_integrity",
+                                 "maintenance_pattern", "operational_efficiency"],
+        "financial_stability": ["credit_rating", "leverage", "aro_coverage", "capex_trend",
+                               "restructuring"],
+        "asset_portfolio": ["asset_age", "concentration", "complexity", "decommissioning",
+                           "permit_status"],
+        "corporate_footprint": ["safety_communication", "esg_reporting", "technical_hiring",
+                               "industry_presence", "disclosure_quality", "hse_leadership"],
+        "structured_data": ["esg_rating", "benchmark", "credit_rating"],
+        "network_authority": ["partner_quality", "contractor_quality", "banking_relationship",
+                             "insurance_history", "industry_association", "regulator_relationship",
+                             "customer_quality"],
+    },
+    "professional_indemnity": {
+        "regulatory_standing": ["license_status", "disciplinary_history", "malpractice_record",
+                               "ce_compliance", "specialty_certification", "peer_review", "pcaob_standing"],
+        "network_authority": ["peer_ranking", "client_quality", "referral_network",
+                             "association_leadership", "thought_leadership", "panel_membership"],
+        "firm_stability": ["tenure", "partner_stability", "staff_retention", "office_stability",
+                          "financial_stability", "succession_planning"],
+        "practice_quality": ["outcome_patterns", "client_reviews", "work_quality",
+                            "fee_dispute", "complaint_history"],
+        "technical_infrastructure": ["tls_score", "email_auth", "security_headers",
+                                    "portal_security", "breach_history"],
+        "corporate_footprint": ["website_quality", "bio_completeness", "practice_clarity",
+                               "publications", "community_involvement", "diversity"],
+        "litigation_history": ["malpractice_suits", "fee_disputes_litigation", "regulatory_enforcement",
+                              "civil_litigation", "bankruptcy"],
+    },
+}
+
+
+def get_extractors_for_coverage(coverage: str) -> List[Type[DataExtractor]]:
+    """Get all registered extractors for a coverage line."""
+    return [
+        ext_class for ext_class in EXTRACTOR_REGISTRY.values()
+        if ext_class.coverage == coverage or ext_class.coverage == "cross_coverage"
+    ]
+
+
+def get_extractor_by_signal(signal: str) -> Optional[Type[DataExtractor]]:
+    """Find extractor that provides a specific signal."""
+    for ext_class in EXTRACTOR_REGISTRY.values():
+        if signal in ext_class.signals:
+            return ext_class
+    return None
+
+
+def list_all_signals() -> Dict[str, List[str]]:
+    """List all signals grouped by coverage."""
+    return COVERAGE_SIGNAL_MAP.copy()
+
+
+def get_ttl_summary() -> Dict[str, Dict[str, Any]]:
+    """Get TTL configuration summary for all extractors."""
+    summary = {}
+    for name, ext_class in EXTRACTOR_REGISTRY.items():
+        summary[name] = {
+            "coverage": ext_class.coverage,
+            "signals": ext_class.signals,
+            "ttl_category": ext_class.ttl_config.category.value,
+            "ttl_seconds": ext_class.ttl_config.ttl_seconds,
+            "alternative_sources": len(ext_class.alternative_sources) if hasattr(ext_class, 'alternative_sources') else 0,
         }
-        return ExtractionResult(source=self.source_name, source_type="api", timestamp=datetime.now().isoformat(), raw_data=raw_data, metadata={"years_in_business": 2024 - formation_year})
+    return summary
+
+
+def print_coverage_report():
+    """Print comprehensive coverage report."""
+    print("\n" + "=" * 80)
+    print("DSI EXTRACTOR COVERAGE REPORT")
+    print("=" * 80)
+    
+    for coverage, signal_groups in COVERAGE_SIGNAL_MAP.items():
+        print(f"\n{coverage.upper().replace('_', ' ')}")
+        print("-" * 40)
+        
+        extractors = get_extractors_for_coverage(coverage)
+        print(f"  Extractors: {len(extractors)}")
+        
+        total_signals = sum(len(signals) for signals in signal_groups.values())
+        print(f"  Signal Groups: {len(signal_groups)}")
+        print(f"  Total Signals: {total_signals}")
+        
+        for group, signals in signal_groups.items():
+            print(f"    • {group}: {len(signals)} signals")
+    
+    print("\n" + "=" * 80)
+    print("TTL DISTRIBUTION")
+    print("-" * 40)
+    
+    ttl_counts = {"real_time": 0, "dynamic": 0, "semi_static": 0, "static": 0}
+    for ext_class in EXTRACTOR_REGISTRY.values():
+        ttl_counts[ext_class.ttl_config.category.value] += 1
+    
+    for category, count in ttl_counts.items():
+        print(f"  {category}: {count} extractors")
+    
+    print("\n" + "=" * 80)
 
 
 # =============================================================================
-# FACTORY FUNCTIONS AND UTILITIES
-# =============================================================================
-
-def get_extractor(extractor_type: str, seed: Optional[str] = None, **kwargs) -> DataExtractor:
-    """Factory function to instantiate extractors by name or shorthand."""
-    shorthand_map = {
-        # Marine
-        "equasis_operator": "EquasisOperatorExtractor", "psc_inspection": "PSCInspectionExtractor",
-        "ais_tracking": "AISTrackingExtractor", "sanctions_screening": "SanctionsScreeningExtractor",
-        "classification_society": "ClassificationSocietyExtractor", "pi_club": "PIClubExtractor",
-        "marine_financial": "MarineFinancialExtractor", "ism_compliance": "ISMComplianceExtractor",
-        "vessel_valuation": "VesselValuationExtractor", "flag_state_performance": "FlagStatePerformanceExtractor",
-        # Aerospace
-        "iata_operator": "IATAOperatorExtractor", "aviation_safety": "AviationSafetyExtractor",
-        "faa_registry": "FAARegistryExtractor", "aircraft_fleet": "AircraftFleetExtractor",
-        "mro_provider": "MROProviderExtractor", "crew_training": "CrewTrainingExtractor",
-        "operational_performance": "OperationalPerformanceExtractor", "aviation_financial": "AviationFinancialExtractor",
-        # Cyber
-        "security_scorecard": "SecurityScorecardExtractor", "cve_exposure": "CVEExposureExtractor",
-        "breach_database": "BreachDatabaseExtractor", "cyber_governance": "CyberGovernanceExtractor",
-        "vendor_security": "VendorSecurityExtractor", "incident_response": "IncidentResponseExtractor",
-        "threat_intelligence": "ThreatIntelligenceExtractor", "cyber_insurance_history": "CyberInsuranceHistoryExtractor",
-        # D&O
-        "sec_edgar": "SECEdgarExtractor", "litigation_database": "LitigationDatabaseExtractor",
-        "proxy_statement": "ProxyStatementExtractor", "insider_activity": "InsiderActivityExtractor",
-        "sec_enforcement": "SECEnforcementExtractor", "industry_comparison": "IndustryComparisonExtractor",
-        "do_financial": "DOFinancialExtractor",
-        # Financial Institutions
-        "ffiec_call_report": "FFIECCallReportExtractor", "bank_regulatory": "BankRegulatoryExtractor",
-        "fi_litigation": "FILitigationExtractor", "fi_governance": "FIGovernanceExtractor",
-        "fi_cyber": "FICyberExtractor", "fi_operational": "FIOperationalRiskExtractor",
-        "bsa_aml": "BSAAMLExtractor", "liquidity": "LiquidityExtractor", "credit_portfolio": "CreditPortfolioExtractor",
-        # Energy
-        "osha_safety": "OSHASafetyExtractor", "epa_compliance": "EPAComplianceExtractor",
-        "state_regulatory": "StateRegulatoryExtractor", "production_data": "ProductionDataExtractor",
-        "reserve_data": "ReserveDataExtractor", "energy_financial": "EnergyFinancialExtractor",
-        "esg_metrics": "ESGMetricsExtractor", "operations_metrics": "OperationsMetricsExtractor",
-        "well_integrity": "WellIntegrityExtractor",
-        # Professional Indemnity
-        "state_bar": "StateBarExtractor", "malpractice_claims": "MalpracticeClaimsExtractor",
-        "network_authority": "NetworkAuthorityExtractor", "peer_review": "PeerReviewExtractor",
-        "quality_management": "QualityManagementExtractor", "client_quality": "ClientQualityExtractor",
-        "professional_development": "ProfessionalDevelopmentExtractor", "pi_financial": "PIFinancialExtractor",
-        # Common
-        "credit_rating": "CreditRatingExtractor", "news_media": "NewsMediaExtractor",
-        "corporate_registry": "CorporateRegistryExtractor",
-    }
-    
-    class_name = shorthand_map.get(extractor_type.lower(), extractor_type)
-    extractor_class = EXTRACTOR_REGISTRY.get(class_name)
-    
-    if not extractor_class:
-        raise ValueError(f"Unknown extractor '{extractor_type}'. Available: {sorted(shorthand_map.keys())}")
-    
-    return extractor_class(seed=seed, **kwargs)
-
-
-def list_extractors_by_coverage() -> Dict[str, List[str]]:
-    """List all extractors organized by coverage line."""
-    coverage_map: Dict[str, List[str]] = {}
-    for name, cls in EXTRACTOR_REGISTRY.items():
-        coverage = getattr(cls, "coverage", "unknown")
-        if coverage not in coverage_map:
-            coverage_map[coverage] = []
-        coverage_map[coverage].append(name)
-    return coverage_map
-
-
-def list_extractors_by_signal() -> Dict[str, List[str]]:
-    """List all extractors organized by signal they contribute to."""
-    signal_map: Dict[str, List[str]] = {}
-    for name, cls in EXTRACTOR_REGISTRY.items():
-        signals = getattr(cls, "signals", [])
-        for signal in signals:
-            if signal not in signal_map:
-                signal_map[signal] = []
-            signal_map[signal].append(name)
-    return signal_map
-
-
-def get_extractors_for_coverage(coverage: str) -> List[str]:
-    """Get all extractor names for a specific coverage line."""
-    return [name for name, cls in EXTRACTOR_REGISTRY.items() if getattr(cls, "coverage", "") == coverage]
-
-
-def get_extractors_for_signal(signal: str) -> List[str]:
-    """Get all extractor names that contribute to a specific signal."""
-    return [name for name, cls in EXTRACTOR_REGISTRY.items() if signal in getattr(cls, "signals", [])]
-
-
-# =============================================================================
-# DEMO
+# DEMONSTRATION
 # =============================================================================
 
 if __name__ == "__main__":
+    print_coverage_report()
+    
+    # Example: Run marine extractors
+    print("\n" + "=" * 80)
+    print("SAMPLE EXTRACTION - Marine Coverage")
     print("=" * 80)
-    print("EXTRACTORS MODULE - COMPREHENSIVE DEMONSTRATION")
-    print("=" * 80)
     
-    # Count extractors by coverage
-    print("\n--- Extractors by Coverage ---")
-    coverage_counts = {}
-    for coverage, extractors in sorted(list_extractors_by_coverage().items()):
-        coverage_counts[coverage] = len(extractors)
-        print(f"\n{coverage.upper()}: {len(extractors)} extractors")
-        for ext in extractors:
-            signals = getattr(EXTRACTOR_REGISTRY[ext], "signals", [])
-            print(f"  - {ext}: {signals}")
+    marine_extractors = get_extractors_for_coverage("marine")
+    print(f"\nFound {len(marine_extractors)} extractors for marine coverage")
     
-    total_extractors = sum(coverage_counts.values())
-    print(f"\n{'='*80}")
-    print(f"TOTAL: {total_extractors} extractors across {len(coverage_counts)} coverage lines")
-    print(f"{'='*80}")
-    
-    # Signal coverage matrix
-    print("\n--- Signal Coverage Matrix ---")
-    signal_map = list_extractors_by_signal()
-    for signal, extractors in sorted(signal_map.items()):
-        print(f"\n{signal} ({len(extractors)} extractors):")
-        for ext in extractors:
-            coverage = getattr(EXTRACTOR_REGISTRY[ext], "coverage", "unknown")
-            print(f"  [{coverage}] {ext}")
-    
-    # Sample extractions
-    print(f"\n{'='*80}")
-    print("SAMPLE EXTRACTIONS")
-    print(f"{'='*80}")
-    
-    demos = [
-        ("equasis_operator", {"company_name": "Atlas Container Lines"}),
-        ("iata_operator", {"operator_name": "Sky Airways International"}),
-        ("security_scorecard", {"company_name": "TechCorp Solutions"}),
-        ("sec_edgar", {"company_name": "MegaCorp Industries"}),
-        ("ffiec_call_report", {"institution_name": "First National Bank"}),
-        ("osha_safety", {"company_name": "Gulf Energy LLC"}),
-        ("state_bar", {"firm_name": "Smith & Partners LLP", "entity_type": "firm"}),
-    ]
-    
-    for ext_type, kwargs in demos:
-        print(f"\n--- {ext_type} ---")
-        ext = get_extractor(ext_type, seed="demo_seed_2024", **kwargs)
-        result = ext.extract()
-        print(f"Coverage: {ext.coverage}, Signals: {ext.signals}")
-        print(f"Data keys: {list(result.raw_data.keys())}")
-        print(f"Metadata: {result.metadata}")
+    # Run first 3 extractors as demo
+    for ext_class in marine_extractors[:3]:
+        extractor = ext_class(seed="demo_company_123")
+        result = extractor.extract()
+        print(f"\n{ext_class.__name__}:")
+        print(f"  Source: {result.source}")
+        print(f"  TTL: {extractor.ttl_config.category.value} ({extractor.ttl_config.ttl_seconds}s)")
+        print(f"  Signals: {extractor.signals}")
+        print(f"  Alternative Sources: {len(extractor.alternative_sources)}")
