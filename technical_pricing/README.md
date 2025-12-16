@@ -1,6 +1,15 @@
-# DSI Technical Pricing Architecture v2.0
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## Overview
+## Data Processing Framework: Technical Architecture
+
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|November 2025|
+|Classification|Technical Specification|
+
+---
+### Overview
 
 This document defines the clean separation of concerns between:
 1. **Extractors** - Fetch raw data from external sources
@@ -9,18 +18,18 @@ This document defines the clean separation of concerns between:
 4. **Utility Functions** - Model-level operations (composite scoring, tier assignment)
 5. **Inference Functions** - Orchestrate extractor→aggregator→categorizer chains
 
-## Core Design Principles
+### Core Design Principles
 
-### 1. Configuration-Driven Architecture
+#### 1. Configuration-Driven Architecture
 ```
 coverage:           aerospace           # Top-level coverage cohort
   configuration:    aerospace_general   # Specific model configuration
 ```
 
-All modifiers, weights, tier definitions, and bands are defined in the config YAML.
+All modifiers, weights, tier definitions, and bands are defined in the coverage/config YAML.
 Code never hardcodes these values - it reads them from configuration.
 
-### 2. Instantiation by Configuration (Not Coverage)
+#### 2. Instantiation by Configuration (Not Coverage)
 ```python
 # CORRECT - instantiate by configuration
 model = DSIModel.from_config("aerospace", "aerospace_general")
@@ -29,35 +38,35 @@ model = DSIModel.from_config("aerospace", "aerospace_general")
 model = DSIModel("aerospace")  # Ambiguous - which configuration?
 ```
 
-### 3. Clean Separation of Concerns
+#### 3. Clean Separation of Concerns
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        CONFIG.YAML                                   │
-│  (aerospace_general)                                                 │
-│                                                                      │
-│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌───────────┐ │
-│  │ signal_     │  │ categorical_ │  │ tier_       │  │ direct_   │ │
-│  │ groups      │  │ features     │  │ thresholds  │  │ queries   │ │
-│  └─────────────┘  └──────────────┘  └─────────────┘  └───────────┘ │
+│                        CONFIG.YAML                                  │
+│  (aerospace_general)                                                │
+│                                                                     │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌───────────┐  │
+│  │ signal_     │  │ categorical_ │  │ tier_       │  │ direct_   │  │
+│  │ groups      │  │ features     │  │ thresholds  │  │ queries   │  │
+│  └─────────────┘  └──────────────┘  └─────────────┘  └───────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     INFERENCE FUNCTIONS                              │
+│                     INFERENCE FUNCTIONS                             │
 │  (orchestrate data flow for each signal feature)                    │
-│                                                                      │
-│  alliance_membership_inference:                                      │
-│    extractor: IATARegistryExtractor                                  │
+│                                                                     │
+│  alliance_membership_inference:                                     │
+│    extractor: IATARegistryExtractor                                 │
 │    aggregator: AllianceMembershipAggregator                         │
-│    categorizer: scoring_logic                                        │
+│    categorizer: scoring_logic                                       │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    EXTRACTORS / AGGREGATORS / CATEGORIZERS          │
 │  (stateless functions that process data → return scores/categories) │
-│                                                                      │
+│                                                                     │
 │  Input: raw data / extractor outputs                                │
 │  Output: score (0-100) + metadata                                   │
 │  NO ACCESS TO: modifiers, weights, tier definitions                 │
@@ -65,23 +74,23 @@ model = DSIModel("aerospace")  # Ambiguous - which configuration?
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      UTILITY FUNCTIONS                               │
+│                      UTILITY FUNCTIONS                              │
 │  (model-level operations that apply config values)                  │
-│                                                                      │
-│  ┌──────────────────┐  ┌───────────────┐  ┌────────────────────┐   │
-│  │ CompositeScorer  │  │ TierAssigner  │  │ ConditionEvaluator │   │
-│  │ (applies weights │  │ (maps score   │  │ (evaluates bands   │   │
-│  │  from config)    │  │  to tier)     │  │  from config)      │   │
-│  └──────────────────┘  └───────────────┘  └────────────────────┘   │
+│                                                                     │
+│  ┌──────────────────┐  ┌───────────────┐  ┌────────────────────┐    │
+│  │ CompositeScorer  │  │ TierAssigner  │  │ ConditionEvaluator │    │
+│  │ (applies weights │  │ (maps score   │  │ (evaluates bands   │    │
+│  │  from config)    │  │  to tier)     │  │  from config)      │    │
+│  └──────────────────┘  └───────────────┘  └────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Component Specifications
+### Component Specifications
 
-### Extractors
+#### Extractors
 **Purpose**: Fetch raw data from external sources
 **Scope**: One data source per extractor
-**Output**: Raw API response or normalized data structure
+**Output**: Raw API response or normalised data structure
 **Config Access**: NONE - extractors are source-specific, not config-specific
 
 ```python
@@ -100,7 +109,7 @@ class ExtractorResult:
     metadata: Dict[str, Any]
 ```
 
-### Aggregators
+#### Aggregators
 **Purpose**: Combine multiple extractor outputs into a signal score
 **Scope**: One signal per aggregator
 **Output**: Score (0-100) with supporting evidence
@@ -123,7 +132,7 @@ class AggregatorResult:
     metadata: Dict[str, Any]
 ```
 
-### Categorizers
+#### Categorizers
 **Purpose**: Map values to categories (for categorical feature inference)
 **Scope**: Stateless mapping functions
 **Output**: Category with confidence
@@ -144,8 +153,8 @@ class CategorizationResult:
     metadata: Dict[str, Any]
 ```
 
-### Inference Functions
-**Purpose**: Orchestrate extractor→aggregator→categorizer chains
+#### Inference Functions
+**Purpose**: Orchestrate extractor → aggregator → categorizer chains
 **Scope**: One signal feature per inference function
 **Output**: Signal score ready for utility functions
 **Config Access**: Referenced by name in config, receives config context
@@ -183,7 +192,7 @@ def alliance_membership_inference(entity_id: str, config: Dict) -> InferenceResu
     )
 ```
 
-### Utility Functions
+#### Utility Functions
 **Purpose**: Model-level operations that apply config values
 **Scope**: Operate on signal scores using config-defined parameters
 **Output**: Final model decisions (tier, composite score, actions)
@@ -215,7 +224,7 @@ class ConditionEvaluator(UtilityFunction):
         # ... evaluate against bands
 ```
 
-## Data Flow Example
+### Data Flow Example
 
 ```
 Entity: "Delta Air Lines"
@@ -230,7 +239,7 @@ Configuration: aerospace_general
    │        └─ returns: score=88, category="SKYTEAM"             │
    └─────────────────────────────────────────────────────────────┘
    
-   Repeat for all 41 signal features...
+   Repeat for all signal features...
    
    Result: Dict[signal_id, score]
    {
@@ -266,9 +275,9 @@ Configuration: aerospace_general
    }
 ```
 
-## Registry Design
+### Registry Design
 
-### Inference Function Registry
+#### Inference Function Registry
 ```python
 INFERENCE_REGISTRY: Dict[str, Callable] = {}
 
@@ -283,7 +292,7 @@ def alliance_membership_inference(entity_id: str, config: Dict) -> InferenceResu
     ...
 ```
 
-### Config Reference
+#### Config Reference
 ```yaml
 # In aerospace_general config
 signal_features:
@@ -294,22 +303,7 @@ signal_features:
       inference_function: "alliance_membership_inference"  # Registry lookup
       score_condition: false
 ```
-
-## Migration Path
-
-### Current categorizers_v2.py Issues
-1. ❌ Hardcodes threshold profiles, scoring logic, weights
-2. ❌ Mixes signal processing with model-level operations
-3. ❌ No distinction between configuration and coverage
-
-### Required Changes
-1. ✅ Move all profiles/weights/thresholds to config YAML
-2. ✅ Extract utility functions to separate module
-3. ✅ Create inference function registry
-4. ✅ Refactor categorizers to be stateless mappers
-5. ✅ All instantiation by configuration name
-
-## File Structure
+### File Structure
 
 ```
 technical_pricing/
@@ -318,7 +312,7 @@ technical_pricing/
 │   │   └── config.yaml          # aerospace_general config
 │   ├── marine/
 │   │   └── config.yaml          # marine_general, marine_hull configs
-│   └── cyber/
+│   └── etc/
 │       └── config.yaml
 ├── signals/
 │   ├── extractors.py            # Data source extractors
