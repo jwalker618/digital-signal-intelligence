@@ -3,7 +3,7 @@ Signal Data Aggregation Framework
 
 This module transforms raw extractor output into structured input suitable for categorisers.
 Each aggregator maps to one or more extractors and produces typed output dictionaries
-that match categorizsr input specifications.
+that match categoriser input specifications.
 
 Architecture:
 - Aggregators receive ExtractionResult objects from extractors
