@@ -107,27 +107,37 @@ aerospace:
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
+    
     categorical_groups:
       - id: "operator_type"
         name: "Operator Type"
         description: "Type of aviation operator - inferred from regulatory filings and operational data"
+        impact: "modifier"
         inference_utility_function: operatortype_basefunction
       - id: "fleet_category"
         name: "Fleet Category"
         description: "Primary aircraft category in fleet"
+        impact: "modifier"
         inference_utility_function: fleetcategory_basefunction
       - id: "fleet_size"
         name: "Fleet Size"
         description: "Number of aircraft in operator's fleet"
+        impact: "modifier"
         inference_utility_function: fleetsize_basefunction
       - id: "regulatory_framework"
         name: "Regulatory Framework"
         description: "Primary regulatory authority governing operations" 
+        impact: "modifier"
         inference_utility_function: regulatoryframework_basefunction
       - id: "iosa_status"
         name: "IOSA Status"
         description: "IATA Operational Safety Audit registration status" 
+        impact: "modifier"
         inference_utility_function: iosastatus_basefunction
 
     # -------------------------------------------------------------------------
@@ -748,7 +758,7 @@ aerospace:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 1200  # Per $1M hull value
+          premium: 1200  # Per $1M hull value
         - id: 2
           label: "STANDARD_PLUS"
           min_score: 650
@@ -757,7 +767,7 @@ aerospace:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 1800
+          premium: 1800
         - id: 3        
           label: "STANDARD"
           min_score: 500
@@ -766,7 +776,7 @@ aerospace:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 2800
+          premium: 2800
         - id: 4           
           label: "SUBSTANDARD"
           min_score: 350
@@ -775,7 +785,7 @@ aerospace:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 4500
+          premium: 4500
         - id: 5        
           label: "DECLINE"
           min_score: 0
@@ -784,7 +794,7 @@ aerospace:
           auto_approve: false
           auto_decline: true
           premium_generation_method: "base"
-          base_premium: 8000
+          premium: 8000
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
@@ -795,7 +805,7 @@ aerospace:
         deductible: 500000
       - id: 2
         limit: 25000000
-        deductible: 1000000        
+        deductible: 1000000
       - id: 3
         limit: 50000000
         deductible: 2000000

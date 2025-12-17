@@ -56,6 +56,7 @@ energy:
         - "power_generation"
         - "renewable"
       applicable_markets: ["us", "uk", "eu", "apac", "latam", "mena"]
+      minimum_viable_input: ["client name (domain optional)","Limit in USD","TIV"]
       min_premium: 100000
       default_currency: "USD"
 
@@ -107,180 +108,195 @@ energy:
             note: "Third-party contractor usage"
 
     # -------------------------------------------------------------------------
+    # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
+    # -------------------------------------------------------------------------
+    
+    categorical_groups:
+      - id: "operator_type"
+        name: "Operator Type"
+        description: "Operator classification based on size, integration, and ownership"
+        impact: "modifier"
+        inference_utility_function: operator_type_basefunction
+      - id: "operation_segment"
+        name: "Operation Segment"
+        description: "Primary operational segment"
+        impact: "modifier"
+        inference_utility_function: operation_segment_basefunction
+      - id: "geographic_focus"
+        name: "Geographic Focus"
+        description: "Primary geographic focus of operations"
+        impact: "modifier"
+        inference_utility_function: geographic_focus_basefunction
+
+    # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
-    # These define classification values and their pricing impact
-    # inference_method specifies how to automatically determine the value
-    
+        
     categorical_features:
       operator_type:
-        description: "Operator classification based on size, integration, and ownership"
-        inference_utility_function: operator_type_basefunction
-        values:
-          - id: "SUPERMAJOR"
-            label: "Supermajor"
-            modifier: 0.75
-            description: "ExxonMobil, Shell, BP, Chevron, TotalEnergies, etc."
-            
-          - id: "MAJOR_INTEGRATED"
-            label: "Major Integrated"
-            modifier: 0.85
-            description: "Large integrated oil companies"
-            
-          - id: "LARGE_INDEPENDENT"
-            label: "Large Independent"
-            modifier: 0.95
-            description: "Large E&P independents (ConocoPhillips, EOG, etc.)"
-            
-          - id: "MID_INDEPENDENT"
-            label: "Mid-Size Independent"
-            modifier: 1.00
-            description: "Mid-size E&P companies"
-            
-          - id: "SMALL_INDEPENDENT"
-            label: "Small Independent"
-            modifier: 1.20
-            description: "Small E&P operators"
-            
-          - id: "NATIONAL_OIL"
-            label: "National Oil Company"
-            modifier: 0.90
-            description: "State-owned national oil companies"
-            
-          - id: "MIDSTREAM_MAJOR"
-            label: "Major Midstream"
-            modifier: 0.85
-            description: "Major pipeline/processing operators"
-            
-          - id: "DOWNSTREAM_MAJOR"
-            label: "Major Downstream"
-            modifier: 0.90
-            description: "Major refining operators"
-            
-          - id: "PRIVATE_EQUITY"
-            label: "Private Equity Backed"
-            modifier: 1.15
-            description: "PE-backed operators"
-            
-          - id: "UNKNOWN"
-            label: "Unknown/New Operator"
-            modifier: 1.40
-            description: "New or unclassified operator"
+        - cat: "SUPERMAJOR"
+          label: "Supermajor"
+          modifier: 0.75
+          description: "ExxonMobil, Shell, BP, Chevron, TotalEnergies, etc."
+          
+        - cat: "MAJOR_INTEGRATED"
+          label: "Major Integrated"
+          modifier: 0.85
+          description: "Large integrated oil companies"
+          
+        - cat: "LARGE_INDEPENDENT"
+          label: "Large Independent"
+          modifier: 0.95
+          description: "Large E&P independents (ConocoPhillips, EOG, etc.)"
+          
+        - cat: "MID_INDEPENDENT"
+          label: "Mid-Size Independent"
+          modifier: 1.00
+          description: "Mid-size E&P companies"
+          
+        - cat: "SMALL_INDEPENDENT"
+          label: "Small Independent"
+          modifier: 1.20
+          description: "Small E&P operators"
+          
+        - cat: "NATIONAL_OIL"
+          label: "National Oil Company"
+          modifier: 0.90
+          description: "State-owned national oil companies"
+          
+        - cat: "MIDSTREAM_MAJOR"
+          label: "Major Midstream"
+          modifier: 0.85
+          description: "Major pipeline/processing operators"
+          
+        - cat: "DOWNSTREAM_MAJOR"
+          label: "Major Downstream"
+          modifier: 0.90
+          description: "Major refining operators"
+          
+        - cat: "PRIVATE_EQUITY"
+          label: "Private Equity Backed"
+          modifier: 1.15
+          description: "PE-backed operators"
+          
+        - cat: "UNKNOWN"
+          label: "Unknown/New Operator"
+          modifier: 1.40
+          description: "New or unclassified operator"
 
       operation_segment:
-        description: "Primary operational segment"
-        inference_utility_function: operation_segment_basefunction
-        values:
-          - id: "UPSTREAM_CONVENTIONAL"
-            label: "Upstream Conventional"
-            modifier: 1.00
-            description: "Conventional onshore oil & gas production"
-            
-          - id: "UPSTREAM_UNCONVENTIONAL"
-            label: "Upstream Unconventional"
-            modifier: 0.95
-            description: "Shale, tight oil, CBM operations"
-            
-          - id: "UPSTREAM_OFFSHORE"
-            label: "Upstream Offshore (Shelf)"
-            modifier: 1.20
-            description: "Shallow water offshore operations"
-            
-          - id: "UPSTREAM_DEEPWATER"
-            label: "Upstream Deepwater"
-            modifier: 1.50
-            description: "Deepwater offshore operations (>500m)"
-            
-          - id: "MIDSTREAM_PIPELINE"
-            label: "Midstream Pipeline"
-            modifier: 0.80
-            description: "Oil & gas pipeline operations"
-            
-          - id: "MIDSTREAM_PROCESSING"
-            label: "Midstream Processing"
-            modifier: 1.00
-            description: "Gas processing, NGL fractionation"
-            
-          - id: "MIDSTREAM_STORAGE"
-            label: "Midstream Storage"
-            modifier: 0.85
-            description: "Crude/product storage terminals"
-            
-          - id: "DOWNSTREAM_REFINING"
-            label: "Downstream Refining"
-            modifier: 1.30
-            description: "Petroleum refining operations"
-            
-          - id: "DOWNSTREAM_PETROCHEMICAL"
-            label: "Downstream Petrochemical"
-            modifier: 1.25
-            description: "Petrochemical manufacturing"
-            
-          - id: "POWER_GENERATION"
-            label: "Power Generation"
-            modifier: 0.90
-            description: "Gas-fired power generation"
-            
-          - id: "RENEWABLE"
-            label: "Renewable Energy"
-            modifier: 0.70
-            description: "Wind, solar, other renewables"
-            
-          - id: "MIXED"
-            label: "Mixed Operations"
-            modifier: 1.05
-            description: "Diversified operations across segments"
+        - cat: "UPSTREAM_CONVENTIONAL"
+          label: "Upstream Conventional"
+          modifier: 1.00
+          description: "Conventional onshore oil & gas production"
+          
+        - cat: "UPSTREAM_UNCONVENTIONAL"
+          label: "Upstream Unconventional"
+          modifier: 0.95
+          description: "Shale, tight oil, CBM operations"
+          
+        - cat: "UPSTREAM_OFFSHORE"
+          label: "Upstream Offshore (Shelf)"
+          modifier: 1.20
+          description: "Shallow water offshore operations"
+          
+        - cat: "UPSTREAM_DEEPWATER"
+          label: "Upstream Deepwater"
+          modifier: 1.50
+          description: "Deepwater offshore operations (>500m)"
+          
+        - cat: "MIDSTREAM_PIPELINE"
+          label: "Midstream Pipeline"
+          modifier: 0.80
+          description: "Oil & gas pipeline operations"
+          
+        - cat: "MIDSTREAM_PROCESSING"
+          label: "Midstream Processing"
+          modifier: 1.00
+          description: "Gas processing, NGL fractionation"
+          
+        - cat: "MIDSTREAM_STORAGE"
+          label: "Midstream Storage"
+          modifier: 0.85
+          description: "Crude/product storage terminals"
+          
+        - cat: "DOWNSTREAM_REFINING"
+          label: "Downstream Refining"
+          modifier: 1.30
+          description: "Petroleum refining operations"
+          
+        - cat: "DOWNSTREAM_PETROCHEMICAL"
+          label: "Downstream Petrochemical"
+          modifier: 1.25
+          description: "Petrochemical manufacturing"
+          
+        - cat: "POWER_GENERATION"
+          label: "Power Generation"
+          modifier: 0.90
+          description: "Gas-fired power generation"
+          
+        - cat: "RENEWABLE"
+          label: "Renewable Energy"
+          modifier: 0.70
+          description: "Wind, solar, other renewables"
+          
+        - cat: "MIXED"
+          label: "Mixed Operations"
+          modifier: 1.05
+          description: "Diversified operations across segments"
 
       geographic_focus:
-        description: "Primary geographic focus of operations"
-        inference_utility_function: geographic_focus_basefunction
-        values:
-          - id: "US_ONSHORE", 
-            label: "US Onshore"
-            modifier: 1.00
-            description: ""     
-          - id: "US_GULF_SHELF"
-            label: "US Gulf Shelf"
-            modifier: 1.10
-            description: ""     
-          - id: "US_GULF_DEEPWATER"
-            label: "US Gulf Deepwater"
-            modifier: 1.40
-            description: ""     
-          - id: "NORTH_SEA"
-            label: "North Sea"
-            modifier: 1.15
-            description: ""     
-          - id: "WEST_AFRICA"
-            label: "West Africa"
-            modifier: 1.25
-            description: ""     
-          - id: "MIDDLE_EAST"
-            label: "Middle East"
-            modifier: 1.20
-            description: ""     
-          - id: "ASIA_PACIFIC"
-            label: "Asia Pacific"
-            modifier: 1.10
-            description: ""     
-          - id: "LATIN_AMERICA" 
-            label: "Latin America"
-            modifier: 1.20
-            description: ""     
-          - id: "GLOBAL_DIVERSIFIED"
-            label: "Global Diversified"
-            modifier: 1.05
-            description: ""     
-          - id: "OTHER"
-            label: "Other"
-            modifier: 1.15
-            description: ""     
+        - cat: "US_ONSHORE", 
+          label: "US Onshore"
+          modifier: 1.00
+          description: ""     
+        - cat: "US_GULF_SHELF"
+          label: "US Gulf Shelf"
+          modifier: 1.10
+          description: ""     
+        - cat: "US_GULF_DEEPWATER"
+          label: "US Gulf Deepwater"
+          modifier: 1.40
+          description: ""     
+        - cat: "NORTH_SEA"
+          label: "North Sea"
+          modifier: 1.15
+          description: ""     
+        - cat: "WEST_AFRICA"
+          label: "West Africa"
+          modifier: 1.25
+          description: ""     
+        - cat: "MIDDLE_EAST"
+          label: "Middle East"
+          modifier: 1.20
+          description: ""     
+        - cat: "ASIA_PACIFIC"
+          label: "Asia Pacific"
+          modifier: 1.10
+          description: ""     
+        - cat: "LATIN_AMERICA" 
+          label: "Latin America"
+          modifier: 1.20
+          description: ""     
+        - cat: "GLOBAL_DIVERSIFIED"
+          label: "Global Diversified"
+          modifier: 1.05
+          description: ""     
+        - cat: "OTHER"
+          label: "Other"
+          modifier: 1.15
+          description: ""     
 
-    # ---------------------------------------------------------------------------
-    # SIGNAL GROUPINGS (Categories with Weights)
-    # ---------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # SIGNAL GROUPS
+    # Each group is the product of its underlying features
     # Each group contributes to the composite score
-    # Weights must sum to 1.0
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
     
     signal_groups:
       - id: "network_authority"
@@ -288,64 +304,89 @@ energy:
         description: "Quality of partnerships, contractors, and industry relationships"
         weight: 0.10
         test_scores: {excellent: 88, average: 68, poor: 40}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "safety_performance"
         name: "Safety Performance"
         description: "OSHA metrics, incidents, process safety events"
         weight: 0.30
         test_scores: {excellent: 92, average: 72, poor: 35}
-        critical: true
-        score_condition: safety_performance_critical
+        score_condition: true
+        bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Critical safety performance"
+          - max: 45
+            override: 4
+            action: "REFER"
+            note: "Significant safety concerns"
+        inclusive_max: false
         
       - id: "environmental_compliance"
         name: "Environmental Compliance"
         description: "EPA violations, spills, emissions, flaring"
         weight: 0.20
         test_scores: {excellent: 90, average: 70, poor: 38}
-        critical: true
-        score_condition: environmental_compliance_critical
+        score_condition: true
+        bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Critical environmental violations"
+          - max: 45
+            override: 4
+            action: "REFER"
+            note: "Significant environmental concerns"
+        inclusive_max: false
         
       - id: "operational_telemetry"
         name: "Operational Telemetry"
         description: "Production patterns, facility activity, maintenance signals"
         weight: 0.10
         test_scores: {excellent: 85, average: 68, poor: 45}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "financial_stability"
         name: "Financial Stability"
         description: "Credit rating, leverage, ARO coverage, capex trends"
         weight: 0.10
         test_scores: {excellent: 88, average: 70, poor: 40}
-        critical: false
-        score_condition: financial_stability_critical
+        score_condition: true
+        bands:
+          - max: 35
+            override: 4
+            action: "REFER"
+            note: "Financial stability concerns"
+        inclusive_max: false
         
       - id: "asset_portfolio"
         name: "Asset Portfolio"
         description: "Asset age, concentration, complexity, permit status"
         weight: 0.10
         test_scores: {excellent: 82, average: 65, poor: 42}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "corporate_footprint"
         name: "Corporate Footprint"
         description: "Safety culture communication, ESG reporting, HSE leadership"
         weight: 0.05
         test_scores: {excellent: 85, average: 62, poor: 38}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "structured_data"
         name: "Structured Data"
         description: "Third-party ESG ratings and industry benchmarks"
         weight: 0.05
         test_scores: {excellent: 85, average: 65, poor: 40}
-        critical: false
-        score_condition: null
+        score_condition: false
+
+    # -------------------------------------------------------------------------
+    # SIGNAL FEATURES
+    # Each is a underlying feature for the previously defined groups
+    # Each group contributes to the group score
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
 
     signal_features:
       network_authority:
@@ -354,56 +395,49 @@ energy:
           description: "Quality of joint venture partners"
           weight: 0.20
           inference_utility_function: partner_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "contractor_quality"
           name: "Contractor Relationships"
           description: "Quality of drilling/service contractors"
           weight: 0.15
           inference_utility_function: contractor_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "banking_relationship"
           name: "Banking/Financing Relationships"
           description: "Quality of banking relationships"
           weight: 0.15
           inference_utility_function: banking_relationship_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "insurance_history"
           name: "Insurance Market Reputation"
           description: "Historical insurance placement and claims record"
           weight: 0.15
           inference_utility_function: insurance_history_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "industry_association"
           name: "Industry Association Membership"
           description: "API, IOGP, and other association involvement"
           weight: 0.10
           inference_utility_function: industry_association_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "regulator_relationship"
           name: "Regulator Relationship Quality"
           description: "Quality of regulatory relationships"
           weight: 0.15
           inference_utility_function: regulator_relationship_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "customer_quality"
           name: "Offtake/Customer Quality"
           description: "Quality of product offtake relationships"
           weight: 0.10
           inference_utility_function: offtake_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       safety_performance:
         - id: "osha_trir"
@@ -411,56 +445,97 @@ energy:
           description: "TRIR vs industry benchmark"
           weight: 0.20
           inference_utility_function: osha_trir_basefunction
-          critical: true
-          score_condition: osha_trir_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "TRIR significantly above benchmark"
+          inclusive_max: false
           
         - id: "osha_violations"
           name: "OSHA Serious Violations"
           description: "History of serious/willful OSHA violations"
           weight: 0.15
           inference_utility_function: osha_violations_basefunction
-          critical: true
-          score_condition: osha_violations_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Willful/repeat OSHA violations"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Serious OSHA violation history"
+          inclusive_max: false
           
         - id: "bsee_incident"
           name: "BSEE Incidents"
           description: "Offshore incidents reported to BSEE"
           weight: 0.10
           inference_utility_function: bsee_incident_basefunction
-          critical: true
-          score_condition: bsee_incident_critical
+          score_condition: true
+          bands:
+            - max: 30
+              tier_override: 4
+              action: "REFER"
+              note: "Significant BSEE incident history"
+          inclusive_max: false
           
         - id: "process_safety"
           name: "Process Safety Events"
           description: "Tier 1 and Tier 2 process safety events"
           weight: 0.20
           inference_utility_function: process_safety_basefunction
-          critical: true
-          score_condition: process_safety_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE" 
+              note: "Major process safety events"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Process safety concerns"
+          inclusive_max: false
           
         - id: "fatality"
           name: "Fatality History"
           description: "Work-related fatality history"
           weight: 0.15
           inference_utility_function: fatality_history_basefunction
-          critical: true
-          score_condition: fatality_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4 
+              action: "REFER" 
+              note: "Fatality history concerns"
+          inclusive_max: false
           
         - id: "major_incident"
           name: "Major Incident History"
           description: "Explosions, blowouts, major spills"
           weight: 0.15
           inference_utility_function: major_incident_basefunction
-          critical: true
-          score_condition: major_incident_critical
+          score_condition: true
+          bands:
+            - max: 20
+              override: 5
+              action: "DECLINE"
+              note: "Major incident history"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Incident history concerns"
+          inclusive_max: false
           
         - id: "near_miss"
           name: "Near-Miss Reporting"
           description: "Near-miss reporting culture (if disclosed)"
           weight: 0.05
           inference_utility_function: nearmiss_reporting_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       environmental_compliance:
         - id: "epa_violation"
@@ -468,48 +543,62 @@ energy:
           description: "CAA, CWA, RCRA violations"
           weight: 0.20
           inference_utility_function: epa_violation_basefunction
-          critical: true
-          score_condition: epa_violation_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Ongoing EPA enforcement"
+            - max: 45
+              override: 4
+              action: "REFER" 
+              note: "Significant EPA violations"
+          inclusive_max: false
           
         - id: "spill_history"
           name: "Spill History"
           description: "Oil/chemical spill history from NRC and state records"
           weight: 0.25
           inference_utility_function: spill_history_basefunction
-          critical: true
-          score_condition: spill_history_critical
+          score_condition: true
+          bands:
+            - max: 20
+              override: 5
+              action: "DECLINE" 
+              note: "Major spill history"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Spill history concerns"
+          inclusive_max: false
           
         - id: "emissions_compliance"
           name: "Air Emissions Compliance"
           description: "Air permit compliance and emissions"
           weight: 0.15
           inference_utility_function: emissions_compliance_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "flaring"
           name: "Flaring Intensity"
           description: "Flaring intensity from satellite data"
           weight: 0.15
           inference_utility_function: flaring_intensity_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "methane"
           name: "Methane Emissions"
           description: "Methane emissions from satellite and ground monitoring"
           weight: 0.15
           inference_utility_function: methane_emissions_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "remediation"
           name: "Remediation Obligations"
           description: "Environmental remediation obligations"
           weight: 0.10
           inference_utility_function: remediation_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       operational_telemetry:
         - id: "production_consistency"
@@ -517,40 +606,35 @@ energy:
           description: "Volatility in reported production"
           weight: 0.20
           inference_utility_function: production_consistency_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "facility_activity"
           name: "Facility Activity Patterns"
           description: "Satellite-derived facility activity indicators"
           weight: 0.20
           inference_utility_function: facility_activity_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "well_integrity"
           name: "Well Integrity Indicators"
           description: "Shut-in patterns, workovers, P&A activity"
           weight: 0.20
           inference_utility_function: well_integrity_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "maintenance_pattern"
           name: "Maintenance Patterns"
           description: "Observable turnarounds and maintenance activity"
           weight: 0.20
           inference_utility_function: maintenance_patterm_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "operational_efficiency"
           name: "Operational Efficiency"
           description: "Production per well, utilization metrics"
           weight: 0.20
           inference_utility_function: operational_efficiency_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       financial_stability:
         - id: "credit_rating"
@@ -558,40 +642,51 @@ energy:
           description: "Corporate credit rating"
           weight: 0.25
           inference_utility_function: credit_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "leverage"
           name: "Debt/Equity Leverage"
           description: "Leverage ratio vs peer benchmark"
           weight: 0.20
           inference_utility_function: leverage_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "aro_coverage"
           name: "ARO Coverage"
           description: "Asset retirement obligation funding status"
           weight: 0.20
           inference_utility_function: aro_coverage_basefunction
-          critical: true
-          score_condition: aro_coverage_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "ARO underfunding concerns"
+          inclusive_max: false
           
         - id: "capex_trend"
           name: "Capex Trends"
           description: "Maintenance vs growth capital trends"
           weight: 0.20
           inference_utility_function: capex_trend_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "restructuring"
           name: "Bankruptcy/Restructuring History"
           description: "Bankruptcy or debt restructuring history"
           weight: 0.15
           inference_utility_function: restructuring_basefunction
-          critical: true
-          score_condition: restructuring_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Recent bankruptcy"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Restructuring history"
+          inclusive_max: false
 
       asset_portfolio:
         - id: "asset_age"
@@ -599,40 +694,35 @@ energy:
           description: "Weighted average asset age vs peers"
           weight: 0.25
           inference_utility_function: asset_age_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "concentration"
           name: "Geographic Concentration"
           description: "Geographic and asset concentration risk"
           weight: 0.20
           inference_utility_function: concentration_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "complexity"
           name: "Technology/Complexity Profile"
           description: "Operational complexity and technology risk"
           weight: 0.20
           inference_utility_function: technology_profile_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "decommissioning"
           name: "Decommissioning Obligations"
           description: "Decommissioning liability status"
           weight: 0.20
           inference_utility_function: decomissioning_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "permit_status"
           name: "Permit Status"
           description: "Operating permit status and compliance"
           weight: 0.15
           inference_utility_function: permit_status_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       corporate_footprint:
         - id: "safety_communication"
@@ -640,48 +730,42 @@ energy:
           description: "Observable safety culture and communication"
           weight: 0.20
           inference_utility_function: safety_comms_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "esg_reporting"
           name: "ESG/Sustainability Reporting"
           description: "Quality of ESG and sustainability reporting"
           weight: 0.20
           inference_utility_function: esg_reporting_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "technical_hiring"
           name: "Technical/HSE Hiring"
           description: "HSE and engineering hiring signals"
           weight: 0.15
           inference_utility_function: technical_hiring_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "industry_presence"
           name: "Industry Conference Presence"
           description: "Presence at industry conferences"
           weight: 0.15
           inference_utility_function: industry_presence_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "disclosure_quality"
           name: "Transparency/Disclosure Quality"
           description: "Overall transparency and disclosure quality"
           weight: 0.15
           inference_utility_function: disclosure_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "hse_leadership"
           name: "HSE Leadership Visibility"
           description: "HSE leadership profiles and visibility"
           weight: 0.15
           inference_utility_function: hse_leadership_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       structured_data:
         - id: "esg_rating"
@@ -689,24 +773,21 @@ energy:
           description: "Third-party ESG ratings"
           weight: 0.40
           inference_utility_function: esg_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "benchmark"
           name: "Industry Benchmark Data"
           description: "Performance vs industry benchmarks"
           weight: 0.35
           inference_utility_function: benchmark_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "credit"
           name: "Credit Rating (Structured)"
           description: "Credit rating from structured feed"
           weight: 0.25
           inference_utility_function: credit_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
     # -------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -720,7 +801,8 @@ energy:
           description: "Excellent operator - auto-approve at preferred pricing"
           auto_approve: true
           auto_decline: false
-          base_rate: 0.0008  # 0.08% of TIV
+          premium_generation_method: "tiv"
+          rate: 0.0008  # 0.08% of TIV
         - id: 2       
           label: "STANDARD"
           min_score: 650
@@ -728,7 +810,8 @@ energy:
           description: "Good operator - auto-approve at standard pricing"
           auto_approve: true
           auto_decline: false
-          base_rate: 0.0012  # 0.12% of TIV
+          premium_generation_method: "tiv"
+          rate: 0.0012  # 0.12% of TIV
         - id: 3       
           label: "ELEVATED"
           min_score: 500
@@ -736,7 +819,8 @@ energy:
           description: "Moderate risk - auto-approve with conditions"
           auto_approve: false
           auto_decline: false
-          base_rate: 0.0018  # 0.18% of TIV
+          premium_generation_method: "tiv"
+          rate: 0.0018  # 0.18% of TIV
         - id: 4       
           label: "HIGH_RISK"
           min_score: 350
@@ -744,7 +828,8 @@ energy:
           description: "High risk - manual review with loading"
           auto_approve: false
           auto_decline: false
-          base_rate: 0.0028  # 0.28% of TIV
+          premium_generation_method: "tiv"
+          rate: 0.0028  # 0.28% of TIV
         - id: 5        
           label: "CRITICAL"
           min_score: 0
@@ -752,86 +837,28 @@ energy:
           description: "Critical risk - decline or senior review"
           auto_approve: false
           auto_decline: true
-          base_rate: 0.0045  # 0.45% of TIV
+          premium_generation_method: "tiv"
+          rate: 0.0045  # 0.45% of TIV
 
     # -------------------------------------------------------------------------
-    # CONDITION DEFINITIONS
+    # LIMIT BANDINGS
     # -------------------------------------------------------------------------
-
-  
-    score_conditions:
-      - id: safety_performance_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical safety performance"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant safety concerns"}
-        inclusive_max: false
-      
-      - id: environmental_compliance_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical environmental violations"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant environmental concerns"}
-        inclusive_max: false
-      
-      - id: osha_trir_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "TRIR significantly above benchmark"}
-        inclusive_max: false
-      
-      - id: osha_violations_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Willful/repeat OSHA violations"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Serious OSHA violation history"}
-        inclusive_max: false
-      
-      - id: bsee_incident_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Significant BSEE incident history"}
-        inclusive_max: false
-      
-      - id: process_safety_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Major process safety events"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Process safety concerns"}
-        inclusive_max: false
-      
-      - id: fatality_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Fatality history concerns"}
-        inclusive_max: false
-      
-      - id: major_incident_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Major incident history"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Incident history concerns"}
-        inclusive_max: false
-      
-      - id: epa_violation_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Ongoing EPA enforcement"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant EPA violations"}
-        inclusive_max: false
-      
-      - id: spill_history_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Major spill history"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Spill history concerns"}
-        inclusive_max: false
-      
-      - id: financial_stability_critical
-        bands:
-          - {max: 35, tier_override: 4, action: "REFER", note: "Financial stability concerns"}
-        inclusive_max: false
-      
-      - id: aro_coverage_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "ARO underfunding concerns"}
-        inclusive_max: false
-      
-      - id: restructuring_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Recent bankruptcy"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Restructuring history"}
-        inclusive_max: false
+    limit_bandings:
+      - id: 1
+        limit: 10000000
+        deductible: 500000
+      - id: 2
+        limit: 25000000
+        deductible: 1000000
+      - id: 3
+        limit: 50000000
+        deductible: 2000000
+      - id: 4
+        limit: 100000000
+        deductible: 5000000
+      - id: 5
+        limit: 250000000
+        deductible: 10000000
 
     # -------------------------------------------------------------------------
     # PRICING PARAMETERS
