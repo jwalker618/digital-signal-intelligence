@@ -775,7 +775,7 @@ financial_institutions:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 1500  # Per $1M combined limit
+          premium: 1500  # Per $1M combined limit
         - id: 2       
           label: "STANDARD"
           min_score: 650
@@ -784,7 +784,7 @@ financial_institutions:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 2200
+          premium: 2200
         - id: 3       
           label: "ELEVATED"
           min_score: 500
@@ -793,7 +793,7 @@ financial_institutions:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 3200
+          premium: 3200
         - id: 4        
           label: "HIGH_RISK"
           min_score: 350
@@ -802,7 +802,7 @@ financial_institutions:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 5000
+          premium: 5000
         - id: 5        
           label: "CRITICAL"
           min_score: 0
@@ -811,7 +811,7 @@ financial_institutions:
           auto_approve: false
           auto_decline: true
           premium_generation_method: "base"
-          base_premium: 8000
+          premium: 8000
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
