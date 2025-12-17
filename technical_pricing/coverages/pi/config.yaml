@@ -555,22 +555,48 @@ professional_indemnity:
           description: "Current status of all professional licenses"
           weight: 0.25
           inference_utility_function: license_status_basefunction
-          score_condition: license_status_critical
+          score_condition: true
+          bands:
+            - max: 35
+              override: 5
+              action: "DECLINE"
+              note: "License status critical"
+            - max: 50
+              override: 4
+              action: "REFER"
+              note: "License status concerns"
+          inclusive_max: false
           
         - id: "disciplinary_history"
           name: "Disciplinary History"
           description: "Sanctions, censures, suspensions, reprimands"
           weight: 0.30
           inference_utility_function: disciplianry_history_basefunction
-          score_condition: disciplinary_history_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Severe disciplinary history"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Significant disciplinary history"
+          inclusive_max: false
           
         - id: "malpractice_record"
           name: "Public Malpractice Record"
           description: "Public judgments and disclosed settlements"
           weight: 0.15
           inference_utility_function: malpractice_record_basefunction
-          score_condition: malpractice_record_critical
-          
+          score_condition: true
+          bands:
+            - max: 35
+              override: 4
+              action: "REFER" 
+              note: "Malpractice record concerns"
+          inclusive_max: false
+      
         - id: "ce_compliance"
           name: "Continuing Education Compliance"
           description: "CLE/CPE/CE requirements current"
@@ -590,7 +616,17 @@ professional_indemnity:
           description: "AICPA peer review rating (accounting firms)"
           weight: 0.10
           inference_utility_function: peer_review_basefunction
-          score_condition: peer_review_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Failed peer review"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Peer review deficiencies"
+          inclusive_max: false
           
         - id: "pcaob_standing"
           name: "PCAOB/SEC Standing"
@@ -612,7 +648,13 @@ professional_indemnity:
           description: "Partner retention and turnover patterns"
           weight: 0.25
           inference_utility_function: partner_stability_basefunction
-          score_condition: partner_stability_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "Partner stability concerns"
+          inclusive_max: false
           
         - id: "staff_retention"
           name: "Staff Retention"
@@ -633,7 +675,13 @@ professional_indemnity:
           description: "Financial health indicators"
           weight: 0.20
           inference_utility_function: financial_stability_basefunction
-          score_condition: financial_stability_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "Financial stability concerns"
+          inclusive_max: false
           
         - id: "succession_planning"
           name: "Succession Planning"
@@ -712,7 +760,13 @@ professional_indemnity:
           description: "Historical data breaches"
           weight: 0.20
           inference_utility_function: breach_history_basefunction
-          score_condition: breach_history_critical
+          score_condition: true
+          bands:
+            - max: 35
+              override: 4
+              action: "REFER" 
+              note: "Data breach history concerns"
+          inclusive_max: false
 
       corporate_footprint:
         - id: "website_quality"
@@ -763,7 +817,17 @@ professional_indemnity:
           description: "Professional negligence suits filed"
           weight: 0.35
           inference_utility_function: malpractice_suits_basefunction
-          score_condition: malpractice_suits_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Multiple active malpractice suits"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Active malpractice litigation"
+          inclusive_max: false
           
         - id: "fee_disputes_litigation"
           name: "Fee Disputes/Arbitration"
@@ -777,7 +841,17 @@ professional_indemnity:
           description: "Regulatory enforcement actions"
           weight: 0.25
           inference_utility_function: regulatory_enforcement_basefunction
-          score_condition: regulatory_enforcement_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Active regulatory enforcement"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Regulatory enforcement history"
+          inclusive_max: false
           
         - id: "civil_litigation"
           name: "Civil Litigation as Defendant"
@@ -791,7 +865,13 @@ professional_indemnity:
           description: "Firm or principal bankruptcy"
           weight: 0.10
           inference_utility_function: bankruptcy_basefunction
-          score_condition: bankruptcy_critical
+          score_condition: true
+          bands:
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Bankruptcy history concerns"
+          inclusive_max: false
 
     # -------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -805,6 +885,7 @@ professional_indemnity:
           description: "Excellent firm - auto-approve at preferred pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "tiv"
           tier_modifier: 0.75
         - id: 2     
           label: "STANDARD"
@@ -813,6 +894,7 @@ professional_indemnity:
           description: "Good firm - auto-approve at standard pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "tiv"
           tier_modifier: 1.00
         - id: 3     
           label: "ELEVATED"
@@ -821,6 +903,7 @@ professional_indemnity:
           description: "Moderate risk - manual review recommended"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "tiv"
           tier_modifier: 1.30
         - id: 4      
           label: "HIGH_RISK"
@@ -829,6 +912,7 @@ professional_indemnity:
           description: "High risk - senior underwriter review with loading"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "tiv"
           tier_modifier: 1.75
         - id: 5        
           label: "CRITICAL"
@@ -837,72 +921,28 @@ professional_indemnity:
           description: "Critical risk - decline recommended"
           auto_approve: false
           auto_decline: true
+          premium_generation_method: "tiv"
           tier_modifier: 2.50
 
     # -------------------------------------------------------------------------
-    # CONDITION DEFINITIONS
+    # LIMIT BANDINGS
     # -------------------------------------------------------------------------
-
-  
-    score_conditions:
-
-      
-      - id: license_status_critical
-        bands:
-          - {max: 35, tier_override: 5, action: "DECLINE", note: "License status critical"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "License status concerns"}
-        inclusive_max: false
-      
-      - id: disciplinary_history_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Severe disciplinary history"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant disciplinary history"}
-        inclusive_max: false
-      
-      - id: malpractice_record_critical
-        bands:
-          - {max: 35, tier_override: 4, action: "REFER", note: "Malpractice record concerns"}
-        inclusive_max: false
-      
-      - id: peer_review_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Failed peer review"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Peer review deficiencies"}
-        inclusive_max: false
-      
-      - id: partner_stability_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Partner stability concerns"}
-        inclusive_max: false
-      
-      - id: financial_stability_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Financial stability concerns"}
-        inclusive_max: false
-      
-
-      
-      - id: breach_history_critical
-        bands:
-          - {max: 35, tier_override: 4, action: "REFER", note: "Data breach history concerns"}
-        inclusive_max: false
-      
-      - id: malpractice_suits_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Multiple active malpractice suits"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Active malpractice litigation"}
-        inclusive_max: false
-      
-      - id: regulatory_enforcement_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Active regulatory enforcement"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Regulatory enforcement history"}
-        inclusive_max: false
-      
-      - id: bankruptcy_critical
-        bands:
-          - {max: 40, tier_override: 4, action: "REFER", note: "Bankruptcy history concerns"}
-        inclusive_max: false
+    limit_bandings:
+      - id: 1
+        limit: 1000000
+        deductible: 10000
+      - id: 2
+        limit: 2500000
+        deductible: 25000
+      - id: 3
+        limit: 5000000
+        deductible: 50000
+      - id: 4
+        limit: 10000000
+        deductible: 100000
+      - id: 5
+        limit: 25000000
+        deductible: 250000
 
     # -------------------------------------------------------------------------
     # PRICING PARAMETERS
