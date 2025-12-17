@@ -87,21 +87,30 @@ directors_officers:
             action: "REFER"
             note: "Executive dispute disclosed"
 
+
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
+    
   categorical_groups:
       - id: "company_type"
         name: "Company Type"
         description: "Company classification based on public/private status and market cap"
+        impact: "modifier"
         inference_utility_function: company_type_basefunction    
       - id: "industry"
         name: "Industry"
         description: "Industry classification from SIC/NAICS codes"
+        impact: "modifier"
         inference_utility_function: industry_classification_basefunction
       - id: "stock_exchange"
         name: "Stock Exchange"
         description: "Primary stock exchange listing"
+        impact: "modifier"
         inference_utility_function: stock_exchange_basefunction
 
     # -------------------------------------------------------------------------
