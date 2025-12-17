@@ -706,7 +706,7 @@ directors_officers:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 4000  # Per $1M limit
+          premium: 4000  # Per $1M limit
         - id: 2      
           label: "STANDARD"
           min_score: 650
@@ -715,7 +715,7 @@ directors_officers:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 6000
+          premium: 6000
         - id: 3        
           label: "ELEVATED"
           min_score: 500
@@ -724,7 +724,7 @@ directors_officers:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 9000
+          premium: 9000
         - id: 4       
           label: "HIGH_RISK"
           min_score: 350
@@ -733,7 +733,7 @@ directors_officers:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 15000
+          premium: 15000
         - id: 5        
           label: "CRITICAL"
           min_score: 0
@@ -742,7 +742,7 @@ directors_officers:
           auto_approve: false
           auto_decline: true
           premium_generation_method: "base"
-          base_premium: 25000
+          premium: 25000
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
