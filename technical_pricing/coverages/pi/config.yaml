@@ -104,8 +104,6 @@ professional_indemnity:
             action: "FLAG"
             note: "Major client loss (>25% revenue)"
 
-
-
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
     # categorical groups can either
