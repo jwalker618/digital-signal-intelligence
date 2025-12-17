@@ -310,7 +310,13 @@ cyber:
           description: "Relationships with tier-1 security vendors (CrowdStrike, Palo Alto, etc.)"
           weight: 0.25
           inference_utility_function: security_vendor_basefunction
-          score_condition: security_vendor_poor
+          score_condition: true
+          bands:
+            - max: 25
+              override: null
+              action: "FLAG"
+              note: "No tier-1 security vendors detected"
+          inclusive_max: false     
           
         - id: "industry_body"
           name: "Industry Body Membership"
@@ -381,8 +387,18 @@ cyber:
           description: "Exposed services and open ports (Shodan/Censys analysis)"
           weight: 0.18
           inference_utility_function: network_exposure_basefunction
-          score_condition: exposure_critical
-
+          score_condition: true
+          bands:
+            - max: 30, 
+              override: 5, 
+              action: "DECLINE", 
+              note: "Dangerous network exposure"
+            - max: 45, 
+              override: 4, 
+              action: "REFER", 
+              note: "Elevated network exposure"
+          inclusive_max: false
+      
         - id: "software_currency"
           name: "Software Currency"
           description: "Software version freshness (fingerprinting analysis)"
@@ -395,7 +411,17 @@ cyber:
           description: "Known vulnerabilities in detected software"
           weight: 0.18
           inference_utility_function: cve_exposure_basefunction
-          score_condition: cve_exposure_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Critical unpatched vulnerabilities"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Significant vulnerability exposure"
+          inclusive_max: false
 
         - id: "cloud_infrastructure"
           name: "Cloud Infrastructure Quality"
@@ -488,8 +514,18 @@ cyber:
           description: "Historical data breaches (HHS, state AG, public disclosures)"
           weight: 0.35
           inference_utility_function: breach_history_basefunction
-          score_condition: breach_history_critical
-          
+          score_condition: true
+          bands:
+            - max: 35
+              override: 5
+              action: "DECLINE"
+              note: "Severe or recent breach history"
+            - max: 50
+              override: 4
+              action: "REFER"
+              note: "Material breach history"
+          inclusive_max: false
+            
         - id: "regulatory_action"
           name: "Regulatory Actions"
           description: "FTC, state AG, GDPR enforcement actions"
@@ -516,8 +552,18 @@ cyber:
           description: "Leaked data and credentials for sale"
           weight: 0.15
           inference_utility_function: dark_web_basefunction
-          score_condition: dark_web_critical
-  
+          score_condition: true
+          bands:
+            - max: 30
+              override: 5
+              action: "DECLINE"
+              note: "Active dark web exposure"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Dark web data presence"
+          inclusive_max: false
+          
       structured_data:
         - id: "security_rating"
           name: "Security Rating"
@@ -554,6 +600,7 @@ cyber:
           description: "Excellent risk - automatic approval, preferred pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 8000
         - id: 2        
           label: "STANDARD_PLUS"
@@ -562,6 +609,7 @@ cyber:
           description: "Good risk - automatic approval, standard pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 12000
         - id: 3        
           label: "STANDARD"
@@ -570,6 +618,7 @@ cyber:
           description: "Average risk - may require referral"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 18000
         - id: 4        
           label: "SUBSTANDARD"
@@ -577,7 +626,8 @@ cyber:
           max_score: 499
           description: "Elevated risk - requires senior review"
           auto_approve: false
-          auto_decline: false
+          auto_decline: fals
+          premium_generation_method: "base"
           base_premium: 30000
         - id: 5        
           label: "DECLINE"
@@ -586,49 +636,29 @@ cyber:
           description: "Unacceptable risk - decline"
           auto_approve: false
           auto_decline: true
+          premium_generation_method: "base"
           base_premium: 50000
 
     # -------------------------------------------------------------------------
-    # CONDITION DEFINITIONS
+    # LIMIT BANDINGS
     # -------------------------------------------------------------------------
-    # Conditions that trigger automatic actions
-    
-    score_conditions:
+    limit_bandings:
+      - id: 1
+        limit: 1000000
+        deductible: 25000
+      - id: 2
+        limit: 5000000
+        deductible: 50000
+      - id: 3
+        limit: 10000000
+        deductible: 100000
+      - id: 4
+        limit: 25000000
+        deductible: 250000
+      - id: 5
+        limit: 50000000
+        deductible: 500000
 
-      - id: cve_exposure_critical
-        description: "Critical CVE exposure"
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Critical unpatched vulnerabilities"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Significant vulnerability exposure"}
-        inclusive_max: false
-      
-      - id: exposure_critical
-        description: "Critical network exposure"
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Dangerous network exposure"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Elevated network exposure"}
-        inclusive_max: false
-      
-      - id: breach_history_critical
-        description: "Critical breach history"
-        bands:
-          - {max: 35, tier_override: 5, action: "DECLINE", note: "Severe or recent breach history"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "Material breach history"}
-        inclusive_max: false
-      
-      - id: dark_web_critical
-        description: "Critical dark web exposure"
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Active dark web exposure"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Dark web data presence"}
-        inclusive_max: false
-      
-      - id: security_vendor_poor
-        description: "No security vendor relationships"
-        bands:
-          - {max: 25, tier_override: null, action: "FLAG", note: "No tier-1 security vendors detected"}
-        inclusive_max: false     
-  
     # ---------------------------------------------------------------------------
     # PRICING PARAMETERS
     # ---------------------------------------------------------------------------
