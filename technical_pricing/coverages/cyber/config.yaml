@@ -41,6 +41,7 @@ cyber:
         - "privacy_liability"
         - "cyber_extortion"
       applicable_markets: ["us", "uk", "eu", "apac"]
+      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
       min_premium: 5000
       default_currency: "USD"
 
@@ -109,113 +110,121 @@ cyber:
 
 
     # -------------------------------------------------------------------------
+    # CATEGORICAL GROUPS
+    # -------------------------------------------------------------------------
+
+    categorical_groups:
+      - id: "industry_classification"
+        name: "Industry Classification"
+        description: "Industry classification derived from public records"
+        inference_utility_function: industry_classification_basefunction
+      - id: "size_band"
+        name: "Size Band"
+        description: "Company size classification"
+        inference_utility_function: company_size_basefunction
+      - id: "geography"
+        name: "geography"
+        description: "Primary operational geography"
+        inference_utility_function: operational_base_basefunction
+        
+    # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
-    # These define classification values and their pricing impact
-    # inference_method specifies how to automatically determine the value
 
     categorical_features:
       industry_classification:
-        description: "Industry classification derived from public records"
-        inference_utility_function: industry_classification_basefunction
-        values:
-          - id: "TECHNOLOGY"
-            label: "Technology"
-            modifier: 1.15
-            description: ""         
-          - id: "FINANCIAL_SERVICES" 
-            label: "Financial Services" 
-            modifier: 1.40
-            description: ""     
-          - id: "HEALTHCARE"
-            label: "Healthcare"
-            modifier: 1.50
-            description: ""     
-          - id: "RETAIL"
-            label: "Retail"
-            modifier: 1.25
-            description: ""     
-          - id: "MANUFACTURING"
-            label: "Manufacturing"
-            modifier: 0.95
-            description: ""     
-          - id: "PROFESSIONAL_SERVICES"
-            label: "Professional Services"
-            modifier: 1.10
-            description: ""     
-          - id: "EDUCATION"
-            label: "Education"
-            modifier: 1.05
-            description: ""     
-          - id: "GOVERNMENT"
-            label: "Government"
-            modifier: 0.90
-            description: ""     
-          - id: "ENERGY"
-            label: "Energy & Utilities"
-            modifier: 1.20
-            description: ""     
-          - id: "OTHER"
-            label: "Other" 
-            modifier: 1.00
-            description: ""     
+        - cat: "TECHNOLOGY"
+          label: "Technology"
+          modifier: 1.15
+          description: ""         
+        - cat: "FINANCIAL_SERVICES" 
+          label: "Financial Services" 
+          modifier: 1.40
+          description: ""     
+        - cat: "HEALTHCARE"
+          label: "Healthcare"
+          modifier: 1.50
+          description: ""     
+        - cat: "RETAIL"
+          label: "Retail"
+          modifier: 1.25
+          description: ""     
+        - cat: "MANUFACTURING"
+          label: "Manufacturing"
+          modifier: 0.95
+          description: ""     
+        - cat: "PROFESSIONAL_SERVICES"
+          label: "Professional Services"
+          modifier: 1.10
+          description: ""     
+        - cat: "EDUCATION"
+          label: "Education"
+          modifier: 1.05
+          description: ""     
+        - cat: "GOVERNMENT"
+          label: "Government"
+          modifier: 0.90
+          description: ""     
+        - cat: "ENERGY"
+          label: "Energy & Utilities"
+          modifier: 1.20
+          description: ""     
+        - cat: "OTHER"
+          label: "Other" 
+          modifier: 1.00
+          description: ""     
   
       size_band:
-        description: "Company size classification"
-        inference_utility_function: company_size_basefunction
-        values:
-          - id: "MICRO"
-            label: "Micro"
-            modifier: 0.40
-            description: ""     
-          - id: "SMALL"
-            label: "Small"
-            modifier: 0.60
-            description: ""     
-          - id: "MEDIUM"
-            label: "Medium"
-            modifier: 1.00
-            description: ""     
-          - id: "LARGE"
-            label: "Large"
-            description: ""     
-            modifier: 2.00
-          - id: "ENTERPRISE"
-            label: "Enterprise"
-            modifier: 4.00 
-            description: ""     
+        - cat: "MICRO"
+          label: "Micro"
+          modifier: 0.40
+          description: ""     
+        - cat: "SMALL"
+          label: "Small"
+          modifier: 0.60
+          description: ""     
+        - cat: "MEDIUM"
+          label: "Medium"
+          modifier: 1.00
+          description: ""     
+        - cat: "LARGE"
+          label: "Large"
+          description: ""     
+          modifier: 2.00
+        - cat: "ENTERPRISE"
+          label: "Enterprise"
+          modifier: 4.00 
+          description: ""     
             
       geography:
-        description: "Primary operational geography"
-        inference_utility_function: operational_base_basefunction
-        values:
-          - id: "US" 
-            label: "United States"
-            modifier: 1.00
-            description: ""     
-          - id: "UK"
-            label: "United Kingdom"
-            modifier: 1.05
-            description: ""     
-          - id: "EU"
-            label: "European Union"
-            modifier: 1.10 
-            description: ""     
-          - id: "APAC"
-            label: "Asia Pacific"
-            modifier: 1.15
-            description: ""     
-          - id: "OTHER" 
-            label: "Other"
-            modifier: 1.25
-            description: ""     
+        - cat: "US" 
+          label: "United States"
+          modifier: 1.00
+          description: ""     
+        - cat: "UK"
+          label: "United Kingdom"
+          modifier: 1.05
+          description: ""     
+        - cat: "EU"
+          label: "European Union"
+          modifier: 1.10 
+          description: ""     
+        - cat: "APAC"
+          label: "Asia Pacific"
+          modifier: 1.15
+          description: ""     
+        - cat: "OTHER" 
+          label: "Other"
+          modifier: 1.25
+          description: ""     
 
   
-    # ---------------------------------------------------------------------------
-    # SIGNAL GROUPINGS (Categories with Weights)
-    # ---------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # SIGNAL GROUPS
+    # Each group is the product of its underlying features
     # Each group contributes to the composite score
-    # Weights must sum to 1.0
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
     
     signal_groups:
       - id: "network_authority"
@@ -223,40 +232,62 @@ cyber:
         description: "Industry relationships, partnerships, and counterparty quality"
         weight: 0.15
         test_scores: {excellent: 90, average: 70, poor: 40}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "technical_infrastructure"
         name: "Technical Infrastructure"
         description: "Observable technical security implementation"
         weight: 0.35
         test_scores: {excellent: 92, average: 68, poor: 35}
-        critical: true
-        score_condition: technical_infrastructure_critical
+        score_condition: true
+        bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Critical technical deficiencies"
+          - max: 45
+            override: 4
+            action: "REFER"
+            note: "Significant technical concerns"
+        inclusive_max: false
         
       - id: "corporate_footprint"
         name: "Corporate Footprint"
         description: "Signals from company's digital presence and security posture"
         weight: 0.15
         test_scores: {excellent: 88, average: 65, poor: 38}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "public_record"
         name: "Public Record"
         description: "Breach history, regulatory actions, and public disclosures"
         weight: 0.25
         test_scores: {excellent: 95, average: 72, poor: 30}
-        critical: true
-        score_condition: public_record_critical
-        
+        score_condition: true
+        bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Severe breach/regulatory history"
+          - max: 45
+            override: 4
+            action: "REFER"
+            note: "Material breach history"
+        inclusive_max: false
+     
       - id: "structured_data"
         name: "Structured Data"
         description: "Third-party security ratings and scores"
         weight: 0.10
         test_scores: {excellent: 88, average: 68, poor: 42}
-        critical: false
-        score_condition: null
+        score_condition: false
+
+    # -------------------------------------------------------------------------
+    # SIGNAL FEATURES
+    # Each is a underlying feature for the previously defined groups
+    # Each group contributes to the group score
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
   
     signal_features:
       network_authority:
@@ -265,23 +296,20 @@ cyber:
           description: "Customer quality inferred from case studies, logos, testimonials"
           weight: 0.15
           inference_utility_function: customer_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "partner_quality"
           name: "Partner Network Quality"
           description: "Technology partners and alliance quality"
           weight: 0.10
           inference_utility_function: partner_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "security_vendor"
           name: "Security Vendor Relationships"
           description: "Relationships with tier-1 security vendors (CrowdStrike, Palo Alto, etc.)"
           weight: 0.25
           inference_utility_function: security_vendor_basefunction
-          critical: true
           score_condition: security_vendor_poor
           
         - id: "industry_body"
@@ -289,40 +317,35 @@ cyber:
           description: "Membership in ISACs, trade associations, security consortiums"
           weight: 0.15
           inference_utility_function: industry_body_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "certification_authority"
           name: "Certification Authority"
           description: "Quality of certification auditors (Big 4, recognized bodies)"
           weight: 0.15
           inference_utility_function: certification_authority_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "financial_relationship"
           name: "Financial Relationship Quality"
           description: "Banking and financial relationship indicators"
           weight: 0.05
           inference_utility_function: financial_relationship_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "network_centrality"
           name: "Peer Network Centrality"
           description: "Position in industry relationship graph"
           weight: 0.10
           inference_utility_function: network_centrality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "second_degree"
           name: "Second-Degree Relationship Quality"
           description: "Quality of partners' partners (supply chain depth)"
           weight: 0.05
           inference_utility_function: second_degree_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       technical_infrastructure:
         - id: "tls_score"
@@ -330,39 +353,34 @@ cyber:
           description: "TLS configuration quality (SSL Labs methodology)"
           weight: 0.12
           inference_utility_function: tls_configuration_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "security_headers"
           name: "Security Headers"
           description: "HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)"
           weight: 0.10
           inference_utility_function: security_headers_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "email_auth"
           name: "Email Authentication"
           description: "Email security (SPF, DMARC, DKIM configuration)"
           weight: 0.12
           inference_utility_function: email_authentication_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "dnssec"
           name: "DNSSEC Implementation"
           description: "DNS Security Extensions implementation"
           weight: 0.05
           inference_utility_function: dnssec_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "exposure"
           name: "Network Exposure"
           description: "Exposed services and open ports (Shodan/Censys analysis)"
           weight: 0.18
           inference_utility_function: network_exposure_basefunction
-          critical: true
           score_condition: exposure_critical
 
         - id: "software_currency"
@@ -370,15 +388,13 @@ cyber:
           description: "Software version freshness (fingerprinting analysis)"
           weight: 0.10
           inference_utility_function: software_currency_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "cve_exposure"
           name: "CVE Exposure"
           description: "Known vulnerabilities in detected software"
           weight: 0.18
           inference_utility_function: cve_exposure_basefunction
-          critical: true
           score_condition: cve_exposure_critical
 
         - id: "cloud_infrastructure"
@@ -386,24 +402,21 @@ cyber:
           description: "Cloud provider quality and configuration"
           weight: 0.05
           inference_utility_function: cloud_infrastructure_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "waf_presence"
           name: "WAF Presence"
           description: "Web Application Firewall detection"
           weight: 0.05
           inference_utility_function: waf_presence_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "cdn_usage"
           name: "CDN Usage"
           description: "Content Delivery Network usage (DDoS protection indicator)"
           weight: 0.05
           inference_utility_function: cdn_usage_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       corporate_footprint:
         - id: "security_page"
@@ -411,72 +424,63 @@ cyber:
           description: "Dedicated security/trust page presence and quality"
           weight: 0.15
           inference_utility_function: security_page_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "privacy_policy"
           name: "Privacy Policy Quality"
           description: "Privacy policy comprehensiveness (NLP analysis)"
           weight: 0.10
           inference_utility_function: privacy_policy_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "security_txt"
           name: "Security.txt Presence"
           description: "RFC 9116 security.txt file presence and completeness"
           weight: 0.08
           inference_utility_function: security_txt_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "bug_bounty"
           name: "Bug Bounty Program"
           description: "Public bug bounty program presence"
           weight: 0.15
           inference_utility_function: bug_bounty_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "security_hiring"
           name: "Security Hiring Activity"
           description: "Security-related job postings (CISO, security engineers)"
           weight: 0.12
           inference_utility_function: security_hiring_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "technical_content"
           name: "Technical Blog Quality"
           description: "Security-focused technical content presence"
           weight: 0.08
           inference_utility_function: technical_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "developer_resources"
           name: "Developer Resources"
           description: "API documentation and developer portal presence"
           weight: 0.07
           inference_utility_function: developer_resources_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "security_leadership"
           name: "Security Leadership Visibility"
           description: "CISO/security leadership public presence"
           weight: 0.15
           inference_utility_function: security_leadership_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
         - id: "compliance_badges"
           name: "Compliance Certifications"
           description: "Displayed compliance certifications (SOC 2, ISO 27001, etc.)"
           weight: 0.10
           inference_utility_function: compliance_badges_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
       public_record:
         - id: "breach_history"
@@ -484,7 +488,6 @@ cyber:
           description: "Historical data breaches (HHS, state AG, public disclosures)"
           weight: 0.35
           inference_utility_function: breach_history_basefunction
-          critical: true
           score_condition: breach_history_critical
           
         - id: "regulatory_action"
@@ -492,31 +495,27 @@ cyber:
           description: "FTC, state AG, GDPR enforcement actions"
           weight: 0.20
           inference_utility_function: regulatory_action_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "litigation_history"
           name: "Litigation History"
           description: "Data breach and privacy-related lawsuits"
           weight: 0.15
           inference_utility_function: litigation_history_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "credential_exposure"
           name: "Credential Exposure"
           description: "Corporate domain credential exposure (HIBP)"
           weight: 0.15
           inference_utility_function: credential_exposure_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "dark_web"
           name: "Dark Web Exposure"
           description: "Leaked data and credentials for sale"
           weight: 0.15
           inference_utility_function: dark_web_basefunction
-          critical: true
           score_condition: dark_web_critical
   
       structured_data:
@@ -525,24 +524,21 @@ cyber:
           description: "Third-party security rating (BitSight, SecurityScorecard)"
           weight: 0.50
           inference_utility_function: security_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "esg_cyber"
           name: "ESG Cyber Component"
           description: "Cyber/privacy component of ESG ratings"
           weight: 0.25
           inference_utility_function: esg_cyber_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "credit_rating"
           name: "Credit Rating Proxy"
           description: "Credit rating as proxy for organizational quality"
           weight: 0.25
           inference_utility_function: credit_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
   
     # ---------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -598,20 +594,7 @@ cyber:
     # Conditions that trigger automatic actions
     
     score_conditions:
-      - id: technical_infrastructure_critical
-        description: "Critical technical infrastructure score"
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical technical deficiencies"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant technical concerns"}
-        inclusive_max: false
-      
-      - id: public_record_critical
-        description: "Critical public record score"
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Severe breach/regulatory history"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Material breach history"}
-        inclusive_max: false
-      
+
       - id: cve_exposure_critical
         description: "Critical CVE exposure"
         bands:
