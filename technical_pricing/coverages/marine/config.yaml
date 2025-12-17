@@ -96,29 +96,40 @@ marine:
             action: "DECLINE"
             note: "Trading to sanctioned regions - coverage not available"
 
+
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
+    
     categorical_groups:
       - id: "operator_type"
         name: "Operator Type"
         description: "Operator classification based on fleet size and segment"
+        impact: "modifier"
         inference_utility_function: operator_classification_basefunction
       - id: "vessel_category"
         name: "Vessel Category"
         description: "Primary vessel category for fleet"
+        impact: "modifier"
         inference_utility_function: primaryvessel_category_basefunction
       - id: "trading_pattern"
         name: "Trading Pattern"
         description: "Trading pattern from AIS analysis"
+        impact: "modifier"
         inference_utility_function: trading_pattern_basefunction
       - id: "flag_state_quality"
         name: "Flag State Quality"
         description: "Flag state quality based on Paris MoU performance"
+        impact: "modifier"
         inference_utility_function: flagstate_quality_basefunction
       - id: "fleet_age_band"
         name: "Fleet Age Band"
         description: "Average fleet age classification"
+        impact: "modifier"
         inference_utility_function: fleet_age_basefunction
         
     # -------------------------------------------------------------------------
