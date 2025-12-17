@@ -795,7 +795,7 @@ energy:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0008  # 0.08% of TIV
+          rate: 0.0008  # 0.08% of TIV
         - id: 2       
           label: "STANDARD"
           min_score: 650
@@ -804,7 +804,7 @@ energy:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0012  # 0.12% of TIV
+          rate: 0.0012  # 0.12% of TIV
         - id: 3       
           label: "ELEVATED"
           min_score: 500
@@ -813,7 +813,7 @@ energy:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0018  # 0.18% of TIV
+          rate: 0.0018  # 0.18% of TIV
         - id: 4       
           label: "HIGH_RISK"
           min_score: 350
@@ -822,7 +822,7 @@ energy:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0028  # 0.28% of TIV
+          rate: 0.0028  # 0.28% of TIV
         - id: 5        
           label: "CRITICAL"
           min_score: 0
@@ -831,7 +831,7 @@ energy:
           auto_approve: false
           auto_decline: true
           premium_generation_method: "tiv"
-          base_rate: 0.0045  # 0.45% of TIV
+          rate: 0.0045  # 0.45% of TIV
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
