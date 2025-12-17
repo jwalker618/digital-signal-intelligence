@@ -96,7 +96,7 @@ directors_officers:
     # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
     
-  categorical_groups:
+    categorical_groups:
       - id: "company_type"
         name: "Company Type"
         description: "Company classification based on public/private status and market cap"
