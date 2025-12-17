@@ -417,14 +417,34 @@ financial_institutions:
           description: "Inferred examination quality from observable indicators"
           weight: 0.20
           inference_utility_function: examination_rating_basefunction
-          score_condition: examination_rating_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Critically weak examination indicators"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Weak examination indicators"
+          inclusive_max: false
           
         - id: "enforcement_action"
           name: "Enforcement Actions"
           description: "Formal enforcement actions (C&D, CMPs, consent orders)"
           weight: 0.25
           inference_utility_function: enforcement_action_basefunction
-          score_condition: enforcement_action_critical
+          score_condition: true
+          bands:
+            - max: 20
+              override: 5
+              action: "DECLINE"
+              note: "Active enforcement actions"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Recent enforcement history"
+          inclusive_max: false
           
         - id: "informal_action"
           name: "Informal Actions"
@@ -445,7 +465,17 @@ financial_institutions:
           description: "Bank Secrecy Act / Anti-Money Laundering compliance"
           weight: 0.15
           inference_utility_function: bsa_aml_basefunction
-          score_condition: bsa_aml_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Critical BSA/AML issues"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "BSA/AML compliance concerns"
+          inclusive_max: false
           
         - id: "fair_lending"
           name: "Fair Lending Compliance"
@@ -467,14 +497,30 @@ financial_institutions:
           description: "CET1, Tier 1, Total capital ratios vs requirements"
           weight: 0.20
           inference_utility_function: capital_ratio_basefunction
-          score_condition: capital_ratio_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 5
+              action: "DECLINE"
+              note: "Capital adequacy crisis"
+            - max: 50
+              override: 4
+              action: "REFER"
+              note: "Capital adequacy concerns"
+          inclusive_max: false
           
         - id: "asset_quality"
           name: "Asset Quality"
           description: "NPL ratio, charge-off rates, classified assets"
           weight: 0.20
           inference_utility_function: asset_quality_basefunction
-          score_condition: asset_quality_critical
+          score_condition: true
+          bands:
+            - max: 30, 
+              override: 4, 
+              action: "REFER", 
+              note: "Asset quality concerns"
+          inclusive_max: false
           
         - id: "liquidity"
           name: "Liquidity Position"
@@ -574,14 +620,26 @@ financial_institutions:
           description: "Class actions, regulatory suits, significant litigation"
           weight: 0.25
           inference_utility_function: litigation_basefunction
-          score_condition: litigation_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 4
+              action: "REFER"
+              note: "Significant litigation exposure"
+          inclusive_max: false
           
         - id: "breach_history"
           name: "Data Breach History"
           description: "Historical data breaches and security incidents"
           weight: 0.25
           inference_utility_function: breach_history_basefunction
-          score_condition: breach_history_critical
+          score_condition: true
+          bands:
+            - max: 35
+              override: 4
+              action: "REFER"
+              note: "Data breach history concerns"
+          inclusive_max: false
           
         - id: "operational_incident"
           name: "Operational Incidents"
@@ -624,7 +682,13 @@ financial_institutions:
           description: "CVE exposure in detected software"
           weight: 0.15
           inference_utility_function: cve_exposure_basefunction
-          score_condition: vulnerability_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 4
+              action: "REFER"
+              note: "Critical vulnerabilities detected"
+          inclusive_max: false
           
         - id: "security_rating"
           name: "Third-Party Security Rating"
@@ -710,6 +774,7 @@ financial_institutions:
           description: "Excellent institution - auto-approve at preferred pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 1500  # Per $1M combined limit
         - id: 2       
           label: "STANDARD"
@@ -718,6 +783,7 @@ financial_institutions:
           description: "Good institution - auto-approve at standard pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 2200
         - id: 3       
           label: "ELEVATED"
@@ -726,6 +792,7 @@ financial_institutions:
           description: "Moderate risk - auto-approve with conditions"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 3200
         - id: 4        
           label: "HIGH_RISK"
@@ -734,6 +801,7 @@ financial_institutions:
           description: "High risk - manual review required"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "base"
           base_premium: 5000
         - id: 5        
           label: "CRITICAL"
@@ -742,63 +810,28 @@ financial_institutions:
           description: "Critical risk - decline or senior review"
           auto_approve: false
           auto_decline: true
+          premium_generation_method: "base"
           base_premium: 8000
 
     # -------------------------------------------------------------------------
-    # CONDITION DEFINITIONS
+    # LIMIT BANDINGS
     # -------------------------------------------------------------------------
-
-  
-    score_conditions:
-
-      
-      - id: examination_rating_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Critically weak examination indicators"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Weak examination indicators"}
-        inclusive_max: false
-      
-      - id: enforcement_action_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Active enforcement actions"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Recent enforcement history"}
-        inclusive_max: false
-      
-      - id: bsa_aml_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Critical BSA/AML issues"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "BSA/AML compliance concerns"}
-        inclusive_max: false
-      
-      - id: capital_ratio_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Capital adequacy crisis"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "Capital adequacy concerns"}
-        inclusive_max: false
-      
-      - id: asset_quality_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Asset quality concerns"}
-        inclusive_max: false
-      
-
-      
-      - id: litigation_critical
-        bands:
-          - {max: 25, tier_override: 4, action: "REFER", note: "Significant litigation exposure"}
-        inclusive_max: false
-      
-      - id: breach_history_critical
-        bands:
-          - {max: 35, tier_override: 4, action: "REFER", note: "Data breach history concerns"}
-        inclusive_max: false
-      
-
-      
-      - id: vulnerability_critical
-        bands:
-          - {max: 25, tier_override: 4, action: "REFER", note: "Critical vulnerabilities detected"}
-        inclusive_max: false
+    limit_bandings:
+      - id: 1
+        limit: 5000000
+        deductible: 100000
+      - id: 2
+        limit: 10000000
+        deductible: 250000
+      - id: 3
+        limit: 25000000
+        deductible: 500000
+      - id: 4
+        limit: 50000000
+        deductible: 1000000
+      - id: 5
+        limit: 100000000
+        deductible: 2000000
 
     # -------------------------------------------------------------------------
     # PRICING PARAMETERS
