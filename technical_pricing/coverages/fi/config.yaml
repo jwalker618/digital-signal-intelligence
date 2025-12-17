@@ -516,9 +516,9 @@ financial_institutions:
           inference_utility_function: asset_quality_basefunction
           score_condition: true
           bands:
-            - max: 30, 
-              override: 4, 
-              action: "REFER", 
+            - max: 30
+              override: 4
+              action: "REFER"
               note: "Asset quality concerns"
           inclusive_max: false
           
