@@ -432,14 +432,30 @@ marine:
           description: "Consistency of AIS transmission across fleet"
           weight: 0.25
           inference_utility_function: ais_compliance_basefunction
-          score_condition: ais_compliance_critical
+          score_condition: true
+          bands:
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "AIS compliance concerns"
+          inclusive_max: false
           
         - id: "dark_activity"
           name: "Dark Activity Patterns"
           description: "AIS gaps in suspicious locations or patterns"
           weight: 0.25
           inference_utility_function: dark_activity_basefunction
-          score_condition: dark_activity_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "High-risk dark activity"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Concerning dark activity patterns"
+          inclusive_max: false
           
         - id: "route_risk"
           name: "Trading Route Risk Profile"
@@ -475,7 +491,13 @@ marine:
           description: "Port state control detention history"
           weight: 0.25
           inference_utility_function: psc_detention_basefunction
-          score_condition: psc_detention_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "Elevated PSC detention rate"
+          inclusive_max: false
           
         - id: "psc_deficiency"
           name: "PSC Deficiency Rate"
@@ -489,28 +511,60 @@ marine:
           description: "Class status, conditions, recommendations outstanding"
           weight: 0.20
           inference_utility_function: class_status_basefunction
-          score_condition: class_status_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Class suspended/withdrawn"
+            - max: 50
+              override: 4
+              action: "REFER"
+              note: "Class status concerns"
+          inclusive_max: false
           
         - id: "ism_compliance"
           name: "ISM/ISPS Compliance"
           description: "Document of Compliance and safety management status"
           weight: 0.15
           inference_utility_function: ism_compliance_basefunction
-          score_condition: ism_compliance_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 5
+              action: "DECLINE"
+              note: "ISM compliance failure"
+            - max: 50
+              override: 4
+              action: "REFER"
+              note: "ISM concerns"
+          inclusive_max: false
           
         - id: "casualty_history"
           name: "Casualty/Incident History"
           description: "Fleet casualty and incident history"
           weight: 0.10
           inference_utility_function: casualty_history_basefunction
-          score_condition: casualty_history_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "Serious casualty history"
+          inclusive_max: false
           
         - id: "total_loss"
           name: "Total Loss History"
           description: "Total loss history (CTL or ATL)"
           weight: 0.10
           inference_utility_function: totalloss_history_basefunction
-          score_condition: total_loss_critical
+          score_condition: true
+          bands:
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Total loss history"
+          inclusive_max: false
 
       fleet_profile:
         - id: "fleet_age"
@@ -554,28 +608,60 @@ marine:
           description: "OFAC, EU, UN sanctions list status"
           weight: 0.30
           inference_utility_function: sanctions_status_basefunction
-          score_condition: sanctions_status_critical
+          score_condition: true
+          bands:
+            - max: 20
+              override: 5
+              action: "DECLINE"
+              note: "Sanctions listed - coverage not available"
+          inclusive_max: false
           
         - id: "ownership_transparency"
           name: "Beneficial Ownership Transparency"
           description: "Clarity of beneficial ownership structure"
           weight: 0.20
           inference_utility_function: ownership_transparency_basefunction
-          score_condition: ownership_transparency_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "Ownership transparency concerns"
+          inclusive_max: false
           
         - id: "jurisdiction_risk"
           name: "High-Risk Jurisdiction Exposure"
           description: "Exposure to sanctioned or high-risk jurisdictions"
           weight: 0.20
           inference_utility_function: jurisdiction_risk_basefunction
-          score_condition: jurisdiction_risk_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Sanctioned jurisdiction exposure"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "High-risk jurisdiction exposure"
+          inclusive_max: false
           
         - id: "sts_pattern"
           name: "STS Transfer Patterns"
           description: "Ship-to-ship transfer activity analysis"
           weight: 0.15
           inference_utility_function: sts_pattern_basefunction
-          score_condition: sts_pattern_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "High-risk STS activity"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Suspicious STS patterns"
+          inclusive_max: false
           
         - id: "historical_sanctions"
           name: "Historical Sanctions Connections"
@@ -690,6 +776,7 @@ marine:
           description: "Excellent operator - auto-approve at preferred pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0015  # 0.15% of insured value
         - id: 2    
           label: "STANDARD"
@@ -698,6 +785,7 @@ marine:
           description: "Good operator - auto-approve at standard pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0022  # 0.22% of insured value
         - id: 3      
           label: "ELEVATED"
@@ -706,6 +794,7 @@ marine:
           description: "Moderate risk - auto-approve with conditions"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0032  # 0.32% of insured value
         - id: 4        
           label: "HIGH_RISK"
@@ -714,6 +803,7 @@ marine:
           description: "High risk - manual review required"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0050  # 0.50% of insured value
         - id: 5        
           label: "CRITICAL"
@@ -722,74 +812,28 @@ marine:
           description: "Critical risk - decline or senior review"
           auto_approve: false
           auto_decline: true
+          premium_generation_method: "tiv"
           base_rate: 0.0080  # 0.80% of insured value
 
     # -------------------------------------------------------------------------
-    # CONDITION DEFINITIONS
+    # LIMIT BANDINGS
     # -------------------------------------------------------------------------
-  
-    score_conditions:
-
-      
-      - id: ais_compliance_critical
-        bands:
-          - {max: 40, tier_override: 4, action: "REFER", note: "AIS compliance concerns"}
-        inclusive_max: false
-      
-      - id: dark_activity_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "High-risk dark activity"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Concerning dark activity patterns"}
-        inclusive_max: false
-      
-      - id: psc_detention_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Elevated PSC detention rate"}
-        inclusive_max: false
-      
-      - id: class_status_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Class suspended/withdrawn"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "Class status concerns"}
-        inclusive_max: false
-      
-      - id: ism_compliance_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "ISM compliance failure"}
-          - {max: 50, tier_override: 4, action: "REFER", note: "ISM concerns"}
-        inclusive_max: false
-      
-      - id: casualty_history_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Serious casualty history"}
-        inclusive_max: false
-      
-      - id: total_loss_critical
-        bands:
-          - {max: 40, tier_override: 4, action: "REFER", note: "Total loss history"}
-        inclusive_max: false
-      
-      - id: sanctions_status_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Sanctions listed - coverage not available"}
-        inclusive_max: false
-      
-      - id: ownership_transparency_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Ownership transparency concerns"}
-        inclusive_max: false
-      
-      - id: jurisdiction_risk_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Sanctioned jurisdiction exposure"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "High-risk jurisdiction exposure"}
-        inclusive_max: false
-      
-      - id: sts_pattern_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "High-risk STS activity"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Suspicious STS patterns"}
-        inclusive_max: false
+    limit_bandings:
+      - id: 1
+        limit: 5000000
+        deductible: 250000
+      - id: 2
+        limit: 10000000
+        deductible: 500000
+      - id: 3
+        limit: 25000000
+        deductible: 1000000
+      - id: 4
+        limit: 50000000
+        deductible: 2000000
+      - id: 5
+        limit: 100000000
+        deductible: 5000000
 
     # -------------------------------------------------------------------------
     # PRICING PARAMETERS
