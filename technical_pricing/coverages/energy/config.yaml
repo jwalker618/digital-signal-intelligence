@@ -483,13 +483,13 @@ energy:
           inference_utility_function: process_safety_basefunction
           score_condition: true
           bands:
-            - max: 25, 
-              override: 5, 
-              action: "DECLINE", 
+            - max: 25
+              override: 5
+              action: "DECLINE" 
               note: "Major process safety events"
-            - max: 40, 
-              override: 4, 
-              action: "REFER", 
+            - max: 40
+              override: 4
+              action: "REFER"
               note: "Process safety concerns"
           inclusive_max: false
           
