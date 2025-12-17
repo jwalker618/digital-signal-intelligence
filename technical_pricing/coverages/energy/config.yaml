@@ -107,22 +107,29 @@ energy:
             action: "INFO"
             note: "Third-party contractor usage"
 
-    
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
+    
     categorical_groups:
       - id: "operator_type"
         name: "Operator Type"
         description: "Operator classification based on size, integration, and ownership"
+        impact: "modifier"
         inference_utility_function: operator_type_basefunction
       - id: "operation_segment"
         name: "Operation Segment"
         description: "Primary operational segment"
+        impact: "modifier"
         inference_utility_function: operation_segment_basefunction
       - id: "geographic_focus"
         name: "Geographic Focus"
         description: "Primary geographic focus of operations"
+        impact: "modifier"
         inference_utility_function: geographic_focus_basefunction
 
     # -------------------------------------------------------------------------
