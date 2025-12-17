@@ -776,7 +776,7 @@ marine:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0015  # 0.15% of insured value
+          rate: 0.0015  # 0.15% of insured value
         - id: 2    
           label: "STANDARD"
           min_score: 650
@@ -785,7 +785,7 @@ marine:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0022  # 0.22% of insured value
+          rate: 0.0022  # 0.22% of insured value
         - id: 3      
           label: "ELEVATED"
           min_score: 500
@@ -794,7 +794,7 @@ marine:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0032  # 0.32% of insured value
+          rate: 0.0032  # 0.32% of insured value
         - id: 4        
           label: "HIGH_RISK"
           min_score: 350
@@ -803,7 +803,7 @@ marine:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "tiv"
-          base_rate: 0.0050  # 0.50% of insured value
+          rate: 0.0050  # 0.50% of insured value
         - id: 5        
           label: "CRITICAL"
           min_score: 0
@@ -812,7 +812,7 @@ marine:
           auto_approve: false
           auto_decline: true
           premium_generation_method: "tiv"
-          base_rate: 0.0080  # 0.80% of insured value
+          rate: 0.0080  # 0.80% of insured value
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
