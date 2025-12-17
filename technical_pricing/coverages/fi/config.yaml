@@ -95,25 +95,35 @@ financial_institutions:
             note: "New product line risk"
 
         
+
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
+    
     categorical_groups:
       - id: "institution_type"
         name: "Institution Type"
         description: "Type of financial institution from charter/registration"
+        impact: "modifier"
         inference_utility_function: institution_type_basefunction
       - id: "regulatory_framework"
         name: "Regulatory Framework"
         description: "Primary regulatory authority"
+        impact: "modifier"
         inference_utility_function: regulatory_authority_basefunction
       - id: "asset_size_band"
         name: "Asset Size Band"
         description: "Total asset size classification"
+        impact: "modifier"
         inference_utility_function: asset_size_basefunction
       - id: "publicly_traded"
         name: "Publicly Traded"
         description: "Whether institution is publicly traded"
+        impact: "modifier"
         inference_utility_function: publically_traded_basefunction
         
     # -------------------------------------------------------------------------
