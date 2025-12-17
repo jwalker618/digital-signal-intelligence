@@ -96,7 +96,6 @@ marine:
             action: "DECLINE"
             note: "Trading to sanctioned regions - coverage not available"
 
-
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
     # -------------------------------------------------------------------------
