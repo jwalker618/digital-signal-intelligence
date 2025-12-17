@@ -389,13 +389,13 @@ cyber:
           inference_utility_function: network_exposure_basefunction
           score_condition: true
           bands:
-            - max: 30, 
-              override: 5, 
-              action: "DECLINE", 
+            - max: 30
+              override: 5
+              action: "DECLINE" 
               note: "Dangerous network exposure"
-            - max: 45, 
-              override: 4, 
-              action: "REFER", 
+            - max: 45
+              override: 4
+              action: "REFER"
               note: "Elevated network exposure"
           inclusive_max: false
       
