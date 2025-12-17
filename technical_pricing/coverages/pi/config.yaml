@@ -421,7 +421,7 @@ professional_indemnity:
     # Each group contributes to the composite score
     # Weights must add to 1
     # -------------------------------------------------------------------------
-    
+
     signal_groups:
       - id: "network_authority"
         name: "Network Authority"
