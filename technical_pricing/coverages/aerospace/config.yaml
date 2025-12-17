@@ -748,7 +748,7 @@ aerospace:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 1200  # Per $1M hull value
+          premium: 1200  # Per $1M hull value
         - id: 2
           label: "STANDARD_PLUS"
           min_score: 650
@@ -757,7 +757,7 @@ aerospace:
           auto_approve: true
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 1800
+          premium: 1800
         - id: 3        
           label: "STANDARD"
           min_score: 500
@@ -766,7 +766,7 @@ aerospace:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 2800
+          premium: 2800
         - id: 4           
           label: "SUBSTANDARD"
           min_score: 350
@@ -775,7 +775,7 @@ aerospace:
           auto_approve: false
           auto_decline: false
           premium_generation_method: "base"
-          base_premium: 4500
+          premium: 4500
         - id: 5        
           label: "DECLINE"
           min_score: 0
@@ -784,7 +784,7 @@ aerospace:
           auto_approve: false
           auto_decline: true
           premium_generation_method: "base"
-          base_premium: 8000
+          premium: 8000
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
