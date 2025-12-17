@@ -438,42 +438,90 @@ energy:
           description: "TRIR vs industry benchmark"
           weight: 0.20
           inference_utility_function: osha_trir_basefunction
-          score_condition: osha_trir_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "TRIR significantly above benchmark"
+          inclusive_max: false
           
         - id: "osha_violations"
           name: "OSHA Serious Violations"
           description: "History of serious/willful OSHA violations"
           weight: 0.15
           inference_utility_function: osha_violations_basefunction
-          score_condition: osha_violations_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Willful/repeat OSHA violations"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Serious OSHA violation history"
+          inclusive_max: false
           
         - id: "bsee_incident"
           name: "BSEE Incidents"
           description: "Offshore incidents reported to BSEE"
           weight: 0.10
           inference_utility_function: bsee_incident_basefunction
-          score_condition: bsee_incident_critical
+          score_condition: true
+          bands:
+            - max: 30
+              tier_override: 4
+              action: "REFER"
+              note: "Significant BSEE incident history"
+          inclusive_max: false
           
         - id: "process_safety"
           name: "Process Safety Events"
           description: "Tier 1 and Tier 2 process safety events"
           weight: 0.20
           inference_utility_function: process_safety_basefunction
-          score_condition: process_safety_critical
+          score_condition: true
+          bands:
+            - max: 25, 
+              override: 5, 
+              action: "DECLINE", 
+              note: "Major process safety events"
+            - max: 40, 
+              override: 4, 
+              action: "REFER", 
+              note: "Process safety concerns"
+          inclusive_max: false
           
         - id: "fatality"
           name: "Fatality History"
           description: "Work-related fatality history"
           weight: 0.15
           inference_utility_function: fatality_history_basefunction
-          score_condition: fatality_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4 
+              action: "REFER" 
+              note: "Fatality history concerns"
+          inclusive_max: false
           
         - id: "major_incident"
           name: "Major Incident History"
           description: "Explosions, blowouts, major spills"
           weight: 0.15
           inference_utility_function: major_incident_basefunction
-          score_condition: major_incident_critical
+          score_condition: true
+          bands:
+            - max: 20
+              override: 5
+              action: "DECLINE"
+              note: "Major incident history"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Incident history concerns"
+          inclusive_max: false
           
         - id: "near_miss"
           name: "Near-Miss Reporting"
@@ -488,14 +536,34 @@ energy:
           description: "CAA, CWA, RCRA violations"
           weight: 0.20
           inference_utility_function: epa_violation_basefunction
-          score_condition: epa_violation_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Ongoing EPA enforcement"
+            - max: 45
+              override: 4
+              action: "REFER" 
+              note: "Significant EPA violations"
+          inclusive_max: false
           
         - id: "spill_history"
           name: "Spill History"
           description: "Oil/chemical spill history from NRC and state records"
           weight: 0.25
           inference_utility_function: spill_history_basefunction
-          score_condition: spill_history_critical
+          score_condition: true
+          bands:
+            - max: 20
+              override: 5
+              action: "DECLINE" 
+              note: "Major spill history"
+            - max: 40
+              override: 4
+              action: "REFER"
+              note: "Spill history concerns"
+          inclusive_max: false
           
         - id: "emissions_compliance"
           name: "Air Emissions Compliance"
@@ -581,7 +649,13 @@ energy:
           description: "Asset retirement obligation funding status"
           weight: 0.20
           inference_utility_function: aro_coverage_basefunction
-          score_condition: aro_coverage_critical
+          score_condition: true
+          bands:
+            - max: 30
+              override: 4
+              action: "REFER"
+              note: "ARO underfunding concerns"
+          inclusive_max: false
           
         - id: "capex_trend"
           name: "Capex Trends"
@@ -595,7 +669,17 @@ energy:
           description: "Bankruptcy or debt restructuring history"
           weight: 0.15
           inference_utility_function: restructuring_basefunction
-          score_condition: restructuring_critical
+          score_condition: true
+          bands:
+            - max: 25
+              override: 5
+              action: "DECLINE"
+              note: "Recent bankruptcy"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Restructuring history"
+          inclusive_max: false
 
       asset_portfolio:
         - id: "asset_age"
@@ -710,6 +794,7 @@ energy:
           description: "Excellent operator - auto-approve at preferred pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0008  # 0.08% of TIV
         - id: 2       
           label: "STANDARD"
@@ -718,6 +803,7 @@ energy:
           description: "Good operator - auto-approve at standard pricing"
           auto_approve: true
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0012  # 0.12% of TIV
         - id: 3       
           label: "ELEVATED"
@@ -726,6 +812,7 @@ energy:
           description: "Moderate risk - auto-approve with conditions"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0018  # 0.18% of TIV
         - id: 4       
           label: "HIGH_RISK"
@@ -734,6 +821,7 @@ energy:
           description: "High risk - manual review with loading"
           auto_approve: false
           auto_decline: false
+          premium_generation_method: "tiv"
           base_rate: 0.0028  # 0.28% of TIV
         - id: 5        
           label: "CRITICAL"
@@ -742,73 +830,28 @@ energy:
           description: "Critical risk - decline or senior review"
           auto_approve: false
           auto_decline: true
+          premium_generation_method: "tiv"
           base_rate: 0.0045  # 0.45% of TIV
 
     # -------------------------------------------------------------------------
-    # CONDITION DEFINITIONS
+    # LIMIT BANDINGS
     # -------------------------------------------------------------------------
-
-  
-    score_conditions:
-
-      
-      - id: osha_trir_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "TRIR significantly above benchmark"}
-        inclusive_max: false
-      
-      - id: osha_violations_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Willful/repeat OSHA violations"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Serious OSHA violation history"}
-        inclusive_max: false
-      
-      - id: bsee_incident_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Significant BSEE incident history"}
-        inclusive_max: false
-      
-      - id: process_safety_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Major process safety events"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Process safety concerns"}
-        inclusive_max: false
-      
-      - id: fatality_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "Fatality history concerns"}
-        inclusive_max: false
-      
-      - id: major_incident_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Major incident history"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Incident history concerns"}
-        inclusive_max: false
-      
-      - id: epa_violation_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Ongoing EPA enforcement"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant EPA violations"}
-        inclusive_max: false
-      
-      - id: spill_history_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Major spill history"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Spill history concerns"}
-        inclusive_max: false
-      
-
-      
-      - id: aro_coverage_critical
-        bands:
-          - {max: 30, tier_override: 4, action: "REFER", note: "ARO underfunding concerns"}
-        inclusive_max: false
-      
-      - id: restructuring_critical
-        bands:
-          - {max: 25, tier_override: 5, action: "DECLINE", note: "Recent bankruptcy"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Restructuring history"}
-        inclusive_max: false
+    limit_bandings:
+      - id: 1
+        limit: 10000000
+        deductible: 500000
+      - id: 2
+        limit: 25000000
+        deductible: 1000000
+      - id: 3
+        limit: 50000000
+        deductible: 2000000
+      - id: 4
+        limit: 100000000
+        deductible: 5000000
+      - id: 5
+        limit: 250000000
+        deductible: 10000000
 
     # -------------------------------------------------------------------------
     # PRICING PARAMETERS
