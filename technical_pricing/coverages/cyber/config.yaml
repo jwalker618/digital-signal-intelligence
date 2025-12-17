@@ -111,20 +111,27 @@ cyber:
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
 
     categorical_groups:
       - id: "industry_classification"
         name: "Industry Classification"
         description: "Industry classification derived from public records"
+        impact: "modifier" 
         inference_utility_function: industry_classification_basefunction
       - id: "size_band"
         name: "Size Band"
         description: "Company size classification"
+        impact: "modifier"
         inference_utility_function: company_size_basefunction
       - id: "geography"
         name: "geography"
         description: "Primary operational geography"
+        impact: "modifier"
         inference_utility_function: operational_base_basefunction
         
     # -------------------------------------------------------------------------
@@ -218,7 +225,6 @@ cyber:
           modifier: 1.25
           description: ""     
 
-  
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
     # Each group is the product of its underlying features
