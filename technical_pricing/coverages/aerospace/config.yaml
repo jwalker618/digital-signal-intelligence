@@ -107,27 +107,37 @@ aerospace:
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
+    # categorical groups can either
+    # a) impact base premium after generation (impact: modifier)
+    # b) be the basis of premium (impact: premium)
+    # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
+    
     categorical_groups:
       - id: "operator_type"
         name: "Operator Type"
         description: "Type of aviation operator - inferred from regulatory filings and operational data"
+        impact: "modifier"
         inference_utility_function: operatortype_basefunction
       - id: "fleet_category"
         name: "Fleet Category"
         description: "Primary aircraft category in fleet"
+        impact: "modifier"
         inference_utility_function: fleetcategory_basefunction
       - id: "fleet_size"
         name: "Fleet Size"
         description: "Number of aircraft in operator's fleet"
+        impact: "modifier"
         inference_utility_function: fleetsize_basefunction
       - id: "regulatory_framework"
         name: "Regulatory Framework"
         description: "Primary regulatory authority governing operations" 
+        impact: "modifier"
         inference_utility_function: regulatoryframework_basefunction
       - id: "iosa_status"
         name: "IOSA Status"
         description: "IATA Operational Safety Audit registration status" 
+        impact: "modifier"
         inference_utility_function: iosastatus_basefunction
 
     # -------------------------------------------------------------------------
