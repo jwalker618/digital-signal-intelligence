@@ -52,6 +52,7 @@ marine:
         - "passenger"
         - "general_cargo"
       applicable_markets: ["global"]
+      minimum_viable_input: ["client name (domain optional)","Limit in USD","TIV"]
       min_premium: 50000
       default_currency: "USD"
 
@@ -95,173 +96,183 @@ marine:
             action: "DECLINE"
             note: "Trading to sanctioned regions - coverage not available"
 
+
+    # -------------------------------------------------------------------------
+    # CATEGORICAL GROUPS
+    # -------------------------------------------------------------------------
+    categorical_groups:
+      - id: "operator_type"
+        name: "Operator Type"
+        description: "Operator classification based on fleet size and segment"
+        inference_utility_function: operator_classification_basefunction
+      - id: "vessel_category"
+        name: "Vessel Category"
+        description: "Primary vessel category for fleet"
+        inference_utility_function: primaryvessel_category_basefunction
+      - id: "trading_pattern"
+        name: "Trading Pattern"
+        description: "Trading pattern from AIS analysis"
+        inference_utility_function: trading_pattern_basefunction
+      - id: "flag_state_quality"
+        name: "Flag State Quality"
+        description: "Flag state quality based on Paris MoU performance"
+        inference_utility_function: flagstate_quality_basefunction
+      - id: "fleet_age_band"
+        name: "Fleet Age Band"
+        description: "Average fleet age classification"
+        inference_utility_function: fleet_age_basefunction
+        
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
-    # These define classification values and their pricing impact
-    # inference_method specifies how to automatically determine the value
     
     categorical_features:
       operator_type:
-        description: "Operator classification based on fleet size and segment"
-        inference_utility_function: operator_classification_basefunction
-        values:
-          - id: "MAJOR_LINER"
-            label: "Major Liner Operator"
-            modifier: 0.80
-            description: "Top 20 container lines (Maersk, MSC, CMA CGM, etc.)"
-            
-          - id: "MAJOR_TANKER"
-            label: "Major Tanker Operator"
-            modifier: 0.90
-            description: "Major tanker fleet operators"
-            
-          - id: "MAJOR_BULK"
-            label: "Major Bulk Operator"
-            modifier: 0.95
-            description: "Major dry bulk fleet operators"
-            
-          - id: "REGIONAL_OPERATOR"
-            label: "Regional Fleet Operator"
-            modifier: 1.00
-            description: "Regional fleet operators (10-30 vessels)"
-            
-          - id: "INDEPENDENT"
-            label: "Independent Operator"
-            modifier: 1.25
-            description: "Single or few vessel operators (<10 vessels)"
-            
-          - id: "STATE_OWNED"
-            label: "State-Owned Operator"
-            modifier: 1.10
-            description: "Government-owned shipping lines"
-            
-          - id: "UNKNOWN"
-            label: "Unknown Operator"
-            modifier: 1.50
-            description: "New or unverified operator"
+        - cat: "MAJOR_LINER"
+          label: "Major Liner Operator"
+          modifier: 0.80
+          description: "Top 20 container lines (Maersk, MSC, CMA CGM, etc.)"
+          
+        - cat: "MAJOR_TANKER"
+          label: "Major Tanker Operator"
+          modifier: 0.90
+          description: "Major tanker fleet operators"
+          
+        - cat: "MAJOR_BULK"
+          label: "Major Bulk Operator"
+          modifier: 0.95
+          description: "Major dry bulk fleet operators"
+          
+        - cat: "REGIONAL_OPERATOR"
+          label: "Regional Fleet Operator"
+          modifier: 1.00
+          description: "Regional fleet operators (10-30 vessels)"
+          
+        - cat: "INDEPENDENT"
+          label: "Independent Operator"
+          modifier: 1.25
+          description: "Single or few vessel operators (<10 vessels)"
+          
+        - cat: "STATE_OWNED"
+          label: "State-Owned Operator"
+          modifier: 1.10
+          description: "Government-owned shipping lines"
+          
+        - cat: "UNKNOWN"
+          label: "Unknown Operator"
+          modifier: 1.50
+          description: "New or unverified operator"
             
       vessel_category:
-        description: "Primary vessel category for fleet"
-        inference_utility_function: primaryvessel_category_basefunction
-        values:
-          - id: "CONTAINER"
-            label: "Container"
-            modifier: 0.90
-            description: "Container vessels"
-            
-          - id: "TANKER"
-            label: "Tanker"
-            modifier: 1.10
-            description: "Crude, product, chemical tankers"
-            
-          - id: "DRY_BULK"
-            label: "Dry Bulk"
-            modifier: 1.00
-            description: "Dry bulk carriers"
-            
-          - id: "LNG_LPG"
-            label: "LNG/LPG Carrier"
-            modifier: 0.85
-            description: "Gas carriers (typically highest standards)"
-            
-          - id: "OFFSHORE"
-            label: "Offshore"
-            modifier: 1.30
-            description: "Offshore supply, construction vessels"
-            
-          - id: "PASSENGER"
-            label: "Passenger"
-            modifier: 1.25
-            description: "Cruise, ferry, passenger vessels"
-            
-          - id: "GENERAL_CARGO"
-            label: "General Cargo"
-            modifier: 1.10
-            description: "General cargo, MPP vessels"
-            
-          - id: "MIXED"
-            label: "Mixed Fleet"
-            modifier: 1.05
-            description: "Diversified vessel types"
+        - cat: "CONTAINER"
+          label: "Container"
+          modifier: 0.90
+          description: "Container vessels"
+          
+        - cat: "TANKER"
+          label: "Tanker"
+          modifier: 1.10
+          description: "Crude, product, chemical tankers"
+          
+        - cat: "DRY_BULK"
+          label: "Dry Bulk"
+          modifier: 1.00
+          description: "Dry bulk carriers"
+          
+        - cat: "LNG_LPG"
+          label: "LNG/LPG Carrier"
+          modifier: 0.85
+          description: "Gas carriers (typically highest standards)"
+          
+        - cat: "OFFSHORE"
+          label: "Offshore"
+          modifier: 1.30
+          description: "Offshore supply, construction vessels"
+          
+        - cat: "PASSENGER"
+          label: "Passenger"
+          modifier: 1.25
+          description: "Cruise, ferry, passenger vessels"
+          
+        - cat: "GENERAL_CARGO"
+          label: "General Cargo"
+          modifier: 1.10
+          description: "General cargo, MPP vessels"
+          
+        - cat: "MIXED"
+          label: "Mixed Fleet"
+          modifier: 1.05
+          description: "Diversified vessel types"
 
       trading_pattern:
-        description: "Trading pattern from AIS analysis"
-        inference_utility_function: trading_pattern_basefunction
-        values:
-          - id: "LINER_REGULAR"
-            label: "Liner/Regular Service"
-            modifier: 0.85
-            description: "Fixed routes, scheduled services"
-            
-          - id: "SPOT_TRAMP"
-            label: "Spot/Tramp Trading"
-            modifier: 1.15
-            description: "Voyage charter, variable routes"
-            
-          - id: "INDUSTRIAL"
-            label: "Industrial Shipping"
-            modifier: 0.90
-            description: "Dedicated cargo flows (e.g., iron ore majors)"
-            
-          - id: "MIXED"
-            label: "Mixed Trading"
-            modifier: 1.00
-            description: "Combination of trading patterns"
+        - cat: "LINER_REGULAR"
+          label: "Liner/Regular Service"
+          modifier: 0.85
+          description: "Fixed routes, scheduled services"
+          
+        - cat: "SPOT_TRAMP"
+          label: "Spot/Tramp Trading"
+          modifier: 1.15
+          description: "Voyage charter, variable routes"
+          
+        - cat: "INDUSTRIAL"
+          label: "Industrial Shipping"
+          modifier: 0.90
+          description: "Dedicated cargo flows (e.g., iron ore majors)"
+          
+        - cat: "MIXED"
+          label: "Mixed Trading"
+          modifier: 1.00
+          description: "Combination of trading patterns"
             
       flag_state_quality:
-        description: "Flag state quality based on Paris MoU performance"
-        inference_utility_function: flagstate_quality_basefunction
-        values:
-          - id: "WHITE_LIST"
-            label: "Paris MoU White List"
-            modifier: 0.95
-            description: "High-performing flag states"
-            
-          - id: "GREY_LIST"
-            label: "Paris MoU Grey List"
-            modifier: 1.10
-            description: "Average-performing flag states"
-            
-          - id: "BLACK_LIST"
-            label: "Paris MoU Black List"
-            modifier: 1.40
-            description: "Poor-performing flag states"
+        - cat: "WHITE_LIST"
+          label: "Paris MoU White List"
+          modifier: 0.95
+          description: "High-performing flag states"
+          
+        - cat: "GREY_LIST"
+          label: "Paris MoU Grey List"
+          modifier: 1.10
+          description: "Average-performing flag states"
+          
+        - cat: "BLACK_LIST"
+          label: "Paris MoU Black List"
+          modifier: 1.40
+          description: "Poor-performing flag states"
 
       fleet_age_band:
-        description: "Average fleet age classification"
-        inference_utility_function: fleet_age_basefunction
-        values:
-          - id: "AGE_0_5"
-            label: "0-5 Years"
-            modifier: 0.85
-            description: ""      
-          - id: "AGE_5_10"
-            label: "5-10 Years"
-            modifier: 0.95
-            description: ""      
-          - id: "AGE_10_15"
-            label: "10-15 Years"
-            modifier: 1.05
-            description: ""      
-          - id: "AGE_15_20"
-            label: "15-20 Years"
-            modifier: 1.20
-            description: ""      
-          - id: "AGE_20_25"
-            label: "20-25 Years"
-            modifier: 1.40
-            description: ""      
-          - id: "AGE_25_PLUS"
-            label: "25+ Years"
-            modifier: 1.60
-            description: ""      
+        - cat: "AGE_0_5"
+          label: "0-5 Years"
+          modifier: 0.85
+          description: ""      
+        - cat: "AGE_5_10"
+          label: "5-10 Years"
+          modifier: 0.95
+          description: ""      
+        - cat: "AGE_10_15"
+          label: "10-15 Years"
+          modifier: 1.05
+          description: ""      
+        - cat: "AGE_15_20"
+          label: "15-20 Years"
+          modifier: 1.20
+          description: ""      
+        - cat: "AGE_20_25"
+          label: "20-25 Years"
+          modifier: 1.40
+          description: ""      
+        - cat: "AGE_25_PLUS"
+          label: "25+ Years"
+          modifier: 1.60
+          description: ""      
 
-    # ---------------------------------------------------------------------------
-    # SIGNAL GROUPINGS (Categories with Weights)
-    # ---------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # SIGNAL GROUPS
+    # Each group is the product of its underlying features
     # Each group contributes to the composite score
-    # Weights must sum to 1.0
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
     
     signal_groups:
       - id: "network_authority"
@@ -269,65 +280,93 @@ marine:
         description: "Classification society, P&I Club, charterer relationships"
         weight: 0.15
         test_scores: {excellent: 92, average: 70, poor: 40}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "operational_telemetry"
         name: "Operational Telemetry"
         description: "AIS behavior patterns, dark activity, route risk"
         weight: 0.20
         test_scores: {excellent: 95, average: 72, poor: 38}
-        critical: true
-        score_condition: operational_telemetry_critical
+        score_condition: true
+        bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Critical AIS/operational concerns"
+          - max: 45
+            override: 4
+            action: "REFER"
+            note: "Significant operational concerns"
+        inclusive_max: false
         
       - id: "safety_compliance"
         name: "Safety Compliance"
         description: "PSC performance, class status, incident history"
         weight: 0.25
         test_scores: {excellent: 95, average: 75, poor: 35}
-        critical: true
-        score_condition: safety_compliance_critical
+        score_condition: true
+        bands:
+          - max: 30
+            override: 5
+            action: "DECLINE"
+            note: "Critical safety compliance issues"
+          - max: 45
+            override: 4
+            action: "REFER"
+            note: "Significant safety concerns"
+        inclusive_max: false
         
       - id: "fleet_profile"
         name: "Fleet Profile"
         description: "Fleet age, stability, vessel quality, crew certification"
         weight: 0.10
         test_scores: {excellent: 88, average: 68, poor: 42}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "sanctions_compliance"
         name: "Sanctions Compliance"
         description: "Sanctions status, ownership transparency, STS patterns"
         weight: 0.15
         test_scores: {excellent: 100, average: 85, poor: 30}
-        critical: true
-        score_condition: sanctions_compliance_critical
+        score_condition: true
+        bands:
+          - max: 20
+            override: 5
+            action: "DECLINE"
+            note: "Sanctions exposure - coverage not available"
+          - max: 40
+            override: 4
+            action: "REFER"
+            note: "Sanctions concerns require review"
+        inclusive_max: false
         
       - id: "environmental"
         name: "Environmental Compliance"
         description: "IMO 2020, ballast water, CII rating, incidents"
         weight: 0.05
         test_scores: {excellent: 92, average: 70, poor: 45}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "corporate_footprint"
         name: "Corporate Footprint"
         description: "Transparency, sustainability reporting, safety culture"
         weight: 0.05
         test_scores: {excellent: 88, average: 62, poor: 38}
-        critical: false
-        score_condition: null
+        score_condition: false
         
       - id: "structured_data"
         name: "Structured Data"
         description: "RightShip vetting, ESG ratings, credit ratings"
         weight: 0.05
         test_scores: {excellent: 90, average: 68, poor: 40}
-        critical: false
-        score_condition: null
+        score_condition: false
 
+    # -------------------------------------------------------------------------
+    # SIGNAL FEATURES
+    # Each is a underlying feature for the previously defined groups
+    # Each group contributes to the group score
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
 
     signal_features:
       network_authority:
@@ -336,64 +375,56 @@ marine:
           description: "IACS member vs non-IACS classification"
           weight: 0.20
           inference_utility_function: classification_society_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "pi_club"
           name: "P&I Club Membership"
           description: "International Group club vs fixed premium"
           weight: 0.15
           inference_utility_function: pi_club_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "charterer_quality"
           name: "Charterer Relationships"
           description: "Quality of major charterers (oil majors, commodity traders)"
           weight: 0.15
           inference_utility_function: chartere_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "banking_relationship"
           name: "Ship Finance Relationships"
           description: "Quality of ship finance banks"
           weight: 0.10
           inference_utility_function: banking_relationship_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "flag_state"
           name: "Flag State Quality"
           description: "Paris MoU white/grey/black list status"
           weight: 0.15
           inference_utility_function: flag_state_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "industry_association"
           name: "Industry Association Membership"
           description: "BIMCO, Intertanko, Intercargo membership"
           weight: 0.10
           inference_utility_function: industry_association_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "technical_manager"
           name: "Technical Manager Quality"
           description: "Quality of third-party technical manager if applicable"
           weight: 0.10
           inference_utility_function: technical_manager_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "port_relationship"
           name: "Port Relationships"
           description: "Relationships with major ports and terminals"
           weight: 0.05
           inference_utility_function: port_relationship_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       operational_telemetry:
         - id: "ais_compliance"
@@ -401,7 +432,6 @@ marine:
           description: "Consistency of AIS transmission across fleet"
           weight: 0.25
           inference_utility_function: ais_compliance_basefunction
-          critical: true
           score_condition: ais_compliance_critical
           
         - id: "dark_activity"
@@ -409,7 +439,6 @@ marine:
           description: "AIS gaps in suspicious locations or patterns"
           weight: 0.25
           inference_utility_function: dark_activity_basefunction
-          critical: true
           score_condition: dark_activity_critical
           
         - id: "route_risk"
@@ -417,32 +446,28 @@ marine:
           description: "Exposure to high-risk areas (piracy, war zones)"
           weight: 0.20
           inference_utility_function: route_risk_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "psc_region_exposure"
           name: "PSC Region Exposure"
           description: "Trading pattern by PSC regime quality"
           weight: 0.10
           inference_utility_function: psc_regions_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "operational_efficiency"
           name: "Operational Efficiency"
           description: "Speed/fuel efficiency patterns indicating discipline"
           weight: 0.10
           inference_utility_function: operational_efficiency_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "weather_routing"
           name: "Weather Routing Behavior"
           description: "Evidence of weather routing and risk management"
           weight: 0.10
           inference_utility_function: weather_routing_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       safety_compliance:
         - id: "psc_detention"
@@ -450,7 +475,6 @@ marine:
           description: "Port state control detention history"
           weight: 0.25
           inference_utility_function: psc_detention_basefunction
-          critical: true
           score_condition: psc_detention_critical
           
         - id: "psc_deficiency"
@@ -458,15 +482,13 @@ marine:
           description: "Average deficiencies per inspection vs benchmark"
           weight: 0.20
           inference_utility_function: psc_deficiency_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "class_status"
           name: "Classification Status"
           description: "Class status, conditions, recommendations outstanding"
           weight: 0.20
           inference_utility_function: class_status_basefunction
-          critical: true
           score_condition: class_status_critical
           
         - id: "ism_compliance"
@@ -474,7 +496,6 @@ marine:
           description: "Document of Compliance and safety management status"
           weight: 0.15
           inference_utility_function: ism_compliance_basefunction
-          critical: true
           score_condition: ism_compliance_critical
           
         - id: "casualty_history"
@@ -482,7 +503,6 @@ marine:
           description: "Fleet casualty and incident history"
           weight: 0.10
           inference_utility_function: casualty_history_basefunction
-          critical: true
           score_condition: casualty_history_critical
           
         - id: "total_loss"
@@ -490,7 +510,6 @@ marine:
           description: "Total loss history (CTL or ATL)"
           weight: 0.10
           inference_utility_function: totalloss_history_basefunction
-          critical: true
           score_condition: total_loss_critical
 
       fleet_profile:
@@ -499,40 +518,35 @@ marine:
           description: "Weighted average fleet age"
           weight: 0.30
           inference_utility_function: fleet_age_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "fleet_stability"
           name: "Fleet Size and Stability"
           description: "Fleet size changes and stability indicators"
           weight: 0.20
           inference_utility_function: fleet_stability_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "vessel_quality"
           name: "Vessel Quality Indicators"
           description: "Class notations, equipment quality"
           weight: 0.20
           inference_utility_function: vessel_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "crew_certification"
           name: "Crew Certification Quality"
           description: "Crew nationality and certification patterns"
           weight: 0.15
           inference_utility_function: crew_certification_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "management_consistency"
           name: "Management Consistency"
           description: "Stability of technical management"
           weight: 0.15
           inference_utility_function: management_consistency_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       sanctions_compliance:
         - id: "sanctions_status"
@@ -540,7 +554,6 @@ marine:
           description: "OFAC, EU, UN sanctions list status"
           weight: 0.30
           inference_utility_function: sanctions_status_basefunction
-          critical: true
           score_condition: sanctions_status_critical
           
         - id: "ownership_transparency"
@@ -548,7 +561,6 @@ marine:
           description: "Clarity of beneficial ownership structure"
           weight: 0.20
           inference_utility_function: ownership_transparency_basefunction
-          critical: true
           score_condition: ownership_transparency_critical
           
         - id: "jurisdiction_risk"
@@ -556,7 +568,6 @@ marine:
           description: "Exposure to sanctioned or high-risk jurisdictions"
           weight: 0.20
           inference_utility_function: jurisdiction_risk_basefunction
-          critical: true
           score_condition: jurisdiction_risk_critical
           
         - id: "sts_pattern"
@@ -564,7 +575,6 @@ marine:
           description: "Ship-to-ship transfer activity analysis"
           weight: 0.15
           inference_utility_function: sts_pattern_basefunction
-          critical: true
           score_condition: sts_pattern_critical
           
         - id: "historical_sanctions"
@@ -572,8 +582,7 @@ marine:
           description: "Historical connections to sanctioned entities"
           weight: 0.15
           inference_utility_function: historiccal_sanctions_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       environmental:
         - id: "imo2020_compliance"
@@ -581,32 +590,28 @@ marine:
           description: "Compliance with 0.5% sulphur cap"
           weight: 0.30
           inference_utility_function: imo_compliance_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "bwm_compliance"
           name: "Ballast Water Management Compliance"
           description: "BWM convention compliance status"
           weight: 0.25
           inference_utility_function: bwm_compliance_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "cii_rating"
           name: "CII Rating"
           description: "Carbon Intensity Indicator rating"
           weight: 0.25
           inference_utility_function: cii_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "environmental_incident"
           name: "Environmental Incidents"
           description: "Pollution incidents and environmental fines"
           weight: 0.20
           inference_utility_function: enviromental_incident_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       corporate_footprint:
         - id: "website_quality"
@@ -614,48 +619,42 @@ marine:
           description: "Quality of corporate website and disclosures"
           weight: 0.15
           inference_utility_function: website_quality_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "fleet_disclosure"
           name: "Fleet List Disclosure"
           description: "Public fleet list availability"
           weight: 0.20
           inference_utility_function: fleet_list_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "sustainability_reporting"
           name: "Sustainability/ESG Reporting"
           description: "Quality of sustainability reporting"
           weight: 0.20
           inference_utility_function: sustainability_reporting_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "safety_communication"
           name: "Safety Culture Communication"
           description: "Evidence of safety culture in communications"
           weight: 0.20
           inference_utility_function: safety_culture_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "crew_welfare"
           name: "Crew Welfare Visibility"
           description: "Visible commitment to crew welfare"
           weight: 0.10
           inference_utility_function: crew_welfare_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "industry_presence"
           name: "Industry Presence"
           description: "Conference attendance, publications, industry engagement"
           weight: 0.15
           inference_utility_function: industry_presence_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
       structured_data:
         - id: "vetting"
@@ -663,24 +662,21 @@ marine:
           description: "Third-party vetting scores"
           weight: 0.50
           inference_utility_function: vetting_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "esg_rating"
           name: "ESG Maritime Rating"
           description: "Maritime-specific ESG ratings"
           weight: 0.30
           inference_utility_function: esg_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
           
         - id: "credit_rating"
           name: "Credit Rating"
           description: "Corporate credit rating if available"
           weight: 0.20
           inference_utility_function: credit_rating_basefunction
-          critical: false
-          score_condition: null
+          score_condition: false
 
     # -------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -733,23 +729,7 @@ marine:
     # -------------------------------------------------------------------------
   
     score_conditions:
-      - id: operational_telemetry_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical AIS/operational concerns"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant operational concerns"}
-        inclusive_max: false
-      
-      - id: safety_compliance_critical
-        bands:
-          - {max: 30, tier_override: 5, action: "DECLINE", note: "Critical safety compliance issues"}
-          - {max: 45, tier_override: 4, action: "REFER", note: "Significant safety concerns"}
-        inclusive_max: false
-      
-      - id: sanctions_compliance_critical
-        bands:
-          - {max: 20, tier_override: 5, action: "DECLINE", note: "Sanctions exposure - coverage not available"}
-          - {max: 40, tier_override: 4, action: "REFER", note: "Sanctions concerns require review"}
-        inclusive_max: false
+
       
       - id: ais_compliance_critical
         bands:
