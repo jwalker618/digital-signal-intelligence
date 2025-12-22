@@ -1,6 +1,6 @@
 """
 extractors/#coverage#.py - Coverage Inference Functions
-FI and DO are sub-sets of PI in practice, and all required signals are included here.
+FI and DO are sub-sets of PI in practice and all required signals are included here.
 """
 
 from __future__ import annotations
