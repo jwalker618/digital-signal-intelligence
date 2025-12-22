@@ -24,6 +24,10 @@ from .base import (
 
 logger = logging.getLogger(__name__)
 
+# =============================================================================
+# AEROSPACE EXTRACTORS
+# =============================================================================
+
 @register_extractor
 class AircraftFleetExtractor(DataExtractor):
     """
