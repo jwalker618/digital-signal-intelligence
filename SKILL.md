@@ -1,6 +1,6 @@
 ---
 name: dsi-framework
-description: Digital Signal Intelligence (DSI) insurance pricing framework. Use this skill when working on DSI project code including extractors, aggregators, categorizers, inference functions, signal processing, YAML config interpretation, or any technical pricing model development. Triggers on mentions of DSI, signal architecture, coverage configs, technical pricing, or insurance underwriting automation.
+description: Digital Signal Intelligence (DSI) insurance pricing framework. Use this skill when working on DSI project code including extractors, aggregators, categorizers, inference functions, signal processing, YAML config interpretation, or any technical model development. Triggers on mentions of DSI, signal architecture, coverage configs, technical pricing, or insurance underwriting automation.
 ---
 
 # DSI Framework Development Guide
@@ -29,12 +29,12 @@ Key principles:
 ┌─────────────────────────────────────────────────────────────────┐
 │                    SIGNAL ARCHITECTURE                          │
 │                                                                 │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐ │
-│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE │ │
-│  │          │    │          │    │           │    │          │ │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌────────── ┐ │
+│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE  │ │
+│  │          │    │          │    │           │    │           │ │
 │  │Raw data  │    │Structure/│    │Score or   │    │Orchestrate│
 │  │from APIs │    │normalize │    │category   │    │pipeline   │
-│  └──────────┘    └──────────┘    └───────────┘    └──────────┘ │
+│  └──────────┘    └──────────┘    └───────────┘    └───────── ─┘ │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
