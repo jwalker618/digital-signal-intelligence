@@ -1,11 +1,12 @@
 """
 Signal Data Extraction Framework
+
+Provides base classes, registries, and utilities for all extraction functions.
 """
 
 from __future__ import annotations
 
 import hashlib
-import logging
 import random
 import string
 from abc import ABC, abstractmethod
@@ -13,11 +14,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Tuple, Union
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
-
 
 # =============================================================================
 # TTL CONFIGURATION
@@ -29,7 +25,6 @@ class TTLCategory(Enum):
     DYNAMIC = "dynamic"          # 24 hours - inspections, incidents, violations
     SEMI_STATIC = "semi_static"  # 7 days - ratings, certifications, fleet data
     STATIC = "static"            # 90 days - registrations, long-term relationships
-
 
 @dataclass
 class TTLConfig:
@@ -58,7 +53,6 @@ class TTLConfig:
         """Check if data needs refresh based on TTL."""
         age_seconds = (datetime.now() - last_fetched).total_seconds()
         return age_seconds > self.ttl_seconds
-
 
 @dataclass
 class DataSource:
@@ -104,7 +98,6 @@ class SignalResult:
             error=error
         )
 
-
 @dataclass
 class ExtractionResult:
     """Complete extraction result with all signals."""
@@ -116,7 +109,6 @@ class ExtractionResult:
     metadata: Dict[str, Any] = field(default_factory=dict)
     errors: List[str] = field(default_factory=list)
     ttl_config: Optional[TTLConfig] = None
-
 
 # =============================================================================
 # MISSING SIGNAL HANDLING STRATEGIES
@@ -136,115 +128,23 @@ class SignalWeightConfig:
     weight: float
     missing_strategy: MissingSignalStrategy = MissingSignalStrategy.EXCLUDE
     default_value: Optional[float] = None
-    penalty_value: float = 25.0  # Score to use if PENALIZE strategy
+    penalty_value: float = 25.0  # Score to use if PENALISE strategy
     min_confidence: float = 0.5  # Minimum confidence to include signal
 
-
-def calculate_weighted_score(
-    signal_scores: Dict[str, Tuple[float, float, SignalWeightConfig]],  # signal_id -> (score, confidence, config)
-    min_signals_required: int = 1,
-    min_weight_coverage: float = 0.5
-) -> Tuple[Optional[float], Dict[str, Any]]:
-    """
-    Calculate weighted composite score with missing signal handling.
-    
-    Args:
-        signal_scores: Dict mapping signal_id to (score, confidence, weight_config)
-        min_signals_required: Minimum number of valid signals required
-        min_weight_coverage: Minimum percentage of total weight that must be covered
-    
-    Returns:
-        Tuple of (composite_score or None, metadata_dict)
-    """
-    valid_signals = []
-    excluded_signals = []
-    penalty_signals = []
-    required_missing = []
-    total_configured_weight = sum(cfg.weight for _, _, cfg in signal_scores.values())
-    
-    for signal_id, (score, confidence, config) in signal_scores.items():
-        # Check if signal is missing or low confidence
-        is_missing = score is None or confidence < config.min_confidence
-        
-        if is_missing:
-            if config.missing_strategy == MissingSignalStrategy.REQUIRE:
-                required_missing.append(signal_id)
-            elif config.missing_strategy == MissingSignalStrategy.EXCLUDE:
-                excluded_signals.append(signal_id)
-            elif config.missing_strategy == MissingSignalStrategy.USE_DEFAULT:
-                if config.default_value is not None:
-                    valid_signals.append((signal_id, config.default_value, config.weight, 0.5))
-                else:
-                    excluded_signals.append(signal_id)
-            elif config.missing_strategy == MissingSignalStrategy.PENALIZE:
-                penalty_signals.append(signal_id)
-                valid_signals.append((signal_id, config.penalty_value, config.weight, 0.3))
-        else:
-            valid_signals.append((signal_id, score, config.weight, confidence))
-    
-    # Check if required signals are missing
-    if required_missing:
-        return None, {
-            "error": f"Required signals missing: {required_missing}",
-            "valid_count": len(valid_signals),
-            "excluded": excluded_signals,
-            "required_missing": required_missing
-        }
-    
-    # Check minimum signal count
-    if len(valid_signals) < min_signals_required:
-        return None, {
-            "error": f"Insufficient signals: {len(valid_signals)} < {min_signals_required}",
-            "valid_count": len(valid_signals),
-            "excluded": excluded_signals
-        }
-    
-    # Check minimum weight coverage
-    covered_weight = sum(w for _, _, w, _ in valid_signals)
-    weight_coverage = covered_weight / total_configured_weight if total_configured_weight > 0 else 0
-    
-    if weight_coverage < min_weight_coverage:
-        return None, {
-            "error": f"Insufficient weight coverage: {weight_coverage:.2%} < {min_weight_coverage:.2%}",
-            "weight_coverage": weight_coverage,
-            "excluded": excluded_signals
-        }
-    
-    # Calculate weighted average (normalize weights to sum to 1)
-    if covered_weight == 0:
-        return None, {"error": "No valid weight coverage"}
-    
-    weighted_sum = sum(score * weight for _, score, weight, _ in valid_signals)
-    composite_score = weighted_sum / covered_weight
-    
-    # Calculate confidence-weighted score (optional refinement)
-    confidence_weighted_sum = sum(score * weight * conf for _, score, weight, conf in valid_signals)
-    total_conf_weight = sum(weight * conf for _, _, weight, conf in valid_signals)
-    confidence_adjusted_score = confidence_weighted_sum / total_conf_weight if total_conf_weight > 0 else composite_score
-    
-    return composite_score, {
-        "composite_score": composite_score,
-        "confidence_adjusted_score": confidence_adjusted_score,
-        "valid_signals": len(valid_signals),
-        "excluded_signals": excluded_signals,
-        "penalty_signals": penalty_signals,
-        "weight_coverage": weight_coverage,
-        "signal_breakdown": {sid: {"score": s, "weight": w, "confidence": c} 
-                           for sid, s, w, c in valid_signals}
-    }
-
 # =============================================================================
-# REGISTRY & BASE CLASSES
+# REGISTRIES
 # =============================================================================
 
 EXTRACTOR_REGISTRY: Dict[str, Type["DataExtractor"]] = {}
-
 
 def register_extractor(cls: Type["DataExtractor"]) -> Type["DataExtractor"]:
     """Decorator to register extractor classes."""
     EXTRACTOR_REGISTRY[cls.__name__] = cls
     return cls
 
+# =============================================================================
+# DATA CLASSES
+# =============================================================================
 
 class DataExtractor(ABC):
     """
