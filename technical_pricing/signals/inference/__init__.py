@@ -1,53 +1,30 @@
 """
-Inference Function Framework
+DSI Inference Functions
 
-This module provides the inference function framework for all coverage lines.
-Inference functions orchestrate data extraction and aggregation to produce
-signal scores (0-100) for each signal feature defined in config.
+Inference functions orchestrate the full pipeline for specific signals
+or categorical features: Extractor(s) → Aggregator(s) → Categorizer.
 
-Design Principles:
-1. One inference function per signal feature (referenced by name in config)
-2. Inference functions return scores (0-100), NOT modifiers or tier decisions
-3. Modifiers, weights, and tier logic are applied by utility functions
-4. Inference functions are stateless - they receive context and return scores
+Components:
+    - registry: Maps YAML inference_utility_function names to implementations
+    - functions/: Domain-specific inference function implementations
 
-Organisation:
-- inference/base.py - Core classes, registry, and utilities
-- inference/aerospace.py - Aerospace coverage inference functions
-- inference/cyber.py - Cyber coverage inference functions
-- inference/directors_officers.py - D&O coverage inference functions
-- inference/energy.py - Energy coverage inference functions
-- inference/financial_institutions.py - FI coverage inference functions
-- inference/marine.py - Marine coverage inference functions
-- inference/professional_indemnity.py - PI coverage inference functions
+Usage:
+    from signals.inference import get_inference_function
+    
+    func = get_inference_function("alliance_membership_basefunction")
+    result = func(entity_id, context)
 """
 
-from .base import (
-    INFERENCE_REGISTRY,
-    CATEGORICAL_INFERENCE_REGISTRY,
-    register_inference,
-    register_categorical_inference,
+from .registry import (
+    register_inference_function,
     get_inference_function,
-    get_categorical_inference,
     list_inference_functions,
-    InferenceResult,
-    InferenceContext,
-    run_signal_inference,
-    run_categorical_inference,
-    extract_scores,
+    InferenceFunctionNotFoundError,
 )
 
 __all__ = [
-    "INFERENCE_REGISTRY",
-    "CATEGORICAL_INFERENCE_REGISTRY", 
-    "register_inference",
-    "register_categorical_inference",
+    "register_inference_function",
     "get_inference_function",
-    "get_categorical_inference",
     "list_inference_functions",
-    "InferenceResult",
-    "InferenceContext",
-    "run_signal_inference",
-    "run_categorical_inference",
-    "extract_scores",
+    "InferenceFunctionNotFoundError",
 ]
