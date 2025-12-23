@@ -1,51 +1,36 @@
 """
-extractors/__init__.py - DSI Extractor Function Framework
+DSI Extractors
 
-DSI uses a logical architectural with a clear seperation of tasks. These are:
-1/. Extractor
-    Fetches raw data from a source (API, FTP, database, etc.). One extractor can provide data for multiple signals.
-2/. Aggregator
-    Structures/transforms raw extractor data, optimising it for scoring/categorisation. One aggregator can serve multiple signals.
-3/. Categorizer
-    Applies scoring/categorisation logic to produce the final signal value. One categorizer type (e.g., threshold_bucket for "size" signals) can be reused across many signals.
-4/. Inference
-    Orchestrates extractor(s) → aggregator(s) → categorizer(s) for ONE specific signal. 
+Extractors fetch raw data from external sources (APIs, databases, FTP, etc.).
 
-Design Principles:
-1. Data is raw from source and un-adjusted in any way.
-2. ...
+Implementation Status: STUB
+    All extractors return randomized but structurally realistic data
+    that mimics real API responses.
 
-Organisation:
-- /framework.py - Core classes, registry, and utilities
-- /#base (cross-coverage), specific or group of coverages.py
+Classes:
+    StubExtractor: Base class with randomization utilities for stub implementations
+
+Usage:
+    from signals.extractors import StubExtractor
+    
+    class MyExtractor(StubExtractor):
+        SOURCE_NAME = "my_api"
+        
+        def extract(self, entity_id: str) -> ExtractorResult:
+            data = {"value": self._random_int(1, 100)}
+            return self._create_success_result(data)
 """
 
-from .framework import (
-    TTLCategory,
-    TTLConfig,
-    DataSource,
-    SignalResult,
-    ExtractionResult,
-    MissingSignalStrategy,
-    SignalWeightConfig,
-    DataExtractor,
-
-    EXTRACTOR_REGISTRY,
-
-    register_extractor
+from .base import (
+    StubExtractor,
+    generate_company_profile,
+    generate_financial_summary,
+    generate_address,
 )
 
 __all__ = [
-    "TTLCategory",
-    "TTLConfig",
-    "DataSource",
-    "SignalResult",
-    "ExtractionResult",
-    "MissingSignalStrategy",
-    "SignalWeightConfig",
-    "DataExtractor",
-
-    "EXTRACTOR_REGISTRY",
-
-    "register_extractor"
+    "StubExtractor",
+    "generate_company_profile",
+    "generate_financial_summary",
+    "generate_address",
 ]
