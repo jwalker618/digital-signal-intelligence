@@ -4,7 +4,7 @@ DSI Signal Architecture - Core Data Types
 This module defines the data structures used throughout the signal processing pipeline:
     Extractor → Aggregator → Categorizer → Inference
 
-All components use these standardised types to ensure consistent data flow.
+All components use these standardized types to ensure consistent data flow.
 """
 
 from dataclasses import dataclass, field
