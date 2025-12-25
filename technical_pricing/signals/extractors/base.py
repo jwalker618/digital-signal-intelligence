@@ -1,224 +1,381 @@
 """
-extractors/#coverage#.py - Coverage Inference Functions
+DSI Signal Architecture - Extractor Base
+
+This module provides the base class and utilities for Extractors.
+Extractors fetch raw data from external sources (APIs, databases, FTP, etc.).
+
+Implementation Status: STUB
+    All extractors are currently stubs that return randomized but
+    structurally realistic data. When real data sources are integrated,
+    only the extract() method needs to change - aggregators and
+    categorizers remain unchanged.
+
+Utilities provided:
+    - StubExtractor: Extended base with randomization helpers
+    - Common data generation functions for realistic stub data
 """
 
-from __future__ import annotations
+import random
+import string
+from abc import abstractmethod
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
-from typing import Any, Dict
+from ..base import BaseExtractor
+from ..types import ExtractorResult, InferenceContext
 
-# =============================================================================
-# CROSS-COVERAGE EXTRACTORS
-# =============================================================================
 
-@register_extractor
-class CreditRatingExtractor(DataExtractor):
+def utcnow() -> datetime:
+    """Get current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
+
+
+class StubExtractor(BaseExtractor):
     """
-    Credit Rating Data - S&P, Moody's, Fitch ratings.
+    Extended base class for stub extractors with randomization utilities.
     
-    Signals: credit_rating
+    Provides helper methods for generating realistic random data
+    that mimics real API responses, plus TTL-aware caching.
     
-    Used across: Marine, Aerospace, D&O, FI, Energy
+    TTL Configuration:
+        Override DEFAULT_TTL_SECONDS based on the data source characteristics:
+        - TTL_REALTIME (60s): Live prices, positions
+        - TTL_FREQUENT (300s): Frequently updated feeds
+        - TTL_HOURLY (3600s): General API data
+        - TTL_DAILY (86400s): Regulatory status, certifications
+        - TTL_WEEKLY (604800s): Corporate structure
+        - TTL_MONTHLY (2592000s): Historical records
+    
+    Example:
+        class AllianceExtractor(StubExtractor):
+            SOURCE_NAME = "iata_alliance_registry"
+            DEFAULT_TTL_SECONDS = StubExtractor.TTL_DAILY  # Alliance membership rarely changes
+            
+            def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+                data = {
+                    "alliance": self._random_choice(["STAR", "OW", "ST", None]),
+                    "join_date": self._random_date_iso(years_back=10),
+                }
+                return self._create_success_result(data)
     """
-    source_name = "credit_rating"
-    coverage = "cross_coverage"
-    signals = ["credit_rating"]
-    ttl_config = TTLConfig.semi_static("Credit ratings updated weekly")
     
-    alternative_sources = [
-        DataSource("api", "sp_global", "ratings", priority=1),
-        DataSource("api", "moodys", "ratings", priority=1),
-        DataSource("api", "fitch", "ratings", priority=2),
-        DataSource("api", "kroll", "ratings", priority=3),
-    ]
-
-    def extract(self) -> ExtractionResult:
-        has_rating = self._rng.random() > 0.40
+    def extract(
+        self, 
+        entity_id: str, 
+        context: 'InferenceContext' = None,
+        force_refresh: bool = False,
+        **kwargs
+    ) -> ExtractorResult:
+        """
+        Extract data with TTL-aware caching.
         
-        sp_scale = ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-", "BBB+", "BBB", "BBB-",
-                   "BB+", "BB", "BB-", "B+", "B", "B-", "CCC+", "CCC", "CCC-", "CC", "C", "D"]
-        moodys_scale = ["Aaa", "Aa1", "Aa2", "Aa3", "A1", "A2", "A3", "Baa1", "Baa2", "Baa3",
-                       "Ba1", "Ba2", "Ba3", "B1", "B2", "B3", "Caa1", "Caa2", "Caa3", "Ca", "C"]
+        This method handles the caching logic. Subclasses should implement
+        _do_extract() for the actual data fetching.
         
-        rating_idx = self._weighted_choice([
-            (self._rng.randint(0, 3), 0.10),   # AAA to AA-
-            (self._rng.randint(4, 9), 0.35),   # A+ to BBB-
-            (self._rng.randint(10, 15), 0.40), # BB+ to B-
-            (self._rng.randint(16, 21), 0.15), # CCC+ to D
-        ])
+        Args:
+            entity_id: Identifier for the entity
+            context: InferenceContext for caching
+            force_refresh: If True, bypass cache and fetch fresh
+            **kwargs: Additional parameters
         
-        raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "has_rating": has_rating,
-            "ratings": {
-                "sp": sp_scale[rating_idx] if has_rating else None,
-                "moodys": moodys_scale[min(rating_idx, len(moodys_scale) - 1)] if has_rating else None,
-                "fitch": sp_scale[rating_idx] if has_rating and self._rng.random() > 0.30 else None,
-            },
-            "outlook": self._weighted_choice([
-                ("Stable", 0.55), ("Positive", 0.15), ("Negative", 0.25), ("Watch Negative", 0.05)
-            ]) if has_rating else None,
-            "investment_grade": rating_idx <= 9 if has_rating else None,
-            "last_action": {
-                "date": self._random_date(365, 0) if has_rating else None,
-                "type": self._weighted_choice([("Affirmed", 0.60), ("Upgraded", 0.15), ("Downgraded", 0.20), ("New", 0.05)]) if has_rating else None,
-            },
-        }
+        Returns:
+            ExtractorResult (from cache if valid, fresh otherwise)
+        """
+        # Check cache first (unless force_refresh)
+        if context and not force_refresh:
+            cached = self._get_cached(entity_id, context, **kwargs)
+            if cached:
+                return cached
         
-        self._last_fetch = datetime.now()
-        return ExtractionResult(
-            source=self.source_name,
-            source_type="api",
-            timestamp=datetime.now().isoformat(),
-            raw_data=raw_data,
-            ttl_config=self.ttl_config,
-            metadata={
-                "has_rating": has_rating,
-                "alternative_sources": [str(s) for s in self.alternative_sources]
+        # Simulate occasional failures
+        if self._simulate_failure():
+            result = self._create_error_result(self._random_error())
+        else:
+            # Fetch fresh data via subclass implementation
+            result = self._do_extract(entity_id, **kwargs)
+        
+        # Cache successful results
+        if context and result.success:
+            self._cache_result(entity_id, result, context, **kwargs)
+        
+        return result
+    
+    def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        """
+        Perform the actual extraction. Override in subclasses.
+        
+        This is where stub data generation happens. The caching logic
+        is handled by extract().
+        
+        Args:
+            entity_id: Identifier for the entity
+            **kwargs: Additional parameters
+        
+        Returns:
+            ExtractorResult with generated stub data
+        """
+        # Default implementation - override in subclasses
+        return self._create_success_result({
+            "entity_id": entity_id,
+            "stub": True,
+            "message": "Override _do_extract() in subclass"
+        })
+    
+    def _random_choice(
+        self,
+        options: List[Any],
+        weights: Optional[List[float]] = None
+    ) -> Any:
+        """
+        Select randomly from options with optional weighting.
+        
+        Args:
+            options: List of possible values
+            weights: Optional probability weights (must sum to 1.0)
+        
+        Returns:
+            Randomly selected option
+        """
+        if weights:
+            return random.choices(options, weights=weights, k=1)[0]
+        return random.choice(options)
+    
+    def _random_bool(self, true_probability: float = 0.5) -> bool:
+        """Return True with the given probability."""
+        return random.random() < true_probability
+    
+    def _random_int(self, min_val: int, max_val: int) -> int:
+        """Return a random integer in the inclusive range."""
+        return random.randint(min_val, max_val)
+    
+    def _random_float(
+        self,
+        min_val: float,
+        max_val: float,
+        decimals: int = 2
+    ) -> float:
+        """Return a random float in the range, rounded to decimals."""
+        value = random.uniform(min_val, max_val)
+        return round(value, decimals)
+    
+    def _random_date(
+        self,
+        years_back: int = 5,
+        years_forward: int = 0
+    ) -> datetime:
+        """
+        Generate a random date within the specified range.
+        
+        Args:
+            years_back: Maximum years in the past
+            years_forward: Maximum years in the future
+        
+        Returns:
+            Random datetime
+        """
+        now = utcnow()
+        start = now - timedelta(days=years_back * 365)
+        end = now + timedelta(days=years_forward * 365)
+        delta = end - start
+        random_days = random.randint(0, delta.days)
+        return start + timedelta(days=random_days)
+    
+    def _random_date_iso(
+        self,
+        years_back: int = 5,
+        years_forward: int = 0,
+        include_time: bool = False
+    ) -> str:
+        """Generate a random date as ISO format string."""
+        dt = self._random_date(years_back, years_forward)
+        if include_time:
+            return dt.isoformat()
+        return dt.date().isoformat()
+    
+    def _random_date_or_none(
+        self,
+        none_probability: float = 0.2,
+        **kwargs
+    ) -> Optional[str]:
+        """Generate a random date or None."""
+        if random.random() < none_probability:
+            return None
+        return self._random_date_iso(**kwargs)
+    
+    def _random_string(
+        self,
+        length: int = 10,
+        include_digits: bool = False
+    ) -> str:
+        """Generate a random alphanumeric string."""
+        chars = string.ascii_uppercase
+        if include_digits:
+            chars += string.digits
+        return ''.join(random.choices(chars, k=length))
+    
+    def _random_id(self, prefix: str = "") -> str:
+        """Generate a random ID with optional prefix."""
+        suffix = self._random_string(8, include_digits=True)
+        return f"{prefix}{suffix}" if prefix else suffix
+    
+    def _random_percentage(self, decimals: int = 1) -> float:
+        """Generate a random percentage 0-100."""
+        return self._random_float(0, 100, decimals)
+    
+    def _random_count(
+        self,
+        min_val: int = 0,
+        max_val: int = 100,
+        zero_probability: float = 0.1
+    ) -> int:
+        """Generate a random count with probability of zero."""
+        if random.random() < zero_probability:
+            return 0
+        return self._random_int(min_val, max_val)
+    
+    def _random_rating(
+        self,
+        ratings: List[str] = None,
+        include_none: bool = True
+    ) -> Optional[str]:
+        """
+        Generate a random rating from a standard set.
+        
+        Default ratings follow S&P-style: AAA, AA, A, BBB, BB, B, CCC, CC, C
+        """
+        if ratings is None:
+            ratings = ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-",
+                      "BBB+", "BBB", "BBB-", "BB+", "BB", "BB-",
+                      "B+", "B", "B-", "CCC", "CC", "C"]
+        
+        if include_none:
+            ratings = ratings + [None]
+        
+        return self._random_choice(ratings)
+    
+    def _random_country_code(self) -> str:
+        """Generate a random ISO country code."""
+        codes = ["US", "GB", "DE", "FR", "JP", "CN", "AU", "CA", 
+                 "BR", "IN", "SG", "AE", "CH", "NL", "KR"]
+        return self._random_choice(codes)
+    
+    def _random_currency(self) -> str:
+        """Generate a random currency code."""
+        currencies = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD"]
+        return self._random_choice(currencies)
+    
+    def _random_amount(
+        self,
+        min_val: float = 1000,
+        max_val: float = 1000000,
+        currency: bool = False
+    ) -> Dict[str, Any] | float:
+        """Generate a random monetary amount."""
+        amount = self._random_float(min_val, max_val, 2)
+        if currency:
+            return {
+                "amount": amount,
+                "currency": self._random_currency()
             }
-        )
-
-
-@register_extractor
-class CompanyProfileExtractor(DataExtractor):
-    """
-    Company Profile Data - Basic company information, D&B data.
+        return amount
     
-    Signals: company_type, size_band, geography, industry
+    def _simulate_response_time(self) -> int:
+        """Simulate API response time in milliseconds."""
+        return self._random_int(50, 500)
     
-    Used across all coverages
-    """
-    source_name = "company_profile"
-    coverage = "cross_coverage"
-    signals = ["company_type", "size_band", "geography", "industry"]
-    ttl_config = TTLConfig.semi_static("Company profile updated weekly")
-    
-    alternative_sources = [
-        DataSource("api", "dnb", "company/profile", priority=1),
-        DataSource("api", "pitchbook", "companies/profile", priority=2),
-        DataSource("api", "linkedin", "company/about", priority=3),
-        DataSource("scrape", "company_website", "/about", priority=4),
-    ]
-
-    def extract(self) -> ExtractionResult:
-        company_type = self._weighted_choice([
-            ("Public", 0.30), ("Private", 0.50), ("PE-Backed", 0.15), ("Non-Profit", 0.05)
-        ])
-        
-        employees = self._weighted_choice([
-            (self._rng.randint(10, 50), 0.25),
-            (self._rng.randint(50, 250), 0.30),
-            (self._rng.randint(250, 1000), 0.25),
-            (self._rng.randint(1000, 10000), 0.15),
-            (self._rng.randint(10000, 100000), 0.05),
-        ])
-        
-        raw_data = {
-            "company_id": self.kwargs.get("company_id", self._random_id("CO", 10)),
-            "basic_info": {
-                "company_name": self.kwargs.get("company_name", self._random_company_name("Corp")),
-                "company_type": company_type,
-                "year_founded": self._rng.randint(1900, 2020),
-                "employees": employees,
-            },
-            "size_classification": {
-                "size_band": self._classify_size(employees),
-                "revenue_band": self._weighted_choice([
-                    ("Under $10M", 0.25), ("$10M-$50M", 0.25), ("$50M-$250M", 0.25),
-                    ("$250M-$1B", 0.15), ("Over $1B", 0.10)
-                ]),
-            },
-            "geography": {
-                "headquarters_country": self._weighted_choice([
-                    ("United States", 0.40), ("United Kingdom", 0.10), ("Germany", 0.08),
-                    ("Canada", 0.07), ("France", 0.05), ("Other", 0.30)
-                ]),
-                "headquarters_state": self._rng.choice(["California", "New York", "Texas", "Florida", "Illinois"]),
-                "operating_countries": self._rng.randint(1, 50),
-            },
-            "industry": {
-                "primary_sic": str(self._rng.randint(1000, 9999)),
-                "primary_naics": str(self._rng.randint(100000, 999999)),
-                "industry_description": self._weighted_choice([
-                    "Technology", "Healthcare", "Financial Services", "Manufacturing",
-                    "Retail", "Energy", "Professional Services", "Transportation"
-                ]),
-            },
+    def _create_stub_metadata(self) -> Dict[str, Any]:
+        """Create standard metadata for stub responses."""
+        return {
+            "api_version": self.SOURCE_VERSION,
+            "response_time_ms": self._simulate_response_time(),
+            "is_stub": True,
+            "stub_generated_at": utcnow().isoformat(),
+            "ttl_seconds": self.DEFAULT_TTL_SECONDS,
         }
+    
+    def _create_success_result(
+        self,
+        data: Dict[str, Any],
+        metadata: Optional[Dict[str, Any]] = None,
+        ttl_seconds: Optional[int] = None
+    ) -> ExtractorResult:
+        """
+        Create a successful extraction result with TTL.
         
-        self._last_fetch = datetime.now()
-        return ExtractionResult(
-            source=self.source_name,
-            source_type="api",
-            timestamp=datetime.now().isoformat(),
-            raw_data=raw_data,
-            ttl_config=self.ttl_config,
-            metadata={
-                "company_type": company_type,
-                "alternative_sources": [str(s) for s in self.alternative_sources]
-            }
+        Args:
+            data: The extracted data
+            metadata: Additional metadata to merge
+            ttl_seconds: Override default TTL
+        """
+        stub_metadata = self._create_stub_metadata()
+        if metadata:
+            stub_metadata.update(metadata)
+        return super()._create_success_result(
+            data, 
+            stub_metadata, 
+            ttl_seconds=ttl_seconds or self.DEFAULT_TTL_SECONDS
         )
     
-    def _classify_size(self, employees: int) -> str:
-        if employees < 50: return "Small"
-        elif employees < 250: return "Medium"
-        elif employees < 1000: return "Large"
-        else: return "Enterprise"
-
-
-@register_extractor  
-class NewsMediaExtractor(DataExtractor):
-    """
-    News & Media Monitoring - GDELT, news APIs for reputation signals.
-    
-    Signals: media_sentiment, news_mentions
-    
-    Used across all coverages
-    """
-    source_name = "news_media"
-    coverage = "cross_coverage"
-    signals = ["media_sentiment", "news_mentions"]
-    ttl_config = TTLConfig.dynamic("News monitored continuously")
-    
-    alternative_sources = [
-        DataSource("news", "gdelt", "query", priority=1),
-        DataSource("api", "businesswire", "releases/company", priority=2),
-        DataSource("api", "prnewswire", "releases/company", priority=3),
-    ]
-
-    def extract(self) -> ExtractionResult:
-        mentions = self._rng.randint(0, 500)
+    def _simulate_failure(self, failure_rate: float = 0.05) -> bool:
+        """
+        Determine if this extraction should simulate a failure.
         
-        raw_data = {
-            "entity_id": self.kwargs.get("entity_id", self._random_id("ENT", 10)),
-            "news_coverage": {
-                "mentions_30d": mentions,
-                "mentions_90d": mentions * 3,
-                "trend": self._weighted_choice([("Increasing", 0.30), ("Stable", 0.50), ("Decreasing", 0.20)]),
-            },
-            "sentiment": {
-                "overall": self._weighted_choice([
-                    ("Very Positive", 0.10), ("Positive", 0.30), ("Neutral", 0.40),
-                    ("Negative", 0.15), ("Very Negative", 0.05)
-                ]),
-                "positive_pct": self._rng.randint(20, 60),
-                "negative_pct": self._rng.randint(5, 30),
-            },
-            "key_topics": self._rng.sample([
-                "Financial Results", "Product Launch", "Leadership Change",
-                "Regulatory", "M&A", "Partnership", "Controversy", "Award"
-            ], self._rng.randint(2, 5)),
+        Args:
+            failure_rate: Probability of failure (default 5%)
+        
+        Returns:
+            True if extraction should fail
+        """
+        return random.random() < failure_rate
+    
+    def _random_error(self) -> str:
+        """Generate a random realistic error message."""
+        errors = [
+            "Connection timeout",
+            "Rate limit exceeded",
+            "Service temporarily unavailable",
+            "Invalid API key",
+            "Resource not found",
+            "Internal server error",
+        ]
+        return self._random_choice(errors)
+
+
+# Convenience functions for common data patterns
+
+def generate_company_profile() -> Dict[str, Any]:
+    """Generate a random company profile structure."""
+    return {
+        "name": f"Company_{random.randint(1000, 9999)}",
+        "incorporated_country": random.choice(["US", "GB", "DE", "FR", "JP"]),
+        "incorporated_date": (utcnow() - timedelta(days=random.randint(365, 20000))).date().isoformat(),
+        "public": random.random() > 0.6,
+        "employee_count": random.randint(10, 50000),
+        "industry_codes": {
+            "sic": str(random.randint(1000, 9999)),
+            "naics": str(random.randint(100000, 999999)),
         }
-        
-        self._last_fetch = datetime.now()
-        return ExtractionResult(
-            source=self.source_name,
-            source_type="api",
-            timestamp=datetime.now().isoformat(),
-            raw_data=raw_data,
-            ttl_config=self.ttl_config,
-            metadata={
-                "mentions": mentions,
-                "alternative_sources": [str(s) for s in self.alternative_sources]
-            }
-        )
+    }
 
+
+def generate_financial_summary() -> Dict[str, Any]:
+    """Generate a random financial summary structure."""
+    revenue = random.uniform(1e6, 1e10)
+    return {
+        "revenue": round(revenue, 2),
+        "revenue_currency": "USD",
+        "fiscal_year": utcnow().year - 1,
+        "net_income": round(revenue * random.uniform(-0.1, 0.3), 2),
+        "total_assets": round(revenue * random.uniform(0.5, 3.0), 2),
+        "total_liabilities": round(revenue * random.uniform(0.2, 1.5), 2),
+    }
+
+
+def generate_address() -> Dict[str, Any]:
+    """Generate a random address structure."""
+    return {
+        "street": f"{random.randint(1, 999)} Main Street",
+        "city": random.choice(["New York", "London", "Tokyo", "Singapore", "Frankfurt"]),
+        "country": random.choice(["US", "GB", "JP", "SG", "DE"]),
+        "postal_code": str(random.randint(10000, 99999)),
+    }
