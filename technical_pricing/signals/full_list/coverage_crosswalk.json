@@ -1,0 +1,169 @@
+{
+  "metadata": {
+    "description": "Crosswalk of common concepts across seven coverages (aerospace, cyber, do, energy, fi, pi, marine).",
+    "notes": [
+      "Full path IDs are used to avoid collisions.",
+      "CommonConcept provides a normalized anchor for mapping.",
+      "Empty arrays mean no equivalent ID in that coverage.",
+      "This file is designed for LLM interrogation and code generation.",
+      "Versioning allows controlled updates as coverage schemas evolve."
+    ],
+    "version": "1.0.0",
+    "last_updated": "2025-12-25"
+  },
+  "crosswalk": [
+    {
+      "commonConcept": "Credit Rating",
+      "aerospace": ["signal_features/financial_stability/credit_rating"],
+      "cyber": ["signal_features/structured_data/credit_rating"],
+      "do": ["signal_features/structured_data/credit_rating"],
+      "energy": [
+        "signal_features/financial_stability/credit_rating",
+        "signal_features/structured_data/credit"
+      ],
+      "fi": [
+        "signal_features/network_authority/credit_rating",
+        "signal_features/structured_data/credit_rating_structured"
+      ],
+      "pi": ["signal_features/firm_stability/financial_stability"],
+      "marine": ["signal_features/structured_data/credit_rating"]
+    },
+    {
+      "commonConcept": "Certification / License Status",
+      "aerospace": ["signal_features/regulatory_compliance/certificate_status"],
+      "cyber": ["signal_features/network_authority/certification_authority"],
+      "do": [],
+      "energy": ["signal_features/asset_portfolio/permit_status"],
+      "fi": ["categorical_groups/regulatory_framework"],
+      "pi": ["signal_features/regulatory_standing/license_status"],
+      "marine": [
+        "signal_features/safety_compliance/ism_compliance",
+        "signal_features/fleet_profile/crew_certification"
+      ]
+    },
+    {
+      "commonConcept": "Leadership Stability",
+      "aerospace": ["signal_features/corporate_governance/management_stability"],
+      "cyber": ["signal_features/corporate_footprint/security_leadership"],
+      "do": ["signal_features/executive/executive_stability"],
+      "energy": ["signal_features/corporate_footprint/hse_leadership"],
+      "fi": ["signal_features/governance/executive_stability"],
+      "pi": [
+        "signal_features/firm_stability/partner_stability",
+        "signal_features/firm_stability/staff_retention"
+      ],
+      "marine": ["signal_features/fleet_profile/management_consistency"]
+    },
+    {
+      "commonConcept": "Public Reporting / Disclosure",
+      "aerospace": ["signal_features/corporate_governance/safety_reporting"],
+      "cyber": ["signal_features/corporate_footprint/security_page"],
+      "do": [
+        "signal_features/corporate_footprint/governance_page",
+        "signal_features/corporate_footprint/esg_reporting"
+      ],
+      "energy": [
+        "signal_features/corporate_footprint/esg_reporting",
+        "signal_features/corporate_footprint/disclosure_quality"
+      ],
+      "fi": [
+        "signal_features/corporate_footprint/disclosure_quality",
+        "signal_features/corporate_footprint/security_page",
+        "signal_features/corporate_footprint/esg_reporting"
+      ],
+      "pi": [
+        "signal_features/corporate_footprint/website_quality",
+        "signal_features/corporate_footprint/practice_clarity",
+        "signal_features/corporate_footprint/community_involvement"
+      ],
+      "marine": [
+        "signal_features/corporate_footprint/website_quality",
+        "signal_features/corporate_footprint/sustainability_reporting",
+        "signal_features/corporate_footprint/safety_communication"
+      ]
+    },
+    {
+      "commonConcept": "Regulatory Actions / Enforcement",
+      "aerospace": ["signal_features/regulatory_compliance/enforcement_actions"],
+      "cyber": ["signal_features/public_record/regulatory_action"],
+      "do": [
+        "signal_features/litigation/regulatory_action",
+        "signal_features/litigation/sec_enforcement"
+      ],
+      "energy": ["signal_features/environmental_compliance/epa_violation"],
+      "fi": [
+        "signal_features/regulatory_compliance/enforcement_action",
+        "signal_features/operational_risk/litigation"
+      ],
+      "pi": ["signal_features/litigation_history/regulatory_enforcement"],
+      "marine": [
+        "signal_features/sanctions_compliance/sanctions_status",
+        "signal_features/sanctions_compliance/historical_sanctions"
+      ]
+    },
+    {
+      "commonConcept": "Incident / Breach History",
+      "aerospace": ["signal_features/safety_record/incident_history"],
+      "cyber": ["signal_features/public_record/breach_history"],
+      "do": ["signal_features/financial/restatement"],
+      "energy": [
+        "signal_features/safety_performance/near_miss",
+        "signal_features/environmental_compliance/spill_history"
+      ],
+      "fi": [
+        "signal_features/operational_risk/breach_history",
+        "signal_features/operational_risk/operational_incident"
+      ],
+      "pi": ["signal_features/technical_infrastructure/breach_history"],
+      "marine": [
+        "signal_features/safety_compliance/casualty_history",
+        "signal_features/environmental/environmental_incident"
+      ]
+    },
+    {
+      "commonConcept": "Accident / Litigation History",
+      "aerospace": ["signal_features/safety_record/accident_history"],
+      "cyber": ["signal_features/public_record/litigation_history"],
+      "do": [
+        "signal_features/litigation/securities_litigation",
+        "signal_features/litigation/derivative_litigation"
+      ],
+      "energy": [
+        "signal_features/safety_performance/major_incident",
+        "signal_features/safety_performance/fatality"
+      ],
+      "fi": ["signal_features/operational_risk/litigation"],
+      "pi": [
+        "signal_features/litigation_history/malpractice_suits",
+        "signal_features/litigation_history/civil_litigation"
+      ],
+      "marine": ["signal_features/safety_compliance/total_loss"]
+    },
+    {
+      "commonConcept": "Industry Engagement / Association",
+      "aerospace": ["signal_features/corporate_governance/industry_engagement"],
+      "cyber": ["signal_features/network_authority/industry_body"],
+      "do": ["signal_features/network_authority/industry_association"],
+      "energy": ["signal_features/network_authority/industry_association"],
+      "fi": ["signal_features/network_authority/industry_association"],
+      "pi": ["signal_features/network_authority/association_leadership"],
+      "marine": [
+        "signal_features/network_authority/industry_association",
+        "signal_features/corporate_footprint/industry_presence"
+      ]
+    },
+    {
+      "commonConcept": "Banking Relationship",
+      "aerospace": [],
+      "cyber": ["signal_features/network_authority/financial_relationship"],
+      "do": ["signal_features/network_authority/banking_relationship"],
+      "energy": ["signal_features/network_authority/banking_relationship"],
+      "fi": [
+        "signal_features/network_authority/correspondent_quality",
+        "signal_features/network_authority/clearing_relationship"
+      ],
+      "pi": [],
+      "marine": ["signal_features/network_authority/banking_relationship"]
+    }
+  ]
+}
