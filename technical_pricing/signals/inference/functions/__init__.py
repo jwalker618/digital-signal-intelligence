@@ -8,6 +8,13 @@ Aerospace modules:
     - aerospace_regulatory.py: Regulatory compliance signal functions
     - aerospace_others.py: Operational, fleet, route, corporate, financial functions
 
+Cyber modules:
+    - cyber_categorical.py: Categorical group functions (industry, size, geography)
+    - cyber_network_authority.py: Network authority signal functions
+    - cyber_technical_infrastructure.py: Technical infrastructure signal functions
+    - cyber_footprint_and_record.py: Corporate footprint and public record functions
+    - cyber_structured_data.py: Structured data signal functions
+
 Each function:
     - Maps to an `inference_utility_function` in the YAML config
     - Orchestrates: Extractor(s) → Aggregator(s) → Categorizer
@@ -24,6 +31,13 @@ from . import aerospace_network_authority
 from . import aerospace_safety_record
 from . import aerospace_regulatory
 from . import aerospace_others
+
+# Import all cyber modules to register functions
+from . import cyber_categorical
+from . import cyber_network_authority
+from . import cyber_technical_infrastructure
+from . import cyber_footprint_and_record
+from . import cyber_structured_data
 
 # Re-export commonly used functions for convenience
 from .aerospace_categorical import (
