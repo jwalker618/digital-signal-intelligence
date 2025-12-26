@@ -1,36 +1,25 @@
-"""
-Aerospace Aggregators
+"""Aerospace Aggregators"""
 
-Production-ready aggregators for aerospace coverage signals.
-Organized by signal group for clarity.
-"""
-
-from .network_authority import (
+from .aggregators import (
+    # Network Authority
     AllianceMembershipAggregator,
     CodeshareQualityAggregator,
     LessorQualityAggregator,
     OEMRelationshipAggregator,
     MROQualityAggregator,
-)
-
-from .safety_record import (
+    # Safety Record
     AviationSafetyAggregator,
     AccidentHistoryAggregator,
     IncidentHistoryAggregator,
     AccidentRateAggregator,
     FatalityHistoryAggregator,
     InvestigationFindingsAggregator,
-)
-
-from .regulatory_compliance import (
+    # Regulatory Compliance
     CertificateStatusAggregator,
     IOSAAuditAggregator,
     RampInspectionAggregator,
     EUSafetyListAggregator,
     StateSafetyAggregator,
-)
-
-from .operational_and_others import (
     # Operational Quality
     FlightOperationsAggregator,
     CrewTrainingAggregator,
@@ -49,38 +38,14 @@ from .operational_and_others import (
 )
 
 __all__ = [
-    # Network Authority
-    "AllianceMembershipAggregator",
-    "CodeshareQualityAggregator",
-    "LessorQualityAggregator",
-    "OEMRelationshipAggregator",
-    "MROQualityAggregator",
-    # Safety Record
-    "AviationSafetyAggregator",
-    "AccidentHistoryAggregator",
-    "IncidentHistoryAggregator",
-    "AccidentRateAggregator",
-    "FatalityHistoryAggregator",
-    "InvestigationFindingsAggregator",
-    # Regulatory Compliance
-    "CertificateStatusAggregator",
-    "IOSAAuditAggregator",
-    "RampInspectionAggregator",
-    "EUSafetyListAggregator",
-    "StateSafetyAggregator",
-    # Operational Quality
-    "FlightOperationsAggregator",
-    "CrewTrainingAggregator",
-    "OperationalComplexityAggregator",
-    # Fleet Quality
-    "FleetQualityAggregator",
-    "OrderBacklogAggregator",
-    "MaintenanceIndicatorsAggregator",
-    # Route Risk
-    "RouteRiskAggregator",
-    # Corporate Governance
-    "SafetyLeadershipAggregator",
-    # Financial
-    "MarketPositionAggregator",
-    "GovernmentSupportAggregator",
+    "AllianceMembershipAggregator", "CodeshareQualityAggregator", "LessorQualityAggregator",
+    "OEMRelationshipAggregator", "MROQualityAggregator", "AviationSafetyAggregator",
+    "AccidentHistoryAggregator", "IncidentHistoryAggregator", "AccidentRateAggregator",
+    "FatalityHistoryAggregator", "InvestigationFindingsAggregator", "CertificateStatusAggregator",
+    "IOSAAuditAggregator", "RampInspectionAggregator", "EUSafetyListAggregator",
+    "StateSafetyAggregator", "FlightOperationsAggregator", "CrewTrainingAggregator",
+    "OperationalComplexityAggregator", "FleetQualityAggregator", "OrderBacklogAggregator",
+    "MaintenanceIndicatorsAggregator", "RouteRiskAggregator", "SafetyLeadershipAggregator",
+    "MarketPositionAggregator", "GovernmentSupportAggregator",
 ]
+
