@@ -1,14 +1,10 @@
 """
 DSI Inference Functions by Coverage Domain
 
-Each module contains inference function implementations for a specific coverage:
-    - aerospace.py: Aviation signal inference functions
-    - cyber.py: Cybersecurity signal inference functions
-    - do.py: Directors & Officers signal inference functions
-    - energy.py: Energy sector signal inference functions
-    - fi.py: Financial Institutions signal inference functions
-    - marine.py: Marine/shipping signal inference functions
-    - pi.py: Professional Indemnity signal inference functions
+Structure:
+    {coverage}/
+        __init__.py
+        signals.py      - All inference functions for the coverage
 
 Each function:
     - Maps to an `inference_utility_function` in the YAML config
@@ -16,14 +12,12 @@ Each function:
     - Returns a SignalResult with score/category and audit trail
 
 Registration:
-    Functions are registered via decorator:
-    
-    @register_inference_function("alliance_membership_basefunction")
-    def alliance_membership_basefunction(entity_id: str, context: InferenceContext) -> SignalResult:
-        ...
+    Functions are registered via @register_inference_function decorator.
+    Import the modules to trigger registration.
 """
 
-# Functions will be imported here to trigger registration
-# from . import aerospace
-# from . import cyber
-# etc.
+# Import all coverage modules to register functions
+from . import aerospace
+from . import cyber
+from . import do
+from . import energy
