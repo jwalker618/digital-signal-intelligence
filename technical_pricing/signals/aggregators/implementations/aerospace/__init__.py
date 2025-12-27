@@ -48,4 +48,3 @@ __all__ = [
     "MaintenanceIndicatorsAggregator", "RouteRiskAggregator", "SafetyLeadershipAggregator",
     "MarketPositionAggregator", "GovernmentSupportAggregator",
 ]
-
