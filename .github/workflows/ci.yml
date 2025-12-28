@@ -8,10 +8,10 @@ on:
 
 env:
   RUN_VERSION: '3.11'
-  PYTHON_VERSIONS: '["3.9","3.10","3.11","3.12"]'
+  PYTHON_VERSIONS: '["3.10","3.11","3.12"]'
 
 jobs:
-  setup: 
+  setup:
     name: Setup matrix
     runs-on: ubuntu-latest
     outputs:
@@ -20,9 +20,9 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          echo 'python-versions=["3.9","3.10","3.11","3.12"]' >> $GITHUB_OUTPUT
+          echo 'python-versions=["3.10","3.11","3.12"]' >> $GITHUB_OUTPUT
           echo 'run-version=3.11' >> $GITHUB_OUTPUT
-  
+
   lint:
     name: Code Linting
     needs: setup
@@ -42,22 +42,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 black isort mypy
 
-      - name: Run Black (code formatting)
-        run: black .
+      - name: Run Black (code formatting check)
+        run: black --check technical_pricing/
 
-      - name: Run isort (import sorting)
-        run: isort .
+      - name: Run isort (import sorting check)
+        run: isort --check-only technical_pricing/
 
       - name: Run Flake8 (linting)
         run: |
           set -o pipefail
-          flake8 models/ api/ examples/ \
+          flake8 technical_pricing/ \
             --max-line-length=100 \
             --extend-ignore=E203,W503,E501,F541,F841 \
             --format=default \
             > flake8-report.txt || true
 
-      - name: upload flake8 report
+      - name: Upload flake8 report
         uses: actions/upload-artifact@v4
         with:
           name: flake8-report
@@ -66,9 +66,9 @@ jobs:
       - name: Run MyPy (type checking)
         run: |
           set -o pipefail
-          mypy models/ api/ \
+          mypy technical_pricing/ \
           --ignore-missing-imports \
-          > mypy-report.txt 
+          > mypy-report.txt
         continue-on-error: true
 
       - name: Upload MyPy report
@@ -103,14 +103,14 @@ jobs:
       - name: Run tests with pytest
         if: matrix.python-version == needs.setup.outputs.run-version
         run: |
-          pytest models/ \
-          --cov=models/ \
+          pytest technical_pricing/tests/ \
+          --cov=technical_pricing/ \
           --cov-report=xml \
           --cov-report=html \
           --cov-report=term-missing \
           -v \
           --junitxml=pytest-report-${{ matrix.python-version }}.xml
-          
+
       - name: Upload pytest report
         if: always() && matrix.python-version == needs.setup.outputs.run-version
         uses: actions/upload-artifact@v4
@@ -118,7 +118,7 @@ jobs:
           name: pytest-report-${{ matrix.python-version }}
           path: pytest-report-${{ matrix.python-version }}.xml
           if-no-files-found: ignore
-          
+
       - name: Upload coverage to Codecov
         if: matrix.python-version == needs.setup.outputs.run-version
         uses: codecov/codecov-action@v3
@@ -136,111 +136,9 @@ jobs:
           path: htmlcov/
           if-no-files-found: ignore
 
-# THIS WORKS PERFECTLY, COMMENTING OUT FOR SPEED
-#  security:
-#    name: Security Scanning
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-
-#      - name: Set up Python
-#        uses: actions/setup-python@v5
-#        with:
-#          python-version: ${{ env.PYTHON_VERSION }}
-
-#      - name: Install dependencies
-#        run: |
-#          python -m pip install --upgrade pip
-#          pip install bandit safety
-
-#      - name: Run Bandit (security linter)
-#        run: bandit -r models/ api/ -f json -o bandit-report.json
-#        continue-on-error: true
-
-#      - name: Run Safety (dependency checker)
-#        run: safety check --json
-#        continue-on-error: true
-
-#      - name: Upload security reports
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: security-reports
-#          path: bandit-report.json
-
-# THIS WORKS PERFECTLY, COMMENTING OUT FOR SPEED
-#  build-docker:
-#    name: Build Docker Image
-#    runs-on: ubuntu-latest
-#    needs: [lint, test]
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v3
-
-#      - name: Build Docker image
-#        uses: docker/build-push-action@v5
-#        with:
-#          context: .
-#          file: ./Dockerfile
-#          push: false
-#          tags: dsi-api:${{ github.sha }}
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-
-#      - name: Test Docker image
-#        run: |
-#          docker build -t dsi-api:test .
-#          docker run -d --name dsi-test -p 5000:5000 dsi-api:test
-#          sleep 10
-#          curl -f http://localhost:5000/health || exit 1
-#          docker stop dsi-test
-
-# THIS WORKS PERFECTLY, COMMENTING OUT FOR SPEED
-#  integration-tests:
-#    name: Integration Tests
-#    runs-on: ubuntu-latest
-#    needs: [test]
-#    services:
-#      api:
-#        image: python:3.11-slim
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-
-#      - name: Set up Python
-#        uses: actions/setup-python@v5
-#        with:
-#          python-version: ${{ env.PYTHON_VERSION }}
-
-#      - name: Install dependencies
-#        run: |
-#          python -m pip install --upgrade pip
-#          pip install -r requirements.txt
-#          pip install requests pytest
-
-#      - name: Run integration tests
-#        run: |
-#          # Start API in background
-#          python -m api.server &
-#          API_PID=$!
-#          sleep 5
-
-#          # Test API endpoints
-#          curl -f http://localhost:5000/health || exit 1
-#          curl -f http://localhost:5000/api/v1/cyber/health || exit 1
-#          curl -f http://localhost:5000/api/v1/energy/health || exit 1
-#          curl -f http://localhost:5000/api/v1/financial/health || exit 1
-
-#          # Kill API
-#          kill $API_PID
-
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-#    needs: [lint, test, security, build-docker, integration-tests]
     needs: [setup, lint, test]
     if: always()
     steps:
@@ -249,18 +147,14 @@ jobs:
           echo "=== Job Results ==="
           echo "Lint: ${{ needs.lint.result }}"
           echo "Test: ${{ needs.test.result }}"
-#          echo "Security: ${{ needs.security.result }}"
-#          echo "Docker Build: ${{ needs.build-docker.result }}"
-#          echo "Integration Tests: ${{ needs.integration-tests.result }}"
-  
+
       - name: Download pytest reports
         if: needs.test.result != 'skipped'
         uses: actions/download-artifact@v4
         with:
           name: pytest-report-${{ needs.setup.outputs.run-version }}
           path: reports
-  
-      # Summarise failing tests across all matrix runs
+
       - name: Summarise failing tests
         if: ${{ needs.test.result == 'failure' }}
         run: |
@@ -304,21 +198,16 @@ jobs:
           if failures_out:
               print("\n".join(failures_out))
           else:
-              print("No test failures 🎉")
+              print("No test failures")
           EOF
 
       - name: Report success
-#        if: ${{ needs.lint.result == 'success' && needs.test.result == 'success' && needs.build-docker.result == 'success' }}
         if: ${{ needs.lint.result == 'success' && needs.test.result == 'success'}}
-        run: echo "All checks passed! ✅"
-  
+        run: echo "All checks passed!"
+
       - name: Report failure
-#        if: ${{ needs.lint.result == 'failure' || needs.test.result == 'failure' || needs.build-docker.result == 'failure' }}
         if: ${{ needs.lint.result == 'failure' || needs.test.result == 'failure'  }}
         run: |
-          echo "Some checks failed! ❌"
+          echo "Some checks failed!"
           echo "Lint: ${{ needs.lint.result }}"
           echo "Test: ${{ needs.test.result }}"
-#          echo "Security: ${{ needs.security.result }}"
-#          echo "Docker Build: ${{ needs.build-docker.result }}"
-#          echo "Integration Tests: ${{ needs.integration-tests.result }}"

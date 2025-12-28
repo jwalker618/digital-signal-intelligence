@@ -345,35 +345,81 @@ Retrospective analysis across multiple sectors shows:
 
 #### Prerequisites
 
-- Python 3.9+
-- Modern web browser (for dashboards)
+- Python 3.10+
+- pip or conda for package management
 
 #### Installation
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/dsi-insurance-pricing.git
-cd dsi-insurance-pricing
+git clone https://github.com/jwalker618/digital-signal-intelligence.git
+cd digital-signal-intelligence
 
 # Install dependencies
 pip install -r requirements.txt
+
+# For development
+pip install -r requirements-dev.txt
+```
+
+#### Project Structure
+
+```
+digital-signal-intelligence/
+├── technical_pricing/           # Main package
+│   ├── signals/                 # Signal extraction framework
+│   │   ├── extractors/          # Data extraction stubs
+│   │   ├── aggregators/         # Signal aggregation
+│   │   ├── categorisers/        # Score categorization
+│   │   └── inference/           # Inference functions
+│   ├── coverages/               # Coverage configurations (YAML)
+│   │   ├── aerospace/
+│   │   ├── cyber/
+│   │   └── ...
+│   ├── model/                   # 13-step workflow implementation
+│   │   ├── config_manager.py    # Config loading & validation
+│   │   ├── scorer.py            # Signal scoring (Steps 4-6)
+│   │   ├── query_evaluator.py   # Direct queries (Step 7)
+│   │   ├── pricer.py            # Premium calculation (Steps 8-12)
+│   │   └── workflow.py          # Complete workflow orchestration
+│   ├── discovery/               # Entity identification
+│   └── tests/                   # Unit & integration tests
+├── SKILL.md                     # Detailed architecture documentation
+└── docs/                        # Documentation & case studies
 ```
 
 #### Quick Start
 
 ```python
-from signal_collection import create_signal_engine, ModelType
-from portfolio_management import DSIPortfolioManager, CoverageType
+from technical_pricing.discovery import discover_website
+from technical_pricing.model.workflow import create_workflow_engine
+from technical_pricing.model.types import SubmissionRequest
 
-# Assess a single risk
-engine = create_signal_engine(ModelType.CYBER)
-assessment = engine.collect("Target Company", domain_hint="targetcompany.com")
-print(f"DSI Score: {assessment.overall_score}, Tier: {assessment.tier}")
+# Step 1: Discover entity website
+discovery = discover_website("Target Company", domain_hint="targetcompany.com")
+print(f"Website: {discovery.primary_website.domain}")
 
-# Manage a portfolio
-portfolio = DSIPortfolioManager()
-portfolio.add_risk("Target Company", CoverageType.CYBER, assessment=assessment)
-dashboard = portfolio.generate_dashboard()
+# Step 2: Run pricing workflow
+engine = create_workflow_engine(config_dir="technical_pricing/coverages")
+request = SubmissionRequest(
+    entity_id="target-company",
+    coverage="cyber",
+    submission_data={"tiv": 10_000_000},
+    user="underwriter"
+)
+result = engine.run_workflow(request)
+print(f"Decision: {result.decision}, Tier: {result.model_version.final_tier}")
+print(f"Premium options: {result.premium_options}")
+```
+
+#### Run Tests
+
+```bash
+# Run all tests
+pytest technical_pricing/tests/ -v
+
+# Run with coverage
+pytest technical_pricing/tests/ --cov=technical_pricing --cov-report=html
 ```
 
 #### View Interactive Dashboards

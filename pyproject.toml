@@ -4,21 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "digital-signal-intelligence"
-version = "0.1.0"
-description = "Revolutionary insurance technical pricing using digital footprint analysis"
+version = "0.2.0"
+description = "Insurance technical pricing using digital signal analysis and observable data"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "Proprietary"}
 authors = [
     {name = "John Walker", email = "johnea.walker@outlook.com"}
 ]
-keywords = ["insurance", "pricing", "underwriting", "risk-assessment", "insurtech"]
+keywords = ["insurance", "pricing", "underwriting", "risk-assessment", "insurtech", "signals"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Financial and Insurance Industry",
     "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -27,9 +26,8 @@ classifiers = [
 dependencies = [
     "numpy>=1.24.0",
     "pandas>=2.0.0",
-    "flask>=2.3.0",
-    "requests>=2.31.0",
     "pydantic>=2.0.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -42,13 +40,12 @@ dev = [
     "pre-commit>=3.0.0",
     "isort>=5.12.0",
 ]
-viz = [
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
-    "plotly>=5.14.0",
-]
-ml = [
-    "scikit-learn>=1.3.0",
+api = [
+    "flask>=3.0.0",
+    "flask-restx>=1.3.0",
+    "flask-cors>=4.0.0",
+    "gunicorn>=21.2.0",
+    "requests>=2.31.0",
 ]
 scraping = [
     "beautifulsoup4>=4.12.0",
@@ -57,22 +54,18 @@ scraping = [
 database = [
     "sqlalchemy>=2.0.0",
     "psycopg2-binary>=2.9.0",
+    "redis>=5.0.0",
 ]
 cloud = [
     "boto3>=1.28.0",
 ]
-api = [
-    "flask-restx>=1.1.0",
-    "flask-cors>=4.0.0",
-    "gunicorn>=21.0.0",
+all = [
+    "digital-signal-intelligence[dev,api,scraping,database,cloud]",
 ]
-
-[project.scripts]
-dsi-api = "api.server:main"
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py310', 'py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -98,7 +91,7 @@ use_parentheses = true
 ensure_newline_before_comments = true
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
@@ -121,25 +114,23 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--showlocals",
-    "--cov=models",
+    "--cov=technical_pricing",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
 ]
 testpaths = [
-    "models/cyber/tests",
-    "models/energy/tests",
-    "models/financial_institutions/tests",
-    "models/portfolio/tests",
+    "technical_pricing/tests",
 ]
-pythonpath = ["models"]
+pythonpath = ["."]
 
 [tool.coverage.run]
-source = ["models"]
+source = ["technical_pricing"]
 omit = [
     "*/tests/*",
     "*/__init__.py",
-    "*/examples/*",
+    "*/to_be_deleted/*",
+    "*/to_be_extracted/*",
 ]
 
 [tool.coverage.report]
@@ -166,5 +157,7 @@ exclude = [
     "*.egg-info",
     ".venv",
     "venv",
+    "to_be_deleted",
+    "to_be_extracted",
 ]
 max-complexity = 10

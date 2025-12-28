@@ -1,6 +1,9 @@
 """
 Digital Signal Intelligence - Insurance Pricing Platform
 Setup configuration for package installation
+
+Note: Primary configuration is in pyproject.toml. This file provides
+backwards compatibility for editable installs (pip install -e .).
 """
 
 from setuptools import setup, find_packages
@@ -12,33 +15,29 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="digital-signal-intelligence",
-    version="0.1.0",
+    version="0.2.0",
     author="John Walker",
     author_email="johnea.walker@outlook.com",
-    description="Revolutionary insurance technical pricing using digital footprint analysis",
+    description="Insurance technical pricing using digital signal analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/jwalker618/digital-signal-intelligence",
-    packages=find_packages(where="models"),
-    package_dir={"": "models"},
+    packages=find_packages(include=["technical_pricing", "technical_pricing.*"]),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Financial and Insurance Industry",
-        "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: Other/Proprietary License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     install_requires=[
         "numpy>=1.24.0",
         "pandas>=2.0.0",
-        "flask>=2.3.0",
-        "requests>=2.31.0",
         "pydantic>=2.0.0",
+        "pyyaml>=6.0",
     ],
     extras_require={
         "dev": [
@@ -48,35 +47,26 @@ setup(
             "flake8>=6.0.0",
             "mypy>=1.0.0",
             "pre-commit>=3.0.0",
-        ],
-        "viz": [
-            "matplotlib>=3.7.0",
-            "seaborn>=0.12.0",
-            "plotly>=5.14.0",
-        ],
-        "ml": [
-            "scikit-learn>=1.3.0",
+            "isort>=5.12.0",
         ],
         "scraping": [
             "beautifulsoup4>=4.12.0",
             "selenium>=4.10.0",
+            "requests>=2.31.0",
+        ],
+        "api": [
+            "flask>=3.0.0",
+            "flask-restx>=1.3.0",
+            "flask-cors>=4.0.0",
+            "gunicorn>=21.2.0",
         ],
         "database": [
             "sqlalchemy>=2.0.0",
             "psycopg2-binary>=2.9.0",
+            "redis>=5.0.0",
         ],
         "cloud": [
             "boto3>=1.28.0",
-        ],
-        "api": [
-            "flask-restx>=1.1.0",
-            "flask-cors>=4.0.0",
-            "gunicorn>=21.0.0",
-        ],
-    },
-    entry_points={
-        "console_scripts": [
-            "dsi-api=api.server:main",
         ],
     },
     include_package_data=True,
