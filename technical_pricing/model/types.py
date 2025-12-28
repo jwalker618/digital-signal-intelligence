@@ -1,0 +1,747 @@
+"""
+DSI Model Layer - Core Data Types (Phase 4)
+
+This module defines the dataclasses used by the model layer to:
+- Parse and represent YAML configuration
+- Track model data and versions
+- Pass results between workflow steps
+
+These types connect the signal architecture to the pricing workflow.
+"""
+
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+from enum import Enum
+
+
+def utcnow() -> datetime:
+    """Get current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
+
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+class DecisionType(Enum):
+    """Workflow decision outcomes."""
+    APPROVE = "approve"
+    REFER = "refer"
+    DECLINE = "decline"
+
+
+class ConditionAction(Enum):
+    """Actions that can be triggered by conditions."""
+    TIER_OVERRIDE = "tier_override"
+    REFERRAL = "referral"
+    NOTE = "note"
+    MODIFIER = "modifier"
+
+
+class PremiumMethod(Enum):
+    """Methods for base premium calculation."""
+    PURE = "pure"           # Direct premium amount from tier
+    RATE_BASED = "rate"     # Rate applied to metric (TIV, revenue, etc.)
+
+
+# =============================================================================
+# CONFIGURATION TYPES (from YAML)
+# =============================================================================
+
+@dataclass
+class SignalCondition:
+    """
+    Condition that can trigger tier override, referral, or note.
+
+    Defined at signal_feature or signal_group level in YAML config.
+    These are evaluated in Step 6 of the workflow.
+    """
+    condition_type: str       # 'threshold', 'max', 'equals', 'contains'
+    condition_value: Any      # The value to compare against (e.g., max score)
+    action: ConditionAction   # What happens when triggered
+    action_value: Any         # tier number, referral reason, note text
+    inclusive: bool = False   # Whether the threshold is inclusive
+
+    @classmethod
+    def from_yaml_band(cls, band: Dict[str, Any]) -> 'SignalCondition':
+        """Create from YAML band definition."""
+        # Map YAML action strings to ConditionAction
+        action_map = {
+            "DECLINE": ConditionAction.TIER_OVERRIDE,
+            "REFER": ConditionAction.REFERRAL,
+            "MODIFIER": ConditionAction.MODIFIER,
+            "NOTE": ConditionAction.NOTE,
+        }
+
+        action_str = band.get("action", "NOTE")
+        action = action_map.get(action_str, ConditionAction.NOTE)
+
+        # Determine action_value based on action type
+        if action == ConditionAction.TIER_OVERRIDE:
+            action_value = band.get("override", 5)
+        elif action == ConditionAction.MODIFIER:
+            action_value = band.get("modifier", 1.0)
+        elif action == ConditionAction.REFERRAL:
+            action_value = band.get("note", "Referral triggered")
+        else:
+            action_value = band.get("note", "")
+
+        return cls(
+            condition_type="max",
+            condition_value=band.get("max", 0),
+            action=action,
+            action_value=action_value,
+            inclusive=band.get("inclusive_max", False),
+        )
+
+
+@dataclass
+class SignalFeatureConfig:
+    """
+    Single signal feature definition from YAML.
+
+    Represents one signal within a signal group.
+    """
+    id: str
+    name: str
+    description: str
+    weight: float
+    inference_function: str
+    score_condition: bool = False
+    conditions: List[SignalCondition] = field(default_factory=list)
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'SignalFeatureConfig':
+        """Create from YAML feature definition."""
+        conditions = []
+        if data.get("score_condition") and "bands" in data:
+            conditions = [
+                SignalCondition.from_yaml_band(band)
+                for band in data["bands"]
+            ]
+
+        return cls(
+            id=data["id"],
+            name=data.get("name", data["id"]),
+            description=data.get("description", ""),
+            weight=data.get("weight", 0.0),
+            inference_function=data.get("inference_utility_function", ""),
+            score_condition=data.get("score_condition", False),
+            conditions=conditions,
+        )
+
+
+@dataclass
+class SignalGroupConfig:
+    """
+    Group of signals with collective weight.
+
+    Signal groups contribute to the composite score.
+    """
+    id: str
+    name: str
+    description: str
+    weight: float
+    score_condition: bool = False
+    conditions: List[SignalCondition] = field(default_factory=list)
+    features: List[SignalFeatureConfig] = field(default_factory=list)
+    test_scores: Dict[str, float] = field(default_factory=dict)
+
+    @classmethod
+    def from_yaml(
+        cls,
+        group_data: Dict[str, Any],
+        features_data: List[Dict[str, Any]]
+    ) -> 'SignalGroupConfig':
+        """Create from YAML group and features definitions."""
+        conditions = []
+        if group_data.get("score_condition") and "bands" in group_data:
+            conditions = [
+                SignalCondition.from_yaml_band(band)
+                for band in group_data["bands"]
+            ]
+
+        features = [
+            SignalFeatureConfig.from_yaml(f)
+            for f in features_data
+        ]
+
+        return cls(
+            id=group_data["id"],
+            name=group_data.get("name", group_data["id"]),
+            description=group_data.get("description", ""),
+            weight=group_data.get("weight", 0.0),
+            score_condition=group_data.get("score_condition", False),
+            conditions=conditions,
+            features=features,
+            test_scores=group_data.get("test_scores", {}),
+        )
+
+
+@dataclass
+class DirectQueryImpact:
+    """Impact triggered by a direct query response."""
+    trigger_value: bool       # The response that triggers this impact
+    tier_override: Optional[int] = None
+    action: Optional[str] = None  # "REFER", "DECLINE", "MODIFIER"
+    modifier: Optional[float] = None
+    note: Optional[str] = None
+
+    @classmethod
+    def from_yaml_band(cls, band: Dict[str, Any]) -> 'DirectQueryImpact':
+        """Create from YAML band definition."""
+        return cls(
+            trigger_value=band.get("return", True),
+            tier_override=band.get("override"),
+            action=band.get("action"),
+            modifier=band.get("modifier"),
+            note=band.get("note"),
+        )
+
+
+@dataclass
+class DirectQueryConfig:
+    """
+    Direct query (boolean question) definition.
+
+    Direct queries are optional and evaluated in Step 7.
+    """
+    id: str
+    question: str
+    impacts: List[DirectQueryImpact] = field(default_factory=list)
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'DirectQueryConfig':
+        """Create from YAML query definition."""
+        impacts = [
+            DirectQueryImpact.from_yaml_band(band)
+            for band in data.get("bands", [])
+        ]
+
+        return cls(
+            id=data["id"],
+            question=data.get("question", ""),
+            impacts=impacts,
+        )
+
+
+@dataclass
+class CategoricalFeatureValue:
+    """Single value option for a categorical feature."""
+    category: str
+    label: str
+    modifier: float
+    description: str = ""
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'CategoricalFeatureValue':
+        """Create from YAML category definition."""
+        return cls(
+            category=data.get("cat", "UNKNOWN"),
+            label=data.get("label", ""),
+            modifier=data.get("modifier", 1.0),
+            description=data.get("description", ""),
+        )
+
+
+@dataclass
+class CategoricalGroupConfig:
+    """
+    Categorical group definition from YAML.
+
+    Categorical groups can impact premium as modifiers or be the basis of premium.
+    """
+    id: str
+    name: str
+    description: str
+    impact: str  # "modifier" or "premium"
+    inference_function: str
+    values: List[CategoricalFeatureValue] = field(default_factory=list)
+
+    @classmethod
+    def from_yaml(
+        cls,
+        group_data: Dict[str, Any],
+        values_data: List[Dict[str, Any]]
+    ) -> 'CategoricalGroupConfig':
+        """Create from YAML group and values definitions."""
+        values = [CategoricalFeatureValue.from_yaml(v) for v in values_data]
+
+        return cls(
+            id=group_data["id"],
+            name=group_data.get("name", group_data["id"]),
+            description=group_data.get("description", ""),
+            impact=group_data.get("impact", "modifier"),
+            inference_function=group_data.get("inference_utility_function", ""),
+            values=values,
+        )
+
+    def get_modifier(self, category: str) -> float:
+        """Get modifier for a category value."""
+        for v in self.values:
+            if v.category == category:
+                return v.modifier
+        return 1.0
+
+
+@dataclass
+class TierConfig:
+    """
+    Score threshold to tier mapping.
+
+    Defines score ranges for each tier and associated parameters.
+    """
+    tier: int
+    label: str
+    min_score: int
+    max_score: int
+    description: str = ""
+    auto_approve: bool = False
+    auto_decline: bool = False
+    premium_method: PremiumMethod = PremiumMethod.PURE
+    base_premium: Optional[float] = None      # For PURE method
+    rate: Optional[float] = None              # For RATE_BASED method
+    rate_basis: Optional[str] = None          # e.g., 'tiv', 'revenue'
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'TierConfig':
+        """Create from YAML tier definition."""
+        method_str = data.get("premium_generation_method", "base")
+        method = PremiumMethod.RATE_BASED if method_str == "rate" else PremiumMethod.PURE
+
+        return cls(
+            tier=data.get("id", 1),
+            label=data.get("label", f"TIER_{data.get('id', 1)}"),
+            min_score=data.get("min_score", 0),
+            max_score=data.get("max_score", 1000),
+            description=data.get("description", ""),
+            auto_approve=data.get("auto_approve", False),
+            auto_decline=data.get("auto_decline", False),
+            premium_method=method,
+            base_premium=data.get("premium"),
+            rate=data.get("rate"),
+            rate_basis=data.get("rate_basis"),
+        )
+
+    @property
+    def decision(self) -> DecisionType:
+        """Determine decision type for this tier."""
+        if self.auto_decline:
+            return DecisionType.DECLINE
+        elif self.auto_approve:
+            return DecisionType.APPROVE
+        return DecisionType.REFER
+
+
+@dataclass
+class LimitBandConfig:
+    """Limit band configuration for ILF calculations."""
+    id: int
+    limit: float
+    deductible: float
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'LimitBandConfig':
+        """Create from YAML limit band definition."""
+        return cls(
+            id=data.get("id", 1),
+            limit=data.get("limit", 0),
+            deductible=data.get("deductible", 0),
+        )
+
+
+@dataclass
+class PricingConfig:
+    """Pricing parameters from YAML."""
+    hull_ilf_base: float = 10_000_000
+    hull_ilf_factors: List[Dict[str, float]] = field(default_factory=list)
+    liability_ilf_base: float = 100_000_000
+    liability_ilf_factors: List[Dict[str, float]] = field(default_factory=list)
+    deductible_credits: List[Dict[str, Any]] = field(default_factory=list)
+    experience_modifiers: Dict[str, float] = field(default_factory=dict)
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'PricingConfig':
+        """Create from YAML pricing definition."""
+        hull_ilf = data.get("hull_ilf", {})
+        liability_ilf = data.get("liability_ilf", {})
+
+        return cls(
+            hull_ilf_base=hull_ilf.get("base_value", 10_000_000),
+            hull_ilf_factors=hull_ilf.get("factors", []),
+            liability_ilf_base=liability_ilf.get("base_limit", 100_000_000),
+            liability_ilf_factors=liability_ilf.get("factors", []),
+            deductible_credits=data.get("deductible_credits", []),
+            experience_modifiers=data.get("experience_modifiers", {}),
+        )
+
+
+@dataclass
+class ConfigMetadata:
+    """Metadata for a configuration."""
+    name: str
+    description: str = ""
+    version: str = "1.0.0"
+    coverage_types: List[str] = field(default_factory=list)
+    applicable_markets: List[str] = field(default_factory=list)
+    minimum_viable_input: List[str] = field(default_factory=list)
+    min_premium: float = 0.0
+    default_currency: str = "USD"
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'ConfigMetadata':
+        """Create from YAML metadata definition."""
+        return cls(
+            name=data.get("name", ""),
+            description=data.get("description", ""),
+            version=data.get("version", "1.0.0"),
+            coverage_types=data.get("coverage_types", []),
+            applicable_markets=data.get("applicable_markets", []),
+            minimum_viable_input=data.get("minimum_viable_input", []),
+            min_premium=data.get("min_premium", 0.0),
+            default_currency=data.get("default_currency", "USD"),
+        )
+
+
+@dataclass
+class CoverageConfig:
+    """
+    Complete coverage model configuration.
+
+    This is the parsed representation of a YAML configuration file,
+    providing all parameters needed to run the 13-step workflow.
+    """
+    coverage: str                 # e.g., "aerospace"
+    configuration: str            # e.g., "aerospace_general"
+    config_hash: str = ""         # SHA-256 hash of YAML content
+
+    # Metadata
+    metadata: ConfigMetadata = field(default_factory=ConfigMetadata)
+
+    # Direct queries (Step 7)
+    direct_queries: List[DirectQueryConfig] = field(default_factory=list)
+
+    # Categorical features
+    categorical_groups: List[CategoricalGroupConfig] = field(default_factory=list)
+
+    # Signal architecture (Steps 4-6)
+    signal_groups: List[SignalGroupConfig] = field(default_factory=list)
+
+    # Tier definitions (Steps 8-9)
+    tiers: List[TierConfig] = field(default_factory=list)
+
+    # Limit bands (Step 12)
+    limit_bands: List[LimitBandConfig] = field(default_factory=list)
+
+    # Pricing parameters (Steps 10-12)
+    pricing: PricingConfig = field(default_factory=PricingConfig)
+
+    # Test profiles
+    test_profiles: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+
+    def get_tier_for_score(self, score: float) -> TierConfig:
+        """Get tier configuration for a composite score."""
+        for tier in sorted(self.tiers, key=lambda t: t.tier):
+            if tier.min_score <= score <= tier.max_score:
+                return tier
+        # Default to worst tier if no match
+        return max(self.tiers, key=lambda t: t.tier) if self.tiers else TierConfig(tier=5, label="DECLINE", min_score=0, max_score=1000)
+
+    def get_signal_group(self, group_id: str) -> Optional[SignalGroupConfig]:
+        """Get signal group by ID."""
+        for group in self.signal_groups:
+            if group.id == group_id:
+                return group
+        return None
+
+    def get_categorical_group(self, group_id: str) -> Optional[CategoricalGroupConfig]:
+        """Get categorical group by ID."""
+        for group in self.categorical_groups:
+            if group.id == group_id:
+                return group
+        return None
+
+    def get_direct_query(self, query_id: str) -> Optional[DirectQueryConfig]:
+        """Get direct query by ID."""
+        for query in self.direct_queries:
+            if query.id == query_id:
+                return query
+        return None
+
+    def get_all_inference_functions(self) -> List[str]:
+        """Get all inference function names referenced in config."""
+        functions = []
+
+        # From signal features
+        for group in self.signal_groups:
+            for feature in group.features:
+                if feature.inference_function:
+                    functions.append(feature.inference_function)
+
+        # From categorical groups
+        for group in self.categorical_groups:
+            if group.inference_function:
+                functions.append(group.inference_function)
+
+        return functions
+
+
+# =============================================================================
+# MODEL DATA TYPES (for workflow tracking)
+# =============================================================================
+
+@dataclass
+class SignalOutput:
+    """
+    Output from a single signal during Step 4.
+
+    Tracks the result from running an inference function.
+    """
+    signal_id: str
+    signal_name: str
+    group_id: str
+    raw_score: float
+    confidence: float
+    weighted_score: float        # raw_score * weight
+    weight: float
+    data_sources: List[str] = field(default_factory=list)
+    extracted_at: datetime = field(default_factory=utcnow)
+    conditions_triggered: List[str] = field(default_factory=list)
+    from_cache: bool = False
+    execution_time_ms: float = 0.0
+    error: Optional[str] = None
+
+
+@dataclass
+class CategoricalOutput:
+    """
+    Output from a categorical inference function.
+
+    Represents the inferred category for a categorical group.
+    """
+    group_id: str
+    group_name: str
+    category: str
+    label: str
+    modifier: float
+    confidence: float
+    extracted_at: datetime = field(default_factory=utcnow)
+    error: Optional[str] = None
+
+
+@dataclass
+class TriggeredCondition:
+    """
+    A condition that was triggered during evaluation.
+
+    Tracks conditions from Steps 6 and 7.
+    """
+    source_type: str           # "signal_feature", "signal_group", "direct_query"
+    source_id: str
+    source_name: str
+    score: Optional[float]     # The score that triggered (for signals)
+    response: Optional[bool]   # The response that triggered (for queries)
+    action: ConditionAction
+    action_value: Any
+    note: str
+
+
+@dataclass
+class AppliedModifier:
+    """
+    A modifier that was applied during pricing.
+
+    Tracks the audit trail of premium modifications.
+    """
+    source: str               # "categorical", "direct_query", "experience"
+    source_id: str
+    name: str
+    factor: float
+    premium_before: float
+    premium_after: float
+
+
+@dataclass
+class ModelVersion:
+    """
+    A complete model execution snapshot.
+
+    This represents one complete run through the 13-step workflow,
+    capturing all inputs, intermediate values, and outputs.
+    """
+    # Identifiers
+    version_id: str
+    model_id: str
+    version_number: int
+    version_type: str          # 'initial', 'referral_review', 'amendment'
+
+    # Configuration reference
+    config_hash: str
+    coverage: str
+    configuration: str
+
+    # Inputs
+    entity_id: str
+    submission_data: Dict[str, Any] = field(default_factory=dict)
+    direct_query_responses: Dict[str, bool] = field(default_factory=dict)
+    categorical_selections: Dict[str, str] = field(default_factory=dict)
+
+    # Signal outputs (Step 4)
+    signal_outputs: List[SignalOutput] = field(default_factory=list)
+    categorical_outputs: List[CategoricalOutput] = field(default_factory=list)
+    group_scores: Dict[str, float] = field(default_factory=dict)
+
+    # Scoring (Step 5)
+    pure_composite_score: float = 0.0
+
+    # Conditions (Steps 6 & 7)
+    signal_conditions: List[TriggeredCondition] = field(default_factory=list)
+    query_conditions: List[TriggeredCondition] = field(default_factory=list)
+
+    # Tier resolution (Steps 8 & 9)
+    tier_overrides: List[int] = field(default_factory=list)
+    score_based_tier: int = 3
+    final_tier: int = 3
+    tier_label: str = "STANDARD"
+
+    # Pricing (Steps 10-12)
+    base_premium: float = 0.0
+    base_premium_method: str = "pure"
+    modifiers_applied: List[AppliedModifier] = field(default_factory=list)
+    premium_after_modifiers: float = 0.0
+    limit_premiums: Dict[str, float] = field(default_factory=dict)
+    final_premium: float = 0.0
+
+    # Decision (Step 13)
+    decision: DecisionType = DecisionType.REFER
+    auto_approve: bool = False
+    referral_reasons: List[str] = field(default_factory=list)
+    notes: List[str] = field(default_factory=list)
+
+    # Metadata
+    created_at: datetime = field(default_factory=utcnow)
+    created_by: str = ""
+    confidence: float = 1.0
+    signal_coverage: float = 1.0
+
+
+@dataclass
+class ConfigVersion:
+    """
+    Metadata for a configuration version.
+
+    Used by ConfigManager for content-addressable storage.
+    """
+    version_id: str              # UUID
+    config_hash: str             # SHA-256 of YAML payload
+    coverage: str
+    configuration: str
+    created_by: str
+    created_at: datetime
+    is_active: bool = False
+
+
+# =============================================================================
+# RESULT TYPES (for workflow step outputs)
+# =============================================================================
+
+@dataclass
+class ScoringResult:
+    """
+    Output from scoring pipeline (Steps 4-6).
+
+    Contains all signal outputs, composite score, and triggered conditions.
+    """
+    # Step 4: Signal extraction
+    signal_outputs: List[SignalOutput] = field(default_factory=list)
+    categorical_outputs: List[CategoricalOutput] = field(default_factory=list)
+    group_scores: Dict[str, float] = field(default_factory=dict)
+
+    # Step 5: Pure composite
+    pure_composite_score: float = 0.0
+    confidence: float = 1.0
+    signal_coverage: float = 1.0
+
+    # Step 6: Signal conditions
+    conditions_triggered: List[TriggeredCondition] = field(default_factory=list)
+    tier_overrides: List[int] = field(default_factory=list)
+    referrals: List[str] = field(default_factory=list)
+    notes: List[str] = field(default_factory=list)
+
+
+@dataclass
+class QueryEvaluationResult:
+    """
+    Output from query evaluation (Step 7).
+
+    Contains all impacts from direct query responses.
+    """
+    conditions_triggered: List[TriggeredCondition] = field(default_factory=list)
+    tier_overrides: List[int] = field(default_factory=list)
+    referrals: List[str] = field(default_factory=list)
+    notes: List[str] = field(default_factory=list)
+    modifiers: List[Dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class PricingResult:
+    """
+    Output from pricing calculation (Steps 8-12).
+
+    Contains complete pricing breakdown and audit trail.
+    """
+    # Step 8: Tier override resolution
+    tier_overrides_considered: List[int] = field(default_factory=list)
+    max_tier_override: Optional[int] = None
+
+    # Step 9: Final tier
+    score_based_tier: int = 3
+    final_tier: int = 3
+    tier_label: str = "STANDARD"
+    tier_config: Optional[TierConfig] = None
+
+    # Step 10: Base premium
+    base_premium: float = 0.0
+    base_premium_method: str = "pure"
+
+    # Step 11: Modifiers
+    modifiers_applied: List[AppliedModifier] = field(default_factory=list)
+    total_modifier: float = 1.0
+    premium_after_modifiers: float = 0.0
+
+    # Step 12: Limit bands
+    limit_premiums: Dict[str, float] = field(default_factory=dict)
+    final_premium: float = 0.0
+
+
+@dataclass
+class WorkflowResult:
+    """
+    Complete workflow output (Step 13).
+
+    The final result of running an entity through the 13-step workflow.
+    """
+    # Complete model version for audit trail
+    model_version: ModelVersion = field(default_factory=ModelVersion)
+
+    # Decision
+    decision: DecisionType = DecisionType.REFER
+    auto_approve: bool = False
+    referral_reasons: List[str] = field(default_factory=list)
+    notes: List[str] = field(default_factory=list)
+
+    # For API response
+    premium_options: Dict[str, float] = field(default_factory=dict)
+    recommended_limit: float = 0.0
+    recommended_premium: float = 0.0
+
+    # Summary
+    composite_score: float = 0.0
+    tier: int = 3
+    tier_label: str = "STANDARD"
+    confidence: float = 1.0
+
+    # Missing inputs (if Step 3 fails)
+    missing_inputs: List[str] = field(default_factory=list)
+    is_valid: bool = True

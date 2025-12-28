@@ -1,0 +1,485 @@
+"""
+DSI Model Layer - Workflow Engine (Phase 4)
+
+Orchestrates the complete 13-step workflow:
+
+1. Model Configuration Instantiation
+2. Model Data File Creation
+3. Minimum Viable Input Verification
+4. Signal Extraction
+5. Pure Composite Score Calculation
+6. Signal Conditions Evaluation
+7. Direct Query Response Evaluation
+8. Maximum Tier Override Application
+9. Final Tier Capture
+10. Base Premium Generation
+11. Modifier Application
+12. Limit Band Scaling
+13. Output Decision
+
+This is the main entry point for running DSI assessments.
+"""
+
+import logging
+import uuid
+from typing import Dict, List, Optional, Any, Tuple
+
+from .types import (
+    CoverageConfig,
+    WorkflowResult,
+    ModelVersion,
+    DecisionType,
+    utcnow,
+)
+from .config_manager import ConfigManager, load_coverage_config
+from .model_data import ModelDataManager, get_model_data_manager
+from .scorer import ModelScorer, get_scorer
+from .query_evaluator import QueryEvaluator, get_query_evaluator
+from .pricer import ModelPricer, get_pricer
+
+from ..signals.types import InferenceContext
+
+
+logger = logging.getLogger("dsi.workflow")
+
+
+class WorkflowError(Exception):
+    """Raised when workflow execution fails."""
+    pass
+
+
+class MissingInputError(Exception):
+    """Raised when required inputs are missing."""
+    def __init__(self, missing_fields: List[str]):
+        self.missing_fields = missing_fields
+        super().__init__(f"Missing required inputs: {', '.join(missing_fields)}")
+
+
+class WorkflowEngine:
+    """
+    Orchestrates the complete 13-step DSI model workflow.
+
+    This engine coordinates all components:
+    - ConfigManager: Configuration loading and versioning
+    - ModelDataManager: Model data tracking
+    - ModelScorer: Signal extraction and scoring
+    - QueryEvaluator: Direct query evaluation
+    - ModelPricer: Premium calculation
+    """
+
+    def __init__(
+        self,
+        config_manager: Optional[ConfigManager] = None,
+        data_manager: Optional[ModelDataManager] = None,
+        scorer: Optional[ModelScorer] = None,
+        query_evaluator: Optional[QueryEvaluator] = None,
+        pricer: Optional[ModelPricer] = None
+    ):
+        """
+        Initialize WorkflowEngine with dependencies.
+
+        Args:
+            config_manager: Configuration manager (uses default if None)
+            data_manager: Model data manager (uses default if None)
+            scorer: Model scorer (uses default if None)
+            query_evaluator: Query evaluator (uses default if None)
+            pricer: Model pricer (uses default if None)
+        """
+        self.config_manager = config_manager or ConfigManager()
+        self.data_manager = data_manager or get_model_data_manager()
+        self.scorer = scorer or get_scorer()
+        self.query_evaluator = query_evaluator or get_query_evaluator()
+        self.pricer = pricer or get_pricer()
+
+    def run_workflow(
+        self,
+        entity_id: str,
+        coverage: str,
+        submission_data: Optional[Dict[str, Any]] = None,
+        direct_query_responses: Optional[Dict[str, bool]] = None,
+        categorical_selections: Optional[Dict[str, str]] = None,
+        user: str = "system",
+        config: Optional[CoverageConfig] = None,
+        skip_input_validation: bool = False
+    ) -> WorkflowResult:
+        """
+        Execute the complete 13-step workflow.
+
+        Args:
+            entity_id: The entity being assessed
+            coverage: Coverage domain (e.g., "aerospace")
+            submission_data: Submission data (limits, TIV, etc.)
+            direct_query_responses: Optional direct query answers
+            categorical_selections: Optional category overrides
+            user: User running the workflow
+            config: Optional pre-loaded config (loaded if None)
+            skip_input_validation: Skip Step 3 validation
+
+        Returns:
+            WorkflowResult with complete assessment
+
+        Raises:
+            MissingInputError: If required inputs missing (Step 3)
+            WorkflowError: If workflow execution fails
+        """
+        submission_data = submission_data or {}
+        direct_query_responses = direct_query_responses or {}
+        categorical_selections = categorical_selections or {}
+
+        logger.info(f"Starting workflow for entity {entity_id}, coverage {coverage}")
+
+        # Step 1: Load Configuration
+        if config is None:
+            config = load_coverage_config(coverage)
+            logger.debug(f"Loaded config: {config.configuration} v{config.metadata.version}")
+
+        # Step 2: Create Model Data File
+        model_id = self.data_manager.create_model(
+            entity_id=entity_id,
+            config=config,
+            submission_data=submission_data,
+            user=user,
+        )
+
+        # Step 3: Verify Minimum Viable Inputs
+        if not skip_input_validation:
+            is_valid, missing_fields = self.verify_inputs(submission_data, config)
+            if not is_valid:
+                logger.warning(f"Missing inputs: {missing_fields}")
+                # Return partial result with missing inputs
+                return WorkflowResult(
+                    is_valid=False,
+                    missing_inputs=missing_fields,
+                    decision=DecisionType.REFER,
+                    notes=["Incomplete submission - missing required inputs"],
+                )
+
+        # Create inference context for signal extraction
+        context = InferenceContext(
+            configuration={},
+            coverage=config.coverage,
+            config_name=config.configuration,
+        )
+
+        # Steps 4-6: Score Entity (Signal Extraction + Composite + Conditions)
+        scoring_result = self.scorer.score_entity(
+            entity_id=entity_id,
+            config=config,
+            context=context,
+        )
+
+        # Step 7: Evaluate Direct Queries
+        query_result = self.query_evaluator.evaluate_queries(
+            responses=direct_query_responses,
+            config=config,
+        )
+
+        # Use categorical outputs from scorer, or override with provided selections
+        categorical_outputs = scoring_result.categorical_outputs
+        # TODO: Handle categorical_selections overrides
+
+        # Steps 8-12: Calculate Premium
+        pricing_result = self.pricer.price_submission(
+            pure_composite_score=scoring_result.pure_composite_score,
+            signal_tier_overrides=scoring_result.tier_overrides,
+            query_tier_overrides=query_result.tier_overrides,
+            query_modifiers=query_result.modifiers,
+            categorical_outputs=categorical_outputs,
+            submission_data=submission_data,
+            config=config,
+        )
+
+        # Combine referral reasons and notes
+        all_referrals = scoring_result.referrals + query_result.referrals
+        all_notes = scoring_result.notes + query_result.notes
+
+        # Step 13: Determine Decision
+        decision, auto_approve = self.determine_decision(
+            final_tier=pricing_result.final_tier,
+            referral_reasons=all_referrals,
+            config=config,
+        )
+
+        # Create Model Version (audit trail)
+        model_version = self.data_manager.create_version(
+            model_id=model_id,
+            version_type="initial",
+            user=user,
+            submission_data=submission_data,
+            direct_query_responses=direct_query_responses,
+            categorical_selections=categorical_selections,
+            signal_outputs=scoring_result.signal_outputs,
+            categorical_outputs=scoring_result.categorical_outputs,
+            group_scores=scoring_result.group_scores,
+            pure_composite_score=scoring_result.pure_composite_score,
+            signal_conditions=scoring_result.conditions_triggered,
+            query_conditions=query_result.conditions_triggered,
+            tier_overrides=pricing_result.tier_overrides_considered,
+            score_based_tier=pricing_result.score_based_tier,
+            final_tier=pricing_result.final_tier,
+            tier_label=pricing_result.tier_label,
+            base_premium=pricing_result.base_premium,
+            base_premium_method=pricing_result.base_premium_method,
+            modifiers_applied=pricing_result.modifiers_applied,
+            premium_after_modifiers=pricing_result.premium_after_modifiers,
+            limit_premiums=pricing_result.limit_premiums,
+            final_premium=pricing_result.final_premium,
+            decision=decision,
+            auto_approve=auto_approve,
+            referral_reasons=all_referrals,
+            notes=all_notes,
+            confidence=scoring_result.confidence,
+            signal_coverage=scoring_result.signal_coverage,
+        )
+
+        # Determine recommended option
+        recommended_limit = 0.0
+        recommended_premium = pricing_result.final_premium
+        if pricing_result.limit_premiums:
+            # Recommend middle limit option
+            limits = sorted([float(k) for k in pricing_result.limit_premiums.keys()])
+            mid_index = len(limits) // 2
+            recommended_limit = limits[mid_index]
+            recommended_premium = pricing_result.limit_premiums[str(int(recommended_limit))]
+
+        logger.info(
+            f"Workflow complete: score={scoring_result.pure_composite_score:.0f}, "
+            f"tier={pricing_result.final_tier} ({pricing_result.tier_label}), "
+            f"decision={decision.value}, "
+            f"premium={pricing_result.final_premium:.0f}"
+        )
+
+        return WorkflowResult(
+            model_version=model_version,
+            decision=decision,
+            auto_approve=auto_approve,
+            referral_reasons=all_referrals,
+            notes=all_notes,
+            premium_options=pricing_result.limit_premiums,
+            recommended_limit=recommended_limit,
+            recommended_premium=recommended_premium,
+            composite_score=scoring_result.pure_composite_score,
+            tier=pricing_result.final_tier,
+            tier_label=pricing_result.tier_label,
+            confidence=scoring_result.confidence,
+            is_valid=True,
+        )
+
+    def verify_inputs(
+        self,
+        submission_data: Dict[str, Any],
+        config: CoverageConfig
+    ) -> Tuple[bool, List[str]]:
+        """
+        Step 3: Verify minimum viable inputs are present.
+
+        Args:
+            submission_data: Provided submission data
+            config: Coverage configuration
+
+        Returns:
+            Tuple of (is_valid, missing_fields)
+        """
+        missing = []
+
+        # Check required inputs from config metadata
+        required = config.metadata.minimum_viable_input
+        if not required:
+            # Default required fields
+            required = ["entity_id", "limit"]
+
+        for field in required:
+            # Normalize field name (remove spaces, make lowercase)
+            normalized = field.lower().replace(" ", "_").replace("(", "").replace(")", "")
+
+            # Check various forms of the field
+            found = False
+            for key in submission_data.keys():
+                if normalized in key.lower():
+                    if submission_data[key]:  # Has a value
+                        found = True
+                        break
+
+            if not found:
+                missing.append(field)
+
+        return len(missing) == 0, missing
+
+    def determine_decision(
+        self,
+        final_tier: int,
+        referral_reasons: List[str],
+        config: CoverageConfig
+    ) -> Tuple[DecisionType, bool]:
+        """
+        Step 13: Determine final decision.
+
+        Decision logic:
+        - APPROVE: auto_approve tier and no referrals
+        - DECLINE: auto_decline tier or tier 5
+        - REFER: requires underwriter review
+
+        Args:
+            final_tier: Final tier after overrides
+            referral_reasons: Accumulated referral reasons
+            config: Coverage configuration
+
+        Returns:
+            Tuple of (decision, auto_approve)
+        """
+        # Get tier configuration
+        tier_config = None
+        for t in config.tiers:
+            if t.tier == final_tier:
+                tier_config = t
+                break
+
+        if tier_config is None:
+            # Default to refer if no tier config
+            return DecisionType.REFER, False
+
+        # Check for auto-decline
+        if tier_config.auto_decline:
+            return DecisionType.DECLINE, False
+
+        # Check for referral reasons
+        if referral_reasons:
+            return DecisionType.REFER, False
+
+        # Check for auto-approve
+        if tier_config.auto_approve:
+            return DecisionType.APPROVE, True
+
+        # Default to refer
+        return DecisionType.REFER, False
+
+    def process_referral(
+        self,
+        model_id: str,
+        reviewer: str,
+        decision: str,
+        adjustments: Optional[Dict[str, Any]] = None,
+        notes: Optional[List[str]] = None
+    ) -> WorkflowResult:
+        """
+        Handle referral review and create new model version.
+
+        Args:
+            model_id: The model being reviewed
+            reviewer: User performing review
+            decision: Review decision ('approve', 'decline', 'modify')
+            adjustments: Optional adjustments (tier override, premium adjustment)
+            notes: Optional reviewer notes
+
+        Returns:
+            WorkflowResult with updated assessment
+        """
+        adjustments = adjustments or {}
+        notes = notes or []
+
+        # Get latest version
+        latest = self.data_manager.get_latest_version(model_id)
+
+        # Determine new decision
+        if decision == "approve":
+            new_decision = DecisionType.APPROVE
+            auto_approve = False  # Manual approval, not auto
+        elif decision == "decline":
+            new_decision = DecisionType.DECLINE
+            auto_approve = False
+        else:
+            new_decision = DecisionType.REFER
+            auto_approve = False
+
+        # Apply adjustments
+        final_tier = adjustments.get("tier_override", latest.final_tier)
+        final_premium = adjustments.get("premium_override", latest.final_premium)
+
+        # Create new version
+        new_version = self.data_manager.create_version(
+            model_id=model_id,
+            version_type="referral_review",
+            user=reviewer,
+            submission_data=latest.submission_data,
+            direct_query_responses=latest.direct_query_responses,
+            categorical_selections=latest.categorical_selections,
+            signal_outputs=latest.signal_outputs,
+            categorical_outputs=latest.categorical_outputs,
+            group_scores=latest.group_scores,
+            pure_composite_score=latest.pure_composite_score,
+            signal_conditions=latest.signal_conditions,
+            query_conditions=latest.query_conditions,
+            tier_overrides=latest.tier_overrides + ([adjustments.get("tier_override")] if "tier_override" in adjustments else []),
+            score_based_tier=latest.score_based_tier,
+            final_tier=final_tier,
+            tier_label=latest.tier_label,
+            base_premium=latest.base_premium,
+            base_premium_method=latest.base_premium_method,
+            modifiers_applied=latest.modifiers_applied,
+            premium_after_modifiers=latest.premium_after_modifiers,
+            limit_premiums=latest.limit_premiums,
+            final_premium=final_premium,
+            decision=new_decision,
+            auto_approve=auto_approve,
+            referral_reasons=latest.referral_reasons,
+            notes=latest.notes + notes + [f"Reviewed by {reviewer}: {decision}"],
+            confidence=latest.confidence,
+            signal_coverage=latest.signal_coverage,
+        )
+
+        return WorkflowResult(
+            model_version=new_version,
+            decision=new_decision,
+            auto_approve=auto_approve,
+            referral_reasons=latest.referral_reasons,
+            notes=new_version.notes,
+            premium_options=latest.limit_premiums,
+            recommended_premium=final_premium,
+            composite_score=latest.pure_composite_score,
+            tier=final_tier,
+            tier_label=latest.tier_label,
+            confidence=latest.confidence,
+            is_valid=True,
+        )
+
+
+# Singleton instance for convenience
+_default_engine: Optional[WorkflowEngine] = None
+
+
+def get_workflow_engine() -> WorkflowEngine:
+    """Get the default WorkflowEngine instance."""
+    global _default_engine
+    if _default_engine is None:
+        _default_engine = WorkflowEngine()
+    return _default_engine
+
+
+def run_assessment(
+    entity_id: str,
+    coverage: str,
+    submission_data: Optional[Dict[str, Any]] = None,
+    direct_query_responses: Optional[Dict[str, bool]] = None,
+    user: str = "api"
+) -> WorkflowResult:
+    """
+    Convenience function to run a full assessment.
+
+    Args:
+        entity_id: Entity to assess
+        coverage: Coverage domain
+        submission_data: Submission data
+        direct_query_responses: Optional query responses
+        user: User running assessment
+
+    Returns:
+        WorkflowResult with complete assessment
+    """
+    engine = get_workflow_engine()
+    return engine.run_workflow(
+        entity_id=entity_id,
+        coverage=coverage,
+        submission_data=submission_data,
+        direct_query_responses=direct_query_responses,
+        user=user,
+    )
