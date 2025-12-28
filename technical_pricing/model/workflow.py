@@ -1,9 +1,9 @@
 """
-DSI Model Layer - Workflow Engine (Phase 4 + 6)
+DSI Model Layer - Workflow Engine (Phase 4 + 6 + 7)
 
 Orchestrates the complete 14-step workflow:
 
-0. Website Discovery (NEW - Phase 6)
+0. Website Discovery (Phase 6)
 1. Model Configuration Instantiation
 2. Model Data File Creation
 3. Minimum Viable Input Verification
@@ -14,6 +14,7 @@ Orchestrates the complete 14-step workflow:
 8. Maximum Tier Override Application
 9. Final Tier Capture
 10. Base Premium Generation
+10.5. Traditional Modifiers (Phase 7 - OPTIONAL)
 11. Modifier Application
 12. Limit Band Scaling
 13. Output Decision
@@ -33,6 +34,7 @@ from .types import (
     DecisionType,
     DiscoveryOutput,
     DiscoveryConfidence,
+    AppliedModifier,
     utcnow,
 )
 from .config_manager import ConfigManager, load_coverage_config
@@ -40,6 +42,13 @@ from .model_data import ModelDataManager, get_model_data_manager
 from .scorer import ModelScorer, get_scorer
 from .query_evaluator import QueryEvaluator, get_query_evaluator
 from .pricer import ModelPricer, get_pricer
+from .modifiers import (
+    TraditionalModifier,
+    TraditionalModifierResult,
+    LossHistoryModifier,
+    ExposureModifier,
+    ExternalRatingModifier,
+)
 
 from ..signals.types import InferenceContext
 from ..discovery.website_discovery import (
@@ -75,6 +84,7 @@ class WorkflowEngine:
     - ModelScorer: Signal extraction and scoring
     - QueryEvaluator: Direct query evaluation
     - ModelPricer: Premium calculation
+    - TraditionalModifiers: Optional actuarial modifiers (Step 10.5)
     """
 
     def __init__(
@@ -84,7 +94,9 @@ class WorkflowEngine:
         scorer: Optional[ModelScorer] = None,
         query_evaluator: Optional[QueryEvaluator] = None,
         pricer: Optional[ModelPricer] = None,
-        discovery_engine: Optional[WebsiteDiscoveryEngine] = None
+        discovery_engine: Optional[WebsiteDiscoveryEngine] = None,
+        traditional_modifiers: Optional[List[TraditionalModifier]] = None,
+        enable_default_modifiers: bool = True,
     ):
         """
         Initialize WorkflowEngine with dependencies.
@@ -96,6 +108,8 @@ class WorkflowEngine:
             query_evaluator: Query evaluator (uses default if None)
             pricer: Model pricer (uses default if None)
             discovery_engine: Website discovery engine (uses default if None)
+            traditional_modifiers: Optional list of traditional modifiers
+            enable_default_modifiers: If True and no modifiers provided, use defaults
         """
         self.config_manager = config_manager or ConfigManager()
         self.data_manager = data_manager or get_model_data_manager()
@@ -103,6 +117,19 @@ class WorkflowEngine:
         self.query_evaluator = query_evaluator or get_query_evaluator()
         self.pricer = pricer or get_pricer()
         self.discovery_engine = discovery_engine or WebsiteDiscoveryEngine()
+
+        # Traditional modifiers (Phase 7) - all optional
+        if traditional_modifiers is not None:
+            self.traditional_modifiers = traditional_modifiers
+        elif enable_default_modifiers:
+            # Default modifiers with sensible defaults
+            self.traditional_modifiers = [
+                LossHistoryModifier(enabled=True),
+                ExposureModifier(enabled=True),
+                ExternalRatingModifier(enabled=False),  # Disabled by default
+            ]
+        else:
+            self.traditional_modifiers = []
 
     def run_workflow(
         self,
@@ -222,12 +249,32 @@ class WorkflowEngine:
         categorical_outputs = scoring_result.categorical_outputs
         # TODO: Handle categorical_selections overrides
 
+        # Step 10.5: Calculate Traditional Modifiers (Phase 7 - OPTIONAL)
+        # These are calculated but applied within the pricer
+        traditional_modifier_results = self._calculate_traditional_modifiers(
+            entity_id=entity_id,
+            coverage=coverage,
+            submission_data=submission_data,
+            context=context,
+            config=config,
+        )
+
+        # Convert traditional modifier results to query_modifiers format
+        traditional_modifiers_for_pricer = [
+            {"name": r.modifier_type, "factor": r.factor, "confidence": r.confidence}
+            for r in traditional_modifier_results
+            if r.has_impact  # Only include modifiers with actual impact
+        ]
+
+        # Combine query modifiers with traditional modifiers
+        all_modifiers = query_result.modifiers + traditional_modifiers_for_pricer
+
         # Steps 8-12: Calculate Premium
         pricing_result = self.pricer.price_submission(
             pure_composite_score=scoring_result.pure_composite_score,
             signal_tier_overrides=scoring_result.tier_overrides,
             query_tier_overrides=query_result.tier_overrides,
-            query_modifiers=query_result.modifiers,
+            query_modifiers=all_modifiers,
             categorical_outputs=categorical_outputs,
             submission_data=submission_data,
             config=config,
@@ -403,6 +450,70 @@ class WorkflowEngine:
 
         # Default to refer
         return DecisionType.REFER, False
+
+    def _calculate_traditional_modifiers(
+        self,
+        entity_id: str,
+        coverage: str,
+        submission_data: Dict[str, Any],
+        context: InferenceContext,
+        config: Optional[CoverageConfig] = None,
+    ) -> List[TraditionalModifierResult]:
+        """
+        Step 10.5: Calculate traditional pricing modifiers (Phase 7).
+
+        Runs all configured traditional modifiers and collects results.
+        Modifiers that lack data return neutral results (factor=1.0).
+
+        Args:
+            entity_id: The entity being priced
+            coverage: Coverage type
+            submission_data: Submission data from broker
+            context: Inference context with discovery data
+            config: Optional coverage configuration
+
+        Returns:
+            List of TraditionalModifierResult from each modifier
+        """
+        if not self.traditional_modifiers:
+            return []
+
+        results: List[TraditionalModifierResult] = []
+
+        for modifier in self.traditional_modifiers:
+            if not modifier.is_enabled:
+                continue
+
+            try:
+                result = modifier.calculate(
+                    entity_id=entity_id,
+                    coverage=coverage,
+                    submission_data=submission_data,
+                    context=context,
+                    config=config,
+                )
+                results.append(result)
+
+                if result.has_impact:
+                    logger.info(
+                        f"Traditional modifier {result.modifier_type}: "
+                        f"factor={result.factor:.3f}, confidence={result.confidence:.2f}"
+                    )
+                else:
+                    logger.debug(
+                        f"Traditional modifier {result.modifier_type} skipped: "
+                        f"{result.notes[0] if result.notes else 'no data'}"
+                    )
+
+            except Exception as e:
+                logger.error(f"Error in {modifier.modifier_type} modifier: {e}")
+                # Add neutral result on error
+                results.append(TraditionalModifierResult.neutral(
+                    modifier.modifier_type,
+                    f"Error: {str(e)}"
+                ))
+
+        return results
 
     def _run_discovery(
         self,

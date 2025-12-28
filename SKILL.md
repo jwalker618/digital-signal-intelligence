@@ -1041,17 +1041,23 @@ technical_pricing/
 
 ## Phase 7: Traditional Pricing Integration (Detailed Plan)
 
-This phase integrates traditional actuarial data sources as modifiers applied after base premium generation. These complement DSI signals with historical and exposure-based factors.
+This phase integrates traditional actuarial data sources as **OPTIONAL** modifiers applied after base premium generation. These complement DSI signals with historical and exposure-based factors when data is available.
 
 ### 7.1 The Integration Problem
 
-DSI provides forward-looking risk assessment through digital signals, but traditional pricing relies on:
-- **Loss History**: Past claims experience
-- **Exposure Data**: Revenue, payroll, TIV, fleet size, etc.
+DSI provides forward-looking risk assessment through digital signals, but traditional pricing can optionally include:
+- **Loss History**: Past claims experience (when available)
+- **Exposure Data**: Revenue, payroll, TIV, fleet size, etc. (when available)
 - **Actuarial Models**: Experience rating, credibility weighting
-- **External Ratings**: Credit scores, financial strength
+- **External Ratings**: Credit scores, financial strength (when integrated)
 
-**Solution**: Create stub modifier interfaces that can be plugged in after Step 10 (Base Premium) and before Step 11 (Modifier Application).
+**Key Design Principles**:
+1. **All inputs are OPTIONAL** - DSI works without traditional data
+2. **Graceful degradation** - Skip modifiers when data unavailable
+3. **Streamlined mode** - Quick exposure scoring for STP (Straight-Through Processing)
+4. **Full mode** - Detailed analysis when data is rich
+
+**Solution**: Create optional modifier interfaces that can be plugged in after Step 10 (Base Premium) and before Step 11 (Modifier Application). Modifiers that lack data simply return factor=1.0 (no impact).
 
 ### 7.2 Traditional Modifier Architecture
 
@@ -1114,18 +1120,43 @@ class Claim:
 
 @dataclass
 class ExposureInput:
-    """Exposure metrics for rating"""
-    tiv: float
-    revenue: float
-    employee_count: int
-    payroll: float
-    fleet_size: int
-    fleet_average_age: float
-    locations_count: int
-    # Coverage-specific
-    cyber_endpoints: int = 0
-    vessels_count: int = 0
-    aircraft_count: int = 0
+    """
+    Exposure metrics for rating - ALL FIELDS OPTIONAL
+
+    Two modes:
+    - Streamlined (STP): Only needs revenue OR tiv for quick factor
+    - Full: Uses all available data for detailed analysis
+    """
+    # Core exposure (any ONE enables streamlined mode)
+    tiv: Optional[float] = None
+    revenue: Optional[float] = None
+
+    # Additional metrics (for full mode)
+    employee_count: Optional[int] = None
+    payroll: Optional[float] = None
+    fleet_size: Optional[int] = None
+    fleet_average_age: Optional[float] = None
+    locations_count: Optional[int] = None
+
+    # Coverage-specific (optional)
+    cyber_endpoints: Optional[int] = None
+    vessels_count: Optional[int] = None
+    aircraft_count: Optional[int] = None
+
+    @property
+    def has_minimal_data(self) -> bool:
+        """Check if enough data for streamlined exposure factor"""
+        return self.tiv is not None or self.revenue is not None
+
+    @property
+    def mode(self) -> str:
+        """Determine analysis mode based on available data"""
+        if not self.has_minimal_data:
+            return "none"  # Skip exposure modifier
+        full_fields = [self.employee_count, self.payroll, self.fleet_size]
+        if sum(1 for f in full_fields if f is not None) >= 2:
+            return "full"
+        return "streamlined"  # STP mode
 
 @dataclass
 class TraditionalModifierResult:
@@ -1163,22 +1194,41 @@ class TraditionalModifier(ABC):
 
 class LossHistoryModifier(TraditionalModifier):
     """
-    Experience rating based on loss history.
+    Experience rating based on loss history - OPTIONAL input.
 
     Methods:
     - Pure loss ratio method
     - Frequency/severity method
     - Credibility-weighted method
+
+    When no loss history is provided, returns factor=1.0 (no impact).
     """
 
     def calculate(self, entity_id: str, ...) -> TraditionalModifierResult:
-        # Stub: would fetch from claims system
-        loss_ratio = self._get_loss_ratio(entity_id)
-        expected_loss_ratio = self._get_expected_loss_ratio(coverage)
+        # Check if loss data is available
+        loss_data = self._get_loss_data(entity_id, submission_data)
+        if not loss_data:
+            # No loss history - return neutral (no impact)
+            return TraditionalModifierResult(
+                modifier_type="loss_history",
+                factor=1.0,
+                confidence=0.0,
+                components={},
+                notes=["No loss history available - modifier skipped"],
+                data_sources=[]
+            )
 
-        # Experience modification factor
-        credibility = min(1.0, premium_volume / full_credibility_threshold)
+        # Process available loss data
+        loss_ratio = self._calculate_loss_ratio(loss_data)
+        expected_loss_ratio = self._get_expected_loss_ratio(coverage)
+        premium_volume = loss_data.total_premium
+
+        # Experience modification factor with credibility weighting
+        credibility = min(1.0, premium_volume / self.full_credibility_premium)
         emf = (credibility * loss_ratio + (1 - credibility) * expected_loss_ratio) / expected_loss_ratio
+
+        # Apply cap and floor
+        emf = max(self.floor_factor, min(self.cap_factor, emf))
 
         return TraditionalModifierResult(
             modifier_type="loss_history",
@@ -1188,21 +1238,56 @@ class LossHistoryModifier(TraditionalModifier):
                 "loss_ratio": loss_ratio,
                 "expected_loss_ratio": expected_loss_ratio,
                 "credibility": credibility,
+                "raw_emf": emf,
             },
-            notes=[],
-            data_sources=["claims_system"]
+            notes=[f"Experience mod based on {len(loss_data.policy_years)} years of history"],
+            data_sources=["claims_system", "submission"]
         )
 
 class ExposureModifier(TraditionalModifier):
     """
-    Exposure-based adjustments.
+    Exposure-based adjustments with streamlined STP mode.
 
-    Adjusts for:
-    - Size relativities
-    - Growth trends
-    - Concentration factors
+    Two modes:
+    1. STREAMLINED (STP - Straight-Through Processing):
+       - Only needs revenue OR tiv
+       - Uses simplified size curve lookup
+       - Returns quick factor for automatic processing
+
+    2. FULL (when rich data available):
+       - Analyzes multiple exposure metrics
+       - Considers growth trends
+       - Evaluates concentration factors
     """
-    pass
+
+    def calculate(self, entity_id: str, ...) -> TraditionalModifierResult:
+        exposure = ExposureInput.from_submission(submission_data)
+
+        if not exposure.has_minimal_data:
+            # No exposure data - return neutral (no impact)
+            return TraditionalModifierResult(
+                modifier_type="exposure",
+                factor=1.0,
+                confidence=0.0,
+                components={},
+                notes=["No exposure data available - modifier skipped"],
+                data_sources=[]
+            )
+
+        if exposure.mode == "streamlined":
+            # STP mode: Quick factor from size curve
+            factor = self._streamlined_factor(exposure)
+            return TraditionalModifierResult(
+                modifier_type="exposure",
+                factor=factor,
+                confidence=0.7,  # Lower confidence for simplified analysis
+                components={"size_factor": factor},
+                notes=["Streamlined exposure analysis (STP mode)"],
+                data_sources=["submission"]
+            )
+        else:
+            # Full mode: Detailed analysis
+            return self._full_analysis(exposure)
 
 class ExternalRatingModifier(TraditionalModifier):
     """
