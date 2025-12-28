@@ -330,32 +330,50 @@ class ModelResult:
             raise ValueError(f"Tier must be between 1 and 5, got {self.tier}")
 
 
-@dataclass 
+@dataclass
 class InferenceContext:
     """
     Context passed to inference functions.
-    
+
     Provides access to configuration and shared resources needed
-    during signal processing, including TTL-aware caching.
-    
+    during signal processing, including TTL-aware caching and discovery data.
+
     Attributes:
         configuration: The full parsed YAML configuration
         coverage: Coverage domain (e.g., "aerospace")
         config_name: Configuration name (e.g., "aerospace_general")
         cache: Cache for extractor results (avoids duplicate API calls within TTL)
         cache_stats: Statistics on cache hits/misses
+
+        Discovery context (populated by Step 0):
+        discovered_website: The discovered corporate website URL
+        discovered_domain: The domain extracted from the website
+        corporate_identity: Corporate identity info from discovery
+        discovery_confidence: Confidence level from discovery (0.0-1.0)
+        discovery_method: How the website was discovered
+        discovery_warnings: Any warnings from the discovery process
     """
     configuration: Dict[str, Any]
     coverage: str
     config_name: str
     cache: Optional[Dict[str, ExtractorResult]] = None
     cache_stats: Optional[Dict[str, int]] = None
+
+    # Discovery context (populated by Step 0)
+    discovered_website: Optional[str] = None
+    discovered_domain: Optional[str] = None
+    corporate_identity: Optional[Dict[str, Any]] = None
+    discovery_confidence: float = 1.0
+    discovery_method: Optional[str] = None
+    discovery_warnings: Optional[List[str]] = None
     
     def __post_init__(self):
         if self.cache is None:
             self.cache = {}
         if self.cache_stats is None:
             self.cache_stats = {"hits": 0, "misses": 0, "expired": 0, "stores": 0}
+        if self.discovery_warnings is None:
+            self.discovery_warnings = []
     
     def get_cached_extraction(
         self, 

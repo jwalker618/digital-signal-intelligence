@@ -45,6 +45,14 @@ class PremiumMethod(Enum):
     RATE_BASED = "rate"     # Rate applied to metric (TIV, revenue, etc.)
 
 
+class DiscoveryConfidence(Enum):
+    """Confidence levels for website discovery."""
+    HIGH = "high"           # 90%+ confidence - multiple signals align
+    MEDIUM = "medium"       # 70-89% confidence - some ambiguity
+    LOW = "low"             # 50-69% confidence - significant uncertainty
+    UNVERIFIED = "unverified"  # <50% - requires manual verification
+
+
 # =============================================================================
 # CONFIGURATION TYPES (from YAML)
 # =============================================================================
@@ -531,6 +539,47 @@ class CategoricalOutput:
 
 
 @dataclass
+class DiscoveryOutput:
+    """
+    Output from Step 0: Website Discovery.
+
+    Tracks the result of discovering the corporate website before
+    signal extraction begins.
+    """
+    # Input
+    entity_name: str
+    domain_hint: Optional[str] = None
+    country_hint: Optional[str] = None
+
+    # Primary result
+    discovered_website: Optional[str] = None
+    discovered_domain: Optional[str] = None
+    confidence: DiscoveryConfidence = DiscoveryConfidence.UNVERIFIED
+    confidence_score: float = 0.0
+
+    # Corporate identity
+    legal_name: Optional[str] = None
+    parent_company: Optional[str] = None
+    industry: Optional[str] = None
+
+    # Method and timing
+    discovery_method: Optional[str] = None
+    discovery_methods_used: List[str] = field(default_factory=list)
+    discovered_at: datetime = field(default_factory=utcnow)
+    execution_time_ms: float = 0.0
+
+    # Validation
+    requires_manual_review: bool = False
+    review_reasons: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    candidates_found: int = 0
+
+    # Error handling
+    error: Optional[str] = None
+    skipped: bool = False
+
+
+@dataclass
 class TriggeredCondition:
     """
     A condition that was triggered during evaluation.
@@ -586,6 +635,9 @@ class ModelVersion:
     submission_data: Dict[str, Any] = field(default_factory=dict)
     direct_query_responses: Dict[str, bool] = field(default_factory=dict)
     categorical_selections: Dict[str, str] = field(default_factory=dict)
+
+    # Discovery output (Step 0)
+    discovery_output: Optional[DiscoveryOutput] = None
 
     # Signal outputs (Step 4)
     signal_outputs: List[SignalOutput] = field(default_factory=list)
@@ -741,6 +793,11 @@ class WorkflowResult:
     tier: int = 3
     tier_label: str = "STANDARD"
     confidence: float = 1.0
+
+    # Discovery summary (Step 0)
+    discovered_domain: Optional[str] = None
+    discovery_confidence: Optional[str] = None
+    discovery_warnings: List[str] = field(default_factory=list)
 
     # Missing inputs (if Step 3 fails)
     missing_inputs: List[str] = field(default_factory=list)

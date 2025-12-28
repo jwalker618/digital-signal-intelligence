@@ -165,71 +165,35 @@ CoverageLineRegistry.register(
 ### Repository Structure
 
 ```
-dsi-insurance-pricing/
+digital-signal-intelligence/
 │
-├── api/
-|
-├── docs/
-│   └── overview/
-|   |   ├──An Agentic Future - Global Technical Pricing.pdf
-|   |   ├──Executive Summary.pdf
-|   |   ├──Foundational Principles.md
-|   |   └──The PageRank precedent.md
-│   │
+├── technical_pricing/           # Main package (Phase 4-6)
+│   ├── signals/                 # Signal extraction framework
+│   │   ├── types.py             # Core data types (InferenceContext, etc.)
+│   │   ├── extractors/          # Data extraction stubs
+│   │   ├── aggregators/         # Signal aggregation
+│   │   ├── categorisers/        # Score categorization
+│   │   └── inference/           # Inference functions
+│   ├── coverages/               # Coverage configurations (YAML)
+│   │   ├── aerospace/
+│   │   ├── cyber/
+│   │   └── ...
+│   ├── model/                   # 14-step workflow implementation
+│   │   ├── types.py             # Model data types
+│   │   ├── config_manager.py    # Config loading & validation
+│   │   ├── scorer.py            # Signal scoring (Steps 4-6)
+│   │   ├── query_evaluator.py   # Direct queries (Step 7)
+│   │   ├── pricer.py            # Premium calculation (Steps 8-12)
+│   │   └── workflow.py          # Complete workflow orchestration
+│   ├── discovery/               # Entity identification (Step 0)
+│   │   └── website_discovery.py # Corporate website discovery
+│   └── tests/                   # Unit & integration tests
+│
+├── docs/                        # Documentation & case studies
+│   ├── overview/
 │   └── demos and case-studies/
-|   |   ├──case_studies
-|   |   |  ├──dsi_client_assessment_samples.md
-|   |   |  ├──dsi_retrospective_case_study_detail.md
-|   |   |  ├──dsi_retrospective_case_study_executive_summary.md
-|   |   |  └──dsi_retrospective_methodology.md
-|   |   |
-|   |   └── demos
-|   |      ├──dsi_demo_dashboard.html
-|   |      ├──dsi_demo_workflow.html
-|   |      └──dsi_portfolio_dashboard.html
-|   |
-│   └── agent_interaction/
-|       └──dsi_specification.md
-|   
-├── models/
-│   ├── cyber/
-│   │   └── dsi_cyber_pricing.py   
-│   │
-│   ├── d&o/
-│   │   └── dsi_do_pricing.py   
-│   │
-│   ├── energy/
-│   │   └── dsi_energy_pricing.py   
-│   │
-│   ├── financial_institutions/
-│   │   └── dsi_fi_pricing.py   
-│   │
-│   ├── marine/
-│   │   └── dsi_marine_pricing.py
-│   │
-│   ├── pi/
-│   │   └── dsi_pi_pricing.py
-│   │
-│   ├── aerospace/
-│   │   └── dsi_aerospace_pricing.py
-│   │
-│   ├── portfolio/
-│   │   └── dsi_portfolio_analytics.py   
-│   │
-│   ├── signal_collection/
-│   │   └── dsi_signal_collection.py   
-│   │
-│   └── website_discovery/
-│       └── dsi_website_discovery.py   
 │
-├── workflow/
-│   ├── dsi_persistance.py
-│   ├── dsi_workflow.py
-|   |
-│   └── storage/
-|      ├──postgres.py
-│      └──redis.py
-|  
+├── SKILL.md                     # Detailed architecture documentation
 └── README.md
 ```
 
@@ -237,83 +201,92 @@ dsi-insurance-pricing/
 
 ### Core Modules
 
-#### 1. Website Discovery (`models/website_discovery/dsi_website_discovery.py`)
+#### 1. Website Discovery (`technical_pricing/discovery/website_discovery.py`)
 
-Resolves the correct corporate website for any entity—a foundational step before signal collection.
+Resolves the correct corporate website for any entity—Step 0 of the pricing workflow. This is foundational for accurate signal extraction.
 
 ```python
-from website_discovery import WebsiteDiscoveryEngine
+from technical_pricing.discovery import discover_website, WebsiteDiscoveryEngine
 
-engine = WebsiteDiscoveryEngine()
-result = engine.discover("MS Amlin", country_hint="UK")
-
+# Simple discovery
+result = discover_website("MS Amlin", country_hint="UK")
 print(result.primary_website.domain)  # → msamlin.com
 print(result.confidence)              # → ConfidenceLevel.HIGH
-print(result.company_identity.parent) # → MS&AD Insurance Group Holdings
+
+# With domain hint
+engine = WebsiteDiscoveryEngine()
+result = engine.discover(
+    "Petrobras",
+    domain_hint="petrobras.com.br",
+    country_hint="Brazil"
+)
+print(result.primary_website.domain)  # → petrobras.com.br
+print(result.confidence)              # → ConfidenceLevel.HIGH
 ```
 
 **Key Features:**
-- Multi-method discovery (DNS, search, registries)
+- Multi-method discovery (DNS enumeration, search, corporate registries)
 - Parent/subsidiary resolution
 - Confidence scoring with manual review flags
 - Batch processing support
+- Integrated into workflow as Step 0
 
-#### 2. Signal Collection (`models/signal_collection/dsi_signal_collection.py`)
+#### 2. Workflow Engine (`technical_pricing/model/workflow.py`)
 
-Harvests and scores signals from multiple sources into a unified DSI assessment.
+Orchestrates the complete 14-step DSI pricing workflow from discovery through decision.
 
 ```python
-from signal_collection import create_signal_engine, ModelType
+from technical_pricing.model.workflow import run_assessment, WorkflowEngine
 
-engine = create_signal_engine(ModelType.CYBER)
-result = engine.collect("Petrobras", domain_hint="petrobras.com.br")
+# Simple assessment
+result = run_assessment(
+    entity_id="petrobras-001",
+    coverage="cyber",
+    entity_name="Petrobras",
+    domain_hint="petrobras.com.br",
+    submission_data={"tiv": 10_000_000}
+)
 
-print(f"Score: {result.overall_score}/1000")  # → Score: 742/1000
-print(f"Tier: {result.tier}")                  # → Tier: 2
-print(f"Red Flags: {result.red_flags}")        # → Red Flags: []
+print(f"Score: {result.composite_score}/1000")  # → Score: 742/1000
+print(f"Tier: {result.tier}")                    # → Tier: 2
+print(f"Decision: {result.decision.value}")      # → Decision: approve
+print(f"Premium: ${result.recommended_premium}") # → Premium: $125,000
 ```
 
 **Key Features:**
-- Modular collector architecture
-- Model-specific signal weighting
-- Multiple scoring methods (binary, linear, logarithmic, threshold)
-- Red flag / green flag detection
-- Quality-adjusted scoring
+- 14-step workflow (Step 0 discovery + 13 pricing steps)
+- Content-addressable configuration storage
+- Full audit trail with model versioning
+- Automatic tier-to-decision mapping
+- Multiple premium options by limit band
 
-#### 3. Portfolio Management (`models/portfolio/dsi_portfolio_analytics.py`)
+#### 3. Signal Architecture (`technical_pricing/signals/`)
 
-The primary human interface—orchestrates all DSI functionality for portfolio-level oversight.
+The signal extraction framework implements the Extractor → Aggregator → Categorizer → Inference pipeline.
 
 ```python
-from portfolio_management import DSIPortfolioManager, CoverageType
+from technical_pricing.signals.types import InferenceContext, SignalResult
 
-manager = DSIPortfolioManager()
+# Context includes discovery data for extractors
+context = InferenceContext(
+    configuration={},
+    coverage="cyber",
+    config_name="cyber_general",
+    discovered_domain="example.com",    # From Step 0
+    discovery_confidence=0.95           # From Step 0
+)
 
-# Add risks
-manager.add_risk("Acme Corp", CoverageType.CYBER, metadata=metadata, assessment=assessment)
-
-# Get portfolio metrics
-metrics = manager.calculate_metrics()
-print(f"Average Score: {metrics.average_score}")
-print(f"Tier Distribution: {metrics.risks_by_tier}")
-
-# Check alerts
-alerts = manager.get_active_alerts(severity=AlertSeverity.HIGH)
-
-# Natural language query
-results = manager.query("show me tier 4 cyber risks")
-
-# Generate dashboard
-dashboard = manager.generate_dashboard()
+# Extractors can use the discovered domain
+def infer_security_headers(entity_id: str, context: InferenceContext) -> SignalResult:
+    domain = context.discovered_domain  # Use discovered website
+    # ... fetch and score security headers
 ```
 
 **Key Features:**
-- Multi-line portfolio management
-- Real-time alerting (concentration, deterioration, tier migration)
-- Natural language queries
-- Drill-down analysis and peer comparison
-- Scenario modeling ("what-if" analysis)
-- Export to JSON/CSV
+- TTL-aware caching for extractor results
+- Discovery data passed to all inference functions
+- Standardized result types for audit trail
+- Confidence scoring per signal
 
 ---
 
@@ -391,25 +364,36 @@ digital-signal-intelligence/
 #### Quick Start
 
 ```python
-from technical_pricing.discovery import discover_website
-from technical_pricing.model.workflow import create_workflow_engine
-from technical_pricing.model.types import SubmissionRequest
+from technical_pricing.model.workflow import run_assessment
 
-# Step 1: Discover entity website
-discovery = discover_website("Target Company", domain_hint="targetcompany.com")
-print(f"Website: {discovery.primary_website.domain}")
-
-# Step 2: Run pricing workflow
-engine = create_workflow_engine(config_dir="technical_pricing/coverages")
-request = SubmissionRequest(
-    entity_id="target-company",
-    coverage="cyber",
-    submission_data={"tiv": 10_000_000},
-    user="underwriter"
+# Run complete workflow (discovery + pricing in one call)
+result = run_assessment(
+    entity_id="target-company-001",
+    coverage="aerospace",
+    entity_name="Target Aviation Corp",
+    domain_hint="targetaviation.com",
+    country_hint="US",
+    submission_data={
+        "tiv": 50_000_000,
+        "limit": 10_000_000,
+    }
 )
-result = engine.run_workflow(request)
-print(f"Decision: {result.decision}, Tier: {result.model_version.final_tier}")
+
+# Check discovery results (Step 0)
+print(f"Discovered: {result.discovered_domain}")
+print(f"Discovery confidence: {result.discovery_confidence}")
+
+# Check pricing results (Steps 1-13)
+print(f"Composite Score: {result.composite_score}/1000")
+print(f"Tier: {result.tier} ({result.tier_label})")
+print(f"Decision: {result.decision.value}")
+print(f"Premium: ${result.recommended_premium:,.0f}")
 print(f"Premium options: {result.premium_options}")
+
+# Access full audit trail
+version = result.model_version
+print(f"Signal coverage: {version.signal_coverage:.0%}")
+print(f"Confidence: {version.confidence:.0%}")
 ```
 
 #### Run Tests

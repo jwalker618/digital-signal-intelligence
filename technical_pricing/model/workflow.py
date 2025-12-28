@@ -1,8 +1,9 @@
 """
-DSI Model Layer - Workflow Engine (Phase 4)
+DSI Model Layer - Workflow Engine (Phase 4 + 6)
 
-Orchestrates the complete 13-step workflow:
+Orchestrates the complete 14-step workflow:
 
+0. Website Discovery (NEW - Phase 6)
 1. Model Configuration Instantiation
 2. Model Data File Creation
 3. Minimum Viable Input Verification
@@ -21,6 +22,7 @@ This is the main entry point for running DSI assessments.
 """
 
 import logging
+import time
 import uuid
 from typing import Dict, List, Optional, Any, Tuple
 
@@ -29,6 +31,8 @@ from .types import (
     WorkflowResult,
     ModelVersion,
     DecisionType,
+    DiscoveryOutput,
+    DiscoveryConfidence,
     utcnow,
 )
 from .config_manager import ConfigManager, load_coverage_config
@@ -38,6 +42,11 @@ from .query_evaluator import QueryEvaluator, get_query_evaluator
 from .pricer import ModelPricer, get_pricer
 
 from ..signals.types import InferenceContext
+from ..discovery.website_discovery import (
+    WebsiteDiscoveryEngine,
+    DiscoveryResult,
+    ConfidenceLevel,
+)
 
 
 logger = logging.getLogger("dsi.workflow")
@@ -57,9 +66,10 @@ class MissingInputError(Exception):
 
 class WorkflowEngine:
     """
-    Orchestrates the complete 13-step DSI model workflow.
+    Orchestrates the complete 14-step DSI model workflow.
 
     This engine coordinates all components:
+    - WebsiteDiscoveryEngine: Entity website discovery (Step 0)
     - ConfigManager: Configuration loading and versioning
     - ModelDataManager: Model data tracking
     - ModelScorer: Signal extraction and scoring
@@ -73,7 +83,8 @@ class WorkflowEngine:
         data_manager: Optional[ModelDataManager] = None,
         scorer: Optional[ModelScorer] = None,
         query_evaluator: Optional[QueryEvaluator] = None,
-        pricer: Optional[ModelPricer] = None
+        pricer: Optional[ModelPricer] = None,
+        discovery_engine: Optional[WebsiteDiscoveryEngine] = None
     ):
         """
         Initialize WorkflowEngine with dependencies.
@@ -84,12 +95,14 @@ class WorkflowEngine:
             scorer: Model scorer (uses default if None)
             query_evaluator: Query evaluator (uses default if None)
             pricer: Model pricer (uses default if None)
+            discovery_engine: Website discovery engine (uses default if None)
         """
         self.config_manager = config_manager or ConfigManager()
         self.data_manager = data_manager or get_model_data_manager()
         self.scorer = scorer or get_scorer()
         self.query_evaluator = query_evaluator or get_query_evaluator()
         self.pricer = pricer or get_pricer()
+        self.discovery_engine = discovery_engine or WebsiteDiscoveryEngine()
 
     def run_workflow(
         self,
@@ -100,10 +113,15 @@ class WorkflowEngine:
         categorical_selections: Optional[Dict[str, str]] = None,
         user: str = "system",
         config: Optional[CoverageConfig] = None,
-        skip_input_validation: bool = False
+        skip_input_validation: bool = False,
+        # Discovery parameters (Step 0)
+        entity_name: Optional[str] = None,
+        domain_hint: Optional[str] = None,
+        country_hint: Optional[str] = None,
+        skip_discovery: bool = False
     ) -> WorkflowResult:
         """
-        Execute the complete 13-step workflow.
+        Execute the complete 14-step workflow.
 
         Args:
             entity_id: The entity being assessed
@@ -114,6 +132,10 @@ class WorkflowEngine:
             user: User running the workflow
             config: Optional pre-loaded config (loaded if None)
             skip_input_validation: Skip Step 3 validation
+            entity_name: Company name for discovery (defaults to entity_id)
+            domain_hint: Optional domain hint (e.g., "example.com")
+            country_hint: Optional country hint (e.g., "UK", "US")
+            skip_discovery: Skip Step 0 discovery if domain is known
 
         Returns:
             WorkflowResult with complete assessment
@@ -126,7 +148,18 @@ class WorkflowEngine:
         direct_query_responses = direct_query_responses or {}
         categorical_selections = categorical_selections or {}
 
+        # Use entity_id as entity_name if not provided
+        entity_name = entity_name or entity_id
+
         logger.info(f"Starting workflow for entity {entity_id}, coverage {coverage}")
+
+        # Step 0: Website Discovery
+        discovery_output = self._run_discovery(
+            entity_name=entity_name,
+            domain_hint=domain_hint,
+            country_hint=country_hint,
+            skip_discovery=skip_discovery
+        )
 
         # Step 1: Load Configuration
         if config is None:
@@ -155,10 +188,21 @@ class WorkflowEngine:
                 )
 
         # Create inference context for signal extraction
+        # Include discovery data so extractors can use the discovered website
         context = InferenceContext(
             configuration={},
             coverage=config.coverage,
             config_name=config.configuration,
+            discovered_website=discovery_output.discovered_website if discovery_output else None,
+            discovered_domain=discovery_output.discovered_domain if discovery_output else None,
+            corporate_identity={
+                "legal_name": discovery_output.legal_name,
+                "parent_company": discovery_output.parent_company,
+                "industry": discovery_output.industry,
+            } if discovery_output and discovery_output.legal_name else None,
+            discovery_confidence=discovery_output.confidence_score / 100.0 if discovery_output else 1.0,
+            discovery_method=discovery_output.discovery_method if discovery_output else None,
+            discovery_warnings=discovery_output.warnings if discovery_output else [],
         )
 
         # Steps 4-6: Score Entity (Signal Extraction + Composite + Conditions)
@@ -249,6 +293,9 @@ class WorkflowEngine:
             f"premium={pricing_result.final_premium:.0f}"
         )
 
+        # Add discovery output to model version for audit trail
+        model_version.discovery_output = discovery_output
+
         return WorkflowResult(
             model_version=model_version,
             decision=decision,
@@ -263,6 +310,10 @@ class WorkflowEngine:
             tier_label=pricing_result.tier_label,
             confidence=scoring_result.confidence,
             is_valid=True,
+            # Discovery summary (Step 0)
+            discovered_domain=discovery_output.discovered_domain if discovery_output else None,
+            discovery_confidence=discovery_output.confidence.value if discovery_output else None,
+            discovery_warnings=discovery_output.warnings if discovery_output else [],
         )
 
     def verify_inputs(
@@ -352,6 +403,111 @@ class WorkflowEngine:
 
         # Default to refer
         return DecisionType.REFER, False
+
+    def _run_discovery(
+        self,
+        entity_name: str,
+        domain_hint: Optional[str] = None,
+        country_hint: Optional[str] = None,
+        skip_discovery: bool = False
+    ) -> Optional[DiscoveryOutput]:
+        """
+        Step 0: Run website discovery for the entity.
+
+        Identifies the correct corporate website before signal extraction
+        begins. This enables extractors to fetch data from the entity's
+        actual website rather than relying on guesses.
+
+        Args:
+            entity_name: Company name to search for
+            domain_hint: Optional known domain (skips discovery if high confidence)
+            country_hint: Optional country for regional TLD prioritization
+            skip_discovery: If True, skip discovery entirely
+
+        Returns:
+            DiscoveryOutput with discovery results, or None if skipped
+        """
+        if skip_discovery:
+            logger.debug(f"Discovery skipped for {entity_name}")
+            return DiscoveryOutput(
+                entity_name=entity_name,
+                domain_hint=domain_hint,
+                skipped=True
+            )
+
+        logger.info(f"Step 0: Discovering website for {entity_name}")
+        start_time = time.time()
+
+        try:
+            # Run discovery
+            result: DiscoveryResult = self.discovery_engine.discover(
+                company_name=entity_name,
+                domain_hint=domain_hint,
+                country_hint=country_hint
+            )
+
+            execution_time_ms = (time.time() - start_time) * 1000
+
+            # Map discovery confidence level to our enum
+            confidence_map = {
+                ConfidenceLevel.HIGH: DiscoveryConfidence.HIGH,
+                ConfidenceLevel.MEDIUM: DiscoveryConfidence.MEDIUM,
+                ConfidenceLevel.LOW: DiscoveryConfidence.LOW,
+                ConfidenceLevel.UNVERIFIED: DiscoveryConfidence.UNVERIFIED,
+            }
+
+            # Extract primary website info
+            primary = result.primary_website
+            discovered_website = primary.url if primary else None
+            discovered_domain = primary.domain if primary else None
+            confidence_score = primary.confidence_score if primary else 0.0
+            discovery_method = primary.discovery_method.value if primary else None
+
+            # Extract corporate identity info
+            identity = result.company_identity
+            legal_name = identity.legal_name if identity else None
+            parent_company = (
+                identity.parent_company.input_name
+                if identity and identity.parent_company else None
+            )
+
+            output = DiscoveryOutput(
+                entity_name=entity_name,
+                domain_hint=domain_hint,
+                country_hint=country_hint,
+                discovered_website=discovered_website,
+                discovered_domain=discovered_domain,
+                confidence=confidence_map.get(result.confidence, DiscoveryConfidence.UNVERIFIED),
+                confidence_score=confidence_score,
+                legal_name=legal_name,
+                parent_company=parent_company,
+                discovery_method=discovery_method,
+                discovery_methods_used=[m.value for m in result.discovery_methods_used],
+                execution_time_ms=execution_time_ms,
+                requires_manual_review=result.requires_manual_review,
+                review_reasons=result.manual_review_reasons,
+                warnings=result.warnings,
+                candidates_found=len(result.all_candidates),
+            )
+
+            logger.info(
+                f"Discovery complete: {discovered_domain} "
+                f"(confidence: {result.confidence.value}, "
+                f"candidates: {len(result.all_candidates)})"
+            )
+
+            return output
+
+        except Exception as e:
+            logger.error(f"Discovery failed for {entity_name}: {e}")
+            execution_time_ms = (time.time() - start_time) * 1000
+            return DiscoveryOutput(
+                entity_name=entity_name,
+                domain_hint=domain_hint,
+                country_hint=country_hint,
+                execution_time_ms=execution_time_ms,
+                error=str(e),
+            )
 
     def process_referral(
         self,
@@ -460,7 +616,11 @@ def run_assessment(
     coverage: str,
     submission_data: Optional[Dict[str, Any]] = None,
     direct_query_responses: Optional[Dict[str, bool]] = None,
-    user: str = "api"
+    user: str = "api",
+    entity_name: Optional[str] = None,
+    domain_hint: Optional[str] = None,
+    country_hint: Optional[str] = None,
+    skip_discovery: bool = False
 ) -> WorkflowResult:
     """
     Convenience function to run a full assessment.
@@ -471,6 +631,10 @@ def run_assessment(
         submission_data: Submission data
         direct_query_responses: Optional query responses
         user: User running assessment
+        entity_name: Company name for discovery (defaults to entity_id)
+        domain_hint: Optional domain hint (e.g., "example.com")
+        country_hint: Optional country hint (e.g., "UK", "US")
+        skip_discovery: Skip Step 0 discovery if domain is known
 
     Returns:
         WorkflowResult with complete assessment
@@ -482,4 +646,8 @@ def run_assessment(
         submission_data=submission_data,
         direct_query_responses=direct_query_responses,
         user=user,
+        entity_name=entity_name,
+        domain_hint=domain_hint,
+        country_hint=country_hint,
+        skip_discovery=skip_discovery,
     )

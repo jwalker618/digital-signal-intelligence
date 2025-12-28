@@ -24,6 +24,26 @@ Key principles:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
+│                     SUBMISSION INPUT                            │
+│     Company name, domain hint, coverage, TIV, limits            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   DISCOVERY MODULE (Step 0)                     │
+│                                                                 │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐                 │
+│  │SEARCH    │ →  │VALIDATE  │ →  │IDENTIFY   │                 │
+│  │          │    │          │    │           │                 │
+│  │Find      │    │Corporate │    │Primary    │                 │
+│  │candidates│    │website   │    │website    │                 │
+│  └──────────┘    └──────────┘    └───────────┘                 │
+│                                                                 │
+│  Output: Discovered website URL + confidence + identity         │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
 │                        YAML CONFIG                              │
 │     Single source of truth for coverage model definition        │
 │   (weights, modifiers, tiers, direct queries, conditions)       │
@@ -39,6 +59,8 @@ Key principles:
 │  │Raw data  │    │Structure/│    │Score or   │    │Orchestrat│ │
 │  │from APIs │    │normalize │    │category   │    │pipeline  │ │
 │  └──────────┘    └──────────┘    └───────────┘    └──────────┘ │
+│                                                                 │
+│  Uses discovered website for data extraction                    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -224,11 +246,35 @@ All base infrastructure is built and tested:
 |Common (cross-coverage)|7         |7          |-        |✅ Complete|
 |**Total**              |**~266**  |**~271**   |**~292** |          |
 
-### 🔲 Phase 4: Model Integration (CURRENT PHASE)
+### ✅ Phase 4: Model Integration (COMPLETE)
 
-See detailed breakdown below.
+Complete model layer implementing the 13-step workflow:
 
-### 🔲 Phase 5: Testing & Validation (NOT STARTED)
+|Component              |File                      |Status    |
+|-----------------------|--------------------------|----------|
+|Core Data Types        |`model/types.py`          |✅ Complete|
+|Config Manager         |`model/config_manager.py` |✅ Complete|
+|Model Data Manager     |`model/model_data.py`     |✅ Complete|
+|Model Scorer (4-6)     |`model/scorer.py`         |✅ Complete|
+|Query Evaluator (7)    |`model/query_evaluator.py`|✅ Complete|
+|Model Pricer (8-12)    |`model/pricer.py`         |✅ Complete|
+|Workflow Engine (1-13) |`model/workflow.py`       |✅ Complete|
+
+### ✅ Phase 5: Testing & Validation (COMPLETE)
+
+Comprehensive test suite:
+
+|Test Type              |Location                           |Status    |
+|-----------------------|-----------------------------------|----------|
+|Config Manager Tests   |`tests/unit/test_config_manager.py`|✅ Complete|
+|Model Data Tests       |`tests/unit/test_model_data.py`    |✅ Complete|
+|Scorer Tests           |`tests/unit/test_scorer.py`        |✅ Complete|
+|Query Evaluator Tests  |`tests/unit/test_query_evaluator.py`|✅ Complete|
+|Pricer Tests           |`tests/unit/test_pricer.py`        |✅ Complete|
+|Workflow Tests         |`tests/unit/test_workflow.py`      |✅ Complete|
+|Integration Tests      |`tests/integration/`               |✅ Complete|
+
+### 🔲 Phase 6: Discovery Integration (CURRENT PHASE)
 
 See detailed breakdown below.
 
@@ -751,6 +797,203 @@ test_profiles:
 
 -----
 
+## Phase 6: Discovery Integration (Detailed Plan)
+
+This phase integrates website discovery as a pre-processing step before signal extraction.
+
+### 6.1 The Discovery Problem
+
+When a submission arrives, it typically contains:
+- Company name (e.g., "MS Amlin", "Petrobras", "Lufthansa")
+- Optional domain hint (e.g., "msamlin.com")
+- Optional country/region hint
+
+**Challenge**: The same company name can have multiple web presences:
+- Corporate parent vs subsidiary
+- Regional variations (petrobras.com vs petrobras.com.br)
+- Marketing sites vs investor relations
+
+**Solution**: Discovery module identifies the correct corporate website before signal extraction begins.
+
+### 6.2 Discovery Module (`discovery/`)
+
+Located in `technical_pricing/discovery/`:
+
+```python
+from technical_pricing.discovery import (
+    WebsiteDiscoveryEngine,
+    discover_website,
+    DiscoveryResult,
+    WebsiteCandidate,
+)
+
+# Simple discovery
+result = discover_website("MS Amlin")
+print(result.primary_website.domain)  # "msamlin.com"
+print(result.confidence)              # 0.95
+
+# Discovery with hints
+result = discover_website(
+    "Petrobras",
+    domain_hint="petrobras.com.br",
+    country_hint="Brazil"
+)
+```
+
+**Key Classes:**
+
+```python
+@dataclass
+class WebsiteCandidate:
+    """A potential website match"""
+    domain: str
+    url: str
+    confidence: float
+    discovery_method: DiscoveryMethod
+    website_type: WebsiteType
+    evidence: List[str]
+
+@dataclass
+class DiscoveryResult:
+    """Complete discovery output"""
+    query: str
+    primary_website: WebsiteCandidate
+    alternate_websites: List[WebsiteCandidate]
+    corporate_identity: CompanyIdentity
+    relationships: List[CorporateRelationship]
+    confidence: float
+    discovery_time_ms: float
+```
+
+### 6.3 Extended Workflow (Step 0)
+
+The 13-step workflow extends to include discovery as Step 0:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    EXTENDED WORKFLOW                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  STEP 0: DISCOVERY (NEW)                                         │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Company Name + Hints → Website Discovery → Domain        │   │
+│  │                                                           │   │
+│  │ Outputs:                                                  │   │
+│  │ - Primary website URL/domain                              │   │
+│  │ - Corporate identity (parent, subsidiaries)               │   │
+│  │ - Confidence score                                        │   │
+│  │ - Alternate websites for manual review                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  STEPS 1-13: EXISTING WORKFLOW                                   │
+│  (Now with discovered website context for extractors)            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 6.4 Integration Points
+
+**WorkflowEngine Changes:**
+
+```python
+class WorkflowEngine:
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        data_manager: ModelDataManager,
+        scorer: ModelScorer,
+        query_evaluator: QueryEvaluator,
+        pricer: ModelPricer,
+        discovery_engine: WebsiteDiscoveryEngine = None  # NEW
+    ):
+        self.discovery_engine = discovery_engine or WebsiteDiscoveryEngine()
+
+    def run_workflow(
+        self,
+        entity_name: str,              # Company name for discovery
+        coverage: str,
+        submission_data: dict,
+        domain_hint: str = None,       # Optional domain hint
+        country_hint: str = None,      # Optional country hint
+        skip_discovery: bool = False,  # Skip if domain already known
+        **kwargs
+    ) -> WorkflowResult:
+        # Step 0: Discovery
+        if not skip_discovery:
+            discovery = self.discovery_engine.discover(
+                entity_name,
+                domain_hint=domain_hint,
+                country_hint=country_hint
+            )
+            entity_id = discovery.primary_website.domain
+            submission_data["discovered_website"] = discovery.primary_website.url
+            submission_data["discovery_confidence"] = discovery.confidence
+        else:
+            entity_id = domain_hint or entity_name
+
+        # Steps 1-13: Existing workflow
+        # ...
+```
+
+**InferenceContext Enhancement:**
+
+```python
+@dataclass
+class InferenceContext:
+    # Existing fields
+    configuration: dict
+    coverage: str
+    config_name: str
+
+    # NEW: Discovery context for extractors
+    discovered_website: str = None
+    discovered_domain: str = None
+    corporate_identity: dict = None
+    discovery_confidence: float = 1.0
+```
+
+### 6.5 Extractor Usage of Discovery
+
+Extractors can use the discovered website to fetch data:
+
+```python
+class SecurityHeadersExtractor(StubExtractor):
+    def extract(self, entity_id: str, context: InferenceContext) -> ExtractorResult:
+        # Use discovered website if available
+        url = context.discovered_website or f"https://{entity_id}"
+
+        # In production: fetch and analyze headers
+        # In stub mode: return realistic mock data
+        return self._generate_stub_data(entity_id, url)
+```
+
+### 6.6 File Structure for Phase 6
+
+```
+technical_pricing/
+├── discovery/
+│   ├── __init__.py              ✅ Package exports
+│   └── website_discovery.py     ✅ Core discovery engine
+├── model/
+│   ├── types.py                 🔲 Add DiscoveryResult reference
+│   └── workflow.py              🔲 Add Step 0 discovery
+└── signals/
+    └── types.py                 🔲 Enhance InferenceContext
+```
+
+### 6.7 Implementation Tasks
+
+| Task | File | Status |
+|------|------|--------|
+| Add discovery types to model | `model/types.py` | 🔲 |
+| Enhance InferenceContext | `signals/types.py` | 🔲 |
+| Integrate discovery into workflow | `model/workflow.py` | 🔲 |
+| Add discovery tests | `tests/unit/test_discovery.py` | 🔲 |
+| Update integration tests | `tests/integration/` | 🔲 |
+
+-----
+
 ## File Structure (Complete)
 
 ```
@@ -815,18 +1058,29 @@ technical_pricing/
 │           ├── fi/                  ✅ ~42 functions
 │           ├── marine/              ✅ ~40 functions
 │           └── pi/                  ✅ ~38 functions
-├── model/                           🔲 PHASE 4
+├── discovery/                       ✅ PHASE 6
+│   ├── __init__.py                  ✅ Package exports
+│   └── website_discovery.py         ✅ Discovery engine
+├── model/                           ✅ PHASE 4
 │   ├── __init__.py
-│   ├── types.py                     🔲 All dataclasses
-│   ├── config_manager.py            🔲 Config hashing/storage
-│   ├── model_data.py                🔲 Model data file management
-│   ├── scorer.py                    🔲 Steps 4-6
-│   ├── query_evaluator.py           🔲 Step 7
-│   ├── pricer.py                    🔲 Steps 8-12
-│   └── workflow.py                  🔲 Full orchestration
-└── tests/                           🔲 PHASE 5
+│   ├── types.py                     ✅ All dataclasses
+│   ├── config_manager.py            ✅ Config hashing/storage
+│   ├── model_data.py                ✅ Model data file management
+│   ├── scorer.py                    ✅ Steps 4-6
+│   ├── query_evaluator.py           ✅ Step 7
+│   ├── pricer.py                    ✅ Steps 8-12
+│   └── workflow.py                  ✅ Full orchestration (🔲 Step 0)
+└── tests/                           ✅ PHASE 5
+    ├── conftest.py                  ✅ Test configuration
     ├── unit/
+    │   ├── test_config_manager.py   ✅
+    │   ├── test_model_data.py       ✅
+    │   ├── test_scorer.py           ✅
+    │   ├── test_query_evaluator.py  ✅
+    │   ├── test_pricer.py           ✅
+    │   └── test_workflow.py         ✅
     └── integration/
+        └── test_workflow_integration.py ✅
 ```
 
 Legend: ✅ Complete | 🔲 Not Started
