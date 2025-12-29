@@ -4,13 +4,31 @@
 
 | Item | Value |
 |-|-|
-|Version|1.0|
-|Date|November 2025|
-|Classification|Introduction|
+|Version|0.2.0|
+|Date|December 2024|
+|Classification|Development|
 
 ---
 
-**A production-ready framework for automated underwriting using digital footprint analysis and network intelligence.**
+## Project Status
+
+| Component | Status | Completeness |
+|-----------|--------|--------------|
+| **Core Workflow** | ✅ Complete | 14-step workflow fully implemented |
+| **Coverage Configs** | ✅ Complete | 7 coverages (Aerospace, Cyber, D&O, Energy, FI, Marine, PI) |
+| **Signal Architecture** | ⚠️ Stubs | Architecture complete, extractors return simulated data |
+| **API Layer** | ✅ Functional | FastAPI with actual workflow integration |
+| **Database Layer** | ✅ Schema Ready | SQLAlchemy models, awaiting deployment |
+| **Authentication** | ✅ Implemented | JWT + API key modules ready |
+| **Tests** | ✅ 380+ tests | Good coverage of core logic |
+| **Production Infra** | 🔲 Pending | Requires K8s/Helm, monitoring setup |
+
+> **Note**: Signal extractors currently return **simulated data** for development/testing.
+> Real API integrations (SSL Labs, SecurityScorecard, etc.) are required for production use.
+
+---
+
+**A framework for automated underwriting using digital footprint analysis and network intelligence.**
 
 DSI applies the principles that made Google's PageRank revolutionary—inferring quality from observable network relationships—to insurance underwriting. A company's digital presence serves as a powerful proxy for operational maturity, governance quality, and risk management capability.
 
@@ -166,34 +184,44 @@ CoverageLineRegistry.register(
 
 ```
 digital-signal-intelligence/
-│
-├── technical_pricing/           # Main package (Phase 4-6)
+├── technical_pricing/           # Main package (~70K lines)
 │   ├── signals/                 # Signal extraction framework
-│   │   ├── types.py             # Core data types (InferenceContext, etc.)
-│   │   ├── extractors/          # Data extraction stubs
+│   │   ├── types.py             # Core data types
+│   │   ├── extractors/stubs/    # Stub extractors (7 coverages)
 │   │   ├── aggregators/         # Signal aggregation
 │   │   ├── categorisers/        # Score categorization
 │   │   └── inference/           # Inference functions
-│   ├── coverages/               # Coverage configurations (YAML)
-│   │   ├── aerospace/
-│   │   ├── cyber/
-│   │   └── ...
-│   ├── model/                   # 14-step workflow implementation
-│   │   ├── types.py             # Model data types
-│   │   ├── config_manager.py    # Config loading & validation
-│   │   ├── scorer.py            # Signal scoring (Steps 4-6)
-│   │   ├── query_evaluator.py   # Direct queries (Step 7)
-│   │   ├── pricer.py            # Premium calculation (Steps 8-12)
-│   │   └── workflow.py          # Complete workflow orchestration
+│   ├── coverages/               # YAML configurations
+│   │   ├── aerospace/           # 21 signals
+│   │   ├── cyber/               # 35 signals
+│   │   ├── do/                  # 46 signals
+│   │   ├── energy/              # 44 signals
+│   │   ├── fi/                  # ~40 signals
+│   │   ├── marine/              # ~38 signals
+│   │   └── pi/                  # ~35 signals
+│   ├── model/                   # 14-step workflow
+│   │   ├── workflow.py          # Complete orchestration
+│   │   ├── scorer.py            # Signal scoring
+│   │   ├── pricer.py            # Premium calculation
+│   │   └── modifiers/           # Traditional pricing modifiers
 │   ├── discovery/               # Entity identification (Step 0)
-│   │   └── website_discovery.py # Corporate website discovery
-│   └── tests/                   # Unit & integration tests
-│
-├── docs/                        # Documentation & case studies
-│   ├── overview/
-│   └── demos and case-studies/
-│
-├── SKILL.md                     # Detailed architecture documentation
+│   ├── api/                     # FastAPI REST API
+│   │   ├── main.py              # Application entry
+│   │   ├── routes/              # Endpoint handlers
+│   │   └── auth/                # JWT & API key auth
+│   ├── db/                      # Database layer
+│   │   ├── models.py            # SQLAlchemy models
+│   │   └── repositories.py      # Data access
+│   ├── orchestration/           # Multi-coverage handling
+│   ├── analytics/               # Performance analysis
+│   ├── integrations/            # Email, docs, webhooks
+│   ├── builder/                 # LLM coverage builder
+│   └── tests/                   # 380+ tests
+├── examples/                    # Working examples (all 7 coverages)
+├── docs/                        # Documentation
+├── .env.example                 # Environment template
+├── requirements.txt             # Dependencies
+├── SKILL.md                     # Architecture guide (119KB)
 └── README.md
 ```
 
@@ -319,7 +347,8 @@ Retrospective analysis across multiple sectors shows:
 #### Prerequisites
 
 - Python 3.10+
-- pip or conda for package management
+- PostgreSQL 14+ (optional, for persistence)
+- Redis 7+ (optional, for caching)
 
 #### Installation
 
@@ -333,7 +362,23 @@ pip install -r requirements.txt
 
 # For development
 pip install -r requirements-dev.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your settings
 ```
+
+#### Run the API
+
+```bash
+# Development mode
+uvicorn technical_pricing.api.main:app --reload --port 8000
+
+# Production mode
+uvicorn technical_pricing.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+API documentation available at: `http://localhost:8000/api/docs`
 
 #### Project Structure
 

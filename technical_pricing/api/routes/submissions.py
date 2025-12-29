@@ -2,12 +2,14 @@
 DSI Submission Endpoints (Phase 11)
 
 Endpoints for creating and managing submissions.
+Wired to actual workflow engine for pricing.
 """
 
 import logging
+import time
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
@@ -25,6 +27,9 @@ from ..types import (
     ListFilters,
 )
 
+# Import workflow engine
+from ...model.workflow import run_assessment
+from ...model.types import WorkflowResult, DecisionType
 
 logger = logging.getLogger("dsi.api.submissions")
 
@@ -32,11 +37,12 @@ router = APIRouter()
 
 
 # =============================================================================
-# IN-MEMORY STORAGE (Replace with database)
+# IN-MEMORY STORAGE (Replace with database in production)
 # =============================================================================
 
-_submissions: dict = {}
-_jobs: dict = {}
+_submissions: Dict[str, Dict[str, Any]] = {}
+_quotes: Dict[str, Dict[str, Any]] = {}
+_jobs: Dict[str, Dict[str, Any]] = {}
 
 
 # =============================================================================
@@ -48,27 +54,127 @@ def generate_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 
-async def process_submission(submission_id: str, request: SubmissionRequest):
-    """Background task to process a submission."""
-    logger.info(f"Processing submission {submission_id}")
+def workflow_result_to_quote(
+    result: WorkflowResult,
+    submission_id: str,
+    quote_id: str,
+) -> Dict[str, Any]:
+    """Convert WorkflowResult to quote dict."""
+    now = datetime.utcnow()
 
-    # Update status
+    # Map decision type to string
+    decision_map = {
+        DecisionType.APPROVE: "approve",
+        DecisionType.REFER: "refer",
+        DecisionType.DECLINE: "decline",
+    }
+
+    return {
+        "quote_id": quote_id,
+        "submission_id": submission_id,
+        "status": QuoteStatus.READY,
+        "composite_score": result.composite_score,
+        "confidence": result.confidence,
+        "tier": result.tier,
+        "tier_label": result.tier_label,
+        "decision": decision_map.get(result.decision, "refer"),
+        "auto_approve": result.auto_approve,
+        "referral_reasons": result.referral_reasons,
+        "premium_options": result.premium_options,
+        "recommended_premium": result.recommended_premium,
+        "recommended_limit": result.recommended_limit,
+        "discovery": {
+            "domain": result.discovered_domain,
+            "confidence": result.discovery_confidence,
+            "warnings": result.discovery_warnings,
+        } if result.discovered_domain else None,
+        "notes": result.notes,
+        "created_at": now,
+        "valid_until": now + timedelta(days=30),
+    }
+
+
+def execute_workflow(
+    submission_id: str,
+    request: SubmissionRequest,
+) -> WorkflowResult:
+    """Execute the pricing workflow."""
+    logger.info(f"Executing workflow for submission {submission_id}")
+    start_time = time.time()
+
+    try:
+        # Run the actual workflow
+        result = run_assessment(
+            entity_id=submission_id,
+            coverage=request.coverage,
+            submission_data=request.submission_data or {},
+            direct_query_responses=request.direct_query_responses or {},
+            entity_name=request.entity_name,
+            domain_hint=request.domain_hint,
+            country_hint=request.country_hint,
+            skip_discovery=True,  # Skip discovery for now (use stubs)
+        )
+
+        duration = time.time() - start_time
+        logger.info(
+            f"Workflow complete for {submission_id}: "
+            f"score={result.composite_score:.0f}, tier={result.tier}, "
+            f"decision={result.decision.value}, duration={duration:.2f}s"
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Workflow failed for {submission_id}: {e}")
+        raise
+
+
+async def process_submission_async(
+    submission_id: str,
+    request: SubmissionRequest,
+):
+    """Background task to process a submission."""
+    logger.info(f"Processing submission {submission_id} in background")
+
+    # Update status to processing
     if submission_id in _submissions:
         _submissions[submission_id]["status"] = SubmissionStatus.PROCESSING
+        _submissions[submission_id]["processing_started_at"] = datetime.utcnow()
 
-    # Simulate processing
-    # In production, this would:
-    # 1. Run discovery
-    # 2. Execute workflow
-    # 3. Generate quote
+    try:
+        # Execute workflow
+        result = execute_workflow(submission_id, request)
 
-    # For now, create a mock result
-    quote_id = generate_id("quo")
+        # Create quote from result
+        quote_id = generate_id("quo")
+        quote = workflow_result_to_quote(result, submission_id, quote_id)
+        _quotes[quote_id] = quote
 
-    if submission_id in _submissions:
-        _submissions[submission_id]["status"] = SubmissionStatus.READY
-        _submissions[submission_id]["quote_id"] = quote_id
-        _submissions[submission_id]["updated_at"] = datetime.utcnow()
+        # Update submission
+        if submission_id in _submissions:
+            _submissions[submission_id]["status"] = SubmissionStatus.READY
+            _submissions[submission_id]["quote_id"] = quote_id
+            _submissions[submission_id]["processing_completed_at"] = datetime.utcnow()
+            _submissions[submission_id]["discovered_domain"] = result.discovered_domain
+
+        # Update job if exists
+        for job_id, job in _jobs.items():
+            if job.get("submission_id") == submission_id:
+                job["status"] = JobStatus.COMPLETED
+                job["result"] = {"quote_id": quote_id}
+                job["completed_at"] = datetime.utcnow()
+
+    except Exception as e:
+        logger.error(f"Failed to process submission {submission_id}: {e}")
+
+        if submission_id in _submissions:
+            _submissions[submission_id]["status"] = SubmissionStatus.FAILED
+            _submissions[submission_id]["error"] = str(e)
+
+        for job_id, job in _jobs.items():
+            if job.get("submission_id") == submission_id:
+                job["status"] = JobStatus.FAILED
+                job["error"] = str(e)
 
 
 # =============================================================================
@@ -94,6 +200,7 @@ async def create_submission(
         "submission_id": submission_id,
         "entity_name": request.entity_name,
         "domain_hint": request.domain_hint,
+        "country_hint": request.country_hint,
         "coverage": request.coverage,
         "configuration": request.configuration or f"{request.coverage}_general",
         "status": SubmissionStatus.PENDING,
@@ -118,7 +225,7 @@ async def create_submission(
         }
 
         # Process in background
-        background_tasks.add_task(process_submission, submission_id, request)
+        background_tasks.add_task(process_submission_async, submission_id, request)
 
         return SubmissionResponse(
             submission_id=submission_id,
@@ -127,14 +234,32 @@ async def create_submission(
             job_id=job_id,
         )
     else:
-        # Process synchronously (simplified)
-        await process_submission(submission_id, request)
+        # Process synchronously
+        try:
+            _submissions[submission_id]["status"] = SubmissionStatus.PROCESSING
 
-        return SubmissionResponse(
-            submission_id=submission_id,
-            status=_submissions[submission_id]["status"],
-            estimated_completion=None,
-        )
+            result = execute_workflow(submission_id, request)
+
+            # Create quote from result
+            quote_id = generate_id("quo")
+            quote = workflow_result_to_quote(result, submission_id, quote_id)
+            _quotes[quote_id] = quote
+
+            _submissions[submission_id]["status"] = SubmissionStatus.READY
+            _submissions[submission_id]["quote_id"] = quote_id
+            _submissions[submission_id]["discovered_domain"] = result.discovered_domain
+
+            return SubmissionResponse(
+                submission_id=submission_id,
+                status=SubmissionStatus.READY,
+                quote_id=quote_id,
+            )
+
+        except Exception as e:
+            _submissions[submission_id]["status"] = SubmissionStatus.FAILED
+            _submissions[submission_id]["error"] = str(e)
+
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/submissions", response_model=List[SubmissionDetail])
@@ -235,55 +360,76 @@ async def create_multi_coverage_submission(
     """
     Create a multi-coverage submission.
 
-    Prices multiple coverages and/or locales from a single submission.
+    Prices multiple coverages from a single submission using the
+    actual workflow engine.
     """
     result_id = generate_id("mcs")
     now = datetime.utcnow()
+    start_time = time.time()
 
     # Determine coverages
-    coverages = request.coverages or ["cyber"]  # Default
+    coverages = request.coverages or ["cyber"]
 
-    # Create individual submissions for each coverage
-    coverage_quotes = {}
-    failed_coverages = []
+    # Process each coverage
+    coverage_quotes: Dict[str, QuoteResponse] = {}
+    failed_coverages: List[str] = []
 
     for coverage in coverages:
         try:
             submission_id = generate_id("sub")
             quote_id = generate_id("quo")
 
-            # Store submission
+            # Create submission record
             _submissions[submission_id] = {
                 "submission_id": submission_id,
                 "entity_name": request.entity_name,
                 "domain_hint": request.domain_hint,
                 "coverage": coverage,
                 "configuration": f"{coverage}_general",
-                "status": SubmissionStatus.READY,
+                "status": SubmissionStatus.PROCESSING,
                 "created_at": now,
                 "updated_at": now,
-                "quote_id": quote_id,
+                "quote_id": None,
             }
 
-            # Create mock quote
+            # Run actual workflow
+            result = run_assessment(
+                entity_id=submission_id,
+                coverage=coverage,
+                submission_data=request.submission_data or {},
+                direct_query_responses=request.direct_query_responses or {},
+                entity_name=request.entity_name,
+                domain_hint=request.domain_hint,
+                country_hint=request.country_hint,
+                skip_discovery=True,
+            )
+
+            # Map decision
+            decision_map = {
+                DecisionType.APPROVE: "approve",
+                DecisionType.REFER: "refer",
+                DecisionType.DECLINE: "decline",
+            }
+
+            # Create quote response
             coverage_quotes[coverage] = QuoteResponse(
                 quote_id=quote_id,
                 submission_id=submission_id,
                 status=QuoteStatus.READY,
-                composite_score=750,
-                tier=2,
-                tier_label="STANDARD",
-                decision="approve",
-                premium_options={
-                    "1000000": 12500,
-                    "2000000": 18750,
-                    "5000000": 31250,
-                },
-                recommended_premium=18750,
-                recommended_limit=2000000,
+                composite_score=result.composite_score,
+                tier=result.tier,
+                tier_label=result.tier_label,
+                decision=decision_map.get(result.decision, "refer"),
+                premium_options=result.premium_options,
+                recommended_premium=result.recommended_premium,
+                recommended_limit=result.recommended_limit,
                 created_at=now,
                 valid_until=now + timedelta(days=30),
             )
+
+            # Update submission
+            _submissions[submission_id]["status"] = SubmissionStatus.READY
+            _submissions[submission_id]["quote_id"] = quote_id
 
         except Exception as e:
             logger.error(f"Failed to price {coverage}: {e}")
@@ -292,7 +438,6 @@ async def create_multi_coverage_submission(
     # Calculate package discount
     successful = list(coverage_quotes.keys())
     discount = 0.0
-    combined = 0.0
 
     if len(successful) >= 2:
         discount = 0.05  # 5% for 2+ coverages
@@ -303,18 +448,20 @@ async def create_multi_coverage_submission(
     savings = total * discount
     combined = total - savings
 
+    duration = time.time() - start_time
+
     return MultiCoverageResponse(
         result_id=result_id,
         entity_name=request.entity_name,
-        detected_locale="US",
+        detected_locale=request.country_hint or "US",
         coverage_quotes=coverage_quotes,
         failed_coverages=failed_coverages,
         recommended_package=successful,
         package_discount=discount,
         combined_premium=combined,
         total_savings=savings,
-        duration_seconds=2.5,
-        cache_hit_rate=0.35,
+        duration_seconds=duration,
+        cache_hit_rate=0.0,
     )
 
 
@@ -351,4 +498,47 @@ async def get_job_status(job_id: str):
         error=job.get("error"),
         created_at=job["created_at"],
         completed_at=job.get("completed_at"),
+    )
+
+
+# =============================================================================
+# QUOTE RETRIEVAL (convenience endpoint)
+# =============================================================================
+
+@router.get("/submissions/{submission_id}/quote", response_model=QuoteResponse)
+async def get_submission_quote(submission_id: str):
+    """
+    Get the quote for a submission.
+    """
+    if submission_id not in _submissions:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    sub = _submissions[submission_id]
+
+    if sub["status"] != SubmissionStatus.READY:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Submission not ready (status: {sub['status'].value})"
+        )
+
+    quote_id = sub.get("quote_id")
+    if not quote_id or quote_id not in _quotes:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    q = _quotes[quote_id]
+
+    return QuoteResponse(
+        quote_id=q["quote_id"],
+        submission_id=q["submission_id"],
+        status=q["status"],
+        composite_score=q["composite_score"],
+        tier=q["tier"],
+        tier_label=q["tier_label"],
+        decision=q["decision"],
+        premium_options=q["premium_options"],
+        recommended_premium=q["recommended_premium"],
+        recommended_limit=q.get("recommended_limit"),
+        discovery=q.get("discovery"),
+        created_at=q["created_at"],
+        valid_until=q["valid_until"],
     )
