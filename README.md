@@ -218,9 +218,19 @@ digital-signal-intelligence/
 │   ├── builder/                 # LLM coverage builder
 │   └── tests/                   # 380+ tests
 ├── examples/                    # Working examples (all 7 coverages)
+├── demo/                        # Interactive demonstrations
+│   ├── server.py                # Live demo server (FastAPI)
+│   ├── index.html               # Live demo UI
+│   └── standalone/              # No-install HTML demos
+├── deploy/                      # Deployment configurations
+│   ├── docker/                  # Docker Compose for production
+│   ├── kubernetes/              # K8s manifests
+│   └── monitoring/              # Prometheus & Grafana configs
 ├── docs/                        # Documentation
-├── .env.example                 # Environment template
-├── requirements.txt             # Dependencies
+│   └── deployment/              # Deployment guide
+├── .env.example                 # Environment template (100+ options)
+├── Dockerfile                   # Production container image
+├── requirements.txt             # Python dependencies
 ├── SKILL.md                     # Architecture guide (119KB)
 └── README.md
 ```
@@ -394,7 +404,7 @@ digital-signal-intelligence/
 │   │   ├── aerospace/
 │   │   ├── cyber/
 │   │   └── ...
-│   ├── model/                   # 13-step workflow implementation
+│   ├── model/                   # 14-step workflow implementation
 │   │   ├── config_manager.py    # Config loading & validation
 │   │   ├── scorer.py            # Signal scoring (Steps 4-6)
 │   │   ├── query_evaluator.py   # Direct queries (Step 7)
@@ -451,11 +461,26 @@ pytest technical_pricing/tests/ -v
 pytest technical_pricing/tests/ --cov=technical_pricing --cov-report=html
 ```
 
-#### View Interactive Dashboards
+#### Interactive Demos
 
-Open any `.html` file in `docs/demos and case_studies/demos/` directly in a browser:
-- `DSI_Dashboard_v2.html` - Signal-level analysis
-- `DSI_Portfolio_Dashboard.html` - Portfolio management interface
+**Standalone HTML Demos** (no installation required):
+Open any file in `demo/standalone/` directly in your browser:
+- `signal-scoring.html` - Interactive signal weight exploration
+- `tier-visualization.html` - Score-to-tier mapping
+- `pricing-calculator.html` - Premium calculation with ILF curves
+- `workflow-animation.html` - Animated 14-step workflow
+- `coverage-comparison.html` - Compare all 7 coverage types
+
+**Live Demo Server** (requires Python):
+```bash
+pip install fastapi uvicorn
+python -m demo.server
+# Open http://localhost:8080
+```
+
+**Legacy Dashboards** in `docs/demos and case_studies/demos/`:
+- `dsi_demo_dashboard.html` - Signal-level analysis
+- `dsi_portfolio_dashboard.html` - Portfolio management interface
 
 ---
 
@@ -492,9 +517,10 @@ Open any `.html` file in `docs/demos and case_studies/demos/` directly in a brow
 | [PageRank Precedent](docs/overview/The%20PageRank%20precedent.pdf) | Board-level summary | C-Suite, Board |
 | [White Paper](docs/overview/An%20Agentic%20Future%20-%20Global%20Technical%20Pricing.pdf) | Detailed Explanation | Technical leadership |
 | [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
+| [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) | Production deployment | DevOps, Engineering |
 | [Methodology Defense](docs/demos%20and%20case_studies/validation/dsi_methodology.md) | Actuarial Q&A | Actuaries, Risk |
 | [Case Studies](docs/demos%20and%20case_studies/case-studies/) | Worked examples | Underwriters |
-| [Demos](docs/demos%20and%20case_studies/demos/) | Examples | All stakeholders |
+| [Interactive Demos](demo/standalone/) | Hands-on exploration | All stakeholders |
 
 ---
 

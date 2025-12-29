@@ -39,7 +39,7 @@ Run individual risk assessments in real-time:
 - Select from 7 coverage types
 - Watch the workflow execute
 - See detailed results including:
-  - Composite risk score (0-100)
+  - Composite risk score (0-1000)
   - Risk tier assignment (1-5)
   - Underwriting decision (Approve/Refer/Decline)
   - Recommended premium
