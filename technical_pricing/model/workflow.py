@@ -208,6 +208,8 @@ class WorkflowEngine:
                 logger.warning(f"Missing inputs: {missing_fields}")
                 # Return partial result with missing inputs
                 return WorkflowResult(
+                    entity_id=entity_id,
+                    coverage=coverage,
                     is_valid=False,
                     missing_inputs=missing_fields,
                     decision=DecisionType.REFER,
@@ -344,6 +346,8 @@ class WorkflowEngine:
         model_version.discovery_output = discovery_output
 
         return WorkflowResult(
+            entity_id=entity_id,
+            coverage=coverage,
             model_version=model_version,
             decision=decision,
             auto_approve=auto_approve,
@@ -695,6 +699,8 @@ class WorkflowEngine:
         )
 
         return WorkflowResult(
+            entity_id=latest.entity_id,
+            coverage=latest.coverage,
             model_version=new_version,
             decision=new_decision,
             auto_approve=auto_approve,
@@ -731,7 +737,8 @@ def run_assessment(
     entity_name: Optional[str] = None,
     domain_hint: Optional[str] = None,
     country_hint: Optional[str] = None,
-    skip_discovery: bool = False
+    skip_discovery: bool = False,
+    skip_input_validation: bool = False,
 ) -> WorkflowResult:
     """
     Convenience function to run a full assessment.
@@ -746,6 +753,7 @@ def run_assessment(
         domain_hint: Optional domain hint (e.g., "example.com")
         country_hint: Optional country hint (e.g., "UK", "US")
         skip_discovery: Skip Step 0 discovery if domain is known
+        skip_input_validation: Skip Step 3 minimum viable input validation
 
     Returns:
         WorkflowResult with complete assessment
@@ -761,4 +769,5 @@ def run_assessment(
         domain_hint=domain_hint,
         country_hint=country_hint,
         skip_discovery=skip_discovery,
+        skip_input_validation=skip_input_validation,
     )

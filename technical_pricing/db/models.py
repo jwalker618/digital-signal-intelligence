@@ -255,8 +255,8 @@ class Referral(Base):
     quote = relationship("Quote", back_populates="referrals")
 
 
-class ModelVersion(Base):
-    """Complete workflow execution snapshot for audit trail."""
+class ModelVersionRecord(Base):
+    """Complete workflow execution snapshot for audit trail (database record)."""
     __tablename__ = "model_versions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

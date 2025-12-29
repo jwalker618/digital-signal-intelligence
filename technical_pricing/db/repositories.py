@@ -15,7 +15,7 @@ from .models import (
     Submission,
     Quote,
     Referral,
-    ModelVersion,
+    ModelVersionRecord,
     SignalCache,
     AuditLog,
     SubmissionStatus,

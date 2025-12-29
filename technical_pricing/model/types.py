@@ -774,8 +774,12 @@ class WorkflowResult:
 
     The final result of running an entity through the 13-step workflow.
     """
+    # Identifiers
+    entity_id: str = ""
+    coverage: str = ""
+
     # Complete model version for audit trail
-    model_version: ModelVersion = field(default_factory=ModelVersion)
+    model_version: Optional[ModelVersion] = None
 
     # Decision
     decision: DecisionType = DecisionType.REFER
