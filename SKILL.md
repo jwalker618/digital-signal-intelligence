@@ -349,7 +349,7 @@ Working examples for all 7 coverages in `examples/`. Live demo in `demo/`. Deplo
 
 ## Phase 4: Model Integration (Detailed Plan)
 
-This phase builds the runtime engine that executes the 13-step workflow above.
+This phase builds the runtime engine that executes the 14-step workflow above.
 
 ### 4.1 Config Manager (`model/config_manager.py`)
 
@@ -718,7 +718,7 @@ class ModelPricer:
 
 ### 4.6 Workflow Engine (`model/workflow.py`)
 
-**Purpose**: Orchestrate complete 13-step workflow and determine decision.
+**Purpose**: Orchestrate complete 14-step workflow and determine decision.
 
 ```python
 @dataclass
@@ -758,7 +758,7 @@ class WorkflowEngine:
         user: str
     ) -> WorkflowResult:
         """
-        Execute complete 13-step workflow:
+        Execute complete 14-step workflow:
         1. Load config (from active version)
         2. Create model data file
         3. Verify minimum viable inputs
@@ -934,7 +934,7 @@ class DiscoveryResult:
 
 ### 6.3 Extended Workflow (Step 0)
 
-The 13-step workflow extends to include discovery as Step 0:
+The complete workflow is 14 steps (Step 0 discovery + Steps 1-13 pricing):
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -3178,4 +3178,4 @@ When starting any DSI work:
 1. **Reference YAML config** for the coverage you’re working on
 1. **Follow the standard patterns** - don’t invent new structures
 1. **Never hardcode** - if it’s in YAML, read it from YAML
-1. **Follow the 13-step workflow** - don’t skip or reorder steps
+1. **Follow the 14-step workflow** - don't skip or reorder steps

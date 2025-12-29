@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Technical Pricing Architecture** (`technical_pricing/`)
   - Complete signal extraction framework with Extractor → Aggregator → Categorizer pipeline
-  - Model layer implementing the 13-step workflow
+  - Model layer implementing the 14-step workflow
   - Coverage configurations for 7 insurance lines (aerospace, cyber, D&O, energy, FI, marine, PI)
   - Inference registry for connecting YAML configs to Python implementations
   - Content-addressable configuration storage pattern
@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `scorer.py` - Signal extraction and composite score calculation (Steps 4-6)
   - `query_evaluator.py` - Direct query evaluation (Step 7)
   - `pricer.py` - Premium calculation with modifiers and limit bands (Steps 8-12)
-  - `workflow.py` - Complete 13-step workflow orchestration
+  - `workflow.py` - Complete 14-step workflow orchestration
 
 - **Discovery Module** (`technical_pricing/discovery/`)
   - Website discovery engine for entity identification

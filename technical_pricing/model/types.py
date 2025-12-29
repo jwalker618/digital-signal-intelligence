@@ -418,7 +418,7 @@ class CoverageConfig:
     Complete coverage model configuration.
 
     This is the parsed representation of a YAML configuration file,
-    providing all parameters needed to run the 13-step workflow.
+    providing all parameters needed to run the 14-step workflow.
     """
     coverage: str                 # e.g., "aerospace"
     configuration: str            # e.g., "aerospace_general"
@@ -616,7 +616,7 @@ class ModelVersion:
     """
     A complete model execution snapshot.
 
-    This represents one complete run through the 13-step workflow,
+    This represents one complete run through the 14-step workflow,
     capturing all inputs, intermediate values, and outputs.
     """
     # Identifiers
@@ -772,7 +772,7 @@ class WorkflowResult:
     """
     Complete workflow output (Step 13).
 
-    The final result of running an entity through the 13-step workflow.
+    The final result of running an entity through the 14-step workflow.
     """
     # Identifiers
     entity_id: str = ""
