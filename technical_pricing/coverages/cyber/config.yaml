@@ -605,7 +605,7 @@ cyber:
           max_score: 1000
           description: "Excellent risk - automatic approval, preferred pricing"
           auto_approve: true
-          auto_decline: falsee
+          auto_decline: false
           premium_generation_method: "base"
           premium: 8000
         - id: 2        
@@ -614,7 +614,7 @@ cyber:
           max_score: 799
           description: "Good risk - automatic approval, standard pricing"
           auto_approve: true
-          auto_decline: falsee
+          auto_decline: false
           premium_generation_method: "base"
           premium: 12000
         - id: 3        
@@ -623,7 +623,7 @@ cyber:
           max_score: 649
           description: "Average risk - may require referral"
           auto_approve: false
-          auto_decline: falsee
+          auto_decline: false
           premium_generation_method: "base"
           premium: 18000
         - id: 4        
