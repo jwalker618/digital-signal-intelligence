@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSI Coverage Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .coverage-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .coverage-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .coverage-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .coverage-tab.active {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(123, 44, 191, 0.2));
+            border-color: #00d4ff;
+            color: #fff;
+        }
+
+        .coverage-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        .coverage-detail {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+
+        .coverage-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .coverage-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+
+        .coverage-desc {
+            color: #888;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #00d4ff;
+        }
+
+        .signal-groups-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 20px;
+            background: #00d4ff;
+            border-radius: 2px;
+        }
+
+        .signal-group {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .signal-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .group-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .group-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .group-weight {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+
+        .group-signals {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .signal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .signal-name {
+            color: #aaa;
+        }
+
+        .signal-weight {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .weight-bar-container {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin: 20px 0;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .weight-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: rgba(255,255,255,0.8);
+            transition: all 0.3s;
+        }
+
+        .weight-segment:hover {
+            filter: brightness(1.2);
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin-top: 40px;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .comparison-table th {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .comparison-table td:first-child {
+            text-align: left;
+            color: #888;
+        }
+
+        .check {
+            color: #27ae60;
+            font-size: 1.2rem;
+        }
+
+        .cross {
+            color: #e74c3c;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 900px) {
+            .coverage-detail {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Coverage Comparison</h1>
+            <p class="subtitle">Explore signal configurations across different coverage types</p>
+        </header>
+
+        <div class="coverage-tabs" id="coverageTabs">
+            <!-- Generated by JavaScript -->
+        </div>
+
+        <div class="coverage-detail">
+            <div class="coverage-info" id="coverageInfo">
+                <!-- Generated by JavaScript -->
+            </div>
+
+            <div class="signal-groups-panel">
+                <div class="panel-title">Signal Group Weights</div>
+                <div class="weight-bar-container" id="weightBar">
+                    <!-- Generated by JavaScript -->
+                </div>
+                <div id="signalGroups">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <table class="comparison-table" id="comparisonTable">
+            <!-- Generated by JavaScript -->
+        </table>
+    </div>
+
+    <script>
+        const coverages = {
+            cyber: {
+                id: 'cyber',
+                name: 'Cyber Liability',
+                icon: '🔐',
+                description: 'Coverage for data breaches, network security failures, and cyber extortion. Signals focus on technical security posture and breach history.',
+                markets: ['US', 'UK', 'EU', 'APAC'],
+                minPremium: '$5,000',
+                coverageTypes: ['Network Security', 'Privacy Liability', 'Cyber Extortion', 'Business Interruption'],
+                groups: [
+                    {
+                        name: 'Technical Infrastructure',
+                        weight: 0.35,
+                        color: '#9b59b6',
+                        signals: ['TLS Config', 'Security Headers', 'Email Auth', 'Network Exposure', 'CVE Exposure', 'Software Currency', 'WAF', 'CDN']
+                    },
+                    {
+                        name: 'Public Record',
+                        weight: 0.25,
+                        color: '#e74c3c',
+                        signals: ['Breach History', 'Regulatory Actions', 'Litigation', 'Credential Exposure', 'Dark Web']
+                    },
+                    {
+                        name: 'Network Authority',
+                        weight: 0.15,
+                        color: '#3498db',
+                        signals: ['Customer Quality', 'Partner Network', 'Security Vendors', 'Industry Bodies', 'Certifications']
+                    },
+                    {
+                        name: 'Corporate Footprint',
+                        weight: 0.15,
+                        color: '#1abc9c',
+                        signals: ['Security Page', 'Privacy Policy', 'Bug Bounty', 'CISO Visibility', 'Compliance Certs']
+                    },
+                    {
+                        name: 'Structured Data',
+                        weight: 0.10,
+                        color: '#f39c12',
+                        signals: ['Security Rating', 'ESG Score', 'Credit Rating']
+                    }
+                ]
+            },
+            do: {
+                id: 'do',
+                name: 'Directors & Officers',
+                icon: '👔',
+                description: 'Coverage for corporate leadership decisions and fiduciary duties. Signals focus on governance, financials, and regulatory compliance.',
+                markets: ['US', 'UK', 'EU'],
+                minPremium: '$10,000',
+                coverageTypes: ['Side A', 'Side B', 'Side C', 'Entity Coverage'],
+                groups: [
+                    {
+                        name: 'Financial Health',
+                        weight: 0.30,
+                        color: '#27ae60',
+                        signals: ['Revenue Trend', 'Profitability', 'Debt Ratio', 'Cash Position', 'Stock Volatility']
+                    },
+                    {
+                        name: 'Governance Quality',
+                        weight: 0.25,
+                        color: '#3498db',
+                        signals: ['Board Independence', 'Audit Committee', 'Executive Tenure', 'Compensation Structure']
+                    },
+                    {
+                        name: 'Regulatory Exposure',
+                        weight: 0.20,
+                        color: '#e74c3c',
+                        signals: ['SEC Filings', 'Regulatory Actions', 'Litigation History', 'Restatements']
+                    },
+                    {
+                        name: 'Market Position',
+                        weight: 0.15,
+                        color: '#9b59b6',
+                        signals: ['Market Cap', 'Industry Position', 'Analyst Coverage', 'Institutional Ownership']
+                    },
+                    {
+                        name: 'ESG Profile',
+                        weight: 0.10,
+                        color: '#1abc9c',
+                        signals: ['ESG Rating', 'Sustainability Reports', 'Controversies']
+                    }
+                ]
+            },
+            aerospace: {
+                id: 'aerospace',
+                name: 'Aerospace',
+                icon: '✈️',
+                description: 'Coverage for aviation and space industry risks. Signals focus on operational safety, fleet condition, and regulatory compliance.',
+                markets: ['US', 'UK', 'EU', 'APAC'],
+                minPremium: '$25,000',
+                coverageTypes: ['Hull', 'Liability', 'Passenger', 'Cargo'],
+                groups: [
+                    {
+                        name: 'Operational Safety',
+                        weight: 0.35,
+                        color: '#e74c3c',
+                        signals: ['Safety Record', 'Incident History', 'Pilot Training', 'Maintenance Quality']
+                    },
+                    {
+                        name: 'Fleet Analysis',
+                        weight: 0.25,
+                        color: '#3498db',
+                        signals: ['Fleet Age', 'Aircraft Types', 'Utilization', 'Modification Status']
+                    },
+                    {
+                        name: 'Regulatory Compliance',
+                        weight: 0.20,
+                        color: '#9b59b6',
+                        signals: ['FAA Status', 'EASA Compliance', 'Audit Results', 'Certificate Status']
+                    },
+                    {
+                        name: 'Financial Stability',
+                        weight: 0.15,
+                        color: '#27ae60',
+                        signals: ['Revenue', 'Load Factor', 'Operating Margin', 'Debt Level']
+                    },
+                    {
+                        name: 'Route Profile',
+                        weight: 0.05,
+                        color: '#f39c12',
+                        signals: ['Destinations', 'War Zones', 'Weather Exposure']
+                    }
+                ]
+            },
+            energy: {
+                id: 'energy',
+                name: 'Energy',
+                icon: '⚡',
+                description: 'Coverage for oil, gas, and renewable energy operations. Signals focus on operational risk, environmental exposure, and asset condition.',
+                markets: ['US', 'UK', 'Middle East'],
+                minPremium: '$50,000',
+                coverageTypes: ['Property', 'Control of Well', 'Pollution', 'Business Interruption'],
+                groups: [
+                    {
+                        name: 'Operational Risk',
+                        weight: 0.30,
+                        color: '#e74c3c',
+                        signals: ['Incident History', 'Safety Culture', 'Process Safety', 'Contractor Management']
+                    },
+                    {
+                        name: 'Asset Condition',
+                        weight: 0.25,
+                        color: '#3498db',
+                        signals: ['Asset Age', 'Maintenance Program', 'Inspection Results', 'Corrosion Management']
+                    },
+                    {
+                        name: 'Environmental Exposure',
+                        weight: 0.20,
+                        color: '#27ae60',
+                        signals: ['EPA Compliance', 'Spill History', 'Remediation Status', 'Water Proximity']
+                    },
+                    {
+                        name: 'Financial Health',
+                        weight: 0.15,
+                        color: '#9b59b6',
+                        signals: ['Production Volume', 'Reserve Quality', 'Hedging Strategy', 'Debt Coverage']
+                    },
+                    {
+                        name: 'Geopolitical',
+                        weight: 0.10,
+                        color: '#f39c12',
+                        signals: ['Location Risk', 'Sanctions Exposure', 'Political Stability']
+                    }
+                ]
+            },
+            marine: {
+                id: 'marine',
+                name: 'Marine',
+                icon: '🚢',
+                description: 'Coverage for maritime operations and cargo. Signals focus on vessel condition, crew competency, and route exposure.',
+                markets: ['UK', 'Singapore', 'Hong Kong'],
+                minPremium: '$15,000',
+                coverageTypes: ['Hull & Machinery', 'P&I', 'Cargo', 'War Risks'],
+                groups: [
+                    {
+                        name: 'Vessel Condition',
+                        weight: 0.30,
+                        color: '#3498db',
+                        signals: ['Vessel Age', 'Class Status', 'Survey Results', 'Maintenance Record']
+                    },
+                    {
+                        name: 'Operational History',
+                        weight: 0.25,
+                        color: '#e74c3c',
+                        signals: ['Claims History', 'Port State Detentions', 'Casualties', 'Near Misses']
+                    },
+                    {
+                        name: 'Crew & Management',
+                        weight: 0.20,
+                        color: '#9b59b6',
+                        signals: ['Crew Competency', 'ISM Compliance', 'Flag State', 'Manager Quality']
+                    },
+                    {
+                        name: 'Trade Pattern',
+                        weight: 0.15,
+                        color: '#f39c12',
+                        signals: ['Trade Routes', 'Cargo Types', 'Port Calls', 'War Zone Transit']
+                    },
+                    {
+                        name: 'Financial',
+                        weight: 0.10,
+                        color: '#27ae60',
+                        signals: ['Owner Financial', 'Charter Terms', 'Insurance History']
+                    }
+                ]
+            },
+            fi: {
+                id: 'fi',
+                name: 'Financial Institutions',
+                icon: '🏦',
+                description: 'Coverage for banks, insurers, and asset managers. Signals focus on regulatory standing, capital adequacy, and cyber resilience.',
+                markets: ['US', 'UK', 'EU', 'APAC'],
+                minPremium: '$20,000',
+                coverageTypes: ['Bankers Professional', 'Crime', 'Cyber', 'D&O'],
+                groups: [
+                    {
+                        name: 'Regulatory Standing',
+                        weight: 0.30,
+                        color: '#9b59b6',
+                        signals: ['Regulatory Rating', 'Exam Results', 'Enforcement Actions', 'Capital Adequacy']
+                    },
+                    {
+                        name: 'Operational Risk',
+                        weight: 0.25,
+                        color: '#e74c3c',
+                        signals: ['Loss Events', 'Control Framework', 'Vendor Risk', 'Process Maturity']
+                    },
+                    {
+                        name: 'Cyber Posture',
+                        weight: 0.20,
+                        color: '#3498db',
+                        signals: ['Security Rating', 'Breach History', 'Tech Stack', 'Incident Response']
+                    },
+                    {
+                        name: 'Financial Health',
+                        weight: 0.15,
+                        color: '#27ae60',
+                        signals: ['Asset Quality', 'Earnings Stability', 'Liquidity', 'Credit Rating']
+                    },
+                    {
+                        name: 'Governance',
+                        weight: 0.10,
+                        color: '#1abc9c',
+                        signals: ['Board Quality', 'Risk Culture', 'Compliance Program']
+                    }
+                ]
+            },
+            pi: {
+                id: 'pi',
+                name: 'Professional Indemnity',
+                icon: '📋',
+                description: 'Coverage for professional service providers. Signals focus on practice quality, claims history, and client concentration.',
+                markets: ['US', 'UK', 'EU', 'Australia'],
+                minPremium: '$3,000',
+                coverageTypes: ['Errors & Omissions', 'Professional Liability', 'Malpractice'],
+                groups: [
+                    {
+                        name: 'Practice Quality',
+                        weight: 0.30,
+                        color: '#3498db',
+                        signals: ['Credentials', 'Experience', 'Specialization', 'Peer Recognition']
+                    },
+                    {
+                        name: 'Claims History',
+                        weight: 0.25,
+                        color: '#e74c3c',
+                        signals: ['Loss History', 'Claim Frequency', 'Large Losses', 'Circumstances']
+                    },
+                    {
+                        name: 'Risk Management',
+                        weight: 0.20,
+                        color: '#9b59b6',
+                        signals: ['Engagement Letters', 'QA Procedures', 'Training', 'Supervision']
+                    },
+                    {
+                        name: 'Client Profile',
+                        weight: 0.15,
+                        color: '#f39c12',
+                        signals: ['Client Types', 'Concentration', 'Contract Terms', 'Billing Practices']
+                    },
+                    {
+                        name: 'Financial Stability',
+                        weight: 0.10,
+                        color: '#27ae60',
+                        signals: ['Revenue', 'Partner Capital', 'Insurance History']
+                    }
+                ]
+            }
+        };
+
+        let selectedCoverage = 'cyber';
+
+        function renderTabs() {
+            const container = document.getElementById('coverageTabs');
+            container.innerHTML = Object.values(coverages).map(cov => `
+                <div class="coverage-tab ${cov.id === selectedCoverage ? 'active' : ''}"
+                     onclick="selectCoverage('${cov.id}')">
+                    <span class="coverage-icon">${cov.icon}</span>
+                    ${cov.name}
+                </div>
+            `).join('');
+        }
+
+        function renderCoverageInfo(coverage) {
+            const container = document.getElementById('coverageInfo');
+            container.innerHTML = `
+                <div class="coverage-title">${coverage.icon} ${coverage.name}</div>
+                <div class="coverage-desc">${coverage.description}</div>
+
+                <div class="info-section">
+                    <div class="info-label">Markets</div>
+                    <div class="tag-list">
+                        ${coverage.markets.map(m => `<span class="tag">${m}</span>`).join('')}
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-label">Coverage Types</div>
+                    <div class="tag-list">
+                        ${coverage.coverageTypes.map(t => `<span class="tag">${t}</span>`).join('')}
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-label">Minimum Premium</div>
+                    <div class="info-value">${coverage.minPremium}</div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-label">Signal Groups</div>
+                    <div class="info-value">${coverage.groups.length} groups</div>
+                </div>
+            `;
+        }
+
+        function renderWeightBar(coverage) {
+            const container = document.getElementById('weightBar');
+            container.innerHTML = coverage.groups.map(group => `
+                <div class="weight-segment"
+                     style="width: ${group.weight * 100}%; background: ${group.color};"
+                     title="${group.name}: ${(group.weight * 100).toFixed(0)}%">
+                    ${(group.weight * 100).toFixed(0)}%
+                </div>
+            `).join('');
+        }
+
+        function renderSignalGroups(coverage) {
+            const container = document.getElementById('signalGroups');
+            container.innerHTML = coverage.groups.map(group => `
+                <div class="signal-group">
+                    <div class="group-header">
+                        <div class="group-name">
+                            <span class="group-color" style="background: ${group.color}"></span>
+                            ${group.name}
+                        </div>
+                        <span class="group-weight">${(group.weight * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="group-signals">
+                        ${group.signals.map(sig => `
+                            <div class="signal-item">
+                                <span class="signal-name">${sig}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderComparisonTable() {
+            const container = document.getElementById('comparisonTable');
+            const allCoverages = Object.values(coverages);
+
+            // Get all unique group names
+            const groupNames = [...new Set(allCoverages.flatMap(c => c.groups.map(g => g.name)))];
+
+            let html = `
+                <thead>
+                    <tr>
+                        <th>Signal Group</th>
+                        ${allCoverages.map(c => `<th>${c.icon} ${c.name}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            groupNames.forEach(groupName => {
+                html += `<tr><td>${groupName}</td>`;
+                allCoverages.forEach(cov => {
+                    const group = cov.groups.find(g => g.name === groupName);
+                    if (group) {
+                        html += `<td style="color: ${group.color}">${(group.weight * 100).toFixed(0)}%</td>`;
+                    } else {
+                        html += `<td>-</td>`;
+                    }
+                });
+                html += `</tr>`;
+            });
+
+            html += `</tbody>`;
+            container.innerHTML = html;
+        }
+
+        function selectCoverage(covId) {
+            selectedCoverage = covId;
+            const coverage = coverages[covId];
+
+            renderTabs();
+            renderCoverageInfo(coverage);
+            renderWeightBar(coverage);
+            renderSignalGroups(coverage);
+        }
+
+        // Initialize
+        renderTabs();
+        selectCoverage('cyber');
+        renderComparisonTable();
+    </script>
+</body>
+</html>

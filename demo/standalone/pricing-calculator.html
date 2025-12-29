@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSI Pricing Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 20px;
+            background: #00d4ff;
+            border-radius: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        select, input[type="number"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .tier-selector {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .tier-option {
+            padding: 15px 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .tier-option:hover {
+            transform: translateY(-2px);
+        }
+
+        .tier-option.selected {
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .tier-1 { background: rgba(39, 174, 96, 0.3); color: #27ae60; }
+        .tier-2 { background: rgba(46, 204, 113, 0.3); color: #2ecc71; }
+        .tier-3 { background: rgba(243, 156, 18, 0.3); color: #f39c12; }
+        .tier-4 { background: rgba(230, 126, 34, 0.3); color: #e67e22; }
+        .tier-5 { background: rgba(231, 76, 60, 0.3); color: #e74c3c; }
+
+        .tier-num {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .tier-name {
+            font-size: 0.7rem;
+            margin-top: 5px;
+        }
+
+        .modifier-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modifier-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .modifier-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .modifier-label {
+            flex: 1;
+        }
+
+        .modifier-factor {
+            font-weight: bold;
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+
+        .modifier-factor.positive { color: #27ae60; }
+        .modifier-factor.negative { color: #e74c3c; }
+
+        .result-card {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 44, 191, 0.1));
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            grid-column: span 2;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .result-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .final-premium {
+            font-size: 3.5rem;
+            color: #00d4ff;
+        }
+
+        .breakdown-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .breakdown-title {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .breakdown-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .ilf-chart {
+            height: 200px;
+            position: relative;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-top: 15px;
+            padding: 20px;
+        }
+
+        .ilf-bar {
+            position: absolute;
+            bottom: 40px;
+            width: 50px;
+            background: linear-gradient(180deg, #00d4ff, #7b2cbf);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+        }
+
+        .ilf-bar.selected {
+            background: linear-gradient(180deg, #fff, #00d4ff);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .ilf-label {
+            position: absolute;
+            bottom: 10px;
+            font-size: 0.7rem;
+            color: #888;
+            transform: translateX(-50%);
+        }
+
+        .ilf-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .result-card {
+                grid-column: span 1;
+            }
+            .result-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pricing Calculator</h1>
+            <p class="subtitle">Explore how tier, limit, and modifiers affect premium</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-title">Risk Tier</div>
+                <div class="tier-selector" id="tierSelector">
+                    <div class="tier-option tier-1" onclick="selectTier(1)">
+                        <div class="tier-num">1</div>
+                        <div class="tier-name">PREFERRED</div>
+                    </div>
+                    <div class="tier-option tier-2" onclick="selectTier(2)">
+                        <div class="tier-num">2</div>
+                        <div class="tier-name">STANDARD+</div>
+                    </div>
+                    <div class="tier-option tier-3 selected" onclick="selectTier(3)">
+                        <div class="tier-num">3</div>
+                        <div class="tier-name">STANDARD</div>
+                    </div>
+                    <div class="tier-option tier-4" onclick="selectTier(4)">
+                        <div class="tier-num">4</div>
+                        <div class="tier-name">SUBSTANDARD</div>
+                    </div>
+                    <div class="tier-option tier-5" onclick="selectTier(5)">
+                        <div class="tier-num">5</div>
+                        <div class="tier-name">DECLINE</div>
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-top: 25px;">
+                    <label class="input-label">Policy Limit</label>
+                    <select id="limitSelect" onchange="calculate()">
+                        <option value="1000000">$1,000,000</option>
+                        <option value="2000000">$2,000,000</option>
+                        <option value="5000000" selected>$5,000,000</option>
+                        <option value="10000000">$10,000,000</option>
+                        <option value="25000000">$25,000,000</option>
+                        <option value="50000000">$50,000,000</option>
+                    </select>
+                </div>
+
+                <div class="ilf-chart" id="ilfChart">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Premium Modifiers</div>
+                <div class="modifier-list">
+                    <div class="modifier-item">
+                        <input type="checkbox" class="modifier-checkbox" id="mod_industry" onchange="calculate()">
+                        <span class="modifier-label">Healthcare Industry</span>
+                        <span class="modifier-factor negative">+50%</span>
+                    </div>
+                    <div class="modifier-item">
+                        <input type="checkbox" class="modifier-checkbox" id="mod_phi" onchange="calculate()">
+                        <span class="modifier-label">PHI Handler (HIPAA)</span>
+                        <span class="modifier-factor negative">+25%</span>
+                    </div>
+                    <div class="modifier-item">
+                        <input type="checkbox" class="modifier-checkbox" id="mod_pci" onchange="calculate()">
+                        <span class="modifier-label">PCI Scope</span>
+                        <span class="modifier-factor negative">+15%</span>
+                    </div>
+                    <div class="modifier-item">
+                        <input type="checkbox" class="modifier-checkbox" id="mod_size" onchange="calculate()">
+                        <span class="modifier-label">Enterprise Size (&gt;5000 employees)</span>
+                        <span class="modifier-factor negative">+100%</span>
+                    </div>
+                    <div class="modifier-item">
+                        <input type="checkbox" class="modifier-checkbox" id="mod_claims" onchange="calculate()" checked>
+                        <span class="modifier-label">Clean Claims History (5 years)</span>
+                        <span class="modifier-factor positive">-10%</span>
+                    </div>
+                    <div class="modifier-item">
+                        <input type="checkbox" class="modifier-checkbox" id="mod_deductible" onchange="calculate()">
+                        <span class="modifier-label">High Deductible (&gt;2% of limit)</span>
+                        <span class="modifier-factor positive">-20%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card result-card">
+                <div class="card-title">Premium Calculation</div>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-value" id="basePremium">$18,000</div>
+                        <div class="result-label">Base Premium (Tier)</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value" id="ilfFactor">3.20x</div>
+                        <div class="result-label">Limit Factor (ILF)</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value" id="modifierFactor">0.90x</div>
+                        <div class="result-label">Modifier Factor</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value final-premium" id="finalPremium">$51,840</div>
+                        <div class="result-label">Final Premium</div>
+                    </div>
+                </div>
+
+                <div class="breakdown-section">
+                    <div class="breakdown-title">Calculation Breakdown</div>
+                    <div id="breakdown">
+                        <!-- Generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tier base premiums
+        const tierPremiums = {
+            1: 8000,
+            2: 12000,
+            3: 18000,
+            4: 30000,
+            5: 50000
+        };
+
+        // ILF curve
+        const ilfFactors = {
+            1000000: 1.00,
+            2000000: 1.70,
+            5000000: 3.20,
+            10000000: 5.00,
+            25000000: 9.00,
+            50000000: 14.00
+        };
+
+        // Modifiers
+        const modifiers = {
+            mod_industry: { factor: 1.50, label: 'Healthcare Industry' },
+            mod_phi: { factor: 1.25, label: 'PHI Handler' },
+            mod_pci: { factor: 1.15, label: 'PCI Scope' },
+            mod_size: { factor: 2.00, label: 'Enterprise Size' },
+            mod_claims: { factor: 0.90, label: 'Clean Claims History' },
+            mod_deductible: { factor: 0.80, label: 'High Deductible' }
+        };
+
+        let selectedTier = 3;
+
+        function selectTier(tier) {
+            selectedTier = tier;
+            document.querySelectorAll('.tier-option').forEach((el, i) => {
+                el.classList.toggle('selected', i + 1 === tier);
+            });
+            calculate();
+        }
+
+        function renderILFChart() {
+            const chart = document.getElementById('ilfChart');
+            const limits = Object.keys(ilfFactors);
+            const maxFactor = Math.max(...Object.values(ilfFactors));
+            const selectedLimit = parseInt(document.getElementById('limitSelect').value);
+
+            let html = '';
+            limits.forEach((limit, i) => {
+                const factor = ilfFactors[limit];
+                const height = (factor / maxFactor) * 120;
+                const left = 40 + i * 85;
+                const isSelected = parseInt(limit) === selectedLimit;
+
+                html += `
+                    <div class="ilf-bar ${isSelected ? 'selected' : ''}"
+                         style="left: ${left}px; height: ${height}px;">
+                        <div class="ilf-value">${factor.toFixed(2)}x</div>
+                    </div>
+                    <div class="ilf-label" style="left: ${left + 25}px;">
+                        $${(parseInt(limit) / 1000000).toFixed(0)}M
+                    </div>
+                `;
+            });
+
+            chart.innerHTML = html;
+        }
+
+        function calculate() {
+            const limit = parseInt(document.getElementById('limitSelect').value);
+            const basePremium = tierPremiums[selectedTier];
+            const ilf = ilfFactors[limit];
+
+            // Calculate modifier factor
+            let modifierFactor = 1.0;
+            const appliedModifiers = [];
+
+            Object.keys(modifiers).forEach(modId => {
+                const checkbox = document.getElementById(modId);
+                if (checkbox && checkbox.checked) {
+                    modifierFactor *= modifiers[modId].factor;
+                    appliedModifiers.push({
+                        label: modifiers[modId].label,
+                        factor: modifiers[modId].factor
+                    });
+                }
+            });
+
+            // Calculate final premium
+            const afterILF = basePremium * ilf;
+            const finalPremium = afterILF * modifierFactor;
+
+            // Update displays
+            document.getElementById('basePremium').textContent = '$' + basePremium.toLocaleString();
+            document.getElementById('ilfFactor').textContent = ilf.toFixed(2) + 'x';
+            document.getElementById('modifierFactor').textContent = modifierFactor.toFixed(2) + 'x';
+            document.getElementById('finalPremium').textContent = '$' + Math.round(finalPremium).toLocaleString();
+
+            // Update ILF chart
+            renderILFChart();
+
+            // Update breakdown
+            let breakdownHtml = `
+                <div class="breakdown-row">
+                    <span>Base Premium (Tier ${selectedTier})</span>
+                    <span>$${basePremium.toLocaleString()}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span>ILF for $${(limit / 1000000).toFixed(0)}M Limit</span>
+                    <span>&times; ${ilf.toFixed(2)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span>After ILF</span>
+                    <span>$${Math.round(afterILF).toLocaleString()}</span>
+                </div>
+            `;
+
+            appliedModifiers.forEach(mod => {
+                const sign = mod.factor >= 1 ? '+' : '';
+                const pct = ((mod.factor - 1) * 100).toFixed(0);
+                breakdownHtml += `
+                    <div class="breakdown-row">
+                        <span>${mod.label}</span>
+                        <span>&times; ${mod.factor.toFixed(2)} (${sign}${pct}%)</span>
+                    </div>
+                `;
+            });
+
+            breakdownHtml += `
+                <div class="breakdown-row">
+                    <span>Final Premium</span>
+                    <span>$${Math.round(finalPremium).toLocaleString()}</span>
+                </div>
+            `;
+
+            document.getElementById('breakdown').innerHTML = breakdownHtml;
+        }
+
+        // Initialize
+        calculate();
+    </script>
+</body>
+</html>
