@@ -55,8 +55,8 @@ repos:
     rev: 1.7.6
     hooks:
       - id: bandit
-        args: ['-r', 'models/', 'api/', '-f', 'screen']
-        exclude: ^tests/
+        args: ['-r', 'technical_pricing/', '-f', 'screen']
+        exclude: ^technical_pricing/tests/
 
   # YAML formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -87,5 +87,7 @@ exclude: |
       build/|
       dist/|
       .*\.egg-info/|
-      docs/case-studies/.*\.pptx
+      docs/case-studies/.*\.pptx|
+      technical_pricing/signals/to_be_deleted/|
+      technical_pricing/signals/to_be_extracted/
   )$

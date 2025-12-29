@@ -1,568 +1,618 @@
 """
-DSI Model Scorer
+DSI Model Layer - Model Scorer (Phase 4)
 
-Executes signal scoring pipeline (Steps 4-6).
+Executes Steps 4-6 of the workflow:
+- Step 4: Signal Extraction (run all inference functions)
+- Step 5: Pure Composite Score Calculation (weighted sum)
+- Step 6: Signal Conditions Evaluation (check triggered conditions)
 
-Step 4: Signal extraction - run all inference functions
-Step 5: Pure composite score calculation
-Step 6: Signal conditions evaluation
+Connects the model layer to the signal architecture via the inference registry.
 """
 
-import uuid
+import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
-from typing import Any, Callable
+from typing import Dict, List, Optional, Tuple, Any
 
 from .types import (
     CoverageConfig,
-    SignalConfig,
     SignalGroupConfig,
-    SignalCondition,
+    SignalFeatureConfig,
     SignalOutput,
+    CategoricalOutput,
     ScoringResult,
+    TriggeredCondition,
     ConditionAction,
+    utcnow,
 )
+
+# Import from signal architecture
+from ..signals.types import InferenceContext, SignalResult
+from ..signals.inference.registry import (
+    get_inference_function,
+    InferenceFunctionNotFoundError,
+)
+
+
+logger = logging.getLogger("dsi.scorer")
+
+
+class ScoringError(Exception):
+    """Raised when scoring fails."""
+    pass
 
 
 class ModelScorer:
     """
-    Executes signal scoring pipeline.
-    
-    Orchestrates extraction → aggregation → categorization → inference
-    for all signals defined in configuration.
+    Executes signal scoring pipeline (Steps 4-6).
+
+    This class bridges the model layer to the signal architecture,
+    orchestrating extraction and scoring for all signals defined in config.
     """
-    
+
     def __init__(
         self,
-        inference_registry: dict[str, Callable] | None = None,
-        max_workers: int = 8
+        max_workers: int = 10,
+        default_score: float = 50.0,
+        default_confidence: float = 0.5
     ):
         """
-        Initialize scorer.
-        
+        Initialize ModelScorer.
+
         Args:
-            inference_registry: Dict mapping inference function names to callables
-            max_workers: Max parallel workers for signal extraction
+            max_workers: Maximum parallel workers for signal extraction
+            default_score: Default score when extraction fails
+            default_confidence: Default confidence when extraction fails
         """
-        self.inference_registry = inference_registry or {}
         self.max_workers = max_workers
-    
-    def register_inference_function(self, name: str, func: Callable) -> None:
-        """Register an inference function"""
-        self.inference_registry[name] = func
-    
-    # =========================================================================
-    # MAIN SCORING (Steps 4-6)
-    # =========================================================================
-    
+        self.default_score = default_score
+        self.default_confidence = default_confidence
+
     def score_entity(
         self,
         entity_id: str,
         config: CoverageConfig,
-        submission_data: dict[str, Any] | None = None,
-        parallel: bool = True
+        parallel: bool = True,
+        context: Optional[InferenceContext] = None
     ) -> ScoringResult:
         """
-        Execute full scoring pipeline (Steps 4-6).
-        
+        Execute Steps 4-6 for an entity.
+
         Args:
-            entity_id: Entity being scored
+            entity_id: The entity to score
             config: Coverage configuration
-            submission_data: Additional submission data for context
-            parallel: Whether to run signals in parallel
-        
+            parallel: Whether to run extractions in parallel
+            context: Optional inference context (created if not provided)
+
         Returns:
-            ScoringResult with all signal outputs and composite score
+            ScoringResult with signal outputs, composite score, and conditions
         """
-        start_time = datetime.utcnow()
-        
-        result = ScoringResult(
-            entity_id=entity_id,
-            coverage=config.coverage,
-            extraction_started_at=start_time
-        )
-        
+        start_time = time.time()
+
+        # Create inference context if not provided
+        if context is None:
+            context = InferenceContext(
+                configuration={},  # Will be populated by inference functions
+                coverage=config.coverage,
+                config_name=config.configuration,
+            )
+
         # Step 4: Extract all signals
-        signal_outputs = self.extract_signals(
+        signal_outputs, categorical_outputs = self.extract_signals(
             entity_id=entity_id,
             config=config,
-            submission_data=submission_data,
-            parallel=parallel
+            context=context,
+            parallel=parallel,
         )
-        result.signal_outputs = signal_outputs
-        
-        # Step 5: Calculate composite score
-        composite_score, group_scores, confidence = self.calculate_composite(
+
+        # Step 5: Calculate pure composite score
+        pure_composite_score, group_scores, confidence, coverage = self.calculate_composite(
             signal_outputs=signal_outputs,
-            config=config
+            config=config,
         )
-        result.pure_composite_score = composite_score
-        result.group_scores = group_scores
-        result.aggregate_confidence = confidence
-        
+
         # Step 6: Evaluate signal conditions
-        conditions = self.evaluate_signal_conditions(
+        conditions, tier_overrides, referrals, notes = self.evaluate_signal_conditions(
             signal_outputs=signal_outputs,
             group_scores=group_scores,
-            config=config
+            config=config,
         )
-        
-        result.signal_conditions_triggered = conditions['all_conditions']
-        result.tier_overrides_from_signals = conditions['tier_overrides']
-        result.referrals_from_signals = conditions['referrals']
-        result.notes_from_signals = conditions['notes']
-        
-        # Complete timing
-        end_time = datetime.utcnow()
-        result.extraction_completed_at = end_time
-        result.duration_ms = (end_time - start_time).total_seconds() * 1000
-        
-        return result
-    
-    # =========================================================================
-    # STEP 4: SIGNAL EXTRACTION
-    # =========================================================================
-    
+
+        elapsed_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Scored entity {entity_id} in {elapsed_ms:.0f}ms: "
+            f"composite={pure_composite_score:.0f}, "
+            f"signals={len(signal_outputs)}, "
+            f"conditions={len(conditions)}"
+        )
+
+        return ScoringResult(
+            signal_outputs=signal_outputs,
+            categorical_outputs=categorical_outputs,
+            group_scores=group_scores,
+            pure_composite_score=pure_composite_score,
+            confidence=confidence,
+            signal_coverage=coverage,
+            conditions_triggered=conditions,
+            tier_overrides=tier_overrides,
+            referrals=referrals,
+            notes=notes,
+        )
+
     def extract_signals(
         self,
         entity_id: str,
         config: CoverageConfig,
-        submission_data: dict[str, Any] | None = None,
+        context: InferenceContext,
         parallel: bool = True
-    ) -> list[SignalOutput]:
+    ) -> Tuple[List[SignalOutput], List[CategoricalOutput]]:
         """
-        Run all inference functions to extract signals.
-        
-        For each signal in config:
-        1. Look up inference function in registry
-        2. Execute function with entity_id and context
-        3. Capture result as SignalOutput
+        Step 4: Run all inference functions.
+
+        Args:
+            entity_id: The entity to extract signals for
+            config: Coverage configuration
+            context: Inference context with cache
+            parallel: Whether to run in parallel
+
+        Returns:
+            Tuple of (signal_outputs, categorical_outputs)
         """
-        submission_data = submission_data or {}
-        signals_to_extract = []
-        
-        # Build list of signals to extract
+        signal_outputs: List[SignalOutput] = []
+        categorical_outputs: List[CategoricalOutput] = []
+
+        # Collect all extraction tasks
+        signal_tasks = []
+        categorical_tasks = []
+
+        # From signal groups and features
         for group in config.signal_groups:
-            for signal in group.signals:
-                signals_to_extract.append({
-                    'group': group,
-                    'signal': signal,
-                    'entity_id': entity_id,
-                    'submission_data': submission_data
-                })
-        
-        if parallel and len(signals_to_extract) > 1:
-            return self._extract_parallel(signals_to_extract)
+            for feature in group.features:
+                if feature.inference_function:
+                    signal_tasks.append((group, feature))
+
+        # From categorical groups
+        for cat_group in config.categorical_groups:
+            if cat_group.inference_function:
+                categorical_tasks.append(cat_group)
+
+        if parallel and (signal_tasks or categorical_tasks):
+            # Parallel execution
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                # Submit signal extraction tasks
+                signal_futures = {
+                    executor.submit(
+                        self._extract_signal,
+                        entity_id, group, feature, context
+                    ): (group, feature)
+                    for group, feature in signal_tasks
+                }
+
+                # Submit categorical extraction tasks
+                categorical_futures = {
+                    executor.submit(
+                        self._extract_categorical,
+                        entity_id, cat_group, context
+                    ): cat_group
+                    for cat_group in categorical_tasks
+                }
+
+                # Collect signal results
+                for future in as_completed(signal_futures):
+                    group, feature = signal_futures[future]
+                    try:
+                        output = future.result()
+                        signal_outputs.append(output)
+                    except Exception as e:
+                        logger.error(f"Signal extraction failed for {feature.id}: {e}")
+                        signal_outputs.append(self._create_default_signal_output(
+                            group, feature, str(e)
+                        ))
+
+                # Collect categorical results
+                for future in as_completed(categorical_futures):
+                    cat_group = categorical_futures[future]
+                    try:
+                        output = future.result()
+                        categorical_outputs.append(output)
+                    except Exception as e:
+                        logger.error(f"Categorical extraction failed for {cat_group.id}: {e}")
+                        categorical_outputs.append(self._create_default_categorical_output(
+                            cat_group, str(e)
+                        ))
         else:
-            return self._extract_sequential(signals_to_extract)
-    
-    def _extract_sequential(self, signals: list[dict]) -> list[SignalOutput]:
-        """Extract signals one at a time"""
-        outputs = []
-        for item in signals:
-            output = self._extract_single_signal(
-                group=item['group'],
-                signal=item['signal'],
-                entity_id=item['entity_id'],
-                submission_data=item['submission_data']
-            )
-            outputs.append(output)
-        return outputs
-    
-    def _extract_parallel(self, signals: list[dict]) -> list[SignalOutput]:
-        """Extract signals in parallel using ThreadPoolExecutor"""
-        outputs = []
-        
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {
-                executor.submit(
-                    self._extract_single_signal,
-                    group=item['group'],
-                    signal=item['signal'],
-                    entity_id=item['entity_id'],
-                    submission_data=item['submission_data']
-                ): item
-                for item in signals
-            }
-            
-            for future in as_completed(futures):
+            # Sequential execution
+            for group, feature in signal_tasks:
                 try:
-                    output = future.result()
-                    outputs.append(output)
+                    output = self._extract_signal(entity_id, group, feature, context)
+                    signal_outputs.append(output)
                 except Exception as e:
-                    # Log error and create failed signal output
-                    item = futures[future]
-                    outputs.append(self._create_failed_output(
-                        group=item['group'],
-                        signal=item['signal'],
-                        error=str(e)
+                    logger.error(f"Signal extraction failed for {feature.id}: {e}")
+                    signal_outputs.append(self._create_default_signal_output(
+                        group, feature, str(e)
                     ))
-        
-        return outputs
-    
-    def _extract_single_signal(
+
+            for cat_group in categorical_tasks:
+                try:
+                    output = self._extract_categorical(entity_id, cat_group, context)
+                    categorical_outputs.append(output)
+                except Exception as e:
+                    logger.error(f"Categorical extraction failed for {cat_group.id}: {e}")
+                    categorical_outputs.append(self._create_default_categorical_output(
+                        cat_group, str(e)
+                    ))
+
+        return signal_outputs, categorical_outputs
+
+    def _extract_signal(
         self,
-        group: SignalGroupConfig,
-        signal: SignalConfig,
         entity_id: str,
-        submission_data: dict
+        group: SignalGroupConfig,
+        feature: SignalFeatureConfig,
+        context: InferenceContext
     ) -> SignalOutput:
-        """Extract a single signal"""
-        func_name = signal.inference_function
-        
-        if func_name not in self.inference_registry:
-            return self._create_failed_output(
-                group=group,
-                signal=signal,
-                error=f"Inference function not found: {func_name}"
-            )
-        
+        """
+        Extract a single signal using its inference function.
+
+        Args:
+            entity_id: The entity to extract for
+            group: Signal group configuration
+            feature: Signal feature configuration
+            context: Inference context
+
+        Returns:
+            SignalOutput with extracted score
+        """
+        start_time = time.time()
+
         try:
-            # Call inference function
-            func = self.inference_registry[func_name]
-            result = func(entity_id=entity_id, context=submission_data)
-            
-            # Extract score and confidence from result
-            if isinstance(result, dict):
-                raw_score = float(result.get('score', 0))
-                confidence = float(result.get('confidence', 1.0))
-                data_sources = result.get('data_sources', [])
-            elif isinstance(result, (int, float)):
-                raw_score = float(result)
-                confidence = 1.0
-                data_sources = []
-            else:
-                raw_score = 0.0
-                confidence = 0.0
-                data_sources = []
-            
-            # Clamp score to 0-100
-            raw_score = max(0.0, min(100.0, raw_score))
-            confidence = max(0.0, min(1.0, confidence))
-            
-            # Calculate weighted score
-            # weighted_score = raw_score * signal_weight * group_weight * 10
-            # This contributes directly to 0-1000 composite
-            weighted_score = raw_score * signal.weight * group.weight * 10
-            
+            # Get the inference function from registry
+            inference_func = get_inference_function(feature.inference_function)
+        except InferenceFunctionNotFoundError:
+            logger.warning(f"Inference function not found: {feature.inference_function}")
+            return self._create_default_signal_output(
+                group, feature, f"Function not found: {feature.inference_function}"
+            )
+
+        try:
+            # Run the inference function
+            result: SignalResult = inference_func(entity_id, context)
+
+            elapsed_ms = (time.time() - start_time) * 1000
+
+            # Convert SignalResult to SignalOutput
             return SignalOutput(
-                signal_id=str(uuid.uuid4()),
-                signal_name=signal.name,
-                group_name=group.name,
-                raw_score=raw_score,
-                confidence=confidence,
-                signal_weight=signal.weight,
-                group_weight=group.weight,
-                weighted_score=weighted_score,
-                data_sources=data_sources,
-                extracted_at=datetime.utcnow()
+                signal_id=feature.id,
+                signal_name=feature.name,
+                group_id=group.id,
+                raw_score=result.score if result.score is not None else self.default_score,
+                confidence=result.confidence if result.confidence else self.default_confidence,
+                weighted_score=(result.score or self.default_score) * feature.weight,
+                weight=feature.weight,
+                data_sources=[result.metadata.get("extractor", "unknown")] if result.metadata else [],
+                extracted_at=utcnow(),
+                from_cache=result.metadata.get("from_cache", False) if result.metadata else False,
+                execution_time_ms=result.execution_time_ms or elapsed_ms,
+                error=result.error,
             )
-            
+
         except Exception as e:
-            return self._create_failed_output(
-                group=group,
-                signal=signal,
-                error=str(e)
+            logger.error(f"Inference function failed for {feature.id}: {e}")
+            return self._create_default_signal_output(group, feature, str(e))
+
+    def _extract_categorical(
+        self,
+        entity_id: str,
+        cat_group,  # CategoricalGroupConfig
+        context: InferenceContext
+    ) -> CategoricalOutput:
+        """
+        Extract a categorical value using its inference function.
+
+        Args:
+            entity_id: The entity to extract for
+            cat_group: Categorical group configuration
+            context: Inference context
+
+        Returns:
+            CategoricalOutput with inferred category
+        """
+        try:
+            inference_func = get_inference_function(cat_group.inference_function)
+        except InferenceFunctionNotFoundError:
+            return self._create_default_categorical_output(
+                cat_group, f"Function not found: {cat_group.inference_function}"
             )
-    
-    def _create_failed_output(
+
+        try:
+            result: SignalResult = inference_func(entity_id, context)
+
+            # Get category from result
+            category = result.category if result.category else "UNKNOWN"
+
+            # Find the modifier for this category
+            modifier = cat_group.get_modifier(category)
+
+            # Find the label
+            label = category
+            for val in cat_group.values:
+                if val.category == category:
+                    label = val.label
+                    break
+
+            return CategoricalOutput(
+                group_id=cat_group.id,
+                group_name=cat_group.name,
+                category=category,
+                label=label,
+                modifier=modifier,
+                confidence=result.confidence if result.confidence else 0.8,
+                extracted_at=utcnow(),
+                error=result.error,
+            )
+
+        except Exception as e:
+            return self._create_default_categorical_output(cat_group, str(e))
+
+    def _create_default_signal_output(
         self,
         group: SignalGroupConfig,
-        signal: SignalConfig,
+        feature: SignalFeatureConfig,
         error: str
     ) -> SignalOutput:
-        """Create a signal output for a failed extraction"""
+        """Create a default signal output when extraction fails."""
         return SignalOutput(
-            signal_id=str(uuid.uuid4()),
-            signal_name=signal.name,
-            group_name=group.name,
-            raw_score=0.0,
-            confidence=0.0,  # Zero confidence indicates failure
-            signal_weight=signal.weight,
-            group_weight=group.weight,
-            weighted_score=0.0,
-            data_sources=[],
-            extracted_at=datetime.utcnow(),
-            conditions_triggered=[{
-                'type': 'extraction_error',
-                'error': error
-            }]
+            signal_id=feature.id,
+            signal_name=feature.name,
+            group_id=group.id,
+            raw_score=self.default_score,
+            confidence=self.default_confidence,
+            weighted_score=self.default_score * feature.weight,
+            weight=feature.weight,
+            extracted_at=utcnow(),
+            error=error,
         )
-    
-    # =========================================================================
-    # STEP 5: COMPOSITE SCORE CALCULATION
-    # =========================================================================
-    
+
+    def _create_default_categorical_output(
+        self,
+        cat_group,
+        error: str
+    ) -> CategoricalOutput:
+        """Create a default categorical output when extraction fails."""
+        # Use first value as default
+        default_cat = cat_group.values[0] if cat_group.values else None
+
+        return CategoricalOutput(
+            group_id=cat_group.id,
+            group_name=cat_group.name,
+            category=default_cat.category if default_cat else "UNKNOWN",
+            label=default_cat.label if default_cat else "Unknown",
+            modifier=default_cat.modifier if default_cat else 1.0,
+            confidence=0.0,
+            extracted_at=utcnow(),
+            error=error,
+        )
+
     def calculate_composite(
         self,
-        signal_outputs: list[SignalOutput],
+        signal_outputs: List[SignalOutput],
         config: CoverageConfig
-    ) -> tuple[float, dict[str, float], float]:
+    ) -> Tuple[float, Dict[str, float], float, float]:
         """
-        Calculate weighted composite score.
-        
-        Composite score = sum of all weighted signal scores (0-1000)
-        
+        Step 5: Calculate pure composite score.
+
+        The composite score is a weighted sum of group scores,
+        where each group score is a weighted sum of signal scores.
+
+        Score range: 0-1000 (signal scores 0-100 multiplied by 10)
+
+        Args:
+            signal_outputs: All extracted signal outputs
+            config: Coverage configuration
+
         Returns:
-            Tuple of (composite_score, group_scores, aggregate_confidence)
+            Tuple of (composite_score, group_scores, confidence, coverage)
         """
-        # Group signals by their group
-        signals_by_group: dict[str, list[SignalOutput]] = {}
+        # Group signals by group_id
+        signals_by_group: Dict[str, List[SignalOutput]] = {}
         for output in signal_outputs:
-            if output.group_name not in signals_by_group:
-                signals_by_group[output.group_name] = []
-            signals_by_group[output.group_name].append(output)
-        
+            if output.group_id not in signals_by_group:
+                signals_by_group[output.group_id] = []
+            signals_by_group[output.group_id].append(output)
+
         # Calculate group scores
-        group_scores: dict[str, float] = {}
-        group_confidences: dict[str, float] = {}
-        
+        group_scores: Dict[str, float] = {}
+        total_confidence = 0.0
+        total_signals = 0
+        populated_signals = 0
+
         for group in config.signal_groups:
-            group_outputs = signals_by_group.get(group.name, [])
-            
-            if not group_outputs:
-                group_scores[group.name] = 0.0
-                group_confidences[group.name] = 0.0
-                continue
-            
-            # Sum weighted scores within group
-            # Each signal's weighted_score already includes signal_weight * group_weight
-            group_score = sum(o.weighted_score for o in group_outputs)
-            group_scores[group.name] = group_score
-            
-            # Average confidence within group, weighted by signal weight
-            total_weight = sum(o.signal_weight for o in group_outputs)
-            if total_weight > 0:
-                group_confidences[group.name] = sum(
-                    o.confidence * o.signal_weight for o in group_outputs
-                ) / total_weight
+            group_signals = signals_by_group.get(group.id, [])
+
+            if group_signals:
+                # Weighted average within group
+                total_weighted = sum(s.raw_score * s.weight for s in group_signals)
+                total_weight = sum(s.weight for s in group_signals)
+
+                if total_weight > 0:
+                    group_score = total_weighted / total_weight
+                else:
+                    group_score = self.default_score
+
+                # Track confidence
+                group_confidence = sum(s.confidence for s in group_signals) / len(group_signals)
+                total_confidence += group_confidence * len(group_signals)
+                populated_signals += sum(1 for s in group_signals if s.error is None)
             else:
-                group_confidences[group.name] = 0.0
-        
-        # Composite score is sum of group scores
-        composite_score = sum(group_scores.values())
-        
-        # Clamp to 0-1000
-        composite_score = max(0.0, min(1000.0, composite_score))
-        
-        # Aggregate confidence weighted by group weights
-        total_group_weight = sum(g.weight for g in config.signal_groups)
-        if total_group_weight > 0:
-            aggregate_confidence = sum(
-                group_confidences.get(g.name, 0) * g.weight
-                for g in config.signal_groups
-            ) / total_group_weight
+                group_score = self.default_score
+                group_confidence = 0.0
+
+            group_scores[group.id] = group_score
+            total_signals += len(group.features)
+
+        # Calculate composite score (0-1000 scale)
+        composite_score = 0.0
+        for group in config.signal_groups:
+            group_score = group_scores.get(group.id, self.default_score)
+            # Group score (0-100) * group weight * 10 = contribution to 0-1000 scale
+            composite_score += group_score * group.weight * 10
+
+        # Calculate overall confidence and coverage
+        if total_signals > 0:
+            overall_confidence = total_confidence / total_signals if total_signals > 0 else 0.5
+            signal_coverage = populated_signals / total_signals
         else:
-            aggregate_confidence = 0.0
-        
-        return (composite_score, group_scores, aggregate_confidence)
-    
-    # =========================================================================
-    # STEP 6: SIGNAL CONDITIONS EVALUATION
-    # =========================================================================
-    
+            overall_confidence = 0.5
+            signal_coverage = 0.0
+
+        return composite_score, group_scores, overall_confidence, signal_coverage
+
     def evaluate_signal_conditions(
         self,
-        signal_outputs: list[SignalOutput],
-        group_scores: dict[str, float],
+        signal_outputs: List[SignalOutput],
+        group_scores: Dict[str, float],
         config: CoverageConfig
-    ) -> dict[str, list]:
+    ) -> Tuple[List[TriggeredCondition], List[int], List[str], List[str]]:
         """
-        Evaluate conditions defined at signal_group and signal_feature levels.
-        
+        Step 6: Evaluate conditions at signal_group and signal_feature levels.
+
         Conditions can trigger:
-        - (a) Tier override
-        - (b) Referral
-        - (c) Note
-        
-        Note: Signal conditions CANNOT trigger modifiers.
-        
+        - Tier override: Force to specific tier
+        - Referral: Set auto_approve = false
+        - Note: Post note for underwriter
+
+        Args:
+            signal_outputs: All extracted signals
+            group_scores: Calculated group scores
+            config: Coverage configuration
+
         Returns:
-            Dict with keys: all_conditions, tier_overrides, referrals, notes
+            Tuple of (conditions, tier_overrides, referrals, notes)
         """
-        all_conditions = []
-        tier_overrides = []
-        referrals = []
-        notes = []
-        
-        # Build lookup for signal outputs by name
-        outputs_by_name = {o.signal_name: o for o in signal_outputs}
-        
+        conditions: List[TriggeredCondition] = []
+        tier_overrides: List[int] = []
+        referrals: List[str] = []
+        notes: List[str] = []
+
+        # Create signal lookup by ID
+        signal_by_id = {s.signal_id: s for s in signal_outputs}
+
         # Evaluate group-level conditions
         for group in config.signal_groups:
-            group_score = group_scores.get(group.name, 0)
-            
-            for condition in group.conditions:
-                if self._evaluate_condition(condition, group_score):
-                    triggered = {
-                        'level': 'group',
-                        'group': group.name,
-                        'condition_type': condition.condition_type,
-                        'condition_value': condition.condition_value,
-                        'actual_value': group_score,
-                        'action': condition.action.value,
-                        'action_value': condition.action_value
-                    }
-                    all_conditions.append(triggered)
-                    
-                    self._apply_condition_action(
-                        condition=condition,
-                        tier_overrides=tier_overrides,
-                        referrals=referrals,
-                        notes=notes,
-                        context=f"Group '{group.name}'"
-                    )
-        
-        # Evaluate signal-level conditions
-        for group in config.signal_groups:
-            for signal in group.signals:
-                output = outputs_by_name.get(signal.name)
-                if not output:
-                    continue
-                
-                for condition in signal.conditions:
-                    if self._evaluate_condition(condition, output.raw_score):
-                        triggered = {
-                            'level': 'signal',
-                            'group': group.name,
-                            'signal': signal.name,
-                            'condition_type': condition.condition_type,
-                            'condition_value': condition.condition_value,
-                            'actual_value': output.raw_score,
-                            'action': condition.action.value,
-                            'action_value': condition.action_value
-                        }
-                        all_conditions.append(triggered)
-                        
-                        # Also track on the signal output itself
-                        output.conditions_triggered.append(triggered)
-                        
-                        self._apply_condition_action(
-                            condition=condition,
-                            tier_overrides=tier_overrides,
-                            referrals=referrals,
-                            notes=notes,
-                            context=f"Signal '{signal.name}'"
+            if group.score_condition and group.conditions:
+                group_score = group_scores.get(group.id, self.default_score)
+
+                for condition in group.conditions:
+                    triggered = self._check_condition(group_score, condition)
+
+                    if triggered:
+                        tc = TriggeredCondition(
+                            source_type="signal_group",
+                            source_id=group.id,
+                            source_name=group.name,
+                            score=group_score,
+                            response=None,
+                            action=condition.action,
+                            action_value=condition.action_value,
+                            note=f"{group.name}: {condition.action_value}" if condition.action == ConditionAction.NOTE else str(condition.action_value),
                         )
-        
-        return {
-            'all_conditions': all_conditions,
-            'tier_overrides': tier_overrides,
-            'referrals': referrals,
-            'notes': notes
-        }
-    
-    def _evaluate_condition(
-        self,
-        condition: SignalCondition,
-        value: float
-    ) -> bool:
+                        conditions.append(tc)
+
+                        # Collect impacts
+                        if condition.action == ConditionAction.TIER_OVERRIDE:
+                            tier_overrides.append(int(condition.action_value))
+                        elif condition.action == ConditionAction.REFERRAL:
+                            referrals.append(str(condition.action_value))
+                        elif condition.action == ConditionAction.NOTE:
+                            notes.append(str(condition.action_value))
+
+        # Evaluate feature-level conditions
+        for group in config.signal_groups:
+            for feature in group.features:
+                if feature.score_condition and feature.conditions:
+                    signal_output = signal_by_id.get(feature.id)
+                    signal_score = signal_output.raw_score if signal_output else self.default_score
+
+                    for condition in feature.conditions:
+                        triggered = self._check_condition(signal_score, condition)
+
+                        if triggered:
+                            tc = TriggeredCondition(
+                                source_type="signal_feature",
+                                source_id=feature.id,
+                                source_name=feature.name,
+                                score=signal_score,
+                                response=None,
+                                action=condition.action,
+                                action_value=condition.action_value,
+                                note=f"{feature.name}: {condition.action_value}" if condition.action == ConditionAction.NOTE else str(condition.action_value),
+                            )
+                            conditions.append(tc)
+
+                            # Collect impacts
+                            if condition.action == ConditionAction.TIER_OVERRIDE:
+                                tier_overrides.append(int(condition.action_value))
+                            elif condition.action == ConditionAction.REFERRAL:
+                                referrals.append(str(condition.action_value))
+                            elif condition.action == ConditionAction.NOTE:
+                                notes.append(str(condition.action_value))
+
+                            # Also add conditions triggered from signal output
+                            if signal_output:
+                                signal_output.conditions_triggered.append(feature.id)
+
+        logger.debug(
+            f"Evaluated signal conditions: "
+            f"{len(tier_overrides)} tier overrides, "
+            f"{len(referrals)} referrals, "
+            f"{len(notes)} notes"
+        )
+
+        return conditions, tier_overrides, referrals, notes
+
+    def _check_condition(self, score: float, condition) -> bool:
         """
-        Evaluate whether a condition is triggered.
-        
-        Supports condition types:
-        - threshold_below: value < condition_value
-        - threshold_above: value > condition_value
-        - equals: value == condition_value
-        - in_range: condition_value is [min, max], check if value in range
+        Check if a score triggers a condition.
+
+        Args:
+            score: The score to check
+            condition: SignalCondition to evaluate
+
+        Returns:
+            True if condition is triggered
         """
-        ctype = condition.condition_type.lower()
-        cvalue = condition.condition_value
-        
-        if ctype == 'threshold_below':
-            return value < float(cvalue)
-        
-        elif ctype == 'threshold_above':
-            return value > float(cvalue)
-        
-        elif ctype == 'equals':
-            if isinstance(cvalue, (int, float)):
-                return abs(value - float(cvalue)) < 0.001
-            return str(value) == str(cvalue)
-        
-        elif ctype == 'in_range':
-            if isinstance(cvalue, (list, tuple)) and len(cvalue) == 2:
-                return float(cvalue[0]) <= value <= float(cvalue[1])
-            return False
-        
-        elif ctype == 'not_in_range':
-            if isinstance(cvalue, (list, tuple)) and len(cvalue) == 2:
-                return not (float(cvalue[0]) <= value <= float(cvalue[1]))
-            return False
-        
-        elif ctype == 'in_list':
-            if isinstance(cvalue, list):
-                return value in cvalue
-            return False
-        
-        # Unknown condition type - don't trigger
+        if condition.condition_type == "max":
+            threshold = float(condition.condition_value)
+            if condition.inclusive:
+                return score <= threshold
+            else:
+                return score < threshold
+
+        elif condition.condition_type == "min":
+            threshold = float(condition.condition_value)
+            if condition.inclusive:
+                return score >= threshold
+            else:
+                return score > threshold
+
+        elif condition.condition_type == "equals":
+            return score == float(condition.condition_value)
+
+        elif condition.condition_type == "threshold":
+            # Legacy support - treat as max
+            threshold = float(condition.condition_value)
+            return score < threshold
+
         return False
-    
-    def _apply_condition_action(
-        self,
-        condition: SignalCondition,
-        tier_overrides: list[int],
-        referrals: list[str],
-        notes: list[str],
-        context: str
-    ) -> None:
-        """Apply the action from a triggered condition"""
-        if condition.action == ConditionAction.TIER_OVERRIDE:
-            tier_overrides.append(int(condition.action_value))
-        
-        elif condition.action == ConditionAction.REFERRAL:
-            reason = condition.action_value or f"Condition triggered by {context}"
-            referrals.append(str(reason))
-        
-        elif condition.action == ConditionAction.NOTE:
-            note = condition.action_value or f"Note from {context}"
-            notes.append(str(note))
-        
-        # Signal conditions cannot trigger modifiers
-        elif condition.action == ConditionAction.MODIFIER:
-            # This should have been caught during config parsing
-            pass
-    
-    # =========================================================================
-    # UTILITY METHODS
-    # =========================================================================
-    
-    def get_signal_breakdown(
-        self,
-        result: ScoringResult
-    ) -> dict[str, Any]:
-        """
-        Get detailed breakdown of scoring for audit/debug.
-        """
-        groups = {}
-        
-        for output in result.signal_outputs:
-            if output.group_name not in groups:
-                groups[output.group_name] = {
-                    'group_weight': output.group_weight,
-                    'group_score': result.group_scores.get(output.group_name, 0),
-                    'signals': []
-                }
-            
-            groups[output.group_name]['signals'].append({
-                'name': output.signal_name,
-                'raw_score': output.raw_score,
-                'confidence': output.confidence,
-                'weight': output.signal_weight,
-                'weighted_score': output.weighted_score,
-                'conditions_triggered': output.conditions_triggered
-            })
-        
-        return {
-            'entity_id': result.entity_id,
-            'coverage': result.coverage,
-            'composite_score': result.pure_composite_score,
-            'aggregate_confidence': result.aggregate_confidence,
-            'groups': groups,
-            'conditions_summary': {
-                'tier_overrides': result.tier_overrides_from_signals,
-                'referrals': result.referrals_from_signals,
-                'notes': result.notes_from_signals
-            },
-            'duration_ms': result.duration_ms
-        }
+
+
+# Singleton instance for convenience
+_default_scorer: Optional[ModelScorer] = None
+
+
+def get_scorer() -> ModelScorer:
+    """Get the default ModelScorer instance."""
+    global _default_scorer
+    if _default_scorer is None:
+        _default_scorer = ModelScorer()
+    return _default_scorer

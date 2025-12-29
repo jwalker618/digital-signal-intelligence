@@ -100,7 +100,7 @@ cyber:
             override: null
             action: "FLAG"
             note: "No immutable backups - ransomware recovery risk"
-       - id: "recent_incident"
+      - id: "recent_incident"
         question: "Have you experienced a material cyber incident in the past 3 years?"
         bands:
           - return: true
@@ -632,7 +632,7 @@ cyber:
           max_score: 499
           description: "Elevated risk - requires senior review"
           auto_approve: false
-          auto_decline: fals
+          auto_decline: false
           premium_generation_method: "base"
           premium: 30000
         - id: 5        

@@ -1,34 +1,23 @@
 version: '3.8'
 
+# Digital Signal Intelligence - Docker Compose Configuration
+# Note: API functionality is being reimplemented.
+# This configuration is a placeholder for future deployment.
+
 services:
-  # DSI API Service
-  dsi-api:
+  # DSI Development Container
+  dsi-dev:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: dsi-api
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-      - DEBUG=True
-      - PORT=5000
-      - LOG_LEVEL=INFO
+    container_name: dsi-dev
     volumes:
-      # Mount code for development hot-reload
-      - ./api:/app/api
-      - ./models:/app/models
+      - ./technical_pricing:/app/technical_pricing
     networks:
       - dsi-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+    command: python -c "print('DSI development container ready')"
 
-  # PostgreSQL Database (optional - for future use)
+  # PostgreSQL Database (for future use)
   # postgres:
   #   image: postgres:15-alpine
   #   container_name: dsi-postgres
@@ -44,7 +33,7 @@ services:
   #     - dsi-network
   #   restart: unless-stopped
 
-  # Redis Cache (optional - for future use)
+  # Redis Cache (for future use)
   # redis:
   #   image: redis:7-alpine
   #   container_name: dsi-redis

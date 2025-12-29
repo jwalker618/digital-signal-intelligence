@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSI Live Demo - Digital Signal Intelligence</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #2a2a3a;
+            --gradient-1: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: var(--accent-red);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 2rem;
+        }
+
+        .nav-tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        /* Stats */
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Score Display */
+        .score-display {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--accent-cyan) calc(var(--score) * 1%),
+                var(--bg-tertiary) calc(var(--score) * 1%)
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            background: var(--bg-secondary);
+            border-radius: 50%;
+        }
+
+        .score-value {
+            position: relative;
+            z-index: 1;
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        /* Tier Badges */
+        .tier-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .tier-1 { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .tier-2 { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+        .tier-3 { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .tier-4 { background: rgba(249, 115, 22, 0.2); color: #f97316; }
+        .tier-5 { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        /* Decision Badges */
+        .decision-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .decision-approve { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .decision-refer { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .decision-decline { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        /* Signal Bars */
+        .signal-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .signal-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .signal-item:last-child {
+            border-bottom: none;
+        }
+
+        .signal-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .signal-bar-container {
+            width: 150px;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin: 0 1rem;
+            overflow: hidden;
+        }
+
+        .signal-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .signal-score {
+            width: 50px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Group Scores */
+        .group-score {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .group-name {
+            font-weight: 500;
+        }
+
+        .group-value {
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        /* Premium Display */
+        .premium-display {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .premium-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .premium-options {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .premium-option {
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .premium-option-limit {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .premium-option-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Coverage Cards */
+        .coverage-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .coverage-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+
+        .coverage-card.selected {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .coverage-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .coverage-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .coverage-stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .coverage-stat {
+            font-size: 0.85rem;
+        }
+
+        .coverage-stat span {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            display: none;
+        }
+
+        .results-panel.visible {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Referral Reasons */
+        .referral-reasons {
+            margin-top: 1rem;
+        }
+
+        .referral-reason {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .referral-reason::before {
+            content: '⚠️';
+        }
+
+        /* Batch Results */
+        .batch-results {
+            margin-top: 1.5rem;
+        }
+
+        .batch-result-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .batch-result-row:first-child {
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            border-radius: 8px 8px 0 0;
+        }
+
+        /* Charts */
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 100%;
+            padding: 1rem;
+        }
+
+        .bar {
+            width: 60px;
+            background: var(--gradient-1);
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            transition: height 0.5s ease;
+        }
+
+        .bar-label {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .bar-value {
+            color: white;
+            font-weight: 600;
+            padding: 0.25rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">⚡ DSI Live Demo</div>
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-tabs">
+        <div class="nav-tab active" data-tab="assessment">Live Assessment</div>
+        <div class="nav-tab" data-tab="batch">Batch Simulation</div>
+        <div class="nav-tab" data-tab="coverages">Coverage Explorer</div>
+        <div class="nav-tab" data-tab="architecture">Architecture</div>
+        <div class="nav-tab" data-tab="stats">Statistics</div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Live Assessment Tab -->
+        <div class="tab-content active" id="assessment">
+            <div class="grid-2">
+                <!-- Input Panel -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Run Live Assessment</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" class="form-input" id="entityName" placeholder="Enter company name...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Domain Hint (optional)</label>
+                        <input type="text" class="form-input" id="domainHint" placeholder="e.g., company.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Country</label>
+                        <select class="form-select" id="countryHint">
+                            <option value="US">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="DE">Germany</option>
+                            <option value="FR">France</option>
+                            <option value="SG">Singapore</option>
+                            <option value="AU">Australia</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Coverage Type</label>
+                        <select class="form-select" id="coverageType">
+                            <option value="cyber">Cyber Liability</option>
+                            <option value="do">Directors & Officers</option>
+                            <option value="fi">Financial Institutions</option>
+                            <option value="pi">Professional Indemnity</option>
+                            <option value="energy">Energy</option>
+                            <option value="marine">Marine</option>
+                            <option value="aerospace">Aerospace</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" id="runAssessment" style="width: 100%;">
+                        ⚡ Run Assessment
+                    </button>
+
+                    <div style="margin-top: 1rem;">
+                        <label class="form-label">Quick Select Sample Company:</label>
+                        <div id="sampleCompanies" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div id="resultsPanel" class="results-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title" id="resultEntityName">Assessment Results</h2>
+                            <span id="processingTime" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+                        </div>
+
+                        <div class="score-display">
+                            <div class="score-circle" id="scoreCircle" style="--score: 0">
+                                <span class="score-value" id="scoreValue">-</span>
+                            </div>
+                            <div id="tierBadge" class="tier-badge tier-3">-</div>
+                            <div style="margin-top: 1rem;">
+                                <span id="decisionBadge" class="decision-badge decision-refer">-</span>
+                            </div>
+                        </div>
+
+                        <div class="premium-display">
+                            <div style="color: var(--text-secondary); margin-bottom: 0.5rem;">Recommended Premium</div>
+                            <div class="premium-amount" id="premiumAmount">$-</div>
+                            <div class="premium-options" id="premiumOptions"></div>
+                        </div>
+
+                        <div id="referralReasons" class="referral-reasons" style="display: none;"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Signal Breakdown</h2>
+                        </div>
+
+                        <div id="groupScores" style="margin-bottom: 1.5rem;"></div>
+
+                        <div class="signal-list" id="signalList"></div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingPanel" class="card" style="display: none;">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                    <p style="text-align: center; color: var(--text-secondary);">Running DSI Workflow...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Simulation Tab -->
+        <div class="tab-content" id="batch">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Batch Simulation</h2>
+                    <p style="color: var(--text-secondary);">Run multiple assessments to see statistical distribution</p>
+                </div>
+
+                <div class="grid-3" style="margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label">Coverage Type</label>
+                        <select class="form-select" id="batchCoverage">
+                            <option value="cyber">Cyber Liability</option>
+                            <option value="do">Directors & Officers</option>
+                            <option value="fi">Financial Institutions</option>
+                            <option value="pi">Professional Indemnity</option>
+                            <option value="energy">Energy</option>
+                            <option value="marine">Marine</option>
+                            <option value="aerospace">Aerospace</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Number of Assessments</label>
+                        <select class="form-select" id="batchCount">
+                            <option value="5">5 Companies</option>
+                            <option value="8" selected>8 Companies</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary" id="runBatch" style="width: 100%;">
+                            🚀 Run Batch Assessment
+                        </button>
+                    </div>
+                </div>
+
+                <div id="batchLoading" style="display: none;" class="loading">
+                    <div class="spinner"></div>
+                </div>
+
+                <div id="batchResults" style="display: none;">
+                    <div class="grid-4" style="margin-bottom: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="batchAvgScore">-</div>
+                            <div class="stat-label">Avg Score</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="batchApproveRate">-</div>
+                            <div class="stat-label">Auto-Approve Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="batchAvgPremium">-</div>
+                            <div class="stat-label">Avg Premium</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="batchTotalPremium">-</div>
+                            <div class="stat-label">Total Premium</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Tier Distribution</h3>
+                            <div class="chart-container">
+                                <div class="bar-chart" id="tierChart"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Decision Distribution</h3>
+                            <div class="chart-container">
+                                <div class="bar-chart" id="decisionChart"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem;">Individual Results</h3>
+                        <div class="batch-results">
+                            <div class="batch-result-row">
+                                <div>Company</div>
+                                <div>Score</div>
+                                <div>Tier</div>
+                                <div>Decision</div>
+                                <div>Premium</div>
+                            </div>
+                            <div id="batchResultsTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coverage Explorer Tab -->
+        <div class="tab-content" id="coverages">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Coverage Explorer</h2>
+                    <p style="color: var(--text-secondary);">Explore signal configurations for each coverage type</p>
+                </div>
+
+                <div class="grid-3" id="coverageGrid" style="margin-bottom: 1.5rem;"></div>
+
+                <div id="coverageDetails" style="display: none;">
+                    <h3 style="margin-bottom: 1rem;" id="coverageDetailsTitle">Coverage Details</h3>
+
+                    <div class="grid-2">
+                        <div>
+                            <h4 style="margin-bottom: 0.75rem; color: var(--text-secondary);">Signal Groups</h4>
+                            <div id="coverageSignalGroups"></div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.75rem; color: var(--text-secondary);">Signals (<span id="signalCount">0</span>)</h4>
+                            <div id="coverageSignals" class="signal-list" style="max-height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture Tab -->
+        <div class="tab-content" id="architecture">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">DSI Architecture</h2>
+                </div>
+
+                <div style="font-family: monospace; background: var(--bg-tertiary); padding: 1.5rem; border-radius: 8px; overflow-x: auto;">
+<pre style="margin: 0; color: var(--text-primary);">
+┌─────────────────────────────────────────────────────────────────┐
+│                     SUBMISSION INPUT                            │
+│     Company name, domain hint, coverage, submission data        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   DISCOVERY MODULE (Step 0)                     │
+│                                                                 │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐                 │
+│  │SEARCH    │ →  │VALIDATE  │ →  │IDENTIFY   │                 │
+│  │          │    │          │    │           │                 │
+│  │Find      │    │Corporate │    │Primary    │                 │
+│  │candidates│    │website   │    │website    │                 │
+│  └──────────┘    └──────────┘    └───────────┘                 │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    SIGNAL ARCHITECTURE                          │
+│                                                                 │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐ │
+│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE │ │
+│  │          │    │          │    │           │    │          │ │
+│  │Raw data  │    │Structure/│    │Score or   │    │Orchestrat│ │
+│  │from APIs │    │normalize │    │category   │    │pipeline  │ │
+│  └──────────┘    └──────────┘    └───────────┘    └──────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      MODEL LAYER                                │
+│                                                                 │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐ │
+│  │CONFIG    │ →  │SCORER    │ →  │PRICER     │ →  │WORKFLOW  │ │
+│  │MANAGER   │    │          │    │           │    │ENGINE    │ │
+│  │Load/hash │    │Composite │    │Premium    │    │Decision  │ │
+│  │validate  │    │scoring   │    │calculate  │    │Approve/  │ │
+│  │          │    │          │    │           │    │Refer/Decl│ │
+│  └──────────┘    └──────────┘    └───────────┘    └──────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      MODEL OUTPUT                               │
+│  Score → Tier → Base Premium → Modifiers → Decision             │
+│                                                                 │
+│  Full audit trail with version tracking                         │
+└─────────────────────────────────────────────────────────────────┘
+</pre>
+                </div>
+
+                <div class="grid-2" style="margin-top: 1.5rem;">
+                    <div class="card" style="background: var(--bg-tertiary);">
+                        <h3 style="margin-bottom: 1rem;">14-Step Workflow</h3>
+                        <ol style="padding-left: 1.5rem; color: var(--text-secondary);">
+                            <li>Configuration Instantiation</li>
+                            <li>Discovery Execution</li>
+                            <li>Signal Extraction</li>
+                            <li>Numeric Scoring</li>
+                            <li>Categorical Evaluation</li>
+                            <li>Composite Scoring</li>
+                            <li>Direct Query Evaluation</li>
+                            <li>Override Condition Check</li>
+                            <li>Score-Based Tier Assignment</li>
+                            <li>Traditional Modifiers (Optional)</li>
+                            <li>Base Premium Calculation</li>
+                            <li>Limit Band Pricing</li>
+                            <li>Decision Determination</li>
+                        </ol>
+                    </div>
+                    <div class="card" style="background: var(--bg-tertiary);">
+                        <h3 style="margin-bottom: 1rem;">7 Signal Types</h3>
+                        <ol style="padding-left: 1.5rem; color: var(--text-secondary);">
+                            <li><strong>Network Authority</strong> - Who trusts this entity</li>
+                            <li><strong>Technical Infrastructure</strong> - Security implementation</li>
+                            <li><strong>Asset Telemetry</strong> - Third-party assessments</li>
+                            <li><strong>Structured Data</strong> - Industry benchmarks</li>
+                            <li><strong>Corporate Footprint</strong> - Public presentation</li>
+                            <li><strong>Public Records</strong> - Historical events</li>
+                            <li><strong>Direct Inquiry</strong> - Questionnaire responses</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+        <div class="tab-content" id="stats">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Demo Session Statistics</h2>
+                    <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh</button>
+                </div>
+
+                <div class="grid-4" style="margin-bottom: 1.5rem;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statAssessments">0</div>
+                        <div class="stat-label">Assessments Run</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statAvgTime">0ms</div>
+                        <div class="stat-label">Avg Processing Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statUptime">0s</div>
+                        <div class="stat-label">Server Uptime</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statCoverages">7</div>
+                        <div class="stat-label">Available Coverages</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card" style="background: var(--bg-tertiary);">
+                        <h3 style="margin-bottom: 1rem;">Tier Distribution</h3>
+                        <div id="statsTierDist"></div>
+                    </div>
+                    <div class="card" style="background: var(--bg-tertiary);">
+                        <h3 style="margin-bottom: 1rem;">Decision Distribution</h3>
+                        <div id="statsDecisionDist"></div>
+                    </div>
+                </div>
+
+                <div class="card" style="background: var(--bg-tertiary); margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Coverage Usage</h3>
+                    <div id="statsCoverageUsage"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>DSI Live Demo • Digital Signal Intelligence • Running actual workflow with stub extractors</p>
+        <p style="margin-top: 0.5rem; font-size: 0.8rem;">
+            Note: Results use simulated signal data for demonstration purposes
+        </p>
+    </footer>
+
+    <script>
+        // API Base URL
+        const API_BASE = '';  // Same origin
+
+        // State
+        let serverConnected = false;
+
+        // DOM Elements
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        // Tab Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Initialize
+        async function init() {
+            await checkConnection();
+            await loadSampleCompanies();
+            await loadCoverages();
+            await refreshStats();
+        }
+
+        // Check server connection
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/api/info`);
+                if (response.ok) {
+                    serverConnected = true;
+                    statusDot.classList.remove('disconnected');
+                    statusText.textContent = 'Connected to DSI Server';
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch (e) {
+                serverConnected = false;
+                statusDot.classList.add('disconnected');
+                statusText.textContent = 'Disconnected - Start demo server';
+            }
+        }
+
+        // Load sample companies
+        async function loadSampleCompanies() {
+            try {
+                const response = await fetch(`${API_BASE}/api/samples`);
+                const data = await response.json();
+                const container = document.getElementById('sampleCompanies');
+                container.innerHTML = data.companies.map(c =>
+                    `<button class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;"
+                        onclick="selectSample('${c.name}', '${c.domain}', '${c.country}')">${c.name.split(' ')[0]}</button>`
+                ).join('');
+            } catch (e) {
+                console.error('Failed to load samples:', e);
+            }
+        }
+
+        function selectSample(name, domain, country) {
+            document.getElementById('entityName').value = name;
+            document.getElementById('domainHint').value = domain;
+            document.getElementById('countryHint').value = country;
+        }
+
+        // Run Assessment
+        document.getElementById('runAssessment').addEventListener('click', runAssessment);
+
+        async function runAssessment() {
+            const entityName = document.getElementById('entityName').value;
+            if (!entityName) {
+                alert('Please enter a company name');
+                return;
+            }
+
+            const btn = document.getElementById('runAssessment');
+            btn.disabled = true;
+
+            document.getElementById('resultsPanel').classList.remove('visible');
+            document.getElementById('loadingPanel').style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/assess`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        entity_name: entityName,
+                        domain_hint: document.getElementById('domainHint').value || null,
+                        country_hint: document.getElementById('countryHint').value,
+                        coverage: document.getElementById('coverageType').value,
+                    })
+                });
+
+                const result = await response.json();
+                displayResults(result);
+
+            } catch (e) {
+                console.error('Assessment failed:', e);
+                alert('Assessment failed. Is the demo server running?');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('loadingPanel').style.display = 'none';
+            }
+        }
+
+        function displayResults(result) {
+            // Header
+            document.getElementById('resultEntityName').textContent = result.entity_name;
+            document.getElementById('processingTime').textContent = `${result.processing_time_ms.toFixed(0)}ms`;
+
+            // Score circle
+            const scorePercent = (result.composite_score / 1000) * 100;
+            document.getElementById('scoreCircle').style.setProperty('--score', scorePercent);
+            document.getElementById('scoreValue').textContent = Math.round(result.composite_score);
+
+            // Tier badge
+            const tierBadge = document.getElementById('tierBadge');
+            tierBadge.className = `tier-badge tier-${result.tier}`;
+            tierBadge.textContent = `Tier ${result.tier} - ${result.tier_label}`;
+
+            // Decision badge
+            const decisionBadge = document.getElementById('decisionBadge');
+            decisionBadge.className = `decision-badge decision-${result.decision}`;
+            decisionBadge.textContent = result.decision.toUpperCase() + (result.auto_approve ? ' (Auto)' : '');
+
+            // Premium
+            document.getElementById('premiumAmount').textContent = formatCurrency(result.recommended_premium);
+
+            // Premium options
+            const optionsContainer = document.getElementById('premiumOptions');
+            optionsContainer.innerHTML = Object.entries(result.premium_options || {})
+                .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+                .map(([limit, premium]) => `
+                    <div class="premium-option">
+                        <div class="premium-option-limit">${formatCurrency(parseFloat(limit))} limit</div>
+                        <div class="premium-option-value">${formatCurrency(premium)}</div>
+                    </div>
+                `).join('');
+
+            // Referral reasons
+            const referralDiv = document.getElementById('referralReasons');
+            if (result.referral_reasons && result.referral_reasons.length > 0) {
+                referralDiv.style.display = 'block';
+                referralDiv.innerHTML = '<h4 style="margin-bottom: 0.5rem;">Referral Reasons</h4>' +
+                    result.referral_reasons.map(r => `<div class="referral-reason">${r}</div>`).join('');
+            } else {
+                referralDiv.style.display = 'none';
+            }
+
+            // Group scores
+            const groupScoresDiv = document.getElementById('groupScores');
+            groupScoresDiv.innerHTML = Object.entries(result.group_scores || {})
+                .map(([group, score]) => `
+                    <div class="group-score">
+                        <span class="group-name">${formatGroupName(group)}</span>
+                        <span class="group-value">${score.toFixed(1)}</span>
+                    </div>
+                `).join('');
+
+            // Signal list
+            const signalList = document.getElementById('signalList');
+            signalList.innerHTML = (result.signals || [])
+                .sort((a, b) => b.weighted_score - a.weighted_score)
+                .map(s => {
+                    const color = getScoreColor(s.raw_score);
+                    return `
+                        <div class="signal-item">
+                            <span class="signal-name">${formatSignalName(s.signal_name)}</span>
+                            <div class="signal-bar-container">
+                                <div class="signal-bar" style="width: ${s.raw_score}%; background: ${color};"></div>
+                            </div>
+                            <span class="signal-score" style="color: ${color};">${s.raw_score.toFixed(0)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            document.getElementById('resultsPanel').classList.add('visible');
+        }
+
+        // Batch Assessment
+        document.getElementById('runBatch').addEventListener('click', runBatchAssessment);
+
+        async function runBatchAssessment() {
+            const btn = document.getElementById('runBatch');
+            btn.disabled = true;
+
+            document.getElementById('batchResults').style.display = 'none';
+            document.getElementById('batchLoading').style.display = 'flex';
+
+            try {
+                const coverage = document.getElementById('batchCoverage').value;
+                const count = document.getElementById('batchCount').value;
+
+                const response = await fetch(`${API_BASE}/api/batch-assess?coverage=${coverage}&count=${count}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                displayBatchResults(data);
+
+            } catch (e) {
+                console.error('Batch assessment failed:', e);
+                alert('Batch assessment failed');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('batchLoading').style.display = 'none';
+            }
+        }
+
+        function displayBatchResults(data) {
+            const stats = data.statistics;
+
+            document.getElementById('batchAvgScore').textContent = stats.avg_score.toFixed(0);
+            document.getElementById('batchApproveRate').textContent =
+                ((stats.decision_distribution.approve / data.count) * 100).toFixed(0) + '%';
+            document.getElementById('batchAvgPremium').textContent = formatCurrency(stats.avg_premium);
+            document.getElementById('batchTotalPremium').textContent = formatCurrency(stats.avg_premium * data.count);
+
+            // Tier chart
+            const tierChart = document.getElementById('tierChart');
+            const maxTier = Math.max(...Object.values(stats.tier_distribution), 1);
+            tierChart.innerHTML = Object.entries(stats.tier_distribution)
+                .map(([tier, count]) => `
+                    <div style="text-align: center;">
+                        <div class="bar" style="height: ${(count / maxTier) * 200}px;">
+                            <span class="bar-value">${count}</span>
+                        </div>
+                        <div class="bar-label">Tier ${tier}</div>
+                    </div>
+                `).join('');
+
+            // Decision chart
+            const decisionChart = document.getElementById('decisionChart');
+            const maxDecision = Math.max(...Object.values(stats.decision_distribution), 1);
+            const decisionColors = { approve: '#10b981', refer: '#f59e0b', decline: '#ef4444' };
+            decisionChart.innerHTML = Object.entries(stats.decision_distribution)
+                .map(([decision, count]) => `
+                    <div style="text-align: center;">
+                        <div class="bar" style="height: ${(count / maxDecision) * 200}px; background: ${decisionColors[decision]};">
+                            <span class="bar-value">${count}</span>
+                        </div>
+                        <div class="bar-label">${decision}</div>
+                    </div>
+                `).join('');
+
+            // Results table
+            const table = document.getElementById('batchResultsTable');
+            table.innerHTML = data.results.map(r => `
+                <div class="batch-result-row">
+                    <div>${r.entity_name}</div>
+                    <div style="font-weight: 600;">${r.composite_score.toFixed(0)}</div>
+                    <div><span class="tier-badge tier-${r.tier}">Tier ${r.tier}</span></div>
+                    <div><span class="decision-badge decision-${r.decision}">${r.decision}</span></div>
+                    <div>${formatCurrency(r.recommended_premium)}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('batchResults').style.display = 'block';
+        }
+
+        // Load Coverages
+        async function loadCoverages() {
+            try {
+                const response = await fetch(`${API_BASE}/api/coverages`);
+                const data = await response.json();
+
+                const grid = document.getElementById('coverageGrid');
+                grid.innerHTML = data.coverages.map(c => `
+                    <div class="coverage-card" onclick="loadCoverageDetails('${c.name}')">
+                        <div class="coverage-name">${c.name}</div>
+                        <div class="coverage-description">${c.description}</div>
+                        <div class="coverage-stats">
+                            <div class="coverage-stat"><span>${c.signal_count}</span> signals</div>
+                            <div class="coverage-stat"><span>${c.signal_groups.length}</span> groups</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load coverages:', e);
+            }
+        }
+
+        async function loadCoverageDetails(coverage) {
+            try {
+                const response = await fetch(`${API_BASE}/api/coverage/${coverage}`);
+                const data = await response.json();
+
+                // Highlight selected
+                document.querySelectorAll('.coverage-card').forEach(c => c.classList.remove('selected'));
+                event.target.closest('.coverage-card').classList.add('selected');
+
+                document.getElementById('coverageDetailsTitle').textContent = coverage.toUpperCase() + ' Coverage';
+                document.getElementById('signalCount').textContent = data.signals.length;
+
+                // Signal groups
+                const groupsDiv = document.getElementById('coverageSignalGroups');
+                groupsDiv.innerHTML = Object.entries(data.signal_groups || {})
+                    .map(([name, config]) => `
+                        <div class="group-score">
+                            <span class="group-name">${formatGroupName(name)}</span>
+                            <span class="group-value">Weight: ${((config.weight || 0) * 100).toFixed(0)}%</span>
+                        </div>
+                    `).join('');
+
+                // Signals
+                const signalsDiv = document.getElementById('coverageSignals');
+                signalsDiv.innerHTML = (data.signals || [])
+                    .map(s => `
+                        <div class="signal-item">
+                            <span class="signal-name">${formatSignalName(s.name || s.id)}</span>
+                            <span style="color: var(--text-secondary); font-size: 0.85rem;">${s.group_id || ''}</span>
+                        </div>
+                    `).join('');
+
+                document.getElementById('coverageDetails').style.display = 'block';
+
+            } catch (e) {
+                console.error('Failed to load coverage details:', e);
+            }
+        }
+
+        // Refresh Stats
+        async function refreshStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/info`);
+                const data = await response.json();
+
+                document.getElementById('statAssessments').textContent = data.assessments_run;
+                document.getElementById('statAvgTime').textContent = data.average_processing_ms.toFixed(0) + 'ms';
+                document.getElementById('statUptime').textContent = formatUptime(data.uptime_seconds);
+                document.getElementById('statCoverages').textContent = data.available_coverages.length;
+
+                // Tier distribution
+                const tierDiv = document.getElementById('statsTierDist');
+                tierDiv.innerHTML = Object.entries(data.tier_distribution)
+                    .map(([tier, count]) => `
+                        <div class="group-score">
+                            <span class="group-name">Tier ${tier}</span>
+                            <span class="group-value">${count}</span>
+                        </div>
+                    `).join('');
+
+                // Decision distribution
+                const decisionDiv = document.getElementById('statsDecisionDist');
+                decisionDiv.innerHTML = Object.entries(data.decision_distribution)
+                    .map(([decision, count]) => `
+                        <div class="group-score">
+                            <span class="group-name" style="text-transform: capitalize;">${decision}</span>
+                            <span class="group-value">${count}</span>
+                        </div>
+                    `).join('');
+
+                // Coverage usage
+                const coverageDiv = document.getElementById('statsCoverageUsage');
+                coverageDiv.innerHTML = Object.entries(data.coverage_usage)
+                    .map(([coverage, count]) => `
+                        <div class="group-score">
+                            <span class="group-name" style="text-transform: uppercase;">${coverage}</span>
+                            <span class="group-value">${count}</span>
+                        </div>
+                    `).join('');
+
+            } catch (e) {
+                console.error('Failed to refresh stats:', e);
+            }
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatGroupName(name) {
+            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatSignalName(name) {
+            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatUptime(seconds) {
+            if (seconds < 60) return seconds.toFixed(0) + 's';
+            if (seconds < 3600) return (seconds / 60).toFixed(0) + 'm';
+            return (seconds / 3600).toFixed(1) + 'h';
+        }
+
+        function getScoreColor(score) {
+            if (score >= 80) return '#10b981';
+            if (score >= 60) return '#00d4ff';
+            if (score >= 40) return '#f59e0b';
+            return '#ef4444';
+        }
+
+        // Initialize on load
+        init();
+
+        // Refresh connection status periodically
+        setInterval(checkConnection, 30000);
+    </script>
+</body>
+</html>

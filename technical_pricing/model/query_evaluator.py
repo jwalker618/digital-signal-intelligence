@@ -1,190 +1,264 @@
 """
-DSI Query Evaluator
+DSI Model Layer - Query Evaluator (Phase 4)
 
-Evaluates direct query responses (Step 7).
+Executes Step 7 of the workflow:
+- Evaluate responses to direct queries (boolean questions)
+- Trigger impacts: tier override, referral, note, modifier
 
-Direct queries are boolean questions that can trigger:
-- (a) Tier override
-- (b) Referral
-- (c) Note
-- (d) Modifier (ONLY direct queries can define modifiers)
-
-This is the key difference from signal conditions (Step 6),
-which cannot define modifiers.
+Direct queries are OPTIONAL per DSI principles - the model must work
+without them. They provide additional risk signals when available.
 """
+
+import logging
+from typing import Dict, List, Optional, Any
 
 from .types import (
     CoverageConfig,
     DirectQueryConfig,
-    DirectQueryImpact,
     QueryEvaluationResult,
+    TriggeredCondition,
     ConditionAction,
 )
 
 
+logger = logging.getLogger("dsi.query_evaluator")
+
+
 class QueryEvaluator:
     """
-    Evaluates direct query responses.
-    
-    Direct queries are optional boolean questions that allow
-    additional underwriting control beyond signal-based scoring.
+    Evaluates direct query responses (Step 7).
+
+    Direct queries can trigger:
+    - Tier override: Force to specific tier
+    - Referral: Set auto_approve = false
+    - Note: Post note for underwriter
+    - Modifier: Premium modifier applied after base premium
     """
-    
+
     def evaluate_queries(
         self,
-        responses: dict[str, bool],
+        responses: Dict[str, bool],
         config: CoverageConfig
     ) -> QueryEvaluationResult:
         """
-        Evaluate all direct query responses (Step 7).
-        
+        Step 7: Evaluate all direct query responses.
+
         Args:
-            responses: Dict mapping query_id to boolean response
-            config: Coverage configuration
-        
+            responses: Map of query_id -> boolean response
+            config: Coverage configuration with query definitions
+
         Returns:
-            QueryEvaluationResult with tier overrides, referrals, notes, and modifiers
+            QueryEvaluationResult with all triggered impacts
         """
-        result = QueryEvaluationResult()
-        
-        for query in config.direct_queries:
-            # Get response for this query
-            response = responses.get(query.id)
-            
-            # Track evaluation for audit
-            query_eval = {
-                'id': query.id,
-                'question': query.question,
-                'response': response,
-                'impacts_triggered': []
-            }
-            
-            # Skip if no response provided
+        conditions: List[TriggeredCondition] = []
+        tier_overrides: List[int] = []
+        referrals: List[str] = []
+        notes: List[str] = []
+        modifiers: List[Dict[str, Any]] = []
+
+        for query_config in config.direct_queries:
+            query_id = query_config.id
+            response = responses.get(query_id)
+
+            # Skip if no response provided (queries are optional)
             if response is None:
-                query_eval['skipped'] = True
-                result.queries_evaluated.append(query_eval)
+                logger.debug(f"Query '{query_id}' not answered, skipping")
                 continue
-            
-            # Evaluate each impact
-            for impact in query.impacts:
-                if self._should_trigger(impact, response):
-                    triggered = {
-                        'impact_type': impact.impact_type.value,
-                        'value': impact.value,
-                        'trigger_on': impact.trigger_on
-                    }
-                    query_eval['impacts_triggered'].append(triggered)
-                    
-                    # Apply the impact
-                    self._apply_impact(
-                        impact=impact,
-                        query=query,
-                        result=result
+
+            # Evaluate each impact band for this query
+            for impact in query_config.impacts:
+                # Check if the response triggers this impact
+                if response == impact.trigger_value:
+                    triggered_condition = self._create_triggered_condition(
+                        query_config, impact, response
                     )
-            
-            result.queries_evaluated.append(query_eval)
-        
-        return result
-    
-    def _should_trigger(self, impact: DirectQueryImpact, response: bool) -> bool:
-        """
-        Determine if an impact should trigger based on response.
-        
-        trigger_on=True means impact fires when response is True
-        trigger_on=False means impact fires when response is False
-        """
-        return response == impact.trigger_on
-    
-    def _apply_impact(
+                    conditions.append(triggered_condition)
+
+                    # Collect the specific impact
+                    if impact.action == "DECLINE":
+                        tier_overrides.append(impact.tier_override or 5)
+                        notes.append(impact.note or f"Query {query_id} triggered decline")
+
+                    elif impact.action == "REFER":
+                        referrals.append(impact.note or f"Query {query_id} requires referral")
+
+                    elif impact.action == "MODIFIER":
+                        if impact.modifier is not None:
+                            modifiers.append({
+                                "source": "direct_query",
+                                "source_id": query_id,
+                                "name": query_config.question[:50],
+                                "factor": impact.modifier,
+                            })
+                        if impact.note:
+                            notes.append(impact.note)
+
+                    elif impact.tier_override is not None:
+                        tier_overrides.append(impact.tier_override)
+                        if impact.note:
+                            notes.append(impact.note)
+
+                    elif impact.note:
+                        notes.append(impact.note)
+
+        logger.debug(
+            f"Evaluated {len(responses)} query responses: "
+            f"{len(tier_overrides)} tier overrides, "
+            f"{len(referrals)} referrals, "
+            f"{len(modifiers)} modifiers, "
+            f"{len(notes)} notes"
+        )
+
+        return QueryEvaluationResult(
+            conditions_triggered=conditions,
+            tier_overrides=tier_overrides,
+            referrals=referrals,
+            notes=notes,
+            modifiers=modifiers,
+        )
+
+    def _create_triggered_condition(
         self,
-        impact: DirectQueryImpact,
-        query: DirectQueryConfig,
-        result: QueryEvaluationResult
-    ) -> None:
-        """Apply a triggered impact to the result"""
-        
-        if impact.impact_type == ConditionAction.TIER_OVERRIDE:
-            result.tier_overrides.append(int(impact.value))
-        
-        elif impact.impact_type == ConditionAction.REFERRAL:
-            reason = impact.value or f"Query '{query.id}' triggered referral"
-            result.referrals.append(str(reason))
-        
-        elif impact.impact_type == ConditionAction.NOTE:
-            note = impact.value or f"Note from query '{query.id}'"
-            result.notes.append(str(note))
-        
-        elif impact.impact_type == ConditionAction.MODIFIER:
-            # Direct queries CAN define modifiers
-            modifier = {
-                'name': f"query_{query.id}",
-                'factor': float(impact.value),
-                'source': 'direct_query',
-                'query_id': query.id
-            }
-            result.modifiers.append(modifier)
-    
-    def validate_responses(
-        self,
-        responses: dict[str, bool],
-        config: CoverageConfig
-    ) -> tuple[bool, list[str]]:
+        query_config: DirectQueryConfig,
+        impact,  # DirectQueryImpact
+        response: bool
+    ) -> TriggeredCondition:
         """
-        Validate query responses against configuration.
-        
+        Create a TriggeredCondition from a query impact.
+
+        Args:
+            query_config: The query configuration
+            impact: The triggered impact
+            response: The response that triggered it
+
         Returns:
-            Tuple of (is_valid, errors)
+            TriggeredCondition record
         """
-        errors = []
-        
-        # Check for unknown query IDs
-        valid_ids = {q.id for q in config.direct_queries}
-        for query_id in responses:
-            if query_id not in valid_ids:
-                errors.append(f"Unknown query ID: {query_id}")
-        
-        # Check response types
-        for query_id, response in responses.items():
-            if not isinstance(response, bool):
-                errors.append(f"Query '{query_id}' response must be boolean, got {type(response).__name__}")
-        
-        return (len(errors) == 0, errors)
-    
-    def get_required_queries(self, config: CoverageConfig) -> list[dict]:
+        # Determine the action type
+        if impact.action == "DECLINE":
+            action = ConditionAction.TIER_OVERRIDE
+            action_value = impact.tier_override or 5
+        elif impact.action == "REFER":
+            action = ConditionAction.REFERRAL
+            action_value = impact.note or "Referral required"
+        elif impact.action == "MODIFIER":
+            action = ConditionAction.MODIFIER
+            action_value = impact.modifier
+        elif impact.tier_override is not None:
+            action = ConditionAction.TIER_OVERRIDE
+            action_value = impact.tier_override
+        else:
+            action = ConditionAction.NOTE
+            action_value = impact.note or ""
+
+        return TriggeredCondition(
+            source_type="direct_query",
+            source_id=query_config.id,
+            source_name=query_config.question,
+            score=None,
+            response=response,
+            action=action,
+            action_value=action_value,
+            note=impact.note or "",
+        )
+
+    def get_unanswered_queries(
+        self,
+        responses: Dict[str, bool],
+        config: CoverageConfig
+    ) -> List[DirectQueryConfig]:
         """
-        Get list of queries that should be answered.
-        
-        Returns list of {id, question} dicts.
+        Get list of queries that haven't been answered.
+
+        Useful for showing which optional queries are pending.
+
+        Args:
+            responses: Map of query_id -> response
+            config: Coverage configuration
+
+        Returns:
+            List of unanswered DirectQueryConfig
         """
+        answered_ids = set(responses.keys())
+
         return [
-            {'id': q.id, 'question': q.question}
-            for q in config.direct_queries
+            query for query in config.direct_queries
+            if query.id not in answered_ids
         ]
-    
-    def summarize_impacts(self, result: QueryEvaluationResult) -> dict:
+
+    def get_critical_queries(
+        self,
+        config: CoverageConfig
+    ) -> List[DirectQueryConfig]:
         """
-        Summarize the impacts from query evaluation for reporting.
+        Get queries that can trigger decline or severe tier override.
+
+        These are the most impactful queries that should be prioritized.
+
+        Args:
+            config: Coverage configuration
+
+        Returns:
+            List of critical DirectQueryConfig
+        """
+        critical_queries = []
+
+        for query in config.direct_queries:
+            is_critical = False
+            for impact in query.impacts:
+                if impact.action == "DECLINE":
+                    is_critical = True
+                elif impact.tier_override is not None and impact.tier_override >= 4:
+                    is_critical = True
+
+            if is_critical:
+                critical_queries.append(query)
+
+        return critical_queries
+
+    def summarize_query_impacts(
+        self,
+        result: QueryEvaluationResult
+    ) -> Dict[str, Any]:
+        """
+        Create a summary of query evaluation results.
+
+        Args:
+            result: QueryEvaluationResult
+
+        Returns:
+            Summary dictionary for reporting
         """
         return {
-            'total_queries': len(result.queries_evaluated),
-            'queries_with_impacts': sum(
-                1 for q in result.queries_evaluated
-                if q.get('impacts_triggered')
-            ),
-            'tier_overrides': len(result.tier_overrides),
-            'referrals': len(result.referrals),
-            'notes': len(result.notes),
-            'modifiers': len(result.modifiers),
-            'modifier_total': self._calculate_modifier_total(result.modifiers)
+            "conditions_count": len(result.conditions_triggered),
+            "has_tier_override": len(result.tier_overrides) > 0,
+            "max_tier_override": max(result.tier_overrides) if result.tier_overrides else None,
+            "requires_referral": len(result.referrals) > 0,
+            "referral_reasons": result.referrals,
+            "has_modifiers": len(result.modifiers) > 0,
+            "modifier_count": len(result.modifiers),
+            "total_modifier_factor": self._calculate_total_modifier(result.modifiers),
+            "notes": result.notes,
         }
-    
-    def _calculate_modifier_total(self, modifiers: list[dict]) -> float:
-        """Calculate combined modifier factor"""
-        if not modifiers:
-            return 1.0
-        
-        # Modifiers are multiplicative
+
+    def _calculate_total_modifier(
+        self,
+        modifiers: List[Dict[str, Any]]
+    ) -> float:
+        """Calculate combined modifier factor."""
         total = 1.0
         for mod in modifiers:
-            total *= mod.get('factor', 1.0)
+            total *= mod.get("factor", 1.0)
         return total
+
+
+# Singleton instance for convenience
+_default_evaluator: Optional[QueryEvaluator] = None
+
+
+def get_query_evaluator() -> QueryEvaluator:
+    """Get the default QueryEvaluator instance."""
+    global _default_evaluator
+    if _default_evaluator is None:
+        _default_evaluator = QueryEvaluator()
+    return _default_evaluator

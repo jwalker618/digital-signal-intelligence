@@ -4,13 +4,31 @@
 
 | Item | Value |
 |-|-|
-|Version|1.0|
-|Date|November 2025|
-|Classification|Introduction|
+|Version|0.2.0|
+|Date|December 2024|
+|Classification|Development|
 
 ---
 
-**A production-ready framework for automated underwriting using digital footprint analysis and network intelligence.**
+## Project Status
+
+| Component | Status | Completeness |
+|-----------|--------|--------------|
+| **Core Workflow** | ✅ Complete | 14-step workflow fully implemented |
+| **Coverage Configs** | ✅ Complete | 7 coverages (Aerospace, Cyber, D&O, Energy, FI, Marine, PI) |
+| **Signal Architecture** | ⚠️ Stubs | Architecture complete, extractors return simulated data |
+| **API Layer** | ✅ Functional | FastAPI with actual workflow integration |
+| **Database Layer** | ✅ Schema Ready | SQLAlchemy models, awaiting deployment |
+| **Authentication** | ✅ Implemented | JWT + API key modules ready |
+| **Tests** | ✅ 380+ tests | Good coverage of core logic |
+| **Production Infra** | 🔲 Pending | Requires K8s/Helm, monitoring setup |
+
+> **Note**: Signal extractors currently return **simulated data** for development/testing.
+> Real API integrations (SSL Labs, SecurityScorecard, etc.) are required for production use.
+
+---
+
+**A framework for automated underwriting using digital footprint analysis and network intelligence.**
 
 DSI applies the principles that made Google's PageRank revolutionary—inferring quality from observable network relationships—to insurance underwriting. A company's digital presence serves as a powerful proxy for operational maturity, governance quality, and risk management capability.
 
@@ -165,71 +183,55 @@ CoverageLineRegistry.register(
 ### Repository Structure
 
 ```
-dsi-insurance-pricing/
-│
-├── api/
-|
-├── docs/
-│   └── overview/
-|   |   ├──An Agentic Future - Global Technical Pricing.pdf
-|   |   ├──Executive Summary.pdf
-|   |   ├──Foundational Principles.md
-|   |   └──The PageRank precedent.md
-│   │
-│   └── demos and case-studies/
-|   |   ├──case_studies
-|   |   |  ├──dsi_client_assessment_samples.md
-|   |   |  ├──dsi_retrospective_case_study_detail.md
-|   |   |  ├──dsi_retrospective_case_study_executive_summary.md
-|   |   |  └──dsi_retrospective_methodology.md
-|   |   |
-|   |   └── demos
-|   |      ├──dsi_demo_dashboard.html
-|   |      ├──dsi_demo_workflow.html
-|   |      └──dsi_portfolio_dashboard.html
-|   |
-│   └── agent_interaction/
-|       └──dsi_specification.md
-|   
-├── models/
-│   ├── cyber/
-│   │   └── dsi_cyber_pricing.py   
-│   │
-│   ├── d&o/
-│   │   └── dsi_do_pricing.py   
-│   │
-│   ├── energy/
-│   │   └── dsi_energy_pricing.py   
-│   │
-│   ├── financial_institutions/
-│   │   └── dsi_fi_pricing.py   
-│   │
-│   ├── marine/
-│   │   └── dsi_marine_pricing.py
-│   │
-│   ├── pi/
-│   │   └── dsi_pi_pricing.py
-│   │
-│   ├── aerospace/
-│   │   └── dsi_aerospace_pricing.py
-│   │
-│   ├── portfolio/
-│   │   └── dsi_portfolio_analytics.py   
-│   │
-│   ├── signal_collection/
-│   │   └── dsi_signal_collection.py   
-│   │
-│   └── website_discovery/
-│       └── dsi_website_discovery.py   
-│
-├── workflow/
-│   ├── dsi_persistance.py
-│   ├── dsi_workflow.py
-|   |
-│   └── storage/
-|      ├──postgres.py
-│      └──redis.py
-|  
+digital-signal-intelligence/
+├── technical_pricing/           # Main package (~70K lines)
+│   ├── signals/                 # Signal extraction framework
+│   │   ├── types.py             # Core data types
+│   │   ├── extractors/stubs/    # Stub extractors (7 coverages)
+│   │   ├── aggregators/         # Signal aggregation
+│   │   ├── categorisers/        # Score categorization
+│   │   └── inference/           # Inference functions
+│   ├── coverages/               # YAML configurations
+│   │   ├── aerospace/           # 21 signals
+│   │   ├── cyber/               # 35 signals
+│   │   ├── do/                  # 46 signals
+│   │   ├── energy/              # 44 signals
+│   │   ├── fi/                  # ~40 signals
+│   │   ├── marine/              # ~38 signals
+│   │   └── pi/                  # ~35 signals
+│   ├── model/                   # 14-step workflow
+│   │   ├── workflow.py          # Complete orchestration
+│   │   ├── scorer.py            # Signal scoring
+│   │   ├── pricer.py            # Premium calculation
+│   │   └── modifiers/           # Traditional pricing modifiers
+│   ├── discovery/               # Entity identification (Step 0)
+│   ├── api/                     # FastAPI REST API
+│   │   ├── main.py              # Application entry
+│   │   ├── routes/              # Endpoint handlers
+│   │   └── auth/                # JWT & API key auth
+│   ├── db/                      # Database layer
+│   │   ├── models.py            # SQLAlchemy models
+│   │   └── repositories.py      # Data access
+│   ├── orchestration/           # Multi-coverage handling
+│   ├── analytics/               # Performance analysis
+│   ├── integrations/            # Email, docs, webhooks
+│   ├── builder/                 # LLM coverage builder
+│   └── tests/                   # 380+ tests
+├── examples/                    # Working examples (all 7 coverages)
+├── demo/                        # Interactive demonstrations
+│   ├── server.py                # Live demo server (FastAPI)
+│   ├── index.html               # Live demo UI
+│   └── standalone/              # No-install HTML demos
+├── deploy/                      # Deployment configurations
+│   ├── docker/                  # Docker Compose for production
+│   ├── kubernetes/              # K8s manifests
+│   └── monitoring/              # Prometheus & Grafana configs
+├── docs/                        # Documentation
+│   └── deployment/              # Deployment guide
+├── .env.example                 # Environment template (100+ options)
+├── Dockerfile                   # Production container image
+├── requirements.txt             # Python dependencies
+├── SKILL.md                     # Architecture guide (119KB)
 └── README.md
 ```
 
@@ -237,83 +239,92 @@ dsi-insurance-pricing/
 
 ### Core Modules
 
-#### 1. Website Discovery (`models/website_discovery/dsi_website_discovery.py`)
+#### 1. Website Discovery (`technical_pricing/discovery/website_discovery.py`)
 
-Resolves the correct corporate website for any entity—a foundational step before signal collection.
+Resolves the correct corporate website for any entity—Step 0 of the pricing workflow. This is foundational for accurate signal extraction.
 
 ```python
-from website_discovery import WebsiteDiscoveryEngine
+from technical_pricing.discovery import discover_website, WebsiteDiscoveryEngine
 
-engine = WebsiteDiscoveryEngine()
-result = engine.discover("MS Amlin", country_hint="UK")
-
+# Simple discovery
+result = discover_website("MS Amlin", country_hint="UK")
 print(result.primary_website.domain)  # → msamlin.com
 print(result.confidence)              # → ConfidenceLevel.HIGH
-print(result.company_identity.parent) # → MS&AD Insurance Group Holdings
+
+# With domain hint
+engine = WebsiteDiscoveryEngine()
+result = engine.discover(
+    "Petrobras",
+    domain_hint="petrobras.com.br",
+    country_hint="Brazil"
+)
+print(result.primary_website.domain)  # → petrobras.com.br
+print(result.confidence)              # → ConfidenceLevel.HIGH
 ```
 
 **Key Features:**
-- Multi-method discovery (DNS, search, registries)
+- Multi-method discovery (DNS enumeration, search, corporate registries)
 - Parent/subsidiary resolution
 - Confidence scoring with manual review flags
 - Batch processing support
+- Integrated into workflow as Step 0
 
-#### 2. Signal Collection (`models/signal_collection/dsi_signal_collection.py`)
+#### 2. Workflow Engine (`technical_pricing/model/workflow.py`)
 
-Harvests and scores signals from multiple sources into a unified DSI assessment.
+Orchestrates the complete 14-step DSI pricing workflow from discovery through decision.
 
 ```python
-from signal_collection import create_signal_engine, ModelType
+from technical_pricing.model.workflow import run_assessment, WorkflowEngine
 
-engine = create_signal_engine(ModelType.CYBER)
-result = engine.collect("Petrobras", domain_hint="petrobras.com.br")
+# Simple assessment
+result = run_assessment(
+    entity_id="petrobras-001",
+    coverage="cyber",
+    entity_name="Petrobras",
+    domain_hint="petrobras.com.br",
+    submission_data={"tiv": 10_000_000}
+)
 
-print(f"Score: {result.overall_score}/1000")  # → Score: 742/1000
-print(f"Tier: {result.tier}")                  # → Tier: 2
-print(f"Red Flags: {result.red_flags}")        # → Red Flags: []
+print(f"Score: {result.composite_score}/1000")  # → Score: 742/1000
+print(f"Tier: {result.tier}")                    # → Tier: 2
+print(f"Decision: {result.decision.value}")      # → Decision: approve
+print(f"Premium: ${result.recommended_premium}") # → Premium: $125,000
 ```
 
 **Key Features:**
-- Modular collector architecture
-- Model-specific signal weighting
-- Multiple scoring methods (binary, linear, logarithmic, threshold)
-- Red flag / green flag detection
-- Quality-adjusted scoring
+- 14-step workflow (Step 0 discovery + 13 pricing steps)
+- Content-addressable configuration storage
+- Full audit trail with model versioning
+- Automatic tier-to-decision mapping
+- Multiple premium options by limit band
 
-#### 3. Portfolio Management (`models/portfolio/dsi_portfolio_analytics.py`)
+#### 3. Signal Architecture (`technical_pricing/signals/`)
 
-The primary human interface—orchestrates all DSI functionality for portfolio-level oversight.
+The signal extraction framework implements the Extractor → Aggregator → Categorizer → Inference pipeline.
 
 ```python
-from portfolio_management import DSIPortfolioManager, CoverageType
+from technical_pricing.signals.types import InferenceContext, SignalResult
 
-manager = DSIPortfolioManager()
+# Context includes discovery data for extractors
+context = InferenceContext(
+    configuration={},
+    coverage="cyber",
+    config_name="cyber_general",
+    discovered_domain="example.com",    # From Step 0
+    discovery_confidence=0.95           # From Step 0
+)
 
-# Add risks
-manager.add_risk("Acme Corp", CoverageType.CYBER, metadata=metadata, assessment=assessment)
-
-# Get portfolio metrics
-metrics = manager.calculate_metrics()
-print(f"Average Score: {metrics.average_score}")
-print(f"Tier Distribution: {metrics.risks_by_tier}")
-
-# Check alerts
-alerts = manager.get_active_alerts(severity=AlertSeverity.HIGH)
-
-# Natural language query
-results = manager.query("show me tier 4 cyber risks")
-
-# Generate dashboard
-dashboard = manager.generate_dashboard()
+# Extractors can use the discovered domain
+def infer_security_headers(entity_id: str, context: InferenceContext) -> SignalResult:
+    domain = context.discovered_domain  # Use discovered website
+    # ... fetch and score security headers
 ```
 
 **Key Features:**
-- Multi-line portfolio management
-- Real-time alerting (concentration, deterioration, tier migration)
-- Natural language queries
-- Drill-down analysis and peer comparison
-- Scenario modeling ("what-if" analysis)
-- Export to JSON/CSV
+- TTL-aware caching for extractor results
+- Discovery data passed to all inference functions
+- Standardized result types for audit trail
+- Confidence scoring per signal
 
 ---
 
@@ -345,42 +356,131 @@ Retrospective analysis across multiple sectors shows:
 
 #### Prerequisites
 
-- Python 3.9+
-- Modern web browser (for dashboards)
+- Python 3.10+
+- PostgreSQL 14+ (optional, for persistence)
+- Redis 7+ (optional, for caching)
 
 #### Installation
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/dsi-insurance-pricing.git
-cd dsi-insurance-pricing
+git clone https://github.com/jwalker618/digital-signal-intelligence.git
+cd digital-signal-intelligence
 
 # Install dependencies
 pip install -r requirements.txt
+
+# For development
+pip install -r requirements-dev.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your settings
+```
+
+#### Run the API
+
+```bash
+# Development mode
+uvicorn technical_pricing.api.main:app --reload --port 8000
+
+# Production mode
+uvicorn technical_pricing.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+API documentation available at: `http://localhost:8000/api/docs`
+
+#### Project Structure
+
+```
+digital-signal-intelligence/
+├── technical_pricing/           # Main package
+│   ├── signals/                 # Signal extraction framework
+│   │   ├── extractors/          # Data extraction stubs
+│   │   ├── aggregators/         # Signal aggregation
+│   │   ├── categorisers/        # Score categorization
+│   │   └── inference/           # Inference functions
+│   ├── coverages/               # Coverage configurations (YAML)
+│   │   ├── aerospace/
+│   │   ├── cyber/
+│   │   └── ...
+│   ├── model/                   # 14-step workflow implementation
+│   │   ├── config_manager.py    # Config loading & validation
+│   │   ├── scorer.py            # Signal scoring (Steps 4-6)
+│   │   ├── query_evaluator.py   # Direct queries (Step 7)
+│   │   ├── pricer.py            # Premium calculation (Steps 8-12)
+│   │   └── workflow.py          # Complete workflow orchestration
+│   ├── discovery/               # Entity identification
+│   └── tests/                   # Unit & integration tests
+├── SKILL.md                     # Detailed architecture documentation
+└── docs/                        # Documentation & case studies
 ```
 
 #### Quick Start
 
 ```python
-from signal_collection import create_signal_engine, ModelType
-from portfolio_management import DSIPortfolioManager, CoverageType
+from technical_pricing.model.workflow import run_assessment
 
-# Assess a single risk
-engine = create_signal_engine(ModelType.CYBER)
-assessment = engine.collect("Target Company", domain_hint="targetcompany.com")
-print(f"DSI Score: {assessment.overall_score}, Tier: {assessment.tier}")
+# Run complete workflow (discovery + pricing in one call)
+result = run_assessment(
+    entity_id="target-company-001",
+    coverage="aerospace",
+    entity_name="Target Aviation Corp",
+    domain_hint="targetaviation.com",
+    country_hint="US",
+    submission_data={
+        "tiv": 50_000_000,
+        "limit": 10_000_000,
+    }
+)
 
-# Manage a portfolio
-portfolio = DSIPortfolioManager()
-portfolio.add_risk("Target Company", CoverageType.CYBER, assessment=assessment)
-dashboard = portfolio.generate_dashboard()
+# Check discovery results (Step 0)
+print(f"Discovered: {result.discovered_domain}")
+print(f"Discovery confidence: {result.discovery_confidence}")
+
+# Check pricing results (Steps 1-13)
+print(f"Composite Score: {result.composite_score}/1000")
+print(f"Tier: {result.tier} ({result.tier_label})")
+print(f"Decision: {result.decision.value}")
+print(f"Premium: ${result.recommended_premium:,.0f}")
+print(f"Premium options: {result.premium_options}")
+
+# Access full audit trail
+version = result.model_version
+print(f"Signal coverage: {version.signal_coverage:.0%}")
+print(f"Confidence: {version.confidence:.0%}")
 ```
 
-#### View Interactive Dashboards
+#### Run Tests
 
-Open any `.html` file in `docs/demos and case_studies/demos/` directly in a browser:
-- `DSI_Dashboard_v2.html` - Signal-level analysis
-- `DSI_Portfolio_Dashboard.html` - Portfolio management interface
+```bash
+# Run all tests
+pytest technical_pricing/tests/ -v
+
+# Run with coverage
+pytest technical_pricing/tests/ --cov=technical_pricing --cov-report=html
+```
+
+#### Interactive Demos
+
+**Standalone HTML Demos** (no installation required):
+Open any file in `demo/standalone/` directly in your browser:
+- `signal-scoring.html` - Interactive signal weight exploration
+- `tier-visualization.html` - Score-to-tier mapping
+- `pricing-calculator.html` - Premium calculation with ILF curves
+- `workflow-animation.html` - Animated 14-step workflow
+- `coverage-comparison.html` - Compare all 7 coverage types
+
+**Live Demo Server** (requires Python):
+```bash
+pip install fastapi uvicorn
+python -m demo.server
+# Open http://localhost:8080
+```
+
+**Legacy Dashboards** in `docs/demos and case_studies/demos/`:
+- `dsi_demo_dashboard.html` - Signal-level analysis
+- `dsi_portfolio_dashboard.html` - Portfolio management interface
 
 ---
 
@@ -417,9 +517,10 @@ Open any `.html` file in `docs/demos and case_studies/demos/` directly in a brow
 | [PageRank Precedent](docs/overview/The%20PageRank%20precedent.pdf) | Board-level summary | C-Suite, Board |
 | [White Paper](docs/overview/An%20Agentic%20Future%20-%20Global%20Technical%20Pricing.pdf) | Detailed Explanation | Technical leadership |
 | [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
+| [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) | Production deployment | DevOps, Engineering |
 | [Methodology Defense](docs/demos%20and%20case_studies/validation/dsi_methodology.md) | Actuarial Q&A | Actuaries, Risk |
 | [Case Studies](docs/demos%20and%20case_studies/case-studies/) | Worked examples | Underwriters |
-| [Demos](docs/demos%20and%20case_studies/demos/) | Examples | All stakeholders |
+| [Interactive Demos](demo/standalone/) | Hands-on exploration | All stakeholders |
 
 ---
 

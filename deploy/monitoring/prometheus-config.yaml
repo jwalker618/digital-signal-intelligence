@@ -1,0 +1,173 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: dsi-prod
+  labels:
+    app.kubernetes.io/name: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'dsi-prod'
+
+    # Alerting configuration
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+
+    # Rule files
+    rule_files:
+      - /etc/prometheus/rules/*.yaml
+
+    # Scrape configurations
+    scrape_configs:
+      # Prometheus self-monitoring
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+
+      # DSI API pods
+      - job_name: 'dsi-api'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: ['dsi-prod']
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: dsi-api
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            regex: "true"
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name
+
+      # PostgreSQL exporter
+      - job_name: 'postgres'
+        static_configs:
+          - targets: ['postgres-exporter:9187']
+
+      # Redis exporter
+      - job_name: 'redis'
+        static_configs:
+          - targets: ['redis-exporter:9121']
+
+  # Alerting rules
+  alerts.yaml: |
+    groups:
+      - name: dsi-api-alerts
+        rules:
+          # High error rate
+          - alert: DSIHighErrorRate
+            expr: |
+              sum(rate(http_requests_total{job="dsi-api",status=~"5.."}[5m])) /
+              sum(rate(http_requests_total{job="dsi-api"}[5m])) > 0.01
+            for: 5m
+            labels:
+              severity: critical
+              team: platform
+            annotations:
+              summary: "DSI API high error rate"
+              description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+          # High latency
+          - alert: DSIHighLatency
+            expr: |
+              histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="dsi-api"}[5m])) by (le)) > 2
+            for: 10m
+            labels:
+              severity: warning
+              team: platform
+            annotations:
+              summary: "DSI API high latency"
+              description: "99th percentile latency is {{ $value | humanizeDuration }}"
+
+          # Pod restarts
+          - alert: DSIPodRestarts
+            expr: |
+              increase(kube_pod_container_status_restarts_total{namespace="dsi-prod",container="dsi-api"}[1h]) > 3
+            for: 5m
+            labels:
+              severity: warning
+              team: platform
+            annotations:
+              summary: "DSI API pod restarting frequently"
+              description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last hour"
+
+          # Low replica count
+          - alert: DSILowReplicas
+            expr: |
+              kube_deployment_status_replicas_available{namespace="dsi-prod",deployment="dsi-api"} < 2
+            for: 5m
+            labels:
+              severity: critical
+              team: platform
+            annotations:
+              summary: "DSI API low available replicas"
+              description: "Only {{ $value }} replicas available"
+
+          # Database connection pool exhausted
+          - alert: DSIDatabaseConnectionsHigh
+            expr: |
+              pg_stat_activity_count{datname="dsi_db"} > 40
+            for: 5m
+            labels:
+              severity: warning
+              team: platform
+            annotations:
+              summary: "DSI database connections high"
+              description: "{{ $value }} active database connections"
+
+          # Redis memory high
+          - alert: DSIRedisMemoryHigh
+            expr: |
+              redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+            for: 10m
+            labels:
+              severity: warning
+              team: platform
+            annotations:
+              summary: "DSI Redis memory usage high"
+              description: "Redis memory usage is {{ $value | humanizePercentage }}"
+
+          # Workflow execution slow
+          - alert: DSIWorkflowSlow
+            expr: |
+              histogram_quantile(0.95, sum(rate(dsi_workflow_duration_seconds_bucket[10m])) by (le, coverage)) > 30
+            for: 15m
+            labels:
+              severity: warning
+              team: platform
+            annotations:
+              summary: "DSI workflow execution slow"
+              description: "95th percentile workflow duration for {{ $labels.coverage }} is {{ $value | humanizeDuration }}"
+
+          # Health check failing
+          - alert: DSIHealthCheckFailing
+            expr: |
+              up{job="dsi-api"} == 0
+            for: 2m
+            labels:
+              severity: critical
+              team: platform
+            annotations:
+              summary: "DSI API health check failing"
+              description: "API instance {{ $labels.instance }} is down"

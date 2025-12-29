@@ -1,496 +1,773 @@
 """
-DSI Workflow Engine
+DSI Model Layer - Workflow Engine (Phase 4 + 6 + 7)
 
-Orchestrates the complete 13-step model workflow.
+Orchestrates the complete 14-step workflow:
 
-Steps 1-2: Configuration and model data initialization
-Step 3: Input verification
-Steps 4-6: Signal scoring
-Step 7: Query evaluation
-Steps 8-12: Pricing
-Step 13: Decision output
+0. Website Discovery (Phase 6)
+1. Model Configuration Instantiation
+2. Model Data File Creation
+3. Minimum Viable Input Verification
+4. Signal Extraction
+5. Pure Composite Score Calculation
+6. Signal Conditions Evaluation
+7. Direct Query Response Evaluation
+8. Maximum Tier Override Application
+9. Final Tier Capture
+10. Base Premium Generation
+10.5. Traditional Modifiers (Phase 7 - OPTIONAL)
+11. Modifier Application
+12. Limit Band Scaling
+13. Output Decision
+
+This is the main entry point for running DSI assessments.
 """
 
-from datetime import datetime
-from typing import Callable
+import logging
+import time
+import uuid
+from typing import Dict, List, Optional, Any, Tuple
 
 from .types import (
     CoverageConfig,
-    ModelVersion,
     WorkflowResult,
-    SubmissionRequest,
-    ScoringResult,
-    QueryEvaluationResult,
-    PricingResult,
+    ModelVersion,
     DecisionType,
-    VersionType,
+    DiscoveryOutput,
+    DiscoveryConfidence,
+    AppliedModifier,
+    utcnow,
 )
-from .config_manager import ConfigManager
-from .model_data import ModelDataManager
-from .scorer import ModelScorer
-from .query_evaluator import QueryEvaluator
-from .pricer import ModelPricer
+from .config_manager import ConfigManager, load_coverage_config
+from .model_data import ModelDataManager, get_model_data_manager
+from .scorer import ModelScorer, get_scorer
+from .query_evaluator import QueryEvaluator, get_query_evaluator
+from .pricer import ModelPricer, get_pricer
+from .modifiers import (
+    TraditionalModifier,
+    TraditionalModifierResult,
+    LossHistoryModifier,
+    ExposureModifier,
+    ExternalRatingModifier,
+)
+
+from ..signals.types import InferenceContext
+from ..discovery.website_discovery import (
+    WebsiteDiscoveryEngine,
+    DiscoveryResult,
+    ConfidenceLevel,
+)
+
+
+logger = logging.getLogger("dsi.workflow")
+
+
+class WorkflowError(Exception):
+    """Raised when workflow execution fails."""
+    pass
+
+
+class MissingInputError(Exception):
+    """Raised when required inputs are missing."""
+    def __init__(self, missing_fields: List[str]):
+        self.missing_fields = missing_fields
+        super().__init__(f"Missing required inputs: {', '.join(missing_fields)}")
 
 
 class WorkflowEngine:
     """
-    Orchestrates complete model workflow.
-    
-    This is the main entry point for running the DSI model.
-    All components are injected for testability and flexibility.
+    Orchestrates the complete 14-step DSI model workflow.
+
+    This engine coordinates all components:
+    - WebsiteDiscoveryEngine: Entity website discovery (Step 0)
+    - ConfigManager: Configuration loading and versioning
+    - ModelDataManager: Model data tracking
+    - ModelScorer: Signal extraction and scoring
+    - QueryEvaluator: Direct query evaluation
+    - ModelPricer: Premium calculation
+    - TraditionalModifiers: Optional actuarial modifiers (Step 10.5)
     """
-    
+
     def __init__(
         self,
-        config_manager: ConfigManager,
-        data_manager: ModelDataManager,
-        scorer: ModelScorer,
-        query_evaluator: QueryEvaluator,
-        pricer: ModelPricer
+        config_manager: Optional[ConfigManager] = None,
+        data_manager: Optional[ModelDataManager] = None,
+        scorer: Optional[ModelScorer] = None,
+        query_evaluator: Optional[QueryEvaluator] = None,
+        pricer: Optional[ModelPricer] = None,
+        discovery_engine: Optional[WebsiteDiscoveryEngine] = None,
+        traditional_modifiers: Optional[List[TraditionalModifier]] = None,
+        enable_default_modifiers: bool = True,
     ):
         """
-        Initialize workflow engine with dependencies.
-        
+        Initialize WorkflowEngine with dependencies.
+
         Args:
-            config_manager: Manages configuration loading/storage
-            data_manager: Manages model data and versions
-            scorer: Executes signal scoring (Steps 4-6)
-            query_evaluator: Evaluates direct queries (Step 7)
-            pricer: Calculates premiums (Steps 8-12)
+            config_manager: Configuration manager (uses default if None)
+            data_manager: Model data manager (uses default if None)
+            scorer: Model scorer (uses default if None)
+            query_evaluator: Query evaluator (uses default if None)
+            pricer: Model pricer (uses default if None)
+            discovery_engine: Website discovery engine (uses default if None)
+            traditional_modifiers: Optional list of traditional modifiers
+            enable_default_modifiers: If True and no modifiers provided, use defaults
         """
-        self.config_manager = config_manager
-        self.data_manager = data_manager
-        self.scorer = scorer
-        self.query_evaluator = query_evaluator
-        self.pricer = pricer
-    
-    # =========================================================================
-    # MAIN WORKFLOW
-    # =========================================================================
-    
+        self.config_manager = config_manager or ConfigManager()
+        self.data_manager = data_manager or get_model_data_manager()
+        self.scorer = scorer or get_scorer()
+        self.query_evaluator = query_evaluator or get_query_evaluator()
+        self.pricer = pricer or get_pricer()
+        self.discovery_engine = discovery_engine or WebsiteDiscoveryEngine()
+
+        # Traditional modifiers (Phase 7) - all optional
+        if traditional_modifiers is not None:
+            self.traditional_modifiers = traditional_modifiers
+        elif enable_default_modifiers:
+            # Default modifiers with sensible defaults
+            self.traditional_modifiers = [
+                LossHistoryModifier(enabled=True),
+                ExposureModifier(enabled=True),
+                ExternalRatingModifier(enabled=False),  # Disabled by default
+            ]
+        else:
+            self.traditional_modifiers = []
+
     def run_workflow(
         self,
-        request: SubmissionRequest
+        entity_id: str,
+        coverage: str,
+        submission_data: Optional[Dict[str, Any]] = None,
+        direct_query_responses: Optional[Dict[str, bool]] = None,
+        categorical_selections: Optional[Dict[str, str]] = None,
+        user: str = "system",
+        config: Optional[CoverageConfig] = None,
+        skip_input_validation: bool = False,
+        # Discovery parameters (Step 0)
+        entity_name: Optional[str] = None,
+        domain_hint: Optional[str] = None,
+        country_hint: Optional[str] = None,
+        skip_discovery: bool = False
     ) -> WorkflowResult:
         """
-        Execute complete 13-step workflow.
-        
+        Execute the complete 14-step workflow.
+
         Args:
-            request: Submission request with all inputs
-        
+            entity_id: The entity being assessed
+            coverage: Coverage domain (e.g., "aerospace")
+            submission_data: Submission data (limits, TIV, etc.)
+            direct_query_responses: Optional direct query answers
+            categorical_selections: Optional category overrides
+            user: User running the workflow
+            config: Optional pre-loaded config (loaded if None)
+            skip_input_validation: Skip Step 3 validation
+            entity_name: Company name for discovery (defaults to entity_id)
+            domain_hint: Optional domain hint (e.g., "example.com")
+            country_hint: Optional country hint (e.g., "UK", "US")
+            skip_discovery: Skip Step 0 discovery if domain is known
+
         Returns:
-            WorkflowResult with decision and premium options
+            WorkflowResult with complete assessment
+
+        Raises:
+            MissingInputError: If required inputs missing (Step 3)
+            WorkflowError: If workflow execution fails
         """
-        # Step 1: Load configuration
-        try:
-            config = self.config_manager.load_from_file(request.coverage)
-        except FileNotFoundError as e:
-            return self._error_result(
-                request=request,
-                error=f"Configuration not found: {e}"
-            )
-        
-        # Validate configuration
-        config_errors = self.config_manager.validate_config(config)
-        if config_errors:
-            return self._error_result(
-                request=request,
-                error=f"Invalid configuration: {config_errors}"
-            )
-        
-        # Step 2: Create model data file
+        submission_data = submission_data or {}
+        direct_query_responses = direct_query_responses or {}
+        categorical_selections = categorical_selections or {}
+
+        # Use entity_id as entity_name if not provided
+        entity_name = entity_name or entity_id
+
+        logger.info(f"Starting workflow for entity {entity_id}, coverage {coverage}")
+
+        # Step 0: Website Discovery
+        discovery_output = self._run_discovery(
+            entity_name=entity_name,
+            domain_hint=domain_hint,
+            country_hint=country_hint,
+            skip_discovery=skip_discovery
+        )
+
+        # Step 1: Load Configuration
+        if config is None:
+            config = load_coverage_config(coverage)
+            logger.debug(f"Loaded config: {config.configuration} v{config.metadata.version}")
+
+        # Step 2: Create Model Data File
         model_id = self.data_manager.create_model(
-            entity_id=request.entity_id,
-            coverage=request.coverage,
-            config_hash=config.config_hash,
-            user=request.user
-        )
-        
-        # Create initial version
-        version = self.data_manager.create_initial_version(
-            model_id=model_id,
-            entity_id=request.entity_id,
-            submission_data=request.submission_data,
-            direct_query_responses=request.direct_query_responses,
-            categorical_selections=request.categorical_selections,
-            config_hash=config.config_hash,
-            user=request.user
-        )
-        
-        # Step 3: Verify minimum viable inputs
-        is_valid, missing_inputs = self.config_manager.verify_required_inputs(
+            entity_id=entity_id,
             config=config,
-            submission_data=request.submission_data
+            submission_data=submission_data,
+            user=user,
         )
-        
-        if not is_valid:
-            return WorkflowResult(
-                model_version=version,
-                decision=DecisionType.REFER,
-                auto_approve=False,
-                referral_reasons=["Missing required inputs"],
-                missing_inputs=missing_inputs
-            )
-        
-        # Steps 4-6: Score entity
+
+        # Step 3: Verify Minimum Viable Inputs
+        if not skip_input_validation:
+            is_valid, missing_fields = self.verify_inputs(submission_data, config)
+            if not is_valid:
+                logger.warning(f"Missing inputs: {missing_fields}")
+                # Return partial result with missing inputs
+                return WorkflowResult(
+                    entity_id=entity_id,
+                    coverage=coverage,
+                    is_valid=False,
+                    missing_inputs=missing_fields,
+                    decision=DecisionType.REFER,
+                    notes=["Incomplete submission - missing required inputs"],
+                )
+
+        # Create inference context for signal extraction
+        # Include discovery data so extractors can use the discovered website
+        context = InferenceContext(
+            configuration={},
+            coverage=config.coverage,
+            config_name=config.configuration,
+            discovered_website=discovery_output.discovered_website if discovery_output else None,
+            discovered_domain=discovery_output.discovered_domain if discovery_output else None,
+            corporate_identity={
+                "legal_name": discovery_output.legal_name,
+                "parent_company": discovery_output.parent_company,
+                "industry": discovery_output.industry,
+            } if discovery_output and discovery_output.legal_name else None,
+            discovery_confidence=discovery_output.confidence_score / 100.0 if discovery_output else 1.0,
+            discovery_method=discovery_output.discovery_method if discovery_output else None,
+            discovery_warnings=discovery_output.warnings if discovery_output else [],
+        )
+
+        # Steps 4-6: Score Entity (Signal Extraction + Composite + Conditions)
         scoring_result = self.scorer.score_entity(
-            entity_id=request.entity_id,
+            entity_id=entity_id,
             config=config,
-            submission_data=request.submission_data
+            context=context,
         )
-        
-        # Update version with scoring
-        version = self.data_manager.update_version_scoring(
-            version_id=version.version_id,
-            scoring_result=scoring_result
-        )
-        
-        # Step 7: Evaluate direct queries
+
+        # Step 7: Evaluate Direct Queries
         query_result = self.query_evaluator.evaluate_queries(
-            responses=request.direct_query_responses,
-            config=config
+            responses=direct_query_responses,
+            config=config,
         )
-        
-        # Update version with query results
-        version = self.data_manager.update_version_queries(
-            version_id=version.version_id,
-            query_result=query_result
+
+        # Use categorical outputs from scorer, or override with provided selections
+        categorical_outputs = scoring_result.categorical_outputs
+        # TODO: Handle categorical_selections overrides
+
+        # Step 10.5: Calculate Traditional Modifiers (Phase 7 - OPTIONAL)
+        # These are calculated but applied within the pricer
+        traditional_modifier_results = self._calculate_traditional_modifiers(
+            entity_id=entity_id,
+            coverage=coverage,
+            submission_data=submission_data,
+            context=context,
+            config=config,
         )
-        
-        # Steps 8-12: Calculate pricing
+
+        # Convert traditional modifier results to query_modifiers format
+        traditional_modifiers_for_pricer = [
+            {"name": r.modifier_type, "factor": r.factor, "confidence": r.confidence}
+            for r in traditional_modifier_results
+            if r.has_impact  # Only include modifiers with actual impact
+        ]
+
+        # Combine query modifiers with traditional modifiers
+        all_modifiers = query_result.modifiers + traditional_modifiers_for_pricer
+
+        # Steps 8-12: Calculate Premium
         pricing_result = self.pricer.price_submission(
             pure_composite_score=scoring_result.pure_composite_score,
-            signal_tier_overrides=scoring_result.tier_overrides_from_signals,
+            signal_tier_overrides=scoring_result.tier_overrides,
             query_tier_overrides=query_result.tier_overrides,
-            query_modifiers=query_result.modifiers,
-            categorical_selections=request.categorical_selections,
-            submission_data=request.submission_data,
-            config=config
+            query_modifiers=all_modifiers,
+            categorical_outputs=categorical_outputs,
+            submission_data=submission_data,
+            config=config,
         )
-        
-        # Update version with pricing
-        version = self.data_manager.update_version_pricing(
-            version_id=version.version_id,
-            pricing_result=pricing_result
-        )
-        
-        # Step 13: Determine decision
-        all_referral_reasons = (
-            scoring_result.referrals_from_signals +
-            query_result.referrals
-        )
-        all_notes = (
-            scoring_result.notes_from_signals +
-            query_result.notes
-        )
-        
+
+        # Combine referral reasons and notes
+        all_referrals = scoring_result.referrals + query_result.referrals
+        all_notes = scoring_result.notes + query_result.notes
+
+        # Step 13: Determine Decision
         decision, auto_approve = self.determine_decision(
             final_tier=pricing_result.final_tier,
-            referral_reasons=all_referral_reasons,
-            config=config
+            referral_reasons=all_referrals,
+            config=config,
         )
-        
-        # Update version with decision
-        version = self.data_manager.update_version_decision(
-            version_id=version.version_id,
+
+        # Create Model Version (audit trail)
+        model_version = self.data_manager.create_version(
+            model_id=model_id,
+            version_type="initial",
+            user=user,
+            submission_data=submission_data,
+            direct_query_responses=direct_query_responses,
+            categorical_selections=categorical_selections,
+            signal_outputs=scoring_result.signal_outputs,
+            categorical_outputs=scoring_result.categorical_outputs,
+            group_scores=scoring_result.group_scores,
+            pure_composite_score=scoring_result.pure_composite_score,
+            signal_conditions=scoring_result.conditions_triggered,
+            query_conditions=query_result.conditions_triggered,
+            tier_overrides=pricing_result.tier_overrides_considered,
+            score_based_tier=pricing_result.score_based_tier,
+            final_tier=pricing_result.final_tier,
+            tier_label=pricing_result.tier_label,
+            base_premium=pricing_result.base_premium,
+            base_premium_method=pricing_result.base_premium_method,
+            modifiers_applied=pricing_result.modifiers_applied,
+            premium_after_modifiers=pricing_result.premium_after_modifiers,
+            limit_premiums=pricing_result.limit_premiums,
+            final_premium=pricing_result.final_premium,
             decision=decision,
             auto_approve=auto_approve,
-            referral_reasons=all_referral_reasons,
-            notes=all_notes
-        )
-        
-        # Build result
-        premium_options = pricing_result.limit_premiums
-        recommended_limit = self._get_recommended_limit(premium_options, config)
-        recommended_premium = premium_options.get(recommended_limit, 0)
-        
-        return WorkflowResult(
-            model_version=version,
-            decision=decision,
-            auto_approve=auto_approve,
-            referral_reasons=all_referral_reasons,
+            referral_reasons=all_referrals,
             notes=all_notes,
-            premium_options=premium_options,
-            recommended_limit=recommended_limit,
-            recommended_premium=recommended_premium
+            confidence=scoring_result.confidence,
+            signal_coverage=scoring_result.signal_coverage,
         )
-    
-    # =========================================================================
-    # STEP 3: INPUT VERIFICATION
-    # =========================================================================
-    
+
+        # Determine recommended option
+        recommended_limit = 0.0
+        recommended_premium = pricing_result.final_premium
+        if pricing_result.limit_premiums:
+            # Recommend middle limit option
+            limits = sorted([float(k) for k in pricing_result.limit_premiums.keys()])
+            mid_index = len(limits) // 2
+            recommended_limit = limits[mid_index]
+            recommended_premium = pricing_result.limit_premiums[str(int(recommended_limit))]
+
+        logger.info(
+            f"Workflow complete: score={scoring_result.pure_composite_score:.0f}, "
+            f"tier={pricing_result.final_tier} ({pricing_result.tier_label}), "
+            f"decision={decision.value}, "
+            f"premium={pricing_result.final_premium:.0f}"
+        )
+
+        # Add discovery output to model version for audit trail
+        model_version.discovery_output = discovery_output
+
+        return WorkflowResult(
+            entity_id=entity_id,
+            coverage=coverage,
+            model_version=model_version,
+            decision=decision,
+            auto_approve=auto_approve,
+            referral_reasons=all_referrals,
+            notes=all_notes,
+            premium_options=pricing_result.limit_premiums,
+            recommended_limit=recommended_limit,
+            recommended_premium=recommended_premium,
+            composite_score=scoring_result.pure_composite_score,
+            tier=pricing_result.final_tier,
+            tier_label=pricing_result.tier_label,
+            confidence=scoring_result.confidence,
+            is_valid=True,
+            # Discovery summary (Step 0)
+            discovered_domain=discovery_output.discovered_domain if discovery_output else None,
+            discovery_confidence=discovery_output.confidence.value if discovery_output else None,
+            discovery_warnings=discovery_output.warnings if discovery_output else [],
+        )
+
     def verify_inputs(
         self,
-        submission_data: dict,
+        submission_data: Dict[str, Any],
         config: CoverageConfig
-    ) -> tuple[bool, list[str]]:
+    ) -> Tuple[bool, List[str]]:
         """
-        Verify minimum viable inputs are present.
-        
-        Delegates to config_manager.
+        Step 3: Verify minimum viable inputs are present.
+
+        Args:
+            submission_data: Provided submission data
+            config: Coverage configuration
+
+        Returns:
+            Tuple of (is_valid, missing_fields)
         """
-        return self.config_manager.verify_required_inputs(config, submission_data)
-    
-    # =========================================================================
-    # STEP 13: DECISION DETERMINATION
-    # =========================================================================
-    
+        missing = []
+
+        # Check required inputs from config metadata
+        required = config.metadata.minimum_viable_input
+        if not required:
+            # Default required fields
+            required = ["entity_id", "limit"]
+
+        for field in required:
+            # Normalize field name (remove spaces, make lowercase)
+            normalized = field.lower().replace(" ", "_").replace("(", "").replace(")", "")
+
+            # Check various forms of the field
+            found = False
+            for key in submission_data.keys():
+                if normalized in key.lower():
+                    if submission_data[key]:  # Has a value
+                        found = True
+                        break
+
+            if not found:
+                missing.append(field)
+
+        return len(missing) == 0, missing
+
     def determine_decision(
         self,
         final_tier: int,
-        referral_reasons: list[str],
+        referral_reasons: List[str],
         config: CoverageConfig
-    ) -> tuple[DecisionType, bool]:
+    ) -> Tuple[DecisionType, bool]:
         """
-        Determine final decision (Step 13).
-        
+        Step 13: Determine final decision.
+
         Decision logic:
-        - If tier has decision='decline' â DECLINE
-        - If any referral reasons â REFER, auto_approve=False
-        - If tier has decision='refer' â REFER, auto_approve=False
-        - Otherwise â APPROVE, auto_approve=True
-        
+        - APPROVE: auto_approve tier and no referrals
+        - DECLINE: auto_decline tier or tier 5
+        - REFER: requires underwriter review
+
+        Args:
+            final_tier: Final tier after overrides
+            referral_reasons: Accumulated referral reasons
+            config: Coverage configuration
+
         Returns:
             Tuple of (decision, auto_approve)
         """
         # Get tier configuration
         tier_config = None
-        for t in config.tier_thresholds:
+        for t in config.tiers:
             if t.tier == final_tier:
                 tier_config = t
                 break
-        
-        # Check tier-level decision
-        if tier_config:
-            if tier_config.decision == DecisionType.DECLINE:
-                return (DecisionType.DECLINE, False)
-            
-            if tier_config.decision == DecisionType.REFER:
-                return (DecisionType.REFER, False)
-        
-        # Check for referral triggers
+
+        if tier_config is None:
+            # Default to refer if no tier config
+            return DecisionType.REFER, False
+
+        # Check for auto-decline
+        if tier_config.auto_decline:
+            return DecisionType.DECLINE, False
+
+        # Check for referral reasons
         if referral_reasons:
-            return (DecisionType.REFER, False)
-        
-        # Default to approve
-        return (DecisionType.APPROVE, True)
-    
-    # =========================================================================
-    # REFERRAL PROCESSING
-    # =========================================================================
-    
+            return DecisionType.REFER, False
+
+        # Check for auto-approve
+        if tier_config.auto_approve:
+            return DecisionType.APPROVE, True
+
+        # Default to refer
+        return DecisionType.REFER, False
+
+    def _calculate_traditional_modifiers(
+        self,
+        entity_id: str,
+        coverage: str,
+        submission_data: Dict[str, Any],
+        context: InferenceContext,
+        config: Optional[CoverageConfig] = None,
+    ) -> List[TraditionalModifierResult]:
+        """
+        Step 10.5: Calculate traditional pricing modifiers (Phase 7).
+
+        Runs all configured traditional modifiers and collects results.
+        Modifiers that lack data return neutral results (factor=1.0).
+
+        Args:
+            entity_id: The entity being priced
+            coverage: Coverage type
+            submission_data: Submission data from broker
+            context: Inference context with discovery data
+            config: Optional coverage configuration
+
+        Returns:
+            List of TraditionalModifierResult from each modifier
+        """
+        if not self.traditional_modifiers:
+            return []
+
+        results: List[TraditionalModifierResult] = []
+
+        for modifier in self.traditional_modifiers:
+            if not modifier.is_enabled:
+                continue
+
+            try:
+                result = modifier.calculate(
+                    entity_id=entity_id,
+                    coverage=coverage,
+                    submission_data=submission_data,
+                    context=context,
+                    config=config,
+                )
+                results.append(result)
+
+                if result.has_impact:
+                    logger.info(
+                        f"Traditional modifier {result.modifier_type}: "
+                        f"factor={result.factor:.3f}, confidence={result.confidence:.2f}"
+                    )
+                else:
+                    logger.debug(
+                        f"Traditional modifier {result.modifier_type} skipped: "
+                        f"{result.notes[0] if result.notes else 'no data'}"
+                    )
+
+            except Exception as e:
+                logger.error(f"Error in {modifier.modifier_type} modifier: {e}")
+                # Add neutral result on error
+                results.append(TraditionalModifierResult.neutral(
+                    modifier.modifier_type,
+                    f"Error: {str(e)}"
+                ))
+
+        return results
+
+    def _run_discovery(
+        self,
+        entity_name: str,
+        domain_hint: Optional[str] = None,
+        country_hint: Optional[str] = None,
+        skip_discovery: bool = False
+    ) -> Optional[DiscoveryOutput]:
+        """
+        Step 0: Run website discovery for the entity.
+
+        Identifies the correct corporate website before signal extraction
+        begins. This enables extractors to fetch data from the entity's
+        actual website rather than relying on guesses.
+
+        Args:
+            entity_name: Company name to search for
+            domain_hint: Optional known domain (skips discovery if high confidence)
+            country_hint: Optional country for regional TLD prioritization
+            skip_discovery: If True, skip discovery entirely
+
+        Returns:
+            DiscoveryOutput with discovery results, or None if skipped
+        """
+        if skip_discovery:
+            logger.debug(f"Discovery skipped for {entity_name}")
+            return DiscoveryOutput(
+                entity_name=entity_name,
+                domain_hint=domain_hint,
+                skipped=True
+            )
+
+        logger.info(f"Step 0: Discovering website for {entity_name}")
+        start_time = time.time()
+
+        try:
+            # Run discovery
+            result: DiscoveryResult = self.discovery_engine.discover(
+                company_name=entity_name,
+                domain_hint=domain_hint,
+                country_hint=country_hint
+            )
+
+            execution_time_ms = (time.time() - start_time) * 1000
+
+            # Map discovery confidence level to our enum
+            confidence_map = {
+                ConfidenceLevel.HIGH: DiscoveryConfidence.HIGH,
+                ConfidenceLevel.MEDIUM: DiscoveryConfidence.MEDIUM,
+                ConfidenceLevel.LOW: DiscoveryConfidence.LOW,
+                ConfidenceLevel.UNVERIFIED: DiscoveryConfidence.UNVERIFIED,
+            }
+
+            # Extract primary website info
+            primary = result.primary_website
+            discovered_website = primary.url if primary else None
+            discovered_domain = primary.domain if primary else None
+            confidence_score = primary.confidence_score if primary else 0.0
+            discovery_method = primary.discovery_method.value if primary else None
+
+            # Extract corporate identity info
+            identity = result.company_identity
+            legal_name = identity.legal_name if identity else None
+            parent_company = (
+                identity.parent_company.input_name
+                if identity and identity.parent_company else None
+            )
+
+            output = DiscoveryOutput(
+                entity_name=entity_name,
+                domain_hint=domain_hint,
+                country_hint=country_hint,
+                discovered_website=discovered_website,
+                discovered_domain=discovered_domain,
+                confidence=confidence_map.get(result.confidence, DiscoveryConfidence.UNVERIFIED),
+                confidence_score=confidence_score,
+                legal_name=legal_name,
+                parent_company=parent_company,
+                discovery_method=discovery_method,
+                discovery_methods_used=[m.value for m in result.discovery_methods_used],
+                execution_time_ms=execution_time_ms,
+                requires_manual_review=result.requires_manual_review,
+                review_reasons=result.manual_review_reasons,
+                warnings=result.warnings,
+                candidates_found=len(result.all_candidates),
+            )
+
+            logger.info(
+                f"Discovery complete: {discovered_domain} "
+                f"(confidence: {result.confidence.value}, "
+                f"candidates: {len(result.all_candidates)})"
+            )
+
+            return output
+
+        except Exception as e:
+            logger.error(f"Discovery failed for {entity_name}: {e}")
+            execution_time_ms = (time.time() - start_time) * 1000
+            return DiscoveryOutput(
+                entity_name=entity_name,
+                domain_hint=domain_hint,
+                country_hint=country_hint,
+                execution_time_ms=execution_time_ms,
+                error=str(e),
+            )
+
     def process_referral(
         self,
         model_id: str,
         reviewer: str,
         decision: str,
-        adjustments: dict | None = None
+        adjustments: Optional[Dict[str, Any]] = None,
+        notes: Optional[List[str]] = None
     ) -> WorkflowResult:
         """
-        Handle referral review (creates new model version).
-        
+        Handle referral review and create new model version.
+
         Args:
-            model_id: ID of the model being reviewed
-            reviewer: User reviewing the referral
-            decision: Reviewer's decision ('approve', 'decline', 'refer')
-            adjustments: Optional adjustments (tier, notes, modifiers)
-        
+            model_id: The model being reviewed
+            reviewer: User performing review
+            decision: Review decision ('approve', 'decline', 'modify')
+            adjustments: Optional adjustments (tier override, premium adjustment)
+            notes: Optional reviewer notes
+
         Returns:
-            WorkflowResult with updated decision
+            WorkflowResult with updated assessment
         """
+        adjustments = adjustments or {}
+        notes = notes or []
+
         # Get latest version
         latest = self.data_manager.get_latest_version(model_id)
-        if latest is None:
-            raise ValueError(f"Model not found: {model_id}")
-        
-        # Create referral review version
-        adjustments = adjustments or {}
-        adjustments['decision'] = decision
-        
-        version = self.data_manager.create_referral_version(
+
+        # Determine new decision
+        if decision == "approve":
+            new_decision = DecisionType.APPROVE
+            auto_approve = False  # Manual approval, not auto
+        elif decision == "decline":
+            new_decision = DecisionType.DECLINE
+            auto_approve = False
+        else:
+            new_decision = DecisionType.REFER
+            auto_approve = False
+
+        # Apply adjustments
+        final_tier = adjustments.get("tier_override", latest.final_tier)
+        final_premium = adjustments.get("premium_override", latest.final_premium)
+
+        # Create new version
+        new_version = self.data_manager.create_version(
             model_id=model_id,
-            reviewer=reviewer,
-            adjustments=adjustments
-        )
-        
-        # Update decision
-        final_decision = DecisionType(decision)
-        auto_approve = (final_decision == DecisionType.APPROVE)
-        
-        version = self.data_manager.update_version_decision(
-            version_id=version.version_id,
-            decision=final_decision,
+            version_type="referral_review",
+            user=reviewer,
+            submission_data=latest.submission_data,
+            direct_query_responses=latest.direct_query_responses,
+            categorical_selections=latest.categorical_selections,
+            signal_outputs=latest.signal_outputs,
+            categorical_outputs=latest.categorical_outputs,
+            group_scores=latest.group_scores,
+            pure_composite_score=latest.pure_composite_score,
+            signal_conditions=latest.signal_conditions,
+            query_conditions=latest.query_conditions,
+            tier_overrides=latest.tier_overrides + ([adjustments.get("tier_override")] if "tier_override" in adjustments else []),
+            score_based_tier=latest.score_based_tier,
+            final_tier=final_tier,
+            tier_label=latest.tier_label,
+            base_premium=latest.base_premium,
+            base_premium_method=latest.base_premium_method,
+            modifiers_applied=latest.modifiers_applied,
+            premium_after_modifiers=latest.premium_after_modifiers,
+            limit_premiums=latest.limit_premiums,
+            final_premium=final_premium,
+            decision=new_decision,
             auto_approve=auto_approve,
-            notes=[f"Reviewed by {reviewer}"]
+            referral_reasons=latest.referral_reasons,
+            notes=latest.notes + notes + [f"Reviewed by {reviewer}: {decision}"],
+            confidence=latest.confidence,
+            signal_coverage=latest.signal_coverage,
         )
-        
+
         return WorkflowResult(
-            model_version=version,
-            decision=final_decision,
+            entity_id=latest.entity_id,
+            coverage=latest.coverage,
+            model_version=new_version,
+            decision=new_decision,
             auto_approve=auto_approve,
-            referral_reasons=version.referral_reasons,
-            notes=version.notes,
-            premium_options=version.limit_premiums,
-            recommended_limit=list(version.limit_premiums.keys())[0] if version.limit_premiums else 0,
-            recommended_premium=list(version.limit_premiums.values())[0] if version.limit_premiums else 0
+            referral_reasons=latest.referral_reasons,
+            notes=new_version.notes,
+            premium_options=latest.limit_premiums,
+            recommended_premium=final_premium,
+            composite_score=latest.pure_composite_score,
+            tier=final_tier,
+            tier_label=latest.tier_label,
+            confidence=latest.confidence,
+            is_valid=True,
         )
-    
-    # =========================================================================
-    # UTILITY METHODS
-    # =========================================================================
-    
-    def _error_result(
-        self,
-        request: SubmissionRequest,
-        error: str
-    ) -> WorkflowResult:
-        """Create an error result"""
-        # Create a minimal version for error tracking
-        version = ModelVersion(
-            version_id="error",
-            model_id="error",
-            version_number=0,
-            version_type=VersionType.INITIAL,
-            entity_id=request.entity_id,
-            decision=DecisionType.DECLINE
-        )
-        
-        return WorkflowResult(
-            model_version=version,
-            decision=DecisionType.DECLINE,
-            auto_approve=False,
-            validation_errors=[error]
-        )
-    
-    def _get_recommended_limit(
-        self,
-        premium_options: dict[float, float],
-        config: CoverageConfig
-    ) -> float:
-        """Get recommended limit from options"""
-        if not premium_options:
-            return 0.0
-        
-        # Default to middle limit option
-        limits = sorted(premium_options.keys())
-        if len(limits) >= 3:
-            return limits[len(limits) // 2]
-        return limits[0]
-    
-    def get_workflow_summary(self, result: WorkflowResult) -> dict:
-        """
-        Get summary of workflow execution for API response.
-        """
-        version = result.model_version
-        
-        return {
-            'model_id': version.model_id,
-            'version_id': version.version_id,
-            'version_number': version.version_number,
-            'entity_id': version.entity_id,
-            'decision': result.decision.value,
-            'auto_approve': result.auto_approve,
-            'scoring': {
-                'composite_score': version.pure_composite_score,
-                'confidence': version.aggregate_confidence,
-                'score_based_tier': version.score_based_tier,
-                'final_tier': version.final_tier
-            },
-            'pricing': {
-                'base_premium': version.base_premium,
-                'final_premium': version.final_premium,
-                'modifiers_count': len(version.modifiers_applied)
-            },
-            'premium_options': result.premium_options,
-            'recommended': {
-                'limit': result.recommended_limit,
-                'premium': result.recommended_premium
-            },
-            'referral_reasons': result.referral_reasons,
-            'notes': result.notes,
-            'is_valid': result.is_valid,
-            'validation_errors': result.validation_errors,
-            'missing_inputs': result.missing_inputs
-        }
 
 
-# =============================================================================
-# FACTORY FUNCTION
-# =============================================================================
-
-def create_workflow_engine(
-    config_dir: str = "coverages",
-    inference_registry: dict[str, Callable] | None = None
-) -> WorkflowEngine:
-    """
-    Factory function to create a fully configured workflow engine.
-    
-    Args:
-        config_dir: Directory containing coverage YAML files
-        inference_registry: Dict mapping inference function names to callables
-    
-    Returns:
-        Configured WorkflowEngine
-    """
-    config_manager = ConfigManager(config_dir=config_dir)
-    data_manager = ModelDataManager()
-    scorer = ModelScorer(inference_registry=inference_registry or {})
-    query_evaluator = QueryEvaluator()
-    pricer = ModelPricer()
-    
-    return WorkflowEngine(
-        config_manager=config_manager,
-        data_manager=data_manager,
-        scorer=scorer,
-        query_evaluator=query_evaluator,
-        pricer=pricer
-    )
+# Singleton instance for convenience
+_default_engine: Optional[WorkflowEngine] = None
 
 
-# =============================================================================
-# CONVENIENCE FUNCTION
-# =============================================================================
+def get_workflow_engine() -> WorkflowEngine:
+    """Get the default WorkflowEngine instance."""
+    global _default_engine
+    if _default_engine is None:
+        _default_engine = WorkflowEngine()
+    return _default_engine
 
-def run_model(
+
+def run_assessment(
     entity_id: str,
     coverage: str,
-    submission_data: dict,
-    direct_query_responses: dict[str, bool] | None = None,
-    categorical_selections: dict[str, str] | None = None,
-    user: str = "system",
-    config_dir: str = "coverages",
-    inference_registry: dict[str, Callable] | None = None
+    submission_data: Optional[Dict[str, Any]] = None,
+    direct_query_responses: Optional[Dict[str, bool]] = None,
+    user: str = "api",
+    entity_name: Optional[str] = None,
+    domain_hint: Optional[str] = None,
+    country_hint: Optional[str] = None,
+    skip_discovery: bool = False,
+    skip_input_validation: bool = False,
 ) -> WorkflowResult:
     """
-    Convenience function to run the complete model workflow.
-    
-    Creates engine, builds request, and runs workflow.
-    
+    Convenience function to run a full assessment.
+
     Args:
-        entity_id: Entity being evaluated
-        coverage: Coverage type (e.g., 'aerospace', 'cyber')
-        submission_data: Submission data including rate basis values
-        direct_query_responses: Responses to direct queries
-        categorical_selections: Selected categories
-        user: User running the model
-        config_dir: Directory containing YAML configs
-        inference_registry: Inference function registry
-    
+        entity_id: Entity to assess
+        coverage: Coverage domain
+        submission_data: Submission data
+        direct_query_responses: Optional query responses
+        user: User running assessment
+        entity_name: Company name for discovery (defaults to entity_id)
+        domain_hint: Optional domain hint (e.g., "example.com")
+        country_hint: Optional country hint (e.g., "UK", "US")
+        skip_discovery: Skip Step 0 discovery if domain is known
+        skip_input_validation: Skip Step 3 minimum viable input validation
+
     Returns:
-        WorkflowResult with decision and premiums
+        WorkflowResult with complete assessment
     """
-    engine = create_workflow_engine(
-        config_dir=config_dir,
-        inference_registry=inference_registry
-    )
-    
-    request = SubmissionRequest(
+    engine = get_workflow_engine()
+    return engine.run_workflow(
         entity_id=entity_id,
         coverage=coverage,
         submission_data=submission_data,
-        direct_query_responses=direct_query_responses or {},
-        categorical_selections=categorical_selections or {},
-        user=user
+        direct_query_responses=direct_query_responses,
+        user=user,
+        entity_name=entity_name,
+        domain_hint=domain_hint,
+        country_hint=country_hint,
+        skip_discovery=skip_discovery,
+        skip_input_validation=skip_input_validation,
     )
-    
-    return engine.run_workflow(request)

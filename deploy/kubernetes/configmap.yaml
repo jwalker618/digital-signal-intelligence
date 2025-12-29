@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dsi-api-config
+  namespace: dsi-prod
+  labels:
+    app.kubernetes.io/name: dsi-api
+    app.kubernetes.io/component: config
+data:
+  # Application settings
+  DSI_ENV: "production"
+  DSI_DEBUG: "false"
+  DSI_HOST: "0.0.0.0"
+  DSI_PORT: "8000"
+  DSI_WORKERS: "4"
+
+  # Feature flags
+  FEATURE_USE_STUBS: "true"
+  FEATURE_DISCOVERY: "true"
+  FEATURE_MULTI_COVERAGE: "true"
+  FEATURE_TRADITIONAL_MODIFIERS: "true"
+
+  # Metrics
+  METRICS_ENABLED: "true"
+  METRICS_PATH: "/api/v1/metrics"
+
+  # Database pool settings
+  DB_POOL_SIZE: "5"
+  DB_MAX_OVERFLOW: "10"
+  DB_POOL_TIMEOUT: "30"
+
+  # Cache settings
+  CACHE_DEFAULT_TTL: "3600"
+  CACHE_SIGNAL_TTL: "86400"
+
+  # Rate limiting
+  RATE_LIMIT_PER_MINUTE: "60"
+  RATE_LIMIT_BURST: "10"
