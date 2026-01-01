@@ -2,7 +2,7 @@
 DSI Model Layer - Phase 4 Implementation
 
 This module provides the model layer that connects the signal architecture
-to the pricing workflow. It implements the 13-step DSI workflow:
+to the pricing workflow. It implements the 14-step DSI workflow (Step 0 discovery + Steps 1-13):
 
 1. Model Configuration Instantiation
 2. Model Data File Creation
@@ -25,7 +25,7 @@ Components:
 - scorer: Signal extraction and scoring (Steps 4-6)
 - query_evaluator: Direct query evaluation (Step 7)
 - pricer: Premium calculation (Steps 8-12)
-- workflow: Complete 13-step orchestration
+- workflow: Complete 14-step orchestration
 
 Usage:
     from technical_pricing.model import run_assessment, WorkflowResult
