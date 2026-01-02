@@ -13,9 +13,9 @@ Structure:
     ├── http/            # HTTP header extractors
     ├── network/         # Network infrastructure extractors (cloud, CDN, WAF, TLS)
     ├── sec/             # SEC EDGAR extractors (filings, financials, litigation, governance)
-    ├── regulatory/      # Government database extractors (OFAC, EPA, CFPB, OSHA)
+    ├── regulatory/      # Government database extractors (OFAC, EPA, CFPB, OSHA, FAA, EU, FDIC)
     ├── security/        # Security/vulnerability extractors (NVD CVE, HHS Breach)
-    └── industry/        # Industry-specific registries (PCAOB)
+    └── industry/        # Industry-specific registries (PCAOB, Aviation Safety)
 
 Usage:
     from technical_pricing.signals.extractors.production import (
@@ -42,7 +42,7 @@ Configuration:
     - DSI_NVD_API_KEY: NVD API key (optional, increases rate limit)
     - etc.
 
-Available Free Extractors (21 total):
+Available Free Extractors (24 total):
     DNS (3):
         - email_auth: SPF, DKIM, DMARC analysis
         - dnssec: DNSSEC validation status
@@ -64,18 +64,22 @@ Available Free Extractors (21 total):
         - sec_litigation: SEC 8-K litigation/legal disclosures
         - sec_governance: SEC DEF 14A governance analysis
 
-    Regulatory (4):
+    Regulatory (7):
         - ofac_sanctions: OFAC SDN list search
         - epa_echo: EPA ECHO compliance data
         - cfpb_complaints: CFPB consumer complaint data
         - osha_violations: OSHA workplace safety violations
+        - faa_certificate: FAA operating certificate status
+        - eu_safety_list: EU Air Safety banned airlines list
+        - fdic_enforcement: FDIC/OCC/Fed bank enforcement actions
 
     Security (2):
         - nvd_cve: NIST NVD vulnerability database search
         - hhs_breach: HHS HIPAA breach portal
 
-    Industry (1):
+    Industry (2):
         - pcaob: PCAOB registered auditor status
+        - aviation_safety: Aviation Safety Network accident database
 """
 
 from .base import ProductionExtractor

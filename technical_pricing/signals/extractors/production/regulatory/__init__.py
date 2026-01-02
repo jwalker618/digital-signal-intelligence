@@ -1,7 +1,7 @@
 """
 DSI Production Extractors - Regulatory Databases
 
-This module provides production extractors that query US regulatory databases.
+This module provides production extractors that query US/EU regulatory databases.
 These are FREE to use - government public data.
 
 Extractors:
@@ -9,6 +9,9 @@ Extractors:
     - EPAEchoExtractor: EPA ECHO enforcement/compliance data
     - CFPBComplaintsExtractor: Consumer Financial Protection Bureau complaints
     - OSHAViolationsExtractor: OSHA workplace safety violations
+    - FAACertificateExtractor: FAA operating certificate status
+    - EUSafetyListExtractor: EU Air Safety banned airlines list
+    - FDICEnforcementExtractor: FDIC/OCC/Fed bank enforcement actions
 
 Requirements:
     - requests: pip install requests
@@ -19,6 +22,9 @@ Usage:
         EPAEchoExtractor,
         CFPBComplaintsExtractor,
         OSHAViolationsExtractor,
+        FAACertificateExtractor,
+        EUSafetyListExtractor,
+        FDICEnforcementExtractor,
     )
 
     extractor = OFACSanctionsExtractor()
@@ -29,6 +35,9 @@ from .ofac import OFACSanctionsExtractor
 from .epa_echo import EPAEchoExtractor
 from .cfpb import CFPBComplaintsExtractor
 from .osha import OSHAViolationsExtractor
+from .faa import FAACertificateExtractor
+from .eu_safety_list import EUSafetyListExtractor
+from .fdic_enforcement import FDICEnforcementExtractor
 from ..factory import register_production
 
 __all__ = [
@@ -36,6 +45,9 @@ __all__ = [
     'EPAEchoExtractor',
     'CFPBComplaintsExtractor',
     'OSHAViolationsExtractor',
+    'FAACertificateExtractor',
+    'EUSafetyListExtractor',
+    'FDICEnforcementExtractor',
     'register_all',
 ]
 
@@ -46,3 +58,6 @@ def register_all():
     register_production('epa_echo', EPAEchoExtractor)
     register_production('cfpb_complaints', CFPBComplaintsExtractor)
     register_production('osha_violations', OSHAViolationsExtractor)
+    register_production('faa_certificate', FAACertificateExtractor)
+    register_production('eu_safety_list', EUSafetyListExtractor)
+    register_production('fdic_enforcement', FDICEnforcementExtractor)
