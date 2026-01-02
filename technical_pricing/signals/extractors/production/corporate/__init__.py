@@ -9,6 +9,7 @@ Extractors:
     - OpenCorporatesExtractor: Global corporate data (145 jurisdictions)
     - AustraliaABNExtractor: Australian Business Register
     - IndiaMCAExtractor: India Ministry of Corporate Affairs
+    - GLEIFLEIExtractor: GLEIF Legal Entity Identifier (2.5M+ entities)
 
 Coverage:
     - United Kingdom (Companies House)
@@ -40,6 +41,7 @@ from .companies_house import CompaniesHouseExtractor
 from .opencorporates import OpenCorporatesExtractor
 from .australia_abn import AustraliaABNExtractor
 from .india_mca import IndiaMCAExtractor
+from .gleif_lei import GLEIFLEIExtractor
 from ..factory import register_production
 
 __all__ = [
@@ -47,6 +49,7 @@ __all__ = [
     'OpenCorporatesExtractor',
     'AustraliaABNExtractor',
     'IndiaMCAExtractor',
+    'GLEIFLEIExtractor',
     'register_all',
 ]
 
@@ -57,3 +60,4 @@ def register_all():
     register_production('opencorporates', OpenCorporatesExtractor)
     register_production('australia_abn', AustraliaABNExtractor)
     register_production('india_mca', IndiaMCAExtractor)
+    register_production('gleif_lei', GLEIFLEIExtractor)

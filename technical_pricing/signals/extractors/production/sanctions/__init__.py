@@ -21,6 +21,7 @@ Extractors:
 
     Law Enforcement:
         - InterpolRedNoticesExtractor: Interpol Red Notices (wanted persons)
+        - FBIMostWantedExtractor: FBI Most Wanted list
 
 Coverage:
     - UN Security Council sanctions
@@ -50,6 +51,7 @@ from .uk_ofsi import UKOFSIExtractor
 from .eu_sanctions import EUSanctionsExtractor
 from .worldbank_debarred import WorldBankDebarredExtractor
 from .interpol import InterpolRedNoticesExtractor
+from .fbi_wanted import FBIMostWantedExtractor
 from .mdb_exclusions import (
     ADBSanctionsExtractor,
     IDBSanctionsExtractor,
@@ -64,6 +66,7 @@ __all__ = [
     'EUSanctionsExtractor',
     'WorldBankDebarredExtractor',
     'InterpolRedNoticesExtractor',
+    'FBIMostWantedExtractor',
     'ADBSanctionsExtractor',
     'IDBSanctionsExtractor',
     'EBRDIneligibleExtractor',
@@ -79,6 +82,7 @@ def register_all():
     register_production('eu_sanctions', EUSanctionsExtractor)
     register_production('worldbank_debarred', WorldBankDebarredExtractor)
     register_production('interpol_red_notices', InterpolRedNoticesExtractor)
+    register_production('fbi_most_wanted', FBIMostWantedExtractor)
     register_production('adb_sanctions', ADBSanctionsExtractor)
     register_production('idb_sanctions', IDBSanctionsExtractor)
     register_production('ebrd_ineligible', EBRDIneligibleExtractor)

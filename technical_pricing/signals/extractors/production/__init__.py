@@ -46,11 +46,12 @@ Configuration:
     - DSI_NVD_API_KEY: NVD API key (optional, increases rate limit)
     - etc.
 
-Available Free Extractors (46 total):
-    DNS (3):
+Available Free Extractors (50 total):
+    DNS (4):
         - email_auth: SPF, DKIM, DMARC analysis
         - dnssec: DNSSEC validation status
         - dns_records: General DNS records and infrastructure
+        - whois_rdap: Domain WHOIS/RDAP registration data [Global]
 
     HTTP (2):
         - security_headers: HTTP security header analysis
@@ -69,7 +70,7 @@ Available Free Extractors (46 total):
         - sec_governance: SEC DEF 14A governance analysis [US]
         - sedar_canada: SEDAR+ Canadian securities filings [Canada]
 
-    Regulatory (8):
+    Regulatory (9):
         - ofac_sanctions: OFAC SDN list search [US/Global]
         - epa_echo: EPA ECHO compliance data [US]
         - cfpb_complaints: CFPB consumer complaint data [US]
@@ -78,13 +79,15 @@ Available Free Extractors (46 total):
         - eu_safety_list: EU Air Safety banned airlines list [EU]
         - fdic_enforcement: FDIC/OCC/Fed bank enforcement actions [US]
         - bsee_incidents: BSEE offshore drilling incidents [US]
+        - uk_fca_register: UK FCA Financial Services Register [UK]
 
-    Sanctions (9) - GLOBAL COVERAGE:
+    Sanctions (10) - GLOBAL COVERAGE:
         - opensanctions: Consolidated global sanctions (85+ sources)
         - uk_ofsi: UK OFSI financial sanctions
         - eu_sanctions: EU consolidated financial sanctions
         - worldbank_debarred: World Bank debarred firms
         - interpol_red_notices: Interpol Red Notices [Global]
+        - fbi_most_wanted: FBI Most Wanted fugitives [US/Global]
         - adb_sanctions: Asian Development Bank [Asia-Pacific]
         - idb_sanctions: Inter-American Development Bank [Americas]
         - ebrd_ineligible: European Bank for Reconstruction [Europe/Central Asia]
@@ -98,11 +101,12 @@ Available Free Extractors (46 total):
         - pcaob: PCAOB registered auditor status
         - aviation_safety: Aviation Safety Network accident database
 
-    Corporate (4) - GLOBAL COVERAGE:
+    Corporate (5) - GLOBAL COVERAGE:
         - companies_house: UK Companies House registry [UK]
         - opencorporates: Global corporate data (145 jurisdictions)
         - australia_abn: Australian Business Register [Australia]
         - india_mca: India Ministry of Corporate Affairs [India]
+        - gleif_lei: GLEIF Legal Entity Identifiers (2.5M+ entities) [Global]
 
     Environment (2):
         - eea_environment: European Environment Agency E-PRTR [EU]
