@@ -42,7 +42,7 @@ Configuration:
     - DSI_NVD_API_KEY: NVD API key (optional, increases rate limit)
     - etc.
 
-Available Free Extractors (24 total):
+Available Free Extractors (28 total):
     DNS (3):
         - email_auth: SPF, DKIM, DMARC analysis
         - dnssec: DNSSEC validation status
@@ -64,7 +64,7 @@ Available Free Extractors (24 total):
         - sec_litigation: SEC 8-K litigation/legal disclosures
         - sec_governance: SEC DEF 14A governance analysis
 
-    Regulatory (7):
+    Regulatory (8):
         - ofac_sanctions: OFAC SDN list search
         - epa_echo: EPA ECHO compliance data
         - cfpb_complaints: CFPB consumer complaint data
@@ -72,6 +72,7 @@ Available Free Extractors (24 total):
         - faa_certificate: FAA operating certificate status
         - eu_safety_list: EU Air Safety banned airlines list
         - fdic_enforcement: FDIC/OCC/Fed bank enforcement actions
+        - bsee_incidents: BSEE offshore drilling incidents
 
     Security (2):
         - nvd_cve: NIST NVD vulnerability database search
@@ -80,6 +81,13 @@ Available Free Extractors (24 total):
     Industry (2):
         - pcaob: PCAOB registered auditor status
         - aviation_safety: Aviation Safety Network accident database
+
+    Corporate (1):
+        - companies_house: UK Companies House registry
+
+    Maritime/Aviation (2):
+        - imo_gisis: IMO GISIS ship registry
+        - iosa_registry: IATA IOSA airline safety registry
 """
 
 from .base import ProductionExtractor
@@ -158,3 +166,19 @@ def register_all_extractors():
     except ImportError as e:
         import logging
         logging.getLogger(__name__).warning(f"Could not register industry extractors: {e}")
+
+    # Import and register corporate extractors
+    try:
+        from .corporate import register_all as register_corporate
+        register_corporate()
+    except ImportError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not register corporate extractors: {e}")
+
+    # Import and register maritime extractors
+    try:
+        from .maritime import register_all as register_maritime
+        register_maritime()
+    except ImportError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not register maritime extractors: {e}")

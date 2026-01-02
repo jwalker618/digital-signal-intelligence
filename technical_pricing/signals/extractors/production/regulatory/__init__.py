@@ -38,6 +38,7 @@ from .osha import OSHAViolationsExtractor
 from .faa import FAACertificateExtractor
 from .eu_safety_list import EUSafetyListExtractor
 from .fdic_enforcement import FDICEnforcementExtractor
+from .bsee import BSEEIncidentExtractor
 from ..factory import register_production
 
 __all__ = [
@@ -48,6 +49,7 @@ __all__ = [
     'FAACertificateExtractor',
     'EUSafetyListExtractor',
     'FDICEnforcementExtractor',
+    'BSEEIncidentExtractor',
     'register_all',
 ]
 
@@ -61,3 +63,4 @@ def register_all():
     register_production('faa_certificate', FAACertificateExtractor)
     register_production('eu_safety_list', EUSafetyListExtractor)
     register_production('fdic_enforcement', FDICEnforcementExtractor)
+    register_production('bsee_incidents', BSEEIncidentExtractor)
