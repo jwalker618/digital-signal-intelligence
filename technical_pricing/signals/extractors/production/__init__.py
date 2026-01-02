@@ -46,7 +46,7 @@ Configuration:
     - DSI_NVD_API_KEY: NVD API key (optional, increases rate limit)
     - etc.
 
-Available Free Extractors (40 total):
+Available Free Extractors (46 total):
     DNS (3):
         - email_auth: SPF, DKIM, DMARC analysis
         - dnssec: DNSSEC validation status
@@ -79,11 +79,16 @@ Available Free Extractors (40 total):
         - fdic_enforcement: FDIC/OCC/Fed bank enforcement actions [US]
         - bsee_incidents: BSEE offshore drilling incidents [US]
 
-    Sanctions (4) - GLOBAL COVERAGE:
+    Sanctions (9) - GLOBAL COVERAGE:
         - opensanctions: Consolidated global sanctions (85+ sources)
         - uk_ofsi: UK OFSI financial sanctions
         - eu_sanctions: EU consolidated financial sanctions
-        - worldbank_debarred: World Bank/MDB debarred firms
+        - worldbank_debarred: World Bank debarred firms
+        - interpol_red_notices: Interpol Red Notices [Global]
+        - adb_sanctions: Asian Development Bank [Asia-Pacific]
+        - idb_sanctions: Inter-American Development Bank [Americas]
+        - ebrd_ineligible: European Bank for Reconstruction [Europe/Central Asia]
+        - afdb_sanctions: African Development Bank [Africa]
 
     Security (2):
         - nvd_cve: NIST NVD vulnerability database search
@@ -93,10 +98,11 @@ Available Free Extractors (40 total):
         - pcaob: PCAOB registered auditor status
         - aviation_safety: Aviation Safety Network accident database
 
-    Corporate (3) - GLOBAL COVERAGE:
+    Corporate (4) - GLOBAL COVERAGE:
         - companies_house: UK Companies House registry [UK]
         - opencorporates: Global corporate data (145 jurisdictions)
         - australia_abn: Australian Business Register [Australia]
+        - india_mca: India Ministry of Corporate Affairs [India]
 
     Environment (2):
         - eea_environment: European Environment Agency E-PRTR [EU]

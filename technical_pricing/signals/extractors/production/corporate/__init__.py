@@ -8,10 +8,12 @@ Extractors:
     - CompaniesHouseExtractor: UK Companies House registry
     - OpenCorporatesExtractor: Global corporate data (145 jurisdictions)
     - AustraliaABNExtractor: Australian Business Register
+    - IndiaMCAExtractor: India Ministry of Corporate Affairs
 
 Coverage:
     - United Kingdom (Companies House)
     - Australia (ABN Lookup)
+    - India (MCA registry - 1.5M+ companies)
     - 145+ jurisdictions (OpenCorporates)
 
 Requirements:
@@ -20,27 +22,31 @@ Requirements:
 API Keys (optional but recommended):
     - Companies House: Free API key from https://developer.company-information.service.gov.uk/
     - OpenCorporates: Free API key from https://opencorporates.com/api_accounts/new
+    - India data.gov.in: Free API key from https://data.gov.in/
 
 Usage:
     from technical_pricing.signals.extractors.production.corporate import (
         CompaniesHouseExtractor,
         OpenCorporatesExtractor,
         AustraliaABNExtractor,
+        IndiaMCAExtractor,
     )
 
-    extractor = OpenCorporatesExtractor()
-    result = extractor.extract('Acme Corporation')
+    extractor = IndiaMCAExtractor()
+    result = extractor.extract('Tata Consultancy Services')
 """
 
 from .companies_house import CompaniesHouseExtractor
 from .opencorporates import OpenCorporatesExtractor
 from .australia_abn import AustraliaABNExtractor
+from .india_mca import IndiaMCAExtractor
 from ..factory import register_production
 
 __all__ = [
     'CompaniesHouseExtractor',
     'OpenCorporatesExtractor',
     'AustraliaABNExtractor',
+    'IndiaMCAExtractor',
     'register_all',
 ]
 
@@ -50,3 +56,4 @@ def register_all():
     register_production('companies_house', CompaniesHouseExtractor)
     register_production('opencorporates', OpenCorporatesExtractor)
     register_production('australia_abn', AustraliaABNExtractor)
+    register_production('india_mca', IndiaMCAExtractor)
