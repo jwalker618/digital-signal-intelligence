@@ -6,8 +6,9 @@ These are FREE to use - SEC EDGAR is a public database.
 
 Extractors:
     - SECFilingsExtractor: Company filings (10-K, 10-Q, 8-K, etc.)
-    - SECFinancialsExtractor: Financial data from filings
-    - SECOfficersExtractor: Officers and directors information
+    - SECFinancialsExtractor: Financial data from XBRL filings
+    - SECLitigationExtractor: 8-K litigation/legal disclosures
+    - SECGovernanceExtractor: DEF 14A governance analysis
 
 Requirements:
     - requests: pip install requests
@@ -20,6 +21,8 @@ Usage:
     from technical_pricing.signals.extractors.production.sec import (
         SECFilingsExtractor,
         SECFinancialsExtractor,
+        SECLitigationExtractor,
+        SECGovernanceExtractor,
     )
 
     extractor = SECFilingsExtractor()
@@ -29,11 +32,15 @@ Usage:
 
 from .filings import SECFilingsExtractor
 from .financials import SECFinancialsExtractor
+from .litigation import SECLitigationExtractor
+from .governance import SECGovernanceExtractor
 from ..factory import register_production
 
 __all__ = [
     'SECFilingsExtractor',
     'SECFinancialsExtractor',
+    'SECLitigationExtractor',
+    'SECGovernanceExtractor',
     'register_all',
 ]
 
@@ -42,3 +49,5 @@ def register_all():
     """Register all SEC extractors with the factory."""
     register_production('sec_filings', SECFilingsExtractor)
     register_production('sec_financials', SECFinancialsExtractor)
+    register_production('sec_litigation', SECLitigationExtractor)
+    register_production('sec_governance', SECGovernanceExtractor)

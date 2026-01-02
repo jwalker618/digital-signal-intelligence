@@ -12,9 +12,10 @@ Structure:
     ├── dns/             # DNS-based extractors (SPF, DKIM, DMARC, DNSSEC)
     ├── http/            # HTTP header extractors
     ├── network/         # Network infrastructure extractors (cloud, CDN, WAF, TLS)
-    ├── sec/             # SEC EDGAR extractors
-    ├── regulatory/      # Government database extractors (OFAC, EPA, CFPB)
-    └── security/        # Security/vulnerability extractors (NVD CVE)
+    ├── sec/             # SEC EDGAR extractors (filings, financials, litigation, governance)
+    ├── regulatory/      # Government database extractors (OFAC, EPA, CFPB, OSHA)
+    ├── security/        # Security/vulnerability extractors (NVD CVE, HHS Breach)
+    └── industry/        # Industry-specific registries (PCAOB)
 
 Usage:
     from technical_pricing.signals.extractors.production import (
@@ -41,33 +42,40 @@ Configuration:
     - DSI_NVD_API_KEY: NVD API key (optional, increases rate limit)
     - etc.
 
-Available Free Extractors:
-    DNS:
+Available Free Extractors (21 total):
+    DNS (3):
         - email_auth: SPF, DKIM, DMARC analysis
         - dnssec: DNSSEC validation status
         - dns_records: General DNS records and infrastructure
 
-    HTTP:
+    HTTP (2):
         - security_headers: HTTP security header analysis
         - security_txt: RFC 9116 security.txt validation
 
-    Network:
+    Network (4):
         - cloud_infra: Cloud provider detection (AWS, Azure, GCP, etc.)
         - cdn_usage: CDN detection (Cloudflare, Akamai, Fastly, etc.)
         - waf_presence: WAF detection (Cloudflare, AWS WAF, Imperva, etc.)
         - tls_config: TLS/SSL configuration analysis
 
-    SEC:
+    SEC (4):
         - sec_filings: SEC EDGAR filings (10-K, 10-Q, 8-K)
         - sec_financials: SEC EDGAR XBRL financial data
+        - sec_litigation: SEC 8-K litigation/legal disclosures
+        - sec_governance: SEC DEF 14A governance analysis
 
-    Regulatory:
+    Regulatory (4):
         - ofac_sanctions: OFAC SDN list search
         - epa_echo: EPA ECHO compliance data
         - cfpb_complaints: CFPB consumer complaint data
+        - osha_violations: OSHA workplace safety violations
 
-    Security:
+    Security (2):
         - nvd_cve: NIST NVD vulnerability database search
+        - hhs_breach: HHS HIPAA breach portal
+
+    Industry (1):
+        - pcaob: PCAOB registered auditor status
 """
 
 from .base import ProductionExtractor
@@ -138,3 +146,11 @@ def register_all_extractors():
     except ImportError as e:
         import logging
         logging.getLogger(__name__).warning(f"Could not register security extractors: {e}")
+
+    # Import and register industry extractors
+    try:
+        from .industry import register_all as register_industry
+        register_industry()
+    except ImportError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not register industry extractors: {e}")

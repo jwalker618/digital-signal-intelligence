@@ -8,6 +8,7 @@ Extractors:
     - OFACSanctionsExtractor: OFAC SDN list search
     - EPAEchoExtractor: EPA ECHO enforcement/compliance data
     - CFPBComplaintsExtractor: Consumer Financial Protection Bureau complaints
+    - OSHAViolationsExtractor: OSHA workplace safety violations
 
 Requirements:
     - requests: pip install requests
@@ -17,6 +18,7 @@ Usage:
         OFACSanctionsExtractor,
         EPAEchoExtractor,
         CFPBComplaintsExtractor,
+        OSHAViolationsExtractor,
     )
 
     extractor = OFACSanctionsExtractor()
@@ -26,12 +28,14 @@ Usage:
 from .ofac import OFACSanctionsExtractor
 from .epa_echo import EPAEchoExtractor
 from .cfpb import CFPBComplaintsExtractor
+from .osha import OSHAViolationsExtractor
 from ..factory import register_production
 
 __all__ = [
     'OFACSanctionsExtractor',
     'EPAEchoExtractor',
     'CFPBComplaintsExtractor',
+    'OSHAViolationsExtractor',
     'register_all',
 ]
 
@@ -41,3 +45,4 @@ def register_all():
     register_production('ofac_sanctions', OFACSanctionsExtractor)
     register_production('epa_echo', EPAEchoExtractor)
     register_production('cfpb_complaints', CFPBComplaintsExtractor)
+    register_production('osha_violations', OSHAViolationsExtractor)
