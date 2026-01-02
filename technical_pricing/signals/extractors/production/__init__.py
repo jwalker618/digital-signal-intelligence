@@ -12,10 +12,14 @@ Structure:
     ├── dns/             # DNS-based extractors (SPF, DKIM, DMARC, DNSSEC)
     ├── http/            # HTTP header extractors
     ├── network/         # Network infrastructure extractors (cloud, CDN, WAF, TLS)
-    ├── sec/             # SEC EDGAR extractors (filings, financials, litigation, governance)
-    ├── regulatory/      # Government database extractors (OFAC, EPA, CFPB, OSHA, FAA, EU, FDIC)
-    ├── security/        # Security/vulnerability extractors (NVD CVE, HHS Breach)
-    └── industry/        # Industry-specific registries (PCAOB, Aviation Safety)
+    ├── sec/             # Securities regulators (SEC EDGAR, SEDAR+ Canada)
+    ├── regulatory/      # Government databases (OFAC, EPA, CFPB, OSHA, FAA, EU, FDIC, BSEE)
+    ├── sanctions/       # Global sanctions (OpenSanctions, UK OFSI, EU, World Bank)
+    ├── security/        # Security/vulnerability (NVD CVE, HHS Breach)
+    ├── industry/        # Industry registries (PCAOB, Aviation Safety)
+    ├── corporate/       # Corporate registries (Companies House, OpenCorporates, Australia ABN)
+    ├── environment/     # Environmental data (EEA E-PRTR, Canada NPRI)
+    └── maritime/        # Maritime/aviation (IMO GISIS, IATA IOSA)
 
 Usage:
     from technical_pricing.signals.extractors.production import (
@@ -42,7 +46,7 @@ Configuration:
     - DSI_NVD_API_KEY: NVD API key (optional, increases rate limit)
     - etc.
 
-Available Free Extractors (28 total):
+Available Free Extractors (40 total):
     DNS (3):
         - email_auth: SPF, DKIM, DMARC analysis
         - dnssec: DNSSEC validation status
@@ -58,36 +62,49 @@ Available Free Extractors (28 total):
         - waf_presence: WAF detection (Cloudflare, AWS WAF, Imperva, etc.)
         - tls_config: TLS/SSL configuration analysis
 
-    SEC (4):
-        - sec_filings: SEC EDGAR filings (10-K, 10-Q, 8-K)
-        - sec_financials: SEC EDGAR XBRL financial data
-        - sec_litigation: SEC 8-K litigation/legal disclosures
-        - sec_governance: SEC DEF 14A governance analysis
+    Securities (5):
+        - sec_filings: SEC EDGAR filings (10-K, 10-Q, 8-K) [US]
+        - sec_financials: SEC EDGAR XBRL financial data [US]
+        - sec_litigation: SEC 8-K litigation/legal disclosures [US]
+        - sec_governance: SEC DEF 14A governance analysis [US]
+        - sedar_canada: SEDAR+ Canadian securities filings [Canada]
 
     Regulatory (8):
-        - ofac_sanctions: OFAC SDN list search
-        - epa_echo: EPA ECHO compliance data
-        - cfpb_complaints: CFPB consumer complaint data
-        - osha_violations: OSHA workplace safety violations
-        - faa_certificate: FAA operating certificate status
-        - eu_safety_list: EU Air Safety banned airlines list
-        - fdic_enforcement: FDIC/OCC/Fed bank enforcement actions
-        - bsee_incidents: BSEE offshore drilling incidents
+        - ofac_sanctions: OFAC SDN list search [US/Global]
+        - epa_echo: EPA ECHO compliance data [US]
+        - cfpb_complaints: CFPB consumer complaint data [US]
+        - osha_violations: OSHA workplace safety violations [US]
+        - faa_certificate: FAA operating certificate status [US]
+        - eu_safety_list: EU Air Safety banned airlines list [EU]
+        - fdic_enforcement: FDIC/OCC/Fed bank enforcement actions [US]
+        - bsee_incidents: BSEE offshore drilling incidents [US]
+
+    Sanctions (4) - GLOBAL COVERAGE:
+        - opensanctions: Consolidated global sanctions (85+ sources)
+        - uk_ofsi: UK OFSI financial sanctions
+        - eu_sanctions: EU consolidated financial sanctions
+        - worldbank_debarred: World Bank/MDB debarred firms
 
     Security (2):
         - nvd_cve: NIST NVD vulnerability database search
-        - hhs_breach: HHS HIPAA breach portal
+        - hhs_breach: HHS HIPAA breach portal [US]
 
     Industry (2):
         - pcaob: PCAOB registered auditor status
         - aviation_safety: Aviation Safety Network accident database
 
-    Corporate (1):
-        - companies_house: UK Companies House registry
+    Corporate (3) - GLOBAL COVERAGE:
+        - companies_house: UK Companies House registry [UK]
+        - opencorporates: Global corporate data (145 jurisdictions)
+        - australia_abn: Australian Business Register [Australia]
+
+    Environment (2):
+        - eea_environment: European Environment Agency E-PRTR [EU]
+        - canada_npri: Canadian National Pollutant Release Inventory [Canada]
 
     Maritime/Aviation (2):
-        - imo_gisis: IMO GISIS ship registry
-        - iosa_registry: IATA IOSA airline safety registry
+        - imo_gisis: IMO GISIS ship registry [Global]
+        - iosa_registry: IATA IOSA airline safety registry [Global]
 """
 
 from .base import ProductionExtractor
@@ -182,3 +199,19 @@ def register_all_extractors():
     except ImportError as e:
         import logging
         logging.getLogger(__name__).warning(f"Could not register maritime extractors: {e}")
+
+    # Import and register sanctions extractors
+    try:
+        from .sanctions import register_all as register_sanctions
+        register_sanctions()
+    except ImportError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not register sanctions extractors: {e}")
+
+    # Import and register environment extractors
+    try:
+        from .environment import register_all as register_environment
+        register_environment()
+    except ImportError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not register environment extractors: {e}")
