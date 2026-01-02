@@ -11,8 +11,10 @@ Structure:
     ├── config.py        # Configuration and API keys
     ├── dns/             # DNS-based extractors (SPF, DKIM, DMARC, DNSSEC)
     ├── http/            # HTTP header extractors
+    ├── network/         # Network infrastructure extractors (cloud, CDN, WAF, TLS)
     ├── sec/             # SEC EDGAR extractors
-    └── regulatory/      # Government database extractors (OFAC, EPA, CFPB)
+    ├── regulatory/      # Government database extractors (OFAC, EPA, CFPB)
+    └── security/        # Security/vulnerability extractors (NVD CVE)
 
 Usage:
     from technical_pricing.signals.extractors.production import (
@@ -36,6 +38,7 @@ Configuration:
     - DSI_EXTRACTOR_MODE: 'production' | 'stub' | 'hybrid'
     - DSI_SHODAN_API_KEY: Shodan API key
     - DSI_SSL_LABS_EMAIL: SSL Labs registration email
+    - DSI_NVD_API_KEY: NVD API key (optional, increases rate limit)
     - etc.
 
 Available Free Extractors:
@@ -48,6 +51,12 @@ Available Free Extractors:
         - security_headers: HTTP security header analysis
         - security_txt: RFC 9116 security.txt validation
 
+    Network:
+        - cloud_infra: Cloud provider detection (AWS, Azure, GCP, etc.)
+        - cdn_usage: CDN detection (Cloudflare, Akamai, Fastly, etc.)
+        - waf_presence: WAF detection (Cloudflare, AWS WAF, Imperva, etc.)
+        - tls_config: TLS/SSL configuration analysis
+
     SEC:
         - sec_filings: SEC EDGAR filings (10-K, 10-Q, 8-K)
         - sec_financials: SEC EDGAR XBRL financial data
@@ -56,6 +65,9 @@ Available Free Extractors:
         - ofac_sanctions: OFAC SDN list search
         - epa_echo: EPA ECHO compliance data
         - cfpb_complaints: CFPB consumer complaint data
+
+    Security:
+        - nvd_cve: NIST NVD vulnerability database search
 """
 
 from .base import ProductionExtractor
@@ -110,3 +122,19 @@ def register_all_extractors():
     except ImportError as e:
         import logging
         logging.getLogger(__name__).warning(f"Could not register regulatory extractors: {e}")
+
+    # Import and register network extractors
+    try:
+        from .network import register_all as register_network
+        register_network()
+    except ImportError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not register network extractors: {e}")
+
+    # Import and register security extractors
+    try:
+        from .security import register_all as register_security
+        register_security()
+    except ImportError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not register security extractors: {e}")
