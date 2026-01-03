@@ -3041,10 +3041,132 @@ class SanctionsSignalAggregator(ProductionAggregator):
 | CorporateAggregator | `routing/corporate_aggregator.py` | ✅ Complete |
 | ExtractorTier system | `routing/router.py` | ✅ Complete |
 | Paid extractor mappings | `routing/router.py` | ✅ Complete |
-| InferenceContext.locale | `signals/types.py` | 🔲 Pending |
-| Bridge aggregators | `aggregators/routing_bridges.py` | 🔲 Pending |
-| Routed inference functions | `inference/functions/routed/` | 🔲 Pending |
+| InferenceContext.locale | `signals/types.py` | ✅ Complete |
+| Bridge aggregators | `aggregators/routing_bridges.py` | ✅ Complete |
+| Routed inference functions | `inference/functions/routed/` | ✅ Complete |
+| Routing-level caching | `routing/multi_source.py` | ✅ Complete |
+| Unit tests for routing | `tests/unit/test_routing.py` | ✅ Complete |
+| Hybrid mode demo | `examples/run_hybrid.py` | ✅ Complete |
 | Paid extractors (Shodan, etc.) | `production/paid/` | 🔲 Pending |
+
+### 15.7 Phase 15 Integration Layer (Complete)
+
+The routing module is now fully integrated with the signal framework:
+
+#### 15.7.1 InferenceContext Locale Fields
+```python
+# technical_pricing/signals/types.py
+@dataclass
+class InferenceContext:
+    # ... existing fields ...
+    entity_locale: Optional[str] = None      # ISO country code (UK, US, DE)
+    entity_country: Optional[str] = None     # Full country name
+    locale_source: Optional[str] = None      # 'submission', 'discovery', 'domain_tld'
+```
+
+#### 15.7.2 Bridge Aggregators
+```python
+# technical_pricing/signals/aggregators/routing_bridges.py
+class SanctionsSignalBridge(RoutingBridge):
+    """Converts SanctionsResult → signal score (0-100)"""
+    RISK_TO_SCORE = {CLEAR: 95, LOW: 75, MEDIUM: 50, HIGH: 25, CRITICAL: 5}
+
+class CorporateSignalBridge(RoutingBridge):
+    """Multi-score output: registration_score, status_score, age_score, lei_score"""
+
+class DNSSignalBridge(RoutingBridge):
+    """Methods: get_email_auth_score, get_dnssec_score, get_domain_age_score"""
+
+class NetworkSignalBridge(RoutingBridge):
+    """Methods: get_security_headers_score, get_tls_config_score, get_infrastructure_score"""
+
+class SecuritySignalBridge(RoutingBridge):
+    """Method: get_vulnerability_score"""
+```
+
+#### 15.7.3 Routed Inference Functions (13 Total)
+```python
+# technical_pricing/signals/inference/functions/routed/signals.py
+
+# Sanctions & Corporate (5)
+sanctions_check_routed         # Multi-source sanctions screening
+corporate_registry_routed      # Multi-registry company lookup
+corporate_status_routed        # Company active/dissolved status
+corporate_age_routed           # Company establishment age
+lei_verification_routed        # Legal Entity Identifier check
+
+# DNS (3)
+email_auth_routed              # SPF/DKIM/DMARC configuration
+dnssec_routed                  # DNSSEC validation status
+domain_age_routed              # Domain registration age
+
+# Network (3)
+security_headers_routed        # HTTP security headers
+tls_config_routed              # TLS/SSL configuration
+infrastructure_routed          # Cloud/CDN/WAF detection
+
+# Security (2)
+vulnerability_routed           # CVE exposure check
+breach_history_routed          # Data breach history
+```
+
+#### 15.7.4 Routing-Level Cache
+```python
+# technical_pricing/signals/routing/multi_source.py
+class RoutingCache:
+    """Thread-safe TTL cache for extraction results"""
+    def get(extractor_name, entity_id) -> Optional[CachedResult]
+    def set(extractor_name, entity_id, data, ttl_seconds=300)
+    def invalidate(extractor_name=None, entity_id=None) -> int
+    def get_stats() -> Dict[str, Any]  # hits, misses, hit_rate
+
+# Global cache singleton
+get_routing_cache() -> RoutingCache
+set_routing_cache(cache)  # For testing
+```
+
+#### 15.7.5 Usage Example
+```python
+from technical_pricing.signals.inference.functions.routed import (
+    sanctions_check_routed,
+    corporate_registry_routed,
+    register_all,
+)
+from technical_pricing.signals.types import InferenceContext
+
+# Register all routed functions
+register_all()
+
+# Create context with locale
+context = InferenceContext(
+    configuration={},
+    coverage='general',
+    config_name='test',
+    entity_locale='UK',
+    entity_country='United Kingdom',
+    locale_source='submission',
+)
+
+# Run multi-source sanctions check
+result = sanctions_check_routed('Test Company Ltd', context)
+print(f"Score: {result.score}")           # 95 = clear, 5 = sanctioned
+print(f"Risk: {result.raw_data.get('risk_level')}")
+print(f"Sources: {result.metadata.get('sources_checked')}")
+```
+
+#### 15.7.6 Hybrid Mode Demo
+```bash
+# Run the Phase 15 demo
+python examples/run_hybrid.py
+```
+
+Demonstrates:
+- Jurisdiction-aware routing (UK, US, AU, etc.)
+- Locale detection from domain TLD
+- Routing strategies (LOCALE_ONLY, GLOBAL_ONLY, LOCALE_PLUS_GLOBAL)
+- Extractor tier filtering (FREE, PAID_BASIC, PAID_PREMIUM)
+- Routing cache with TTL expiration
+- Bridge aggregators for all signal types
 
 -----
 
@@ -3097,6 +3219,7 @@ technical_pricing/
 │   ├── aggregators/
 │   │   ├── __init__.py
 │   │   ├── base.py                  ✅ ProductionAggregator
+│   │   ├── routing_bridges.py       ✅ PHASE 15.7 (6 bridge classes)
 │   │   └── implementations/
 │   │       ├── __init__.py
 │   │       ├── common.py            ✅ Cross-coverage
@@ -3121,18 +3244,22 @@ technical_pricing/
 │   │   ├── registry.py              ✅
 │   │   └── functions/
 │   │       ├── __init__.py
+│   │       ├── registry.py          ✅ Function registration
 │   │       ├── aerospace/           ✅ 41 functions
 │   │       ├── cyber/               ✅ 38 functions
 │   │       ├── do/                  ✅ 47 functions
 │   │       ├── energy/              ✅ 46 functions
 │   │       ├── fi/                  ✅ ~42 functions
 │   │       ├── marine/              ✅ ~40 functions
-│   │       └── pi/                  ✅ ~38 functions
+│   │       ├── pi/                  ✅ ~38 functions
+│   │       └── routed/              ✅ PHASE 15.7 (13 functions)
+│   │           ├── __init__.py      ✅ register_all()
+│   │           └── signals.py       ✅ Multi-source inference functions
 │   └── routing/                     ✅ PHASE 15
 │       ├── __init__.py              ✅ Package exports
 │       ├── router.py                ✅ JurisdictionRouter + tier system
 │       ├── schemas.py               ✅ Unified output schemas
-│       ├── multi_source.py          ✅ MultiSourceAggregator base
+│       ├── multi_source.py          ✅ MultiSourceAggregator + RoutingCache
 │       ├── sanctions_aggregator.py  ✅ Sanctions multi-source
 │       └── corporate_aggregator.py  ✅ Corporate multi-source
 ├── discovery/                       ✅ PHASE 6
@@ -3190,7 +3317,7 @@ technical_pricing/
     └── api/                         ✅ API tests
 
 # Additional directories (at repo root):
-examples/                            ✅ PHASE 14
+examples/                            ✅ PHASE 14 + 15
 ├── run_aerospace.py                 ✅ Aerospace example
 ├── run_cyber.py                     ✅ Cyber example
 ├── run_do.py                        ✅ D&O example
@@ -3198,7 +3325,8 @@ examples/                            ✅ PHASE 14
 ├── run_fi.py                        ✅ Financial Institutions example
 ├── run_marine.py                    ✅ Marine example
 ├── run_pi.py                        ✅ Professional Indemnity example
-└── run_multi.py                     ✅ Multi-coverage example
+├── run_multi.py                     ✅ Multi-coverage example
+└── run_hybrid.py                    ✅ PHASE 15.7 - Routing/hybrid demo
 
 demo/                                ✅ Live demos
 ├── server.py                        ✅ FastAPI demo server
