@@ -352,6 +352,11 @@ class InferenceContext:
         discovery_confidence: Confidence level from discovery (0.0-1.0)
         discovery_method: How the website was discovered
         discovery_warnings: Any warnings from the discovery process
+
+        Locale context (for jurisdiction-aware routing):
+        entity_locale: ISO country code for entity jurisdiction (e.g., 'UK', 'US', 'DE')
+        entity_country: Full country name (e.g., 'United Kingdom')
+        locale_source: How locale was determined ('submission', 'discovery', 'default')
     """
     configuration: Dict[str, Any]
     coverage: str
@@ -366,6 +371,11 @@ class InferenceContext:
     discovery_confidence: float = 1.0
     discovery_method: Optional[str] = None
     discovery_warnings: Optional[List[str]] = None
+
+    # Locale context (for jurisdiction-aware routing)
+    entity_locale: Optional[str] = None
+    entity_country: Optional[str] = None
+    locale_source: Optional[str] = None
     
     def __post_init__(self):
         if self.cache is None:

@@ -216,6 +216,14 @@ class WorkflowEngine:
                     notes=["Incomplete submission - missing required inputs"],
                 )
 
+        # Determine entity locale for jurisdiction-aware routing
+        # Priority: country_hint > submission_data.country > detected from domain > default
+        entity_locale, locale_source = self._determine_locale(
+            country_hint=country_hint,
+            submission_data=submission_data,
+            discovered_domain=discovery_output.discovered_domain if discovery_output else None,
+        )
+
         # Create inference context for signal extraction
         # Include discovery data so extractors can use the discovered website
         context = InferenceContext(
@@ -232,6 +240,10 @@ class WorkflowEngine:
             discovery_confidence=discovery_output.confidence_score / 100.0 if discovery_output else 1.0,
             discovery_method=discovery_output.discovery_method if discovery_output else None,
             discovery_warnings=discovery_output.warnings if discovery_output else [],
+            # Locale context for routing
+            entity_locale=entity_locale,
+            entity_country=submission_data.get('country') or submission_data.get('country_name'),
+            locale_source=locale_source,
         )
 
         # Steps 4-6: Score Entity (Signal Extraction + Composite + Conditions)
@@ -623,6 +635,68 @@ class WorkflowEngine:
                 execution_time_ms=execution_time_ms,
                 error=str(e),
             )
+
+    def _determine_locale(
+        self,
+        country_hint: Optional[str],
+        submission_data: Dict[str, Any],
+        discovered_domain: Optional[str],
+    ) -> tuple:
+        """
+        Determine entity locale for jurisdiction-aware routing.
+
+        Priority order:
+        1. country_hint parameter (explicit override)
+        2. submission_data country/country_code field
+        3. TLD detection from discovered domain
+        4. Default to 'US'
+
+        Args:
+            country_hint: Explicit country hint
+            submission_data: Submission data dict
+            discovered_domain: Domain from discovery
+
+        Returns:
+            Tuple of (locale_code, source) where source is
+            'hint', 'submission', 'domain', or 'default'
+        """
+        # 1. Check country_hint
+        if country_hint:
+            return country_hint.upper(), 'hint'
+
+        # 2. Check submission_data for country fields
+        country_code = submission_data.get('country_code') or submission_data.get('country')
+        if country_code and isinstance(country_code, str) and len(country_code) <= 3:
+            return country_code.upper(), 'submission'
+
+        # 3. Detect from domain TLD
+        if discovered_domain:
+            # Import routing module for TLD detection
+            try:
+                from ..signals.routing import TLD_TO_LOCALE
+
+                # Extract TLD
+                parts = discovered_domain.lower().strip().split('.')
+
+                # Check compound TLDs first (e.g., co.uk)
+                if len(parts) >= 2:
+                    compound_tld = '.'.join(parts[-2:])
+                    if compound_tld in TLD_TO_LOCALE:
+                        locale = TLD_TO_LOCALE[compound_tld]
+                        if locale:  # Some TLDs map to None (generic)
+                            return locale, 'domain'
+
+                # Check simple TLD
+                tld = parts[-1] if parts else None
+                if tld and tld in TLD_TO_LOCALE:
+                    locale = TLD_TO_LOCALE[tld]
+                    if locale:
+                        return locale, 'domain'
+            except ImportError:
+                logger.debug("Routing module not available for TLD detection")
+
+        # 4. Default
+        return 'US', 'default'
 
     def process_referral(
         self,
