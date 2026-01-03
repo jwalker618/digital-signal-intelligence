@@ -5,6 +5,7 @@ Routes signal extraction requests to appropriate data sources based on:
 - Entity locale/jurisdiction
 - Signal type (sanctions, corporate, regulatory, etc.)
 - Routing strategy (locale-only, global-only, or combined)
+- Extractor tier (free, paid, premium)
 
 This module solves the problem of which extractors to call for a given entity,
 optimizing for both coverage and efficiency.
@@ -35,6 +36,124 @@ class RoutingStrategy(str, Enum):
 
     # Use primary source only (fastest, least comprehensive)
     PRIMARY_ONLY = "primary_only"
+
+
+class ExtractorTier(str, Enum):
+    """
+    Pricing tier for extractors.
+
+    Controls which extractors are available based on subscription level.
+    """
+    # Free extractors - no API keys or costs
+    FREE = "free"
+
+    # Paid basic - low-cost APIs with generous free tiers
+    PAID_BASIC = "paid_basic"
+
+    # Paid premium - commercial APIs with per-call costs
+    PAID_PREMIUM = "paid_premium"
+
+    # Enterprise - high-cost, high-value data sources
+    ENTERPRISE = "enterprise"
+
+
+# Extractor tier classification
+# All current extractors are FREE tier
+EXTRACTOR_TIERS: Dict[str, ExtractorTier] = {
+    # DNS (all free)
+    'email_auth': ExtractorTier.FREE,
+    'dnssec': ExtractorTier.FREE,
+    'dns_records': ExtractorTier.FREE,
+    'whois_rdap': ExtractorTier.FREE,
+
+    # HTTP (all free)
+    'security_headers': ExtractorTier.FREE,
+    'security_txt': ExtractorTier.FREE,
+
+    # Network (all free)
+    'cloud_infra': ExtractorTier.FREE,
+    'cdn_usage': ExtractorTier.FREE,
+    'waf_presence': ExtractorTier.FREE,
+    'tls_config': ExtractorTier.FREE,
+
+    # Securities (all free)
+    'sec_filings': ExtractorTier.FREE,
+    'sec_financials': ExtractorTier.FREE,
+    'sec_litigation': ExtractorTier.FREE,
+    'sec_governance': ExtractorTier.FREE,
+    'sedar_canada': ExtractorTier.FREE,
+
+    # Regulatory (all free)
+    'ofac_sanctions': ExtractorTier.FREE,
+    'epa_echo': ExtractorTier.FREE,
+    'cfpb_complaints': ExtractorTier.FREE,
+    'osha_violations': ExtractorTier.FREE,
+    'faa_certificate': ExtractorTier.FREE,
+    'eu_safety_list': ExtractorTier.FREE,
+    'fdic_enforcement': ExtractorTier.FREE,
+    'bsee_incidents': ExtractorTier.FREE,
+    'uk_fca_register': ExtractorTier.FREE,
+
+    # Sanctions (all free)
+    'opensanctions': ExtractorTier.FREE,
+    'uk_ofsi': ExtractorTier.FREE,
+    'eu_sanctions': ExtractorTier.FREE,
+    'worldbank_debarred': ExtractorTier.FREE,
+    'interpol_red_notices': ExtractorTier.FREE,
+    'fbi_most_wanted': ExtractorTier.FREE,
+    'adb_sanctions': ExtractorTier.FREE,
+    'idb_sanctions': ExtractorTier.FREE,
+    'ebrd_ineligible': ExtractorTier.FREE,
+    'afdb_sanctions': ExtractorTier.FREE,
+
+    # Security (all free)
+    'nvd_cve': ExtractorTier.FREE,
+    'hhs_breach': ExtractorTier.FREE,
+
+    # Industry (all free)
+    'pcaob': ExtractorTier.FREE,
+    'aviation_safety': ExtractorTier.FREE,
+
+    # Corporate (all free)
+    'companies_house': ExtractorTier.FREE,
+    'opencorporates': ExtractorTier.FREE,
+    'australia_abn': ExtractorTier.FREE,
+    'india_mca': ExtractorTier.FREE,
+    'gleif_lei': ExtractorTier.FREE,
+
+    # Environment (all free)
+    'eea_environment': ExtractorTier.FREE,
+    'canada_npri': ExtractorTier.FREE,
+
+    # Maritime/Aviation (all free)
+    'imo_gisis': ExtractorTier.FREE,
+    'iosa_registry': ExtractorTier.FREE,
+
+    # =========================================================================
+    # PAID EXTRACTORS (Future - not yet implemented)
+    # =========================================================================
+    # PAID_BASIC tier - APIs with generous free tiers or low per-call costs
+    'shodan': ExtractorTier.PAID_BASIC,           # Network/security scanning
+    'censys': ExtractorTier.PAID_BASIC,           # Internet-wide scanning
+    'virustotal': ExtractorTier.PAID_BASIC,       # Malware/threat intel
+    'ssllabs': ExtractorTier.PAID_BASIC,          # Deep SSL analysis
+    'builtwith': ExtractorTier.PAID_BASIC,        # Technology profiling
+
+    # PAID_PREMIUM tier - Commercial per-call APIs
+    'dnb': ExtractorTier.PAID_PREMIUM,            # Dun & Bradstreet
+    'experian': ExtractorTier.PAID_PREMIUM,       # Experian business
+    'lexisnexis': ExtractorTier.PAID_PREMIUM,     # LexisNexis risk
+    'refinitiv': ExtractorTier.PAID_PREMIUM,      # Refinitiv World-Check
+    'moodys': ExtractorTier.PAID_PREMIUM,         # Moody's ratings
+    'sp_global': ExtractorTier.PAID_PREMIUM,      # S&P Global
+    'bureau_van_dijk': ExtractorTier.PAID_PREMIUM,  # Orbis/BvD
+
+    # ENTERPRISE tier - Premium data sources
+    'bloomberg': ExtractorTier.ENTERPRISE,        # Bloomberg terminal data
+    'factset': ExtractorTier.ENTERPRISE,          # FactSet
+    'pitchbook': ExtractorTier.ENTERPRISE,        # PitchBook
+    'crunchbase_enterprise': ExtractorTier.ENTERPRISE,
+}
 
 
 @dataclass
@@ -382,6 +501,8 @@ class JurisdictionRouter:
         locale: Optional[str] = None,
         domain: Optional[str] = None,
         strategy: RoutingStrategy = RoutingStrategy.LOCALE_PLUS_GLOBAL,
+        max_tier: ExtractorTier = ExtractorTier.FREE,
+        include_tiers: Optional[List[ExtractorTier]] = None,
     ) -> List[str]:
         """
         Get list of extractors to use for a signal type and locale.
@@ -391,6 +512,9 @@ class JurisdictionRouter:
             locale: Explicit locale code (e.g., 'UK', 'US', 'DE')
             domain: Domain for automatic locale detection (used if locale is None)
             strategy: How to select extractors
+            max_tier: Maximum tier to include (FREE only includes free extractors,
+                     PAID_BASIC includes free + paid_basic, etc.)
+            include_tiers: Explicit list of tiers to include (overrides max_tier)
 
         Returns:
             List of extractor names to call
@@ -410,6 +534,20 @@ class JurisdictionRouter:
             locale = self.default_locale
 
         locale = locale.upper()
+
+        # Build tier filter
+        if include_tiers:
+            allowed_tiers = set(include_tiers)
+        else:
+            # Build cumulative tier set based on max_tier
+            tier_order = [
+                ExtractorTier.FREE,
+                ExtractorTier.PAID_BASIC,
+                ExtractorTier.PAID_PREMIUM,
+                ExtractorTier.ENTERPRISE,
+            ]
+            max_tier_index = tier_order.index(max_tier)
+            allowed_tiers = set(tier_order[:max_tier_index + 1])
 
         # Select extractors based on strategy
         extractors: List[str] = []
@@ -444,6 +582,13 @@ class JurisdictionRouter:
                 for ext in locale_list:
                     if ext not in extractors:
                         extractors.append(ext)
+
+        # Filter by tier
+        def is_allowed_tier(ext_name: str) -> bool:
+            tier = EXTRACTOR_TIERS.get(ext_name, ExtractorTier.FREE)
+            return tier in allowed_tiers
+
+        extractors = [e for e in extractors if is_allowed_tier(e)]
 
         # Deduplicate while preserving order
         seen: Set[str] = set()

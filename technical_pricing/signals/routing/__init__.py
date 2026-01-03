@@ -49,9 +49,11 @@ Usage:
 from .router import (
     JurisdictionRouter,
     RoutingStrategy,
+    ExtractorTier,
     ExtractorGroup,
     JURISDICTION_MAPPINGS,
     TLD_TO_LOCALE,
+    EXTRACTOR_TIERS,
 )
 
 # Unified schemas
@@ -93,9 +95,11 @@ __all__ = [
     # Router
     'JurisdictionRouter',
     'RoutingStrategy',
+    'ExtractorTier',
     'ExtractorGroup',
     'JURISDICTION_MAPPINGS',
     'TLD_TO_LOCALE',
+    'EXTRACTOR_TIERS',
     # Schemas - Enums
     'SanctionsMatchType',
     'SanctionsProgram',

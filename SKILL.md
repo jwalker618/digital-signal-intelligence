@@ -22,9 +22,10 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 | 12 | Integration Layer | ✅ Complete | Email, documents, webhooks |
 | 13 | LLM Builder | ✅ Complete | Coverage builder, signal library |
 | 14 | Examples | ✅ Complete | Working examples for all 7 coverages |
+| 15 | Production Extractors | 🔄 In Progress | 50 free extractors, routing, multi-source aggregation |
 
-**Current State**: Core framework complete. Signal extractors use stub data.
-**Next Steps**: Implement real extractors, deploy database, add monitoring.
+**Current State**: Core framework complete. 50 free production extractors implemented with global coverage. Routing module complete (jurisdiction-aware, tier-based). Signal framework integration pending.
+**Next Steps**: Integrate routing into inference layer, implement paid extractors, deploy monitoring.
 
 ---
 
@@ -2897,6 +2898,156 @@ if __name__ == "__main__":
 
 -----
 
+## Phase 15: Production Extractors & Signal Routing (Detailed Plan)
+
+Implement production extractors that connect to real data sources with jurisdiction-aware routing for global coverage.
+
+### 15.1 Production Extractor Architecture
+
+Production extractors replace stub extractors with real API connections:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SIGNAL ROUTING MODULE                        │
+│                                                                 │
+│  ┌────────────────┐    ┌────────────────┐    ┌───────────────┐ │
+│  │JURISDICTION    │ →  │MULTI-SOURCE    │ →  │UNIFIED        │ │
+│  │ROUTER          │    │AGGREGATOR      │    │SCHEMA         │ │
+│  │                │    │                │    │               │ │
+│  │Maps locale →   │    │Parallel calls  │    │Normalized     │ │
+│  │extractors      │    │consolidate     │    │output format  │ │
+│  └────────────────┘    └────────────────┘    └───────────────┘ │
+│                                                                 │
+│  Routing Strategies:                                            │
+│  - LOCALE_PLUS_GLOBAL: Region-specific + global (recommended) │
+│  - LOCALE_ONLY: Only regional sources                          │
+│  - GLOBAL_ONLY: Only global sources                            │
+│  - PRIMARY_ONLY: Single best source (fastest)                  │
+│  - ALL: All available sources                                   │
+│                                                                 │
+│  Extractor Tiers:                                               │
+│  - FREE: No API keys required (50 extractors implemented)      │
+│  - PAID_BASIC: Low-cost APIs (Shodan, VirusTotal)              │
+│  - PAID_PREMIUM: Commercial APIs (D&B, Experian, Refinitiv)    │
+│  - ENTERPRISE: Premium sources (Bloomberg, FactSet)            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 15.2 Free Production Extractors (50 Total)
+
+| Category | Count | Extractors | Coverage |
+|----------|-------|------------|----------|
+| DNS | 4 | email_auth, dnssec, dns_records, whois_rdap | Global |
+| HTTP | 2 | security_headers, security_txt | Global |
+| Network | 4 | cloud_infra, cdn_usage, waf_presence, tls_config | Global |
+| Securities | 5 | sec_filings, sec_financials, sec_litigation, sec_governance, sedar_canada | US, Canada |
+| Regulatory | 9 | ofac_sanctions, epa_echo, cfpb_complaints, osha_violations, faa_certificate, eu_safety_list, fdic_enforcement, bsee_incidents, uk_fca_register | US, UK, EU |
+| Sanctions | 10 | opensanctions, uk_ofsi, eu_sanctions, worldbank_debarred, interpol_red_notices, fbi_most_wanted, adb_sanctions, idb_sanctions, ebrd_ineligible, afdb_sanctions | Global |
+| Security | 2 | nvd_cve, hhs_breach | Global, US |
+| Industry | 2 | pcaob, aviation_safety | Global |
+| Corporate | 5 | companies_house, opencorporates, australia_abn, india_mca, gleif_lei | UK, AU, IN, Global |
+| Environment | 2 | eea_environment, canada_npri | EU, Canada |
+| Maritime | 2 | imo_gisis, iosa_registry | Global |
+
+### 15.3 Routing Module Components
+
+```python
+# Usage example
+from technical_pricing.signals.routing import (
+    JurisdictionRouter,
+    RoutingStrategy,
+    ExtractorTier,
+    SanctionsAggregator,
+)
+
+# Get extractors for UK sanctions check
+router = JurisdictionRouter()
+extractors = router.get_extractors(
+    signal_type='sanctions',
+    locale='UK',
+    strategy=RoutingStrategy.LOCALE_PLUS_GLOBAL,
+    max_tier=ExtractorTier.FREE,
+)
+# Returns: ['uk_ofsi', 'opensanctions', 'interpol_red_notices', ...]
+
+# Full multi-source aggregation
+aggregator = SanctionsAggregator()
+result = aggregator.aggregate(
+    entity_id='Acme Corporation',
+    signal_type='sanctions',
+    locale='UK'
+)
+print(f"Risk: {result.result.risk_level}")  # CLEAR/LOW/MEDIUM/HIGH/CRITICAL
+print(f"Matches: {result.result.total_matches}")
+print(f"Sources: {result.result.sources_checked}")
+```
+
+### 15.4 Unified Output Schemas
+
+Each signal type has a standardized output schema regardless of data source:
+
+- **SanctionsResult**: risk_level, total_matches, matches[], confirmed_sanctioned
+- **CorporateResult**: records_found, primary_record, lei, any_active
+- **RegulatoryResult**: total_violations, open_violations, risk_level
+- **DomainResult**: domain_age_days, expires_soon, privacy_protected
+
+### 15.5 Signal Framework Integration (Pending)
+
+Integration points to connect routing to existing inference layer:
+
+1. **InferenceContext.entity_locale** - Populate from discovery/submission
+2. **Bridge Aggregators** - Convert unified schemas → signal scores
+3. **Routed Inference Functions** - Use router instead of hardcoded extractors
+
+```python
+# Pending: Bridge aggregator example
+class SanctionsSignalAggregator(ProductionAggregator):
+    """Converts SanctionsResult → signal score 0-100"""
+
+    RISK_TO_SCORE = {
+        RiskLevel.CLEAR: 95,
+        RiskLevel.LOW: 75,
+        RiskLevel.MEDIUM: 50,
+        RiskLevel.HIGH: 25,
+        RiskLevel.CRITICAL: 5,
+    }
+
+    def aggregate(self, results, locale, entity_id):
+        agg = SanctionsAggregator()
+        multi_result = agg.aggregate(entity_id, 'sanctions', locale)
+        score = self.RISK_TO_SCORE[multi_result.result.risk_level]
+        return AggregatorResult(success=True, data={'score': score})
+```
+
+### 15.6 Implementation Tasks
+
+| Task | File | Status |
+|------|------|--------|
+| DNS extractors (4) | `production/dns/` | ✅ Complete |
+| HTTP extractors (2) | `production/http/` | ✅ Complete |
+| Network extractors (4) | `production/network/` | ✅ Complete |
+| SEC extractors (5) | `production/sec/` | ✅ Complete |
+| Regulatory extractors (9) | `production/regulatory/` | ✅ Complete |
+| Sanctions extractors (10) | `production/sanctions/` | ✅ Complete |
+| Security extractors (2) | `production/security/` | ✅ Complete |
+| Industry extractors (2) | `production/industry/` | ✅ Complete |
+| Corporate extractors (5) | `production/corporate/` | ✅ Complete |
+| Environment extractors (2) | `production/environment/` | ✅ Complete |
+| Maritime extractors (2) | `production/maritime/` | ✅ Complete |
+| JurisdictionRouter | `routing/router.py` | ✅ Complete |
+| Unified schemas | `routing/schemas.py` | ✅ Complete |
+| MultiSourceAggregator | `routing/multi_source.py` | ✅ Complete |
+| SanctionsAggregator | `routing/sanctions_aggregator.py` | ✅ Complete |
+| CorporateAggregator | `routing/corporate_aggregator.py` | ✅ Complete |
+| ExtractorTier system | `routing/router.py` | ✅ Complete |
+| Paid extractor mappings | `routing/router.py` | ✅ Complete |
+| InferenceContext.locale | `signals/types.py` | 🔲 Pending |
+| Bridge aggregators | `aggregators/routing_bridges.py` | 🔲 Pending |
+| Routed inference functions | `inference/functions/routed/` | 🔲 Pending |
+| Paid extractors (Shodan, etc.) | `production/paid/` | 🔲 Pending |
+
+-----
+
 ## File Structure (Complete)
 
 ```
@@ -2917,16 +3068,32 @@ technical_pricing/
 │   ├── extractors/
 │   │   ├── __init__.py
 │   │   ├── base.py                  ✅ StubExtractor + utilities
-│   │   └── stubs/
-│   │       ├── __init__.py
-│   │       ├── common.py            ✅ Cross-coverage extractors
-│   │       ├── aerospace/           ✅ 21 extractors
-│   │       ├── cyber/               ✅ 35 extractors
-│   │       ├── do/                  ✅ 46 extractors
-│   │       ├── energy/              ✅ 44 extractors
-│   │       ├── fi/                  ✅ ~40 extractors
-│   │       ├── marine/              ✅ ~38 extractors
-│   │       └── pi/                  ✅ ~35 extractors
+│   │   ├── stubs/
+│   │   │   ├── __init__.py
+│   │   │   ├── common.py            ✅ Cross-coverage extractors
+│   │   │   ├── aerospace/           ✅ 21 extractors
+│   │   │   ├── cyber/               ✅ 35 extractors
+│   │   │   ├── do/                  ✅ 46 extractors
+│   │   │   ├── energy/              ✅ 44 extractors
+│   │   │   ├── fi/                  ✅ ~40 extractors
+│   │   │   ├── marine/              ✅ ~38 extractors
+│   │   │   └── pi/                  ✅ ~35 extractors
+│   │   └── production/              ✅ PHASE 15
+│   │       ├── __init__.py          ✅ Factory + registration
+│   │       ├── base.py              ✅ ProductionExtractor base
+│   │       ├── factory.py           ✅ Stub/production switching
+│   │       ├── config.py            ✅ API key configuration
+│   │       ├── dns/                 ✅ 4 extractors (SPF, DKIM, DNSSEC, WHOIS)
+│   │       ├── http/                ✅ 2 extractors (headers, security.txt)
+│   │       ├── network/             ✅ 4 extractors (cloud, CDN, WAF, TLS)
+│   │       ├── sec/                 ✅ 5 extractors (EDGAR, SEDAR+)
+│   │       ├── regulatory/          ✅ 9 extractors (OFAC, EPA, FCA, etc.)
+│   │       ├── sanctions/           ✅ 10 extractors (OpenSanctions, MDBs)
+│   │       ├── security/            ✅ 2 extractors (NVD, HHS)
+│   │       ├── industry/            ✅ 2 extractors (PCAOB, aviation)
+│   │       ├── corporate/           ✅ 5 extractors (CH, OpenCorp, GLEIF)
+│   │       ├── environment/         ✅ 2 extractors (EEA, NPRI)
+│   │       └── maritime/            ✅ 2 extractors (IMO, IOSA)
 │   ├── aggregators/
 │   │   ├── __init__.py
 │   │   ├── base.py                  ✅ ProductionAggregator
@@ -2949,18 +3116,25 @@ technical_pricing/
 │   │       ├── boolean_score.py     ✅
 │   │       ├── weighted_composite.py ✅
 │   │       └── category_mapper.py   ✅
-│   └── inference/
-│       ├── __init__.py
-│       ├── registry.py              ✅
-│       └── functions/
-│           ├── __init__.py
-│           ├── aerospace/           ✅ 41 functions
-│           ├── cyber/               ✅ 38 functions
-│           ├── do/                  ✅ 47 functions
-│           ├── energy/              ✅ 46 functions
-│           ├── fi/                  ✅ ~42 functions
-│           ├── marine/              ✅ ~40 functions
-│           └── pi/                  ✅ ~38 functions
+│   ├── inference/
+│   │   ├── __init__.py
+│   │   ├── registry.py              ✅
+│   │   └── functions/
+│   │       ├── __init__.py
+│   │       ├── aerospace/           ✅ 41 functions
+│   │       ├── cyber/               ✅ 38 functions
+│   │       ├── do/                  ✅ 47 functions
+│   │       ├── energy/              ✅ 46 functions
+│   │       ├── fi/                  ✅ ~42 functions
+│   │       ├── marine/              ✅ ~40 functions
+│   │       └── pi/                  ✅ ~38 functions
+│   └── routing/                     ✅ PHASE 15
+│       ├── __init__.py              ✅ Package exports
+│       ├── router.py                ✅ JurisdictionRouter + tier system
+│       ├── schemas.py               ✅ Unified output schemas
+│       ├── multi_source.py          ✅ MultiSourceAggregator base
+│       ├── sanctions_aggregator.py  ✅ Sanctions multi-source
+│       └── corporate_aggregator.py  ✅ Corporate multi-source
 ├── discovery/                       ✅ PHASE 6
 │   ├── __init__.py                  ✅ Package exports
 │   └── website_discovery.py         ✅ Discovery engine
