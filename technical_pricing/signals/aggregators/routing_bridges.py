@@ -377,13 +377,583 @@ class RegulatorySignalBridge(RoutingBridge):
         }
 
 
+class DNSSignalBridge(RoutingBridge):
+    """
+    Bridge for DNS-based signals.
+
+    Aggregates from DNS extractors:
+    - email_auth: SPF, DKIM, DMARC
+    - dnssec: DNSSEC validation
+    - whois_rdap: Domain registration info
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._extractor_cache: Dict[str, Any] = {}
+
+    def _get_extractor(self, name: str):
+        """Get extractor with caching."""
+        if name not in self._extractor_cache:
+            try:
+                from ..extractors.production.factory import get_extractor
+                self._extractor_cache[name] = get_extractor(name, mode='production')
+            except Exception as e:
+                logger.warning(f"Could not get extractor {name}: {e}")
+                self._extractor_cache[name] = None
+        return self._extractor_cache[name]
+
+    def get_email_auth_score(
+        self,
+        domain: str,
+        context: Optional[InferenceContext] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get email authentication score (SPF, DKIM, DMARC).
+
+        Score interpretation:
+        - 95: All three configured correctly
+        - 75: Two of three configured
+        - 50: Only one configured
+        - 25: None configured (high spam/phishing risk)
+        """
+        start_time = time.time()
+
+        try:
+            extractor = self._get_extractor('email_auth')
+            if not extractor:
+                return {'score': 50, 'confidence': 0.0, 'error': 'Extractor not available'}
+
+            result = extractor.extract(domain)
+            if not result.success:
+                return {'score': 50, 'confidence': 0.0, 'error': result.error}
+
+            data = result.data
+            spf = data.get('spf', {})
+            dkim = data.get('dkim', {})
+            dmarc = data.get('dmarc', {})
+
+            # Count configured mechanisms
+            configured = 0
+            if spf.get('exists'):
+                configured += 1
+            if dkim.get('exists'):
+                configured += 1
+            if dmarc.get('exists'):
+                configured += 1
+
+            # Score based on configuration
+            if configured == 3:
+                score = 95
+            elif configured == 2:
+                score = 75
+            elif configured == 1:
+                score = 50
+            else:
+                score = 25
+
+            # Bonus for strict policies
+            if dmarc.get('policy') == 'reject':
+                score = min(100, score + 5)
+
+            return {
+                'score': score,
+                'confidence': 0.95,
+                'spf_configured': spf.get('exists', False),
+                'dkim_configured': dkim.get('exists', False),
+                'dmarc_configured': dmarc.get('exists', False),
+                'dmarc_policy': dmarc.get('policy'),
+                'mechanisms_configured': configured,
+                'execution_time_ms': (time.time() - start_time) * 1000,
+            }
+
+        except Exception as e:
+            logger.error(f"Email auth check failed: {e}")
+            return {
+                'score': 50,
+                'confidence': 0.0,
+                'error': str(e),
+                'execution_time_ms': (time.time() - start_time) * 1000,
+            }
+
+    def get_dnssec_score(
+        self,
+        domain: str,
+        context: Optional[InferenceContext] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get DNSSEC validation score.
+
+        Score interpretation:
+        - 90: DNSSEC enabled and valid
+        - 50: DNSSEC not enabled (neutral - many legitimate sites don't use it)
+        - 20: DNSSEC configured but invalid (concerning)
+        """
+        start_time = time.time()
+
+        try:
+            extractor = self._get_extractor('dnssec')
+            if not extractor:
+                return {'score': 50, 'confidence': 0.0, 'error': 'Extractor not available'}
+
+            result = extractor.extract(domain)
+            if not result.success:
+                return {'score': 50, 'confidence': 0.0, 'error': result.error}
+
+            data = result.data
+            enabled = data.get('dnssec_enabled', False)
+            valid = data.get('dnssec_valid', False)
+
+            if enabled and valid:
+                score = 90
+            elif enabled and not valid:
+                score = 20  # Misconfigured is worse than not having it
+            else:
+                score = 50  # Neutral - many sites don't use DNSSEC
+
+            return {
+                'score': score,
+                'confidence': 0.9,
+                'dnssec_enabled': enabled,
+                'dnssec_valid': valid,
+                'execution_time_ms': (time.time() - start_time) * 1000,
+            }
+
+        except Exception as e:
+            logger.error(f"DNSSEC check failed: {e}")
+            return {'score': 50, 'confidence': 0.0, 'error': str(e)}
+
+    def get_domain_age_score(
+        self,
+        domain: str,
+        context: Optional[InferenceContext] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get domain age score from WHOIS/RDAP.
+
+        Score interpretation:
+        - 95: > 10 years old
+        - 85: > 5 years old
+        - 70: > 2 years old
+        - 55: > 1 year old
+        - 35: > 6 months old
+        - 15: < 6 months old (very new - higher risk)
+        """
+        start_time = time.time()
+
+        try:
+            extractor = self._get_extractor('whois_rdap')
+            if not extractor:
+                return {'score': 50, 'confidence': 0.0, 'error': 'Extractor not available'}
+
+            result = extractor.extract(domain)
+            if not result.success:
+                return {'score': 50, 'confidence': 0.0, 'error': result.error}
+
+            data = result.data
+            age_days = data.get('domain_age_days')
+
+            if age_days is None:
+                return {
+                    'score': 50,
+                    'confidence': 0.3,
+                    'domain_age_days': None,
+                    'error': 'Could not determine domain age',
+                }
+
+            # Score based on age
+            if age_days > 3650:  # > 10 years
+                score = 95
+            elif age_days > 1825:  # > 5 years
+                score = 85
+            elif age_days > 730:  # > 2 years
+                score = 70
+            elif age_days > 365:  # > 1 year
+                score = 55
+            elif age_days > 180:  # > 6 months
+                score = 35
+            else:
+                score = 15  # Very new domain
+
+            return {
+                'score': score,
+                'confidence': 0.9,
+                'domain_age_days': age_days,
+                'domain_age_years': round(age_days / 365, 1),
+                'registered': data.get('registered', True),
+                'privacy_protected': data.get('privacy_protected', False),
+                'registrar': data.get('registrar'),
+                'execution_time_ms': (time.time() - start_time) * 1000,
+            }
+
+        except Exception as e:
+            logger.error(f"Domain age check failed: {e}")
+            return {'score': 50, 'confidence': 0.0, 'error': str(e)}
+
+
+class NetworkSignalBridge(RoutingBridge):
+    """
+    Bridge for network/infrastructure signals.
+
+    Aggregates from network extractors:
+    - security_headers: HTTP security headers
+    - tls_config: TLS/SSL configuration
+    - cloud_infra: Cloud provider detection
+    - cdn_usage: CDN detection
+    - waf_presence: WAF detection
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._extractor_cache: Dict[str, Any] = {}
+
+    def _get_extractor(self, name: str):
+        """Get extractor with caching."""
+        if name not in self._extractor_cache:
+            try:
+                from ..extractors.production.factory import get_extractor
+                self._extractor_cache[name] = get_extractor(name, mode='production')
+            except Exception as e:
+                logger.warning(f"Could not get extractor {name}: {e}")
+                self._extractor_cache[name] = None
+        return self._extractor_cache[name]
+
+    def get_security_headers_score(
+        self,
+        domain: str,
+        context: Optional[InferenceContext] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get security headers score.
+
+        Checks for:
+        - Strict-Transport-Security (HSTS)
+        - Content-Security-Policy (CSP)
+        - X-Content-Type-Options
+        - X-Frame-Options
+        - X-XSS-Protection (deprecated but still checked)
+
+        Score: Based on number and quality of headers present.
+        """
+        start_time = time.time()
+
+        try:
+            extractor = self._get_extractor('security_headers')
+            if not extractor:
+                return {'score': 50, 'confidence': 0.0, 'error': 'Extractor not available'}
+
+            result = extractor.extract(domain)
+            if not result.success:
+                return {'score': 50, 'confidence': 0.0, 'error': result.error}
+
+            data = result.data
+            headers = data.get('headers', {})
+
+            # Score components
+            score = 30  # Base score
+
+            # HSTS (most important)
+            if headers.get('strict_transport_security'):
+                score += 20
+                if 'includeSubDomains' in str(headers.get('strict_transport_security', '')):
+                    score += 5
+
+            # CSP
+            if headers.get('content_security_policy'):
+                score += 15
+
+            # X-Content-Type-Options
+            if headers.get('x_content_type_options') == 'nosniff':
+                score += 10
+
+            # X-Frame-Options
+            if headers.get('x_frame_options'):
+                score += 10
+
+            # Referrer-Policy
+            if headers.get('referrer_policy'):
+                score += 5
+
+            # Permissions-Policy
+            if headers.get('permissions_policy'):
+                score += 5
+
+            score = min(100, score)
+
+            return {
+                'score': score,
+                'confidence': 0.95,
+                'hsts_present': bool(headers.get('strict_transport_security')),
+                'csp_present': bool(headers.get('content_security_policy')),
+                'headers_found': list(headers.keys()),
+                'execution_time_ms': (time.time() - start_time) * 1000,
+            }
+
+        except Exception as e:
+            logger.error(f"Security headers check failed: {e}")
+            return {'score': 50, 'confidence': 0.0, 'error': str(e)}
+
+    def get_tls_config_score(
+        self,
+        domain: str,
+        context: Optional[InferenceContext] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get TLS/SSL configuration score.
+
+        Evaluates:
+        - TLS version (1.2 minimum, 1.3 preferred)
+        - Certificate validity
+        - Certificate expiration
+        - Cipher strength
+        """
+        start_time = time.time()
+
+        try:
+            extractor = self._get_extractor('tls_config')
+            if not extractor:
+                return {'score': 50, 'confidence': 0.0, 'error': 'Extractor not available'}
+
+            result = extractor.extract(domain)
+            if not result.success:
+                return {'score': 50, 'confidence': 0.0, 'error': result.error}
+
+            data = result.data
+
+            score = 50  # Base
+
+            # TLS version
+            tls_version = data.get('tls_version', '')
+            if 'TLSv1.3' in tls_version:
+                score += 25
+            elif 'TLSv1.2' in tls_version:
+                score += 15
+            elif 'TLSv1.1' in tls_version or 'TLSv1.0' in tls_version:
+                score -= 20  # Old versions are concerning
+
+            # Certificate validity
+            if data.get('certificate_valid', False):
+                score += 15
+            else:
+                score -= 30  # Invalid cert is bad
+
+            # Certificate expiration
+            days_until_expiry = data.get('days_until_expiry')
+            if days_until_expiry:
+                if days_until_expiry > 60:
+                    score += 10
+                elif days_until_expiry > 14:
+                    score += 5
+                elif days_until_expiry <= 0:
+                    score -= 20  # Expired
+
+            score = max(0, min(100, score))
+
+            return {
+                'score': score,
+                'confidence': 0.9,
+                'tls_version': tls_version,
+                'certificate_valid': data.get('certificate_valid'),
+                'days_until_expiry': days_until_expiry,
+                'issuer': data.get('issuer'),
+                'execution_time_ms': (time.time() - start_time) * 1000,
+            }
+
+        except Exception as e:
+            logger.error(f"TLS config check failed: {e}")
+            return {'score': 50, 'confidence': 0.0, 'error': str(e)}
+
+    def get_infrastructure_score(
+        self,
+        domain: str,
+        context: Optional[InferenceContext] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get overall infrastructure quality score.
+
+        Combines cloud, CDN, and WAF detection into an infrastructure
+        maturity score. Using enterprise infrastructure is positive.
+        """
+        start_time = time.time()
+        scores = []
+        details = {}
+
+        # Check cloud infrastructure
+        try:
+            extractor = self._get_extractor('cloud_infra')
+            if extractor:
+                result = extractor.extract(domain)
+                if result.success:
+                    data = result.data
+                    provider = data.get('provider', 'unknown')
+                    # Known cloud providers indicate maturity
+                    if provider in ('aws', 'azure', 'gcp', 'cloudflare'):
+                        scores.append(85)
+                    elif provider != 'unknown':
+                        scores.append(70)
+                    else:
+                        scores.append(50)
+                    details['cloud_provider'] = provider
+        except Exception as e:
+            logger.debug(f"Cloud check failed: {e}")
+
+        # Check CDN
+        try:
+            extractor = self._get_extractor('cdn_usage')
+            if extractor:
+                result = extractor.extract(domain)
+                if result.success:
+                    data = result.data
+                    if data.get('cdn_detected'):
+                        scores.append(80)
+                        details['cdn'] = data.get('cdn_provider')
+                    else:
+                        scores.append(50)
+        except Exception as e:
+            logger.debug(f"CDN check failed: {e}")
+
+        # Check WAF
+        try:
+            extractor = self._get_extractor('waf_presence')
+            if extractor:
+                result = extractor.extract(domain)
+                if result.success:
+                    data = result.data
+                    if data.get('waf_detected'):
+                        scores.append(85)
+                        details['waf'] = data.get('waf_provider')
+                    else:
+                        scores.append(50)
+        except Exception as e:
+            logger.debug(f"WAF check failed: {e}")
+
+        # Calculate combined score
+        if scores:
+            combined_score = sum(scores) / len(scores)
+        else:
+            combined_score = 50
+
+        return {
+            'score': round(combined_score, 1),
+            'confidence': 0.8 if scores else 0.0,
+            'cloud_provider': details.get('cloud_provider'),
+            'cdn': details.get('cdn'),
+            'waf': details.get('waf'),
+            'checks_completed': len(scores),
+            'execution_time_ms': (time.time() - start_time) * 1000,
+        }
+
+
+class SecuritySignalBridge(RoutingBridge):
+    """
+    Bridge for security/vulnerability signals.
+
+    Aggregates from security extractors:
+    - nvd_cve: Known vulnerabilities
+    - hhs_breach: Healthcare breaches (US)
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._extractor_cache: Dict[str, Any] = {}
+
+    def _get_extractor(self, name: str):
+        """Get extractor with caching."""
+        if name not in self._extractor_cache:
+            try:
+                from ..extractors.production.factory import get_extractor
+                self._extractor_cache[name] = get_extractor(name, mode='production')
+            except Exception as e:
+                logger.warning(f"Could not get extractor {name}: {e}")
+                self._extractor_cache[name] = None
+        return self._extractor_cache[name]
+
+    def get_vulnerability_score(
+        self,
+        entity_id: str,
+        context: Optional[InferenceContext] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get vulnerability exposure score.
+
+        Checks NVD for known CVEs associated with the entity's
+        products/technologies.
+
+        Score interpretation:
+        - 95: No known critical/high vulnerabilities
+        - 70: Some medium vulnerabilities
+        - 40: High vulnerabilities present
+        - 15: Critical vulnerabilities present
+        """
+        start_time = time.time()
+
+        try:
+            extractor = self._get_extractor('nvd_cve')
+            if not extractor:
+                return {'score': 50, 'confidence': 0.0, 'error': 'Extractor not available'}
+
+            result = extractor.extract(entity_id)
+            if not result.success:
+                return {'score': 50, 'confidence': 0.0, 'error': result.error}
+
+            data = result.data
+            cves = data.get('vulnerabilities', [])
+
+            if not cves:
+                return {
+                    'score': 95,
+                    'confidence': 0.8,
+                    'cve_count': 0,
+                    'critical_count': 0,
+                    'high_count': 0,
+                    'execution_time_ms': (time.time() - start_time) * 1000,
+                }
+
+            # Count by severity
+            critical = 0
+            high = 0
+            medium = 0
+
+            for cve in cves:
+                severity = cve.get('severity', '').upper()
+                if severity == 'CRITICAL':
+                    critical += 1
+                elif severity == 'HIGH':
+                    high += 1
+                elif severity == 'MEDIUM':
+                    medium += 1
+
+            # Calculate score
+            if critical > 0:
+                score = max(5, 30 - (critical * 5))
+            elif high > 0:
+                score = max(20, 60 - (high * 5))
+            elif medium > 0:
+                score = max(50, 80 - (medium * 3))
+            else:
+                score = 85
+
+            return {
+                'score': score,
+                'confidence': 0.85,
+                'cve_count': len(cves),
+                'critical_count': critical,
+                'high_count': high,
+                'medium_count': medium,
+                'execution_time_ms': (time.time() - start_time) * 1000,
+            }
+
+        except Exception as e:
+            logger.error(f"Vulnerability check failed: {e}")
+            return {'score': 50, 'confidence': 0.0, 'error': str(e)}
+
+
 # Convenience factory function
 def get_bridge(signal_type: str) -> Optional[RoutingBridge]:
     """
     Get the appropriate bridge for a signal type.
 
     Args:
-        signal_type: 'sanctions', 'corporate', 'regulatory', etc.
+        signal_type: 'sanctions', 'corporate', 'regulatory', 'dns', 'network', 'security'
 
     Returns:
         Appropriate bridge instance or None if not available
@@ -392,6 +962,9 @@ def get_bridge(signal_type: str) -> Optional[RoutingBridge]:
         'sanctions': SanctionsSignalBridge,
         'corporate': CorporateSignalBridge,
         'regulatory': RegulatorySignalBridge,
+        'dns': DNSSignalBridge,
+        'network': NetworkSignalBridge,
+        'security': SecuritySignalBridge,
     }
     bridge_class = bridges.get(signal_type)
     return bridge_class() if bridge_class else None

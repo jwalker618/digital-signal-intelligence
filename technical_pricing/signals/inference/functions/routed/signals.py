@@ -22,6 +22,9 @@ from ....types import SignalResult, InferenceContext
 from ....aggregators.routing_bridges import (
     SanctionsSignalBridge,
     CorporateSignalBridge,
+    DNSSignalBridge,
+    NetworkSignalBridge,
+    SecuritySignalBridge,
 )
 
 logger = logging.getLogger(__name__)
@@ -336,6 +339,608 @@ def lei_verification_routed(
         logger.error(f"lei_verification_routed failed: {e}")
         return SignalResult(
             signal_id='lei_verification_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+# =============================================================================
+# DNS Signal Functions
+# =============================================================================
+
+def email_auth_routed(
+    domain: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    Email authentication configuration check (SPF, DKIM, DMARC).
+
+    Evaluates the entity's email security posture:
+    - 95: All three mechanisms configured correctly
+    - 75: Two of three configured
+    - 50: Only one configured
+    - 25: None configured (high spam/phishing risk)
+
+    Strong email authentication indicates:
+    - Security-conscious organization
+    - Lower phishing risk
+    - Professional IT operations
+
+    Args:
+        domain: Domain to check (uses context.discovered_domain if None)
+        context: InferenceContext
+
+    Returns:
+        SignalResult with email auth score
+    """
+    start_time = time.time()
+    effective_domain = domain or (context.discovered_domain if context else None)
+
+    if not effective_domain:
+        return SignalResult(
+            signal_id='email_auth_routed',
+            score=50,
+            confidence=0.0,
+            error='No domain provided or discovered',
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    try:
+        bridge = DNSSignalBridge()
+        data = bridge.get_email_auth_score(
+            domain=effective_domain,
+            context=context,
+        )
+
+        return SignalResult(
+            signal_id='email_auth_routed',
+            score=data.get('score', 50),
+            confidence=data.get('confidence', 0.8),
+            raw_data={
+                'spf_configured': data.get('spf_configured', False),
+                'dkim_configured': data.get('dkim_configured', False),
+                'dmarc_configured': data.get('dmarc_configured', False),
+                'dmarc_policy': data.get('dmarc_policy'),
+            },
+            aggregated_data=data,
+            metadata={
+                'domain': effective_domain,
+                'mechanisms_configured': data.get('mechanisms_configured', 0),
+                'routing_type': 'dns',
+            },
+            error=data.get('error'),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"email_auth_routed failed: {e}")
+        return SignalResult(
+            signal_id='email_auth_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+def dnssec_routed(
+    domain: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    DNSSEC validation check.
+
+    Evaluates DNS security:
+    - 90: DNSSEC enabled and validating correctly
+    - 50: DNSSEC not enabled (neutral - many legitimate sites don't use it)
+    - 20: DNSSEC configured but invalid (misconfiguration is concerning)
+
+    Args:
+        domain: Domain to check
+        context: InferenceContext
+
+    Returns:
+        SignalResult with DNSSEC score
+    """
+    start_time = time.time()
+    effective_domain = domain or (context.discovered_domain if context else None)
+
+    if not effective_domain:
+        return SignalResult(
+            signal_id='dnssec_routed',
+            score=50,
+            confidence=0.0,
+            error='No domain provided or discovered',
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    try:
+        bridge = DNSSignalBridge()
+        data = bridge.get_dnssec_score(
+            domain=effective_domain,
+            context=context,
+        )
+
+        return SignalResult(
+            signal_id='dnssec_routed',
+            score=data.get('score', 50),
+            confidence=data.get('confidence', 0.8),
+            raw_data={
+                'dnssec_enabled': data.get('dnssec_enabled', False),
+                'dnssec_valid': data.get('dnssec_valid', False),
+            },
+            aggregated_data=data,
+            metadata={
+                'domain': effective_domain,
+                'routing_type': 'dns',
+            },
+            error=data.get('error'),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"dnssec_routed failed: {e}")
+        return SignalResult(
+            signal_id='dnssec_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+def domain_age_routed(
+    domain: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    Domain age verification via WHOIS/RDAP.
+
+    Older domains are generally lower risk:
+    - 95: > 10 years old
+    - 85: > 5 years old
+    - 70: > 2 years old
+    - 55: > 1 year old
+    - 35: > 6 months old
+    - 15: < 6 months old (very new - higher risk)
+
+    Very new domains are commonly associated with fraud/phishing.
+
+    Args:
+        domain: Domain to check
+        context: InferenceContext
+
+    Returns:
+        SignalResult with domain age score
+    """
+    start_time = time.time()
+    effective_domain = domain or (context.discovered_domain if context else None)
+
+    if not effective_domain:
+        return SignalResult(
+            signal_id='domain_age_routed',
+            score=50,
+            confidence=0.0,
+            error='No domain provided or discovered',
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    try:
+        bridge = DNSSignalBridge()
+        data = bridge.get_domain_age_score(
+            domain=effective_domain,
+            context=context,
+        )
+
+        return SignalResult(
+            signal_id='domain_age_routed',
+            score=data.get('score', 50),
+            confidence=data.get('confidence', 0.8),
+            raw_data={
+                'domain_age_days': data.get('domain_age_days'),
+                'domain_age_years': data.get('domain_age_years'),
+                'registered': data.get('registered', True),
+                'privacy_protected': data.get('privacy_protected', False),
+            },
+            aggregated_data=data,
+            metadata={
+                'domain': effective_domain,
+                'registrar': data.get('registrar'),
+                'routing_type': 'dns',
+            },
+            error=data.get('error'),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"domain_age_routed failed: {e}")
+        return SignalResult(
+            signal_id='domain_age_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+# =============================================================================
+# Network Signal Functions
+# =============================================================================
+
+def security_headers_routed(
+    domain: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    HTTP security headers check.
+
+    Evaluates security header configuration:
+    - HSTS (Strict-Transport-Security)
+    - CSP (Content-Security-Policy)
+    - X-Content-Type-Options
+    - X-Frame-Options
+    - Referrer-Policy
+    - Permissions-Policy
+
+    Higher scores indicate better security posture.
+
+    Args:
+        domain: Domain to check
+        context: InferenceContext
+
+    Returns:
+        SignalResult with security headers score
+    """
+    start_time = time.time()
+    effective_domain = domain or (context.discovered_domain if context else None)
+
+    if not effective_domain:
+        return SignalResult(
+            signal_id='security_headers_routed',
+            score=50,
+            confidence=0.0,
+            error='No domain provided or discovered',
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    try:
+        bridge = NetworkSignalBridge()
+        data = bridge.get_security_headers_score(
+            domain=effective_domain,
+            context=context,
+        )
+
+        return SignalResult(
+            signal_id='security_headers_routed',
+            score=data.get('score', 50),
+            confidence=data.get('confidence', 0.8),
+            raw_data={
+                'hsts_present': data.get('hsts_present', False),
+                'csp_present': data.get('csp_present', False),
+                'headers_found': data.get('headers_found', []),
+            },
+            aggregated_data=data,
+            metadata={
+                'domain': effective_domain,
+                'routing_type': 'network',
+            },
+            error=data.get('error'),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"security_headers_routed failed: {e}")
+        return SignalResult(
+            signal_id='security_headers_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+def tls_config_routed(
+    domain: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    TLS/SSL configuration check.
+
+    Evaluates:
+    - TLS version (1.2 minimum, 1.3 preferred)
+    - Certificate validity
+    - Certificate expiration
+    - Cipher strength
+
+    Poor TLS configuration indicates security risk.
+
+    Args:
+        domain: Domain to check
+        context: InferenceContext
+
+    Returns:
+        SignalResult with TLS configuration score
+    """
+    start_time = time.time()
+    effective_domain = domain or (context.discovered_domain if context else None)
+
+    if not effective_domain:
+        return SignalResult(
+            signal_id='tls_config_routed',
+            score=50,
+            confidence=0.0,
+            error='No domain provided or discovered',
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    try:
+        bridge = NetworkSignalBridge()
+        data = bridge.get_tls_config_score(
+            domain=effective_domain,
+            context=context,
+        )
+
+        return SignalResult(
+            signal_id='tls_config_routed',
+            score=data.get('score', 50),
+            confidence=data.get('confidence', 0.8),
+            raw_data={
+                'tls_version': data.get('tls_version'),
+                'certificate_valid': data.get('certificate_valid'),
+                'days_until_expiry': data.get('days_until_expiry'),
+            },
+            aggregated_data=data,
+            metadata={
+                'domain': effective_domain,
+                'issuer': data.get('issuer'),
+                'routing_type': 'network',
+            },
+            error=data.get('error'),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"tls_config_routed failed: {e}")
+        return SignalResult(
+            signal_id='tls_config_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+def infrastructure_routed(
+    domain: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    Infrastructure maturity check.
+
+    Evaluates enterprise infrastructure indicators:
+    - Cloud provider (AWS, Azure, GCP, etc.)
+    - CDN usage
+    - WAF presence
+
+    Using enterprise infrastructure indicates:
+    - Technical maturity
+    - Investment in operations
+    - Better availability/security
+
+    Args:
+        domain: Domain to check
+        context: InferenceContext
+
+    Returns:
+        SignalResult with infrastructure score
+    """
+    start_time = time.time()
+    effective_domain = domain or (context.discovered_domain if context else None)
+
+    if not effective_domain:
+        return SignalResult(
+            signal_id='infrastructure_routed',
+            score=50,
+            confidence=0.0,
+            error='No domain provided or discovered',
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    try:
+        bridge = NetworkSignalBridge()
+        data = bridge.get_infrastructure_score(
+            domain=effective_domain,
+            context=context,
+        )
+
+        return SignalResult(
+            signal_id='infrastructure_routed',
+            score=data.get('score', 50),
+            confidence=data.get('confidence', 0.8),
+            raw_data={
+                'cloud_provider': data.get('cloud_provider'),
+                'cdn': data.get('cdn'),
+                'waf': data.get('waf'),
+            },
+            aggregated_data=data,
+            metadata={
+                'domain': effective_domain,
+                'checks_completed': data.get('checks_completed', 0),
+                'routing_type': 'network',
+            },
+            error=data.get('error'),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"infrastructure_routed failed: {e}")
+        return SignalResult(
+            signal_id='infrastructure_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+# =============================================================================
+# Security Signal Functions
+# =============================================================================
+
+def vulnerability_routed(
+    entity_id: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    Vulnerability exposure check via NVD CVE database.
+
+    Checks for known vulnerabilities in entity's products/technologies:
+    - 95: No known critical/high vulnerabilities
+    - 70: Some medium vulnerabilities
+    - 40: High vulnerabilities present
+    - 15: Critical vulnerabilities present
+
+    This signal is most useful for technology companies or entities
+    with known software products.
+
+    Args:
+        entity_id: Entity name or product identifier
+        context: InferenceContext
+
+    Returns:
+        SignalResult with vulnerability score
+    """
+    start_time = time.time()
+
+    try:
+        bridge = SecuritySignalBridge()
+        data = bridge.get_vulnerability_score(
+            entity_id=entity_id,
+            context=context,
+        )
+
+        return SignalResult(
+            signal_id='vulnerability_routed',
+            score=data.get('score', 50),
+            confidence=data.get('confidence', 0.8),
+            raw_data={
+                'cve_count': data.get('cve_count', 0),
+                'critical_count': data.get('critical_count', 0),
+                'high_count': data.get('high_count', 0),
+                'medium_count': data.get('medium_count', 0),
+            },
+            aggregated_data=data,
+            metadata={
+                'entity_id': entity_id,
+                'routing_type': 'security',
+            },
+            error=data.get('error'),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"vulnerability_routed failed: {e}")
+        return SignalResult(
+            signal_id='vulnerability_routed',
+            score=50,
+            confidence=0.0,
+            error=str(e),
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+
+def breach_history_routed(
+    entity_id: str,
+    context: InferenceContext,
+) -> SignalResult:
+    """
+    Data breach history check (HHS Breach Portal for healthcare).
+
+    Checks if the entity has had reportable data breaches:
+    - 95: No breaches found
+    - 60: Minor breaches (< 500 affected)
+    - 30: Major breaches (> 500 affected)
+    - 10: Multiple major breaches
+
+    Currently covers US healthcare via HHS Breach Portal.
+    Lower scores indicate higher cyber risk.
+
+    Args:
+        entity_id: Entity name to check
+        context: InferenceContext
+
+    Returns:
+        SignalResult with breach history score
+    """
+    start_time = time.time()
+
+    try:
+        bridge = SecuritySignalBridge()
+        # Use the get_extractor pattern from bridge
+        extractor = bridge._get_extractor('hhs_breach')
+
+        if not extractor:
+            return SignalResult(
+                signal_id='breach_history_routed',
+                score=50,
+                confidence=0.0,
+                error='HHS breach extractor not available',
+                execution_time_ms=(time.time() - start_time) * 1000,
+            )
+
+        result = extractor.extract(entity_id)
+        if not result.success:
+            return SignalResult(
+                signal_id='breach_history_routed',
+                score=50,
+                confidence=0.0,
+                error=result.error,
+                execution_time_ms=(time.time() - start_time) * 1000,
+            )
+
+        data = result.data
+        breaches = data.get('breaches', [])
+
+        if not breaches:
+            score = 95
+            major_count = 0
+            minor_count = 0
+        else:
+            major_count = sum(1 for b in breaches if b.get('individuals_affected', 0) >= 500)
+            minor_count = len(breaches) - major_count
+
+            if major_count > 1:
+                score = 10
+            elif major_count == 1:
+                score = 30
+            elif minor_count > 0:
+                score = 60
+            else:
+                score = 80
+
+        return SignalResult(
+            signal_id='breach_history_routed',
+            score=score,
+            confidence=0.85,
+            raw_data={
+                'breach_count': len(breaches),
+                'major_breaches': major_count,
+                'minor_breaches': minor_count,
+            },
+            aggregated_data=data,
+            metadata={
+                'entity_id': entity_id,
+                'routing_type': 'security',
+            },
+            execution_time_ms=(time.time() - start_time) * 1000,
+        )
+
+    except Exception as e:
+        logger.error(f"breach_history_routed failed: {e}")
+        return SignalResult(
+            signal_id='breach_history_routed',
             score=50,
             confidence=0.0,
             error=str(e),

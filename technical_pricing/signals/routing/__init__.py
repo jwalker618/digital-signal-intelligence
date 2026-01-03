@@ -85,6 +85,11 @@ from .multi_source import (
     MultiSourceResult,
     ExtractorCallResult,
     calculate_risk_level,
+    # Caching
+    RoutingCache,
+    CachedResult,
+    get_routing_cache,
+    set_routing_cache,
 )
 
 # Concrete aggregators
@@ -124,6 +129,11 @@ __all__ = [
     'MultiSourceResult',
     'ExtractorCallResult',
     'calculate_risk_level',
+    # Caching
+    'RoutingCache',
+    'CachedResult',
+    'get_routing_cache',
+    'set_routing_cache',
     # Aggregators
     'SanctionsAggregator',
     'CorporateAggregator',

@@ -9,20 +9,222 @@ This solves the problem of:
 2. How to call them efficiently (parallel execution)
 3. How to merge results (source-attributed consolidation)
 4. How to handle variance (normalization to common schema)
+5. How to cache results (TTL-aware caching at routing level)
 """
 
+import hashlib
 import logging
 import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
+from threading import Lock
 from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
 from .router import JurisdictionRouter, RoutingStrategy
 from .schemas import RiskLevel
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Routing-Level Cache
+# =============================================================================
+
+@dataclass
+class CachedResult:
+    """A cached extraction result with TTL."""
+    data: Dict[str, Any]
+    cached_at: datetime
+    expires_at: datetime
+    cache_key: str
+
+    def is_expired(self, now: Optional[datetime] = None) -> bool:
+        """Check if this cached result has expired."""
+        now = now or datetime.utcnow()
+        return now >= self.expires_at
+
+
+class RoutingCache:
+    """
+    Thread-safe cache for routing-level extraction results.
+
+    Provides TTL-based caching to avoid redundant extractor calls
+    when the same entity is queried multiple times within a short window.
+
+    Usage:
+        cache = RoutingCache(default_ttl_seconds=300)
+
+        # Check cache
+        cached = cache.get('opensanctions', 'Acme Corp')
+        if cached:
+            return cached.data
+
+        # Store in cache
+        cache.set('opensanctions', 'Acme Corp', result_data, ttl_seconds=600)
+    """
+
+    def __init__(
+        self,
+        default_ttl_seconds: int = 300,  # 5 minutes default
+        max_entries: int = 10000,
+    ):
+        """
+        Initialize the cache.
+
+        Args:
+            default_ttl_seconds: Default TTL for cached entries
+            max_entries: Maximum cache entries before cleanup
+        """
+        self.default_ttl_seconds = default_ttl_seconds
+        self.max_entries = max_entries
+        self._cache: Dict[str, CachedResult] = {}
+        self._lock = Lock()
+        self._stats = {
+            'hits': 0,
+            'misses': 0,
+            'expired': 0,
+            'stores': 0,
+            'evictions': 0,
+        }
+
+    def _make_key(self, extractor_name: str, entity_id: str) -> str:
+        """Create a cache key from extractor and entity."""
+        combined = f"{extractor_name}:{entity_id}"
+        return hashlib.sha256(combined.encode()).hexdigest()[:32]
+
+    def get(
+        self,
+        extractor_name: str,
+        entity_id: str,
+    ) -> Optional[CachedResult]:
+        """
+        Get a cached result if available and not expired.
+
+        Args:
+            extractor_name: Name of the extractor
+            entity_id: Entity identifier
+
+        Returns:
+            CachedResult if found and valid, None otherwise
+        """
+        key = self._make_key(extractor_name, entity_id)
+
+        with self._lock:
+            cached = self._cache.get(key)
+            if cached is None:
+                self._stats['misses'] += 1
+                return None
+
+            if cached.is_expired():
+                del self._cache[key]
+                self._stats['expired'] += 1
+                return None
+
+            self._stats['hits'] += 1
+            return cached
+
+    def set(
+        self,
+        extractor_name: str,
+        entity_id: str,
+        data: Dict[str, Any],
+        ttl_seconds: Optional[int] = None,
+    ) -> None:
+        """
+        Store a result in the cache.
+
+        Args:
+            extractor_name: Name of the extractor
+            entity_id: Entity identifier
+            data: Data to cache
+            ttl_seconds: Optional custom TTL
+        """
+        key = self._make_key(extractor_name, entity_id)
+        ttl = ttl_seconds or self.default_ttl_seconds
+        now = datetime.utcnow()
+
+        cached_result = CachedResult(
+            data=data,
+            cached_at=now,
+            expires_at=now + timedelta(seconds=ttl),
+            cache_key=key,
+        )
+
+        with self._lock:
+            # Cleanup if approaching max entries
+            if len(self._cache) >= self.max_entries:
+                self._cleanup_expired()
+
+            self._cache[key] = cached_result
+            self._stats['stores'] += 1
+
+    def _cleanup_expired(self) -> int:
+        """Remove expired entries. Must be called with lock held."""
+        now = datetime.utcnow()
+        expired_keys = [
+            key for key, cached in self._cache.items()
+            if cached.is_expired(now)
+        ]
+        for key in expired_keys:
+            del self._cache[key]
+            self._stats['evictions'] += 1
+        return len(expired_keys)
+
+    def invalidate(
+        self,
+        extractor_name: Optional[str] = None,
+        entity_id: Optional[str] = None,
+    ) -> int:
+        """
+        Invalidate cache entries.
+
+        Args:
+            extractor_name: If provided with entity_id, invalidate that specific entry
+            entity_id: If provided with extractor_name, invalidate that specific entry
+
+        Returns:
+            Number of entries invalidated
+        """
+        with self._lock:
+            if extractor_name and entity_id:
+                key = self._make_key(extractor_name, entity_id)
+                if key in self._cache:
+                    del self._cache[key]
+                    return 1
+                return 0
+            else:
+                count = len(self._cache)
+                self._cache.clear()
+                return count
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get cache statistics."""
+        with self._lock:
+            stats = dict(self._stats)
+            stats['current_entries'] = len(self._cache)
+            total_requests = stats['hits'] + stats['misses'] + stats['expired']
+            stats['hit_rate'] = stats['hits'] / total_requests if total_requests > 0 else 0.0
+            return stats
+
+
+# Global routing cache singleton
+_routing_cache: Optional[RoutingCache] = None
+
+
+def get_routing_cache() -> RoutingCache:
+    """Get the global routing cache instance."""
+    global _routing_cache
+    if _routing_cache is None:
+        _routing_cache = RoutingCache()
+    return _routing_cache
+
+
+def set_routing_cache(cache: RoutingCache) -> None:
+    """Set a custom routing cache (useful for testing)."""
+    global _routing_cache
+    _routing_cache = cache
 
 # Generic type for result schema
 T = TypeVar('T')
@@ -97,6 +299,9 @@ class MultiSourceAggregator(ABC, Generic[T]):
         max_workers: int = 10,
         timeout_seconds: float = 30.0,
         default_strategy: RoutingStrategy = RoutingStrategy.LOCALE_PLUS_GLOBAL,
+        cache: Optional[RoutingCache] = None,
+        use_cache: bool = True,
+        cache_ttl_seconds: int = 300,
     ):
         """
         Initialize the aggregator.
@@ -106,11 +311,17 @@ class MultiSourceAggregator(ABC, Generic[T]):
             max_workers: Max parallel extractor calls
             timeout_seconds: Timeout per extractor call
             default_strategy: Default routing strategy
+            cache: Optional routing cache (uses global if None)
+            use_cache: Whether to use caching (default True)
+            cache_ttl_seconds: TTL for cached results
         """
         self.router = router or JurisdictionRouter()
         self.max_workers = max_workers
         self.timeout_seconds = timeout_seconds
         self.default_strategy = default_strategy
+        self.cache = cache
+        self.use_cache = use_cache
+        self.cache_ttl_seconds = cache_ttl_seconds
 
     @abstractmethod
     def get_extractor_func(self) -> Callable[[str], Any]:
@@ -170,6 +381,12 @@ class MultiSourceAggregator(ABC, Generic[T]):
         """
         pass
 
+    def _get_cache(self) -> Optional[RoutingCache]:
+        """Get the cache to use (instance cache or global)."""
+        if not self.use_cache:
+            return None
+        return self.cache or get_routing_cache()
+
     def _call_extractor(
         self,
         extractor_name: str,
@@ -178,6 +395,20 @@ class MultiSourceAggregator(ABC, Generic[T]):
     ) -> ExtractorCallResult:
         """Call a single extractor and return the result."""
         start_time = time.time()
+
+        # Check cache first
+        cache = self._get_cache()
+        if cache:
+            cached = cache.get(extractor_name, entity_id)
+            if cached:
+                logger.debug(f"Cache hit for {extractor_name}:{entity_id}")
+                return ExtractorCallResult(
+                    extractor_name=extractor_name,
+                    success=True,
+                    data=cached.data,
+                    from_cache=True,
+                    execution_time_ms=(time.time() - start_time) * 1000,
+                )
 
         try:
             extractor = get_extractor(extractor_name)
@@ -191,10 +422,23 @@ class MultiSourceAggregator(ABC, Generic[T]):
 
             result = extractor.extract(entity_id)
 
+            # Get result data
+            success = result.success if hasattr(result, 'success') else True
+            data = result.data if hasattr(result, 'data') else result
+
+            # Store in cache if successful
+            if success and cache and data:
+                cache.set(
+                    extractor_name,
+                    entity_id,
+                    data,
+                    ttl_seconds=self.cache_ttl_seconds,
+                )
+
             return ExtractorCallResult(
                 extractor_name=extractor_name,
-                success=result.success if hasattr(result, 'success') else True,
-                data=result.data if hasattr(result, 'data') else result,
+                success=success,
+                data=data,
                 from_cache=result.from_cache if hasattr(result, 'from_cache') else False,
                 execution_time_ms=(time.time() - start_time) * 1000,
             )
