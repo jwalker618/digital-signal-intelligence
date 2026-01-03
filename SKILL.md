@@ -22,10 +22,10 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 | 12 | Integration Layer | ✅ Complete | Email, documents, webhooks |
 | 13 | LLM Builder | ✅ Complete | Coverage builder, signal library |
 | 14 | Examples | ✅ Complete | Working examples for all 7 coverages |
-| 15 | Production Extractors | 🔄 In Progress | 50 free extractors, routing, multi-source aggregation |
+| 15 | Production Extractors | ✅ Complete | 50 free extractors, routing module, routed inference |
 
-**Current State**: Core framework complete. 50 free production extractors implemented with global coverage. Routing module complete (jurisdiction-aware, tier-based). Signal framework integration pending.
-**Next Steps**: Integrate routing into inference layer, implement paid extractors, deploy monitoring.
+**Current State**: Core framework complete. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support.
+**Next Steps**: Implement paid extractors (Shodan, VirusTotal, D&B), deploy production monitoring, tag release.
 
 ---
 

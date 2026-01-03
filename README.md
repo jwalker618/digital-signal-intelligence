@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.2.0|
-|Date|December 2024|
+|Version|0.3.0|
+|Date|January 2025|
 |Classification|Development|
 
 ---
@@ -16,15 +16,16 @@
 |-----------|--------|--------------|
 | **Core Workflow** | ✅ Complete | 14-step workflow fully implemented |
 | **Coverage Configs** | ✅ Complete | 7 coverages (Aerospace, Cyber, D&O, Energy, FI, Marine, PI) |
-| **Signal Architecture** | ⚠️ Stubs | Architecture complete, extractors return simulated data |
+| **Signal Architecture** | ✅ Complete | 50 production extractors, routing module, multi-source aggregation |
+| **Routing Module** | ✅ Complete | Jurisdiction-aware routing, extractor tiers, caching |
 | **API Layer** | ✅ Functional | FastAPI with actual workflow integration |
 | **Database Layer** | ✅ Schema Ready | SQLAlchemy models, awaiting deployment |
 | **Authentication** | ✅ Implemented | JWT + API key modules ready |
 | **Tests** | ✅ 380+ tests | Good coverage of core logic |
 | **Production Infra** | 🔲 Pending | Requires K8s/Helm, monitoring setup |
 
-> **Note**: Signal extractors currently return **simulated data** for development/testing.
-> Real API integrations (SSL Labs, SecurityScorecard, etc.) are required for production use.
+> **Note**: 50 free production extractors implemented (sanctions, corporate, regulatory, DNS, network, security).
+> Paid extractors (Shodan, VirusTotal, D&B) pending API key configuration. Hybrid mode supports gradual migration.
 
 ---
 
@@ -187,10 +188,18 @@ digital-signal-intelligence/
 ├── technical_pricing/           # Main package (~70K lines)
 │   ├── signals/                 # Signal extraction framework
 │   │   ├── types.py             # Core data types
-│   │   ├── extractors/stubs/    # Stub extractors (7 coverages)
+│   │   ├── extractors/
+│   │   │   ├── stubs/           # Stub extractors (7 coverages)
+│   │   │   └── production/      # 50 production extractors (Phase 15)
 │   │   ├── aggregators/         # Signal aggregation
+│   │   │   └── routing_bridges.py  # Bridge to routing module
 │   │   ├── categorisers/        # Score categorization
-│   │   └── inference/           # Inference functions
+│   │   ├── inference/           # Inference functions
+│   │   │   └── functions/routed/   # Multi-source routed functions
+│   │   └── routing/             # Jurisdiction-aware routing (Phase 15)
+│   │       ├── router.py        # JurisdictionRouter + tiers
+│   │       ├── schemas.py       # Unified output schemas
+│   │       └── multi_source.py  # Aggregator + cache
 │   ├── coverages/               # YAML configurations
 │   │   ├── aerospace/           # 21 signals
 │   │   ├── cyber/               # 35 signals
@@ -217,7 +226,7 @@ digital-signal-intelligence/
 │   ├── integrations/            # Email, docs, webhooks
 │   ├── builder/                 # LLM coverage builder
 │   └── tests/                   # 380+ tests
-├── examples/                    # Working examples (all 7 coverages)
+├── examples/                    # Working examples (all 7 coverages + hybrid)
 ├── demo/                        # Interactive demonstrations
 │   ├── server.py                # Live demo server (FastAPI)
 │   ├── index.html               # Live demo UI
