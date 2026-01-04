@@ -252,7 +252,7 @@ financial_institutions:
           modifier: 1.00
           description: ""       
           
-        - icatd: "COMMUNITY"
+        - cat: "COMMUNITY"
           label: "Community (<$1B)"
           modifier: 0.80
           description: ""       
