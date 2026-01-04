@@ -11,7 +11,7 @@ Thank you for your interest in contributing to the Digital Signal Intelligence (
 - [Coding Standards](#coding-standards)
 - [Testing Guidelines](#testing-guidelines)
 - [Submitting Changes](#submitting-changes)
-- [Contact](#contact)
+- [Getting Help](#getting-help)
 
 ## Code of Conduct
 

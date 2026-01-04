@@ -65,7 +65,7 @@ Aerospace Extractors:
 # =============================================================================
 # COMMON EXTRACTORS
 # =============================================================================
-from .common import (
+from .stubs.common import (
     CreditRatingExtractor,
     CorporateRegistryExtractor,
     RegulatoryEnforcementExtractor,
@@ -77,7 +77,7 @@ from .common import (
 # =============================================================================
 # AEROSPACE EXTRACTORS
 # =============================================================================
-from .aerospace import (
+from .stubs.aerospace import (
     # Network Authority
     AirlineAllianceExtractor,
     CodesharePartnershipExtractor,
@@ -88,7 +88,7 @@ from .aerospace import (
     AviationSafetyDatabaseExtractor,
 )
 
-from .aerospace_part2 import (
+from .stubs.aerospace_part2 import (
     # Regulatory Compliance
     OperatingCertificateExtractor,
     IOSARegistryExtractor,
@@ -102,7 +102,7 @@ from .aerospace_part2 import (
     OrderBacklogExtractor,
 )
 
-from .aerospace_part3 import (
+from .stubs.aerospace_part3 import (
     # Operational Quality (continued)
     CrewTrainingExtractor,
     OperationalComplexityExtractor,

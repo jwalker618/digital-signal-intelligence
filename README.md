@@ -527,8 +527,8 @@ python -m demo.server
 | [White Paper](docs/overview/An%20Agentic%20Future%20-%20Global%20Technical%20Pricing.pdf) | Detailed Explanation | Technical leadership |
 | [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
 | [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) | Production deployment | DevOps, Engineering |
-| [Methodology Defense](docs/demos%20and%20case_studies/validation/dsi_methodology.md) | Actuarial Q&A | Actuaries, Risk |
-| [Case Studies](docs/demos%20and%20case_studies/case-studies/) | Worked examples | Underwriters |
+| [Methodology Defense](docs/demos%20and%20case_studies/case_studies/dsi_retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
+| [Case Studies](docs/demos%20and%20case_studies/case_studies/) | Worked examples | Underwriters |
 | [Interactive Demos](demo/standalone/) | Hands-on exploration | All stakeholders |
 
 ---

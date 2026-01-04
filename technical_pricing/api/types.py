@@ -60,6 +60,7 @@ class SubmissionRequest(BaseModel):
     """Request to create a new submission."""
     entity_name: str = Field(..., description="Name of the entity to price")
     domain_hint: Optional[str] = Field(None, description="Optional domain hint for discovery")
+    country_hint: Optional[str] = Field(None, description="Optional country/locale hint (e.g., US, UK, DE)")
     coverage: str = Field(..., description="Coverage type (e.g., fi, cyber, do)")
     configuration: Optional[str] = Field(None, description="Specific configuration to use")
 
@@ -233,6 +234,7 @@ class MultiCoverageRequest(BaseModel):
     """Request for multi-coverage pricing."""
     entity_name: str
     domain_hint: Optional[str] = None
+    country_hint: Optional[str] = Field(None, description="Optional country/locale hint (e.g., US, UK, DE)")
     coverages: Optional[List[str]] = Field(None, description="Coverages to price (None = auto)")
     locales: Optional[List[str]] = Field(None, description="Locales to test (None = auto)")
     submission_data: Dict[str, Any] = Field(default_factory=dict)

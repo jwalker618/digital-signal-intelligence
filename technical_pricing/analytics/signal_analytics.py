@@ -7,6 +7,7 @@ signal extraction health and performance.
 
 import logging
 import statistics
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -41,10 +42,6 @@ class SignalRecord:
     execution_time_ms: float = 0.0
     error: Optional[str] = None
     from_cache: bool = False
-
-
-# Import dataclass
-from dataclasses import dataclass, field
 
 
 class SignalAnalytics:
