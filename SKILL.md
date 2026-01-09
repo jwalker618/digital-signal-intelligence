@@ -23,8 +23,9 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 | 13 | LLM Builder | ✅ Complete | Coverage builder, signal library |
 | 14 | Examples | ✅ Complete | Working examples for all 7 coverages |
 | 15 | Production Extractors | ✅ Complete | 50 free extractors, routing module, routed inference |
+| 16 | Loss Signal Correlation | 🔲 Not Started | Loss propensity scoring, cohort analysis, continuous monitoring |
 
-**Current State**: Core framework complete and validated. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Comprehensive repository review completed January 2026.
+**Current State**: Core framework complete and validated. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Comprehensive repository review completed January 2026.
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -42,7 +43,8 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 2. Implement paid extractors (Shodan, VirusTotal, D&B) - see Phase 15.6
 3. Fix remaining config typos (inference_utility_function spelling errors)
 4. Deploy production monitoring and alerting
-5. Tag v1.0.0 release
+5. **Phase 16**: Implement Loss Signal Correlation Layer for loss propensity scoring
+6. Tag v1.0.0 release
 
 ---
 
@@ -107,19 +109,29 @@ Key principles:
 ┌─────────────────────────────────────────────────────────────────┐
 │                      MODEL LAYER                                │
 │                                                                 │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐ │
-│  │CONFIG    │ →  │SCORER    │ →  │PRICER     │ →  │WORKFLOW  │ │
-│  │MANAGER   │    │          │    │           │    │ENGINE    │ │
-│  │Hash/store│    │Composite │    │Premium    │    │Approve/  │ │
-│  │validate  │    │+ conditions   │calc       │    │Refer/Decl│ │
-│  └──────────┘    └──────────┘    └───────────┘    └──────────┘ │
+│  ┌──────────┐    ┌──────────────────────────────────────────┐  │
+│  │CONFIG    │    │         PARALLEL SCORING                  │  │
+│  │MANAGER   │    │  ┌────────────┐    ┌─────────────────┐   │  │
+│  │Hash/store│ →  │  │RISK SCORER │    │LOSS CORRELATION │   │  │
+│  │validate  │    │  │            │    │SCORER (Phase 16)│   │  │
+│  └──────────┘    │  │Composite   │    │Propensity +     │   │  │
+│                  │  │+ conditions│    │Cohort + Monitor │   │  │
+│                  │  └────────────┘    └─────────────────┘   │  │
+│                  └──────────────────────────────────────────┘  │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decl) │  │
+│  │  Risk Tier × Loss Propensity × Exposure → Final Premium   │  │
+│  └──────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      MODEL OUTPUT                               │
-│  Score → Conditions → Tier → Base Premium → Modifiers → Limits  │
-│                    → Decision (Approve/Refer/Decline)           │
+│  Score → Conditions → Tier → Base Premium → Loss Modifier       │
+│                    → Limits → Decision (Approve/Refer/Decline)  │
+│  + Loss Propensity Score + Cohort Assignment + Monitoring       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -329,7 +341,7 @@ Website discovery integrated into workflow as Step 0:
 
 ## Production Roadmap
 
-All phases are complete. The framework is ready for production deployment.
+Core framework phases (1-15) are complete. Phase 16 (Loss Signal Correlation Layer) is specified and ready for implementation.
 
 ### ✅ Phase 7: Traditional Pricing Integration (COMPLETE)
 
@@ -362,6 +374,14 @@ Coverage builder in `builder/`: coverage_builder.py, validator.py.
 ### ✅ Phase 14: Complete Examples & Final Validation (COMPLETE)
 
 Working examples for all 7 coverages in `examples/`. Live demo in `demo/`. Deployment configs in `deploy/`.
+
+### ✅ Phase 15: Production Extractors & Signal Routing (COMPLETE)
+
+50 free production extractors in `signals/extractors/production/`. Jurisdiction-aware routing module in `signals/routing/`. 13 routed inference functions for multi-source aggregation.
+
+### 🔲 Phase 16: Loss Signal Correlation Layer (SPECIFICATION COMPLETE)
+
+Loss propensity scoring, cohort-based analysis, and continuous monitoring in `model/loss_correlation/`. Extends DSI from risk quality assessment to loss prediction. Full specification in `loss/correlation_layer/`.
 
 -----
 
@@ -3187,6 +3207,329 @@ Demonstrates:
 
 -----
 
+## Phase 16: Loss Signal Correlation Layer (Detailed Plan)
+
+The Loss Signal Correlation Layer extends DSI from risk quality assessment to loss prediction. By correlating observable signals with historical loss outcomes, the system can infer loss propensity for new submissions, enable cohort-based pricing adjustments, and provide continuous risk monitoring.
+
+**Full specification documents**: `loss/correlation_layer/`
+
+### 16.1 The Loss Analysis Problem
+
+Traditional loss analysis suffers from:
+- **Data Sparsity**: 80-90% of policies have zero claims in any given year
+- **Feature Poverty**: Only 5-10 features available vs 200-400 DSI signals
+- **Attribution Impossibility**: Weak correlations at portfolio level only
+- **Emergence Lag**: 6-48 months for loss patterns to become visible
+- **Aggregation Masking**: Profitable business subsidizes unprofitable business
+
+**DSI Solution**: Use 200-400 observable signals to identify patterns that precede and predict loss events.
+
+### 16.2 Architecture Integration
+
+The Loss Signal Correlation Layer runs in parallel with risk scoring:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ENHANCED DSI ARCHITECTURE                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                     SIGNAL EXTRACTION                     │   │
+│  │                    (Steps 0-4 unchanged)                  │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│              ┌───────────────┼───────────────┐                  │
+│              │               │               │                  │
+│              ▼               ▼               ▼                  │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐            │
+│  │ RISK SCORING │ │  EXPOSURE    │ │    LOSS      │            │
+│  │              │ │  SHADOW      │ │ CORRELATION  │            │
+│  │ Steps 5-6   │ │  LAYER       │ │    LAYER     │            │
+│  │ Composite   │ │              │ │              │            │
+│  │ + Conditions│ │ Exposure Band│ │ Propensity   │            │
+│  │             │ │ + Complexity │ │ + Cohort     │            │
+│  └──────────────┘ └──────────────┘ └──────────────┘            │
+│              │               │               │                  │
+│              └───────────────┼───────────────┘                  │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    PRICING ENGINE                         │   │
+│  │                                                           │   │
+│  │  Risk Tier × Exposure Band × Loss Propensity → Premium   │   │
+│  │                                                           │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 16.3 Core Components
+
+#### 16.3.1 Loss Propensity Output
+
+```python
+@dataclass
+class LossPropensityResult:
+    """Complete output from loss propensity calculation"""
+    # Primary scores
+    loss_propensity_score: float  # 0-100
+    severity_propensity_score: float  # 0-100
+    loss_propensity_band: LossPropensityBand  # very_low, low, moderate, elevated, high
+    severity_propensity_band: SeverityPropensityBand  # minimal, moderate, significant, severe, catastrophic
+    loss_confidence: float  # 0-1
+
+    # Cohort assignment
+    cohort_id: str
+    cohort_name: str
+    cohort_confidence: float
+
+    # Pricing impact
+    frequency_multiplier: float
+    severity_multiplier: float
+    combined_loss_modifier: float
+
+    # Monitoring
+    trend_direction: TrendDirection  # improving, stable, deteriorating
+    score_velocity: float  # points per month
+
+    # Referral triggers
+    referral_triggered: bool
+    referral_reasons: List[str]
+    flags: List[str]
+```
+
+#### 16.3.2 Loss Correlation Scorer (`model/loss_correlation/scorer.py`)
+
+Calculates loss propensity from signal outputs using loss-specific weighting:
+
+```python
+class LossCorrelationScorer:
+    """
+    Calculates loss propensity scores from signal outputs.
+    Uses same signals as risk scoring but with loss-specific weights.
+    """
+
+    def calculate_propensity(
+        self,
+        signal_outputs: List[SignalOutput],
+        previous_result: Optional[LossPropensityResult] = None
+    ) -> LossPropensityResult:
+        """
+        Calculate loss propensity from signal outputs.
+        Runs in parallel with risk scoring (Steps 5-6).
+        """
+```
+
+#### 16.3.3 Correlation Matrix Manager (`model/loss_correlation/matrix.py`)
+
+Manages empirically-derived signal-loss correlations:
+
+```python
+class CorrelationMatrixManager:
+    """
+    Manages the loss correlation matrix - relationships between
+    signals and loss outcomes validated against historical data.
+    """
+
+    def calibrate(
+        self,
+        policies: List[Dict],  # Policy data with signal snapshots
+        losses: List[Dict],    # Loss data linked to policies
+    ) -> CorrelationMatrix:
+        """Calibrate correlation matrix from historical data."""
+```
+
+#### 16.3.4 Monitoring Engine (`model/loss_correlation/monitoring.py`)
+
+Continuous monitoring for in-force policies:
+
+```python
+class LossMonitoringEngine:
+    """
+    Continuous monitoring of loss propensity for in-force policies.
+    Detects deterioration, triggers alerts, and recommends actions.
+    """
+
+    def check_entity(
+        self,
+        entity_id: str,
+        signal_outputs: List,
+        force_refresh: bool = False
+    ) -> MonitoringResult:
+        """Check an entity's loss propensity and generate alerts."""
+```
+
+### 16.4 Canonical Loss-Predictive Signals
+
+28 signals with hypothesized loss correlation:
+
+| Category | Signals | Correlation Type |
+|----------|---------|------------------|
+| Network Authority | certification_authority_score, partner_quality_index, customer_concentration, regulatory_standing_score | Both |
+| Technical Infrastructure | security_header_completeness, tls_configuration_score, software_currency_index, exposed_service_count, dns_security_score | Frequency |
+| Corporate Footprint | content_recency_score, leadership_visibility_index, hiring_activity_trend, policy_documentation_score, crisis_communication_presence | Both |
+| Behavioural | management_stability_index, regulatory_engagement_pattern, incident_response_history, change_velocity_score, disclosure_consistency | Severity |
+| Public Record | litigation_frequency, regulatory_action_history, bankruptcy_proximity_signals, ownership_change_frequency, ip_filing_trend | Frequency |
+| Structured Data | credit_rating_trajectory, esg_score_trend, financial_ratio_anomalies, peer_comparison_rank | Both |
+
+### 16.5 YAML Configuration Extension
+
+```yaml
+loss_correlation:
+  enabled: true
+  version: "2026-01-08"
+
+  correlation_groups:
+    - name: loss_technical_infrastructure
+      weight: 0.35
+      confidence_threshold: 0.7
+      features:
+        - id: security_header_completeness
+          weight: 0.30
+          correlation_type: both      # frequency, severity, or both
+          correlation_direction: negative  # higher signal = lower loss
+          normalizer: linear
+          lag_months: 6
+
+  propensity_band_mapping:
+    method: fixed_threshold
+    bands:
+      - name: very_low
+        min_score: 0
+        max_score: 20
+        expected_frequency_multiplier: 0.60
+        expected_severity_multiplier: 0.70
+      - name: elevated
+        min_score: 60
+        max_score: 80
+        expected_frequency_multiplier: 1.25
+        expected_severity_multiplier: 1.15
+
+  pricing_integration:
+    method: multiplicative
+    frequency_impact_cap: 1.50
+    frequency_impact_floor: 0.70
+    frequency_weight: 0.60
+    severity_weight: 0.40
+
+  auto_apply_rules:
+    - condition: "loss_propensity_band == 'high' AND loss_confidence >= 0.8"
+      action: refer
+      reason: "High loss propensity with high confidence"
+
+  monitoring:
+    refresh_frequency: monthly
+    deterioration_threshold: 15
+```
+
+### 16.6 Pricing Integration Patterns
+
+**Pattern A — Multiplicative Adjustment (Recommended)**
+
+```python
+base_premium = tier_based_premium(risk_tier, exposure_band)
+loss_adjusted_premium = base_premium * combined_loss_modifier
+
+# Where:
+combined_loss_modifier = (
+    (frequency_multiplier * frequency_weight) +
+    (severity_multiplier * severity_weight)
+)
+# Bounded by caps and floors
+```
+
+**Pattern B — Grid-Based Pricing**
+
+```yaml
+pricing_grid:
+  tier_1:
+    very_low: 0.0035
+    low: 0.0040
+    moderate: 0.0045
+    elevated: 0.0055
+    high: 0.0070
+```
+
+### 16.7 Model Version Extensions
+
+```python
+# Add to ModelVersion dataclass:
+
+# Loss Propensity Outputs
+loss_propensity_score: Optional[float] = None
+severity_propensity_score: Optional[float] = None
+loss_propensity_band: Optional[str] = None
+loss_confidence: Optional[float] = None
+
+# Cohort Assignment
+loss_cohort_id: Optional[str] = None
+loss_cohort_name: Optional[str] = None
+
+# Pricing Impact
+loss_frequency_multiplier: Optional[float] = None
+loss_severity_multiplier: Optional[float] = None
+loss_combined_modifier: Optional[float] = None
+
+# Monitoring State
+loss_trend_direction: Optional[str] = None
+loss_previous_score: Optional[float] = None
+loss_score_velocity: Optional[float] = None
+```
+
+### 16.8 Implementation Roadmap
+
+| Phase | Timeline | Objectives |
+|-------|----------|------------|
+| 1. Retrospective Analysis | Months 1-6 | Partner with carrier for historical data, build initial correlation matrix |
+| 2. Prospective Tagging | Months 6-18 | Tag new submissions with signal snapshots, track loss emergence |
+| 3. Pricing Integration | Months 12-24 | Production scoring, pricing adjustments, continuous monitoring |
+| 4. Continuous Calibration | Months 18+ | Automated recalibration, dynamic cohorts, ML enhancement |
+
+### 16.9 Critical Rules
+
+1. **Parallel processing**: Loss correlation runs alongside risk scoring, not in sequence
+2. **Same signals, different weights**: Uses same extracted signals with loss-specific weighting
+3. **Direction matters**: Negative correlation signals are inverted before scoring
+4. **Confidence gates decisions**: Low confidence prevents automatic pricing adjustments
+5. **Caps and floors apply**: Pricing impact bounded to prevent extreme adjustments
+6. **Cohorts are signal-derived**: Not based on industry code or traditional segmentation
+7. **Trend monitoring is continuous**: Not just at bind and renewal
+8. **Correlation matrix requires calibration**: Initial weights are hypotheses, validated against loss data
+9. **Deterioration triggers action**: Not just observation
+10. **Full auditability**: Every pricing adjustment traces to signal patterns
+
+### 16.10 Implementation Tasks
+
+| Task | File | Status |
+|------|------|--------|
+| Create loss correlation types | `model/loss_correlation/types.py` | 🔲 Not Started |
+| Implement LossCorrelationScorer | `model/loss_correlation/scorer.py` | 🔲 Not Started |
+| Implement CorrelationMatrixManager | `model/loss_correlation/matrix.py` | 🔲 Not Started |
+| Implement LossMonitoringEngine | `model/loss_correlation/monitoring.py` | 🔲 Not Started |
+| Add pricing integration | `model/loss_correlation/integration.py` | 🔲 Not Started |
+| Extend YAML config schema | `coverages/*/config.yaml` | 🔲 Not Started |
+| Extend ModelVersion for loss data | `model/types.py` | 🔲 Not Started |
+| Integrate into workflow | `model/workflow.py` | 🔲 Not Started |
+| Add unit tests | `tests/unit/test_loss_correlation.py` | 🔲 Not Started |
+| Add integration tests | `tests/integration/test_loss_workflow.py` | 🔲 Not Started |
+
+### 16.11 File Structure for Phase 16
+
+```
+technical_pricing/
+├── model/
+│   ├── loss_correlation/
+│   │   ├── __init__.py
+│   │   ├── types.py              # All dataclasses and enums
+│   │   ├── scorer.py             # Loss propensity calculation
+│   │   ├── matrix.py             # Correlation matrix management
+│   │   ├── monitoring.py         # Continuous monitoring engine
+│   │   └── integration.py        # Pricing integration patterns
+│   └── ...
+```
+
+-----
+
 ## File Structure (Complete)
 
 ```
@@ -3291,11 +3634,18 @@ technical_pricing/
 │   ├── query_evaluator.py           ✅ Step 7
 │   ├── pricer.py                    ✅ Steps 8-12
 │   ├── workflow.py                  ✅ Full orchestration + Step 0
-│   └── modifiers/                   ✅ PHASE 7
-│       ├── base.py                  ✅ TraditionalModifier base
-│       ├── loss_history.py          ✅ Experience rating
-│       ├── exposure.py              ✅ Exposure adjustments
-│       └── external_rating.py       ✅ Credit/financial ratings
+│   ├── modifiers/                   ✅ PHASE 7
+│   │   ├── base.py                  ✅ TraditionalModifier base
+│   │   ├── loss_history.py          ✅ Experience rating
+│   │   ├── exposure.py              ✅ Exposure adjustments
+│   │   └── external_rating.py       ✅ Credit/financial ratings
+│   └── loss_correlation/            🔲 PHASE 16 (Specification Complete)
+│       ├── __init__.py              🔲 Package exports
+│       ├── types.py                 🔲 LossPropensityResult, enums
+│       ├── scorer.py                🔲 LossCorrelationScorer
+│       ├── matrix.py                🔲 CorrelationMatrixManager
+│       ├── monitoring.py            🔲 LossMonitoringEngine
+│       └── integration.py           🔲 Pricing integration patterns
 ├── analytics/                       ✅ PHASE 8-9
 │   ├── types.py                     ✅ Metrics types
 │   ├── performance.py               ✅ Performance tracking
@@ -3360,9 +3710,14 @@ deploy/                              ✅ Deployment configs
 ├── docker-compose.yml               ✅ Docker Compose
 ├── kubernetes/                      ✅ K8s manifests
 └── DEPLOYMENT.md                    ✅ Deployment guide
+
+loss/                                ✅ Loss analysis specifications
+└── correlation_layer/               ✅ PHASE 16 specifications
+    ├── development_plan.md          ✅ Implementation plan
+    └── loss_signal_correlation_layer_specification.txt  ✅ Full specification
 ```
 
-Legend: ✅ Complete | 🔲 Optional
+Legend: ✅ Complete | 🔲 Not Started (Specification Complete)
 
 -----
 
@@ -3485,6 +3840,9 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 1. **Direct queries can modify premium**: Via modifiers applied after base premium (Step 7)
 1. **Maximum tier override wins**: When multiple overrides, apply worst tier (Step 8)
 1. **Every interaction is versioned**: Full audit trail via model versions (Step 2)
+1. **Loss correlation runs in parallel**: Same signals, different weights - runs alongside risk scoring (Phase 16)
+1. **Loss propensity has caps/floors**: Pricing impact bounded to prevent extreme adjustments
+1. **Cohorts are signal-derived**: Not industry codes - behavioral patterns define peer groups
 
 -----
 
@@ -3494,7 +3852,8 @@ When starting any DSI work:
 
 1. **Read this SKILL.md first**
 1. **Check coverage_crosswalk.json** for common concepts
-1. **Reference YAML config** for the coverage you’re working on
-1. **Follow the standard patterns** - don’t invent new structures
-1. **Never hardcode** - if it’s in YAML, read it from YAML
+1. **Reference YAML config** for the coverage you're working on
+1. **Follow the standard patterns** - don't invent new structures
+1. **Never hardcode** - if it's in YAML, read it from YAML
+1. **For loss correlation work**: Review `loss/correlation_layer/` specification documents
 1. **Follow the 14-step workflow** - don't skip or reorder steps
