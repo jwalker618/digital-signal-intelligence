@@ -1,0 +1,1286 @@
+DSI LOSS SIGNAL CORRELATION LAYER – FULL SPECIFICATION
+=======================================================
+
+This document defines the complete technical specification for the DSI Loss Signal
+Correlation Layer. It is designed for future implementation by an LLM or engineering
+team. It is coverage-agnostic, actuarially valid, and fully aligned with DSI
+principles: externally observable signals, machine-readable inputs, network authority
+over self-reporting, and full auditability.
+
+----------------------------------------------------------------------
+SECTION 1 — PURPOSE
+----------------------------------------------------------------------
+
+The Loss Signal Correlation Layer provides a fully automated, DSI-native method for
+inferring loss propensity without requiring historical loss data at the individual
+risk level. It identifies signal patterns that correlate with loss frequency and
+severity, enabling predictive loss assessment, cohort-based pricing adjustments,
+and continuous risk monitoring.
+
+The output is:
+- Loss Propensity Score (0–100)
+- Severity Propensity Score (0–100)
+- Loss Propensity Band (very_low, low, moderate, elevated, high)
+- Loss Confidence (0–1)
+- Cohort Assignment (signal-derived peer group)
+- Development Pattern (expected emergence timing)
+- Loss-driven referral triggers
+- Pricing adjustments (optional)
+
+This layer does NOT replace risk scoring or exposure estimation. It runs in parallel
+and provides an additional dimension for pricing and portfolio management through
+explicit, auditable mechanisms.
+
+----------------------------------------------------------------------
+SECTION 2 — THE LOSS ANALYSIS PROBLEM
+----------------------------------------------------------------------
+
+Traditional loss analysis in insurance suffers from five fundamental constraints
+that DSI is uniquely positioned to address:
+
+2.1 DATA SPARSITY
+
+Loss events are episodic. In most commercial lines:
+- 80-90% of policies have zero claims in any given year
+- Loss ratios are driven by a small number of large events
+- Statistical significance requires volume that most portfolios lack
+- Credibility-weighted approaches regress heavily to industry averages
+
+Result: Individual risk loss prediction is actuarially impossible with traditional data.
+
+2.2 FEATURE POVERTY
+
+When losses occur, available features are limited to those captured at bind:
+- Industry code (SIC/NAICS)
+- Size metrics (revenue, employees, TIV)
+- Geographic location
+- Limit and deductible selection
+- Years in business
+
+These 5-10 features cannot explain loss variance. A bank with $10B in assets and
+a bank with $10B in assets can have radically different loss profiles based on
+factors invisible to traditional underwriting.
+
+2.3 ATTRIBUTION IMPOSSIBILITY
+
+With sparse outcomes and minimal features, causal attribution is nearly impossible:
+- Was the loss driven by industry characteristics?
+- Was it the company's size?
+- Was it geographic concentration?
+- Was it operational practices?
+- Was it governance failures?
+
+Traditional models cannot answer these questions. They can only establish weak
+correlations at the portfolio level.
+
+2.4 EMERGENCE LAG
+
+Loss emergence timelines vary by coverage:
+- Cyber: 6-12 months to full development
+- D&O: 18-36 months for securities litigation
+- Professional Indemnity: 24-48 months
+- Marine: 12-24 months
+
+By the time loss patterns are visible, the portfolio has turned over. The risks
+that generated the losses are no longer in force. Learning is impossible.
+
+2.5 AGGREGATION MASKING
+
+Portfolio-level loss ratios hide segment performance:
+- A 60% combined ratio may comprise 40% segments and 90% segments
+- Profitable business subsidises unprofitable business
+- Without feature-rich segmentation, cross-subsidisation is invisible
+- Pricing remains market-driven rather than risk-driven
+
+Result: Underwriters correctly state that "the gap between technical pricing and
+loss is absolute."
+
+----------------------------------------------------------------------
+SECTION 3 — THE DSI SOLUTION
+----------------------------------------------------------------------
+
+DSI fundamentally changes the equation through five mechanisms:
+
+3.1 FEATURE RICHNESS
+
+Instead of 5-10 features, DSI captures 200-400 signals per risk:
+- Network authority patterns (50-80 signals)
+- Technical infrastructure details (40-60 signals)
+- Corporate digital footprint metrics (40-60 signals)
+- Behavioural indicators (30-50 signals)
+- Public record signals (20-40 signals)
+- Structured data feeds (20-40 signals)
+
+This feature richness enables statistical differentiation impossible with
+traditional underwriting data.
+
+3.2 BEHAVIOURAL CORRELATION
+
+DSI signals describe HOW an organisation operates, not just WHAT it is:
+- Security investment patterns (not just "has security")
+- Management stability over time (not just "has management")
+- Regulatory engagement history (not just "is regulated")
+- Partner selectivity criteria (not just "has partners")
+
+Behavioural patterns precede and predict loss events.
+
+3.3 PRE-LOSS INDICATORS
+
+Many DSI signals are leading indicators:
+- Deteriorating security posture precedes breaches
+- Management turnover precedes governance failures
+- Regulatory warning letters precede enforcement actions
+- Declining digital presence precedes operational failures
+
+These signals enable detection BEFORE loss occurrence.
+
+3.4 CONTINUOUS OBSERVATION
+
+Unlike bind-time-only assessment, DSI enables:
+- Monthly/quarterly signal refresh
+- Trend detection (improving vs deteriorating)
+- Anomaly identification (sudden changes)
+- Mid-term portfolio recalibration
+
+This transforms insurance from point-in-time to continuous risk assessment.
+
+3.5 COHORT IDENTIFICATION
+
+Signal patterns enable peer grouping independent of traditional classifications:
+- "Companies with weak security but strong governance"
+- "Companies with strong financials but poor operational discipline"
+- "Companies with high network authority but technical debt"
+
+These signal-derived cohorts may share loss characteristics invisible to
+industry-code-based segmentation.
+
+----------------------------------------------------------------------
+SECTION 4 — LOSS SIGNALS AND DATA CONTRACTS
+----------------------------------------------------------------------
+
+Loss correlation signals use the same extractor infrastructure as risk signals.
+Each signal must be externally observable, machine-readable, and reproducible.
+
+All extractors return the standard structure:
+
+signal_id: string
+value: number | string | boolean
+normalized_value: number (0–100) or null
+confidence: number (0–1)
+source_urls: list of strings
+extracted_at: ISO8601 timestamp
+notes: optional string
+
+4.1 CANONICAL LOSS-PREDICTIVE SIGNALS
+
+The following signals have hypothesised loss correlation based on actuarial
+theory and industry observation. Validation requires empirical testing.
+
+Network Authority Signals (Loss Predictive):
+1. certification_authority_score — Certification body quality correlates with
+   operational discipline. Lower scores predict higher loss frequency.
+2. partner_quality_index — Quality of banking/partner relationships indicates
+   risk management maturity.
+3. customer_concentration — High concentration increases event severity.
+4. regulatory_standing_score — Regulatory relationship quality predicts
+   enforcement and liability exposure.
+
+Technical Infrastructure Signals (Loss Predictive):
+5. security_header_completeness — Technical hygiene proxy for security investment.
+6. tls_configuration_score — Encryption implementation quality.
+7. software_currency_index — Outdated systems predict vulnerability exploitation.
+8. exposed_service_count — Attack surface proxy for breach probability.
+9. dns_security_score — DNS configuration indicates security maturity.
+
+Corporate Footprint Signals (Loss Predictive):
+10. content_recency_score — Website freshness indicates operational vitality.
+11. leadership_visibility_index — Governance transparency proxy.
+12. hiring_activity_trend — Growth/contraction indicator.
+13. policy_documentation_score — Presence and quality of public policies.
+14. crisis_communication_presence — Incident response preparedness.
+
+Behavioural Signals (Loss Predictive):
+15. management_stability_index — Turnover rate predicts governance risk.
+16. regulatory_engagement_pattern — History of regulatory interactions.
+17. incident_response_history — Past response quality predicts future response.
+18. change_velocity_score — Rate of operational change (high = risk).
+19. disclosure_consistency — Consistency of public communications.
+
+Public Record Signals (Loss Predictive):
+20. litigation_frequency — Prior litigation predicts future litigation.
+21. regulatory_action_history — Enforcement history predicts future enforcement.
+22. bankruptcy_proximity_signals — Financial distress indicators.
+23. ownership_change_frequency — Instability proxy.
+24. ip_filing_trend — Innovation investment indicator.
+
+Structured Data Signals (Loss Predictive):
+25. credit_rating_trajectory — Direction of rating changes.
+26. esg_score_trend — ESG improvement/deterioration.
+27. financial_ratio_anomalies — Outlier financial metrics.
+28. peer_comparison_rank — Position relative to industry peers.
+
+----------------------------------------------------------------------
+SECTION 5 — YAML CONFIGURATION SCHEMA
+----------------------------------------------------------------------
+
+Loss correlation configuration is defined in YAML under the "loss_correlation"
+section of CoverageConfig.
+
+loss_correlation:
+  enabled: true
+  version: "YYYY-MM-DD"
+  
+  correlation_groups:
+    - name: loss_network_authority
+      weight: float
+      confidence_threshold: float
+      features:
+        - id: string
+          weight: float
+          correlation_type: frequency | severity | both
+          correlation_direction: positive | negative
+          normalizer: log_scale | linear | capped | percentile | categorical_map
+          thresholds: optional list of floats
+          lag_months: optional int (expected lag between signal and loss)
+          
+    - name: loss_technical_infrastructure
+      weight: float
+      confidence_threshold: float
+      features: (same structure)
+      
+    - name: loss_corporate_footprint
+      weight: float
+      confidence_threshold: float
+      features: (same structure)
+      
+    - name: loss_behavioural
+      weight: float
+      confidence_threshold: float
+      features: (same structure)
+      
+    - name: loss_public_record
+      weight: float
+      confidence_threshold: float
+      features: (same structure)
+      
+    - name: loss_structured_data
+      weight: float
+      confidence_threshold: float
+      features: (same structure)
+      
+  propensity_band_mapping:
+    method: cohort_quantile | fixed_threshold | ml_derived
+    bands:
+      - name: very_low
+        min_score: float
+        max_score: float
+        expected_frequency_multiplier: float
+        expected_severity_multiplier: float
+      - name: low
+      - name: moderate
+      - name: elevated
+      - name: high
+      
+  severity_band_mapping:
+    method: cohort_quantile | fixed_threshold
+    bands:
+      - name: minimal
+        min_score: float
+        max_score: float
+      - name: moderate
+      - name: significant
+      - name: severe
+      - name: catastrophic
+      
+  cohort_definitions:
+    method: signal_clustering | predefined | hybrid
+    cluster_features: list of signal_ids for clustering
+    predefined_cohorts:
+      - id: string
+        name: string
+        criteria: dict of signal conditions
+        
+  pricing_integration:
+    method: multiplicative | additive | grid
+    frequency_impact_cap: float (e.g., 1.50 for max 50% loading)
+    frequency_impact_floor: float (e.g., 0.75 for max 25% credit)
+    severity_impact_cap: float
+    severity_impact_floor: float
+    
+  auto_apply_rules:
+    - condition: string
+      action: refer | apply_modifier | flag
+      reason: optional string
+      modifier: optional string
+      
+  monitoring:
+    refresh_frequency: monthly | quarterly | on_signal_change
+    deterioration_threshold: float (score drop triggering alert)
+    improvement_threshold: float (score increase for credit)
+
+----------------------------------------------------------------------
+SECTION 6 — PYTHON DATACLASSES
+----------------------------------------------------------------------
+
+@dataclass
+class LossSignalResult:
+    signal_id: str
+    value: Any
+    normalized_value: float  # 0-100
+    confidence: float  # 0-1
+    correlation_type: str  # 'frequency', 'severity', 'both'
+    correlation_direction: str  # 'positive', 'negative'
+    source_urls: List[str]
+    extracted_at: datetime
+    notes: Optional[str]
+
+@dataclass
+class LossCorrelationFeatureConfig:
+    id: str
+    weight: float
+    correlation_type: str
+    correlation_direction: str
+    normalizer: str
+    thresholds: Optional[List[float]]
+    lag_months: Optional[int]
+
+@dataclass
+class LossCorrelationGroupConfig:
+    name: str
+    weight: float
+    confidence_threshold: float
+    features: List[LossCorrelationFeatureConfig]
+
+@dataclass
+class LossPropensityBand:
+    name: str
+    min_score: float
+    max_score: float
+    expected_frequency_multiplier: float
+    expected_severity_multiplier: float
+
+@dataclass
+class CohortDefinition:
+    id: str
+    name: str
+    criteria: Dict[str, Any]
+    historical_frequency: Optional[float]
+    historical_severity: Optional[float]
+    member_count: Optional[int]
+
+@dataclass
+class LossCorrelationConfig:
+    enabled: bool
+    version: str
+    correlation_groups: List[LossCorrelationGroupConfig]
+    propensity_band_mapping_method: str
+    propensity_bands: List[LossPropensityBand]
+    severity_bands: List[LossPropensityBand]
+    cohort_definitions: List[CohortDefinition]
+    pricing_integration_method: str
+    auto_apply_rules: List[Dict]
+    monitoring_config: Dict
+
+@dataclass
+class LossPropensityResult:
+    """Output from loss propensity calculation"""
+    loss_propensity_score: float  # 0-100
+    severity_propensity_score: float  # 0-100
+    loss_propensity_band: str
+    severity_propensity_band: str
+    loss_confidence: float  # 0-1
+    cohort_id: str
+    cohort_name: str
+    
+    # Component scores
+    group_scores: Dict[str, float]
+    group_confidences: Dict[str, float]
+    
+    # Pricing impact
+    frequency_multiplier: float
+    severity_multiplier: float
+    combined_loss_modifier: float
+    
+    # Monitoring
+    trend_direction: str  # 'improving', 'stable', 'deteriorating'
+    days_since_last_assessment: int
+    
+    # Referral triggers
+    referral_triggered: bool
+    referral_reasons: List[str]
+    
+    # Audit
+    signal_snapshots: List[LossSignalResult]
+    calculated_at: datetime
+
+----------------------------------------------------------------------
+SECTION 7 — SCORING LOGIC
+----------------------------------------------------------------------
+
+7.1 SIGNAL NORMALISATION
+
+Each loss-predictive signal is normalised to 0-100 using the configured normalizer.
+For signals with negative correlation (higher value = lower risk), the score is
+inverted: normalized = 100 - raw_normalized.
+
+Normalization functions:
+
+1. log_scale:
+   score = min(100, log(value, base) * scale)
+
+2. linear:
+   score = 0 if value <= min
+   score = 100 if value >= max
+   else proportional
+
+3. capped:
+   score = min(value, cap) / cap * 100
+
+4. percentile:
+   score = percentile_rank(value, cohort_distribution)
+
+5. categorical_map:
+   score = mapping[value]
+
+7.2 GROUP SCORING
+
+For each correlation group:
+
+frequency_group_score = weighted_average(
+    feature.normalized_value * feature.weight
+    for feature in group.features
+    where feature.correlation_type in ['frequency', 'both']
+)
+
+severity_group_score = weighted_average(
+    feature.normalized_value * feature.weight
+    for feature in group.features
+    where feature.correlation_type in ['severity', 'both']
+)
+
+group_confidence = weighted_average(feature.confidence for feature in group.features)
+
+7.3 COMPOSITE LOSS PROPENSITY SCORE
+
+loss_propensity_score = weighted_average(
+    group.frequency_score * group.weight
+    for group in correlation_groups
+)
+
+severity_propensity_score = weighted_average(
+    group.severity_score * group.weight
+    for group in correlation_groups
+)
+
+loss_confidence = weighted_average(
+    group.confidence * group.weight
+    for group in correlation_groups
+)
+
+7.4 BAND MAPPING
+
+Two mapping methods:
+
+1. fixed_threshold:
+   Compare loss_propensity_score to min_score/max_score ranges defined in config.
+
+2. cohort_quantile:
+   Map score to percentile within cohort, then to band based on empirical
+   loss distributions.
+
+3. ml_derived:
+   Use trained model to map signal pattern directly to band (requires
+   calibration data).
+
+----------------------------------------------------------------------
+SECTION 8 — COHORT ASSIGNMENT
+----------------------------------------------------------------------
+
+Cohorts are signal-derived peer groups that share loss characteristics.
+Unlike industry codes, cohorts are defined by operational patterns.
+
+8.1 CLUSTERING METHOD
+
+Use k-means or hierarchical clustering on selected signal features:
+
+cluster_features = [
+    'security_header_completeness',
+    'management_stability_index',
+    'certification_authority_score',
+    'credit_rating_trajectory',
+    ...
+]
+
+Optimal cluster count determined by silhouette score or elbow method.
+
+8.2 PREDEFINED COHORTS
+
+For coverages with established patterns, predefined cohorts may be used:
+
+predefined_cohorts:
+  - id: "tech_mature"
+    name: "Technology Mature"
+    criteria:
+      security_header_completeness: ">= 80"
+      software_currency_index: ">= 70"
+      management_stability_index: ">= 60"
+      
+  - id: "tech_immature"
+    name: "Technology Immature"
+    criteria:
+      security_header_completeness: "< 50"
+      software_currency_index: "< 40"
+
+8.3 HYBRID METHOD
+
+Combine predefined cohorts with clustering:
+1. Assign to predefined cohort if criteria match
+2. Cluster remaining entities
+3. Monitor cohort stability over time
+
+8.4 COHORT CALIBRATION
+
+Each cohort stores empirical loss data once available:
+
+cohort_calibration:
+  cohort_id: "tech_mature"
+  observation_period: "2023-01-01 to 2025-12-31"
+  policy_count: 1247
+  claim_count: 89
+  observed_frequency: 0.071
+  expected_frequency: 0.085
+  frequency_relativity: 0.84
+  observed_severity: 125000
+  expected_severity: 150000
+  severity_relativity: 0.83
+  confidence: 0.87
+
+----------------------------------------------------------------------
+SECTION 9 — PRICING INTEGRATION PATTERNS
+----------------------------------------------------------------------
+
+Three supported patterns for integrating loss propensity into pricing:
+
+PATTERN A — Multiplicative Adjustment (recommended)
+
+base_premium = tier_based_premium(risk_tier, exposure_band)
+
+loss_adjusted_premium = base_premium * combined_loss_modifier
+
+Where:
+combined_loss_modifier = (
+    (frequency_multiplier * frequency_weight) +
+    (severity_multiplier * severity_weight)
+)
+
+Caps and floors apply:
+combined_loss_modifier = max(floor, min(cap, combined_loss_modifier))
+
+Example:
+- Tier 2 risk with elevated loss propensity
+- Base premium: $50,000
+- Frequency multiplier: 1.20
+- Severity multiplier: 1.10
+- Combined (50/50 weight): 1.15
+- Loss-adjusted premium: $57,500
+
+
+PATTERN B — Grid-Based Pricing
+
+Pricing determined by (risk_tier, loss_propensity_band) matrix:
+
+pricing_grid:
+  tier_1:
+    very_low: 0.0035
+    low: 0.0040
+    moderate: 0.0045
+    elevated: 0.0055
+    high: 0.0070
+  tier_2:
+    very_low: 0.0045
+    low: 0.0050
+    ...
+
+This provides explicit rate differentiation by loss propensity.
+
+
+PATTERN C — Three-Dimensional Grid
+
+Full integration with exposure:
+
+pricing_grid:
+  tier_1:
+    micro:
+      very_low: 0.0030
+      low: 0.0035
+      ...
+    small:
+      very_low: 0.0035
+      ...
+    ...
+
+----------------------------------------------------------------------
+SECTION 10 — CORRELATION MATRIX CONSTRUCTION
+----------------------------------------------------------------------
+
+The Loss Correlation Matrix captures empirically validated relationships between
+signals and loss outcomes. Construction requires historical policy + loss data.
+
+10.1 DATA REQUIREMENTS
+
+For each historical policy:
+- Policy ID
+- Bind date
+- Signal snapshot at bind (all available signals)
+- Outcome:
+  - Claim count
+  - Incurred losses (by claim)
+  - Development status
+  - Cause codes
+- Policy term and exposure
+
+Minimum requirements:
+- 1,000+ policies with full signal capture
+- 24+ months of loss development
+- Reasonable loss frequency (>5% for frequency analysis)
+
+10.2 CORRELATION CALCULATION
+
+For each signal:
+
+frequency_correlation = pearson(
+    signal_normalized_value,
+    loss_indicator  # 0 or 1
+)
+
+severity_correlation = pearson(
+    signal_normalized_value,
+    loss_amount  # for policies with losses only
+)
+
+Additionally calculate:
+- Spearman rank correlation (for non-linear relationships)
+- Information value (for predictive power)
+- Chi-square (for categorical signals)
+
+10.3 STABILITY TESTING
+
+Test correlation stability across:
+- Time periods (rolling 12-month windows)
+- Cohort segments
+- Coverage types
+- Geographic regions
+
+Unstable correlations are flagged for review.
+
+10.4 INTERACTION EFFECTS
+
+Test for interaction effects between signals:
+
+interaction_strength = correlation(
+    signal_A * signal_B,
+    loss_outcome
+) - correlation(signal_A, loss_outcome) - correlation(signal_B, loss_outcome)
+
+Significant interactions are captured in the model.
+
+10.5 MATRIX OUTPUT
+
+correlation_matrix:
+  signals:
+    - signal_id: "security_header_completeness"
+      frequency_correlation: -0.23
+      severity_correlation: -0.18
+      information_value: 0.15
+      stability_score: 0.89
+      interaction_effects:
+        - with_signal: "software_currency_index"
+          interaction_strength: 0.12
+      
+    - signal_id: "management_stability_index"
+      frequency_correlation: -0.31
+      severity_correlation: -0.25
+      information_value: 0.21
+      stability_score: 0.92
+      ...
+
+----------------------------------------------------------------------
+SECTION 11 — CONTINUOUS MONITORING
+----------------------------------------------------------------------
+
+The Loss Signal Correlation Layer enables continuous risk monitoring,
+transforming insurance from point-in-time to ongoing assessment.
+
+11.1 REFRESH FREQUENCY
+
+Configure signal refresh based on volatility:
+
+monitoring:
+  refresh_schedules:
+    high_volatility:  # security, technical
+      frequency: monthly
+      signals: [security_header_completeness, tls_configuration_score, ...]
+    medium_volatility:  # corporate footprint
+      frequency: quarterly
+      signals: [content_recency_score, hiring_activity_trend, ...]
+    low_volatility:  # structured data
+      frequency: semi_annually
+      signals: [credit_rating_trajectory, esg_score_trend, ...]
+
+11.2 DETERIORATION DETECTION
+
+Alert when loss propensity increases significantly:
+
+deterioration_rules:
+  - condition: "loss_propensity_score_delta > 15"
+    within_period: "90_days"
+    action: "alert"
+    severity: "warning"
+    
+  - condition: "loss_propensity_band changed from 'low' to 'elevated'"
+    action: "alert"
+    severity: "critical"
+    
+  - condition: "cohort_migration to higher_risk_cohort"
+    action: "flag_for_review"
+
+11.3 TREND ANALYSIS
+
+Track signal trajectories over time:
+
+trend_analysis:
+  window: 180_days
+  metrics:
+    - score_velocity (points per month)
+    - direction (improving, stable, deteriorating)
+    - volatility (standard deviation of changes)
+    - acceleration (change in velocity)
+
+11.4 PROACTIVE INTERVENTION
+
+Based on deterioration signals:
+
+intervention_rules:
+  - trigger: "deterioration_warning"
+    action: "send_risk_improvement_resources"
+    
+  - trigger: "deterioration_critical"
+    action: "underwriter_outreach"
+    
+  - trigger: "approaching_renewal AND deterioration_any"
+    action: "flag_for_renewal_review"
+
+----------------------------------------------------------------------
+SECTION 12 — MODEL DATA EXTENSIONS
+----------------------------------------------------------------------
+
+ModelVersion must store loss correlation outputs:
+
+# Loss Propensity Outputs
+loss_propensity_score: float
+severity_propensity_score: float
+loss_propensity_band: string
+severity_propensity_band: string
+loss_confidence: float
+
+# Component Scores
+loss_group_scores: dict  # {group_name: score}
+loss_group_confidences: dict  # {group_name: confidence}
+
+# Cohort Assignment
+loss_cohort_id: string
+loss_cohort_name: string
+loss_cohort_confidence: float
+
+# Pricing Impact
+loss_frequency_multiplier: float
+loss_severity_multiplier: float
+loss_combined_modifier: float
+
+# Monitoring State
+loss_trend_direction: string
+loss_previous_score: float
+loss_score_velocity: float
+loss_last_refresh: datetime
+
+# Correlation Matrix Reference
+correlation_matrix_version: string
+correlation_matrix_hash: string
+
+----------------------------------------------------------------------
+SECTION 13 — UNDERWRITER OUTPUTS
+----------------------------------------------------------------------
+
+13.1 LOSS PROPENSITY SUMMARY CARD
+
+Loss Propensity Band: [elevated]
+Loss Propensity Score: 68/100
+Severity Propensity Score: 55/100
+Confidence: 0.82
+
+Top Risk Drivers:
+1. Management Stability Index: 42/100 (below peer median)
+2. Security Header Completeness: 55/100 (below threshold)
+3. Regulatory Engagement Pattern: concerning trend
+
+Cohort: Technology Immature
+Cohort Loss Frequency: 1.3x portfolio average
+Cohort Loss Severity: 1.1x portfolio average
+
+Pricing Impact: +18% loading applied
+
+Referral Reasons: None (within appetite)
+
+13.2 COHORT COMPARISON PANEL
+
+Your Risk vs Cohort Peers:
+
+Signal                          Your Score    Cohort Median    Percentile
+------------------------------- ------------- ---------------- -----------
+Security Header Completeness         55            72              23rd
+Management Stability Index           42            58              18th
+Certification Authority Score        78            75              58th
+Credit Rating Trajectory             65            62              55th
+
+Overall Position: Below cohort median on key loss-predictive signals
+
+13.3 TREND DASHBOARD
+
+180-Day Loss Propensity Trend:
+[Visual: Line chart showing score over time]
+
+Current: 68 (elevated)
+90 days ago: 61 (moderate)
+180 days ago: 58 (moderate)
+
+Trend: Deteriorating (+10 points in 180 days)
+Velocity: +1.7 points/month
+
+Alert Status: Warning - approaching referral threshold
+
+13.4 SIGNAL DEEP DIVE
+
+For each signal group, provide:
+- Individual signal scores
+- Contribution to loss propensity
+- Historical trend
+- Peer comparison
+- Remediation recommendations (if applicable)
+
+----------------------------------------------------------------------
+SECTION 14 — VALIDATION AND BACKTESTING
+----------------------------------------------------------------------
+
+14.1 HOLDOUT VALIDATION
+
+Reserve 20% of historical data for out-of-sample testing:
+- Train correlation matrix on 80%
+- Validate predictive power on 20%
+- Measure lift, AUC, Gini coefficient
+
+14.2 TEMPORAL VALIDATION
+
+Test on sequential time periods:
+- Train on years 1-2
+- Validate on year 3
+- Measure stability of correlations over time
+
+14.3 COHORT VALIDATION
+
+For each cohort:
+- Compare predicted loss frequency to actual
+- Compare predicted loss severity to actual
+- Calculate chi-square goodness of fit
+- Measure cohort stability (membership changes over time)
+
+14.4 BACKTESTING METRICS
+
+Metrics to track:
+
+frequency_metrics:
+  - lift_at_decile (top 10% should have highest frequency)
+  - auc_roc (area under ROC curve)
+  - gini_coefficient
+  - ks_statistic (Kolmogorov-Smirnov)
+  
+severity_metrics:
+  - correlation_with_actual
+  - mean_absolute_error
+  - median_absolute_error
+  - percentile_accuracy
+
+calibration_metrics:
+  - predicted_vs_actual_ratio
+  - confidence_interval_coverage
+  - calibration_slope
+
+14.5 RECALIBRATION TRIGGERS
+
+Recalibrate correlation matrix when:
+- Portfolio loss ratio deviates >10% from predicted
+- Cohort performance deviates >15% from expected
+- Signal availability changes significantly
+- New loss data accumulates (quarterly refresh)
+
+----------------------------------------------------------------------
+SECTION 15 — IMPLEMENTATION ROADMAP
+----------------------------------------------------------------------
+
+15.1 PHASE 1: RETROSPECTIVE ANALYSIS (Months 1-6)
+
+Objectives:
+- Partner with carrier to access historical policy + loss data
+- Map historical policies to DSI signals (where determinable)
+- Calculate initial correlation matrix
+- Identify 5-10 high-confidence signal-loss correlations
+- Validate correlations across time periods
+
+Deliverables:
+- Historical dataset with signal reconstruction
+- Initial correlation matrix
+- Validation report
+- High-confidence signal list
+
+15.2 PHASE 2: PROSPECTIVE TAGGING (Months 6-18)
+
+Objectives:
+- Tag all new submissions with full signal snapshot
+- Persist signal snapshots for future correlation analysis
+- Track loss emergence against signal patterns
+- Refine correlation matrix with fresh data
+- Begin cohort identification
+
+Deliverables:
+- Signal snapshot persistence infrastructure
+- Cohort clustering implementation
+- Quarterly correlation updates
+- Initial pricing integration (shadow mode)
+
+15.3 PHASE 3: PRICING INTEGRATION (Months 12-24)
+
+Objectives:
+- Implement loss propensity scoring in production
+- Enable pricing adjustments (initially capped)
+- Deploy continuous monitoring
+- Validate pricing impact
+
+Deliverables:
+- Production loss propensity scoring
+- Pricing modifier implementation
+- Monitoring dashboard
+- A/B testing framework
+
+15.4 PHASE 4: CONTINUOUS CALIBRATION (Months 18+)
+
+Objectives:
+- Automated correlation recalculation
+- Dynamic cohort redefinition
+- Real-time loss propensity updates
+- Closed-loop model improvement
+- ML enhancement (optional)
+
+Deliverables:
+- Automated calibration pipeline
+- Dynamic cohort management
+- ML model integration (if validated)
+- Governance framework
+
+----------------------------------------------------------------------
+SECTION 16 — ECONOMIC IMPACT
+----------------------------------------------------------------------
+
+If DSI signals prove even modestly predictive of loss, the following
+improvements are achievable:
+
+16.1 LOSS RATIO IMPACT
+
+Improvement Source              Mechanism                    Impact
+------------------------------- ---------------------------- ---------
+Adverse selection reduction     Identify high-loss risks     2-4 pts
+                                before bind
+                                
+Positive selection enhancement  Identify low-loss risks      1-2 pts
+                                to pursue
+                                
+Cohort-based pricing accuracy   Right price for risk type    2-4 pts
+
+Early deterioration detection   Avoid losses through         1-2 pts
+                                intervention
+                                
+TOTAL POTENTIAL                                              6-12 pts
+
+16.2 PORTFOLIO MANAGEMENT IMPACT
+
+Capability                      Traditional        DSI-Enabled
+------------------------------- ------------------ -------------------
+Loss segment identification     Impossible         Signal-based cohorts
+Pricing differentiation depth   5-10 factors       200-400 factors
+Early warning capability        None               Continuous monitoring
+Renewal risk assessment         Point-in-time      Trend-based
+Accumulation analysis           Industry-based     Behavioural-based
+
+16.3 COMPETITIVE ADVANTAGE
+
+Carriers with loss signal correlation capability can:
+- Write better risks at lower prices (positive selection)
+- Avoid worse risks even at higher prices (adverse selection avoidance)
+- Manage in-force portfolio proactively
+- Demonstrate pricing rationale to regulators
+- Build defensible, auditable models
+
+----------------------------------------------------------------------
+SECTION 17 — TESTING AND VALIDATION
+----------------------------------------------------------------------
+
+Unit tests:
+- Signal extractors return valid LossSignalResult
+- Normalization functions produce 0-100 output
+- Group scoring respects weights and correlation types
+- Band mapping produces valid bands
+- Cohort assignment is deterministic
+
+Integration tests:
+- End-to-end loss propensity calculation
+- Pricing integration (all three patterns)
+- Monitoring and alerting
+- Correlation matrix updates
+
+Backtesting:
+- Holdout validation metrics
+- Temporal stability testing
+- Cohort performance validation
+- Calibration accuracy
+
+----------------------------------------------------------------------
+SECTION 18 — MONITORING AND GOVERNANCE
+----------------------------------------------------------------------
+
+18.1 OPERATIONAL METRICS
+
+Monitor:
+- Signal availability by group
+- Loss confidence distribution
+- Cohort assignment distribution
+- Pricing modifier distribution
+- Referral rate by loss band
+
+18.2 MODEL PERFORMANCE METRICS
+
+Track:
+- Actual vs predicted loss frequency by cohort
+- Actual vs predicted loss severity by cohort
+- Correlation stability over time
+- Cohort migration patterns
+- Pricing impact on conversion
+
+18.3 ALERTS
+
+Trigger alerts when:
+- Signal availability < 80%
+- Actual/predicted ratio outside [0.8, 1.2]
+- Cohort performance deviates > 20%
+- Correlation stability score < 0.7
+- Unusual cohort migration detected
+
+18.4 GOVERNANCE
+
+Establish:
+- Quarterly correlation matrix review
+- Annual cohort redefinition process
+- Model change approval workflow
+- Regulatory compliance documentation
+- Audit trail for all pricing decisions
+
+----------------------------------------------------------------------
+SECTION 19 — EXAMPLE COVERAGE TEMPLATE
+----------------------------------------------------------------------
+
+coverage: cyber
+loss_correlation:
+  enabled: true
+  version: "2026-01-08"
+  
+  correlation_groups:
+    - name: loss_technical_infrastructure
+      weight: 0.35
+      confidence_threshold: 0.7
+      features:
+        - id: security_header_completeness
+          weight: 0.30
+          correlation_type: both
+          correlation_direction: negative
+          normalizer: linear
+          thresholds: [20, 40, 60, 80]
+          lag_months: 6
+        - id: tls_configuration_score
+          weight: 0.25
+          correlation_type: frequency
+          correlation_direction: negative
+          normalizer: linear
+        - id: software_currency_index
+          weight: 0.25
+          correlation_type: both
+          correlation_direction: negative
+          normalizer: percentile
+        - id: exposed_service_count
+          weight: 0.20
+          correlation_type: frequency
+          correlation_direction: positive
+          normalizer: log_scale
+          
+    - name: loss_corporate_footprint
+      weight: 0.25
+      confidence_threshold: 0.6
+      features:
+        - id: management_stability_index
+          weight: 0.40
+          correlation_type: both
+          correlation_direction: negative
+          normalizer: linear
+        - id: incident_response_history
+          weight: 0.35
+          correlation_type: severity
+          correlation_direction: negative
+          normalizer: categorical_map
+        - id: policy_documentation_score
+          weight: 0.25
+          correlation_type: frequency
+          correlation_direction: negative
+          normalizer: linear
+          
+    - name: loss_public_record
+      weight: 0.20
+      confidence_threshold: 0.8
+      features:
+        - id: breach_history_score
+          weight: 0.50
+          correlation_type: both
+          correlation_direction: positive
+          normalizer: categorical_map
+          lag_months: 0
+        - id: regulatory_action_history
+          weight: 0.30
+          correlation_type: both
+          correlation_direction: positive
+          normalizer: linear
+        - id: litigation_frequency
+          weight: 0.20
+          correlation_type: frequency
+          correlation_direction: positive
+          normalizer: capped
+          cap: 5
+          
+    - name: loss_structured_data
+      weight: 0.20
+      confidence_threshold: 0.9
+      features:
+        - id: credit_rating_trajectory
+          weight: 0.50
+          correlation_type: both
+          correlation_direction: negative
+          normalizer: categorical_map
+        - id: peer_comparison_rank
+          weight: 0.30
+          correlation_type: both
+          correlation_direction: negative
+          normalizer: percentile
+        - id: esg_score_trend
+          weight: 0.20
+          correlation_type: frequency
+          correlation_direction: negative
+          normalizer: linear
+
+  propensity_band_mapping:
+    method: fixed_threshold
+    bands:
+      - name: very_low
+        min_score: 0
+        max_score: 20
+        expected_frequency_multiplier: 0.60
+        expected_severity_multiplier: 0.70
+      - name: low
+        min_score: 20
+        max_score: 40
+        expected_frequency_multiplier: 0.85
+        expected_severity_multiplier: 0.90
+      - name: moderate
+        min_score: 40
+        max_score: 60
+        expected_frequency_multiplier: 1.00
+        expected_severity_multiplier: 1.00
+      - name: elevated
+        min_score: 60
+        max_score: 80
+        expected_frequency_multiplier: 1.25
+        expected_severity_multiplier: 1.15
+      - name: high
+        min_score: 80
+        max_score: 100
+        expected_frequency_multiplier: 1.60
+        expected_severity_multiplier: 1.40
+
+  pricing_integration:
+    method: multiplicative
+    frequency_impact_cap: 1.50
+    frequency_impact_floor: 0.70
+    severity_impact_cap: 1.40
+    severity_impact_floor: 0.75
+    frequency_weight: 0.60
+    severity_weight: 0.40
+
+  auto_apply_rules:
+    - condition: "loss_propensity_band == 'high' AND loss_confidence >= 0.8"
+      action: refer
+      reason: "High loss propensity with high confidence"
+      
+    - condition: "loss_propensity_score_delta > 20 AND within_90_days"
+      action: flag
+      reason: "Rapid deterioration in loss propensity"
+      
+    - condition: "loss_propensity_band == 'very_low' AND loss_confidence >= 0.8"
+      action: apply_modifier
+      modifier: "preferred_risk_credit"
+
+  monitoring:
+    refresh_frequency: monthly
+    deterioration_threshold: 15
+    improvement_threshold: 15
+
+----------------------------------------------------------------------
+SECTION 20 — FUTURE ENHANCEMENTS
+----------------------------------------------------------------------
+
+20.1 MACHINE LEARNING INTEGRATION
+
+When sufficient calibration data exists:
+- Gradient boosting for optimal weight discovery
+- Neural networks for interaction detection
+- Time series models for trend prediction
+- Anomaly detection for unusual patterns
+
+20.2 CLAIMS INTEGRATION
+
+Direct integration with claims systems:
+- Real-time loss emergence tracking
+- Cause code correlation analysis
+- Reserve development patterns
+- Subrogation opportunity identification
+
+20.3 EXTERNAL DATA ENRICHMENT
+
+Additional data sources:
+- News sentiment analysis
+- Social media monitoring
+- Dark web threat intelligence
+- Supply chain risk mapping
+
+20.4 CROSS-COVERAGE CORRELATION
+
+Identify signals predictive across multiple coverages:
+- Management stability → D&O and Cyber
+- Regulatory standing → PI and FI
+- Technical infrastructure → Cyber and Crime
+
+----------------------------------------------------------------------
+END OF FILE
+----------------------------------------------------------------------
