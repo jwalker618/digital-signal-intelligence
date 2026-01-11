@@ -2,7 +2,7 @@
 
 This directory contains production deployment configurations for the DSI platform.
 
-For the complete deployment guide, see: [docs/deployment/DEPLOYMENT_GUIDE.md](../docs/deployment/DEPLOYMENT_GUIDE.md)
+For the complete deployment guide, see: [docs/deployment/deployment_guide.md](../docs/deployment/deployment_guide.md)
 
 ## Directory Structure
 

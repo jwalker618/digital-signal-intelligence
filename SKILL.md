@@ -2939,6 +2939,8 @@ if __name__ == "__main__":
 
 Implement production extractors that connect to real data sources with jurisdiction-aware routing for global coverage.
 
+> **Master Implementation Document**: See `development_docs/extractor_implementation_plan.md` for detailed API pricing, cost estimates, implementation timeline, and technical architecture recommendations.
+
 ### 15.1 Production Extractor Architecture
 
 Production extractors replace stub extractors with real API connections:
@@ -3846,6 +3848,89 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 
 -----
 
+## Recommended Signal Enhancements
+
+Based on retrospective analysis of major insurance losses (2019-2024), the following signal enhancements are recommended as part of Phase 16 implementation. See `/development_docs/` for full analysis.
+
+### Priority 1: Marine Operational Readiness Signals
+
+From Baltimore/Dali analysis - traditional DSI signals scored the vessel as standard risk, but operational issues were observable:
+
+```yaml
+# Proposed addition to marine/config.yaml
+signal_features:
+  operational_readiness:
+    - name: port_state_control_deficiencies
+      weight: 0.10
+      data_source: equasis_api
+      refresh_frequency: voyage
+    - name: pre_departure_systems_status
+      weight: 0.08
+      data_source: port_authority_integration
+      conditions:
+        - condition_type: equals
+          condition_value: false
+          action: referral
+          reason: "Pre-voyage systems check failed or incomplete"
+```
+
+### Priority 2: Aerospace Supply Chain Quality Signals
+
+From Boeing 737 MAX analysis - supply chain and certification disclosure gaps:
+
+```yaml
+# Proposed addition to aerospace/config.yaml
+signal_features:
+  certification_quality:
+    - name: certification_transparency
+      weight: 0.10
+      components:
+        - pilot_training_changes_disclosed: 0.3
+        - system_failure_modes_documented: 0.4
+        - operational_limitations_published: 0.3
+  supply_chain_quality:
+    - name: component_supplier_audit_status
+      data_source: oem_supplier_database
+    - name: parts_provenance_verification
+      data_source: blockchain_registry
+```
+
+### Priority 3: Cross-Coverage Real-Time Regulatory Monitoring
+
+From SVB, BP Deepwater analysis - regulatory actions were observable signals:
+
+```yaml
+# Proposed cross-coverage enhancement
+cross_coverage:
+  regulatory_monitoring:
+    - name: enforcement_action_feed
+      data_source: regulatory_api_aggregator
+      refresh_frequency: daily
+      alert_threshold: any_new_action
+```
+
+### Signal Effectiveness Summary
+
+From historical loss analysis across 11 major cases:
+
+| Signal Type | Effectiveness | Cases Caught |
+|-------------|---------------|--------------|
+| Absence Signals | 95% | FTX, Shadow Fleet, SVB (CRO) |
+| Regulatory Actions | 90% | SVB, BP Deepwater |
+| Safety History | 85% | BP Deepwater, Costa Concordia |
+| Governance Signals | 80% | FTX, SVB |
+| Network Authority | 75% | FTX, Signature, Shadow Fleet |
+
+### Reference Documents
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| Historical Loss Analysis | `development_docs/historical_loss_analysis.md` | Case-by-case DSI signal mapping |
+| Signal Mapping | `development_docs/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
+| Retrospective Case Studies | `docs/case_studies/retrospective_loss_case_studies.pdf` | Comprehensive loss analysis report |
+
+-----
+
 ## Development Workflow
 
 When starting any DSI work:
@@ -3856,4 +3941,5 @@ When starting any DSI work:
 1. **Follow the standard patterns** - don't invent new structures
 1. **Never hardcode** - if it's in YAML, read it from YAML
 1. **For loss correlation work**: Review `loss/correlation_layer/` specification documents
+1. **Review development_docs/**: Contains implementation plans and historical analysis
 1. **Follow the 14-step workflow** - don't skip or reorder steps

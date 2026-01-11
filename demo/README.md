@@ -268,6 +268,31 @@ pip install fastapi uvicorn
 
 The demo server allows all origins by default. For production, configure proper CORS.
 
+## Additional Demos
+
+### Standalone HTML Demos (`/standalone`)
+
+No-install interactive demos that work directly in your browser:
+
+| Demo | Description |
+|------|-------------|
+| `index.html` | Portal to all standalone demos |
+| `signal-scoring.html` | Interactive signal weight exploration |
+| `tier-visualization.html` | Score-to-tier mapping |
+| `pricing-calculator.html` | Premium calculation with ILF curves |
+| `workflow-animation.html` | Animated 14-step workflow |
+| `coverage-comparison.html` | Compare all 7 coverage types |
+
+### Legacy Dashboards (`/legacy`)
+
+Polished dashboard interfaces for presentations:
+
+| Dashboard | Description |
+|-----------|-------------|
+| `dsi_demo_dashboard.html` | Signal-level analysis |
+| `dsi_demo_workflow.html` | Workflow visualization |
+| `dsi_portfolio_dashboard.html` | Portfolio management |
+
 ## Contributing
 
 To extend the demo:
