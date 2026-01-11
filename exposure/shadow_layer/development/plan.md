@@ -1,4 +1,4 @@
-# DSI Exposure Shadow Layer — Development Plan (Part 2)
+# DSI Exposure Shadow Layer — Development Plan 
 
 ## Continuation of Phase 15.6: Exposure Scorer
 
