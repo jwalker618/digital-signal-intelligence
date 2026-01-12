@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|exposure|
+
+---
+
 # DSI Exposure Shadow Layer — Technical Specification v2.0
 
 ## Document Control
