@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|deployment|
+
+---
+
 # Deployment Documentation
 
 This folder contains the complete deployment guide for the DSI platform.
