@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A new method of Technical Pricing in Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.3.0|
+|Date|January 2025|
+|Classification|demonstration|
+
+---
+
 # Standalone HTML Demos
 
 Interactive HTML demonstrations that work directly in any web browser without requiring Python or a server installation.
