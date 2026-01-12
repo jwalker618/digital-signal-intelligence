@@ -1,12 +1,12 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## A new method of Technical Pricing in Insurance
+## A New Information Substrate for Insurance
 
 | Item | Value |
 |-|-|
-|Version|0.3.0|
+|Version|0.1.0|
 |Date|January 2025|
-|Classification|Development|
+|Classification|overview|
 
 ---
 
@@ -230,17 +230,28 @@ digital-signal-intelligence/
 ├── demo/                        # Interactive demonstrations
 │   ├── server.py                # Live demo server (FastAPI)
 │   ├── index.html               # Live demo UI
-│   └── standalone/              # No-install HTML demos
+│   ├── standalone/              # No-install HTML demos
+│   └── legacy/                  # Legacy dashboard demos
 ├── deploy/                      # Deployment configurations
 │   ├── docker/                  # Docker Compose for production
 │   ├── kubernetes/              # K8s manifests
 │   └── monitoring/              # Prometheus & Grafana configs
 ├── docs/                        # Documentation
-│   └── deployment/              # Deployment guide
+│   ├── overview/                # Executive summaries, white papers
+│   ├── deployment/              # Deployment guide
+│   └── case_studies/            # Retrospective loss analysis
+├── development_docs/            # Internal development documentation
+│   ├── extractor_implementation_plan.md  # Master extractor doc
+│   ├── historical_loss_analysis.md       # Signal-to-loss mapping
+│   └── dsi_retrospective_*.md            # Validation studies
+├── loss/                        # Loss Signal Correlation Layer (Phase 16)
+│   └── correlation_layer/       # Implementation specification
+├── exposure/                    # Exposure Shadow Layer
+│   └── shadow_layer/            # Exposure inference
 ├── .env.example                 # Environment template (100+ options)
 ├── Dockerfile                   # Production container image
 ├── requirements.txt             # Python dependencies
-├── SKILL.md                     # Architecture guide (119KB)
+├── SKILL.md                     # Architecture guide
 └── README.md
 ```
 
@@ -487,8 +498,9 @@ python -m demo.server
 # Open http://localhost:8080
 ```
 
-**Legacy Dashboards** in `docs/demos and case_studies/demos/`:
+**Legacy Dashboards** in `demo/legacy/`:
 - `dsi_demo_dashboard.html` - Signal-level analysis
+- `dsi_demo_workflow.html` - Workflow visualization
 - `dsi_portfolio_dashboard.html` - Portfolio management interface
 
 ---
@@ -526,9 +538,9 @@ python -m demo.server
 | [PageRank Precedent](docs/overview/The%20PageRank%20precedent.pdf) | Board-level summary | C-Suite, Board |
 | [White Paper](docs/overview/An%20Agentic%20Future%20-%20Global%20Technical%20Pricing.pdf) | Detailed Explanation | Technical leadership |
 | [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
-| [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) | Production deployment | DevOps, Engineering |
-| [Methodology Defense](docs/demos%20and%20case_studies/case_studies/dsi_retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
-| [Case Studies](docs/demos%20and%20case_studies/case_studies/) | Worked examples | Underwriters |
+| [Deployment Guide](docs/deployment/deployment_guide.md) | Production deployment | DevOps, Engineering |
+| [Methodology Defense](development_docs/dsi_retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
+| [Case Studies](docs/case_studies/) | Worked examples | Underwriters |
 | [Interactive Demos](demo/standalone/) | Hands-on exploration | All stakeholders |
 
 ---

@@ -1,8 +1,20 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|deployment|
+
+---
+
 # DSI Deployment Configurations
 
 This directory contains production deployment configurations for the DSI platform.
 
-For the complete deployment guide, see: [docs/deployment/DEPLOYMENT_GUIDE.md](../docs/deployment/DEPLOYMENT_GUIDE.md)
+For the complete deployment guide, see: [docs/deployment/deployment_guide.md](../docs/deployment/deployment_guide.md)
 
 ## Directory Structure
 

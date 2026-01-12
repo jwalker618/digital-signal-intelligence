@@ -1,4 +1,15 @@
-# DSI Live Demo
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|demonstration|
+
+---
+# Live Demo
 
 An interactive demonstration of the Digital Signal Intelligence (DSI) platform that runs the **actual workflow engine** with stub extractors for realistic simulation.
 
@@ -196,19 +207,19 @@ Each coverage uses 3-5 signal groups:
         ▼          ▼          ▼                 ▼
 ┌──────────────────────────────────────────────────────────┐
 │                  Demo Server (server.py)                 │
-│  ┌───────────┐  ┌────────────┐  ┌───────────────────┐   │
-│  │   REST    │  │   State    │  │   Result          │   │
-│  │   API     │  │   Tracking │  │   Formatting      │   │
-│  └─────┬─────┘  └────────────┘  └───────────────────┘   │
+│  ┌───────────┐  ┌────────────┐  ┌───────────────────┐    │
+│  │   REST    │  │   State    │  │   Result          │    │
+│  │   API     │  │   Tracking │  │   Formatting      │    │
+│  └─────┬─────┘  └────────────┘  └───────────────────┘    │
 └────────┼─────────────────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────────────────┐
 │                DSI Workflow Engine                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
-│  │ Entity   │ │  Signal  │ │  Score   │ │ Decision │    │
-│  │ Resolve  │ │ Extract  │ │ Compute  │ │  Logic   │    │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
+│  │ Entity   │ │  Signal  │ │  Score   │ │ Decision │     │
+│  │ Resolve  │ │ Extract  │ │ Compute  │ │  Logic   │     │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘     │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -267,6 +278,31 @@ pip install fastapi uvicorn
 ### CORS Issues
 
 The demo server allows all origins by default. For production, configure proper CORS.
+
+## Additional Demos
+
+### Standalone HTML Demos (`/standalone`)
+
+No-install interactive demos that work directly in your browser:
+
+| Demo | Description |
+|-|-|
+| `index.html` | Portal to all standalone demos |
+| `signal-scoring.html` | Interactive signal weight exploration |
+| `tier-visualization.html` | Score-to-tier mapping |
+| `pricing-calculator.html` | Premium calculation with ILF curves |
+| `workflow-animation.html` | Animated 14-step workflow |
+| `coverage-comparison.html` | Compare all 7 coverage types |
+
+### Legacy Dashboards (`/legacy`)
+
+Polished dashboard interfaces for presentations:
+
+| Dashboard | Description |
+|-|-|
+| `dsi_demo_dashboard.html` | Signal-level analysis |
+| `dsi_demo_workflow.html` | Workflow visualization |
+| `dsi_portfolio_dashboard.html` | Portfolio management |
 
 ## Contributing
 
