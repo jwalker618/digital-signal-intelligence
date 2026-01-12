@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|demonstration|
+
+---
+
 # DSI Examples
 
 Working examples demonstrating the DSI workflow for all 7 coverage types.
