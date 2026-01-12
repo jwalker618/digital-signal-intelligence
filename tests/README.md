@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|tests|
+
+---
+
 # Tests
 
 This folder contains end-to-end and system-level tests. Unit and integration tests for the main package are in `technical_pricing/tests/`.
