@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A new method of Technical Pricing in Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.3.0|
+|Date|January 2025|
+|Classification|demonstration|
+
+---
+
 # Legacy DSI Dashboards
 
 Interactive HTML dashboards for DSI visualization and analysis. These are standalone dashboards that can be opened directly in a web browser without requiring Python or a server.
