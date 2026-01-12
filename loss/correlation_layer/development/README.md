@@ -1,3 +1,14 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|loss|
+
+---
 # Loss Correlation Layer Implementation
 
 This folder contains the implementation specification and code for DSI Phase 16: Loss Signal Correlation Layer.
