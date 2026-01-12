@@ -1,10 +1,10 @@
 # ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-## A new method of Technical Pricing in Insurance
+## A New Information Substrate for Insurance
 
 | Item | Value |
 |-|-|
-|Version|0.3.0|
+|Version|0.1.0|
 |Date|January 2025|
 |Classification|demonstration|
 
