@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|exposure|
+
+---
+
 # Exposure Shadow Layer
 
 This folder contains the Exposure Shadow Layer implementation - a parallel processing path that infers exposure characteristics from observable signals.
