@@ -1,8 +1,5 @@
 # Phase 2: Reusable Categorizer Types
 
-## Status
-✅ Complete
-
 ## Purpose
 Provide a library of parameterised categorizer types to support consistent scoring logic across all coverages.
 
