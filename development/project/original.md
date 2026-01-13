@@ -110,36 +110,51 @@ The detailed whitepaper can be found here: `docs/overview/White Paper - Digital 
 │  │from APIs │    │normalize │    │category   │    │pipeline  │  │
 │  └──────────┘    └──────────┘    └───────────┘    └──────────┘  │
 │                                                                 │
-│  Uses discovered website for data extraction                    │
+│  Shared signal infrastructure - feeds all three assessment layers│
+└─────────────────────────────────────────────────────────────────┘
+                              │
+          ┌───────────────────┼───────────────────┐
+          │                   │                   │
+          ▼                   ▼                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              THREE-LAYER PARALLEL ASSESSMENT                    │
+│                                                                 │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐    │
+│  │  RISK SCORING   │ │ EXPOSURE SHADOW │ │ LOSS CORRELATION│    │
+│  │   (Steps 5-6)   │ │  LAYER (Ph 17)  │ │  LAYER (Ph 16)  │    │
+│  │                 │ │                 │ │                 │    │
+│  │ Composite score │ │ Exposure band   │ │ Loss propensity │    │
+│  │ + conditions    │ │ + complexity    │ │ + cohort        │    │
+│  │ → Risk Tier     │ │ → Exposure Band │ │ → Loss Modifier │    │
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘    │
+│          │                   │                   │              │
+│          └───────────────────┼───────────────────┘              │
+│                              │                                  │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      MODEL LAYER                                │
+│                      PRICING ENGINE                             │
 │                                                                 │
-│  ┌──────────┐    ┌──────────────────────────────────────────┐   │
-│  │CONFIG    │    │         PARALLEL SCORING                 │   │
-│  │MANAGER   │    │  ┌────────────┐    ┌─────────────────┐   │   │
-│  │Hash/store│ →  │  │RISK SCORER │    │LOSS CORRELATION │   │   │
-│  │validate  │    │  │            │    │SCORER (Phase 16)│   │   │
-│  └──────────┘    │  │Composite   │    │Propensity +     │   │   │
-│                  │  │+ conditions│    │Cohort + Monitor │   │   │
-│                  │  └────────────┘    └─────────────────┘   │   │
-│                  └──────────────────────────────────────────┘   │
-│                              │                                  │
-│                              ▼                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decl)│   │
-│  │  Risk Tier × Loss Propensity × Exposure → Final Premium  │   │
-│  └──────────────────────────────────────────────────────────┘   │
+│  ┌──────────┐                                                   │
+│  │CONFIG    │    Risk Tier × Exposure Band × Loss Modifier      │
+│  │MANAGER   │ →                    ↓                            │
+│  │Hash/store│    Base Premium → Modifiers → Limits → Decision   │
+│  └──────────┘                                                   │
+│                                                                 │
+│  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decline)    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      MODEL OUTPUT                               │
-│  Score → Conditions → Tier → Base Premium → Loss Modifier       │
-│                    → Limits → Decision (Approve/Refer/Decline)  │
-│  + Loss Propensity Score + Cohort Assignment + Monitoring       │
+│                                                                 │
+│  Risk Layer:     Score → Tier → Conditions → Referrals          │
+│  Exposure Layer: Exposure Band → Complexity Category → Range    │
+│  Loss Layer:     Propensity Score → Cohort → Trend → Alerts     │
+│                                                                 │
+│  Combined:       Final Premium → Decision (Approve/Refer/Decline)│
+│                  + Full audit trail across all three layers     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -147,7 +162,23 @@ The detailed whitepaper can be found here: `docs/overview/White Paper - Digital 
 
 ## Model Process Workflow
 
-The complete model execution follows this 14-step workflow (Step 0 discovery + Steps 1-13 pricing):
+The complete model execution follows this extended workflow (Step 0 discovery + Steps 1-13 pricing, with parallel assessment at Steps 5 and 9):
+
+```
+Steps 1-4: Setup & Signal Extraction
+     │
+     ▼
+Steps 5a/5b/5c: THREE-LAYER PARALLEL SCORING ←── Same signals, different weights
+     │
+     ▼
+Steps 6-8: Conditions & Overrides
+     │
+     ▼
+Steps 9a/9b/9c: CAPTURE ALL THREE LAYER OUTPUTS
+     │
+     ▼
+Steps 10-13: Pricing & Decision (uses all three layers)
+```
 
 ### Step 1: Model Configuration Instantiation
 
@@ -188,11 +219,29 @@ Configuration uses **Content-Addressable Storage (Hybrid)** pattern:
 
 - Execute all signal pipelines (Extractor → Aggregator → Categorizer → Inference)
 - Save all outputs to model data file
+- **Signal outputs feed all three assessment layers** (same data, different weighting)
 
-### Step 5: Pure Composite Score Calculation
+### Step 5: Three-Layer Parallel Assessment
 
-- Calculate weighted composite score (0-1000)
+All three assessment layers run **in parallel** using the same signal outputs:
+
+#### Step 5a: Risk Composite Score (Risk Layer)
+
+- Calculate weighted composite score (0-1000) using risk-specific weights
 - No conditions applied yet - pure signal-based score
+- Output: Risk score for tier determination
+
+#### Step 5b: Exposure Magnitude Score (Exposure Shadow Layer - Phase 17)
+
+- Calculate exposure score (0-100) using exposure-specific weights
+- Apply proxy tier hierarchy (direct → inferred → cohort)
+- Output: Exposure band + complexity category + confidence
+
+#### Step 5c: Loss Propensity Score (Loss Correlation Layer - Phase 16)
+
+- Calculate loss propensity score (0-100) using loss-correlated weights
+- Separate frequency and severity propensity
+- Output: Loss propensity band + cohort assignment + trend direction
 
 ### Step 6: Signal Conditions Evaluation
 
@@ -221,29 +270,54 @@ Evaluate responses to direct queries (boolean questions).
 - Apply the **maximum** (worst) tier override
 - Example: Score says Tier 2, conditions say Tier 3 and Tier 4 → apply Tier 4
 
-### Step 9: Final Tier Capture
+### Step 9: Final Layer Outputs Capture
+
+Capture final outputs from all three assessment layers:
+
+#### Step 9a: Final Risk Tier Capture
 
 - Final tier (after all overrides) captured in model data file
 - This is the tier used for premium calculation
 
+#### Step 9b: Final Exposure Band Capture (Phase 17)
+
+- Exposure band (micro/small/medium/large/very_large) captured
+- Complexity category (simple → extremely_complex) captured
+- Implied TIV range recorded for audit
+
+#### Step 9c: Final Loss Propensity Capture (Phase 16)
+
+- Loss propensity band (very_low → high) captured
+- Severity propensity band captured
+- Cohort assignment and trend direction recorded
+
 ### Step 10: Base Premium Generation
 
-As defined in YAML `tier_thresholds`:
+Premium calculation uses **all three layer outputs**:
 
-**Option A - Pure Premium:**
-
-```yaml
-tier_thresholds:
-  - tier: 1
-    base_premium: 10000
+```
+Base Premium = f(Risk Tier, Exposure Band, Loss Propensity)
 ```
 
-**Option B - Metric-Based:**
+**Pattern A - Multiplicative (Recommended):**
+
+```python
+tier_premium = tier_thresholds[risk_tier].base_premium
+exposure_modifier = exposure_band_modifiers[exposure_band]
+loss_modifier = loss_propensity_modifiers[loss_band]  # bounded by caps/floors
+
+base_premium = tier_premium * exposure_modifier * loss_modifier
+```
+
+**Pattern B - Grid-Based:**
 
 ```yaml
-tier_thresholds:
-  - tier: 1
-    rate: 0.005  # TIV * 0.5%
+pricing_grid:
+  tier_1:
+    small_exposure:
+      low_loss: 0.0035
+      moderate_loss: 0.0040
+      high_loss: 0.0050
 ```
 
 ### Step 11: Modifier Application
@@ -270,6 +344,11 @@ Final output for next steps:
 - **Approve** - `auto_approve = true`, within appetite, no referrals triggered
 - **Decline** - outside appetite (e.g., Tier 5 with decline rule, or hard decline condition)
 - **Refer** - `auto_approve = false`, requires underwriter review
+
+**Referral triggers from all three layers:**
+- Risk Layer: Tier override conditions, signal conditions
+- Exposure Layer: High exposure + low confidence, complexity threshold
+- Loss Layer: High loss propensity + high confidence, significant deterioration
 
 -----
 
@@ -436,28 +515,63 @@ Legend: ✅ Complete | 🔲 Not Started
 
 ## Planned Architecture Evolution
 
-As signals are now used across all three assessment layers (Risk, Exposure, Loss), a future restructuring will extract signals to the root level:
+**STATUS: CRITICAL PRIORITY** - This restructuring is the highest priority item. See [Outstanding Work](#outstanding-work).
+
+As signals are now used across all three assessment layers (Risk, Exposure, Loss), the architecture must be restructured to extract signals to the root level:
 
 ```
-# Future State (Planned)
+# Target State (Phase 18)
 digital-signal-intelligence/
-├── signals/                         # Shared signal infrastructure
+├── signals/                         # Shared signal infrastructure (extracted from technical_pricing/)
+│   ├── __init__.py
+│   ├── base.py
+│   ├── types.py
 │   ├── extractors/
+│   │   ├── base.py
+│   │   ├── stubs/
+│   │   └── production/
 │   ├── aggregators/
 │   ├── categorisers/
 │   ├── inference/
-│   └── routing/
+│   ├── routing/
+│   └── cross_walk/
 │
-├── layers/                          # Assessment layers
-│   ├── risk/                        # Current technical_pricing/model
+├── layers/                          # Assessment layer implementations
+│   ├── risk/                        # Current technical_pricing/model (renamed)
+│   │   ├── scorer.py
+│   │   ├── pricer.py
+│   │   ├── workflow.py
+│   │   └── modifiers/
 │   ├── exposure/                    # Phase 17 implementation
+│   │   ├── scorer.py
+│   │   ├── complexity.py
+│   │   └── band_mapper.py
 │   └── loss/                        # Phase 16 implementation
+│       ├── scorer.py
+│       ├── matrix.py
+│       └── monitoring.py
 │
-├── coverages/                       # Coverage configurations
-└── ...
+├── coverages/                       # Coverage configurations (extracted from technical_pricing/)
+│   ├── aerospace/config.yaml
+│   ├── cyber/config.yaml
+│   └── ...
+│
+├── api/                             # API layer (from technical_pricing/api/)
+├── analytics/                       # Analytics (from technical_pricing/analytics/)
+├── orchestration/                   # Orchestration (from technical_pricing/orchestration/)
+├── discovery/                       # Discovery (from technical_pricing/discovery/)
+├── integrations/                    # Integrations (from technical_pricing/integrations/)
+├── builder/                         # Builder (from technical_pricing/builder/)
+├── db/                              # Database (from technical_pricing/db/)
+│
+├── development/                     # Development documentation (unchanged)
+├── demo/                            # Demos (unchanged)
+├── deploy/                          # Deployment (unchanged)
+├── docs/                            # Documentation (unchanged)
+└── tests/                           # Tests (merged from technical_pricing/tests/ and root tests/)
 ```
 
-This restructuring will be addressed as part of Phase 18 or a subsequent refactoring effort.
+**Restructuring must be completed before implementing Phases 16 and 17** to avoid technical debt from building new layers in the wrong location.
 
 -----
 
@@ -564,6 +678,8 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 
 ## Critical Rules
 
+### Core Framework Rules
+
 1. **YAML is truth**: Never hardcode weights, thresholds, modifiers, or tier definitions
 1. **Extractors are stubs**: Randomized but structurally realistic, with TTL caching
 1. **Aggregators are production**: Must handle real data when extractors upgraded
@@ -576,13 +692,36 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 1. **Confidence matters**: Track data availability throughout pipeline
 1. **TTL varies by source**: Set appropriate `DEFAULT_TTL_SECONDS` per extractor
 1. **Auditability**: Every price must trace back to signals → scores → tier → premium
+
+### Workflow Rules
+
 1. **Conditions cannot modify premium**: Only tier override, referral, or note (Step 6)
 1. **Direct queries can modify premium**: Via modifiers applied after base premium (Step 7)
 1. **Maximum tier override wins**: When multiple overrides, apply worst tier (Step 8)
 1. **Every interaction is versioned**: Full audit trail via model versions (Step 2)
-1. **Loss correlation runs in parallel**: Same signals, different weights - runs alongside risk scoring (Phase 16)
+
+### Three-Layer Assessment Rules
+
+1. **Signals are shared infrastructure**: Same signal outputs feed all three assessment layers
+1. **Three layers run in parallel**: Risk, Exposure, Loss - not in sequence (Steps 5a/5b/5c)
+1. **Different weights per layer**: Same signals, layer-specific weighting schemes
+1. **All layers captured before pricing**: Steps 9a/9b/9c must complete before Step 10
+1. **Pricing uses all three outputs**: Risk Tier × Exposure Band × Loss Modifier → Premium
+
+### Loss Correlation Layer Rules (Phase 16)
+
 1. **Loss propensity has caps/floors**: Pricing impact bounded to prevent extreme adjustments
 1. **Cohorts are signal-derived**: Not industry codes - behavioral patterns define peer groups
+1. **Correlation direction matters**: Negative correlations inverted before scoring
+1. **Confidence gates pricing**: Low confidence prevents automatic pricing adjustments
+1. **Deterioration triggers action**: Trend monitoring is continuous, not just at renewal
+
+### Exposure Shadow Layer Rules (Phase 17)
+
+1. **Proxy tier determines confidence**: Direct observable > inferred > cohort > unknown
+1. **Output ranges, not points**: Acknowledge uncertainty with bounded estimates
+1. **High exposure + low confidence = referral**: Prevent auto-pricing uncertain large risks
+1. **Complexity multiplies exposure**: More complex structures require higher pricing adjustment
 
 -----
 
@@ -594,17 +733,27 @@ This section consolidates all pending, optional, and planned work items. Complet
 
 | Item | Phase | Priority | Notes |
 |------|-------|----------|-------|
+| **Restructure: Extract signals to root level** | 18 | **Critical** | Signals now feed all three layers. See [Planned Architecture Evolution](#planned-architecture-evolution) |
+| Implement Phase 16 (Loss Correlation Layer) | 16 | High | Specification complete. See `loss/correlation_layer/development/` |
+| Implement Phase 17 (Exposure Shadow Layer) | 17 | High | Specification complete. See `exposure/shadow_layer/development/` |
 | Tag v1.0.0 release | 14 | High | Awaiting final validation |
+| Add unit tests for critical modules | - | High | Test coverage at ~12.6% |
 | Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Medium | See `development/extractor_implementation_plan.md` |
 | Fix remaining config typos (inference_utility_function) | - | Medium | 23 function name typos |
-| Add unit tests for critical modules | - | High | Test coverage at ~12.6% |
 
-### Planned Phases (Not Started)
+### Restructuring Rationale
 
-| Phase | Description | Specification |
-|-------|-------------|---------------|
-| 16 - Loss Correlation Layer | Loss propensity scoring, cohort analysis, monitoring | `loss/correlation_layer/development/` |
-| 17 - Exposure Shadow Layer | Exposure magnitude estimation, complexity scoring | `exposure/shadow_layer/development/` |
+The current architecture has signals nested within `technical_pricing/signals/`. However, the three-layer assessment model means signals are now a **shared infrastructure** feeding:
+
+1. **Risk Layer** - existing risk scoring (Steps 5a, 9a)
+2. **Exposure Shadow Layer** - Phase 17 (Steps 5b, 9b)
+3. **Loss Correlation Layer** - Phase 16 (Steps 5c, 9c)
+
+Implementing Phases 16 and 17 before restructuring will create technical debt. The restructuring should:
+- Extract `signals/` to repository root
+- Create `layers/` directory for assessment layer implementations
+- Update all imports and references
+- Ensure all tests pass after migration
 
 ### Optional Enhancements
 
