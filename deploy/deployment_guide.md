@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|deployment|
+
+---
+
 # DSI Deployment Guide
 
 Complete guide for deploying the Digital Signal Intelligence platform to production.
@@ -23,7 +35,7 @@ Complete guide for deploying the Digital Signal Intelligence platform to product
 ### Required Software
 
 | Software | Version | Purpose |
-|----------|---------|---------|
+|-|-|-|
 | Python | 3.10+ | Runtime |
 | PostgreSQL | 14+ | Primary database |
 | Redis | 7+ | Caching & sessions |
@@ -34,7 +46,7 @@ Complete guide for deploying the Digital Signal Intelligence platform to product
 ### Required Accounts/Services
 
 | Service | Purpose | Required For |
-|---------|---------|--------------|
+|-|-|-|
 | AWS/GCP/Azure | Cloud infrastructure | Production |
 | Container Registry | Image storage | Production |
 | SSL Labs API | TLS scanning | Real extractors |
@@ -72,7 +84,7 @@ Complete guide for deploying the Digital Signal Intelligence platform to product
 ### Component Responsibilities
 
 | Component | Replicas | Purpose |
-|-----------|----------|---------|
+|-|-|-|
 | DSI API | 3+ | Request handling, workflow execution |
 | PostgreSQL | 1 primary + 1 replica | Submissions, quotes, audit logs |
 | Redis | 3 (cluster) | Signal caching, session storage |
@@ -359,7 +371,7 @@ psql -h localhost -U dsi_user -d dsi_db -c "VACUUM ANALYZE;"
 ### Health Checks
 
 | Endpoint | Purpose | Expected Response |
-|----------|---------|-------------------|
+|-|-|-|
 | `/api/v1/health` | Full health check | `{"status": "healthy"}` |
 | `/api/v1/health/live` | Liveness probe | `{"alive": true}` |
 | `/api/v1/health/ready` | Readiness probe | `{"ready": true}` |
@@ -386,7 +398,7 @@ scrape_configs:
 ### Key Metrics to Monitor
 
 | Metric | Description | Alert Threshold |
-|--------|-------------|-----------------|
+|-|-|-|
 | `request_count` | Total API requests | N/A (info) |
 | `request_latency_p99` | 99th percentile latency | > 2s |
 | `error_rate` | 5xx error rate | > 1% |
@@ -619,7 +631,7 @@ kubectl set env deployment/dsi-api DSI_DEBUG=false -n dsi-prod
 ### Daily Operations
 
 | Task | Command | Frequency |
-|------|---------|-----------|
+|-|-|--|
 | Check health | `curl /api/v1/health` | Hourly |
 | Review error logs | `kubectl logs -l app=dsi-api \| grep ERROR` | Daily |
 | Check disk usage | `df -h` on database server | Daily |
@@ -628,7 +640,7 @@ kubectl set env deployment/dsi-api DSI_DEBUG=false -n dsi-prod
 ### Weekly Operations
 
 | Task | Command | Notes |
-|------|---------|-------|
+|-|-|-|
 | Rotate logs | Automatic with logrotate | Verify rotation |
 | Database vacuum | `VACUUM ANALYZE;` | Off-peak hours |
 | Review metrics | Grafana dashboard | Check trends |
@@ -688,7 +700,7 @@ helm rollback dsi-api 1 -n dsi-prod
 ### Contacts
 
 | Role | Contact | Escalation |
-|------|---------|------------|
+|-|-|-|
 | On-call Engineer | PagerDuty | Automatic |
 | Platform Lead | Slack #dsi-platform | Manual |
 | Security | security@company.com | For breaches |
@@ -700,7 +712,7 @@ helm rollback dsi-api 1 -n dsi-prod
 ### Resource Sizing
 
 | Environment | API Replicas | CPU | Memory | Database |
-|-------------|--------------|-----|--------|----------|
+|-|-|-|--|-|
 | Development | 1 | 0.5 | 512Mi | Local |
 | Staging | 2 | 1 | 1Gi | db.t3.medium |
 | Production | 3+ | 2 | 2Gi | db.r6g.large |
@@ -708,7 +720,7 @@ helm rollback dsi-api 1 -n dsi-prod
 ### Version Compatibility
 
 | DSI Version | Python | PostgreSQL | Redis |
-|-------------|--------|------------|-------|
+|-|-|-|-|
 | 0.2.x | 3.10-3.12 | 14-16 | 7.x |
 | 0.1.x | 3.10-3.11 | 14-15 | 6.x |
 
