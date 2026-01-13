@@ -2,28 +2,31 @@
 
 ## name: dsi-framework
 
-description: Digital Signal Intelligence (DSI) insurance pricing framework. Use this skill when working on DSI project code including extractors, aggregators, categorizers, inference functions, signal processing, YAML config interpretation, or any technical model development. Triggers on mentions of DSI, signal architecture, coverage configs, technical pricing, or insurance underwriting automation.
+description: Digital Signal Intelligence (DSI) insurance pricing framework. Use this skill when working on any aspect of DSI project code.
 
 # DSI Framework Development Guide
 
 ## Implementation Status
 
-| Phase | Name | Status | Key Deliverables |
-|-------|------|--------|------------------|
-| 1-3 | Foundation | ✅ Complete | Types, base classes, signal architecture |
-| 4 | Config-Driven Model | ✅ Complete | YAML configs, ConfigManager, 7 coverages |
-| 5 | Scoring Engine | ✅ Complete | Scorer, composite scoring, confidence |
-| 6 | Discovery Integration | ✅ Complete | Website discovery, Step 0 integration |
-| 7 | Traditional Modifiers | ✅ Complete | Loss history, exposure, external ratings |
-| 8 | Analytics Engine | ✅ Complete | Performance, signal, portfolio analytics |
-| 9 | Test Profiles | ✅ Complete | Validation scenarios, edge cases |
-| 10 | Multi-Coverage | ✅ Complete | Orchestration, locale detection, aggregation |
-| 11 | Production API | ✅ Complete | FastAPI, routes, auth modules |
-| 12 | Integration Layer | ✅ Complete | Email, documents, webhooks |
-| 13 | LLM Builder | ✅ Complete | Coverage builder, signal library |
-| 14 | Examples | ✅ Complete | Working examples for all 7 coverages |
-| 15 | Production Extractors | ✅ Complete | 50 free extractors, routing module, routed inference |
-| 16 | Loss Signal Correlation | 🔲 Not Started | Loss propensity scoring, cohort analysis, continuous monitoring |
+| Phase | Name | Status | Development documentation |
+|-|-|-|-|
+| 1 | Foundation | ✅ Complete |  `development/project/phase_1.md` |
+| 2 | Reusable Categorizer Types | ✅ Complete |  `development/project/phase_2.md` |
+| 3 | Coverage Implementations | ✅ Complete | | `development/project/phase_3.md` |
+| 4 | Config-Driven Model | ✅ Complete |  `development/project/phase_4.md` |
+| 5 | Scoring Engine | ✅ Complete |  `development/project/phase_5.md` |
+| 6 | Discovery Integration | ✅ Complete |  `development/project/phase_6.md` |
+| 7 | Traditional Modifiers | ✅ Complete |  `development/project/phase_7.md` |
+| 8 | Analytics Engine | ✅ Complete |  `development/project/phase_8.md` |
+| 9 | Test Profiles | ✅ Complete |  `development/project/phase_9.md` |
+| 10 | Multi-Coverage | ✅ Complete |  `development/project/phase_10.md` |
+| 11 | Production API | ✅ Complete |  `development/project/phase_11.md` |
+| 12 | Integration Layer | ✅ Complete |  `development/project/phase_12.md` |
+| 13 | LLM Builder | ✅ Complete |  `development/project/phase_13.md` |
+| 14 | Examples | ✅ Complete |  `development/project/phase_14.md` |
+| 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
+| 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
+| 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
 
 **Current State**: Core framework complete and validated. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Comprehensive repository review completed January 2026.
 
@@ -74,12 +77,12 @@ Key principles:
 ┌─────────────────────────────────────────────────────────────────┐
 │                   DISCOVERY MODULE (Step 0)                     │
 │                                                                 │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐                 │
-│  │SEARCH    │ →  │VALIDATE  │ →  │IDENTIFY   │                 │
-│  │          │    │          │    │           │                 │
-│  │Find      │    │Corporate │    │Primary    │                 │
-│  │candidates│    │website   │    │website    │                 │
-│  └──────────┘    └──────────┘    └───────────┘                 │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐                  │
+│  │SEARCH    │ →  │VALIDATE  │ →  │IDENTIFY   │                  │
+│  │          │    │          │    │           │                  │
+│  │Find      │    │Corporate │    │Primary    │                  │
+│  │candidates│    │website   │    │website    │                  │
+│  └──────────┘    └──────────┘    └───────────┘                  │
 │                                                                 │
 │  Output: Discovered website URL + confidence + identity         │
 └─────────────────────────────────────────────────────────────────┘
@@ -95,12 +98,12 @@ Key principles:
 ┌─────────────────────────────────────────────────────────────────┐
 │                    SIGNAL ARCHITECTURE                          │
 │                                                                 │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐ │
-│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE │ │
-│  │          │    │          │    │           │    │          │ │
-│  │Raw data  │    │Structure/│    │Score or   │    │Orchestrat│ │
-│  │from APIs │    │normalize │    │category   │    │pipeline  │ │
-│  └──────────┘    └──────────┘    └───────────┘    └──────────┘ │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐  │
+│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE │  │
+│  │          │    │          │    │           │    │          │  │
+│  │Raw data  │    │Structure/│    │Score or   │    │Orchestrat│  │
+│  │from APIs │    │normalize │    │category   │    │pipeline  │  │
+│  └──────────┘    └──────────┘    └───────────┘    └──────────┘  │
 │                                                                 │
 │  Uses discovered website for data extraction                    │
 └─────────────────────────────────────────────────────────────────┘
@@ -109,21 +112,21 @@ Key principles:
 ┌─────────────────────────────────────────────────────────────────┐
 │                      MODEL LAYER                                │
 │                                                                 │
-│  ┌──────────┐    ┌──────────────────────────────────────────┐  │
-│  │CONFIG    │    │         PARALLEL SCORING                  │  │
-│  │MANAGER   │    │  ┌────────────┐    ┌─────────────────┐   │  │
-│  │Hash/store│ →  │  │RISK SCORER │    │LOSS CORRELATION │   │  │
-│  │validate  │    │  │            │    │SCORER (Phase 16)│   │  │
-│  └──────────┘    │  │Composite   │    │Propensity +     │   │  │
-│                  │  │+ conditions│    │Cohort + Monitor │   │  │
-│                  │  └────────────┘    └─────────────────┘   │  │
-│                  └──────────────────────────────────────────┘  │
+│  ┌──────────┐    ┌──────────────────────────────────────────┐   │
+│  │CONFIG    │    │         PARALLEL SCORING                 │   │
+│  │MANAGER   │    │  ┌────────────┐    ┌─────────────────┐   │   │
+│  │Hash/store│ →  │  │RISK SCORER │    │LOSS CORRELATION │   │   │
+│  │validate  │    │  │            │    │SCORER (Phase 16)│   │   │
+│  └──────────┘    │  │Composite   │    │Propensity +     │   │   │
+│                  │  │+ conditions│    │Cohort + Monitor │   │   │
+│                  │  └────────────┘    └─────────────────┘   │   │
+│                  └──────────────────────────────────────────┘   │
 │                              │                                  │
 │                              ▼                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decl) │  │
-│  │  Risk Tier × Loss Propensity × Exposure → Final Premium   │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decl)│   │
+│  │  Risk Tier × Loss Propensity × Exposure → Final Premium  │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -262,126 +265,6 @@ Final output for next steps:
 - **Approve** - `auto_approve = true`, within appetite, no referrals triggered
 - **Decline** - outside appetite (e.g., Tier 5 with decline rule, or hard decline condition)
 - **Refer** - `auto_approve = false`, requires underwriter review
-
------
-
-## Implementation Status
-
-### ✅ Phase 1: Foundation (COMPLETE)
-
-All base infrastructure is built and tested:
-
-|Component                       |File                           |Status    |
-|--------------------------------|-------------------------------|----------|
-|Core Data Types                 |`signals/types.py`             |✅ Complete|
-|Abstract Base Classes           |`signals/base.py`              |✅ Complete|
-|StubExtractor (with TTL caching)|`signals/extractors/base.py`   |✅ Complete|
-|ProductionAggregator            |`signals/aggregators/base.py`  |✅ Complete|
-|ProductionCategorizer           |`signals/categorizers/base.py` |✅ Complete|
-|Inference Registry              |`signals/inference/registry.py`|✅ Complete|
-
-### ✅ Phase 2: Reusable Categorizer Types (COMPLETE)
-
-12 parameterized categorizer types ready for use in `signals/categorizers/types/`.
-
-### ✅ Phase 3: Coverage Implementation (COMPLETE - ALL 7 COVERAGES)
-
-|Coverage               |Extractors|Aggregators|Inference|Status    |
-|-----------------------|----------|-----------|---------|----------|
-|Aerospace              |21        |26         |41       |✅ Complete|
-|Cyber                  |35        |35         |38       |✅ Complete|
-|D&O                    |46        |46         |47       |✅ Complete|
-|Energy                 |44        |44         |46       |✅ Complete|
-|Financial Institutions |~40       |~40        |~42      |✅ Complete|
-|Marine                 |~38       |~38        |~40      |✅ Complete|
-|Professional Indemnity |~35       |~35        |~38      |✅ Complete|
-|Common (cross-coverage)|7         |7          |-        |✅ Complete|
-|**Total**              |**~266**  |**~271**   |**~292** |          |
-
-### ✅ Phase 4: Model Integration (COMPLETE)
-
-Complete model layer implementing the 14-step workflow:
-
-|Component              |File                      |Status    |
-|-----------------------|--------------------------|----------|
-|Core Data Types        |`model/types.py`          |✅ Complete|
-|Config Manager         |`model/config_manager.py` |✅ Complete|
-|Model Data Manager     |`model/model_data.py`     |✅ Complete|
-|Model Scorer (4-6)     |`model/scorer.py`         |✅ Complete|
-|Query Evaluator (7)    |`model/query_evaluator.py`|✅ Complete|
-|Model Pricer (8-12)    |`model/pricer.py`         |✅ Complete|
-|Workflow Engine (1-13) |`model/workflow.py`       |✅ Complete|
-
-### ✅ Phase 5: Testing & Validation (COMPLETE)
-
-Comprehensive test suite:
-
-|Test Type              |Location                           |Status    |
-|-----------------------|-----------------------------------|----------|
-|Config Manager Tests   |`tests/unit/test_config_manager.py`|✅ Complete|
-|Model Data Tests       |`tests/unit/test_model_data.py`    |✅ Complete|
-|Scorer Tests           |`tests/unit/test_scorer.py`        |✅ Complete|
-|Query Evaluator Tests  |`tests/unit/test_query_evaluator.py`|✅ Complete|
-|Pricer Tests           |`tests/unit/test_pricer.py`        |✅ Complete|
-|Workflow Tests         |`tests/unit/test_workflow.py`      |✅ Complete|
-|Integration Tests      |`tests/integration/`               |✅ Complete|
-
-### ✅ Phase 6: Discovery Integration (COMPLETE)
-
-Website discovery integrated into workflow as Step 0:
-
-|Component                       |File                           |Status    |
-|--------------------------------|-------------------------------|----------|
-|Discovery Types                 |`model/types.py`               |✅ Complete|
-|Enhanced InferenceContext       |`signals/types.py`             |✅ Complete|
-|Workflow Discovery Integration  |`model/workflow.py`            |✅ Complete|
-|Discovery Engine                |`discovery/website_discovery.py`|✅ Complete|
-
------
-
-## Production Roadmap
-
-Core framework phases (1-15) are complete. Phase 16 (Loss Signal Correlation Layer) is specified and ready for implementation.
-
-### ✅ Phase 7: Traditional Pricing Integration (COMPLETE)
-
-Traditional actuarial modifiers in `model/modifiers/`: loss_history.py, exposure.py, external_rating.py.
-
-### ✅ Phase 8: Performance Monitoring & Analytics (COMPLETE)
-
-Full analytics suite in `analytics/`: performance.py, tuning.py, cohorts.py.
-
-### ✅ Phase 9: Portfolio Analytics (COMPLETE)
-
-Portfolio analytics in `analytics/`: portfolio.py, workflow_analytics.py, signal_analytics.py.
-
-### ✅ Phase 10: Multi-Coverage Orchestration (COMPLETE)
-
-Multi-coverage support with locale detection and configuration-based orchestration.
-
-### ✅ Phase 11: Production API (COMPLETE)
-
-FastAPI implementation in `api/`: routes, auth (JWT + API key), middleware.
-
-### ✅ Phase 12: Integration Layer (COMPLETE)
-
-Integrations in `integrations/`: email parsing, document processing, webhooks.
-
-### ✅ Phase 13: LLM Coverage Builder (COMPLETE)
-
-Coverage builder in `builder/`: coverage_builder.py, validator.py.
-
-### ✅ Phase 14: Complete Examples & Final Validation (COMPLETE)
-
-Working examples for all 7 coverages in `examples/`. Live demo in `demo/`. Deployment configs in `deploy/`.
-
-### ✅ Phase 15: Production Extractors & Signal Routing (COMPLETE)
-
-50 free production extractors in `signals/extractors/production/`. Jurisdiction-aware routing module in `signals/routing/`. 13 routed inference functions for multi-source aggregation.
-
-### 🔲 Phase 16: Loss Signal Correlation Layer (SPECIFICATION COMPLETE)
-
-Loss propensity scoring, cohort-based analysis, and continuous monitoring in `model/loss_correlation/`. Extends DSI from risk quality assessment to loss prediction. Full specification in `loss/correlation_layer/`.
 
 -----
 
