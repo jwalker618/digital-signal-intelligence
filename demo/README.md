@@ -98,7 +98,7 @@ Monitor demo usage:
 The demo server exposes the following REST API:
 
 | Endpoint | Method | Description |
-|----------|--------|-------------|
+|-|-|-|
 | `/` | GET | Main demo page |
 | `/api/info` | GET | Server info and statistics |
 | `/api/coverages` | GET | List available coverages |
@@ -131,7 +131,7 @@ curl http://localhost:8080/api/coverages
 ### Environment Variables
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+|-|-|-|
 | `DEMO_PORT` | `8080` | Server port |
 | `DEMO_HOST` | `0.0.0.0` | Server host |
 
@@ -161,7 +161,7 @@ The demo includes pre-configured sample companies:
 ### Tier System
 
 | Tier | Score Range | Description |
-|------|-------------|-------------|
+|-|-|-|
 | 1 | 0-20 | Preferred risk |
 | 2 | 21-40 | Standard plus |
 | 3 | 41-60 | Standard |
@@ -281,28 +281,21 @@ The demo server allows all origins by default. For production, configure proper 
 
 ## Additional Demos
 
-### Standalone HTML Demos (`/standalone`)
+### HTML Demos (`/html_dashboards`)
 
 No-install interactive demos that work directly in your browser:
 
 | Demo | Description |
 |-|-|
 | `index.html` | Portal to all standalone demos |
-| `signal-scoring.html` | Interactive signal weight exploration |
-| `tier-visualization.html` | Score-to-tier mapping |
-| `pricing-calculator.html` | Premium calculation with ILF curves |
-| `workflow-animation.html` | Animated 14-step workflow |
-| `coverage-comparison.html` | Compare all 7 coverage types |
-
-### Legacy Dashboards (`/legacy`)
-
-Polished dashboard interfaces for presentations:
-
-| Dashboard | Description |
-|-|-|
-| `dsi_demo_dashboard.html` | Signal-level analysis |
-| `dsi_demo_workflow.html` | Workflow visualization |
-| `dsi_portfolio_dashboard.html` | Portfolio management |
+| `signal_scoring.html` | Interactive signal weight exploration |
+| `tier_visualization.html` | Score-to-tier mapping |
+| `pricing_calculator.html` | Premium calculation with ILF curves |
+| `workflow_animation.html` | Animated 14-step workflow |
+| `coverage_comparison.html` | Compare all 7 coverage types |
+| `dashboard.html` | Signal-level analysis |
+| `workflow.html` | Workflow visualization |
+| `portfolio_dashboard.html` | Portfolio management |
 
 ## Contributing
 
