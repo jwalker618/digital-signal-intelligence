@@ -52,3 +52,4 @@ This folder contains all DSI documentation including overviews, and case studies
 
 # Deployment
 All deployment artefacts and documentation can be found here:
+`deploy/`
