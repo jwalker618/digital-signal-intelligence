@@ -10,14 +10,14 @@
 
 ---
 
-# Legacy DSI Dashboards
+# HTML Dashboards
 
 Interactive HTML dashboards for DSI visualization and analysis. These are standalone dashboards that can be opened directly in a web browser without requiring Python or a server.
 
 ## Available Dashboards
 
 | Dashboard | Description | Use Case |
-|-----------|-------------|----------|
+|-|-|-|
 | `dsi_demo_dashboard.html` | Signal-level analysis dashboard | Explore individual signal scores and contributions |
 | `dsi_demo_workflow.html` | Workflow visualization dashboard | Understand the 14-step DSI workflow |
 | `dsi_portfolio_dashboard.html` | Portfolio management interface | Analyze portfolio-level risk distribution |
