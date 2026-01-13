@@ -40,7 +40,3 @@ Each coverage includes a full signal pipeline: extraction, aggregation, categori
 ## Validation Notes
 - All 7 demo applications validated
 - 23 function name typos remain (non-blocking)
-
-## Next Steps
-- Fix remaining config typos
-- Add paid extractors (Phase 15.6)
