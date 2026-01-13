@@ -66,96 +66,96 @@ Digital Signal Intelligence (DSI) is insurance underwriting based on **observabl
 
 All Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
 
-The detailed whitepaper can be found here: `docs/overview/White Paper - Digital Signal Intelligence.docx`
+The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital Signal Intelligence.docx`
 
 -----
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     SUBMISSION INPUT                            │
-│     Company name, domain hint, coverage, TIV, limits            │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                     SUBMISSION INPUT                             │
+│     Company name, domain hint, coverage, TIV, limits             │
+└──────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   DISCOVERY MODULE (Step 0)                     │
-│                                                                 │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐                  │
-│  │SEARCH    │ →  │VALIDATE  │ →  │IDENTIFY   │                  │
-│  │          │    │          │    │           │                  │
-│  │Find      │    │Corporate │    │Primary    │                  │
-│  │candidates│    │website   │    │website    │                  │
-│  └──────────┘    └──────────┘    └───────────┘                  │
-│                                                                 │
-│  Output: Discovered website URL + confidence + identity         │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                   DISCOVERY MODULE (Step 0)                      │
+│                                                                  │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐                   │
+│  │SEARCH    │ →  │VALIDATE  │ →  │IDENTIFY   │                   │
+│  │          │    │          │    │           │                   │
+│  │Find      │    │Corporate │    │Primary    │                   │
+│  │candidates│    │website   │    │website    │                   │
+│  └──────────┘    └──────────┘    └───────────┘                   │
+│                                                                  │
+│  Output: Discovered website URL + confidence + identity          │
+└──────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        YAML CONFIG                              │
-│     Single source of truth for coverage model definition        │
-│   (weights, modifiers, tiers, direct queries, conditions)       │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        YAML CONFIG                               │
+│     Single source of truth for coverage model definition         │
+│   (weights, modifiers, tiers, direct queries, conditions)        │
+└──────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    SIGNAL ARCHITECTURE                          │
-│                                                                 │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐  │
-│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE │  │
-│  │          │    │          │    │           │    │          │  │
-│  │Raw data  │    │Structure/│    │Score or   │    │Orchestrat│  │
-│  │from APIs │    │normalize │    │category   │    │pipeline  │  │
-│  └──────────┘    └──────────┘    └───────────┘    └──────────┘  │
-│                                                                 │
+┌──────────────────────────────────────────────────────────────────┐
+│                    SIGNAL ARCHITECTURE                           │
+│                                                                  │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐   │
+│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE │   │
+│  │          │    │          │    │           │    │          │   │
+│  │Raw data  │    │Structure/│    │Score or   │    │Orchestrat│   │
+│  │from APIs │    │normalize │    │category   │    │pipeline  │   │
+│  └──────────┘    └──────────┘    └───────────┘    └──────────┘   │
+│                                                                  │
 │  Shared signal infrastructure - feeds all three assessment layers│
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
                               │
           ┌───────────────────┼───────────────────┐
           │                   │                   │
           ▼                   ▼                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              THREE-LAYER PARALLEL ASSESSMENT                    │
-│                                                                 │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐    │
-│  │  RISK SCORING   │ │ EXPOSURE SHADOW │ │ LOSS CORRELATION│    │
-│  │   (Steps 5-6)   │ │  LAYER (Ph 17)  │ │  LAYER (Ph 16)  │    │
-│  │                 │ │                 │ │                 │    │
-│  │ Composite score │ │ Exposure band   │ │ Loss propensity │    │
-│  │ + conditions    │ │ + complexity    │ │ + cohort        │    │
-│  │ → Risk Tier     │ │ → Exposure Band │ │ → Loss Modifier │    │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘    │
-│          │                   │                   │              │
-│          └───────────────────┼───────────────────┘              │
-│                              │                                  │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│              THREE-LAYER PARALLEL ASSESSMENT                     │
+│                                                                  │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐     │
+│  │  RISK SCORING   │ │ EXPOSURE SHADOW │ │ LOSS CORRELATION│     │
+│  │   (Steps 5-6)   │ │  LAYER (Ph 17)  │ │  LAYER (Ph 16)  │     │
+│  │                 │ │                 │ │                 │     │
+│  │ Composite score │ │ Exposure band   │ │ Loss propensity │     │
+│  │ + conditions    │ │ + complexity    │ │ + cohort        │     │
+│  │ → Risk Tier     │ │ → Exposure Band │ │ → Loss Modifier │     │
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘     │
+│          │                   │                   │               │
+│          └───────────────────┼───────────────────┘               │
+│                              │                                   │
+└──────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      PRICING ENGINE                             │
-│                                                                 │
-│  ┌──────────┐                                                   │
-│  │CONFIG    │    Risk Tier × Exposure Band × Loss Modifier      │
-│  │MANAGER   │ →                    ↓                            │
-│  │Hash/store│    Base Premium → Modifiers → Limits → Decision   │
-│  └──────────┘                                                   │
-│                                                                 │
-│  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decline)    │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      PRICING ENGINE                              │
+│                                                                  │
+│  ┌──────────┐                                                    │
+│  │CONFIG    │    Risk Tier × Exposure Band × Loss Modifier       │
+│  │MANAGER   │ →                    ↓                             │
+│  │Hash/store│    Base Premium → Modifiers → Limits → Decision    │
+│  └──────────┘                                                    │ 
+│                                                                  │
+│  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decline)     │
+└──────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      MODEL OUTPUT                               │
-│                                                                 │
-│  Risk Layer:     Score → Tier → Conditions → Referrals          │
-│  Exposure Layer: Exposure Band → Complexity Category → Range    │
-│  Loss Layer:     Propensity Score → Cohort → Trend → Alerts     │
-│                                                                 │
+┌──────────────────────────────────────────────────────────────────┐
+│                      MODEL OUTPUT                                │
+│                                                                  │
+│  Risk Layer:     Score → Tier → Conditions → Referrals           │
+│  Exposure Layer: Exposure Band → Complexity Category → Range     │
+│  Loss Layer:     Propensity Score → Cohort → Trend → Alerts      │
+│                                                                  │
 │  Combined:       Final Premium → Decision (Approve/Refer/Decline)│
-│                  + Full audit trail across all three layers     │
-└─────────────────────────────────────────────────────────────────┘
+│                  + Full audit trail across all three layers      │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 -----
