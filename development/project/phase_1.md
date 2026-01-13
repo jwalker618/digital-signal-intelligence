@@ -1,8 +1,5 @@
 # Phase 1: Foundation
 
-## Status
-✅ Complete
-
 ## Purpose
 Establish the core data types, abstract classes, and base signal-processing architecture that all subsequent phases rely on.
 
@@ -43,6 +40,3 @@ This phase defines the fundamental building blocks of the DSI signal architectur
 - All imports validated (Jan 2026)
 - No circular dependencies
 - Caching behaviour confirmed
-
-## Next Steps
-- None — foundation is stable and complete.
