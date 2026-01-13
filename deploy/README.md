@@ -14,7 +14,7 @@
 
 This directory contains production deployment configurations for the DSI platform.
 
-For the complete deployment guide, see: [docs/deployment/deployment_guide.md](../docs/deployment/deployment_guide.md)
+For the complete deployment guide, see: [deploy/deployment_guide.md](../deploy/deployment_guide.md)
 
 ## Directory Structure
 
@@ -38,6 +38,15 @@ deploy/
 ```
 
 ## Quick Start
+
+### Local Development
+
+```bash
+# From repository root
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn technical_pricing.api.main:app --reload --port 8000
+```
 
 ### Docker Compose (Simplest)
 
@@ -102,7 +111,7 @@ kubectl apply -f monitoring/prometheus-config.yaml
 Key variables (see `.env.example` for full list):
 
 | Variable | Required | Description |
-|----------|----------|-------------|
+|-|-|-|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `REDIS_URL` | Yes | Redis connection string |
 | `JWT_SECRET_KEY` | Yes | JWT signing secret (generate with `openssl rand -hex 32`) |
@@ -126,10 +135,19 @@ echo -n "your-jwt-secret" | base64
 The API exposes health endpoints:
 
 | Endpoint | Purpose |
-|----------|---------|
+|-|-|
 | `/api/v1/health` | Full health status |
 | `/api/v1/health/ready` | Kubernetes readiness probe |
 | `/api/v1/health/live` | Kubernetes liveness probe |
+
+## Other
+
+The API for other relevant endpoints:
+
+| Endpoint | Purpose |
+|-|-|
+| `/api/v1/metrics` | Prometheus metrics |
+| `/api/docs` | OpenAPI documentation |
 
 ## Scaling
 
@@ -220,3 +238,16 @@ kubectl scale deployment dsi-api -n dsi --replicas=5
 - Enable TLS for all external traffic
 - Restrict database access to API pods only
 - Rotate JWT secrets periodically
+
+### Checklist
+
+Before production deployment:
+
+- [ ] Generate unique JWT secret (256-bit)
+- [ ] Configure TLS certificates
+- [ ] Restrict CORS origins
+- [ ] Enable rate limiting
+- [ ] Set up network policies
+- [ ] Configure audit logging
+- [ ] Disable debug mode
+
