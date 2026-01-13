@@ -18,9 +18,9 @@ Interactive HTML dashboards for DSI visualization and analysis. These are standa
 
 | Dashboard | Description | Use Case |
 |-|-|-|
-| `dsi_demo_dashboard.html` | Signal-level analysis dashboard | Explore individual signal scores and contributions |
-| `dsi_demo_workflow.html` | Workflow visualization dashboard | Understand the 14-step DSI workflow |
-| `dsi_portfolio_dashboard.html` | Portfolio management interface | Analyze portfolio-level risk distribution |
+| `dashboard.html` | Signal-level analysis dashboard | Explore individual signal scores and contributions |
+| `workflow.html` | Workflow visualization dashboard | Understand the 14-step DSI workflow |
+| `portfolio_dashboard.html` | Portfolio management interface | Analyse portfolio-level risk distribution |
 
 ## Usage
 
