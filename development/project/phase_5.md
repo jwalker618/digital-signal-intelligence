@@ -1,8 +1,5 @@
 # Phase 5: Testing & Validation
 
-## Status
-✅ Complete
-
 ## Purpose
 Establish a comprehensive automated test suite covering all core model components, ensuring correctness, stability, and regression protection.
 
@@ -14,32 +11,54 @@ Establish a comprehensive automated test suite covering all core model component
 ## Implementation Summary
 This phase introduces a structured test suite covering the Config Manager, Model Data Manager, Scorer, Query Evaluator, Pricer, and Workflow Engine. Integration tests validate the entire 14‑step workflow across all coverages.
 
-## Detailed Implementation
-### Test Suite Summary
-| Test Type | Location | Status |
-|-|-|-|
-| Config Manager Tests | `tests/unit/test_config_manager.py` | Complete |
-| Model Data Tests | `tests/unit/test_model_data.py` | Complete |
-| Scorer Tests | `tests/unit/test_scorer.py` | Complete |
-| Query Evaluator Tests | `tests/unit/test_query_evaluator.py` | Complete |
-| Pricer Tests | `tests/unit/test_pricer.py` | Complete |
-| Workflow Tests | `tests/unit/test_workflow.py` | Complete |
-| Integration Tests | `tests/integration/` | Complete |
+## Detailed Plan
 
-### Notes
-- All core Python imports validated (Jan 2026)
-- YAML syntax errors corrected
-- 32 API endpoints validated and functional
+### 5.1 Unit Tests
 
-## File Locations
-- `tests/unit/`
-- `tests/integration/`
+```
+tests/
+├── unit/
+│   ├── test_config_manager.py    # Hash generation, storage, loading
+│   ├── test_model_data.py        # Version creation, retrieval
+│   ├── test_scorer.py            # Composite calculation, conditions
+│   ├── test_query_evaluator.py   # Query impact evaluation
+│   ├── test_pricer.py            # Premium calculation, modifiers
+│   └── test_workflow.py          # End-to-end orchestration
+```
 
-## Validation Notes
-- Test coverage currently ~12.6%  
-  → Critical modules (extractors, aggregators, inference functions) still need tests.
+### 5.2 Integration Tests
 
-## Next Steps
-- Increase test coverage to 60–80%  
-- Add extractor/inference regression tests  
-- Add property‑based tests for scoring and pricing
+Using YAML `test_profiles`:
+
+```yaml
+test_profiles:
+  - name: "excellent_risk_auto_approve"
+    inputs:
+      entity_type: "major_carrier"
+      direct_queries:
+        bankruptcy_filed: false
+        sanctions_exposure: false
+    expected:
+      tier: 1
+      decision: "approve"
+      auto_approve: true
+      
+  - name: "referral_trigger"
+    inputs:
+      entity_type: "startup"
+      direct_queries:
+        bankruptcy_filed: true
+    expected:
+      decision: "refer"
+      auto_approve: false
+      referral_reasons: ["bankruptcy_filed"]
+```
+
+### 5.3 Workflow Tests
+
+- **Happy path**: Full approve flow
+- **Referral flow**: Trigger → review → approve/decline
+- **Tier override**: Multiple conditions, max applied
+- **Missing inputs**: Proper rejection with field list
+- **Version tracking**: Multiple versions for same model
+
