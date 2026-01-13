@@ -672,6 +672,6 @@ From historical loss analysis across 11 major cases:
 
 | Document | Location | Purpose |
 |----------|----------|---------|
-| Historical Loss Analysis | `development_docs/historical_loss_analysis.md` | Case-by-case DSI signal mapping |
-| Signal Mapping | `development_docs/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
+| Historical Loss Analysis | `development/historical_loss_analysis.md` | Case-by-case DSI signal mapping |
+| Signal Mapping | `development/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
 | Retrospective Case Studies | `docs/case_studies/retrospective_loss_case_studies.pdf` | Comprehensive loss analysis report |
