@@ -65,6 +65,8 @@ Key principles:
 
 All Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
 
+The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital Signal Intelligence.docx`
+
 -----
 
 ## Architecture Overview
