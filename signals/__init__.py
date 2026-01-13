@@ -1,3 +1,4 @@
+"""DSI Signals - Shared signal infrastructure for all assessment layers."""
 """
 DSI Signal Architecture
 
