@@ -23,6 +23,3 @@ Categorizer types allow raw extracted data to be mapped into structured categori
 ## Validation Notes
 - All categorizer types validated in integration tests
 - No missing imports or config mismatches
-
-## Next Steps
-- Extend with additional categorizer types if required by Phase 16 (Loss Correlation)
