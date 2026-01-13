@@ -12,7 +12,7 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 |-|-|-|-|
 | 1 | Foundation | ✅ Complete |  `development/project/phase_1.md` |
 | 2 | Reusable Categorizer Types | ✅ Complete |  `development/project/phase_2.md` |
-| 3 | Coverage Implementations | ✅ Complete | | `development/project/phase_3.md` |
+| 3 | Coverage Implementations | ✅ Complete | `development/project/phase_3.md` |
 | 4 | Config-Driven Model | ✅ Complete |  `development/project/phase_4.md` |
 | 5 | Scoring Engine | ✅ Complete |  `development/project/phase_5.md` |
 | 6 | Discovery Integration | ✅ Complete |  `development/project/phase_6.md` |
