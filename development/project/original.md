@@ -43,7 +43,7 @@ When starting any DSI work:
 | 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
 | 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
 
-**Current State**: Core framework complete and validated. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Comprehensive repository review completed January 2026.
+**Current State**: Core framework complete and validated. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Exposure Shadow Layer specification complete (Phase 17). Comprehensive repository review completed January 2026.
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -56,13 +56,7 @@ When starting any DSI work:
 - ⚠️ Test coverage at ~12.6% (critical modules need unit tests)
 - ⚠️ 23 function name typos in configs (runtime warnings, not failures)
 
-**Next Steps for Production**:
-1. **HIGH PRIORITY**: Add unit tests for extractors, aggregators, and inference functions
-2. Implement paid extractors (Shodan, VirusTotal, D&B) - see Phase 15.6
-3. Fix remaining config typos (inference_utility_function spelling errors)
-4. Deploy production monitoring and alerting
-5. **Phase 16**: Implement Loss Signal Correlation Layer for loss propensity scoring
-6. Tag v1.0.0 release
+**Next Steps**: See [Outstanding Work](#outstanding-work) section for consolidated pending, planned, and optional items.
 
 ---
 
@@ -72,7 +66,7 @@ Digital Signal Intelligence (DSI) is insurance underwriting based on **observabl
 
 All Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
 
-The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital Signal Intelligence.docx`
+The detailed whitepaper can be found here: `docs/overview/White Paper - Digital Signal Intelligence.docx`
 
 -----
 
@@ -279,194 +273,191 @@ Final output for next steps:
 
 -----
 
-## File Structure (Complete)
+## File Structure (Current)
 
 ```
-technical_pricing/
-├── __init__.py
-├── coverages/
-│   ├── aerospace/config.yaml        ✅
-│   ├── cyber/config.yaml            ✅
-│   ├── do/config.yaml               ✅
-│   ├── energy/config.yaml           ✅
-│   ├── fi/config.yaml               ✅
-│   ├── marine/config.yaml           ✅
-│   └── pi/config.yaml               ✅
-├── signals/
+# Repository Root
+digital-signal-intelligence/
+├── SKILL.md                         # This document (development guide)
+├── README.md                        # Project overview
+├── CHANGELOG.md                     # Version history
+├── CONTRIBUTING.md                  # Contribution guidelines
+├── pyproject.toml                   # Python project configuration
+├── requirements.txt                 # Production dependencies
+├── requirements-dev.txt             # Development dependencies
+├── setup.py                         # Package setup
+├── Dockerfile                       # Container definition
+├── docker-compose.yml               # Multi-container orchestration
+│
+├── docs/                            # Documentation
+│   ├── overview/
+│   │   ├── Foundational Principles.md    # Core DSI principles
+│   │   └── White Paper - Digital Signal Intelligence.docx  # Detailed whitepaper
+│   ├── agent_interaction/
+│   │   └── dsi_specification.md     # Agent integration spec
+│   └── case_studies/                # Loss case studies
+│
+├── development/                     # Development documentation
+│   ├── project/                     # Phase documents
+│   │   ├── phase_1.md ... phase_17.md   # Implementation phases
+│   │   └── original.md              # Master SKILL document
+│   ├── historical_loss_analysis.md  # Loss analysis
+│   ├── signal_mapping_to_historical_loss.md
+│   ├── retrospective_case_study_detail.md
+│   ├── retrospective_case_study_executive_summary.md
+│   ├── retrospective_methodology.md
+│   ├── client_assessment_samples.md
+│   └── extractor_implementation_plan.md
+│
+├── technical_pricing/               # Core framework
 │   ├── __init__.py
-│   ├── base.py                      ✅ Base classes
-│   ├── types.py                     ✅ Data structures
+│   ├── coverages/                   # Coverage configurations
+│   │   ├── aerospace/config.yaml    ✅
+│   │   ├── cyber/config.yaml        ✅
+│   │   ├── do/config.yaml           ✅
+│   │   ├── energy/config.yaml       ✅
+│   │   ├── fi/config.yaml           ✅
+│   │   ├── marine/config.yaml       ✅
+│   │   └── pi/config.yaml           ✅
+│   │
+│   ├── signals/                     # Signal architecture
+│   │   ├── __init__.py
+│   │   ├── base.py                  ✅ Base classes
+│   │   ├── types.py                 ✅ Data structures
+│   │   ├── extractors/
+│   │   │   ├── base.py              ✅ StubExtractor + utilities
+│   │   │   ├── stubs/               ✅ Coverage-specific stub extractors
+│   │   │   │   ├── common.py        ✅ Cross-coverage extractors
+│   │   │   │   ├── aerospace/       ✅ cyber/ do/ energy/ fi/ marine/ pi/
+│   │   │   └── production/          ✅ PHASE 15 - 50 free extractors
+│   │   │       ├── base.py          ✅ ProductionExtractor base
+│   │   │       ├── factory.py       ✅ Stub/production switching
+│   │   │       ├── config.py        ✅ API key configuration
+│   │   │       ├── dns/             ✅ http/ network/ sec/ regulatory/
+│   │   │       ├── sanctions/       ✅ security/ industry/ corporate/
+│   │   │       ├── environment/     ✅ maritime/
+│   │   ├── aggregators/
+│   │   │   ├── base.py              ✅ ProductionAggregator
+│   │   │   ├── routing_bridges.py   ✅ PHASE 15.7 (6 bridge classes)
+│   │   │   └── implementations/     ✅ Coverage-specific aggregators
+│   │   ├── categorisers/            # Note: British spelling
+│   │   │   ├── base.py              ✅ ProductionCategorizer
+│   │   │   └── types/               ✅ threshold_bucket, boolean_score, etc.
+│   │   ├── inference/
+│   │   │   ├── registry.py          ✅ Function registration
+│   │   │   └── functions/           ✅ Coverage-specific + routed/
+│   │   ├── routing/                 ✅ PHASE 15
+│   │   │   ├── router.py            ✅ JurisdictionRouter
+│   │   │   ├── schemas.py           ✅ Unified output schemas
+│   │   │   ├── multi_source.py      ✅ MultiSourceAggregator + RoutingCache
+│   │   │   ├── sanctions_aggregator.py  ✅
+│   │   │   └── corporate_aggregator.py  ✅
+│   │   └── cross_walk/
+│   │       └── by_coverage.json     ✅ Coverage crosswalk mappings
+│   │
+│   ├── discovery/                   ✅ PHASE 6
+│   │   └── website_discovery.py     ✅ Discovery engine
+│   │
+│   ├── model/                       ✅ PHASE 4
+│   │   ├── types.py                 ✅ All dataclasses
+│   │   ├── config_manager.py        ✅ Config hashing/storage
+│   │   ├── model_data.py            ✅ Model data file management
+│   │   ├── scorer.py                ✅ Steps 4-6
+│   │   ├── query_evaluator.py       ✅ Step 7
+│   │   ├── pricer.py                ✅ Steps 8-12
+│   │   ├── workflow.py              ✅ Full orchestration + Step 0
+│   │   └── modifiers/               ✅ PHASE 7
+│   │       ├── base.py              ✅ loss_history.py exposure.py external_rating.py
+│   │
+│   ├── analytics/                   ✅ PHASE 8-9
+│   │   ├── types.py                 ✅ portfolio_types.py
+│   │   ├── performance.py           ✅ cohorts.py tuning.py
+│   │   ├── portfolio.py             ✅ workflow_analytics.py signal_analytics.py
+│   │
+│   ├── orchestration/               ✅ PHASE 10
+│   │   ├── types.py                 ✅ multi_coverage.py
+│   │   ├── locale_detection.py      ✅ aggregator.py
+│   │
+│   ├── api/                         ✅ PHASE 11
+│   │   ├── main.py                  ✅ FastAPI application
+│   │   ├── types.py                 ✅ API types
+│   │   ├── routes/                  ✅ analytics.py submissions.py referrals.py quotes.py
+│   │   ├── auth/                    ✅ jwt_auth.py api_key.py
+│   │   └── middleware/              ✅ Rate limiting, logging
+│   │
+│   ├── integrations/                ✅ PHASE 12
+│   │   ├── types.py                 ✅ email/ documents/ webhooks/
+│   │
+│   ├── builder/                     ✅ PHASE 13
+│   │   ├── coverage_builder.py      ✅ validator.py
+│   │   ├── signal_library.py        ✅ types.py
+│   │
+│   ├── db/                          ✅ Database layer
+│   │   ├── models.py                ✅ repositories.py config.py
+│   │
+│   └── tests/                       ✅ Unit and integration tests
+│       ├── conftest.py              ✅ unit/ integration/
+│
+├── exposure/                        # Exposure Shadow Layer (PHASE 17)
+│   └── shadow_layer/
+│       └── development/             ✅ Specification documents
+│           ├── README.md
+│           ├── plan.md              ✅ Full implementation plan
+│           ├── executive_briefing.md ✅ Executive summary
+│           └── actuarial_validation.md ✅ Validation requirements
+│
+├── loss/                            # Loss Correlation Layer (PHASE 16)
+│   └── correlation_layer/
+│       └── development/             ✅ Specification documents
+│           ├── README.md
+│           ├── plan.md              ✅ Full implementation plan
+│           └── specification.txt    ✅ Technical specification
+│
+├── demo/                            ✅ Live demos
+│   ├── server.py                    ✅ FastAPI demo server
+│   ├── examples/                    ✅ PHASE 14 + 15
+│   │   ├── run_aerospace.py ... run_pi.py  ✅ Coverage examples
+│   │   ├── run_multi.py             ✅ Multi-coverage example
+│   │   └── run_hybrid.py            ✅ PHASE 15.7 - Routing demo
+│   └── html_dashboards/             ✅ Interactive HTML demos
+│
+├── deploy/                          ✅ Deployment configs
+│   └── kubernetes/                  ✅ K8s manifests
+│
+└── tests/                           ✅ Top-level test suite
+    ├── unit/                        ✅ test_traditional_modifiers.py etc.
+    ├── integration/                 ✅ test_integrations.py
+    └── api/                         ✅ test_api.py
+```
+
+Legend: ✅ Complete | 🔲 Not Started
+
+-----
+
+## Planned Architecture Evolution
+
+As signals are now used across all three assessment layers (Risk, Exposure, Loss), a future restructuring will extract signals to the root level:
+
+```
+# Future State (Planned)
+digital-signal-intelligence/
+├── signals/                         # Shared signal infrastructure
 │   ├── extractors/
-│   │   ├── __init__.py
-│   │   ├── base.py                  ✅ StubExtractor + utilities
-│   │   ├── stubs/
-│   │   │   ├── __init__.py
-│   │   │   ├── common.py            ✅ Cross-coverage extractors
-│   │   │   ├── aerospace/           ✅ 21 extractors
-│   │   │   ├── cyber/               ✅ 35 extractors
-│   │   │   ├── do/                  ✅ 46 extractors
-│   │   │   ├── energy/              ✅ 44 extractors
-│   │   │   ├── fi/                  ✅ ~40 extractors
-│   │   │   ├── marine/              ✅ ~38 extractors
-│   │   │   └── pi/                  ✅ ~35 extractors
-│   │   └── production/              ✅ PHASE 15
-│   │       ├── __init__.py          ✅ Factory + registration
-│   │       ├── base.py              ✅ ProductionExtractor base
-│   │       ├── factory.py           ✅ Stub/production switching
-│   │       ├── config.py            ✅ API key configuration
-│   │       ├── dns/                 ✅ 4 extractors (SPF, DKIM, DNSSEC, WHOIS)
-│   │       ├── http/                ✅ 2 extractors (headers, security.txt)
-│   │       ├── network/             ✅ 4 extractors (cloud, CDN, WAF, TLS)
-│   │       ├── sec/                 ✅ 5 extractors (EDGAR, SEDAR+)
-│   │       ├── regulatory/          ✅ 9 extractors (OFAC, EPA, FCA, etc.)
-│   │       ├── sanctions/           ✅ 10 extractors (OpenSanctions, MDBs)
-│   │       ├── security/            ✅ 2 extractors (NVD, HHS)
-│   │       ├── industry/            ✅ 2 extractors (PCAOB, aviation)
-│   │       ├── corporate/           ✅ 5 extractors (CH, OpenCorp, GLEIF)
-│   │       ├── environment/         ✅ 2 extractors (EEA, NPRI)
-│   │       └── maritime/            ✅ 2 extractors (IMO, IOSA)
 │   ├── aggregators/
-│   │   ├── __init__.py
-│   │   ├── base.py                  ✅ ProductionAggregator
-│   │   ├── routing_bridges.py       ✅ PHASE 15.7 (6 bridge classes)
-│   │   └── implementations/
-│   │       ├── __init__.py
-│   │       ├── common.py            ✅ Cross-coverage
-│   │       ├── aerospace/           ✅ 26 aggregators
-│   │       ├── cyber/               ✅ 35 aggregators
-│   │       ├── do/                  ✅ 46 aggregators
-│   │       ├── energy/              ✅ 44 aggregators
-│   │       ├── fi/                  ✅ ~40 aggregators
-│   │       ├── marine/              ✅ ~38 aggregators
-│   │       └── pi/                  ✅ ~35 aggregators
-│   ├── categorizers/
-│   │   ├── __init__.py
-│   │   ├── base.py                  ✅ ProductionCategorizer
-│   │   └── types/
-│   │       ├── __init__.py
-│   │       ├── threshold_bucket.py  ✅
-│   │       ├── boolean_score.py     ✅
-│   │       ├── weighted_composite.py ✅
-│   │       └── category_mapper.py   ✅
+│   ├── categorisers/
 │   ├── inference/
-│   │   ├── __init__.py
-│   │   ├── registry.py              ✅
-│   │   └── functions/
-│   │       ├── __init__.py
-│   │       ├── registry.py          ✅ Function registration
-│   │       ├── aerospace/           ✅ 41 functions
-│   │       ├── cyber/               ✅ 38 functions
-│   │       ├── do/                  ✅ 47 functions
-│   │       ├── energy/              ✅ 46 functions
-│   │       ├── fi/                  ✅ ~42 functions
-│   │       ├── marine/              ✅ ~40 functions
-│   │       ├── pi/                  ✅ ~38 functions
-│   │       └── routed/              ✅ PHASE 15.7 (13 functions)
-│   │           ├── __init__.py      ✅ register_all()
-│   │           └── signals.py       ✅ Multi-source inference functions
-│   └── routing/                     ✅ PHASE 15
-│       ├── __init__.py              ✅ Package exports
-│       ├── router.py                ✅ JurisdictionRouter + tier system
-│       ├── schemas.py               ✅ Unified output schemas
-│       ├── multi_source.py          ✅ MultiSourceAggregator + RoutingCache
-│       ├── sanctions_aggregator.py  ✅ Sanctions multi-source
-│       └── corporate_aggregator.py  ✅ Corporate multi-source
-├── discovery/                       ✅ PHASE 6
-│   ├── __init__.py                  ✅ Package exports
-│   └── website_discovery.py         ✅ Discovery engine
-├── model/                           ✅ PHASE 4
-│   ├── __init__.py
-│   ├── types.py                     ✅ All dataclasses
-│   ├── config_manager.py            ✅ Config hashing/storage
-│   ├── model_data.py                ✅ Model data file management
-│   ├── scorer.py                    ✅ Steps 4-6
-│   ├── query_evaluator.py           ✅ Step 7
-│   ├── pricer.py                    ✅ Steps 8-12
-│   ├── workflow.py                  ✅ Full orchestration + Step 0
-│   ├── modifiers/                   ✅ PHASE 7
-│   │   ├── base.py                  ✅ TraditionalModifier base
-│   │   ├── loss_history.py          ✅ Experience rating
-│   │   ├── exposure.py              ✅ Exposure adjustments
-│   │   └── external_rating.py       ✅ Credit/financial ratings
-│   └── loss_correlation/            🔲 PHASE 16 (Specification Complete)
-│       ├── __init__.py              🔲 Package exports
-│       ├── types.py                 🔲 LossPropensityResult, enums
-│       ├── scorer.py                🔲 LossCorrelationScorer
-│       ├── matrix.py                🔲 CorrelationMatrixManager
-│       ├── monitoring.py            🔲 LossMonitoringEngine
-│       └── integration.py           🔲 Pricing integration patterns
-├── analytics/                       ✅ PHASE 8-9
-│   ├── types.py                     ✅ Metrics types
-│   ├── performance.py               ✅ Performance tracking
-│   ├── cohorts.py                   ✅ Cohort analysis
-│   ├── tuning.py                    ✅ Model tuning
-│   ├── portfolio.py                 ✅ Portfolio management
-│   ├── workflow_analytics.py        ✅ Workflow metrics
-│   └── signal_analytics.py          ✅ Signal analysis
-├── orchestration/                   ✅ PHASE 10
-│   ├── types.py                     ✅ Orchestration types
-│   ├── multi_coverage.py            ✅ Multi-coverage orchestrator
-│   ├── locale_detection.py          ✅ Locale detection
-│   └── aggregator.py                ✅ Result aggregation
-├── api/                             ✅ PHASE 11
-│   ├── main.py                      ✅ FastAPI application
-│   ├── types.py                     ✅ API types
-│   ├── routes/                      ✅ Endpoint modules
-│   ├── auth/                        ✅ JWT + API key auth
-│   └── middleware/                  ✅ Rate limiting, logging
-├── integrations/                    ✅ PHASE 12
-│   ├── types.py                     ✅ Integration types
-│   ├── email/                       ✅ Email parsing
-│   ├── documents/                   ✅ Document processing
-│   └── webhooks/                    ✅ Webhook manager
-├── builder/                         ✅ PHASE 13
-│   ├── coverage_builder.py          ✅ Coverage builder
-│   └── validator.py                 ✅ Config validation
-├── db/                              ✅ Database layer
-│   ├── models.py                    ✅ SQLAlchemy models
-│   ├── repositories.py              ✅ Data access layer
-│   └── session.py                   ✅ Session management
-└── tests/                           ✅ PHASE 5
-    ├── conftest.py                  ✅ Test configuration
-    ├── unit/                        ✅ Unit tests
-    ├── integration/                 ✅ Integration tests
-    └── api/                         ✅ API tests
-
-# Additional directories (at repo root):
-examples/                            ✅ PHASE 14 + 15
-├── run_aerospace.py                 ✅ Aerospace example
-├── run_cyber.py                     ✅ Cyber example
-├── run_do.py                        ✅ D&O example
-├── run_energy.py                    ✅ Energy example
-├── run_fi.py                        ✅ Financial Institutions example
-├── run_marine.py                    ✅ Marine example
-├── run_pi.py                        ✅ Professional Indemnity example
-├── run_multi.py                     ✅ Multi-coverage example
-└── run_hybrid.py                    ✅ PHASE 15.7 - Routing/hybrid demo
-
-demo/                                ✅ Live demos
-├── server.py                        ✅ FastAPI demo server
-├── index.html                       ✅ Interactive dashboard
-└── standalone/                      ✅ No-install HTML demos
-    ├── index.html                   ✅ Demo gallery
-    ├── signal-scoring.html          ✅ Signal weight explorer
-    ├── tier-visualization.html      ✅ Score-to-tier mapping
-    ├── pricing-calculator.html      ✅ Premium calculation
-    ├── workflow-animation.html      ✅ 14-step workflow animation
-    └── coverage-comparison.html     ✅ Coverage comparison
-
-deploy/                              ✅ Deployment configs
-├── docker-compose.yml               ✅ Docker Compose
-├── kubernetes/                      ✅ K8s manifests
-└── DEPLOYMENT.md                    ✅ Deployment guide
-
-loss/                                ✅ Loss analysis specifications
-└── correlation_layer/               ✅ PHASE 16 specifications
-    ├── development_plan.md          ✅ Implementation plan
-    └── loss_signal_correlation_layer_specification.txt  ✅ Full specification
+│   └── routing/
+│
+├── layers/                          # Assessment layers
+│   ├── risk/                        # Current technical_pricing/model
+│   ├── exposure/                    # Phase 17 implementation
+│   └── loss/                        # Phase 16 implementation
+│
+├── coverages/                       # Coverage configurations
+└── ...
 ```
 
-Legend: ✅ Complete | 🔲 Not Started (Specification Complete)
+This restructuring will be addressed as part of Phase 18 or a subsequent refactoring effort.
 
 -----
 
@@ -595,78 +586,48 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 
 -----
 
-## Recommended Signal Enhancements
+## Outstanding Work
 
-Based on retrospective analysis of major insurance losses (2019-2024), the following signal enhancements are recommended as part of Phase 16 implementation. See `/development_docs/` for full analysis.
+This section consolidates all pending, optional, and planned work items. Completed items are tracked in their respective phase documents.
 
-### Priority 1: Marine Operational Readiness Signals
+### Mandatory Pending Items
 
-From Baltimore/Dali analysis - traditional DSI signals scored the vessel as standard risk, but operational issues were observable:
+| Item | Phase | Priority | Notes |
+|------|-------|----------|-------|
+| Tag v1.0.0 release | 14 | High | Awaiting final validation |
+| Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Medium | See `development/extractor_implementation_plan.md` |
+| Fix remaining config typos (inference_utility_function) | - | Medium | 23 function name typos |
+| Add unit tests for critical modules | - | High | Test coverage at ~12.6% |
 
-```yaml
-# Proposed addition to marine/config.yaml
-signal_features:
-  operational_readiness:
-    - name: port_state_control_deficiencies
-      weight: 0.10
-      data_source: equasis_api
-      refresh_frequency: voyage
-    - name: pre_departure_systems_status
-      weight: 0.08
-      data_source: port_authority_integration
-      conditions:
-        - condition_type: equals
-          condition_value: false
-          action: referral
-          reason: "Pre-voyage systems check failed or incomplete"
-```
+### Planned Phases (Not Started)
 
-### Priority 2: Aerospace Supply Chain Quality Signals
+| Phase | Description | Specification |
+|-------|-------------|---------------|
+| 16 - Loss Correlation Layer | Loss propensity scoring, cohort analysis, monitoring | `loss/correlation_layer/development/` |
+| 17 - Exposure Shadow Layer | Exposure magnitude estimation, complexity scoring | `exposure/shadow_layer/development/` |
 
-From Boeing 737 MAX analysis - supply chain and certification disclosure gaps:
+### Optional Enhancements
 
-```yaml
-# Proposed addition to aerospace/config.yaml
-signal_features:
-  certification_quality:
-    - name: certification_transparency
-      weight: 0.10
-      components:
-        - pilot_training_changes_disclosed: 0.3
-        - system_failure_modes_documented: 0.4
-        - operational_limitations_published: 0.3
-  supply_chain_quality:
-    - name: component_supplier_audit_status
-      data_source: oem_supplier_database
-    - name: parts_provenance_verification
-      data_source: blockchain_registry
-```
+| Item | Phase | Description |
+|------|-------|-------------|
+| ML module | 8 | Gradient boosting, anomaly detection, clustering |
+| Performance dashboards | 8 | Visualization of model performance |
+| Natural language search | 9 | Query portfolio with natural language |
+| Visualization components | 9 | Interactive charts and dashboards |
+| SignalLibrary | 13 | Reusable signal component library |
+| CodeGenerator | 13 | Automated code generation for new signals |
+| LLM prompts | 13 | Prompt templates for coverage building |
+| Builder CLI | 13 | Command-line interface for builder |
 
-### Priority 3: Cross-Coverage Real-Time Regulatory Monitoring
+### Signal Enhancement Recommendations
 
-From SVB, BP Deepwater analysis - regulatory actions were observable signals:
+Based on retrospective analysis of major insurance losses (2019-2024). See `development/` for full analysis.
 
-```yaml
-# Proposed cross-coverage enhancement
-cross_coverage:
-  regulatory_monitoring:
-    - name: enforcement_action_feed
-      data_source: regulatory_api_aggregator
-      refresh_frequency: daily
-      alert_threshold: any_new_action
-```
-
-### Signal Effectiveness Summary
-
-From historical loss analysis across 11 major cases:
-
-| Signal Type | Effectiveness | Cases Caught |
-|-------------|---------------|--------------|
-| Absence Signals | 95% | FTX, Shadow Fleet, SVB (CRO) |
-| Regulatory Actions | 90% | SVB, BP Deepwater |
-| Safety History | 85% | BP Deepwater, Costa Concordia |
-| Governance Signals | 80% | FTX, SVB |
-| Network Authority | 75% | FTX, Signature, Shadow Fleet |
+| Priority | Area | Description | Reference |
+|----------|------|-------------|-----------|
+| 1 | Marine | Port state control deficiencies, pre-departure systems status | Baltimore/Dali analysis |
+| 2 | Aerospace | Certification transparency, supply chain quality | Boeing 737 MAX analysis |
+| 3 | Cross-Coverage | Real-time regulatory monitoring | SVB, BP Deepwater analysis |
 
 ### Reference Documents
 
@@ -674,4 +635,5 @@ From historical loss analysis across 11 major cases:
 |----------|----------|---------|
 | Historical Loss Analysis | `development/historical_loss_analysis.md` | Case-by-case DSI signal mapping |
 | Signal Mapping | `development/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
-| Retrospective Case Studies | `docs/case_studies/retrospective_loss_case_studies.pdf` | Comprehensive loss analysis report |
+| Retrospective Case Studies | `development/retrospective_case_study_detail.md` | Comprehensive loss analysis |
+| Client Assessment Samples | `development/client_assessment_samples.md` | Real-world assessment examples |
