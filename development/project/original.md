@@ -63,6 +63,8 @@ Key principles:
 - Absence is signal (missing expected presence)
 - Signal → Score → Tier → Price (auditable flow)
 
+All Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
+
 -----
 
 ## Architecture Overview
