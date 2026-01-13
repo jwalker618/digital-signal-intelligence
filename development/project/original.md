@@ -6,6 +6,21 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 
 # DSI Framework Development Guide
 
+## Development Workflow
+
+When starting any DSI work:
+
+1. **Read this SKILL.md first**
+1. **Follow the link to the Development documentation indicated in Implementation Status. If this cannot be found, it must be  created first**
+1. **Review development/project/ for the relevant items**: Contains phase development plans
+1. **Reference YAML config** for the coverage you're working on
+1. **Follow the standard patterns** - don't invent new structures
+1. **Follow the 14-step workflow** - don't skip or reorder steps
+1. **Never hardcode** - if it's in YAML, read it from YAML
+1. **Check technical_pricing/cross_walk/by_coverage.json** for common concepts
+1. **For loss correlation work**: Review `loss/correlation_layer/development/` specification documents
+1. **For exposure shadow work**: Review `exposure/shadow_layer/development/` specification documents
+
 ## Implementation Status
 
 | Phase | Name | Status | Development documentation |
@@ -660,18 +675,3 @@ From historical loss analysis across 11 major cases:
 | Historical Loss Analysis | `development_docs/historical_loss_analysis.md` | Case-by-case DSI signal mapping |
 | Signal Mapping | `development_docs/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
 | Retrospective Case Studies | `docs/case_studies/retrospective_loss_case_studies.pdf` | Comprehensive loss analysis report |
-
------
-
-## Development Workflow
-
-When starting any DSI work:
-
-1. **Read this SKILL.md first**
-1. **Check coverage_crosswalk.json** for common concepts
-1. **Reference YAML config** for the coverage you're working on
-1. **Follow the standard patterns** - don't invent new structures
-1. **Never hardcode** - if it's in YAML, read it from YAML
-1. **For loss correlation work**: Review `loss/correlation_layer/` specification documents
-1. **Review development_docs/**: Contains implementation plans and historical analysis
-1. **Follow the 14-step workflow** - don't skip or reorder steps
