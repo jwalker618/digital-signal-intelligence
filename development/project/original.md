@@ -55,14 +55,6 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 
 Digital Signal Intelligence (DSI) is insurance underwriting based on **observable digital signals** rather than self-reported documentation. Core insight: who trusts/partners/certifies an entity reveals risk quality more reliably than what they claim about themselves.
 
-Key principles:
-
-- All primary signals externally observable (no cooperation required)
-- Machine-readable, no subjective judgment
-- Network authority (PageRank-style) over self-reporting
-- Absence is signal (missing expected presence)
-- Signal → Score → Tier → Price (auditable flow)
-
 All Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
 
 The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital Signal Intelligence.docx`
