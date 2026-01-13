@@ -24,6 +24,9 @@ Interactive HTML demonstrations that work directly in any web browser without re
 | `pricing-calculator.html` | Premium calculation with ILF curves | Explore pricing mechanics |
 | `workflow-animation.html` | Animated 14-step workflow | Understand DSI workflow |
 | `coverage-comparison.html` | Compare all 7 coverage types | See signal weight differences |
+| `dashboard.html` | Signal-level analysis dashboard | Explore individual signal scores and contributions |
+| `workflow.html` | Workflow visualization dashboard | Understand the 14-step DSI workflow |
+| `portfolio_dashboard.html` | Portfolio management interface | Analyse portfolio-level risk distribution |
 
 ## Usage
 
@@ -58,4 +61,4 @@ Or navigate to the file in your file browser and double-click it.
 ## Related
 
 - `/demo/server.py` - Live demo server with actual workflow
-- `/demo/legacy/` - Polished dashboard interfaces
+
