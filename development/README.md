@@ -7,13 +7,13 @@ This folder contains internal planning documents, validation studies, and implem
 ### Implementation Plans
 
 | Document | Purpose | Referenced By |
-|----------|---------|---------------|
+|-|-|-|
 | `extractor_implementation_plan.md` | **Master document** for production extractor implementation. Contains API pricing, cost estimates, implementation timeline, and technical architecture. | SKILL.md Phase 15 |
 
 ### Historical Loss Analysis
 
 | Document | Purpose | Coverage Areas |
-|----------|---------|----------------|
+|-|-|-|
 | `historical_loss_analysis.md` | Case-by-case analysis of major insurance losses (2019-2024) demonstrating DSI's predictive power | FI, Marine, Energy, Aerospace |
 | `signal_mapping_to_historical_loss.md` | Technical mapping of DSI signal paths to observable indicators from each case | All coverages |
 
@@ -22,18 +22,18 @@ These documents provide the evidence base for the "Recommended Signal Enhancemen
 ### Cyber Retrospective Validation
 
 | Document | Purpose | Cases Covered |
-|----------|---------|---------------|
-| `dsi_retrospective_case_study_detail.md` | Detailed cyber incident validation using pre-breach signals | SolarWinds, Colonial Pipeline, Equifax, Change Healthcare, 23andMe, MOVEit |
-| `dsi_retrospective_case_study_executive_summary.md` | Executive summary of cyber validation results | Same 6 cases |
-| `dsi_retrospective_methodology.md` | Methodology defense document for actuarial/regulatory review | N/A (methodology focus) |
+|-|-|-|
+| `retrospective_case_study_detail.md` | Detailed cyber incident validation using pre-breach signals | SolarWinds, Colonial Pipeline, Equifax, Change Healthcare, 23andMe, MOVEit |
+| `retrospective_case_study_executive_summary.md` | Executive summary of cyber validation results | Same 6 cases |
+| `retrospective_methodology.md` | Methodology defense document for actuarial/regulatory review | N/A (methodology focus) |
 
 These documents focus specifically on **Cyber coverage** validation, complementing the broader cross-coverage analysis in `docs/case_studies/retrospective_loss_case_studies.pdf`.
 
 ### Client Assessment Samples
 
 | Document | Purpose | Companies Assessed |
-|----------|---------|-------------------|
-| `dsi_client_assessment_samples.md` | Sample DSI assessments using real-world entities | Petrobras (Tier 2), PEMEX (Tier 4), Boeing (Tier 3) |
+|-|-|-|
+| `client_assessment_samples.md` | Sample DSI assessments using real-world entities | Petrobras (Tier 2), PEMEX (Tier 4), Boeing (Tier 3) |
 
 This document demonstrates how DSI scoring differentiates risk quality using externally observable signals.
 
@@ -58,7 +58,7 @@ docs/case_studies/retrospective_loss_case_studies.pdf
 ## Usage
 
 1. **For extractor implementation**: Start with `extractor_implementation_plan.md`
-2. **For methodology questions**: Reference `dsi_retrospective_methodology.md`
+2. **For methodology questions**: Reference `retrospective_methodology.md`
 3. **For signal enhancement work**: See `historical_loss_analysis.md` and `signal_mapping_to_historical_loss.md`
 4. **For validation evidence**: Use cyber retrospective documents and client assessments
 
