@@ -24,7 +24,7 @@ pip install -r requirements.txt
 ## Available Examples
 
 | Script | Coverage | Description |
-|--------|----------|-------------|
+|-|-|-|
 | `run_aerospace.py` | Aerospace | Aviation and space industry assessment |
 | `run_cyber.py` | Cyber | Cybersecurity and data breach coverage |
 | `run_do.py` | D&O | Directors & Officers liability |
@@ -40,9 +40,10 @@ pip install -r requirements.txt
 
 ```bash
 # Run from repository root
-python examples/run_cyber.py
+python demo/examples/run_cyber.py
 
 # Or run directly
+cd demo
 cd examples
 python run_cyber.py
 ```
@@ -50,7 +51,7 @@ python run_cyber.py
 ### Multi-Coverage Assessment
 
 ```bash
-python examples/run_multi.py
+python demo/examples/run_multi.py
 ```
 
 This runs an entity through multiple coverage types and shows comparative results.
