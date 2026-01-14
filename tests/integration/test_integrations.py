@@ -7,7 +7,7 @@ Tests for email, document, and webhook integrations.
 import pytest
 from datetime import datetime
 
-from technical_pricing.integrations import (
+from integrations import (
     # Email types
     EmailProvider,
     FilterRule,

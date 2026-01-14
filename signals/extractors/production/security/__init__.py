@@ -12,7 +12,7 @@ Requirements:
     - requests: pip install requests
 
 Usage:
-    from technical_pricing.signals.extractors.production.security import (
+    from signals.extractors.production.security import (
         NVDCVEExtractor,
         HHSBreachExtractor,
     )

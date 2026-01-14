@@ -9,7 +9,7 @@ import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, MagicMock
 
-from technical_pricing.signals.routing import (
+from signals.routing import (
     JurisdictionRouter,
     RoutingStrategy,
     ExtractorTier,
@@ -27,7 +27,7 @@ from technical_pricing.signals.routing import (
     MultiSourceResult,
     ExtractorCallResult,
 )
-from technical_pricing.signals.types import InferenceContext, SignalResult
+from signals.types import InferenceContext, SignalResult
 
 
 class TestJurisdictionRouter:
@@ -351,43 +351,43 @@ class TestRoutedInferenceFunctions:
 
     def test_sanctions_check_routed_import(self):
         """Should import sanctions_check_routed."""
-        from technical_pricing.signals.inference.functions.routed import (
+        from signals.inference.functions.routed import (
             sanctions_check_routed,
         )
         assert callable(sanctions_check_routed)
 
     def test_corporate_registry_routed_import(self):
         """Should import corporate_registry_routed."""
-        from technical_pricing.signals.inference.functions.routed import (
+        from signals.inference.functions.routed import (
             corporate_registry_routed,
         )
         assert callable(corporate_registry_routed)
 
     def test_email_auth_routed_import(self):
         """Should import email_auth_routed."""
-        from technical_pricing.signals.inference.functions.routed import (
+        from signals.inference.functions.routed import (
             email_auth_routed,
         )
         assert callable(email_auth_routed)
 
     def test_security_headers_routed_import(self):
         """Should import security_headers_routed."""
-        from technical_pricing.signals.inference.functions.routed import (
+        from signals.inference.functions.routed import (
             security_headers_routed,
         )
         assert callable(security_headers_routed)
 
     def test_vulnerability_routed_import(self):
         """Should import vulnerability_routed."""
-        from technical_pricing.signals.inference.functions.routed import (
+        from signals.inference.functions.routed import (
             vulnerability_routed,
         )
         assert callable(vulnerability_routed)
 
     def test_register_all(self):
         """Should register all routed functions."""
-        from technical_pricing.signals.inference.functions.routed import register_all
-        from technical_pricing.signals.inference.functions.registry import (
+        from signals.inference.functions.routed import register_all
+        from signals.inference.functions.registry import (
             get_inference_function,
         )
 
@@ -404,7 +404,7 @@ class TestRoutingBridges:
 
     def test_sanctions_bridge_import(self):
         """Should import SanctionsSignalBridge."""
-        from technical_pricing.signals.aggregators.routing_bridges import (
+        from signals.aggregators.routing_bridges import (
             SanctionsSignalBridge,
         )
         bridge = SanctionsSignalBridge()
@@ -412,7 +412,7 @@ class TestRoutingBridges:
 
     def test_corporate_bridge_import(self):
         """Should import CorporateSignalBridge."""
-        from technical_pricing.signals.aggregators.routing_bridges import (
+        from signals.aggregators.routing_bridges import (
             CorporateSignalBridge,
         )
         bridge = CorporateSignalBridge()
@@ -420,7 +420,7 @@ class TestRoutingBridges:
 
     def test_dns_bridge_import(self):
         """Should import DNSSignalBridge."""
-        from technical_pricing.signals.aggregators.routing_bridges import (
+        from signals.aggregators.routing_bridges import (
             DNSSignalBridge,
         )
         bridge = DNSSignalBridge()
@@ -428,7 +428,7 @@ class TestRoutingBridges:
 
     def test_network_bridge_import(self):
         """Should import NetworkSignalBridge."""
-        from technical_pricing.signals.aggregators.routing_bridges import (
+        from signals.aggregators.routing_bridges import (
             NetworkSignalBridge,
         )
         bridge = NetworkSignalBridge()
@@ -436,7 +436,7 @@ class TestRoutingBridges:
 
     def test_security_bridge_import(self):
         """Should import SecuritySignalBridge."""
-        from technical_pricing.signals.aggregators.routing_bridges import (
+        from signals.aggregators.routing_bridges import (
             SecuritySignalBridge,
         )
         bridge = SecuritySignalBridge()
@@ -444,7 +444,7 @@ class TestRoutingBridges:
 
     def test_get_bridge_factory(self):
         """Should get bridge by signal type."""
-        from technical_pricing.signals.aggregators.routing_bridges import get_bridge
+        from signals.aggregators.routing_bridges import get_bridge
 
         assert get_bridge('sanctions') is not None
         assert get_bridge('corporate') is not None
@@ -466,7 +466,7 @@ class TestExtractorTiers:
 
     def test_extractors_have_tiers(self):
         """All production extractors should have tier assignments."""
-        from technical_pricing.signals.routing.router import EXTRACTOR_TIERS
+        from signals.routing.router import EXTRACTOR_TIERS
 
         # Check some key extractors
         assert 'opensanctions' in EXTRACTOR_TIERS
@@ -476,7 +476,7 @@ class TestExtractorTiers:
 
     def test_free_tier_extractors(self):
         """Free tier extractors should be marked FREE."""
-        from technical_pricing.signals.routing.router import EXTRACTOR_TIERS
+        from signals.routing.router import EXTRACTOR_TIERS
 
         free_extractors = [
             'opensanctions',

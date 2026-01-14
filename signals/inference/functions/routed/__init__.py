@@ -10,7 +10,7 @@ These functions can be used directly in YAML configs:
         inference_utility_function: sanctions_check_routed
 
 Or called directly:
-    from technical_pricing.signals.inference.functions.routed import (
+    from signals.inference.functions.routed import (
         sanctions_check_routed,
         corporate_registry_routed,
     )

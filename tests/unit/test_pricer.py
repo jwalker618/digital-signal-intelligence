@@ -6,8 +6,8 @@ Tests premium calculation (Steps 8-12 of the workflow).
 
 import pytest
 
-from technical_pricing.model.pricer import ModelPricer
-from technical_pricing.model.types import (
+from layers.risk.pricer import ModelPricer
+from layers.risk.types import (
     CoverageConfig,
     TierConfig,
     LimitBand,

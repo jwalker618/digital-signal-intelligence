@@ -22,7 +22,7 @@ Requirements:
     - requests: pip install requests
 
 Usage:
-    from technical_pricing.signals.extractors.production.sec import (
+    from signals.extractors.production.sec import (
         SECFilingsExtractor,
         SECFinancialsExtractor,
         SEDARCanadaExtractor,

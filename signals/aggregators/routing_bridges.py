@@ -8,7 +8,7 @@ These bridges allow inference functions to use the full power of multi-source
 routing while returning standard SignalResult objects.
 
 Usage:
-    from technical_pricing.signals.aggregators.routing_bridges import (
+    from signals.aggregators.routing_bridges import (
         SanctionsSignalBridge,
         CorporateSignalBridge,
     )

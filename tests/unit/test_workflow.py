@@ -8,13 +8,13 @@ import pytest
 from unittest.mock import Mock, MagicMock
 from datetime import datetime
 
-from technical_pricing.model.workflow import WorkflowEngine, create_workflow_engine, run_model
-from technical_pricing.model.config_manager import ConfigManager
-from technical_pricing.model.model_data import ModelDataManager
-from technical_pricing.model.scorer import ModelScorer
-from technical_pricing.model.query_evaluator import QueryEvaluator
-from technical_pricing.model.pricer import ModelPricer
-from technical_pricing.model.types import (
+from layers.risk.workflow import WorkflowEngine, create_workflow_engine, run_model
+from layers.risk.config_manager import ConfigManager
+from layers.risk.model_data import ModelDataManager
+from layers.risk.scorer import ModelScorer
+from layers.risk.query_evaluator import QueryEvaluator
+from layers.risk.pricer import ModelPricer
+from layers.risk.types import (
     WorkflowResult,
     ModelVersion,
     CoverageConfig,

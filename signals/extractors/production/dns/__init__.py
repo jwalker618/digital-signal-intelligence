@@ -15,7 +15,7 @@ Requirements:
     - requests: pip install requests (for RDAP)
 
 Usage:
-    from technical_pricing.signals.extractors.production.dns import (
+    from signals.extractors.production.dns import (
         EmailAuthExtractor,
         DNSSECExtractor,
         WHOISRDAPExtractor,

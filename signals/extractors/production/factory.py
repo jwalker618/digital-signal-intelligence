@@ -5,7 +5,7 @@ Provides a factory for creating extractors that can swap between
 stub and production implementations.
 
 Usage:
-    from technical_pricing.signals.extractors.production import (
+    from signals.extractors.production import (
         get_extractor,
         set_default_mode,
         ExtractorFactory,

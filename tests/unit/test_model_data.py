@@ -7,8 +7,8 @@ Tests model creation, version tracking, and update operations.
 import pytest
 from datetime import datetime
 
-from technical_pricing.model.model_data import ModelDataManager
-from technical_pricing.model.types import (
+from layers.risk.model_data import ModelDataManager
+from layers.risk.types import (
     ModelVersion,
     SignalOutput,
     ScoringResult,

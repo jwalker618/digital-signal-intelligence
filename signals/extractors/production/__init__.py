@@ -22,7 +22,7 @@ Structure:
     └── maritime/        # Maritime/aviation (IMO GISIS, IATA IOSA)
 
 Usage:
-    from technical_pricing.signals.extractors.production import (
+    from signals.extractors.production import (
         ExtractorFactory,
         get_extractor,
         register_all_extractors,

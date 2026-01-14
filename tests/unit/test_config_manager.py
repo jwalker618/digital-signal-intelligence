@@ -9,8 +9,8 @@ import tempfile
 from pathlib import Path
 from datetime import datetime
 
-from technical_pricing.model.config_manager import ConfigManager
-from technical_pricing.model.types import (
+from layers.risk.config_manager import ConfigManager
+from layers.risk.types import (
     CoverageConfig,
     ConfigVersion,
     SignalGroupConfig,

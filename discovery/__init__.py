@@ -6,7 +6,7 @@ This module is used as a pre-processing step before the pricing workflow
 to identify the correct corporate website for signal extraction.
 
 Usage:
-    from technical_pricing.discovery import discover_website, WebsiteDiscoveryEngine
+    from discovery import discover_website, WebsiteDiscoveryEngine
 
     # Simple discovery
     result = discover_website("MS Amlin")

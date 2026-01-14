@@ -28,7 +28,7 @@ Components:
 - workflow: Complete 14-step orchestration
 
 Usage:
-    from technical_pricing.model import run_assessment, WorkflowResult
+    from layers.risk import run_assessment, WorkflowResult
 
     result = run_assessment(
         entity_id="AIRLINE123",

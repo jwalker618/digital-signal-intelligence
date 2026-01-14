@@ -7,7 +7,7 @@ Tests performance tracking, cohort analysis, and model tuning.
 import pytest
 from datetime import date, datetime
 
-from technical_pricing.analytics import (
+from analytics import (
     OutcomeRecord,
     PerformanceMetrics,
     TierPerformance,
@@ -18,7 +18,7 @@ from technical_pricing.analytics import (
     CohortAnalyzer,
     ModelTuner,
 )
-from technical_pricing.analytics.types import RecommendationType
+from analytics.types import RecommendationType
 
 
 # =============================================================================

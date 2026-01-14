@@ -7,7 +7,7 @@ Tests for LLM-assisted coverage building.
 import pytest
 import yaml
 
-from technical_pricing.builder import (
+from builder import (
     # Types
     CoverageSpec,
     CoverageBuildResult,

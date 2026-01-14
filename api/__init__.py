@@ -5,10 +5,10 @@ FastAPI-based REST API for the DSI pricing platform.
 
 Usage:
     # Run with uvicorn
-    uvicorn technical_pricing.api.main:app --reload
+    uvicorn api.main:app --reload
 
     # Or import the app
-    from technical_pricing.api import app
+    from api import app
 
 Components:
 - main: FastAPI application

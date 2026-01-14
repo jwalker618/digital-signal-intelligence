@@ -40,7 +40,7 @@ class CoverageBuilder:
         llm_client: Optional[Callable] = None,
         signal_library: Optional[SignalLibrary] = None,
         validator: Optional[ConfigValidator] = None,
-        output_dir: str = "technical_pricing/coverages",
+        output_dir: str = "coverages",
     ):
         """
         Initialize CoverageBuilder.

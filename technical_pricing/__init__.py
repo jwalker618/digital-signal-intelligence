@@ -20,13 +20,13 @@ Architecture:
     6. Model combines all signals into composite score and premium
 
 Usage:
-    from technical_pricing.signals import (
+    from signals import (
         ExtractorResult,
         SignalResult,
         InferenceContext,
     )
-    from technical_pricing.signals.extractors import StubExtractor
-    from technical_pricing.signals.inference import get_inference_function
+    from signals.extractors import StubExtractor
+    from signals.inference import get_inference_function
 """
 
 __version__ = "0.1.0"

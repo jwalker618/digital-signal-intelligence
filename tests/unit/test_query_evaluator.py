@@ -6,8 +6,8 @@ Tests direct query evaluation (Step 7 of the workflow).
 
 import pytest
 
-from technical_pricing.model.query_evaluator import QueryEvaluator
-from technical_pricing.model.types import (
+from layers.risk.query_evaluator import QueryEvaluator
+from layers.risk.types import (
     CoverageConfig,
     DirectQueryConfig,
     DirectQueryImpact,

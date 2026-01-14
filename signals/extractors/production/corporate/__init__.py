@@ -26,7 +26,7 @@ API Keys (optional but recommended):
     - India data.gov.in: Free API key from https://data.gov.in/
 
 Usage:
-    from technical_pricing.signals.extractors.production.corporate import (
+    from signals.extractors.production.corporate import (
         CompaniesHouseExtractor,
         OpenCorporatesExtractor,
         AustraliaABNExtractor,

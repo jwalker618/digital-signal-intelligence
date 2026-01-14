@@ -12,7 +12,7 @@ Requirements:
     - requests: pip install requests
 
 Usage:
-    from technical_pricing.signals.extractors.production.maritime import (
+    from signals.extractors.production.maritime import (
         IMOGISISExtractor,
         IOSARegistryExtractor,
     )

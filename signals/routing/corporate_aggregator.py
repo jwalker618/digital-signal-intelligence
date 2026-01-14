@@ -31,7 +31,7 @@ class CorporateAggregator(MultiSourceAggregator[CorporateResult]):
     and consolidates into a unified CorporateResult.
 
     Usage:
-        from technical_pricing.signals.routing import CorporateAggregator
+        from signals.routing import CorporateAggregator
 
         aggregator = CorporateAggregator()
 

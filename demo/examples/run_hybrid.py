@@ -15,7 +15,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from technical_pricing.signals.routing import (
+from signals.routing import (
     JurisdictionRouter,
     RoutingStrategy,
     ExtractorTier,
@@ -24,7 +24,7 @@ from technical_pricing.signals.routing import (
     set_routing_cache,
     EXTRACTOR_TIERS,
 )
-from technical_pricing.signals.aggregators.routing_bridges import (
+from signals.aggregators.routing_bridges import (
     SanctionsSignalBridge,
     CorporateSignalBridge,
     DNSSignalBridge,
@@ -32,7 +32,7 @@ from technical_pricing.signals.aggregators.routing_bridges import (
     SecuritySignalBridge,
     get_bridge,
 )
-from technical_pricing.signals.types import InferenceContext
+from signals.types import InferenceContext
 
 
 def print_header(title: str):
@@ -256,11 +256,11 @@ def demo_routed_functions():
 
     print("Usage example:")
     print("""
-    from technical_pricing.signals.inference.functions.routed import (
+    from signals.inference.functions.routed import (
         sanctions_check_routed,
         corporate_registry_routed,
     )
-    from technical_pricing.signals.types import InferenceContext
+    from signals.types import InferenceContext
 
     # Create context with locale
     context = InferenceContext(

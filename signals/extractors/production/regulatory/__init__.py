@@ -24,7 +24,7 @@ Requirements:
     - requests: pip install requests
 
 Usage:
-    from technical_pricing.signals.extractors.production.regulatory import (
+    from signals.extractors.production.regulatory import (
         OFACSanctionsExtractor,
         EPAEchoExtractor,
         CFPBComplaintsExtractor,

@@ -15,7 +15,7 @@ Requirements:
     - requests: pip install requests
 
 Usage:
-    from technical_pricing.signals.extractors.production.network import (
+    from signals.extractors.production.network import (
         CloudInfraExtractor,
         CDNUsageExtractor,
         WAFPresenceExtractor,

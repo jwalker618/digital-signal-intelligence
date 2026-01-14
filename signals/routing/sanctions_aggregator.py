@@ -39,7 +39,7 @@ class SanctionsAggregator(MultiSourceAggregator[SanctionsResult]):
     and consolidates into a unified SanctionsResult.
 
     Usage:
-        from technical_pricing.signals.routing import SanctionsAggregator
+        from signals.routing import SanctionsAggregator
 
         aggregator = SanctionsAggregator()
 

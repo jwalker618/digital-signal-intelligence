@@ -9,8 +9,8 @@ import pytest
 from datetime import datetime
 from typing import Any
 
-from technical_pricing.model.scorer import ModelScorer
-from technical_pricing.model.types import (
+from layers.risk.scorer import ModelScorer
+from layers.risk.types import (
     CoverageConfig,
     SignalGroupConfig,
     SignalConfig,

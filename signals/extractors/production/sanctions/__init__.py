@@ -36,7 +36,7 @@ Requirements:
     - requests: pip install requests
 
 Usage:
-    from technical_pricing.signals.extractors.production.sanctions import (
+    from signals.extractors.production.sanctions import (
         OpenSanctionsExtractor,
         InterpolRedNoticesExtractor,
         ADBSanctionsExtractor,

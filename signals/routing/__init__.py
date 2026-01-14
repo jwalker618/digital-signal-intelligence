@@ -22,7 +22,7 @@ Components:
 
 Usage:
     # Simple routing - get list of extractors
-    from technical_pricing.signals.routing import JurisdictionRouter, RoutingStrategy
+    from signals.routing import JurisdictionRouter, RoutingStrategy
 
     router = JurisdictionRouter()
     extractors = router.get_extractors(
@@ -33,7 +33,7 @@ Usage:
     # Returns: ['uk_ofsi', 'opensanctions', 'interpol_red_notices', ...]
 
     # Full aggregation - call extractors and consolidate results
-    from technical_pricing.signals.routing import SanctionsAggregator
+    from signals.routing import SanctionsAggregator
 
     aggregator = SanctionsAggregator()
     result = aggregator.aggregate(
