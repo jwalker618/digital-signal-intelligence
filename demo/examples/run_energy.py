@@ -13,7 +13,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from technical_pricing.model.workflow import run_assessment
+from layers.risk.workflow import run_assessment
 from examples.utils import print_full_report
 
 

@@ -5,7 +5,7 @@ Shared utilities for example scripts.
 """
 
 from typing import Optional
-from technical_pricing.model.types import WorkflowResult
+from layers.risk.types import WorkflowResult
 
 
 def print_header(title: str) -> None:

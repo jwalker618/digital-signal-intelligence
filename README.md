@@ -185,72 +185,36 @@ CoverageLineRegistry.register(
 
 ```
 digital-signal-intelligence/
-├── technical_pricing/           # Main package (~70K lines)
-│   ├── signals/                 # Signal extraction framework
+├── signal_architecture/         # All signal-related code
+│   ├── signals/                 # Core signal extraction pipeline
 │   │   ├── types.py             # Core data types
-│   │   ├── extractors/
-│   │   │   ├── stubs/           # Stub extractors (7 coverages)
-│   │   │   └── production/      # 50 production extractors (Phase 15)
-│   │   ├── aggregators/         # Signal aggregation
-│   │   │   └── routing_bridges.py  # Bridge to routing module
+│   │   ├── extractors/          # Stub + 50 production extractors
+│   │   ├── aggregators/         # Signal aggregation + routing bridges
 │   │   ├── categorisers/        # Score categorization
-│   │   ├── inference/           # Inference functions
-│   │   │   └── functions/routed/   # Multi-source routed functions
-│   │   └── routing/             # Jurisdiction-aware routing (Phase 15)
-│   │       ├── router.py        # JurisdictionRouter + tiers
-│   │       ├── schemas.py       # Unified output schemas
-│   │       └── multi_source.py  # Aggregator + cache
-│   ├── coverages/               # YAML configurations
-│   │   ├── aerospace/           # 21 signals
-│   │   ├── cyber/               # 35 signals
-│   │   ├── do/                  # 46 signals
-│   │   ├── energy/              # 44 signals
-│   │   ├── fi/                  # ~40 signals
-│   │   ├── marine/              # ~38 signals
-│   │   └── pi/                  # ~35 signals
-│   ├── model/                   # 14-step workflow
-│   │   ├── workflow.py          # Complete orchestration
-│   │   ├── scorer.py            # Signal scoring
-│   │   ├── pricer.py            # Premium calculation
-│   │   └── modifiers/           # Traditional pricing modifiers
+│   │   ├── inference/           # Inference functions + registry
+│   │   ├── routing/             # Jurisdiction-aware routing (Phase 15)
+│   │   └── cross_walk/          # Coverage crosswalk mappings
 │   ├── discovery/               # Entity identification (Step 0)
+│   └── orchestration/           # Multi-coverage coordination
+│
+├── infrastructure/              # Support systems
 │   ├── api/                     # FastAPI REST API
-│   │   ├── main.py              # Application entry
-│   │   ├── routes/              # Endpoint handlers
-│   │   └── auth/                # JWT & API key auth
-│   ├── db/                      # Database layer
-│   │   ├── models.py            # SQLAlchemy models
-│   │   └── repositories.py      # Data access
-│   ├── orchestration/           # Multi-coverage handling
+│   ├── db/                      # Database layer (SQLAlchemy)
 │   ├── analytics/               # Performance analysis
-│   ├── integrations/            # Email, docs, webhooks
 │   ├── builder/                 # LLM coverage builder
-│   └── tests/                   # 380+ tests
-├── examples/                    # Working examples (all 7 coverages + hybrid)
+│   └── integrations/            # Email, docs, webhooks
+│
+├── layers/                      # Assessment layers
+│   ├── risk/                    # Risk scoring (14-step workflow)
+│   ├── exposure/                # Exposure Shadow Layer (Phase 17)
+│   └── loss/                    # Loss Correlation Layer (Phase 16)
+│
+├── coverages/                   # YAML configurations (7 coverages)
+├── tests/                       # 380+ tests
 ├── demo/                        # Interactive demonstrations
-│   ├── server.py                # Live demo server (FastAPI)
-│   ├── index.html               # Live demo UI
-│   ├── standalone/              # No-install HTML demos
-│   └── legacy/                  # Legacy dashboard demos
-├── deploy/                      # Deployment configurations
-│   ├── docker/                  # Docker Compose for production
-│   ├── kubernetes/              # K8s manifests
-│   └── monitoring/              # Prometheus & Grafana configs
+├── deploy/                      # Docker, K8s, monitoring configs
 ├── docs/                        # Documentation
-│   ├── overview/                # Executive summaries, white papers
-│   ├── deployment/              # Deployment guide
-│   └── case_studies/            # Retrospective loss analysis
-├── development_docs/            # Internal development documentation
-│   ├── extractor_implementation_plan.md  # Master extractor doc
-│   ├── historical_loss_analysis.md       # Signal-to-loss mapping
-│   └── dsi_retrospective_*.md            # Validation studies
-├── loss/                        # Loss Signal Correlation Layer (Phase 16)
-│   └── correlation_layer/       # Implementation specification
-├── exposure/                    # Exposure Shadow Layer
-│   └── shadow_layer/            # Exposure inference
-├── .env.example                 # Environment template (100+ options)
-├── Dockerfile                   # Production container image
-├── requirements.txt             # Python dependencies
+├── development/                 # Phase development plans
 ├── SKILL.md                     # Architecture guide
 └── README.md
 ```
@@ -259,12 +223,12 @@ digital-signal-intelligence/
 
 ### Core Modules
 
-#### 1. Website Discovery (`technical_pricing/discovery/website_discovery.py`)
+#### 1. Website Discovery (`signal_architecture/discovery/website_discovery.py`)
 
 Resolves the correct corporate website for any entity—Step 0 of the pricing workflow. This is foundational for accurate signal extraction.
 
 ```python
-from technical_pricing.discovery import discover_website, WebsiteDiscoveryEngine
+from signal_architecture.discovery import discover_website, WebsiteDiscoveryEngine
 
 # Simple discovery
 result = discover_website("MS Amlin", country_hint="UK")
@@ -289,12 +253,12 @@ print(result.confidence)              # → ConfidenceLevel.HIGH
 - Batch processing support
 - Integrated into workflow as Step 0
 
-#### 2. Workflow Engine (`technical_pricing/model/workflow.py`)
+#### 2. Workflow Engine (`layers/risk/workflow.py`)
 
 Orchestrates the complete 14-step DSI pricing workflow from discovery through decision.
 
 ```python
-from technical_pricing.model.workflow import run_assessment, WorkflowEngine
+from layers.risk.workflow import run_assessment, WorkflowEngine
 
 # Simple assessment
 result = run_assessment(
@@ -318,12 +282,12 @@ print(f"Premium: ${result.recommended_premium}") # → Premium: $125,000
 - Automatic tier-to-decision mapping
 - Multiple premium options by limit band
 
-#### 3. Signal Architecture (`technical_pricing/signals/`)
+#### 3. Signal Architecture (`signals/`)
 
 The signal extraction framework implements the Extractor → Aggregator → Categorizer → Inference pipeline.
 
 ```python
-from technical_pricing.signals.types import InferenceContext, SignalResult
+from signal_architecture.signals.types import InferenceContext, SignalResult
 
 # Context includes discovery data for extractors
 context = InferenceContext(
@@ -402,10 +366,10 @@ cp .env.example .env
 
 ```bash
 # Development mode
-uvicorn technical_pricing.api.main:app --reload --port 8000
+uvicorn api.main:app --reload --port 8000
 
 # Production mode
-uvicorn technical_pricing.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 API documentation available at: `http://localhost:8000/api/docs`
@@ -414,24 +378,26 @@ API documentation available at: `http://localhost:8000/api/docs`
 
 ```
 digital-signal-intelligence/
-├── technical_pricing/           # Main package
-│   ├── signals/                 # Signal extraction framework
-│   │   ├── extractors/          # Data extraction stubs
-│   │   ├── aggregators/         # Signal aggregation
-│   │   ├── categorisers/        # Score categorization
-│   │   └── inference/           # Inference functions
-│   ├── coverages/               # Coverage configurations (YAML)
-│   │   ├── aerospace/
-│   │   ├── cyber/
-│   │   └── ...
-│   ├── model/                   # 14-step workflow implementation
+├── signals/                     # Signal extraction framework
+│   ├── extractors/              # Data extraction (stubs + production)
+│   ├── aggregators/             # Signal aggregation
+│   ├── categorisers/            # Score categorization
+│   └── inference/               # Inference functions
+├── layers/                      # Assessment layers
+│   ├── risk/                    # 14-step workflow implementation
 │   │   ├── config_manager.py    # Config loading & validation
 │   │   ├── scorer.py            # Signal scoring (Steps 4-6)
 │   │   ├── query_evaluator.py   # Direct queries (Step 7)
 │   │   ├── pricer.py            # Premium calculation (Steps 8-12)
 │   │   └── workflow.py          # Complete workflow orchestration
-│   ├── discovery/               # Entity identification
-│   └── tests/                   # Unit & integration tests
+│   ├── exposure/                # Exposure Shadow Layer (Phase 17)
+│   └── loss/                    # Loss Correlation Layer (Phase 16)
+├── coverages/                   # Coverage configurations (YAML)
+│   ├── aerospace/
+│   ├── cyber/
+│   └── ...
+├── discovery/                   # Entity identification
+├── tests/                       # Unit & integration tests
 ├── SKILL.md                     # Detailed architecture documentation
 └── docs/                        # Documentation & case studies
 ```
@@ -439,7 +405,7 @@ digital-signal-intelligence/
 #### Quick Start
 
 ```python
-from technical_pricing.model.workflow import run_assessment
+from layers.risk.workflow import run_assessment
 
 # Run complete workflow (discovery + pricing in one call)
 result = run_assessment(
@@ -475,10 +441,10 @@ print(f"Confidence: {version.confidence:.0%}")
 
 ```bash
 # Run all tests
-pytest technical_pricing/tests/ -v
+pytest tests/ -v
 
 # Run with coverage
-pytest technical_pricing/tests/ --cov=technical_pricing --cov-report=html
+pytest tests/ --cov=signals --cov=layers --cov=coverages --cov-report=html
 ```
 
 #### Interactive Demos

@@ -30,9 +30,9 @@ from pydantic import BaseModel
 import uvicorn
 
 # Import DSI components
-from technical_pricing.model.workflow import run_assessment
-from technical_pricing.model.types import WorkflowResult, DecisionType
-from technical_pricing.model.config_manager import ConfigManager
+from layers.risk.workflow import run_assessment
+from layers.risk.types import WorkflowResult, DecisionType
+from layers.risk.config_manager import ConfigManager
 
 
 # =============================================================================

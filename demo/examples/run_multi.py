@@ -15,7 +15,7 @@ import asyncio
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from technical_pricing.orchestration import (
+from orchestration import (
     MultiCoverageOrchestrator,
     MultiCoverageRequest,
     CoverageRequest,

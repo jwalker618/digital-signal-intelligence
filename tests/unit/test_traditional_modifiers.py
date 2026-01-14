@@ -16,7 +16,7 @@ Key test scenarios:
 import pytest
 from datetime import date
 
-from technical_pricing.model.modifiers import (
+from layers.risk.modifiers import (
     TraditionalModifier,
     TraditionalModifierResult,
     LossHistoryInput,
@@ -27,7 +27,7 @@ from technical_pricing.model.modifiers import (
     ExposureModifier,
     ExternalRatingModifier,
 )
-from technical_pricing.signals.types import InferenceContext
+from signal_architecture.signals.types import InferenceContext
 
 
 # =============================================================================

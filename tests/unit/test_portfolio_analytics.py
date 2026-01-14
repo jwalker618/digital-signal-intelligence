@@ -7,7 +7,7 @@ Tests portfolio management, workflow analytics, and signal quality monitoring.
 import pytest
 from datetime import date, datetime, timedelta
 
-from technical_pricing.analytics import (
+from analytics import (
     PortfolioManager,
     WorkflowAnalytics,
     SubmissionRecord,

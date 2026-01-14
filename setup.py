@@ -22,7 +22,12 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/jwalker618/digital-signal-intelligence",
-    packages=find_packages(include=["technical_pricing", "technical_pricing.*"]),
+    packages=find_packages(include=[
+        "signal_architecture", "signal_architecture.*",
+        "infrastructure", "infrastructure.*",
+        "layers", "layers.*",
+        "coverages", "coverages.*",
+    ]),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Financial and Insurance Industry",
