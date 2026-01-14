@@ -20,7 +20,7 @@ from .base import (
     PolicyYear,
 )
 from ..types import CoverageConfig
-from ...signals.types import InferenceContext
+from signals.types import InferenceContext
 
 
 logger = logging.getLogger("dsi.modifiers.loss_history")

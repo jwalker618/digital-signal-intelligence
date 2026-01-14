@@ -1,32 +1,30 @@
 """
-DSI Technical Pricing Framework
+DSI Technical Pricing Framework (Backwards Compatibility Shim)
 
-Digital Signal Intelligence (DSI) insurance pricing based on observable
-digital signals rather than self-reported documentation.
+This module provides backwards compatibility for code using the old
+`technical_pricing` import paths. All functionality has been moved to
+root-level packages as part of Phase 18 restructuring.
 
-Packages:
-    - signals: Signal processing pipeline (extractors, aggregators, categorizers, inference)
-    - coverages: YAML configuration files for each coverage domain
-    - model: Model execution, scoring, and pricing logic
+New import paths:
+    - from signals import ...        (was: from technical_pricing.signals import ...)
+    - from layers.risk import ...    (was: from technical_pricing.model import ...)
+    - from coverages import ...      (was: from technical_pricing.coverages import ...)
+    - from discovery import ...      (was: from technical_pricing.discovery import ...)
 
-Architecture:
-    YAML Config → Extractor → Aggregator → Categorizer → Inference → Model Output
-    
-    1. YAML configs define signals, weights, thresholds, tiers
-    2. Extractors fetch raw data (currently stubs)
-    3. Aggregators normalize data for scoring
-    4. Categorizers apply scoring/categorization logic
-    5. Inference functions orchestrate the pipeline per signal
-    6. Model combines all signals into composite score and premium
-
-Usage:
-    from signals import (
-        ExtractorResult,
-        SignalResult,
-        InferenceContext,
-    )
-    from signals.extractors import StubExtractor
-    from signals.inference import get_inference_function
+This shim re-exports the moved modules for backwards compatibility.
+New code should import directly from the root packages.
 """
 
 __version__ = "0.1.0"
+
+# Backwards compatibility: re-export signals module
+import signals as signals
+
+# Backwards compatibility: re-export model as layers.risk
+from layers import risk as model
+
+# Backwards compatibility: re-export coverages
+import coverages as coverages
+
+# Backwards compatibility: re-export discovery
+import discovery as discovery

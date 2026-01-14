@@ -26,9 +26,9 @@ from .types import (
     utcnow,
 )
 
-# Import from signal architecture
-from ..signals.types import InferenceContext, SignalResult
-from ..signals.inference.registry import (
+# Import from signal architecture (root level)
+from signals.types import InferenceContext, SignalResult
+from signals.inference.registry import (
     get_inference_function,
     InferenceFunctionNotFoundError,
 )

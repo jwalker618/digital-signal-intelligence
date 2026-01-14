@@ -19,8 +19,8 @@ Data Sources Simulated:
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 
-from ..base import StubExtractor, utcnow
-from ...types import ExtractorResult
+from signals.extractors.base import StubExtractor, utcnow
+from signals.types import ExtractorResult
 
 
 # =============================================================================

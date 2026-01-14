@@ -50,8 +50,8 @@ from .modifiers import (
     ExternalRatingModifier,
 )
 
-from ..signals.types import InferenceContext
-from ..discovery.website_discovery import (
+from signals.types import InferenceContext
+from discovery.website_discovery import (
     WebsiteDiscoveryEngine,
     DiscoveryResult,
     ConfidenceLevel,
@@ -673,7 +673,7 @@ class WorkflowEngine:
         if discovered_domain:
             # Import routing module for TLD detection
             try:
-                from ..signals.routing import TLD_TO_LOCALE
+                from signals.routing import TLD_TO_LOCALE
 
                 # Extract TLD
                 parts = discovered_domain.lower().strip().split('.')

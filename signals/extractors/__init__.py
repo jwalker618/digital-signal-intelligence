@@ -63,6 +63,11 @@ Aerospace Extractors:
 """
 
 # =============================================================================
+# BASE CLASSES
+# =============================================================================
+from .base import StubExtractor, utcnow
+
+# =============================================================================
 # COMMON EXTRACTORS
 # =============================================================================
 from .stubs.common import (
@@ -86,9 +91,6 @@ from .stubs.aerospace import (
     MROProviderExtractor,
     # Safety Record
     AviationSafetyDatabaseExtractor,
-)
-
-from .stubs.aerospace_part2 import (
     # Regulatory Compliance
     OperatingCertificateExtractor,
     IOSARegistryExtractor,
@@ -97,16 +99,11 @@ from .stubs.aerospace_part2 import (
     StateSafetyExtractor,
     # Operational Quality
     FlightOperationsExtractor,
+    CrewTrainingExtractor,
+    OperationalComplexityExtractor,
     # Fleet Quality
     FleetRegistryExtractor,
     OrderBacklogExtractor,
-)
-
-from .stubs.aerospace_part3 import (
-    # Operational Quality (continued)
-    CrewTrainingExtractor,
-    OperationalComplexityExtractor,
-    # Fleet Quality (continued)
     MaintenanceIndicatorsExtractor,
     # Route Risk
     RouteRiskExtractor,
