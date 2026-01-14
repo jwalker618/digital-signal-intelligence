@@ -185,72 +185,36 @@ CoverageLineRegistry.register(
 
 ```
 digital-signal-intelligence/
-├── signals/                     # Signal extraction framework (root level)
-│   ├── types.py                 # Core data types
-│   ├── extractors/
-│   │   ├── stubs/               # Stub extractors (7 coverages)
-│   │   └── production/          # 50 production extractors (Phase 15)
-│   ├── aggregators/             # Signal aggregation
-│   │   └── routing_bridges.py   # Bridge to routing module
-│   ├── categorisers/            # Score categorization
-│   ├── inference/               # Inference functions
-│   │   └── functions/routed/    # Multi-source routed functions
-│   └── routing/                 # Jurisdiction-aware routing (Phase 15)
-│       ├── router.py            # JurisdictionRouter + tiers
-│       ├── schemas.py           # Unified output schemas
-│       └── multi_source.py      # Aggregator + cache
+├── signal_architecture/         # All signal-related code
+│   ├── signals/                 # Core signal extraction pipeline
+│   │   ├── types.py             # Core data types
+│   │   ├── extractors/          # Stub + 50 production extractors
+│   │   ├── aggregators/         # Signal aggregation + routing bridges
+│   │   ├── categorisers/        # Score categorization
+│   │   ├── inference/           # Inference functions + registry
+│   │   ├── routing/             # Jurisdiction-aware routing (Phase 15)
+│   │   └── cross_walk/          # Coverage crosswalk mappings
+│   ├── discovery/               # Entity identification (Step 0)
+│   └── orchestration/           # Multi-coverage coordination
+│
+├── infrastructure/              # Support systems
+│   ├── api/                     # FastAPI REST API
+│   ├── db/                      # Database layer (SQLAlchemy)
+│   ├── analytics/               # Performance analysis
+│   ├── builder/                 # LLM coverage builder
+│   └── integrations/            # Email, docs, webhooks
+│
 ├── layers/                      # Assessment layers
 │   ├── risk/                    # Risk scoring (14-step workflow)
-│   │   ├── workflow.py          # Complete orchestration
-│   │   ├── scorer.py            # Signal scoring
-│   │   ├── pricer.py            # Premium calculation
-│   │   └── modifiers/           # Traditional pricing modifiers
 │   ├── exposure/                # Exposure Shadow Layer (Phase 17)
 │   └── loss/                    # Loss Correlation Layer (Phase 16)
-├── coverages/                   # YAML configurations
-│   ├── aerospace/               # 21 signals
-│   ├── cyber/                   # 35 signals
-│   ├── do/                      # 46 signals
-│   ├── energy/                  # 44 signals
-│   ├── fi/                      # ~40 signals
-│   ├── marine/                  # ~38 signals
-│   └── pi/                      # ~35 signals
-├── discovery/                   # Entity identification (Step 0)
-├── api/                         # FastAPI REST API
-│   ├── main.py                  # Application entry
-│   ├── routes/                  # Endpoint handlers
-│   └── auth/                    # JWT & API key auth
-├── db/                          # Database layer
-│   ├── models.py                # SQLAlchemy models
-│   └── repositories.py          # Data access
-├── orchestration/               # Multi-coverage handling
-├── analytics/                   # Performance analysis
-├── integrations/                # Email, docs, webhooks
-├── builder/                     # LLM coverage builder
+│
+├── coverages/                   # YAML configurations (7 coverages)
 ├── tests/                       # 380+ tests
-├── examples/                    # Working examples (all 7 coverages + hybrid)
 ├── demo/                        # Interactive demonstrations
-│   ├── server.py                # Live demo server (FastAPI)
-│   ├── index.html               # Live demo UI
-│   ├── standalone/              # No-install HTML demos
-│   └── legacy/                  # Legacy dashboard demos
-├── deploy/                      # Deployment configurations
-│   ├── docker/                  # Docker Compose for production
-│   ├── kubernetes/              # K8s manifests
-│   └── monitoring/              # Prometheus & Grafana configs
+├── deploy/                      # Docker, K8s, monitoring configs
 ├── docs/                        # Documentation
-│   ├── overview/                # Executive summaries, white papers
-│   ├── deployment/              # Deployment guide
-│   └── case_studies/            # Retrospective loss analysis
-├── development/                 # Internal development documentation
-│   ├── project/                 # Phase development plans
-│   └── ...                      # Various development docs
-├── exposure/                    # Exposure Shadow Layer specs
-│   └── shadow_layer/            # Exposure inference specifications
-├── technical_pricing/           # Backwards compatibility shim
-├── .env.example                 # Environment template (100+ options)
-├── Dockerfile                   # Production container image
-├── requirements.txt             # Python dependencies
+├── development/                 # Phase development plans
 ├── SKILL.md                     # Architecture guide
 └── README.md
 ```
@@ -259,12 +223,12 @@ digital-signal-intelligence/
 
 ### Core Modules
 
-#### 1. Website Discovery (`discovery/website_discovery.py`)
+#### 1. Website Discovery (`signal_architecture/discovery/website_discovery.py`)
 
 Resolves the correct corporate website for any entity—Step 0 of the pricing workflow. This is foundational for accurate signal extraction.
 
 ```python
-from discovery import discover_website, WebsiteDiscoveryEngine
+from signal_architecture.discovery import discover_website, WebsiteDiscoveryEngine
 
 # Simple discovery
 result = discover_website("MS Amlin", country_hint="UK")
@@ -323,7 +287,7 @@ print(f"Premium: ${result.recommended_premium}") # → Premium: $125,000
 The signal extraction framework implements the Extractor → Aggregator → Categorizer → Inference pipeline.
 
 ```python
-from signals.types import InferenceContext, SignalResult
+from signal_architecture.signals.types import InferenceContext, SignalResult
 
 # Context includes discovery data for extractors
 context = InferenceContext(

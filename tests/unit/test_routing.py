@@ -9,7 +9,7 @@ import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, MagicMock
 
-from signals.routing import (
+from signal_architecture.signals.routing import (
     JurisdictionRouter,
     RoutingStrategy,
     ExtractorTier,
@@ -27,7 +27,7 @@ from signals.routing import (
     MultiSourceResult,
     ExtractorCallResult,
 )
-from signals.types import InferenceContext, SignalResult
+from signal_architecture.signals.types import InferenceContext, SignalResult
 
 
 class TestJurisdictionRouter:

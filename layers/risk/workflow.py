@@ -50,8 +50,8 @@ from .modifiers import (
     ExternalRatingModifier,
 )
 
-from signals.types import InferenceContext
-from discovery.website_discovery import (
+from signal_architecture.signals.types import InferenceContext
+from signal_architecture.discovery.website_discovery import (
     WebsiteDiscoveryEngine,
     DiscoveryResult,
     ConfidenceLevel,

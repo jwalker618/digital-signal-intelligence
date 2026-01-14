@@ -15,7 +15,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from signals.routing import (
+from signal_architecture.signals.routing import (
     JurisdictionRouter,
     RoutingStrategy,
     ExtractorTier,
@@ -24,7 +24,7 @@ from signals.routing import (
     set_routing_cache,
     EXTRACTOR_TIERS,
 )
-from signals.aggregators.routing_bridges import (
+from signal_architecture.signals.aggregators.routing_bridges import (
     SanctionsSignalBridge,
     CorporateSignalBridge,
     DNSSignalBridge,
@@ -32,7 +32,7 @@ from signals.aggregators.routing_bridges import (
     SecuritySignalBridge,
     get_bridge,
 )
-from signals.types import InferenceContext
+from signal_architecture.signals.types import InferenceContext
 
 
 def print_header(title: str):

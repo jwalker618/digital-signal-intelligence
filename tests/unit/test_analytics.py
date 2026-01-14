@@ -18,7 +18,7 @@ from analytics import (
     CohortAnalyzer,
     ModelTuner,
 )
-from analytics.types import RecommendationType
+from infrastructure.analytics.types import RecommendationType
 
 
 # =============================================================================

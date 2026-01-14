@@ -27,8 +27,8 @@ from .types import (
 )
 
 # Import from signal architecture (root level)
-from signals.types import InferenceContext, SignalResult
-from signals.inference.registry import (
+from signal_architecture.signals.types import InferenceContext, SignalResult
+from signal_architecture.signals.inference.registry import (
     get_inference_function,
     InferenceFunctionNotFoundError,
 )

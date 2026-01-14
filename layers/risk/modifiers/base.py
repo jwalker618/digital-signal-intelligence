@@ -14,7 +14,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 from ..types import CoverageConfig
-from signals.types import InferenceContext
+from signal_architecture.signals.types import InferenceContext
 
 
 # =============================================================================

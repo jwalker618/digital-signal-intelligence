@@ -23,16 +23,10 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/jwalker618/digital-signal-intelligence",
     packages=find_packages(include=[
-        "signals", "signals.*",
+        "signal_architecture", "signal_architecture.*",
+        "infrastructure", "infrastructure.*",
         "layers", "layers.*",
         "coverages", "coverages.*",
-        "api", "api.*",
-        "analytics", "analytics.*",
-        "orchestration", "orchestration.*",
-        "discovery", "discovery.*",
-        "integrations", "integrations.*",
-        "builder", "builder.*",
-        "db", "db.*",
     ]),
     classifiers=[
         "Development Status :: 3 - Alpha",

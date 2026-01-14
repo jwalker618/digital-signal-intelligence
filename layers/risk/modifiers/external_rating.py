@@ -20,7 +20,7 @@ from .base import (
     TraditionalModifierResult,
 )
 from ..types import CoverageConfig
-from signals.types import InferenceContext
+from signal_architecture.signals.types import InferenceContext
 
 
 logger = logging.getLogger("dsi.modifiers.external_rating")

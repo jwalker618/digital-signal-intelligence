@@ -27,7 +27,7 @@ from layers.risk.modifiers import (
     ExposureModifier,
     ExternalRatingModifier,
 )
-from signals.types import InferenceContext
+from signal_architecture.signals.types import InferenceContext
 
 
 # =============================================================================

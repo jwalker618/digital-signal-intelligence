@@ -12,8 +12,8 @@ Signal Groups Covered:
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 
-from signals.extractors.base import StubExtractor, utcnow
-from signals.types import ExtractorResult
+from signal_architecture.signals.extractors.base import StubExtractor, utcnow
+from signal_architecture.signals.types import ExtractorResult
 
 
 # =============================================================================
