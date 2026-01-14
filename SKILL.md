@@ -42,8 +42,9 @@ When starting any DSI work:
 | 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
 | 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
 | 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
+| 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
 
-**Current State**: Core framework complete and validated. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Exposure Shadow Layer specification complete (Phase 17). Comprehensive repository review completed January 2026.
+**Current State**: Core framework complete and validated. Architecture restructured (Phase 18) - signals, layers, and coverages now at root level. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Exposure Shadow Layer specification complete (Phase 17). Comprehensive repository review completed January 2026.
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -352,7 +353,7 @@ Final output for next steps:
 
 -----
 
-## File Structure (Current)
+## File Structure (Current - Phase 18 Complete)
 
 ```
 # Repository Root
@@ -378,7 +379,7 @@ digital-signal-intelligence/
 │
 ├── development/                     # Development documentation
 │   ├── project/                     # Phase documents
-│   │   ├── phase_1.md ... phase_17.md   # Implementation phases
+│   │   ├── phase_1.md ... phase_18.md   # Implementation phases
 │   │   └── original.md              # Master SKILL document
 │   ├── historical_loss_analysis.md  # Loss analysis
 │   ├── signal_mapping_to_historical_loss.md
@@ -388,56 +389,44 @@ digital-signal-intelligence/
 │   ├── client_assessment_samples.md
 │   └── extractor_implementation_plan.md
 │
-├── technical_pricing/               # Core framework
+├── signals/                         # Signal architecture (root level - Phase 18)
 │   ├── __init__.py
-│   ├── coverages/                   # Coverage configurations
-│   │   ├── aerospace/config.yaml    ✅
-│   │   ├── cyber/config.yaml        ✅
-│   │   ├── do/config.yaml           ✅
-│   │   ├── energy/config.yaml       ✅
-│   │   ├── fi/config.yaml           ✅
-│   │   ├── marine/config.yaml       ✅
-│   │   └── pi/config.yaml           ✅
-│   │
-│   ├── signals/                     # Signal architecture
-│   │   ├── __init__.py
-│   │   ├── base.py                  ✅ Base classes
-│   │   ├── types.py                 ✅ Data structures
-│   │   ├── extractors/
-│   │   │   ├── base.py              ✅ StubExtractor + utilities
-│   │   │   ├── stubs/               ✅ Coverage-specific stub extractors
-│   │   │   │   ├── common.py        ✅ Cross-coverage extractors
-│   │   │   │   ├── aerospace/       ✅ cyber/ do/ energy/ fi/ marine/ pi/
-│   │   │   └── production/          ✅ PHASE 15 - 50 free extractors
-│   │   │       ├── base.py          ✅ ProductionExtractor base
-│   │   │       ├── factory.py       ✅ Stub/production switching
-│   │   │       ├── config.py        ✅ API key configuration
-│   │   │       ├── dns/             ✅ http/ network/ sec/ regulatory/
-│   │   │       ├── sanctions/       ✅ security/ industry/ corporate/
-│   │   │       ├── environment/     ✅ maritime/
-│   │   ├── aggregators/
-│   │   │   ├── base.py              ✅ ProductionAggregator
-│   │   │   ├── routing_bridges.py   ✅ PHASE 15.7 (6 bridge classes)
-│   │   │   └── implementations/     ✅ Coverage-specific aggregators
-│   │   ├── categorisers/            # Note: British spelling
-│   │   │   ├── base.py              ✅ ProductionCategorizer
-│   │   │   └── types/               ✅ threshold_bucket, boolean_score, etc.
-│   │   ├── inference/
-│   │   │   ├── registry.py          ✅ Function registration
-│   │   │   └── functions/           ✅ Coverage-specific + routed/
-│   │   ├── routing/                 ✅ PHASE 15
-│   │   │   ├── router.py            ✅ JurisdictionRouter
-│   │   │   ├── schemas.py           ✅ Unified output schemas
-│   │   │   ├── multi_source.py      ✅ MultiSourceAggregator + RoutingCache
-│   │   │   ├── sanctions_aggregator.py  ✅
-│   │   │   └── corporate_aggregator.py  ✅
-│   │   └── cross_walk/
-│   │       └── by_coverage.json     ✅ Coverage crosswalk mappings
-│   │
-│   ├── discovery/                   ✅ PHASE 6
-│   │   └── website_discovery.py     ✅ Discovery engine
-│   │
-│   ├── model/                       ✅ PHASE 4
+│   ├── base.py                      ✅ Base classes
+│   ├── types.py                     ✅ Data structures
+│   ├── extractors/
+│   │   ├── base.py                  ✅ StubExtractor + utilities
+│   │   ├── stubs/                   ✅ Coverage-specific stub extractors
+│   │   │   ├── common.py            ✅ Cross-coverage extractors
+│   │   │   ├── aerospace/           ✅ cyber/ do/ energy/ fi/ marine/ pi/
+│   │   └── production/              ✅ PHASE 15 - 50 free extractors
+│   │       ├── base.py              ✅ ProductionExtractor base
+│   │       ├── factory.py           ✅ Stub/production switching
+│   │       ├── config.py            ✅ API key configuration
+│   │       ├── dns/                 ✅ http/ network/ sec/ regulatory/
+│   │       ├── sanctions/           ✅ security/ industry/ corporate/
+│   │       ├── environment/         ✅ maritime/
+│   ├── aggregators/
+│   │   ├── base.py                  ✅ ProductionAggregator
+│   │   ├── routing_bridges.py       ✅ PHASE 15.7 (6 bridge classes)
+│   │   └── implementations/         ✅ Coverage-specific aggregators
+│   ├── categorisers/                # Note: British spelling
+│   │   ├── base.py                  ✅ ProductionCategorizer
+│   │   └── types/                   ✅ threshold_bucket, boolean_score, etc.
+│   ├── inference/
+│   │   ├── registry.py              ✅ Function registration
+│   │   └── functions/               ✅ Coverage-specific + routed/
+│   ├── routing/                     ✅ PHASE 15
+│   │   ├── router.py                ✅ JurisdictionRouter
+│   │   ├── schemas.py               ✅ Unified output schemas
+│   │   ├── multi_source.py          ✅ MultiSourceAggregator + RoutingCache
+│   │   ├── sanctions_aggregator.py  ✅
+│   │   └── corporate_aggregator.py  ✅
+│   └── cross_walk/
+│       └── by_coverage.json         ✅ Coverage crosswalk mappings
+│
+├── layers/                          # Assessment layers (Phase 18)
+│   ├── __init__.py
+│   ├── risk/                        ✅ Risk scoring layer (former technical_pricing/model)
 │   │   ├── types.py                 ✅ All dataclasses
 │   │   ├── config_manager.py        ✅ Config hashing/storage
 │   │   ├── model_data.py            ✅ Model data file management
@@ -447,50 +436,58 @@ digital-signal-intelligence/
 │   │   ├── workflow.py              ✅ Full orchestration + Step 0
 │   │   └── modifiers/               ✅ PHASE 7
 │   │       ├── base.py              ✅ loss_history.py exposure.py external_rating.py
-│   │
-│   ├── analytics/                   ✅ PHASE 8-9
-│   │   ├── types.py                 ✅ portfolio_types.py
-│   │   ├── performance.py           ✅ cohorts.py tuning.py
-│   │   ├── portfolio.py             ✅ workflow_analytics.py signal_analytics.py
-│   │
-│   ├── orchestration/               ✅ PHASE 10
-│   │   ├── types.py                 ✅ multi_coverage.py
-│   │   ├── locale_detection.py      ✅ aggregator.py
-│   │
-│   ├── api/                         ✅ PHASE 11
-│   │   ├── main.py                  ✅ FastAPI application
-│   │   ├── types.py                 ✅ API types
-│   │   ├── routes/                  ✅ analytics.py submissions.py referrals.py quotes.py
-│   │   ├── auth/                    ✅ jwt_auth.py api_key.py
-│   │   └── middleware/              ✅ Rate limiting, logging
-│   │
-│   ├── integrations/                ✅ PHASE 12
-│   │   ├── types.py                 ✅ email/ documents/ webhooks/
-│   │
-│   ├── builder/                     ✅ PHASE 13
-│   │   ├── coverage_builder.py      ✅ validator.py
-│   │   ├── signal_library.py        ✅ types.py
-│   │
-│   ├── db/                          ✅ Database layer
-│   │   ├── models.py                ✅ repositories.py config.py
-│   │
-│   └── tests/                       ✅ Unit and integration tests
-│       ├── conftest.py              ✅ unit/ integration/
+│   ├── exposure/                    🔲 Exposure Shadow Layer (PHASE 17)
+│   └── loss/                        🔲 Loss Correlation Layer (PHASE 16)
+│       └── development/             ✅ Specification documents
 │
-├── exposure/                        # Exposure Shadow Layer (PHASE 17)
+├── coverages/                       # Coverage configurations (root level - Phase 18)
+│   ├── aerospace/config.yaml        ✅
+│   ├── cyber/config.yaml            ✅
+│   ├── do/config.yaml               ✅
+│   ├── energy/config.yaml           ✅
+│   ├── fi/config.yaml               ✅
+│   ├── marine/config.yaml           ✅
+│   └── pi/config.yaml               ✅
+│
+├── discovery/                       ✅ PHASE 6 (root level - Phase 18)
+│   └── website_discovery.py         ✅ Discovery engine
+│
+├── api/                             ✅ PHASE 11 (root level - Phase 18)
+│   ├── main.py                      ✅ FastAPI application
+│   ├── types.py                     ✅ API types
+│   ├── routes/                      ✅ analytics.py submissions.py referrals.py quotes.py
+│   ├── auth/                        ✅ jwt_auth.py api_key.py
+│   └── middleware/                  ✅ Rate limiting, logging
+│
+├── analytics/                       ✅ PHASE 8-9 (root level - Phase 18)
+│   ├── types.py                     ✅ portfolio_types.py
+│   ├── performance.py               ✅ cohorts.py tuning.py
+│   ├── portfolio.py                 ✅ workflow_analytics.py signal_analytics.py
+│
+├── orchestration/                   ✅ PHASE 10 (root level - Phase 18)
+│   ├── types.py                     ✅ multi_coverage.py
+│   ├── locale_detection.py          ✅ aggregator.py
+│
+├── integrations/                    ✅ PHASE 12 (root level - Phase 18)
+│   ├── types.py                     ✅ email/ documents/ webhooks/
+│
+├── builder/                         ✅ PHASE 13 (root level - Phase 18)
+│   ├── coverage_builder.py          ✅ validator.py
+│   ├── signal_library.py            ✅ types.py
+│
+├── db/                              ✅ Database layer (root level - Phase 18)
+│   ├── models.py                    ✅ repositories.py config.py
+│
+├── technical_pricing/               # Backwards compatibility shim
+│   └── __init__.py                  ✅ Re-exports from new locations
+│
+├── exposure/                        # Exposure Shadow Layer specs (PHASE 17)
 │   └── shadow_layer/
 │       └── development/             ✅ Specification documents
 │           ├── README.md
 │           ├── plan.md              ✅ Full implementation plan
 │           ├── executive_briefing.md ✅ Executive summary
 │           └── actuarial_validation.md ✅ Validation requirements
-│
-├── loss/                            # Loss Correlation Layer (PHASE 16)
-│   └── correlation_layer/
-│       └── development/             ✅ Specification documents
-│           ├── README.md
-│           ├── plan.md              ✅ Full implementation plan
-│           └── specification.txt    ✅ Technical specification
 │
 ├── demo/                            ✅ Live demos
 │   ├── server.py                    ✅ FastAPI demo server
@@ -503,7 +500,7 @@ digital-signal-intelligence/
 ├── deploy/                          ✅ Deployment configs
 │   └── kubernetes/                  ✅ K8s manifests
 │
-└── tests/                           ✅ Top-level test suite
+└── tests/                           ✅ Test suite (root level - Phase 18)
     ├── unit/                        ✅ test_traditional_modifiers.py etc.
     ├── integration/                 ✅ test_integrations.py
     └── api/                         ✅ test_api.py
@@ -513,65 +510,36 @@ Legend: ✅ Complete | 🔲 Not Started
 
 -----
 
-## Planned Architecture Evolution
+## Architecture Restructuring (Phase 18) - COMPLETE
 
-**STATUS: CRITICAL PRIORITY** - This restructuring is the highest priority item. See [Outstanding Work](#outstanding-work).
+**STATUS: ✅ COMPLETE** - Phase 18 restructuring has been implemented. See `development/project/phase_18.md` for details.
 
-As signals are now used across all three assessment layers (Risk, Exposure, Loss), the architecture must be restructured to extract signals to the root level:
+As signals are now used across all three assessment layers (Risk, Exposure, Loss), the architecture was restructured to extract signals to the root level. This is now the current state (documented in [File Structure](#file-structure-current---phase-18-complete) above).
 
-```
-# Target State (Phase 18)
-digital-signal-intelligence/
-├── signals/                         # Shared signal infrastructure (extracted from technical_pricing/)
-│   ├── __init__.py
-│   ├── base.py
-│   ├── types.py
-│   ├── extractors/
-│   │   ├── base.py
-│   │   ├── stubs/
-│   │   └── production/
-│   ├── aggregators/
-│   ├── categorisers/
-│   ├── inference/
-│   ├── routing/
-│   └── cross_walk/
-│
-├── layers/                          # Assessment layer implementations
-│   ├── risk/                        # Current technical_pricing/model (renamed)
-│   │   ├── scorer.py
-│   │   ├── pricer.py
-│   │   ├── workflow.py
-│   │   └── modifiers/
-│   ├── exposure/                    # Phase 17 implementation
-│   │   ├── scorer.py
-│   │   ├── complexity.py
-│   │   └── band_mapper.py
-│   └── loss/                        # Phase 16 implementation
-│       ├── scorer.py
-│       ├── matrix.py
-│       └── monitoring.py
-│
-├── coverages/                       # Coverage configurations (extracted from technical_pricing/)
-│   ├── aerospace/config.yaml
-│   ├── cyber/config.yaml
-│   └── ...
-│
-├── api/                             # API layer (from technical_pricing/api/)
-├── analytics/                       # Analytics (from technical_pricing/analytics/)
-├── orchestration/                   # Orchestration (from technical_pricing/orchestration/)
-├── discovery/                       # Discovery (from technical_pricing/discovery/)
-├── integrations/                    # Integrations (from technical_pricing/integrations/)
-├── builder/                         # Builder (from technical_pricing/builder/)
-├── db/                              # Database (from technical_pricing/db/)
-│
-├── development/                     # Development documentation (unchanged)
-├── demo/                            # Demos (unchanged)
-├── deploy/                          # Deployment (unchanged)
-├── docs/                            # Documentation (unchanged)
-└── tests/                           # Tests (merged from technical_pricing/tests/ and root tests/)
-```
+**Key Changes Implemented:**
 
-**Restructuring must be completed before implementing Phases 16 and 17** to avoid technical debt from building new layers in the wrong location.
+| Component | From | To |
+|-----------|------|-----|
+| Signals | `technical_pricing/signals/` | `signals/` |
+| Risk Layer | `technical_pricing/model/` | `layers/risk/` |
+| Coverages | `technical_pricing/coverages/` | `coverages/` |
+| API | `technical_pricing/api/` | `api/` |
+| Analytics | `technical_pricing/analytics/` | `analytics/` |
+| Discovery | `technical_pricing/discovery/` | `discovery/` |
+| Orchestration | `technical_pricing/orchestration/` | `orchestration/` |
+| Integrations | `technical_pricing/integrations/` | `integrations/` |
+| Builder | `technical_pricing/builder/` | `builder/` |
+| Database | `technical_pricing/db/` | `db/` |
+| Tests | `technical_pricing/tests/` | `tests/` |
+
+**Backwards Compatibility:**
+- `technical_pricing/__init__.py` re-exports from new locations
+- Existing code using `from technical_pricing.signals import ...` continues to work
+- New code should import directly from root packages
+
+**Next Steps:**
+- Phases 16 and 17 can now be implemented in `layers/exposure/` and `layers/loss/`
+- All three layers share the common `signals/` infrastructure
 
 -----
 
@@ -733,27 +701,29 @@ This section consolidates all pending, optional, and planned work items. Complet
 
 | Item | Phase | Priority | Notes |
 |------|-------|----------|-------|
-| **Restructure: Extract signals to root level** | 18 | **Critical** | Signals now feed all three layers. See [Planned Architecture Evolution](#planned-architecture-evolution) |
-| Implement Phase 16 (Loss Correlation Layer) | 16 | High | Specification complete. See `loss/correlation_layer/development/` |
-| Implement Phase 17 (Exposure Shadow Layer) | 17 | High | Specification complete. See `exposure/shadow_layer/development/` |
+| ~~Restructure: Extract signals to root level~~ | 18 | ~~Critical~~ ✅ | **COMPLETE** - See `development/project/phase_18.md` |
+| Implement Phase 16 (Loss Correlation Layer) | 16 | High | Specification complete. Now implement in `layers/loss/` |
+| Implement Phase 17 (Exposure Shadow Layer) | 17 | High | Specification complete. Now implement in `layers/exposure/` |
 | Tag v1.0.0 release | 14 | High | Awaiting final validation |
 | Add unit tests for critical modules | - | High | Test coverage at ~12.6% |
 | Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Medium | See `development/extractor_implementation_plan.md` |
 | Fix remaining config typos (inference_utility_function) | - | Medium | 23 function name typos |
 
-### Restructuring Rationale
+### Restructuring Status (Phase 18) - COMPLETE
 
-The current architecture has signals nested within `technical_pricing/signals/`. However, the three-layer assessment model means signals are now a **shared infrastructure** feeding:
+✅ The architecture restructuring has been completed. Signals are now a **shared infrastructure** at repository root, feeding:
 
-1. **Risk Layer** - existing risk scoring (Steps 5a, 9a)
-2. **Exposure Shadow Layer** - Phase 17 (Steps 5b, 9b)
-3. **Loss Correlation Layer** - Phase 16 (Steps 5c, 9c)
+1. **Risk Layer** (`layers/risk/`) - existing risk scoring (Steps 5a, 9a)
+2. **Exposure Shadow Layer** (`layers/exposure/`) - Phase 17 (Steps 5b, 9b)
+3. **Loss Correlation Layer** (`layers/loss/`) - Phase 16 (Steps 5c, 9c)
 
-Implementing Phases 16 and 17 before restructuring will create technical debt. The restructuring should:
-- Extract `signals/` to repository root
-- Create `layers/` directory for assessment layer implementations
-- Update all imports and references
-- Ensure all tests pass after migration
+The restructuring completed:
+- ✅ Extracted `signals/` to repository root
+- ✅ Created `layers/` directory for assessment layer implementations
+- ✅ Updated all imports and references
+- ✅ Maintained backwards compatibility via `technical_pricing/__init__.py`
+
+**Phases 16 and 17 are now unblocked** and can be implemented in their proper locations.
 
 ### Optional Enhancements
 
