@@ -48,7 +48,7 @@ This folder contains all DSI documentation including overviews, and case studies
 |-|-|-|
 | `SKILL.md` | Repository root | Complete architecture documentation |
 | `README.md` | Repository root | Project overview and quick start |
-| `development_docs/` | Repository root | Internal development documentation |
+| `development/` | Repository root | Internal development documentation |
 
 # Deployment
 All deployment artefacts and documentation can be found here:
