@@ -20,25 +20,17 @@ This is the second intelligence layer of the DSI framework.
 
 ## Status
 
-🔲 **Not Started** - Specification Complete
+✅ **COMPLETE** - Implemented 2026-01-15
 
 ## Detailed Specification
 
-**Full specification documents are located in**: `loss/correlation_layer/development/`
+**Full specification documents are located in**: `layers/loss/development/`
 
 | Document | Purpose |
 |----------|---------|
 | `plan.md` | Complete implementation plan with code examples |
 | `specification.txt` | Technical specification and API details |
 | `README.md` | Overview and quick start |
-
-**Do not duplicate specification content here.** Refer to the detailed documents for:
-- Core types and dataclasses
-- LossCorrelationScorer implementation
-- CorrelationMatrixManager implementation
-- LossMonitoringEngine implementation
-- YAML configuration schema
-- Pricing integration patterns
 
 ## Architecture Integration
 
@@ -109,41 +101,96 @@ loss_adjusted_premium = base_premium * combined_loss_modifier
 
 | Task | File | Status |
 |------|------|--------|
-| Create loss correlation types | `model/loss_correlation/types.py` | 🔲 Not Started |
-| Implement LossCorrelationScorer | `model/loss_correlation/scorer.py` | 🔲 Not Started |
-| Implement CorrelationMatrixManager | `model/loss_correlation/matrix.py` | 🔲 Not Started |
-| Implement LossMonitoringEngine | `model/loss_correlation/monitoring.py` | 🔲 Not Started |
-| Add pricing integration | `model/loss_correlation/integration.py` | 🔲 Not Started |
-| Extend YAML config schema | `coverages/*/config.yaml` | 🔲 Not Started |
-| Extend ModelVersion for loss data | `model/types.py` | 🔲 Not Started |
-| Integrate into workflow | `model/workflow.py` | 🔲 Not Started |
-| Add unit tests | `tests/unit/test_loss_correlation.py` | 🔲 Not Started |
-| Add integration tests | `tests/integration/test_loss_workflow.py` | 🔲 Not Started |
+| Create loss correlation types | `layers/loss/types.py` | ✅ Complete |
+| Implement LossCorrelationScorer | `layers/loss/scorer.py` | ✅ Complete |
+| Implement CorrelationMatrixManager | `layers/loss/matrix.py` | ✅ Complete |
+| Implement LossMonitoringEngine | `layers/loss/monitoring.py` | ✅ Complete |
+| Add pricing integration | `layers/loss/integration.py` | ✅ Complete |
+| Extend YAML config schema | `coverages/cyber/config.yaml` | ✅ Complete |
+| Extend ModelVersion for loss data | `layers/risk/types.py` | ✅ Complete |
+| Integrate into workflow | `layers/risk/workflow.py` | ✅ Complete |
+| Add unit tests | `tests/unit/test_loss_correlation.py` | ✅ Complete |
+| Add integration tests | `tests/integration/test_loss_workflow.py` | ✅ Complete |
 
-## File Structure
+## File Structure (Post-Phase 18 Restructuring)
 
 ```
-technical_pricing/
-├── model/
-│   ├── loss_correlation/
-│   │   ├── __init__.py
-│   │   ├── types.py              # All dataclasses and enums
-│   │   ├── scorer.py             # Loss propensity calculation
-│   │   ├── matrix.py             # Correlation matrix management
-│   │   ├── monitoring.py         # Continuous monitoring engine
-│   │   └── integration.py        # Pricing integration patterns
-│   └── ...
+layers/
+├── loss/                            # Loss Correlation Layer (Phase 16)
+│   ├── __init__.py                  ✅ Module exports
+│   ├── types.py                     ✅ All dataclasses and enums
+│   ├── scorer.py                    ✅ LossCorrelationScorer
+│   ├── matrix.py                    ✅ CorrelationMatrixManager
+│   ├── monitoring.py                ✅ LossMonitoringEngine
+│   ├── integration.py               ✅ LossPricingIntegration
+│   └── development/                 # Specification documents
+│       ├── README.md
+│       ├── plan.md
+│       └── specification.txt
+├── risk/                            # Risk Layer (extended)
+│   ├── types.py                     ✅ ModelVersion with loss fields
+│   └── workflow.py                  ✅ Loss propensity integration
+
+coverages/
+├── cyber/config.yaml                ✅ loss_correlation schema added
 ```
+
+## Components Implemented
+
+### 1. LossCorrelationScorer (`layers/loss/scorer.py`)
+- Calculates loss propensity from signal outputs
+- Separate frequency and severity scoring
+- Cohort assignment based on signal patterns
+- Trend analysis with velocity tracking
+- Auto-apply rules for referrals/flags
+
+### 2. CorrelationMatrixManager (`layers/loss/matrix.py`)
+- Calibrates signal-loss correlations from historical data
+- Pearson correlation coefficient calculation
+- Information value scoring for predictive power
+- Stability scoring across time periods
+- JSON persistence for correlation matrices
+
+### 3. LossMonitoringEngine (`layers/loss/monitoring.py`)
+- Continuous portfolio monitoring
+- Deterioration alerts (warning/critical)
+- Band migration detection
+- Velocity spike detection
+- Portfolio-wide statistics
+
+### 4. LossPricingIntegration (`layers/loss/integration.py`)
+- Three pricing patterns: multiplicative, additive, grid
+- Configurable caps and floors
+- Confidence threshold gating
+- Default pricing grid generation
+
+### 5. ModelVersion Extensions (`layers/risk/types.py`)
+17 new fields added:
+- `loss_propensity_score`, `severity_propensity_score`
+- `loss_propensity_band`, `severity_propensity_band`
+- `loss_confidence`
+- `loss_cohort_id`, `loss_cohort_name`, `loss_cohort_confidence`
+- `loss_frequency_multiplier`, `loss_severity_multiplier`, `loss_combined_modifier`
+- `loss_trend_direction`, `loss_previous_score`, `loss_score_velocity`
+- `loss_last_refresh`
+- `correlation_matrix_version`, `correlation_matrix_hash`
+
+### 6. Workflow Integration (`layers/risk/workflow.py`)
+- `_calculate_loss_propensity()` method added
+- Called after Step 4-6 (parallel to risk scoring)
+- Loss modifier added to pricing modifiers
+- Loss referrals integrated into decision
+- Model version populated with loss fields
 
 ## Implementation Roadmap
 
-| Phase | Objectives |
-|-------|------------|
-| 1. Retrospective Analysis | Partner with carrier for historical data, build initial correlation matrix |
-| 2. Prospective Tagging | Tag new submissions with signal snapshots, track loss emergence |
-| 3. Pricing Integration | Production scoring, pricing adjustments, continuous monitoring |
-| 4. Continuous Calibration | Automated recalibration, dynamic cohorts, ML enhancement |
+| Phase | Objectives | Status |
+|-------|------------|--------|
+| 1. Retrospective Analysis | Partner with carrier for historical data, build initial correlation matrix | 🔲 Requires Data Partner |
+| 2. Prospective Tagging | Tag new submissions with signal snapshots, track loss emergence | 🔲 Requires Production Use |
+| 3. Pricing Integration | Production scoring, pricing adjustments, continuous monitoring | ✅ Code Complete |
+| 4. Continuous Calibration | Automated recalibration, dynamic cohorts, ML enhancement | 🔲 Future Enhancement |
 
 -----
 
-**For complete implementation details, see**: `loss/correlation_layer/development/plan.md`
+**Implementation complete. Ready for carrier data integration and production validation.**

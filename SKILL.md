@@ -40,11 +40,11 @@ When starting any DSI work:
 | 13 | LLM Builder | ✅ Complete |  `development/project/phase_13.md` |
 | 14 | Examples | ✅ Complete |  `development/project/phase_14.md` |
 | 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
-| 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
+| 16 | Loss Correlation | ✅ Complete |  `development/project/phase_16.md` |
 | 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
 | 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
 
-**Current State**: Core framework complete and validated. Architecture restructured (Phase 18) - signals, layers, and coverages now at root level. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Exposure Shadow Layer specification complete (Phase 17). Comprehensive repository review completed January 2026.
+**Current State**: Core framework complete and validated. Architecture restructured (Phase 18) - signals, layers, and coverages now at root level. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. **Loss Correlation Layer implemented (Phase 16)** - LossCorrelationScorer, CorrelationMatrixManager, LossMonitoringEngine, and LossPricingIntegration complete. Exposure Shadow Layer specification complete (Phase 17). Comprehensive repository review completed January 2026.
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -450,7 +450,13 @@ digital-signal-intelligence/
 │   │   └── modifiers/               ✅ PHASE 7 - Traditional modifiers
 │   │
 │   ├── exposure/                    🔲 Exposure Shadow Layer (PHASE 17)
-│   └── loss/                        🔲 Loss Correlation Layer (PHASE 16)
+│   └── loss/                        ✅ Loss Correlation Layer (PHASE 16)
+│       ├── __init__.py              ✅ Module exports
+│       ├── types.py                 ✅ All dataclasses and enums
+│       ├── scorer.py                ✅ LossCorrelationScorer
+│       ├── matrix.py                ✅ CorrelationMatrixManager
+│       ├── monitoring.py            ✅ LossMonitoringEngine
+│       └── integration.py           ✅ LossPricingIntegration
 │
 ├── coverages/                       # YAML coverage configurations
 │   ├── aerospace/config.yaml        ✅ 21 signals
@@ -681,7 +687,7 @@ This section consolidates all pending, optional, and planned work items. Complet
 | Item | Phase | Priority | Notes |
 |------|-------|----------|-------|
 | ~~Restructure: Extract signals to root level~~ | 18 | ~~Critical~~ ✅ | **COMPLETE** - See `development/project/phase_18.md` |
-| Implement Phase 16 (Loss Correlation Layer) | 16 | High | Specification complete. Now implement in `layers/loss/` |
+| ~~Implement Phase 16 (Loss Correlation Layer)~~ | 16 | ~~High~~ ✅ | **COMPLETE** - See `development/project/phase_16.md` |
 | Implement Phase 17 (Exposure Shadow Layer) | 17 | High | Specification complete. Now implement in `layers/exposure/` |
 | Tag v1.0.0 release | 14 | High | Awaiting final validation |
 | Add unit tests for critical modules | - | High | Test coverage at ~12.6% |
@@ -702,7 +708,7 @@ The restructuring completed:
 - ✅ Updated all imports and references
 - ✅ Maintained backwards compatibility via `technical_pricing/__init__.py`
 
-**Phases 16 and 17 are now unblocked** and can be implemented in their proper locations.
+**Phase 16 is now complete** and Phase 17 can now be implemented in its proper location (`layers/exposure/`).
 
 ### Optional Enhancements
 
