@@ -671,6 +671,33 @@ class ModelVersion:
     referral_reasons: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
 
+    # Loss Propensity Outputs (Phase 16)
+    loss_propensity_score: Optional[float] = None
+    severity_propensity_score: Optional[float] = None
+    loss_propensity_band: Optional[str] = None
+    severity_propensity_band: Optional[str] = None
+    loss_confidence: Optional[float] = None
+
+    # Loss Cohort Assignment
+    loss_cohort_id: Optional[str] = None
+    loss_cohort_name: Optional[str] = None
+    loss_cohort_confidence: Optional[float] = None
+
+    # Loss Pricing Impact
+    loss_frequency_multiplier: Optional[float] = None
+    loss_severity_multiplier: Optional[float] = None
+    loss_combined_modifier: Optional[float] = None
+
+    # Loss Monitoring State
+    loss_trend_direction: Optional[str] = None
+    loss_previous_score: Optional[float] = None
+    loss_score_velocity: Optional[float] = None
+    loss_last_refresh: Optional[datetime] = None
+
+    # Correlation Matrix Reference
+    correlation_matrix_version: Optional[str] = None
+    correlation_matrix_hash: Optional[str] = None
+
     # Metadata
     created_at: datetime = field(default_factory=utcnow)
     created_by: str = ""

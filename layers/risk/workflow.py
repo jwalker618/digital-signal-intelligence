@@ -51,6 +51,20 @@ from .modifiers import (
 )
 
 from signal_architecture.signals.types import InferenceContext
+
+# Phase 16: Loss Correlation Layer (optional, graceful import)
+try:
+    from layers.loss import (
+        LossCorrelationScorer,
+        LossCorrelationConfig,
+        LossPropensityResult,
+    )
+    LOSS_CORRELATION_AVAILABLE = True
+except ImportError:
+    LOSS_CORRELATION_AVAILABLE = False
+    LossCorrelationScorer = None
+    LossCorrelationConfig = None
+    LossPropensityResult = None
 from signal_architecture.discovery.website_discovery import (
     WebsiteDiscoveryEngine,
     DiscoveryResult,
@@ -97,6 +111,8 @@ class WorkflowEngine:
         discovery_engine: Optional[WebsiteDiscoveryEngine] = None,
         traditional_modifiers: Optional[List[TraditionalModifier]] = None,
         enable_default_modifiers: bool = True,
+        loss_correlation_scorer: Optional["LossCorrelationScorer"] = None,
+        enable_loss_correlation: bool = True,
     ):
         """
         Initialize WorkflowEngine with dependencies.
@@ -130,6 +146,74 @@ class WorkflowEngine:
             ]
         else:
             self.traditional_modifiers = []
+
+        # Loss Correlation Scorer (Phase 16) - optional
+        self.loss_correlation_scorer = loss_correlation_scorer
+        self.enable_loss_correlation = enable_loss_correlation and LOSS_CORRELATION_AVAILABLE
+
+    def _calculate_loss_propensity(
+        self,
+        signal_outputs: List[Any],
+        config: CoverageConfig,
+        previous_result: Optional[Any] = None,
+    ) -> Optional[Any]:
+        """
+        Calculate loss propensity from signal outputs (Phase 16).
+
+        This runs in parallel with risk scoring, using the same signals
+        but applying loss-specific weighting and correlation logic.
+
+        Args:
+            signal_outputs: Signal extraction results from main pipeline
+            config: Coverage configuration
+            previous_result: Previous propensity result for trend analysis
+
+        Returns:
+            LossPropensityResult or None if loss correlation disabled
+        """
+        if not self.enable_loss_correlation:
+            return None
+
+        if not LOSS_CORRELATION_AVAILABLE:
+            logger.debug("Loss correlation layer not available")
+            return None
+
+        # Check if loss correlation is enabled in config
+        loss_config_data = getattr(config, 'loss_correlation', None)
+        if loss_config_data is None:
+            logger.debug("Loss correlation not configured for coverage")
+            return None
+
+        if isinstance(loss_config_data, dict) and not loss_config_data.get('enabled', False):
+            logger.debug("Loss correlation disabled in config")
+            return None
+
+        try:
+            # Create scorer if not provided
+            if self.loss_correlation_scorer is None:
+                if isinstance(loss_config_data, dict):
+                    loss_config = LossCorrelationConfig.from_dict(loss_config_data)
+                else:
+                    loss_config = loss_config_data
+                self.loss_correlation_scorer = LossCorrelationScorer(loss_config)
+
+            # Calculate propensity
+            loss_result = self.loss_correlation_scorer.calculate_propensity(
+                signal_outputs,
+                previous_result
+            )
+
+            logger.info(
+                f"Loss propensity calculated: score={loss_result.loss_propensity_score:.1f}, "
+                f"band={loss_result.loss_propensity_band.value}, "
+                f"confidence={loss_result.loss_confidence:.2f}"
+            )
+
+            return loss_result
+
+        except Exception as e:
+            logger.warning(f"Loss propensity calculation failed: {e}")
+            return None
 
     def run_workflow(
         self,
@@ -253,6 +337,14 @@ class WorkflowEngine:
             context=context,
         )
 
+        # Phase 16: Calculate Loss Propensity (parallel to risk scoring)
+        # Uses same signal outputs with loss-specific weighting
+        loss_propensity_result = self._calculate_loss_propensity(
+            signal_outputs=scoring_result.signal_outputs,
+            config=config,
+            previous_result=None,  # Could load from history
+        )
+
         # Step 7: Evaluate Direct Queries
         query_result = self.query_evaluator.evaluate_queries(
             responses=direct_query_responses,
@@ -283,6 +375,15 @@ class WorkflowEngine:
         # Combine query modifiers with traditional modifiers
         all_modifiers = query_result.modifiers + traditional_modifiers_for_pricer
 
+        # Add loss propensity modifier if available and significant
+        if loss_propensity_result and loss_propensity_result.combined_loss_modifier != 1.0:
+            loss_modifier = {
+                "name": "loss_propensity",
+                "factor": loss_propensity_result.combined_loss_modifier,
+                "confidence": loss_propensity_result.loss_confidence,
+            }
+            all_modifiers.append(loss_modifier)
+
         # Steps 8-12: Calculate Premium
         pricing_result = self.pricer.price_submission(
             pure_composite_score=scoring_result.pure_composite_score,
@@ -297,6 +398,13 @@ class WorkflowEngine:
         # Combine referral reasons and notes
         all_referrals = scoring_result.referrals + query_result.referrals
         all_notes = scoring_result.notes + query_result.notes
+
+        # Add loss propensity referrals if triggered
+        if loss_propensity_result:
+            if loss_propensity_result.referral_triggered:
+                all_referrals.extend(loss_propensity_result.referral_reasons)
+            if loss_propensity_result.flags:
+                all_notes.extend([f"Loss flag: {f}" for f in loss_propensity_result.flags])
 
         # Step 13: Determine Decision
         decision, auto_approve = self.determine_decision(
@@ -356,6 +464,25 @@ class WorkflowEngine:
 
         # Add discovery output to model version for audit trail
         model_version.discovery_output = discovery_output
+
+        # Add loss propensity outputs to model version (Phase 16)
+        if loss_propensity_result:
+            model_version.loss_propensity_score = loss_propensity_result.loss_propensity_score
+            model_version.severity_propensity_score = loss_propensity_result.severity_propensity_score
+            model_version.loss_propensity_band = loss_propensity_result.loss_propensity_band.value
+            model_version.severity_propensity_band = loss_propensity_result.severity_propensity_band.value
+            model_version.loss_confidence = loss_propensity_result.loss_confidence
+            model_version.loss_cohort_id = loss_propensity_result.cohort_id
+            model_version.loss_cohort_name = loss_propensity_result.cohort_name
+            model_version.loss_cohort_confidence = loss_propensity_result.cohort_confidence
+            model_version.loss_frequency_multiplier = loss_propensity_result.frequency_multiplier
+            model_version.loss_severity_multiplier = loss_propensity_result.severity_multiplier
+            model_version.loss_combined_modifier = loss_propensity_result.combined_loss_modifier
+            model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
+            model_version.loss_previous_score = loss_propensity_result.previous_score
+            model_version.loss_score_velocity = loss_propensity_result.score_velocity
+            model_version.loss_last_refresh = loss_propensity_result.calculated_at
+            model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
 
         return WorkflowResult(
             entity_id=entity_id,
