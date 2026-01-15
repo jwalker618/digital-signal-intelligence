@@ -1131,3 +1131,334 @@ cyber:
         alert_on_band_change: true
         alert_on_velocity_spike: true
         velocity_spike_threshold: 10.0
+
+    # -------------------------------------------------------------------------
+    # EXPOSURE SHADOW LAYER CONFIGURATION (Phase 17)
+    # -------------------------------------------------------------------------
+    # Exposure magnitude and complexity scoring from observable signals.
+    # Enables TIV estimation without client-provided data.
+
+    exposure_shadow:
+      enabled: true
+      version: "2026-01-15"
+
+      # Exposure magnitude signal groups (TIV proxy)
+      exposure_groups:
+        - name: digital_footprint
+          weight: 0.30
+          confidence_threshold: 0.6
+          description: "Observable digital presence indicators"
+          features:
+            - id: dns_complexity
+              weight: 0.25
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number and structure of DNS records"
+            - id: subdomain_count
+              weight: 0.20
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Count of active subdomains"
+            - id: ip_footprint
+              weight: 0.20
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Size of IP address footprint"
+            - id: ssl_certificates
+              weight: 0.20
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number of active SSL certificates"
+            - id: cloud_infrastructure
+              weight: 0.15
+              proxy_tier: INFERRED_PROXY
+              normalizer: percentile
+              description: "Estimated cloud infrastructure scale"
+
+        - name: corporate_indicators
+          weight: 0.25
+          confidence_threshold: 0.7
+          description: "Observable corporate size indicators"
+          features:
+            - id: employee_estimate
+              weight: 0.35
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Estimated employee count from signals"
+            - id: location_count
+              weight: 0.25
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number of office/operational locations"
+            - id: job_postings
+              weight: 0.20
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Active job posting volume"
+            - id: funding_signals
+              weight: 0.20
+              proxy_tier: INFERRED_PROXY
+              normalizer: percentile
+              description: "Observable funding/investment indicators"
+
+        - name: public_financials
+          weight: 0.25
+          confidence_threshold: 0.8
+          description: "Direct financial observables (when available)"
+          features:
+            - id: market_cap
+              weight: 0.40
+              proxy_tier: DIRECT_OBSERVABLE
+              normalizer: log_scale
+              description: "Public market capitalization"
+            - id: revenue_estimate
+              weight: 0.35
+              proxy_tier: DIRECT_OBSERVABLE
+              normalizer: log_scale
+              description: "Revenue from filings or estimates"
+            - id: asset_value
+              weight: 0.25
+              proxy_tier: DIRECT_OBSERVABLE
+              normalizer: log_scale
+              description: "Total assets from financials"
+
+        - name: industry_context
+          weight: 0.20
+          confidence_threshold: 0.5
+          description: "Industry and sector-based priors"
+          features:
+            - id: industry_avg_tiv
+              weight: 0.50
+              proxy_tier: COHORT_INFERENCE
+              normalizer: percentile
+              description: "Industry average TIV benchmark"
+            - id: peer_group_tiv
+              weight: 0.50
+              proxy_tier: COHORT_INFERENCE
+              normalizer: percentile
+              description: "Similar peer group TIV estimate"
+
+      # Complexity signal groups (operational complexity proxy)
+      complexity_groups:
+        - name: geographic_dispersion
+          weight: 0.30
+          confidence_threshold: 0.6
+          description: "Geographic spread of operations"
+          features:
+            - id: country_count
+              weight: 0.35
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number of countries with presence"
+            - id: timezone_spread
+              weight: 0.25
+              proxy_tier: INFERRED_PROXY
+              normalizer: linear
+              description: "Timezone coverage span"
+            - id: geo_ip_diversity
+              weight: 0.25
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Geographic IP distribution"
+            - id: regional_domains
+              weight: 0.15
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Regional domain count (ccTLDs)"
+
+        - name: structural_complexity
+          weight: 0.25
+          confidence_threshold: 0.7
+          description: "Organizational structure complexity"
+          features:
+            - id: subsidiary_count
+              weight: 0.40
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number of subsidiaries/entities"
+            - id: brand_count
+              weight: 0.30
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number of distinct brands"
+            - id: acquisition_activity
+              weight: 0.30
+              proxy_tier: INFERRED_PROXY
+              normalizer: linear
+              description: "Recent M&A activity level"
+
+        - name: technical_heterogeneity
+          weight: 0.25
+          confidence_threshold: 0.6
+          description: "Technology stack diversity"
+          features:
+            - id: tech_stack_diversity
+              weight: 0.35
+              proxy_tier: INFERRED_PROXY
+              normalizer: linear
+              description: "Variety of detected technologies"
+            - id: cloud_multi
+              weight: 0.30
+              proxy_tier: INFERRED_PROXY
+              normalizer: binary
+              description: "Multi-cloud indicator"
+            - id: legacy_indicators
+              weight: 0.35
+              proxy_tier: INFERRED_PROXY
+              normalizer: linear
+              description: "Legacy technology presence"
+
+        - name: regulatory_jurisdictions
+          weight: 0.20
+          confidence_threshold: 0.7
+          description: "Regulatory jurisdiction complexity"
+          features:
+            - id: regulatory_count
+              weight: 0.50
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number of regulatory jurisdictions"
+            - id: compliance_frameworks
+              weight: 0.50
+              proxy_tier: INFERRED_PROXY
+              normalizer: log_scale
+              description: "Number of compliance frameworks"
+
+      # Exposure band mapping
+      band_mapping:
+        method: fixed_threshold
+        bands:
+          - name: micro
+            min_score: 0
+            max_score: 20
+            implied_tiv_low: 0
+            implied_tiv_high: 1000000
+            exposure_modifier: 0.50
+            label: "Micro ($0 - $1M)"
+          - name: small
+            min_score: 20
+            max_score: 40
+            implied_tiv_low: 1000000
+            implied_tiv_high: 10000000
+            exposure_modifier: 0.75
+            label: "Small ($1M - $10M)"
+          - name: medium
+            min_score: 40
+            max_score: 60
+            implied_tiv_low: 10000000
+            implied_tiv_high: 50000000
+            exposure_modifier: 1.00
+            label: "Medium ($10M - $50M)"
+          - name: large
+            min_score: 60
+            max_score: 80
+            implied_tiv_low: 50000000
+            implied_tiv_high: 250000000
+            exposure_modifier: 1.50
+            label: "Large ($50M - $250M)"
+          - name: very_large
+            min_score: 80
+            max_score: 100
+            implied_tiv_low: 250000000
+            implied_tiv_high: 1000000000
+            exposure_modifier: 2.50
+            label: "Very Large ($250M+)"
+
+      # Complexity category mapping
+      complexity_categories:
+        - name: simple
+          min_score: 0
+          max_score: 20
+          complexity_modifier: 0.85
+          label: "Simple"
+        - name: moderate
+          min_score: 20
+          max_score: 40
+          complexity_modifier: 0.95
+          label: "Moderate"
+        - name: complex
+          min_score: 40
+          max_score: 60
+          complexity_modifier: 1.10
+          label: "Complex"
+        - name: highly_complex
+          min_score: 60
+          max_score: 80
+          complexity_modifier: 1.30
+          label: "Highly Complex"
+        - name: extremely_complex
+          min_score: 80
+          max_score: 100
+          complexity_modifier: 1.60
+          label: "Extremely Complex"
+
+      # Cohort priors for fallback estimation
+      cohort_priors:
+        - cohort_id: tech_startup
+          name: "Technology Startup"
+          sector: technology
+          size_indicator: startup
+          prior_band: small
+          prior_score: 30.0
+          confidence: 0.4
+        - cohort_id: tech_enterprise
+          name: "Technology Enterprise"
+          sector: technology
+          size_indicator: enterprise
+          prior_band: large
+          prior_score: 70.0
+          confidence: 0.5
+        - cohort_id: healthcare_mid
+          name: "Healthcare Mid-Market"
+          sector: healthcare
+          size_indicator: midmarket
+          prior_band: medium
+          prior_score: 50.0
+          confidence: 0.45
+        - cohort_id: financial_large
+          name: "Financial Services Large"
+          sector: financial_services
+          size_indicator: large
+          prior_band: very_large
+          prior_score: 85.0
+          confidence: 0.55
+        - cohort_id: retail_smb
+          name: "Retail SMB"
+          sector: retail
+          size_indicator: smb
+          prior_band: small
+          prior_score: 25.0
+          confidence: 0.4
+
+      # Pricing integration configuration
+      pricing_integration:
+        method: parallel
+        exposure_weight: 0.60
+        complexity_weight: 0.40
+        combined_modifier_cap: 3.00
+        combined_modifier_floor: 0.40
+
+      # Auto-apply rules for exposure decisions
+      auto_apply_rules:
+        - condition: "exposure_band == 'very_large' and confidence < 0.5"
+          action: refer
+          reason: "Very large exposure with low confidence - verify manually"
+
+        - condition: "exposure_band in ['large', 'very_large'] and proxy_tier == 'COHORT_INFERENCE'"
+          action: refer
+          reason: "Large exposure based on cohort inference - direct data needed"
+
+        - condition: "complexity_category == 'extremely_complex'"
+          action: flag
+          reason: "Extremely complex structure - consider enhanced underwriting"
+
+        - condition: "exposure_band == 'micro' and confidence >= 0.7"
+          action: apply_modifier
+          modifier: "micro_exposure_credit"
+
+      # Monitoring configuration
+      monitoring:
+        refresh_frequency: monthly
+        band_change_alert: true
+        complexity_change_threshold: 15
+        cohort_recalibration_frequency: quarterly

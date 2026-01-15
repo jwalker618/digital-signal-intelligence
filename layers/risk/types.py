@@ -698,6 +698,51 @@ class ModelVersion:
     correlation_matrix_version: Optional[str] = None
     correlation_matrix_hash: Optional[str] = None
 
+    # Exposure Shadow Layer Outputs (Phase 17)
+    exposure_score: Optional[float] = None
+    exposure_band: Optional[str] = None
+    exposure_confidence: Optional[float] = None
+    exposure_proxy_tier: Optional[str] = None
+
+    # Exposure Range (acknowledges uncertainty)
+    exposure_range_low: Optional[float] = None
+    exposure_range_high: Optional[float] = None
+
+    # Implied TIV Estimate
+    implied_tiv_low: Optional[float] = None
+    implied_tiv_high: Optional[float] = None
+
+    # Complexity Scoring
+    complexity_score: Optional[float] = None
+    complexity_category: Optional[str] = None
+    complexity_confidence: Optional[float] = None
+
+    # Complexity Component Scores
+    geographic_complexity_score: Optional[float] = None
+    structural_complexity_score: Optional[float] = None
+    technical_complexity_score: Optional[float] = None
+    regulatory_complexity_score: Optional[float] = None
+
+    # Exposure Cohort Assignment
+    exposure_cohort_id: Optional[str] = None
+    exposure_cohort_name: Optional[str] = None
+    exposure_cohort_prior_applied: bool = False
+
+    # Exposure Pricing Impact
+    exposure_modifier: Optional[float] = None
+    complexity_modifier: Optional[float] = None
+    exposure_combined_modifier: Optional[float] = None
+
+    # Exposure Signals Used
+    exposure_signals_used: List[str] = field(default_factory=list)
+    exposure_signals_available: int = 0
+    exposure_signals_total: int = 0
+
+    # Exposure Referral State
+    exposure_referral_triggered: bool = False
+    exposure_referral_reasons: List[str] = field(default_factory=list)
+    exposure_flags: List[str] = field(default_factory=list)
+
     # Metadata
     created_at: datetime = field(default_factory=utcnow)
     created_by: str = ""

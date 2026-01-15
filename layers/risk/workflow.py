@@ -65,6 +65,28 @@ except ImportError:
     LossCorrelationScorer = None
     LossCorrelationConfig = None
     LossPropensityResult = None
+
+# Phase 17: Exposure Shadow Layer (optional, graceful import)
+try:
+    from layers.exposure import (
+        ExposureScorer,
+        ComplexityScorer,
+        CohortManager,
+        ExposureConfig,
+        ExposureResult,
+        ComplexityResult,
+        CombinedExposureResult,
+    )
+    EXPOSURE_SHADOW_AVAILABLE = True
+except ImportError:
+    EXPOSURE_SHADOW_AVAILABLE = False
+    ExposureScorer = None
+    ComplexityScorer = None
+    CohortManager = None
+    ExposureConfig = None
+    ExposureResult = None
+    ComplexityResult = None
+    CombinedExposureResult = None
 from signal_architecture.discovery.website_discovery import (
     WebsiteDiscoveryEngine,
     DiscoveryResult,
@@ -113,6 +135,9 @@ class WorkflowEngine:
         enable_default_modifiers: bool = True,
         loss_correlation_scorer: Optional["LossCorrelationScorer"] = None,
         enable_loss_correlation: bool = True,
+        exposure_scorer: Optional["ExposureScorer"] = None,
+        complexity_scorer: Optional["ComplexityScorer"] = None,
+        enable_exposure_shadow: bool = True,
     ):
         """
         Initialize WorkflowEngine with dependencies.
@@ -150,6 +175,90 @@ class WorkflowEngine:
         # Loss Correlation Scorer (Phase 16) - optional
         self.loss_correlation_scorer = loss_correlation_scorer
         self.enable_loss_correlation = enable_loss_correlation and LOSS_CORRELATION_AVAILABLE
+
+        # Exposure Shadow Layer (Phase 17) - optional
+        self.exposure_scorer = exposure_scorer
+        self.complexity_scorer = complexity_scorer
+        self.enable_exposure_shadow = enable_exposure_shadow and EXPOSURE_SHADOW_AVAILABLE
+
+    def _calculate_exposure(
+        self,
+        signal_outputs: List[Any],
+        config: CoverageConfig,
+    ) -> Optional[Tuple[Any, Any]]:
+        """
+        Calculate exposure magnitude and complexity from signal outputs (Phase 17).
+
+        This runs in parallel with risk scoring, using the same signals
+        but applying exposure-specific weighting and proxy tier logic.
+
+        Args:
+            signal_outputs: Signal extraction results from main pipeline
+            config: Coverage configuration
+
+        Returns:
+            Tuple of (ExposureResult, ComplexityResult) or None if disabled
+        """
+        if not self.enable_exposure_shadow:
+            return None
+
+        if not EXPOSURE_SHADOW_AVAILABLE:
+            logger.debug("Exposure shadow layer not available")
+            return None
+
+        # Check if exposure shadow is enabled in config
+        exposure_config_data = getattr(config, 'exposure_shadow', None)
+        if exposure_config_data is None:
+            logger.debug("Exposure shadow not configured for coverage")
+            return None
+
+        if isinstance(exposure_config_data, dict) and not exposure_config_data.get('enabled', False):
+            logger.debug("Exposure shadow disabled in config")
+            return None
+
+        try:
+            # Create scorers if not provided
+            if self.exposure_scorer is None or self.complexity_scorer is None:
+                if isinstance(exposure_config_data, dict):
+                    exp_config = ExposureConfig.from_dict(exposure_config_data)
+                else:
+                    exp_config = exposure_config_data
+
+                if self.exposure_scorer is None:
+                    self.exposure_scorer = ExposureScorer(exp_config)
+                if self.complexity_scorer is None:
+                    self.complexity_scorer = ComplexityScorer(exp_config)
+
+            # Get cohort prior if available
+            cohort_prior = None
+            cohort_manager = CohortManager(self.exposure_scorer.config)
+            # Could match cohort based on entity characteristics
+            # For now, skip cohort matching (would need entity metadata)
+
+            # Calculate exposure magnitude
+            exposure_result = self.exposure_scorer.score(signal_outputs, cohort_prior)
+
+            # Calculate complexity
+            complexity_result = self.complexity_scorer.score(signal_outputs)
+
+            logger.info(
+                f"Exposure calculated: score={exposure_result.score:.1f}, "
+                f"band={exposure_result.band.value}, "
+                f"confidence={exposure_result.confidence:.2f}, "
+                f"implied_tiv=${exposure_result.implied_tiv_low:,.0f}-${exposure_result.implied_tiv_high:,.0f}"
+            )
+
+            logger.info(
+                f"Complexity calculated: score={complexity_result.score:.1f}, "
+                f"category={complexity_result.category.value}, "
+                f"confidence={complexity_result.confidence:.2f}"
+            )
+
+            return (exposure_result, complexity_result)
+
+        except Exception as e:
+            logger.warning(f"Exposure calculation failed: {e}")
+            return None
 
     def _calculate_loss_propensity(
         self,
@@ -345,6 +454,15 @@ class WorkflowEngine:
             previous_result=None,  # Could load from history
         )
 
+        # Phase 17: Calculate Exposure & Complexity (parallel to risk scoring)
+        # Uses same signal outputs with exposure-specific weighting
+        exposure_results = self._calculate_exposure(
+            signal_outputs=scoring_result.signal_outputs,
+            config=config,
+        )
+        exposure_result = exposure_results[0] if exposure_results else None
+        complexity_result = exposure_results[1] if exposure_results else None
+
         # Step 7: Evaluate Direct Queries
         query_result = self.query_evaluator.evaluate_queries(
             responses=direct_query_responses,
@@ -384,6 +502,24 @@ class WorkflowEngine:
             }
             all_modifiers.append(loss_modifier)
 
+        # Add exposure modifier if available and significant (Phase 17)
+        if exposure_result and exposure_result.exposure_modifier != 1.0:
+            exp_modifier = {
+                "name": "exposure_magnitude",
+                "factor": exposure_result.exposure_modifier,
+                "confidence": exposure_result.confidence,
+            }
+            all_modifiers.append(exp_modifier)
+
+        # Add complexity modifier if available and significant (Phase 17)
+        if complexity_result and complexity_result.complexity_modifier != 1.0:
+            comp_modifier = {
+                "name": "complexity",
+                "factor": complexity_result.complexity_modifier,
+                "confidence": complexity_result.confidence,
+            }
+            all_modifiers.append(comp_modifier)
+
         # Steps 8-12: Calculate Premium
         pricing_result = self.pricer.price_submission(
             pure_composite_score=scoring_result.pure_composite_score,
@@ -405,6 +541,13 @@ class WorkflowEngine:
                 all_referrals.extend(loss_propensity_result.referral_reasons)
             if loss_propensity_result.flags:
                 all_notes.extend([f"Loss flag: {f}" for f in loss_propensity_result.flags])
+
+        # Add exposure referrals if triggered (Phase 17)
+        if exposure_result:
+            if exposure_result.referral_triggered:
+                all_referrals.extend(exposure_result.referral_reasons)
+            if exposure_result.flags:
+                all_notes.extend([f"Exposure flag: {f}" for f in exposure_result.flags])
 
         # Step 13: Determine Decision
         decision, auto_approve = self.determine_decision(
@@ -483,6 +626,43 @@ class WorkflowEngine:
             model_version.loss_score_velocity = loss_propensity_result.score_velocity
             model_version.loss_last_refresh = loss_propensity_result.calculated_at
             model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
+
+        # Add exposure shadow layer outputs to model version (Phase 17)
+        if exposure_result:
+            model_version.exposure_score = exposure_result.score
+            model_version.exposure_band = exposure_result.band.value
+            model_version.exposure_confidence = exposure_result.confidence
+            model_version.exposure_proxy_tier = exposure_result.proxy_tier.name
+            model_version.exposure_range_low = exposure_result.range_low
+            model_version.exposure_range_high = exposure_result.range_high
+            model_version.implied_tiv_low = exposure_result.implied_tiv_low
+            model_version.implied_tiv_high = exposure_result.implied_tiv_high
+            model_version.exposure_cohort_id = exposure_result.cohort_id
+            model_version.exposure_cohort_name = exposure_result.cohort_name
+            model_version.exposure_cohort_prior_applied = exposure_result.cohort_prior_applied
+            model_version.exposure_modifier = exposure_result.exposure_modifier
+            model_version.exposure_signals_used = exposure_result.signals_used
+            model_version.exposure_signals_available = exposure_result.signals_available
+            model_version.exposure_signals_total = exposure_result.signals_total
+            model_version.exposure_referral_triggered = exposure_result.referral_triggered
+            model_version.exposure_referral_reasons = exposure_result.referral_reasons
+            model_version.exposure_flags = exposure_result.flags
+
+        if complexity_result:
+            model_version.complexity_score = complexity_result.score
+            model_version.complexity_category = complexity_result.category.value
+            model_version.complexity_confidence = complexity_result.confidence
+            model_version.geographic_complexity_score = complexity_result.geographic_score
+            model_version.structural_complexity_score = complexity_result.structural_score
+            model_version.technical_complexity_score = complexity_result.technical_score
+            model_version.regulatory_complexity_score = complexity_result.regulatory_score
+            model_version.complexity_modifier = complexity_result.complexity_modifier
+
+            # Calculate combined exposure modifier
+            if exposure_result:
+                model_version.exposure_combined_modifier = (
+                    exposure_result.exposure_modifier * complexity_result.complexity_modifier
+                )
 
         return WorkflowResult(
             entity_id=entity_id,

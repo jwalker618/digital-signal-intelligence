@@ -41,10 +41,10 @@ When starting any DSI work:
 | 14 | Examples | ✅ Complete |  `development/project/phase_14.md` |
 | 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
 | 16 | Loss Correlation | ✅ Complete |  `development/project/phase_16.md` |
-| 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
+| 17 | Exposure Shadow Layer | ✅ Complete | `development/project/phase_17.md` |
 | 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
 
-**Current State**: Core framework complete and validated. Architecture restructured (Phase 18) - signals, layers, and coverages now at root level. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. **Loss Correlation Layer implemented (Phase 16)** - LossCorrelationScorer, CorrelationMatrixManager, LossMonitoringEngine, and LossPricingIntegration complete. Exposure Shadow Layer specification complete (Phase 17). Comprehensive repository review completed January 2026.
+**Current State**: Core framework complete and validated. Architecture restructured (Phase 18) - signals, layers, and coverages now at root level. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. **Loss Correlation Layer implemented (Phase 16)** - LossCorrelationScorer, CorrelationMatrixManager, LossMonitoringEngine, and LossPricingIntegration complete. **Exposure Shadow Layer implemented (Phase 17)** - ExposureScorer, ComplexityScorer, BandMapper, CohortManager, and ExposureRulesEngine complete. Three-layer parallel assessment architecture (Risk, Exposure, Loss) now operational. Comprehensive repository review completed January 2026.
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
