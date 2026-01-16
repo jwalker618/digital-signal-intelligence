@@ -35,6 +35,17 @@ cyber:
       name: "DSI Cyber Technical Pricing Model"
       description: "Cyber liability model based on externally observable technical signals"
       version: "2.0.0"
+      loss_correlation:
+        enabled: true
+        monitoring:
+          refresh_frequency: monthly
+          deterioration_threshold: 15
+          improvement_threshold: 15
+          alert_on_band_change: true
+          alert_on_velocity_spike: true
+          velocity_spike_threshold: 10.0
+      shadow_layer:
+        enabled: true
       coverage_types:
         - "cyber_liability"
         - "network_security"
@@ -236,57 +247,74 @@ cyber:
       - id: "network_authority"
         name: "Network Authority"
         description: "Industry relationships, partnerships, and counterparty quality"
-        weight: 0.15
-        test_scores: {excellent: 90, average: 70, poor: 40}
-        score_condition: false
+        risk:
+          weight: 0.15
+          test_scores: {excellent: 90, average: 70, poor: 40}
+          score_condition: false
         
       - id: "technical_infrastructure"
         name: "Technical Infrastructure"
         description: "Observable technical security implementation"
-        weight: 0.35
-        test_scores: {excellent: 92, average: 68, poor: 35}
-        score_condition: true
-        bands:
-          - max: 30
-            override: 5
-            action: "DECLINE"
-            note: "Critical technical deficiencies"
-          - max: 45
-            override: 4
-            action: "REFER"
-            note: "Significant technical concerns"
-        inclusive_max: false
+        risk:
+          weight: 0.35
+          test_scores: {excellent: 92, average: 68, poor: 35}
+          score_condition: true
+          bands:
+            - max: 30
+              override: 5
+              action: "DECLINE"
+              note: "Critical technical deficiencies"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Significant technical concerns"
+          inclusive_max: false
+        loss:
+          weight: 0.35
+          confidence_threshold: 0.7
         
       - id: "corporate_footprint"
         name: "Corporate Footprint"
         description: "Signals from company's digital presence and security posture"
-        weight: 0.15
-        test_scores: {excellent: 88, average: 65, poor: 38}
-        score_condition: false
+        risk:
+          weight: 0.15
+          test_scores: {excellent: 88, average: 65, poor: 38}
+          score_condition: false
+        loss:
+          weight: 0.25
+          confidence_threshold: 0.6
         
       - id: "public_record"
         name: "Public Record"
         description: "Breach history, regulatory actions, and public disclosures"
-        weight: 0.25
-        test_scores: {excellent: 95, average: 72, poor: 30}
-        score_condition: true
-        bands:
-          - max: 30
-            override: 5
-            action: "DECLINE"
-            note: "Severe breach/regulatory history"
-          - max: 45
-            override: 4
-            action: "REFER"
-            note: "Material breach history"
-        inclusive_max: false
+        risk:
+          weight: 0.25
+          test_scores: {excellent: 95, average: 72, poor: 30}
+          score_condition: true
+          bands:
+            - max: 30
+              override: 5
+              action: "DECLINE"
+              note: "Severe breach/regulatory history"
+            - max: 45
+              override: 4
+              action: "REFER"
+              note: "Material breach history"
+          inclusive_max: false
+        loss:
+          weight: 0.2
+          confidence_threshold: 0.8
      
       - id: "structured_data"
         name: "Structured Data"
         description: "Third-party security ratings and scores"
-        weight: 0.10
-        test_scores: {excellent: 88, average: 68, poor: 42}
-        score_condition: false
+        risk:
+          weight: 0.10
+          test_scores: {excellent: 88, average: 68, poor: 42}
+          score_condition: false
+        loss:
+          weight: 0.2
+          confidence_threshold: 0.9
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -300,297 +328,399 @@ cyber:
         - id: "customer_quality"
           name: "Customer Quality"
           description: "Customer quality inferred from case studies, logos, testimonials"
-          weight: 0.15
           inference_utility_function: customer_quality_basefunction
-          score_condition: false
+          risk:
+            weight: 0.15
+            score_condition: false
           
         - id: "partner_quality"
           name: "Partner Network Quality"
           description: "Technology partners and alliance quality"
-          weight: 0.10
           inference_utility_function: partner_quality_basefunction
-          score_condition: false
+          risk:
+            weight: 0.10
+            score_condition: false
           
         - id: "security_vendor"
           name: "Security Vendor Relationships"
           description: "Relationships with tier-1 security vendors (CrowdStrike, Palo Alto, etc.)"
-          weight: 0.25
           inference_utility_function: security_vendor_basefunction
-          score_condition: true
-          bands:
-            - max: 25
-              override: null
-              action: "FLAG"
-              note: "No tier-1 security vendors detected"
-          inclusive_max: false     
+          risk:
+            weight: 0.25
+            score_condition: true
+            bands:
+              - max: 25
+                override: null
+                action: "FLAG"
+                note: "No tier-1 security vendors detected"
+            inclusive_max: false     
           
         - id: "industry_body"
           name: "Industry Body Membership"
           description: "Membership in ISACs, trade associations, security consortiums"
-          weight: 0.15
           inference_utility_function: industry_body_basefunction
-          score_condition: false
+          risk:
+            weight: 0.15
+            score_condition: false
           
         - id: "certification_authority"
           name: "Certification Authority"
           description: "Quality of certification auditors (Big 4, recognized bodies)"
-          weight: 0.15
           inference_utility_function: certification_authority_basefunction
-          score_condition: false
+          risk:
+            weight: 0.15
+            score_condition: false
 
         - id: "financial_relationship"
           name: "Financial Relationship Quality"
           description: "Banking and financial relationship indicators"
-          weight: 0.05
           inference_utility_function: financial_relationship_basefunction
-          score_condition: false
+          risk:
+            weight: 0.05
+            score_condition: false
 
         - id: "network_centrality"
           name: "Peer Network Centrality"
           description: "Position in industry relationship graph"
-          weight: 0.10
           inference_utility_function: network_centrality_basefunction
-          score_condition: false
+          risk:
+            weight: 0.10
+            score_condition: false
 
         - id: "second_degree"
           name: "Second-Degree Relationship Quality"
           description: "Quality of partners' partners (supply chain depth)"
-          weight: 0.05
           inference_utility_function: second_degree_basefunction
-          score_condition: false
+          risk:
+            weight: 0.05
+            score_condition: false
   
       technical_infrastructure:
         - id: "tls_score"
           name: "TLS/SSL Configuration"
           description: "TLS configuration quality (SSL Labs methodology)"
-          weight: 0.12
           inference_utility_function: tls_configuration_basefunction
-          score_condition: false
+          risk:
+            weight: 0.12
+            score_condition: false
+          loss:
+            weight: 0.25
+            correlation_type: frequency
+            correlation_direction: negative
+            normalizer: linear 
           
         - id: "security_headers"
           name: "Security Headers"
           description: "HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)"
-          weight: 0.10
           inference_utility_function: security_headers_basefunction
-          score_condition: false
+          risk:
+            weight: 0.10
+            score_condition: false
+          loss:
+            weight: 0.3
+            correlation_type: both
+            correlation_direction: negative
+            normalizer: linear
+            thresholds: [20, 40, 60, 80]
+            lag_months: 6
           
         - id: "email_auth"
           name: "Email Authentication"
           description: "Email security (SPF, DMARC, DKIM configuration)"
-          weight: 0.12
           inference_utility_function: email_authentication_basefunction
-          score_condition: false
+          risk:
+            weight: 0.12
+            score_condition: false
           
         - id: "dnssec"
           name: "DNSSEC Implementation"
           description: "DNS Security Extensions implementation"
-          weight: 0.05
           inference_utility_function: dnssec_basefunction
-          score_condition: false
+          risk:
+            weight: 0.05
+            score_condition: false
           
         - id: "exposure"
           name: "Network Exposure"
           description: "Exposed services and open ports (Shodan/Censys analysis)"
-          weight: 0.18
           inference_utility_function: network_exposure_basefunction
-          score_condition: true
-          bands:
-            - max: 30
-              override: 5
-              action: "DECLINE" 
-              note: "Dangerous network exposure"
-            - max: 45
-              override: 4
-              action: "REFER"
-              note: "Elevated network exposure"
-          inclusive_max: false
+          risk:
+            weight: 0.18
+            score_condition: true
+            bands:
+              - max: 30
+                override: 5
+                action: "DECLINE" 
+                note: "Dangerous network exposure"
+              - max: 45
+                override: 4
+                action: "REFER"
+                note: "Elevated network exposure"
+            inclusive_max: false
       
         - id: "software_currency"
           name: "Software Currency"
           description: "Software version freshness (fingerprinting analysis)"
-          weight: 0.10
           inference_utility_function: software_currency_basefunction
-          score_condition: false
+          risk:
+            weight: 0.10
+            score_condition: false
+          loss:
+            weight: 0.25
+            correlation_type: both
+            correlation_direction: negative
+            normalizer: percentile
 
         - id: "cve_exposure"
           name: "CVE Exposure"
           description: "Known vulnerabilities in detected software"
-          weight: 0.18
           inference_utility_function: cve_exposure_basefunction
-          score_condition: true
-          bands:
-            - max: 25
-              override: 5
-              action: "DECLINE"
-              note: "Critical unpatched vulnerabilities"
-            - max: 40
-              override: 4
-              action: "REFER"
-              note: "Significant vulnerability exposure"
-          inclusive_max: false
+          risk:
+            weight: 0.18
+            score_condition: true
+            bands:
+              - max: 25
+                override: 5
+                action: "DECLINE"
+                note: "Critical unpatched vulnerabilities"
+              - max: 40
+                override: 4
+                action: "REFER"
+                note: "Significant vulnerability exposure"
+            inclusive_max: false
+          loss:
+            weight: 0.2
+            correlation_type: frequency
+            correlation_direction: positive
+            normalizer: log_scale 
 
         - id: "cloud_infrastructure"
           name: "Cloud Infrastructure Quality"
           description: "Cloud provider quality and configuration"
-          weight: 0.05
           inference_utility_function: cloud_infrastructure_basefunction
-          score_condition: false
+          risk:
+            weight: 0.05
+            score_condition: false
 
         - id: "waf_presence"
           name: "WAF Presence"
           description: "Web Application Firewall detection"
-          weight: 0.05
           inference_utility_function: waf_presence_basefunction
-          score_condition: false
+          risk:
+            weight: 0.05
+            score_condition: false
 
         - id: "cdn_usage"
           name: "CDN Usage"
           description: "Content Delivery Network usage (DDoS protection indicator)"
-          weight: 0.05
           inference_utility_function: cdn_usage_basefunction
-          score_condition: false
+          risk:
+            weight: 0.05
+            score_condition: false
   
       corporate_footprint:
         - id: "security_page"
           name: "Security Page Presence"
           description: "Dedicated security/trust page presence and quality"
-          weight: 0.15
           inference_utility_function: security_page_basefunction
-          score_condition: false
-          
+          risk:
+            weight: 0.15
+            score_condition: false
+          loss:
+            weight: 0.35
+            correlation_type: severity
+            correlation_direction: negative
+            normalizer: categorical_map            
+            
         - id: "privacy_policy"
           name: "Privacy Policy Quality"
           description: "Privacy policy comprehensiveness (NLP analysis)"
-          weight: 0.10
           inference_utility_function: privacy_policy_basefunction
-          score_condition: false
-          
+          risk:
+            weight: 0.10
+            score_condition: false
+            
         - id: "security_txt"
           name: "Security.txt Presence"
           description: "RFC 9116 security.txt file presence and completeness"
-          weight: 0.08
           inference_utility_function: security_txt_basefunction
-          score_condition: false
+          risk:
+            weight: 0.08
+            score_condition: false
           
         - id: "bug_bounty"
           name: "Bug Bounty Program"
           description: "Public bug bounty program presence"
-          weight: 0.15
           inference_utility_function: bug_bounty_basefunction
-          score_condition: false
+          risk:
+            weight: 0.15
+            score_condition: false
           
         - id: "security_hiring"
           name: "Security Hiring Activity"
           description: "Security-related job postings (CISO, security engineers)"
-          weight: 0.12
           inference_utility_function: security_hiring_basefunction
-          score_condition: false
+          risk:
+            weight: 0.12
+            score_condition: false
           
         - id: "technical_content"
           name: "Technical Blog Quality"
           description: "Security-focused technical content presence"
-          weight: 0.08
           inference_utility_function: technical_quality_basefunction
-          score_condition: false
+          risk:
+            weight: 0.08
+            score_condition: false
 
         - id: "developer_resources"
           name: "Developer Resources"
           description: "API documentation and developer portal presence"
-          weight: 0.07
           inference_utility_function: developer_resources_basefunction
-          score_condition: false
+          risk:
+            weight: 0.07
+            score_condition: false
 
         - id: "security_leadership"
           name: "Security Leadership Visibility"
           description: "CISO/security leadership public presence"
-          weight: 0.15
           inference_utility_function: security_leadership_basefunction
-          score_condition: false
+          risk:
+            weight: 0.15
+            score_condition: false
+          loss:
+            weight: 0.4
+            correlation_type: both
+            correlation_direction: negative
+            normalizer: linear            
 
         - id: "compliance_badges"
           name: "Compliance Certifications"
           description: "Displayed compliance certifications (SOC 2, ISO 27001, etc.)"
-          weight: 0.10
           inference_utility_function: compliance_badges_basefunction
-          score_condition: false
+          risk:
+            weight: 0.10
+            score_condition: false
+          loss:
+            weight: 0.25
+            correlation_type: frequency
+            correlation_direction: negative
+            normalizer: linear            
   
       public_record:
         - id: "breach_history"
           name: "Breach History"
           description: "Historical data breaches (HHS, state AG, public disclosures)"
-          weight: 0.35
           inference_utility_function: breach_history_basefunction
-          score_condition: true
-          bands:
-            - max: 35
-              override: 5
-              action: "DECLINE"
-              note: "Severe or recent breach history"
-            - max: 50
-              override: 4
-              action: "REFER"
-              note: "Material breach history"
-          inclusive_max: false
+          risk:
+            weight: 0.35
+            score_condition: true
+            bands:
+              - max: 35
+                override: 5
+                action: "DECLINE"
+                note: "Severe or recent breach history"
+              - max: 50
+                override: 4
+                action: "REFER"
+                note: "Material breach history"
+            inclusive_max: false
+          loss:
+            weight: 0.5
+            correlation_type: both
+            correlation_direction: positive
+            normalizer: categorical_map            
             
         - id: "regulatory_action"
           name: "Regulatory Actions"
           description: "FTC, state AG, GDPR enforcement actions"
-          weight: 0.20
           inference_utility_function: regulatory_action_basefunction
-          score_condition: false
+          risk:
+            weight: 0.20
+            score_condition: false
+          loss:
+            weight: 0.3
+            correlation_type: both
+            correlation_direction: positive
+            normalizer: linear            
           
         - id: "litigation_history"
           name: "Litigation History"
           description: "Data breach and privacy-related lawsuits"
-          weight: 0.15
           inference_utility_function: litigation_history_basefunction
-          score_condition: false
+          risk:
+            weight: 0.15
+            score_condition: false
+          loss:
+            weight: 0.2
+            correlation_type: frequency
+            correlation_direction: positive
+            normalizer: capped  
           
         - id: "credential_exposure"
           name: "Credential Exposure"
           description: "Corporate domain credential exposure (HIBP)"
-          weight: 0.15
           inference_utility_function: credential_exposure_basefunction
-          score_condition: false
+          risk:
+            weight: 0.15
+            score_condition: false
           
         - id: "dark_web"
           name: "Dark Web Exposure"
           description: "Leaked data and credentials for sale"
-          weight: 0.15
           inference_utility_function: dark_web_basefunction
-          score_condition: true
-          bands:
-            - max: 30
-              override: 5
-              action: "DECLINE"
-              note: "Active dark web exposure"
-            - max: 45
-              override: 4
-              action: "REFER"
-              note: "Dark web data presence"
-          inclusive_max: false
+          risk:
+            weight: 0.15
+            score_condition: true
+            bands:
+              - max: 30
+                override: 5
+                action: "DECLINE"
+                note: "Active dark web exposure"
+              - max: 45
+                override: 4
+                action: "REFER"
+                note: "Dark web data presence"
+            inclusive_max: false
           
       structured_data:
         - id: "security_rating"
           name: "Security Rating"
           description: "Third-party security rating (BitSight, SecurityScorecard)"
-          weight: 0.50
           inference_utility_function: security_rating_basefunction
-          score_condition: false
+          risk:
+            weight: 0.50
+            score_condition: false
+          loss:
+            weight: 0.3
+            correlation_type: both
+            correlation_direction: negative
+            normalizer: percentile
           
         - id: "esg_cyber"
           name: "ESG Cyber Component"
           description: "Cyber/privacy component of ESG ratings"
-          weight: 0.25
           inference_utility_function: esg_cyber_basefunction
-          score_condition: false
-          
+          risk:
+            weight: 0.2
+            score_condition: false
+          loss:
+            weight: 0.3
+            correlation_type: frequency
+            correlation_direction: negative
+            normalizer: linear
+           
         - id: "credit_rating"
           name: "Credit Rating Proxy"
           description: "Credit rating as proxy for organizational quality"
-          weight: 0.25
           inference_utility_function: credit_rating_basefunction
-          score_condition: false
+          risk:
+            weight: 0.25
+            score_condition: false
+          loss:
+            weight: 0.5
+            correlation_type: both
+            correlation_direction: negative
+            normalizer: categorical_map
   
     # ---------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -666,10 +796,71 @@ cyber:
         deductible: 500000
 
     # ---------------------------------------------------------------------------
+    # LOSS PROPENSITY
+    # ---------------------------------------------------------------------------
+    propensity_band:
+      method: fixed_threshold
+      bands:
+        - name: very_low
+          min_score: 0
+          max_score: 20
+          expected_frequency_multiplier: 0.60
+          expected_severity_multiplier: 0.70
+          score_condition: true
+            confidence_bands:
+                - max: 0.8
+                  override: 1
+                  action: "FLAG"
+                  note: "preferred_risk_credit"
+              inclusive_max: false
+          
+        - name: low
+          min_score: 20
+          max_score: 40
+          expected_frequency_multiplier: 0.85
+          expected_severity_multiplier: 0.90
+          score_condition: false
+        - name: moderate
+          min_score: 40
+          max_score: 60
+          expected_frequency_multiplier: 1.00
+          expected_severity_multiplier: 1.00
+          score_condition: false
+        - name: elevated
+          min_score: 60
+          max_score: 80
+          expected_frequency_multiplier: 1.25
+          expected_severity_multiplier: 1.15
+          score_condition: false
+        - name: high
+          min_score: 80
+          max_score: 100
+          expected_frequency_multiplier: 1.60
+          expected_severity_multiplier: 1.40
+          score_condition: true
+            confidence_bands:
+              - max: 0.8
+                override: 4
+                action: "REFER"
+                note: "High loss propensity with high confidence"
+            inclusive_max: false
+
+    # ---------------------------------------------------------------------------
     # PRICING PARAMETERS
     # ---------------------------------------------------------------------------
     
     pricing:
+      loss_integration:
+        method: multiplicative
+        frequency:
+          weight: 0.6
+          cap: 1.5
+          floor: 0.7
+        severity: 
+          weight: 0.4
+          cap: 1.4
+          floor: 0.75
+    
       # Increased Limit Factors (ILF)
       ilf_curve:
         base_limit: 1000000  # $1M base
@@ -688,14 +879,6 @@ cyber:
         - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}   # 0.5-1% of limit
         - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}   # 1-2% of limit
         - {min_pct: 0.020, max_pct: null, credit: 0.20}    # >2% of limit
-      
-      # Experience modifiers
-      experience_modifiers:
-        clean_5yr: 0.90
-        clean_3yr: 0.95
-        minor_losses: 1.00
-        moderate_losses: 1.15
-        major_losses: 1.35
         
       taxes_fees_rate: 0.05
   
@@ -975,172 +1158,13 @@ cyber:
             credit_rating: 65
 
     # -------------------------------------------------------------------------
-    # LOSS CORRELATION CONFIGURATION (Phase 16)
-    # -------------------------------------------------------------------------
-    # Loss propensity scoring based on signal-loss correlations
-
-    loss_correlation:
-      enabled: true
-      version: "2026-01-14"
-
-      correlation_groups:
-        - name: loss_technical_infrastructure
-          weight: 0.35
-          confidence_threshold: 0.7
-          features:
-            - id: security_headers
-              weight: 0.30
-              correlation_type: both
-              correlation_direction: negative
-              normalizer: linear
-              thresholds: [20, 40, 60, 80]
-              lag_months: 6
-            - id: tls_score
-              weight: 0.25
-              correlation_type: frequency
-              correlation_direction: negative
-              normalizer: linear
-            - id: software_currency
-              weight: 0.25
-              correlation_type: both
-              correlation_direction: negative
-              normalizer: percentile
-            - id: exposure
-              weight: 0.20
-              correlation_type: frequency
-              correlation_direction: positive
-              normalizer: log_scale
-
-        - name: loss_corporate_footprint
-          weight: 0.25
-          confidence_threshold: 0.6
-          features:
-            - id: security_leadership
-              weight: 0.40
-              correlation_type: both
-              correlation_direction: negative
-              normalizer: linear
-            - id: security_page
-              weight: 0.35
-              correlation_type: severity
-              correlation_direction: negative
-              normalizer: categorical_map
-            - id: compliance_badges
-              weight: 0.25
-              correlation_type: frequency
-              correlation_direction: negative
-              normalizer: linear
-
-        - name: loss_public_record
-          weight: 0.20
-          confidence_threshold: 0.8
-          features:
-            - id: breach_history
-              weight: 0.50
-              correlation_type: both
-              correlation_direction: positive
-              normalizer: categorical_map
-              lag_months: 0
-            - id: regulatory_action
-              weight: 0.30
-              correlation_type: both
-              correlation_direction: positive
-              normalizer: linear
-            - id: litigation_history
-              weight: 0.20
-              correlation_type: frequency
-              correlation_direction: positive
-              normalizer: capped
-              cap: 5
-
-        - name: loss_structured_data
-          weight: 0.20
-          confidence_threshold: 0.9
-          features:
-            - id: credit_rating
-              weight: 0.50
-              correlation_type: both
-              correlation_direction: negative
-              normalizer: categorical_map
-            - id: security_rating
-              weight: 0.30
-              correlation_type: both
-              correlation_direction: negative
-              normalizer: percentile
-            - id: esg_cyber
-              weight: 0.20
-              correlation_type: frequency
-              correlation_direction: negative
-              normalizer: linear
-
-      propensity_band_mapping:
-        method: fixed_threshold
-        bands:
-          - name: very_low
-            min_score: 0
-            max_score: 20
-            expected_frequency_multiplier: 0.60
-            expected_severity_multiplier: 0.70
-          - name: low
-            min_score: 20
-            max_score: 40
-            expected_frequency_multiplier: 0.85
-            expected_severity_multiplier: 0.90
-          - name: moderate
-            min_score: 40
-            max_score: 60
-            expected_frequency_multiplier: 1.00
-            expected_severity_multiplier: 1.00
-          - name: elevated
-            min_score: 60
-            max_score: 80
-            expected_frequency_multiplier: 1.25
-            expected_severity_multiplier: 1.15
-          - name: high
-            min_score: 80
-            max_score: 100
-            expected_frequency_multiplier: 1.60
-            expected_severity_multiplier: 1.40
-
-      pricing_integration:
-        method: multiplicative
-        frequency_impact_cap: 1.50
-        frequency_impact_floor: 0.70
-        severity_impact_cap: 1.40
-        severity_impact_floor: 0.75
-        frequency_weight: 0.60
-        severity_weight: 0.40
-
-      auto_apply_rules:
-        - condition: "loss_propensity_band == 'high' and loss_confidence >= 0.8"
-          action: refer
-          reason: "High loss propensity with high confidence"
-
-        - condition: "loss_propensity_score_delta > 20"
-          action: flag
-          reason: "Rapid deterioration in loss propensity"
-
-        - condition: "loss_propensity_band == 'very_low' and loss_confidence >= 0.8"
-          action: apply_modifier
-          modifier: "preferred_risk_credit"
-
-      monitoring:
-        refresh_frequency: monthly
-        deterioration_threshold: 15
-        improvement_threshold: 15
-        alert_on_band_change: true
-        alert_on_velocity_spike: true
-        velocity_spike_threshold: 10.0
-
-    # -------------------------------------------------------------------------
     # EXPOSURE SHADOW LAYER CONFIGURATION (Phase 17)
     # -------------------------------------------------------------------------
     # Exposure magnitude and complexity scoring from observable signals.
     # Enables TIV estimation without client-provided data.
 
     exposure_shadow:
-      enabled: true
-      version: "2026-01-15"
+      
 
       # Exposure magnitude signal groups (TIV proxy)
       exposure_groups:
