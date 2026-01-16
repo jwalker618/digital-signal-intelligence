@@ -850,6 +850,76 @@ cyber:
             inclusive_max: false
 
     # ---------------------------------------------------------------------------
+    # EXPOSURE MAPPINGS
+    # ---------------------------------------------------------------------------
+    exposure_band:
+      method: fixed_threshold
+      bands:
+        - name: micro
+          min_score: 0
+          max_score: 20
+          implied_tiv_low: 0
+          implied_tiv_high: 1000000
+          exposure_modifier: 0.50
+          label: "Micro ($0 - $1M)"
+        - name: small
+          min_score: 20
+          max_score: 40
+          implied_tiv_low: 1000000
+          implied_tiv_high: 10000000
+          exposure_modifier: 0.75
+          label: "Small ($1M - $10M)"
+        - name: medium
+          min_score: 40
+          max_score: 60
+          implied_tiv_low: 10000000
+          implied_tiv_high: 50000000
+          exposure_modifier: 1.00
+          label: "Medium ($10M - $50M)"
+        - name: large
+          min_score: 60
+          max_score: 80
+          implied_tiv_low: 50000000
+          implied_tiv_high: 250000000
+          exposure_modifier: 1.50
+          label: "Large ($50M - $250M)"
+        - name: very_large
+          min_score: 80
+          max_score: 100
+          implied_tiv_low: 250000000
+          implied_tiv_high: 1000000000
+          exposure_modifier: 2.50
+          label: "Very Large ($250M+)"
+
+      # Complexity category mapping
+    exposure_complexity:
+      - name: simple
+        min_score: 0
+        max_score: 20
+        complexity_modifier: 0.85
+        label: "Simple"
+      - name: moderate
+        min_score: 20
+        max_score: 40
+        complexity_modifier: 0.95
+        label: "Moderate"
+      - name: complex
+        min_score: 40
+        max_score: 60
+        complexity_modifier: 1.10
+        label: "Complex"
+      - name: highly_complex
+        min_score: 60
+        max_score: 80
+        complexity_modifier: 1.30
+        label: "Highly Complex"
+      - name: extremely_complex
+        min_score: 80
+        max_score: 100
+        complexity_modifier: 1.60
+        label: "Extremely Complex"
+
+    # ---------------------------------------------------------------------------
     # PRICING PARAMETERS
     # ---------------------------------------------------------------------------
     
@@ -1079,74 +1149,6 @@ cyber:
               proxy_tier: INFERRED_PROXY
               normalizer: log_scale
               description: "Number of compliance frameworks"
-
-      # Exposure band mapping
-      band_mapping:
-        method: fixed_threshold
-        bands:
-          - name: micro
-            min_score: 0
-            max_score: 20
-            implied_tiv_low: 0
-            implied_tiv_high: 1000000
-            exposure_modifier: 0.50
-            label: "Micro ($0 - $1M)"
-          - name: small
-            min_score: 20
-            max_score: 40
-            implied_tiv_low: 1000000
-            implied_tiv_high: 10000000
-            exposure_modifier: 0.75
-            label: "Small ($1M - $10M)"
-          - name: medium
-            min_score: 40
-            max_score: 60
-            implied_tiv_low: 10000000
-            implied_tiv_high: 50000000
-            exposure_modifier: 1.00
-            label: "Medium ($10M - $50M)"
-          - name: large
-            min_score: 60
-            max_score: 80
-            implied_tiv_low: 50000000
-            implied_tiv_high: 250000000
-            exposure_modifier: 1.50
-            label: "Large ($50M - $250M)"
-          - name: very_large
-            min_score: 80
-            max_score: 100
-            implied_tiv_low: 250000000
-            implied_tiv_high: 1000000000
-            exposure_modifier: 2.50
-            label: "Very Large ($250M+)"
-
-      # Complexity category mapping
-      complexity_categories:
-        - name: simple
-          min_score: 0
-          max_score: 20
-          complexity_modifier: 0.85
-          label: "Simple"
-        - name: moderate
-          min_score: 20
-          max_score: 40
-          complexity_modifier: 0.95
-          label: "Moderate"
-        - name: complex
-          min_score: 40
-          max_score: 60
-          complexity_modifier: 1.10
-          label: "Complex"
-        - name: highly_complex
-          min_score: 60
-          max_score: 80
-          complexity_modifier: 1.30
-          label: "Highly Complex"
-        - name: extremely_complex
-          min_score: 80
-          max_score: 100
-          complexity_modifier: 1.60
-          label: "Extremely Complex"
 
       # Cohort priors for fallback estimation
       cohort_priors:
