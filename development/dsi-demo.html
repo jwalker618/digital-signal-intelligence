@@ -1,0 +1,3055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Signal Intelligence - Interactive Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0B3954;
+            --accent-1: #0599AD;
+            --accent-2: #000000;
+            --accent-3: #E8E3DA;
+            --accent-4: #7A766F;
+            --accent-5: #39D3BA;
+            --background: #FFFFFF;
+            --danger: #DC3545;
+            --warning: #F59E0B;
+            --success: #10B981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--primary);
+            background: var(--background);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.25rem; }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--accent-5);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-logo svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 3rem;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-link.active {
+            color: var(--accent-5);
+        }
+
+        /* Main Content */
+        .main {
+            margin-top: 64px;
+            min-height: calc(100vh - 64px);
+        }
+
+        .page {
+            display: none;
+            padding: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border: 1px solid var(--accent-3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #048a9c;
+        }
+
+        .btn-secondary {
+            background: var(--accent-3);
+            color: var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: #ddd8cc;
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-approve { background: #D1FAE5; color: #065F46; }
+        .tag-refer { background: #FEF3C7; color: #92400E; }
+        .tag-decline { background: #FEE2E2; color: #991B1B; }
+        .tag-cyber { background: #DBEAFE; color: #1E40AF; }
+        .tag-do { background: #E0E7FF; color: #3730A3; }
+        .tag-marine { background: #CFFAFE; color: #155E75; }
+        .tag-energy { background: #FEF9C3; color: #854D0E; }
+        .tag-fi { background: #FCE7F3; color: #9D174D; }
+        .tag-aerospace { background: #F3E8FF; color: #6B21A8; }
+        .tag-pi { background: #ECFCCB; color: #3F6212; }
+
+        /* Section Headers */
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--accent-4);
+            font-size: 1.125rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--accent-4);
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: var(--accent-1);
+            text-decoration: none;
+        }
+
+        /* Home Page */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #164B6E 100%);
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            color: var(--accent-5);
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .module-section {
+            margin-bottom: 3rem;
+        }
+
+        .module-section h3 {
+            color: var(--accent-1);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent-3);
+        }
+
+        .module-card {
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-1);
+            transform: scaleY(0);
+            transition: transform 0.2s;
+        }
+
+        .module-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .module-card h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .module-card p {
+            color: var(--accent-4);
+            font-size: 0.875rem;
+        }
+
+        .module-card .module-arrow {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-1);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .module-card:hover .module-arrow {
+            opacity: 1;
+        }
+
+        /* Chart Styles */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--accent-3);
+        }
+
+        .lloyds-chart {
+            position: relative;
+            height: 300px;
+            margin: 2rem 0;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            background: linear-gradient(135deg, rgba(5,153,173,0.1) 0%, rgba(57,211,186,0.1) 100%);
+            border-left: 4px solid var(--accent-1);
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .info-box h4 {
+            color: var(--accent-1);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Principles Grid */
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .principle-card {
+            background: white;
+            border: 1px solid var(--accent-3);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .principle-card:hover {
+            border-color: var(--accent-1);
+        }
+
+        .principle-card.highlight {
+            border-color: var(--accent-1);
+            background: linear-gradient(135deg, rgba(5,153,173,0.05) 0%, rgba(57,211,186,0.05) 100%);
+        }
+
+        .principle-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--accent-1);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .principle-card h5 {
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .principle-card p {
+            font-size: 0.8rem;
+            color: var(--accent-4);
+        }
+
+        /* Signal Categories */
+        .signal-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 2rem;
+            background: var(--accent-3);
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .signal-category {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 140px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        .signal-category:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .signal-category h5 {
+            font-size: 0.8rem;
+            color: var(--primary);
+        }
+
+        .signal-arrow {
+            color: var(--accent-1);
+            font-size: 1.5rem;
+        }
+
+        .risk-profile-node {
+            background: var(--accent-1);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 50%;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Workflow Steps */
+        .workflow-container {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.4;
+            transition: all 0.3s;
+        }
+
+        .workflow-step.active {
+            opacity: 1;
+        }
+
+        .workflow-step.completed {
+            opacity: 0.7;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--accent-4);
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .workflow-step.active .step-number {
+            background: var(--accent-1);
+            color: white;
+        }
+
+        .workflow-step.completed .step-number {
+            background: var(--accent-5);
+            color: white;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .step-details {
+            background: var(--accent-3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .workflow-step.active .step-details {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .click-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--accent-1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Case Studies */
+        .case-study-card {
+            border: 1px solid var(--accent-3);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .case-study-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .case-study-header {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .case-study-header h4 {
+            margin-bottom: 0.25rem;
+        }
+
+        .case-study-meta {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+
+        .case-study-loss {
+            font-size: 0.875rem;
+            color: var(--accent-4);
+        }
+
+        .case-study-expand {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .case-study-card.expanded .case-study-expand {
+            transform: rotate(180deg);
+        }
+
+        .case-study-details {
+            display: none;
+            padding: 0 1.5rem 1.5rem;
+            border-top: 1px solid var(--accent-3);
+        }
+
+        .case-study-card.expanded .case-study-details {
+            display: block;
+        }
+
+        .signal-path {
+            background: #F8FAFC;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .signal-path h5 {
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+            color: var(--accent-1);
+        }
+
+        .signal-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--accent-3);
+            font-size: 0.875rem;
+        }
+
+        .signal-item:last-child {
+            border-bottom: none;
+        }
+
+        .signal-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+
+        .signal-indicator.warning {
+            background: var(--warning);
+        }
+
+        /* Economics Tables */
+        .economics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .economics-table th,
+        .economics-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--accent-3);
+        }
+
+        .economics-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        .economics-table tr:hover {
+            background: rgba(5,153,173,0.05);
+        }
+
+        .improvement {
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        /* Pipeline View */
+        .pipeline-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .pipeline-column {
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 1rem;
+            min-height: 400px;
+        }
+
+        .pipeline-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--accent-3);
+            margin-bottom: 1rem;
+        }
+
+        .pipeline-header h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pipeline-count {
+            background: var(--accent-3);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .risk-card {
+            background: white;
+            border: 1px solid var(--accent-3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .risk-card:hover {
+            border-color: var(--accent-1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .risk-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .risk-card h5 {
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .risk-card .risk-domain {
+            font-size: 0.75rem;
+            color: var(--accent-4);
+        }
+
+        .risk-score {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .risk-score.high { color: var(--success); }
+        .risk-score.medium { color: var(--warning); }
+        .risk-score.low { color: var(--danger); }
+
+        .risk-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--accent-3);
+            font-size: 0.75rem;
+        }
+
+        /* Sliders */
+        .slider-container {
+            margin: 1.5rem 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .slider-value {
+            font-weight: 600;
+            color: var(--accent-1);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--accent-3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        /* Portfolio Adjustment Panel */
+        .adjustment-panel {
+            background: white;
+            border: 1px solid var(--accent-3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .adjustment-panel h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .projection-display {
+            background: linear-gradient(135deg, var(--primary) 0%, #164B6E 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .projection-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .projection-item {
+            text-align: center;
+        }
+
+        .projection-item .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-5);
+        }
+
+        .projection-item .label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--accent-3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent-3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        /* Three Layer Visualization */
+        .three-layer-viz {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .layer-card {
+            background: white;
+            border: 2px solid var(--accent-3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .layer-card:hover {
+            border-color: var(--accent-1);
+        }
+
+        .layer-card.active {
+            border-color: var(--accent-1);
+            box-shadow: 0 4px 20px rgba(5,153,173,0.2);
+        }
+
+        .layer-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--accent-3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+        }
+
+        .layer-card.active .layer-icon {
+            background: var(--accent-1);
+            color: white;
+        }
+
+        /* Comparison */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-table th {
+            padding: 1rem;
+            background: var(--accent-3);
+            text-align: left;
+        }
+
+        .comparison-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .comparison-table th:last-child {
+            border-radius: 0 8px 0 0;
+            background: var(--accent-1);
+            color: white;
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--accent-3);
+        }
+
+        .comparison-table tr:last-child td:first-child {
+            border-radius: 0 0 0 8px;
+        }
+
+        .comparison-table tr:last-child td:last-child {
+            border-radius: 0 0 8px 0;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--accent-3);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: var(--accent-3);
+        }
+
+        .tab.active {
+            background: var(--accent-1);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--accent-4);
+            font-size: 0.875rem;
+            border-top: 1px solid var(--accent-3);
+            margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .pipeline-container {
+                grid-template-columns: 1fr;
+            }
+
+            .three-layer-viz {
+                grid-template-columns: 1fr;
+            }
+
+            .projection-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="#" class="nav-logo" onclick="showPage('home')">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 4L4 20L20 36L36 20L20 4Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M12 18H28M12 22H28M12 26H28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Generate
+        </a>
+        <div class="nav-links">
+            <a href="#" class="nav-link active" onclick="showPage('home')">Home</a>
+            <a href="#" class="nav-link" onclick="showPage('automation-myth')">Automation Myth</a>
+            <a href="#" class="nav-link" onclick="showPage('introducing-dsi')">Introducing DSI</a>
+            <a href="#" class="nav-link" onclick="showPage('architecture')">Architecture</a>
+            <a href="#" class="nav-link" onclick="showPage('case-studies')">Case Studies</a>
+            <a href="#" class="nav-link" onclick="showPage('human-oversight')">Human Oversight</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <div class="hero">
+                <h1>Digital Signal Intelligence</h1>
+                <p>A new information substrate for insurance, enabling deterministic, autonomous risk assessment, exposure estimation, loss propensity inference, and pricing at scale.</p>
+            </div>
+
+            <div class="module-section">
+                <h3>Learn about Digital Signal Intelligence</h3>
+                <div class="card-grid">
+                    <div class="card module-card" onclick="showPage('automation-myth')">
+                        <h4>The Automation Myth</h4>
+                        <p>Why decades of transformation have failed to improve insurance profitability.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('introducing-dsi')">
+                        <h4>Introducing DSI</h4>
+                        <p>The core thesis, PageRank precedent, and foundational principles.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('signal-architecture')">
+                        <h4>Signal Architecture</h4>
+                        <p>Seven canonical signal categories that power deterministic underwriting.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('architecture')">
+                        <h4>End-to-End Architecture</h4>
+                        <p>Walk through the complete DSI workflow with the TechFlow example.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('three-layer')">
+                        <h4>Three Layer Assessment</h4>
+                        <p>How DSI separates Risk, Exposure, and Loss into independent dimensions.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('case-studies')">
+                        <h4>Retrospective Case Studies</h4>
+                        <p>Would DSI have identified SVB, FTX, Boeing, and other major losses?</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('bottom-line')">
+                        <h4>The Bottom Line</h4>
+                        <p>Economic impact and competitive differentiation.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-section">
+                <h3>Interact with DSI</h3>
+                <div class="card-grid">
+                    <div class="card module-card" onclick="showPage('human-oversight')">
+                        <h4>Human Oversight</h4>
+                        <p>View the live pipeline, inspect risks, and make referral decisions.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('signal-weighting')">
+                        <h4>Signal Weighting & Calibration</h4>
+                        <p>Adjust model weights and see projected portfolio outcomes.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                    <div class="card module-card" onclick="showPage('interactive-layers')">
+                        <h4>Three Layer Deep Dive</h4>
+                        <p>Explore Risk, Exposure, and Loss layers interactively.</p>
+                        <span class="module-arrow">→</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Automation Myth -->
+        <div id="automation-myth" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>The Automation Myth</span>
+            </div>
+
+            <div class="section-header">
+                <h2>The Automation Myth</h2>
+                <p>Decades of transformation have failed to structurally improve insurance profitability.</p>
+            </div>
+
+            <div class="chart-container">
+                <h4>20 Years of Lloyd's Combined Ratios</h4>
+                <p style="color: var(--accent-4); margin-bottom: 1rem;">Despite billions spent on process modernisation, insurance is flat-lining.</p>
+                <div class="lloyds-chart">
+                    <svg class="chart-svg" viewBox="0 0 800 300">
+                        <!-- Grid lines -->
+                        <line x1="50" y1="50" x2="750" y2="50" stroke="#E8E3DA" stroke-width="1"/>
+                        <line x1="50" y1="100" x2="750" y2="100" stroke="#E8E3DA" stroke-width="1"/>
+                        <line x1="50" y1="150" x2="750" y2="150" stroke="#E8E3DA" stroke-width="1"/>
+                        <line x1="50" y1="200" x2="750" y2="200" stroke="#E8E3DA" stroke-width="1"/>
+                        <line x1="50" y1="250" x2="750" y2="250" stroke="#E8E3DA" stroke-width="1"/>
+
+                        <!-- Y-axis labels -->
+                        <text x="40" y="55" text-anchor="end" font-size="12" fill="#7A766F">120</text>
+                        <text x="40" y="105" text-anchor="end" font-size="12" fill="#7A766F">110</text>
+                        <text x="40" y="155" text-anchor="end" font-size="12" fill="#7A766F">100</text>
+                        <text x="40" y="205" text-anchor="end" font-size="12" fill="#7A766F">90</text>
+                        <text x="40" y="255" text-anchor="end" font-size="12" fill="#7A766F">80</text>
+
+                        <!-- Break-even line -->
+                        <line x1="50" y1="150" x2="750" y2="150" stroke="#7A766F" stroke-width="2" stroke-dasharray="8,4"/>
+                        <text x="760" y="155" font-size="11" fill="#7A766F">Break-even</text>
+
+                        <!-- 10-year average line -->
+                        <line x1="50" y1="163" x2="750" y2="163" stroke="#0B3954" stroke-width="2"/>
+                        <text x="760" y="168" font-size="11" fill="#0B3954">10Y Avg: 97.51</text>
+
+                        <!-- Combined ratio line (volatile) -->
+                        <polyline
+                            fill="none"
+                            stroke="#0599AD"
+                            stroke-width="2"
+                            points="70,180 110,130 150,145 190,170 230,120 270,160 310,140 350,175 390,125 430,155 470,140 510,180 550,135 590,160 630,145 670,170 710,125 730,155"
+                        />
+
+                        <!-- Data points -->
+                        <g fill="#0599AD">
+                            <circle cx="70" cy="180" r="4"/>
+                            <circle cx="110" cy="130" r="4"/>
+                            <circle cx="150" cy="145" r="4"/>
+                            <circle cx="190" cy="170" r="4"/>
+                            <circle cx="230" cy="120" r="4"/>
+                            <circle cx="270" cy="160" r="4"/>
+                            <circle cx="310" cy="140" r="4"/>
+                            <circle cx="350" cy="175" r="4"/>
+                            <circle cx="390" cy="125" r="4"/>
+                            <circle cx="430" cy="155" r="4"/>
+                            <circle cx="470" cy="140" r="4"/>
+                            <circle cx="510" cy="180" r="4"/>
+                            <circle cx="550" cy="135" r="4"/>
+                            <circle cx="590" cy="160" r="4"/>
+                            <circle cx="630" cy="145" r="4"/>
+                            <circle cx="670" cy="170" r="4"/>
+                            <circle cx="710" cy="125" r="4"/>
+                            <circle cx="730" cy="155" r="4"/>
+                        </g>
+                    </svg>
+                </div>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <span style="font-size: 2rem; font-weight: 700; color: var(--accent-1);">2.49%</span>
+                    <span style="color: var(--accent-4); margin-left: 0.5rem;">average return over a decade</span>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 2rem;">
+                <h4>The Core Assumption is Wrong</h4>
+                <p>The industry assumes traditional underwriting inputs can be automated. <strong>This assumption is incorrect.</strong> The inputs themselves are the constraint.</p>
+            </div>
+
+            <h3 style="margin-top: 2rem;">The Information Substrate Problem</h3>
+            <p style="margin: 1rem 0; color: var(--accent-4);">Traditional inputs exist in infinite formats with no canonical schema nor deterministic structure.</p>
+
+            <div style="background: var(--accent-3); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center;">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                    <div style="background: white; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.875rem;">PDFs</div>
+                    <div style="background: white; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.875rem;">Spreadsheets</div>
+                    <div style="background: white; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.875rem;">Emails</div>
+                    <div style="background: white; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.875rem;">Word Docs</div>
+                    <div style="background: white; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.875rem;">Questionnaires</div>
+                </div>
+                <div style="font-size: 3rem; margin: 1rem 0;">↓</div>
+                <div style="background: var(--primary); color: white; padding: 1.5rem; border-radius: 8px; display: inline-block;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌀</div>
+                    <div style="font-weight: 600;">Infinite Formats</div>
+                    <div style="font-size: 0.875rem; opacity: 0.8;">No extraction system can consistently transform these</div>
+                </div>
+                <div style="font-size: 3rem; margin: 1rem 0;">↓</div>
+                <div style="color: var(--danger); font-weight: 600;">Zero-Touch Underwriting Remains Out of Reach</div>
+            </div>
+
+            <div class="card-grid" style="margin-top: 2rem;">
+                <div class="card">
+                    <h4 style="color: var(--danger);">5-15%</h4>
+                    <p>Industry straight-through processing rate</p>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--danger);">$150-650</h4>
+                    <p>Cost per submission processed</p>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--danger);">3-10 days</h4>
+                    <p>Average time to quote</p>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 2rem; border-left-color: var(--accent-5);">
+                <h4 style="color: var(--accent-5);">The Solution</h4>
+                <p>To enable autonomous underwriting, the information substrate must change. <strong>DSI provides this new substrate.</strong></p>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('introducing-dsi')">
+                    Learn about DSI →
+                </button>
+            </div>
+        </div>
+
+        <!-- Introducing DSI -->
+        <div id="introducing-dsi" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>Introducing DSI</span>
+            </div>
+
+            <div class="section-header">
+                <h2>Introducing Digital Signal Intelligence</h2>
+                <p>A new information substrate that enables deterministic, autonomous underwriting.</p>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h3>The Core Thesis</h3>
+                <p style="margin: 1rem 0; font-size: 1.125rem;">Insurance underwriting requires understanding two properties of an organisation:</p>
+                <div style="display: flex; gap: 1.5rem; margin: 1.5rem 0; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px; background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">1</div>
+                        <strong>How well it is managed</strong>
+                    </div>
+                    <div style="flex: 1; min-width: 200px; background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">2</div>
+                        <strong>How it behaves over time</strong>
+                    </div>
+                </div>
+                <p style="color: var(--accent-4);">Traditional underwriting attempts to infer these from self-reported documents—subjective, inconsistent, and non-verifiable.</p>
+                <p style="color: var(--accent-1); font-weight: 600; margin-top: 1rem;">DSI replaces them with observable digital signals.</p>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem;">Why Now? The PageRank Precedent</h3>
+            <p style="color: var(--accent-4); margin-bottom: 1.5rem;">DSI is not experimental. It uses the same network-based principles that underpin modern search and recommendation systems.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+                <div class="card" style="border-top: 4px solid var(--danger);">
+                    <div style="font-size: 0.875rem; color: var(--danger); font-weight: 600; margin-bottom: 0.5rem;">1. THE PROBLEM</div>
+                    <h4>Pre-1998 Search</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Search engines ranked pages by counting self-reported keywords, resulting in spam and manipulation.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--accent-1);">
+                    <div style="font-size: 0.875rem; color: var(--accent-1); font-weight: 600; margin-bottom: 0.5rem;">2. THE BREAKTHROUGH</div>
+                    <h4>PageRank (1998)</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Google introduced a new information substrate: quality inferred from citation patterns and network authority.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--accent-5);">
+                    <div style="font-size: 0.875rem; color: var(--accent-5); font-weight: 600; margin-bottom: 0.5rem;">3. THE PARALLEL (DSI)</div>
+                    <h4>Digital Signal Intelligence</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">DSI applies the same principle: risk quality is inferred from observable digital signals.</p>
+                </div>
+            </div>
+
+            <h4 style="margin: 2rem 0 1rem;">Others Who Understood This</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: var(--accent-3); padding: 1rem 1.5rem; border-radius: 8px;">
+                    <strong>Credit Bureaus</strong>
+                    <p style="font-size: 0.75rem; color: var(--accent-4);">Behaviour-derived creditworthiness</p>
+                </div>
+                <div style="background: var(--accent-3); padding: 1rem 1.5rem; border-radius: 8px;">
+                    <strong>Palantir</strong>
+                    <p style="font-size: 0.75rem; color: var(--accent-4);">Network analysis for intelligence</p>
+                </div>
+                <div style="background: var(--accent-3); padding: 1rem 1.5rem; border-radius: 8px;">
+                    <strong>LinkedIn</strong>
+                    <p style="font-size: 0.75rem; color: var(--accent-4);">Professional network authority</p>
+                </div>
+                <div style="background: var(--accent-3); padding: 1rem 1.5rem; border-radius: 8px;">
+                    <strong>Dun & Bradstreet</strong>
+                    <p style="font-size: 0.75rem; color: var(--accent-4);">Business identity & risk signals</p>
+                </div>
+                <div style="background: var(--accent-3); padding: 1rem 1.5rem; border-radius: 8px;">
+                    <strong>LLMs</strong>
+                    <p style="font-size: 0.75rem; color: var(--accent-4);">Citation networks for knowledge</p>
+                </div>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem;">Foundational Principles</h3>
+            <p style="color: var(--accent-4); margin-bottom: 1.5rem;">Ten mandatory principles ensure DSI operates consistently and autonomously.</p>
+
+            <div class="principles-grid">
+                <div class="principle-card">
+                    <span class="principle-number">1</span>
+                    <h5>External Observability</h5>
+                    <p>Primary signals must be obtainable without cooperation.</p>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-number">2</span>
+                    <h5>Machine Readability</h5>
+                    <p>All signals must be analysable by automated systems.</p>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-number">3</span>
+                    <h5>Network Authority</h5>
+                    <p>Relationship citation patterns reveal quality.</p>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-number">4</span>
+                    <h5>Behavioural Inference</h5>
+                    <p>Observable behaviour weighted over stated intentions.</p>
+                </div>
+                <div class="principle-card highlight">
+                    <span class="principle-number">5</span>
+                    <h5>Absence as a Signal</h5>
+                    <p>Missing expected signals is a measurable risk indicator.</p>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-number">6</span>
+                    <h5>Structured Data Utilisation</h5>
+                    <p>Authoritative data (credit ratings, etc.) incorporated directly.</p>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-number">7</span>
+                    <h5>Minimal Direct Inquiry</h5>
+                    <p>Direct questions constrained to 5-10 per model.</p>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-number">8</span>
+                    <h5>Organisational Assessment</h5>
+                    <p>Risk assessed at organisational level.</p>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-number">9</span>
+                    <h5>Simplicity in Scoring</h5>
+                    <p>Clear scoring flow captured at atomic grain.</p>
+                </div>
+                <div class="principle-card highlight">
+                    <span class="principle-number">10</span>
+                    <h5>Agentic Readiness</h5>
+                    <p>Models must be executable by autonomous systems.</p>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 2rem;">
+                <h4>Key Insight: Absence as a Signal</h4>
+                <p>Where traditional underwriting treats missing data as unknown, DSI inverts this: <strong>absence is itself a signal</strong>. A financial institution without security headers, a tech company without a careers page, a regulated entity without certification documentation—these absences are measurable negative indicators.</p>
+            </div>
+
+            <div class="info-box" style="border-left-color: var(--accent-5);">
+                <h4 style="color: var(--accent-5);">Confidence as a First-Class Metric</h4>
+                <p>Every signal carries a confidence score (0-1) reflecting data availability, source reliability, and signal freshness. The system knows when it knows—and critically, when it does not.</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('signal-architecture')">
+                    Explore Signal Architecture →
+                </button>
+            </div>
+        </div>
+
+        <!-- Signal Architecture -->
+        <div id="signal-architecture" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>Signal Architecture</span>
+            </div>
+
+            <div class="section-header">
+                <h2>Signal Architecture</h2>
+                <p>Seven canonical categories power deterministic underwriting across all coverages.</p>
+            </div>
+
+            <p style="margin-bottom: 2rem;">DSI extracts signals from seven canonical categories that describe how an organisation behaves, operates, and participates in the digital ecosystem.</p>
+
+            <div class="signal-flow">
+                <div class="signal-category">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔗</div>
+                    <h5>Network Authority</h5>
+                </div>
+                <span class="signal-arrow">→</span>
+                <div class="signal-category">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚙️</div>
+                    <h5>Technical Infrastructure</h5>
+                </div>
+                <span class="signal-arrow">→</span>
+                <div class="signal-category">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🏢</div>
+                    <h5>Corporate Footprint</h5>
+                </div>
+                <span class="signal-arrow">→</span>
+                <div class="signal-category">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📊</div>
+                    <h5>Behaviour</h5>
+                </div>
+                <span class="signal-arrow">→</span>
+                <div class="signal-category">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📋</div>
+                    <h5>Public Record</h5>
+                </div>
+                <span class="signal-arrow">→</span>
+                <div class="signal-category">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📈</div>
+                    <h5>Structured Data</h5>
+                </div>
+                <span class="signal-arrow">→</span>
+                <div class="signal-category">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">❓</div>
+                    <h5>Direct Inquiry</h5>
+                </div>
+                <span class="signal-arrow">→</span>
+                <div class="risk-profile-node">
+                    Risk<br>Profile
+                </div>
+            </div>
+
+            <div class="card-grid" style="margin-top: 2rem;">
+                <div class="card">
+                    <h4 style="color: var(--accent-1);">1. Network Authority</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Signals from an entity's position within networks of trust, partnership, and transaction.</p>
+                    <ul style="font-size: 0.8rem; margin-top: 1rem; padding-left: 1.25rem; color: var(--accent-4);">
+                        <li>Client/partner citations</li>
+                        <li>Certification relationships</li>
+                        <li>Industry body memberships</li>
+                        <li>Supplier network quality</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--accent-1);">2. Technical Infrastructure</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Observable technical implementation revealing operational discipline.</p>
+                    <ul style="font-size: 0.8rem; margin-top: 1rem; padding-left: 1.25rem; color: var(--accent-4);">
+                        <li>TLS/SSL configuration</li>
+                        <li>DNS security (DNSSEC, SPF, DKIM)</li>
+                        <li>Software currency</li>
+                        <li>Hosting infrastructure</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--accent-1);">3. Corporate Footprint</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Entity's own digital presence signals maturity and stability.</p>
+                    <ul style="font-size: 0.8rem; margin-top: 1rem; padding-left: 1.25rem; color: var(--accent-4);">
+                        <li>Website structure & recency</li>
+                        <li>Leadership visibility</li>
+                        <li>Hiring activity</li>
+                        <li>Policy documentation</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--accent-1);">4. Behaviour</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Observable operational behaviour over time.</p>
+                    <ul style="font-size: 0.8rem; margin-top: 1rem; padding-left: 1.25rem; color: var(--accent-4);">
+                        <li>Change patterns</li>
+                        <li>Incident response</li>
+                        <li>Regulatory engagement</li>
+                        <li>Customer interaction</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--accent-1);">5. Public Record</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Regulatory filings, litigation, and official records.</p>
+                    <ul style="font-size: 0.8rem; margin-top: 1rem; padding-left: 1.25rem; color: var(--accent-4);">
+                        <li>Corporate registries</li>
+                        <li>Litigation records</li>
+                        <li>IP filings</li>
+                        <li>Breach disclosures</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--accent-1);">6. Structured Data</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Authoritative third-party provider data.</p>
+                    <ul style="font-size: 0.8rem; margin-top: 1rem; padding-left: 1.25rem; color: var(--accent-4);">
+                        <li>Credit ratings</li>
+                        <li>ESG scores</li>
+                        <li>Market data</li>
+                        <li>Classification society records</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--accent-1);">7. Direct Inquiry (Optional)</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4); margin-top: 0.5rem;">Minimal structured questions when external signals insufficient.</p>
+                    <ul style="font-size: 0.8rem; margin-top: 1rem; padding-left: 1.25rem; color: var(--accent-4);">
+                        <li>5-10 questions max per model</li>
+                        <li>Binary or categorical only</li>
+                        <li>Verifiable where possible</li>
+                        <li>Used only to fill critical gaps</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 2rem;">
+                <h4>Signals are Externally Observable, Machine-Readable, and Verifiable</h4>
+                <p>This enables deterministic scoring without self-reported input. Each signal is normalised to 0-100 and carries a confidence score reflecting availability, source reliability, and freshness.</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('architecture')">
+                    See End-to-End Architecture →
+                </button>
+            </div>
+        </div>
+
+        <!-- End-to-End Architecture with TechFlow -->
+        <div id="architecture" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>End-to-End Architecture</span>
+            </div>
+
+            <div class="section-header">
+                <h2>End-to-End Model Architecture</h2>
+                <p>Walk through the complete DSI workflow with the TechFlow worked example.</p>
+            </div>
+
+            <p style="margin-bottom: 1rem;">Models convert raw signals into deterministic underwriting outputs through a structured workflow comprising <strong>six phases</strong> and <strong>fourteen discrete steps</strong>.</p>
+
+            <div class="info-box">
+                <h4>Worked Example: TechFlow Solutions</h4>
+                <p>A mid-market technology company seeking cyber coverage. Click through each phase to see DSI in action.</p>
+            </div>
+
+            <div class="workflow-container" id="workflow-container">
+                <div class="workflow-step active" data-step="0">
+                    <div class="step-number">A</div>
+                    <div class="step-content">
+                        <h4>Phase A – Discovery</h4>
+                        <p style="color: var(--accent-4);">Entity identification from minimal input</p>
+                        <div class="step-details">
+                            <p><strong>Input:</strong> "TechFlow Solutions" with domain hint techflow.io</p>
+                            <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 6px;">
+                                <p style="font-size: 0.875rem;"><strong>DSI validates:</strong></p>
+                                <ul style="font-size: 0.8rem; margin-top: 0.5rem; padding-left: 1.25rem;">
+                                    <li>techflow.io confirmed as corporate website (95% confidence)</li>
+                                    <li>TechFlow Solutions Inc. identified as legal entity</li>
+                                    <li>Corporate registry matching completed</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="click-hint" onclick="advanceWorkflow()">
+                            Click to continue →
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-step" data-step="1">
+                    <div class="step-number">B</div>
+                    <div class="step-content">
+                        <h4>Phase B – Model Instantiation</h4>
+                        <p style="color: var(--accent-4);">Configuration and version creation</p>
+                        <div class="step-details">
+                            <div style="padding: 1rem; background: white; border-radius: 6px;">
+                                <ul style="font-size: 0.8rem; padding-left: 1.25rem;">
+                                    <li>Model version created with full audit trail</li>
+                                    <li>Cyber model configuration loaded (v3.2.1)</li>
+                                    <li>Inputs verified against minimum viable requirements ✓</li>
+                                    <li>35 cyber-specific signals configured</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="click-hint" onclick="advanceWorkflow()">
+                            Click to continue →
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-step" data-step="2">
+                    <div class="step-number">C</div>
+                    <div class="step-content">
+                        <h4>Phase C – Signal Extraction</h4>
+                        <p style="color: var(--accent-4);">Parallel extraction across all pipelines</p>
+                        <div class="step-details">
+                            <div style="padding: 1rem; background: white; border-radius: 6px;">
+                                <p style="font-size: 0.875rem; margin-bottom: 1rem;"><strong>35 signals extracted in parallel:</strong></p>
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.8rem;">
+                                    <div>✓ TLS Configuration: 92/100</div>
+                                    <div>✓ DNS Security: 88/100</div>
+                                    <div>✓ Security Headers: 85/100</div>
+                                    <div>✓ Certificate Authority: 90/100</div>
+                                    <div>✓ Software Currency: 78/100</div>
+                                    <div>✓ Network Authority: 82/100</div>
+                                    <div>✓ Leadership Visibility: 75/100</div>
+                                    <div>⚠ CISO Vacancy: 45/100</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="click-hint" onclick="advanceWorkflow()">
+                            Click to continue →
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-step" data-step="3">
+                    <div class="step-number">D</div>
+                    <div class="step-content">
+                        <h4>Phase D – Three Layer Assessment</h4>
+                        <p style="color: var(--accent-4);">Risk, Exposure, and Loss evaluation</p>
+                        <div class="step-details">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
+                                <div style="background: white; padding: 1rem; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--accent-1); font-weight: 600;">RISK LAYER</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">782/1000</div>
+                                    <div style="font-size: 0.8rem;">Tier 2 (Good Risk)</div>
+                                    <div style="font-size: 0.75rem; color: var(--accent-4);">Confidence: 0.87</div>
+                                </div>
+                                <div style="background: white; padding: 1rem; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--accent-1); font-weight: 600;">EXPOSURE LAYER</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700;">Medium</div>
+                                    <div style="font-size: 0.8rem;">$10M-$50M TIV</div>
+                                    <div style="font-size: 0.75rem; color: var(--accent-4);">Complexity: Moderate</div>
+                                </div>
+                                <div style="background: white; padding: 1rem; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--accent-1); font-weight: 600;">LOSS LAYER</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700;">28/100</div>
+                                    <div style="font-size: 0.8rem;">Low Propensity</div>
+                                    <div style="font-size: 0.75rem; color: var(--accent-4);">Severity: 42/100</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="click-hint" onclick="advanceWorkflow()">
+                            Click to continue →
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-step" data-step="4">
+                    <div class="step-number">E</div>
+                    <div class="step-content">
+                        <h4>Phase E – Pricing</h4>
+                        <p style="color: var(--accent-4);">Deterministic premium calculation</p>
+                        <div class="step-details">
+                            <div style="background: white; padding: 1rem; border-radius: 6px;">
+                                <p style="font-size: 0.875rem; margin-bottom: 1rem;"><strong>Premium Calculation ($5M Limit):</strong></p>
+                                <table style="width: 100%; font-size: 0.8rem;">
+                                    <tr><td>Base Rate:</td><td style="text-align: right;">0.45% of Limit</td></tr>
+                                    <tr><td>Exposure Modifier:</td><td style="text-align: right;">1.00</td></tr>
+                                    <tr><td>Complexity Modifier:</td><td style="text-align: right;">1.00</td></tr>
+                                    <tr><td>Loss Modifier:</td><td style="text-align: right;">0.90</td></tr>
+                                    <tr style="font-weight: 700; border-top: 2px solid var(--accent-3);"><td style="padding-top: 0.5rem;">Final Premium:</td><td style="text-align: right; padding-top: 0.5rem; color: var(--accent-1);">$20,250</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="click-hint" onclick="advanceWorkflow()">
+                            Click to continue →
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-step" data-step="5">
+                    <div class="step-number">F</div>
+                    <div class="step-content">
+                        <h4>Phase F – Decision</h4>
+                        <p style="color: var(--accent-4);">Final determination with full audit trail</p>
+                        <div class="step-details">
+                            <div style="background: var(--success); color: white; padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+                                <div style="font-size: 1.5rem; font-weight: 700;">AUTO-APPROVE</div>
+                                <div style="font-size: 0.875rem; opacity: 0.9;">Tier 2 | Confidence 0.87 | No referral triggers</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-around; text-align: center; font-size: 0.875rem;">
+                                <div>
+                                    <div style="font-weight: 600; color: var(--accent-1);">47 seconds</div>
+                                    <div style="color: var(--accent-4);">Processing time</div>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--accent-1);">35 signals</div>
+                                    <div style="color: var(--accent-4);">Extracted</div>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--accent-1);">Full audit</div>
+                                    <div style="color: var(--accent-4);">Persisted</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="click-hint" onclick="resetWorkflow()">
+                            Restart demo →
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="resetWorkflow()" style="margin-right: 1rem;">
+                    Reset Demo
+                </button>
+                <button class="btn btn-primary" onclick="showPage('three-layer')">
+                    Explore Three Layer Assessment →
+                </button>
+            </div>
+        </div>
+
+        <!-- Three Layer Assessment -->
+        <div id="three-layer" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>Three Layer Assessment</span>
+            </div>
+
+            <div class="section-header">
+                <h2>Three Layer Assessment</h2>
+                <p>Decoupling complexity for absolute clarity in underwriting decisions.</p>
+            </div>
+
+            <div class="info-box">
+                <h4>The Problem with Traditional Underwriting</h4>
+                <p>Traditional underwriting conflates three distinct analytical assessments into a single, subjective, aggregated assessment. DSI separates these into independent, measurable dimensions.</p>
+            </div>
+
+            <div class="three-layer-viz">
+                <div class="layer-card" onclick="selectLayer('risk')">
+                    <div class="layer-icon">📊</div>
+                    <h4>Risk Layer</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4);">How well does this organisation manage risk?</p>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--accent-3);">
+                        <div style="font-size: 0.75rem; color: var(--accent-4);">Traditional: Subjective Assessment</div>
+                        <div style="font-size: 0.75rem; color: var(--accent-1); font-weight: 600;">DSI: Composite Score 0-1000</div>
+                    </div>
+                </div>
+                <div class="layer-card" onclick="selectLayer('exposure')">
+                    <div class="layer-icon">📐</div>
+                    <h4>Exposure Layer</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4);">How large is the insurable exposure?</p>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--accent-3);">
+                        <div style="font-size: 0.75rem; color: var(--accent-4);">Traditional: Self-reported SOV</div>
+                        <div style="font-size: 0.75rem; color: var(--accent-1); font-weight: 600;">DSI: Signal-inferred Bands</div>
+                    </div>
+                </div>
+                <div class="layer-card" onclick="selectLayer('loss')">
+                    <div class="layer-icon">⚠️</div>
+                    <h4>Loss Layer</h4>
+                    <p style="font-size: 0.875rem; color: var(--accent-4);">How likely is a loss event?</p>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--accent-3);">
+                        <div style="font-size: 0.75rem; color: var(--accent-4);">Traditional: Historical Loss Data</div>
+                        <div style="font-size: 0.75rem; color: var(--accent-1); font-weight: 600;">DSI: Behavioural Propensity</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="layer-detail" class="card" style="margin-top: 2rem; display: none;">
+                <!-- Layer detail content populated by JS -->
+            </div>
+
+            <h3 style="margin-top: 3rem;">How It Works Together</h3>
+            <p style="color: var(--accent-4); margin: 1rem 0;">Each dimension is assessed independently using the same underlying signal infrastructure, then combined into a unified pricing decision. Critically, each dimension is captured at the atomic grain.</p>
+
+            <div style="background: var(--accent-3); border-radius: 12px; padding: 2rem; margin: 2rem 0;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="background: white; padding: 1rem 1.5rem; border-radius: 8px; text-align: center;">
+                        <div style="font-weight: 600;">Risk Score</div>
+                        <div style="font-size: 1.25rem; color: var(--accent-1);">782</div>
+                    </div>
+                    <span style="font-size: 1.5rem;">+</span>
+                    <div style="background: white; padding: 1rem 1.5rem; border-radius: 8px; text-align: center;">
+                        <div style="font-weight: 600;">Exposure Band</div>
+                        <div style="font-size: 1.25rem; color: var(--accent-1);">Medium</div>
+                    </div>
+                    <span style="font-size: 1.5rem;">+</span>
+                    <div style="background: white; padding: 1rem 1.5rem; border-radius: 8px; text-align: center;">
+                        <div style="font-weight: 600;">Loss Propensity</div>
+                        <div style="font-size: 1.25rem; color: var(--accent-1);">28</div>
+                    </div>
+                    <span style="font-size: 1.5rem;">=</span>
+                    <div style="background: var(--accent-1); color: white; padding: 1rem 1.5rem; border-radius: 8px; text-align: center;">
+                        <div style="font-weight: 600;">Unified Decision</div>
+                        <div style="font-size: 1.25rem;">$20,250</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('case-studies')">
+                    See Retrospective Case Studies →
+                </button>
+            </div>
+        </div>
+
+        <!-- Retrospective Case Studies -->
+        <div id="case-studies" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>Retrospective Case Studies</span>
+            </div>
+
+            <div class="section-header">
+                <h2>Retrospective Case Studies</h2>
+                <p>Would DSI have identified these major losses? Evidence suggests 70-90% would have been flagged.</p>
+            </div>
+
+            <div class="info-box">
+                <h4>Key Finding</h4>
+                <p>DSI does not predict the future—it reveals the truth already visible in the digital ecosystem. In case after case, <strong>the signals were there</strong>. Traditional underwriting simply wasn't looking.</p>
+            </div>
+
+            <div class="tabs" style="margin-top: 2rem;">
+                <div class="tab active" onclick="filterCaseStudies('all')">All</div>
+                <div class="tab" onclick="filterCaseStudies('FI')">Financial Institutions</div>
+                <div class="tab" onclick="filterCaseStudies('Cyber')">Cyber</div>
+                <div class="tab" onclick="filterCaseStudies('Marine')">Marine</div>
+                <div class="tab" onclick="filterCaseStudies('Energy')">Energy</div>
+                <div class="tab" onclick="filterCaseStudies('Aerospace')">Aerospace</div>
+            </div>
+
+            <div id="case-studies-container">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <h3 style="margin-top: 3rem;">Cross-Coverage Signal Effectiveness</h3>
+            <p style="color: var(--accent-4); margin: 1rem 0;">Common signal patterns that would have identified risk across coverages:</p>
+
+            <table class="economics-table">
+                <thead>
+                    <tr>
+                        <th>Signal Category</th>
+                        <th>FI</th>
+                        <th>Cyber</th>
+                        <th>Marine</th>
+                        <th>Energy</th>
+                        <th>Aerospace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Executive/Leadership Stability</td>
+                        <td>✓ SVB, FTX</td>
+                        <td>✓ 23andMe, SolarWinds</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Regulatory/Audit Findings</td>
+                        <td>✓ SVB</td>
+                        <td>✓ Colonial, Equifax</td>
+                        <td>—</td>
+                        <td>✓ Deepwater</td>
+                        <td>✓ Boeing</td>
+                    </tr>
+                    <tr>
+                        <td>Transparency/Disclosure Gaps</td>
+                        <td>✓ FTX</td>
+                        <td>✓ 23andMe, SolarWinds</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>✓ Boeing</td>
+                    </tr>
+                    <tr>
+                        <td>Counterparty/Network Quality</td>
+                        <td>✓ Signature</td>
+                        <td>—</td>
+                        <td>✓ Shadow Fleet</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Concentration Risk</td>
+                        <td>✓ SVB, Signature</td>
+                        <td>✓ MOVEit</td>
+                        <td>✓ Russia</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Safety/Operational History</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>✓ Costa</td>
+                        <td>✓ Deepwater, Piper</td>
+                        <td>✓ Boeing</td>
+                    </tr>
+                    <tr>
+                        <td>Credential/Auth Hygiene</td>
+                        <td>—</td>
+                        <td>✓ 23andMe, SolarWinds</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('bottom-line')">
+                    See The Bottom Line →
+                </button>
+            </div>
+        </div>
+
+        <!-- The Bottom Line -->
+        <div id="bottom-line" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>The Bottom Line</span>
+            </div>
+
+            <div class="section-header">
+                <h2>The Bottom Line</h2>
+                <p>Economic impact and competitive differentiation.</p>
+            </div>
+
+            <h3>Competitive Differentiation</h3>
+            <p style="color: var(--accent-4); margin: 1rem 0;">DSI occupies a fundamentally different position than existing signal-based tools.</p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Traditional</th>
+                        <th>Digital Signal Intelligence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Input</strong></td>
+                        <td>Submissions (PDFs, Excel, Word)</td>
+                        <td>Digital Ecosystem</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Process</strong></td>
+                        <td>Manual, OCR, NLP</td>
+                        <td>Deterministic Processing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Integrity</strong></td>
+                        <td>High "Manual Noise" ratio</td>
+                        <td>Zero-Touch, Audit-Persistent</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Adjustment</strong></td>
+                        <td>Subjective Overrides</td>
+                        <td>Rule-Based Deterministic Modifiers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scalability</strong></td>
+                        <td>Limited by manual "Stare & Compare"</td>
+                        <td>Unlimited Agentic Readiness</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box" style="margin: 2rem 0;">
+                <p><strong>This is a categorical distinction.</strong> DSI is not a better data feed—it is a complete underwriting substrate that happens to consume data feeds, including those from existing vendors, as inputs.</p>
+                <p style="color: var(--accent-1); margin-top: 0.5rem;">We don't make the old process faster; we make the old process obsolete.</p>
+            </div>
+
+            <h3 style="margin-top: 3rem;">Economic Impact</h3>
+            <p style="color: var(--accent-4); margin: 1rem 0;">Projections based on signal availability ≥80% and straight-through processing ≥60%.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Expense Ratio Improvement</h4>
+                    <table class="economics-table" style="margin-top: 1rem;">
+                        <tr><td>Staff Costs</td><td>12% → <span class="improvement">4%</span></td></tr>
+                        <tr><td>Office & Infrastructure</td><td>8% → <span class="improvement">2%</span></td></tr>
+                        <tr><td>Administration</td><td>4% → <span class="improvement">1%</span></td></tr>
+                        <tr><td>Brokerage & Commissions</td><td>11% → <span class="improvement">6%</span></td></tr>
+                        <tr style="font-weight: 700;"><td>Total</td><td>35% → <span class="improvement">13%</span></td></tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <h4>Operational Metrics</h4>
+                    <table class="economics-table" style="margin-top: 1rem;">
+                        <tr><td>Time to quote</td><td>3-10 days → <span class="improvement">&lt;60 seconds</span></td></tr>
+                        <tr><td>Cost per submission</td><td>$150-650 → <span class="improvement">&lt;$10</span></td></tr>
+                        <tr><td>Straight-through rate</td><td>5-15% → <span class="improvement">60-80%</span></td></tr>
+                        <tr><td>Scalability</td><td>Linear → <span class="improvement">Logarithmic</span></td></tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <h4>Loss Ratio Improvement</h4>
+                    <table class="economics-table" style="margin-top: 1rem;">
+                        <tr><td>Loss Signal Correlation</td><td colspan="2"><span class="improvement">4-8 points</span></td></tr>
+                        <tr><td>Continuous Calibration</td><td colspan="2"><span class="improvement">2-4 points</span></td></tr>
+                        <tr style="font-weight: 700;"><td>Total Improvement</td><td colspan="2"><span class="improvement">6-12 points</span></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, #164B6E 100%); color: white; padding: 2rem; border-radius: 12px; text-align: center; margin: 2rem 0;">
+                <h3 style="color: var(--accent-5); margin-bottom: 1rem;">Overall Portfolio Impact</h3>
+                <p style="font-size: 1.125rem; opacity: 0.9;">On a $500M premium book, these improvements represent</p>
+                <div style="font-size: 3rem; font-weight: 700; color: var(--accent-5); margin: 1rem 0;">$130M – $170M</div>
+                <p style="opacity: 0.9;">in improved underwriting profit</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('human-oversight')">
+                    Try Human Oversight →
+                </button>
+            </div>
+        </div>
+
+        <!-- Human Oversight -->
+        <div id="human-oversight" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>Human Oversight</span>
+            </div>
+
+            <div class="section-header">
+                <h2>Human Oversight</h2>
+                <p>View the live pipeline, inspect risks, and make referral decisions.</p>
+            </div>
+
+            <div class="pipeline-container">
+                <div class="pipeline-column" id="pipeline-approved">
+                    <div class="pipeline-header">
+                        <h4><span style="color: var(--success);">●</span> Auto-Approved</h4>
+                        <span class="pipeline-count" id="approved-count">0</span>
+                    </div>
+                    <div id="approved-risks"></div>
+                </div>
+                <div class="pipeline-column" id="pipeline-referred">
+                    <div class="pipeline-header">
+                        <h4><span style="color: var(--warning);">●</span> Referred</h4>
+                        <span class="pipeline-count" id="referred-count">0</span>
+                    </div>
+                    <div id="referred-risks"></div>
+                </div>
+                <div class="pipeline-column" id="pipeline-declined">
+                    <div class="pipeline-header">
+                        <h4><span style="color: var(--danger);">●</span> Declined</h4>
+                        <span class="pipeline-count" id="declined-count">0</span>
+                    </div>
+                    <div id="declined-risks"></div>
+                </div>
+            </div>
+
+            <div class="adjustment-panel">
+                <h3>📊 Portfolio Adjustment</h3>
+                <p style="color: var(--accent-4); margin-bottom: 1.5rem;">Adjust signal category weights to see projected portfolio impact. This demonstrates DSI's ability to steer portfolio outcomes at the turn of a dial.</p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Network Authority</span>
+                                <span class="slider-value" id="val-network">15%</span>
+                            </div>
+                            <input type="range" min="5" max="30" value="15" id="slider-network" oninput="updateProjections()">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Technical Infrastructure</span>
+                                <span class="slider-value" id="val-tech">20%</span>
+                            </div>
+                            <input type="range" min="5" max="35" value="20" id="slider-tech" oninput="updateProjections()">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Corporate Footprint</span>
+                                <span class="slider-value" id="val-corp">15%</span>
+                            </div>
+                            <input type="range" min="5" max="25" value="15" id="slider-corp" oninput="updateProjections()">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Behaviour</span>
+                                <span class="slider-value" id="val-behav">15%</span>
+                            </div>
+                            <input type="range" min="5" max="25" value="15" id="slider-behav" oninput="updateProjections()">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Public Record</span>
+                                <span class="slider-value" id="val-public">15%</span>
+                            </div>
+                            <input type="range" min="5" max="25" value="15" id="slider-public" oninput="updateProjections()">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Structured Data</span>
+                                <span class="slider-value" id="val-struct">15%</span>
+                            </div>
+                            <input type="range" min="5" max="25" value="15" id="slider-struct" oninput="updateProjections()">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Direct Inquiry</span>
+                                <span class="slider-value" id="val-direct">5%</span>
+                            </div>
+                            <input type="range" min="0" max="15" value="5" id="slider-direct" oninput="updateProjections()">
+                        </div>
+                        <div style="margin-top: 1rem; padding: 1rem; background: var(--accent-3); border-radius: 8px;">
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Total Weight:</div>
+                            <div style="font-size: 1.25rem; font-weight: 600;" id="total-weight">100%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="projection-display">
+                    <h4 style="color: var(--accent-5);">Projected Portfolio Impact</h4>
+                    <div class="projection-grid">
+                        <div class="projection-item">
+                            <div class="value" id="proj-approved">64%</div>
+                            <div class="label">Auto-Approved</div>
+                        </div>
+                        <div class="projection-item">
+                            <div class="value" id="proj-referred">22%</div>
+                            <div class="label">Referred</div>
+                        </div>
+                        <div class="projection-item">
+                            <div class="value" id="proj-declined">14%</div>
+                            <div class="label">Declined</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; justify-content: space-around;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.25rem; font-weight: 600; color: var(--accent-5);" id="proj-premium">$47.2M</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">Projected Premium</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.25rem; font-weight: 600; color: var(--accent-5);" id="proj-loss">92.3</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">Projected Combined Ratio</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.75rem; color: var(--accent-4); margin-top: 1rem; text-align: center;">
+                    Note: Underlying signal weights within each category can also be adjusted. This view shows category-level steering.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('signal-weighting')">
+                    Advanced Signal Weighting →
+                </button>
+            </div>
+        </div>
+
+        <!-- Signal Weighting & Calibration -->
+        <div id="signal-weighting" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>Signal Weighting & Calibration</span>
+            </div>
+
+            <div class="section-header">
+                <h2>Signal Weighting & Calibration</h2>
+                <p>Advanced portfolio optimization through signal analysis and loss correlation.</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Loss-Driven Calibration</h4>
+                    <p style="color: var(--accent-4); font-size: 0.875rem; margin: 1rem 0;">One of DSI's key advantages: loss data has the same signal depth as risk data. This enables true loss-to-signal correlation.</p>
+                    <div style="background: var(--accent-3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                        <h5 style="font-size: 0.875rem; margin-bottom: 0.75rem;">Signal Correlation with Loss</h5>
+                        <div style="margin-bottom: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <span>Technical Infrastructure</span>
+                                <span style="color: var(--success);">+0.72</span>
+                            </div>
+                            <div style="height: 6px; background: #ddd; border-radius: 3px; margin-top: 4px;">
+                                <div style="width: 72%; height: 100%; background: var(--success); border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <span>Behavioural Signals</span>
+                                <span style="color: var(--success);">+0.68</span>
+                            </div>
+                            <div style="height: 6px; background: #ddd; border-radius: 3px; margin-top: 4px;">
+                                <div style="width: 68%; height: 100%; background: var(--success); border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <span>Network Authority</span>
+                                <span style="color: var(--accent-1);">+0.54</span>
+                            </div>
+                            <div style="height: 6px; background: #ddd; border-radius: 3px; margin-top: 4px;">
+                                <div style="width: 54%; height: 100%; background: var(--accent-1); border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <span>Corporate Footprint</span>
+                                <span style="color: var(--warning);">+0.41</span>
+                            </div>
+                            <div style="height: 6px; background: #ddd; border-radius: 3px; margin-top: 4px;">
+                                <div style="width: 41%; height: 100%; background: var(--warning); border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4>Optimization Recommendations</h4>
+                    <p style="color: var(--accent-4); font-size: 0.875rem; margin: 1rem 0;">Based on loss correlation analysis, the model suggests these weight adjustments:</p>
+                    <div style="background: linear-gradient(135deg, rgba(5,153,173,0.1) 0%, rgba(57,211,186,0.1) 100%); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="color: var(--success);">↑</span>
+                            <span style="font-size: 0.875rem;">Increase Technical Infrastructure weight by +5%</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="color: var(--success);">↑</span>
+                            <span style="font-size: 0.875rem;">Increase Behavioural Signals weight by +3%</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="color: var(--danger);">↓</span>
+                            <span style="font-size: 0.875rem;">Decrease Corporate Footprint weight by -4%</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--danger);">↓</span>
+                            <span style="font-size: 0.875rem;">Decrease Direct Inquiry weight by -2%</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--accent-4); margin-top: 1rem;">Projected impact: -2.3 points on loss ratio</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Loss Analytics by Coverage</h3>
+            <div class="card-grid" style="margin-top: 1rem;">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h4>Cyber</h4>
+                        <span class="tag tag-cyber">12 claims</span>
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.875rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Avg Score at Claim:</span>
+                            <span style="font-weight: 600;">534</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Top Signal Gap:</span>
+                            <span style="font-weight: 600; color: var(--danger);">Credential Hygiene</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Predicted vs Actual:</span>
+                            <span style="font-weight: 600; color: var(--success);">+12% accuracy</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h4>D&O</h4>
+                        <span class="tag tag-do">8 claims</span>
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.875rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Avg Score at Claim:</span>
+                            <span style="font-weight: 600;">489</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Top Signal Gap:</span>
+                            <span style="font-weight: 600; color: var(--danger);">Governance Stability</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Predicted vs Actual:</span>
+                            <span style="font-weight: 600; color: var(--success);">+18% accuracy</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h4>Marine</h4>
+                        <span class="tag tag-marine">5 claims</span>
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.875rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Avg Score at Claim:</span>
+                            <span style="font-weight: 600;">412</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Top Signal Gap:</span>
+                            <span style="font-weight: 600; color: var(--danger);">Network Authority</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Predicted vs Actual:</span>
+                            <span style="font-weight: 600; color: var(--success);">+22% accuracy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="showPage('interactive-layers')">
+                    Explore Three Layers Interactively →
+                </button>
+            </div>
+        </div>
+
+        <!-- Interactive Three Layer Assessment -->
+        <div id="interactive-layers" class="page">
+            <div class="breadcrumb">
+                <a href="#" onclick="showPage('home')">Home</a>
+                <span>/</span>
+                <span>Interactive Three Layer Assessment</span>
+            </div>
+
+            <div class="section-header">
+                <h2>Three Layer Deep Dive</h2>
+                <p>Explore Risk, Exposure, and Loss layers with detailed breakdowns.</p>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="showLayerTab('risk-tab')">Risk Layer</div>
+                <div class="tab" onclick="showLayerTab('exposure-tab')">Exposure Layer</div>
+                <div class="tab" onclick="showLayerTab('loss-tab')">Loss Layer</div>
+            </div>
+
+            <div id="risk-tab" class="tab-content active">
+                <div class="card">
+                    <h3>Risk Layer Assessment</h3>
+                    <p style="color: var(--accent-4); margin: 1rem 0;">Using a PageRank-inspired digital signal citation framework to observe maturity and predictability.</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-1);">782</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Composite Score</div>
+                        </div>
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--success);">Tier 2</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Risk Tier (Good)</div>
+                        </div>
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-1);">0.87</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Confidence Score</div>
+                        </div>
+                    </div>
+
+                    <h4>Signal Category Breakdown</h4>
+                    <div style="margin-top: 1rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Network Authority</span>
+                                <span>82/100</span>
+                            </div>
+                            <div style="height: 8px; background: var(--accent-3); border-radius: 4px;">
+                                <div style="width: 82%; height: 100%; background: var(--accent-1); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Technical Infrastructure</span>
+                                <span>88/100</span>
+                            </div>
+                            <div style="height: 8px; background: var(--accent-3); border-radius: 4px;">
+                                <div style="width: 88%; height: 100%; background: var(--success); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Corporate Footprint</span>
+                                <span>75/100</span>
+                            </div>
+                            <div style="height: 8px; background: var(--accent-3); border-radius: 4px;">
+                                <div style="width: 75%; height: 100%; background: var(--accent-1); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Behaviour</span>
+                                <span>79/100</span>
+                            </div>
+                            <div style="height: 8px; background: var(--accent-3); border-radius: 4px;">
+                                <div style="width: 79%; height: 100%; background: var(--accent-1); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Public Record</span>
+                                <span>85/100</span>
+                            </div>
+                            <div style="height: 8px; background: var(--accent-3); border-radius: 4px;">
+                                <div style="width: 85%; height: 100%; background: var(--success); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Structured Data</span>
+                                <span>72/100</span>
+                            </div>
+                            <div style="height: 8px; background: var(--accent-3); border-radius: 4px;">
+                                <div style="width: 72%; height: 100%; background: var(--warning); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="exposure-tab" class="tab-content">
+                <div class="card">
+                    <h3>Exposure Shadow Layer</h3>
+                    <p style="color: var(--accent-4); margin: 1rem 0;">A deterministic inference of organisation's exposure to calculate band and complexity score.</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-1);">Medium</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Exposure Band</div>
+                        </div>
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-1);">$10M-$50M</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Estimated TIV</div>
+                        </div>
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);">Moderate</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Complexity Score</div>
+                        </div>
+                    </div>
+
+                    <h4>Exposure Proxy Hierarchy</h4>
+                    <table class="economics-table" style="margin-top: 1rem;">
+                        <tr>
+                            <td><strong>Tier 1: Direct Observables</strong></td>
+                            <td>No public market cap available</td>
+                            <td style="color: var(--accent-4);">N/A</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tier 2: High-Confidence Proxies</strong></td>
+                            <td>~150 employees, 3 office locations</td>
+                            <td style="color: var(--success);">✓ Used</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tier 3: Inferred Signals</strong></td>
+                            <td>38 subdomains, multi-cloud architecture</td>
+                            <td style="color: var(--success);">✓ Used</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div id="loss-tab" class="tab-content">
+                <div class="card">
+                    <h3>Loss Correlation Layer</h3>
+                    <p style="color: var(--accent-4); margin: 1rem 0;">Correlating real-time signal behaviours with historical loss patterns to predict frequency and severity.</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--success);">28/100</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Loss Propensity</div>
+                        </div>
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">42/100</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Severity Propensity</div>
+                        </div>
+                        <div style="background: var(--accent-3); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">Stable</div>
+                            <div style="font-size: 0.875rem; color: var(--accent-4);">Loss Trend Band</div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>Cohort Assignment: "Tech Growth Mature Security"</h4>
+                        <p>This entity shares loss characteristics with 847 other organisations in this signal-derived peer group. Cohort loss expectancy: 2.3% annual claim frequency.</p>
+                    </div>
+
+                    <h4 style="margin-top: 1.5rem;">Leading Indicators Detected</h4>
+                    <ul style="padding-left: 1.5rem; color: var(--accent-4);">
+                        <li style="margin-bottom: 0.5rem;">Governance stability: Strong (no C-suite changes in 24 months)</li>
+                        <li style="margin-bottom: 0.5rem;">Security posture trend: Improving (+12 points over 6 months)</li>
+                        <li style="margin-bottom: 0.5rem;">Management tenure: Above average (4.2 years avg)</li>
+                        <li>Regulatory engagement: Clean (no enforcement actions)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Risk Detail Modal -->
+    <div class="modal-overlay" id="risk-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Risk Details</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© John Walker. All rights reserved. Digital Signal Intelligence (DSI) is the intellectual property of John Walker.</p>
+    </footer>
+
+    <script>
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+            const page = document.getElementById(pageId);
+            if (page) {
+                page.classList.add('active');
+            }
+
+            // Update nav
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('onclick')?.includes(pageId)) {
+                    link.classList.add('active');
+                }
+            });
+
+            window.scrollTo(0, 0);
+        }
+
+        // Sample portfolio data
+        const portfolioData = [
+            // Cyber
+            { id: 1, name: "TechFlow Solutions", domain: "techflow.io", coverage: "Cyber", score: 782, tier: 2, decision: "approve", exposure: "Medium", loss: 28 },
+            { id: 2, name: "DataVault Inc", domain: "datavault.com", coverage: "Cyber", score: 845, tier: 1, decision: "approve", exposure: "Large", loss: 22 },
+            { id: 3, name: "CloudFirst Systems", domain: "cloudfirst.io", coverage: "Cyber", score: 612, tier: 3, decision: "refer", exposure: "Medium", loss: 45 },
+            { id: 4, name: "SecureNet Corp", domain: "securenet.com", coverage: "Cyber", score: 423, tier: 4, decision: "decline", exposure: "Small", loss: 72 },
+
+            // D&O
+            { id: 5, name: "Apex Holdings", domain: "apexholdings.com", coverage: "D&O", score: 756, tier: 2, decision: "approve", exposure: "Large", loss: 31 },
+            { id: 6, name: "Venture Partners", domain: "venturepartners.co", coverage: "D&O", score: 534, tier: 4, decision: "refer", exposure: "Medium", loss: 58 },
+            { id: 7, name: "GlobalTech Inc", domain: "globaltech.com", coverage: "D&O", score: 891, tier: 1, decision: "approve", exposure: "Very Large", loss: 18 },
+
+            // Marine
+            { id: 8, name: "OceanFreight Ltd", domain: "oceanfreight.com", coverage: "Marine", score: 698, tier: 2, decision: "approve", exposure: "Large", loss: 35 },
+            { id: 9, name: "Pacific Shipping", domain: "pacificship.co", coverage: "Marine", score: 445, tier: 4, decision: "decline", exposure: "Medium", loss: 68 },
+            { id: 10, name: "Atlantic Cargo", domain: "atlanticcargo.com", coverage: "Marine", score: 623, tier: 3, decision: "refer", exposure: "Large", loss: 42 },
+
+            // Energy
+            { id: 11, name: "PowerGen Energy", domain: "powergen.com", coverage: "Energy", score: 734, tier: 2, decision: "approve", exposure: "Very Large", loss: 29 },
+            { id: 12, name: "SolarTech Systems", domain: "solartech.io", coverage: "Energy", score: 812, tier: 1, decision: "approve", exposure: "Large", loss: 24 },
+            { id: 13, name: "OilField Services", domain: "oilfieldsvcs.com", coverage: "Energy", score: 567, tier: 3, decision: "refer", exposure: "Very Large", loss: 51 },
+
+            // FI
+            { id: 14, name: "First Capital Bank", domain: "firstcapital.com", coverage: "FI", score: 778, tier: 2, decision: "approve", exposure: "Very Large", loss: 27 },
+            { id: 15, name: "Digital Finance Co", domain: "digitalfinance.io", coverage: "FI", score: 489, tier: 4, decision: "decline", exposure: "Medium", loss: 63 },
+            { id: 16, name: "Metro Credit Union", domain: "metrocu.com", coverage: "FI", score: 654, tier: 3, decision: "refer", exposure: "Large", loss: 39 },
+
+            // Aerospace
+            { id: 17, name: "SkyWays Aviation", domain: "skyways.aero", coverage: "Aerospace", score: 823, tier: 1, decision: "approve", exposure: "Very Large", loss: 21 },
+            { id: 18, name: "AeroTech Components", domain: "aerotech.com", coverage: "Aerospace", score: 701, tier: 2, decision: "approve", exposure: "Large", loss: 33 },
+            { id: 19, name: "Regional Air Services", domain: "regionalair.co", coverage: "Aerospace", score: 578, tier: 3, decision: "refer", exposure: "Medium", loss: 48 },
+
+            // PI
+            { id: 20, name: "Legal Partners LLP", domain: "legalpartners.com", coverage: "PI", score: 867, tier: 1, decision: "approve", exposure: "Large", loss: 19 },
+            { id: 21, name: "ConsultCo Advisory", domain: "consultco.com", coverage: "PI", score: 712, tier: 2, decision: "approve", exposure: "Medium", loss: 34 },
+            { id: 22, name: "AccountRight CPA", domain: "accountright.com", coverage: "PI", score: 623, tier: 3, decision: "refer", exposure: "Small", loss: 41 },
+            { id: 23, name: "DesignWorks Studio", domain: "designworks.io", coverage: "PI", score: 456, tier: 4, decision: "decline", exposure: "Micro", loss: 67 },
+
+            // Additional risks
+            { id: 24, name: "NetSecure Systems", domain: "netsecure.com", coverage: "Cyber", score: 734, tier: 2, decision: "approve", exposure: "Large", loss: 30 },
+            { id: 25, name: "Maritime Global", domain: "maritimeglobal.com", coverage: "Marine", score: 589, tier: 3, decision: "refer", exposure: "Very Large", loss: 46 },
+            { id: 26, name: "RenewPower Inc", domain: "renewpower.com", coverage: "Energy", score: 856, tier: 1, decision: "approve", exposure: "Large", loss: 20 },
+            { id: 27, name: "Quantum Finance", domain: "quantumfin.com", coverage: "FI", score: 398, tier: 5, decision: "decline", exposure: "Medium", loss: 78 },
+            { id: 28, name: "JetStream Airlines", domain: "jetstream.aero", coverage: "Aerospace", score: 645, tier: 3, decision: "refer", exposure: "Very Large", loss: 44 }
+        ];
+
+        // Case studies data
+        const caseStudies = [
+            {
+                id: 1,
+                name: "Silicon Valley Bank",
+                year: 2023,
+                coverage: "FI",
+                loss: "$20B+ FDIC cost; $200M+ D&O",
+                decision: "DECLINE",
+                signals: [
+                    { text: "CRO role vacant for 8 months", type: "critical" },
+                    { text: "Multiple regulatory MRAs outstanding", type: "critical" },
+                    { text: "Extreme depositor concentration (>90% uninsured)", type: "critical" },
+                    { text: "Rapid balance sheet growth without proportional risk controls", type: "warning" }
+                ],
+                summary: "DSI would have flagged the governance vacancy, regulatory friction, and concentration risk as automatic decline triggers."
+            },
+            {
+                id: 2,
+                name: "FTX",
+                year: 2022,
+                coverage: "FI",
+                loss: "$8B+ customer funds",
+                decision: "DECLINE",
+                signals: [
+                    { text: "No Big 4 auditor", type: "critical" },
+                    { text: "No independent board members", type: "critical" },
+                    { text: "No audited financial statements", type: "critical" },
+                    { text: "Opaque corporate structure across jurisdictions", type: "warning" }
+                ],
+                summary: "Complete absence of governance transparency signals. DSI's 'Absence as Signal' principle would have triggered immediate decline."
+            },
+            {
+                id: 3,
+                name: "Boeing 737 MAX",
+                year: "2018-2020",
+                coverage: "Aerospace",
+                loss: "$18B+",
+                decision: "REFER",
+                signals: [
+                    { text: "FAA audit findings on certification process", type: "warning" },
+                    { text: "Supply chain quality issues documented", type: "warning" },
+                    { text: "Disclosure gaps in safety communications", type: "warning" },
+                    { text: "Regulatory engagement patterns showing friction", type: "warning" }
+                ],
+                summary: "Multiple warning signals across regulatory, transparency, and operational dimensions would have triggered referral with elevated pricing."
+            },
+            {
+                id: 4,
+                name: "Equifax",
+                year: 2017,
+                coverage: "Cyber",
+                loss: "147.9M individuals affected",
+                decision: "DECLINE",
+                signals: [
+                    { text: "Prior security incidents on record", type: "critical" },
+                    { text: "Patch management failures observable", type: "critical" },
+                    { text: "Limited security culture visibility", type: "warning" },
+                    { text: "High-sensitivity data without proportional controls", type: "critical" }
+                ],
+                summary: "Technical infrastructure signals and prior incident history would have flagged this as elevated risk."
+            },
+            {
+                id: 5,
+                name: "SolarWinds",
+                year: 2020,
+                coverage: "Cyber",
+                loss: "Global supply chain compromise",
+                decision: "DECLINE",
+                signals: [
+                    { text: "Public GitHub credential exposure ('solarwinds123')", type: "critical" },
+                    { text: "Weak security culture signals", type: "critical" },
+                    { text: "Public-facing update infrastructure vulnerabilities", type: "critical" },
+                    { text: "Credential hygiene failures", type: "critical" }
+                ],
+                summary: "The infamous weak password was publicly visible. DSI's credential hygiene checks would have flagged this immediately."
+            },
+            {
+                id: 6,
+                name: "Deepwater Horizon",
+                year: 2010,
+                coverage: "Energy",
+                loss: "$3.4B insured; $65B total",
+                decision: "REFER + LOAD",
+                signals: [
+                    { text: "Prior major safety failures (Texas City, 2005)", type: "critical" },
+                    { text: "OSHA enforcement history", type: "warning" },
+                    { text: "Documented safety culture issues", type: "warning" },
+                    { text: "Contractor oversight gaps", type: "warning" }
+                ],
+                summary: "BP's prior safety record and regulatory history would have triggered referral with significant pricing load."
+            },
+            {
+                id: 7,
+                name: "Shadow Fleet Vessels",
+                year: "2022-2024",
+                coverage: "Marine",
+                loss: "50+ incidents",
+                decision: "DECLINE",
+                signals: [
+                    { text: "No IG Club membership", type: "critical" },
+                    { text: "Non-IACS classification society", type: "critical" },
+                    { text: "Sanctioned beneficial owners", type: "critical" },
+                    { text: "AIS manipulation patterns", type: "critical" }
+                ],
+                summary: "Network authority signals (P&I Club, classification society) provide clear decline triggers for shadow fleet vessels."
+            },
+            {
+                id: 8,
+                name: "Costa Concordia",
+                year: 2012,
+                coverage: "Marine",
+                loss: "$1.5B+; 32 fatalities",
+                decision: "REFER",
+                signals: [
+                    { text: "AIS-visible prior navigation deviations", type: "warning" },
+                    { text: "Flag state inspection history", type: "warning" },
+                    { text: "Corporate safety culture indicators", type: "warning" }
+                ],
+                summary: "Behavioural signals from AIS data showing navigation pattern deviations would have flagged operational discipline concerns."
+            },
+            {
+                id: 9,
+                name: "23andMe",
+                year: 2023,
+                coverage: "Cyber",
+                loss: "5.5M profiles accessed",
+                decision: "DECLINE",
+                signals: [
+                    { text: "Optional MFA (not enforced)", type: "critical" },
+                    { text: "Credential stuffing exposure", type: "critical" },
+                    { text: "High-sensitivity genetic data", type: "warning" },
+                    { text: "Authentication hygiene gaps", type: "critical" }
+                ],
+                summary: "The combination of optional MFA and highly sensitive data would have been flagged as unacceptable risk."
+            },
+            {
+                id: 10,
+                name: "Signature Bank",
+                year: 2023,
+                coverage: "FI",
+                loss: "Bank failure; crypto contagion",
+                decision: "REFER",
+                signals: [
+                    { text: "20% crypto-linked deposits", type: "warning" },
+                    { text: ">90% uninsured deposits", type: "warning" },
+                    { text: "DOJ/SEC investigations into crypto clients", type: "warning" },
+                    { text: "Heavy reliance on volatile sector", type: "warning" }
+                ],
+                summary: "Concentration risk in volatile sector would have triggered referral with enhanced due diligence requirements."
+            }
+        ];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPipeline();
+            renderCaseStudies();
+        });
+
+        // Render pipeline
+        function renderPipeline() {
+            const approved = portfolioData.filter(r => r.decision === 'approve');
+            const referred = portfolioData.filter(r => r.decision === 'refer');
+            const declined = portfolioData.filter(r => r.decision === 'decline');
+
+            document.getElementById('approved-count').textContent = approved.length;
+            document.getElementById('referred-count').textContent = referred.length;
+            document.getElementById('declined-count').textContent = declined.length;
+
+            document.getElementById('approved-risks').innerHTML = approved.map(r => createRiskCard(r)).join('');
+            document.getElementById('referred-risks').innerHTML = referred.map(r => createRiskCard(r, true)).join('');
+            document.getElementById('declined-risks').innerHTML = declined.map(r => createRiskCard(r)).join('');
+        }
+
+        function createRiskCard(risk, showActions = false) {
+            const scoreClass = risk.score >= 700 ? 'high' : risk.score >= 500 ? 'medium' : 'low';
+            const coverageClass = risk.coverage.toLowerCase().replace('&', '').replace(' ', '');
+
+            return `
+                <div class="risk-card" onclick="showRiskDetail(${risk.id})">
+                    <div class="risk-card-header">
+                        <div>
+                            <h5>${risk.name}</h5>
+                            <div class="risk-domain">${risk.domain}</div>
+                        </div>
+                        <div class="risk-score ${scoreClass}">${risk.score}</div>
+                    </div>
+                    <div class="risk-card-footer">
+                        <span class="tag tag-${coverageClass}">${risk.coverage}</span>
+                        <span style="color: var(--accent-4);">${risk.exposure}</span>
+                    </div>
+                    ${showActions ? `
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                            <button class="btn btn-primary" style="flex: 1; padding: 0.5rem;" onclick="event.stopPropagation(); handleReferral(${risk.id}, 'approve')">Approve</button>
+                            <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; background: var(--danger); color: white;" onclick="event.stopPropagation(); handleReferral(${risk.id}, 'decline')">Decline</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function showRiskDetail(riskId) {
+            const risk = portfolioData.find(r => r.id === riskId);
+            if (!risk) return;
+
+            document.getElementById('modal-title').textContent = risk.name;
+            document.getElementById('modal-body').innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="text-align: center; padding: 1rem; background: var(--accent-3); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-1);">${risk.score}</div>
+                        <div style="font-size: 0.75rem; color: var(--accent-4);">Composite Score</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: var(--accent-3); border-radius: 8px;">
+                        <div style="font-size: 1.25rem; font-weight: 700;">${risk.exposure}</div>
+                        <div style="font-size: 0.75rem; color: var(--accent-4);">Exposure Band</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: var(--accent-3); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: ${risk.loss < 40 ? 'var(--success)' : risk.loss < 60 ? 'var(--warning)' : 'var(--danger)'};">${risk.loss}</div>
+                        <div style="font-size: 0.75rem; color: var(--accent-4);">Loss Propensity</div>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 1rem;">Signal Category Summary</h4>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.875rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--accent-3); border-radius: 4px;">
+                        <span>Network Authority</span>
+                        <span style="font-weight: 600;">${Math.round(risk.score * 0.95 / 10)}/100</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--accent-3); border-radius: 4px;">
+                        <span>Technical Infrastructure</span>
+                        <span style="font-weight: 600;">${Math.round(risk.score * 1.05 / 10)}/100</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--accent-3); border-radius: 4px;">
+                        <span>Corporate Footprint</span>
+                        <span style="font-weight: 600;">${Math.round(risk.score * 0.9 / 10)}/100</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--accent-3); border-radius: 4px;">
+                        <span>Behaviour</span>
+                        <span style="font-weight: 600;">${Math.round(risk.score * 0.92 / 10)}/100</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--accent-3); border-radius: 4px;">
+                        <span>Public Record</span>
+                        <span style="font-weight: 600;">${Math.round(risk.score * 1.02 / 10)}/100</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--accent-3); border-radius: 4px;">
+                        <span>Structured Data</span>
+                        <span style="font-weight: 600;">${Math.round(risk.score * 0.88 / 10)}/100</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding: 1rem; background: ${risk.decision === 'approve' ? '#D1FAE5' : risk.decision === 'refer' ? '#FEF3C7' : '#FEE2E2'}; border-radius: 8px;">
+                    <h4 style="color: ${risk.decision === 'approve' ? '#065F46' : risk.decision === 'refer' ? '#92400E' : '#991B1B'}; margin-bottom: 0.5rem;">
+                        Decision: ${risk.decision.toUpperCase()}
+                    </h4>
+                    <p style="font-size: 0.875rem; color: ${risk.decision === 'approve' ? '#065F46' : risk.decision === 'refer' ? '#92400E' : '#991B1B'};">
+                        ${risk.decision === 'approve' ? 'Risk meets Tier ' + risk.tier + ' criteria with high confidence. No referral triggers detected.' :
+                          risk.decision === 'refer' ? 'Risk requires human review due to moderate confidence or borderline signals.' :
+                          'Risk fails minimum criteria. Multiple negative signal triggers detected.'}
+                    </p>
+                </div>
+            `;
+            document.getElementById('risk-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('risk-modal').classList.remove('active');
+        }
+
+        function handleReferral(riskId, action) {
+            const risk = portfolioData.find(r => r.id === riskId);
+            if (risk) {
+                risk.decision = action;
+                renderPipeline();
+            }
+        }
+
+        // Render case studies
+        function renderCaseStudies(filter = 'all') {
+            const container = document.getElementById('case-studies-container');
+            if (!container) return;
+
+            const filtered = filter === 'all' ? caseStudies : caseStudies.filter(c => c.coverage === filter);
+
+            container.innerHTML = filtered.map(cs => `
+                <div class="case-study-card" id="case-${cs.id}">
+                    <div class="case-study-header" onclick="toggleCaseStudy(${cs.id})">
+                        <div>
+                            <h4>${cs.name}</h4>
+                            <div class="case-study-meta">
+                                <span class="tag tag-${cs.coverage.toLowerCase()}">${cs.coverage}</span>
+                                <span class="case-study-loss">${cs.year} | ${cs.loss}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <span class="tag tag-${cs.decision.toLowerCase().replace(' + ', '-').replace('+', '')}">${cs.decision}</span>
+                            <div class="case-study-expand">▼</div>
+                        </div>
+                    </div>
+                    <div class="case-study-details">
+                        <p style="margin-bottom: 1rem;">${cs.summary}</p>
+                        <div class="signal-path">
+                            <h5>Signal Path Analysis</h5>
+                            ${cs.signals.map(s => `
+                                <div class="signal-item">
+                                    <div class="signal-indicator ${s.type === 'warning' ? 'warning' : ''}"></div>
+                                    <span>${s.text}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleCaseStudy(id) {
+            const card = document.getElementById('case-' + id);
+            card.classList.toggle('expanded');
+        }
+
+        function filterCaseStudies(filter) {
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderCaseStudies(filter);
+        }
+
+        // Workflow step progression
+        let currentStep = 0;
+
+        function advanceWorkflow() {
+            const steps = document.querySelectorAll('.workflow-step');
+            if (currentStep < steps.length - 1) {
+                steps[currentStep].classList.remove('active');
+                steps[currentStep].classList.add('completed');
+                currentStep++;
+                steps[currentStep].classList.add('active');
+            }
+        }
+
+        function resetWorkflow() {
+            currentStep = 0;
+            const steps = document.querySelectorAll('.workflow-step');
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index === 0) step.classList.add('active');
+            });
+        }
+
+        // Portfolio adjustment sliders
+        function updateProjections() {
+            const network = parseInt(document.getElementById('slider-network').value);
+            const tech = parseInt(document.getElementById('slider-tech').value);
+            const corp = parseInt(document.getElementById('slider-corp').value);
+            const behav = parseInt(document.getElementById('slider-behav').value);
+            const pub = parseInt(document.getElementById('slider-public').value);
+            const struct = parseInt(document.getElementById('slider-struct').value);
+            const direct = parseInt(document.getElementById('slider-direct').value);
+
+            // Update display values
+            document.getElementById('val-network').textContent = network + '%';
+            document.getElementById('val-tech').textContent = tech + '%';
+            document.getElementById('val-corp').textContent = corp + '%';
+            document.getElementById('val-behav').textContent = behav + '%';
+            document.getElementById('val-public').textContent = pub + '%';
+            document.getElementById('val-struct').textContent = struct + '%';
+            document.getElementById('val-direct').textContent = direct + '%';
+
+            const total = network + tech + corp + behav + pub + struct + direct;
+            document.getElementById('total-weight').textContent = total + '%';
+            document.getElementById('total-weight').style.color = total === 100 ? 'var(--success)' : 'var(--danger)';
+
+            // Calculate projections (simplified model)
+            const techBias = (tech - 20) / 100;
+            const behavBias = (behav - 15) / 100;
+
+            const baseApproved = 64;
+            const baseReferred = 22;
+            const baseDeclined = 14;
+
+            const approved = Math.round(baseApproved + (techBias * 10) + (behavBias * 5));
+            const declined = Math.round(baseDeclined - (techBias * 5));
+            const referred = 100 - approved - declined;
+
+            document.getElementById('proj-approved').textContent = approved + '%';
+            document.getElementById('proj-referred').textContent = referred + '%';
+            document.getElementById('proj-declined').textContent = declined + '%';
+
+            // Premium and loss ratio
+            const basePremium = 47.2;
+            const premiumMod = 1 + (techBias * 0.1) + (behavBias * 0.05);
+            document.getElementById('proj-premium').textContent = '$' + (basePremium * premiumMod).toFixed(1) + 'M';
+
+            const baseLoss = 92.3;
+            const lossMod = baseLoss - (techBias * 3) - (behavBias * 2);
+            document.getElementById('proj-loss').textContent = lossMod.toFixed(1);
+        }
+
+        // Layer selection
+        function selectLayer(layer) {
+            const detail = document.getElementById('layer-detail');
+            document.querySelectorAll('.layer-card').forEach(c => c.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const content = {
+                risk: `
+                    <h4>Risk Layer: Composite Scoring</h4>
+                    <p style="margin: 1rem 0; color: var(--accent-4);">The Risk Layer produces a Composite Risk Score (0-1000) that maps to Risk Tiers (1-5) with predefined decision logic.</p>
+                    <h5>Outputs:</h5>
+                    <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Composite Risk Score</li>
+                        <li>Risk Tier (with decision logic)</li>
+                        <li>Confidence Score</li>
+                        <li>Tier Overrides (if triggered)</li>
+                        <li>Referral Flags</li>
+                        <li>Deterministic Modifiers</li>
+                    </ul>
+                `,
+                exposure: `
+                    <h4>Exposure Shadow Layer: Size Inference</h4>
+                    <p style="margin: 1rem 0; color: var(--accent-4);">The Exposure Layer infers exposure magnitude from observable signals without self-reported schedules.</p>
+                    <h5>Proxy Hierarchy:</h5>
+                    <ol style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li><strong>Direct Observables:</strong> Market cap, regulated disclosures</li>
+                        <li><strong>High-Confidence Proxies:</strong> Employee count, office locations</li>
+                        <li><strong>Inferred Signals:</strong> Subdomain complexity, tech stack depth</li>
+                    </ol>
+                    <p style="margin-top: 1rem; color: var(--accent-1);"><strong>Key:</strong> DSI outputs ranges with confidence rather than false-precision point estimates.</p>
+                `,
+                loss: `
+                    <h4>Loss Correlation Layer: Propensity Prediction</h4>
+                    <p style="margin: 1rem 0; color: var(--accent-4);">The Loss Layer correlates real-time signals with historical loss patterns. These are leading indicators—they deteriorate before losses occur.</p>
+                    <h5>Outputs:</h5>
+                    <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Loss Propensity Score (0-100)</li>
+                        <li>Severity Propensity Score (0-100)</li>
+                        <li>Loss Trend Band</li>
+                        <li>Cohort Assignment</li>
+                    </ul>
+                    <p style="margin-top: 1rem; color: var(--accent-1);"><strong>Causal mechanism:</strong> Weakening security posture precedes breaches. Declining governance precedes D&O actions. Regulatory friction precedes enforcement.</p>
+                `
+            };
+
+            detail.innerHTML = content[layer];
+            detail.style.display = 'block';
+        }
+
+        // Tab switching for interactive layers
+        function showLayerTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('risk-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Escape key closes modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
