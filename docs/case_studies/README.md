@@ -22,11 +22,12 @@ This folder contains case study materials for DSI validation and demonstration.
 
 ## Retrospective Loss Case Studies
 
-The `Retrospective_loss_case_studies.pdf` examines major insurance losses across four DSI coverage areas:
+The `Retrospective_loss_case_studies.pdf` examines major insurance losses across five DSI coverage areas:
 
 - **Financial Institutions (FI)**: SVB collapse, FTX failure, Signature Bank
+- **Cyber**: SolarWinds, Equifax, 23AndMe 
 - **Marine**: MV Dali/Baltimore Bridge, Costa Concordia, Shadow Fleet
-- **Energy**: Deepwater Horizon, Piper Alpha
+- **Energy**: Deepwater Horizon, Piper Alpha, Colonial Pipeline
 - **Aerospace**: Boeing 737 MAX, Jeju Air, Russia-stranded aircraft
 
 ### Key Findings
