@@ -39,7 +39,7 @@ This folder contains all DSI documentation including overviews, and case studies
 
 | Document | Purpose |
 |-|-|
-| `Retrospective_loss_case_studies.pdf` | Cross-coverage loss analysis (FI, Marine, Energy, Aerospace) |
+| `Retrospective_loss_case_studies.pdf` | Cross-coverage loss analysis (FI, Cybe, Marine, Energy, Aerospace) |
 
 
 ## Related Documentation
