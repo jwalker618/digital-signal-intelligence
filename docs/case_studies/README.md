@@ -18,11 +18,11 @@ This folder contains case study materials for DSI validation and demonstration.
 
 | Document | Description |
 |----------|-------------|
-| `retrospective_loss_case_studies.pdf` | Comprehensive analysis of major insurance losses (2019-2024) demonstrating how DSI signals would have identified elevated risk |
+| `Retrospective_loss_case_studies.pdf` | Comprehensive analysis of major insurance losses (2019-2024) demonstrating how DSI signals would have identified elevated risk |
 
 ## Retrospective Loss Case Studies
 
-The `retrospective_loss_case_studies.pdf` examines major insurance losses across four DSI coverage areas:
+The `Retrospective_loss_case_studies.pdf` examines major insurance losses across four DSI coverage areas:
 
 - **Financial Institutions (FI)**: SVB collapse, FTX failure, Signature Bank
 - **Marine**: MV Dali/Baltimore Bridge, Costa Concordia, Shadow Fleet
