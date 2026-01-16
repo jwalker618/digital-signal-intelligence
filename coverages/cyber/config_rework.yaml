@@ -35,7 +35,7 @@ cyber:
       name: "DSI Cyber Technical Pricing Model"
       description: "Cyber liability model based on externally observable technical signals"
       version: "2.0.0"
-      loss_correlation:
+      loss_correlation_layer:
         enabled: true
         monitoring:
           refresh_frequency: monthly
@@ -44,8 +44,13 @@ cyber:
           alert_on_band_change: true
           alert_on_velocity_spike: true
           velocity_spike_threshold: 10.0
-      shadow_layer:
-        enabled: true
+      exposure_shadow_layer:
+        enabled: true 
+        monitoring:
+          refresh_frequency: monthly
+          band_change_alert: true
+          complexity_change_threshold: 15
+          cohort_recalibration_frequency: quarterly
       coverage_types:
         - "cyber_liability"
         - "network_security"
@@ -813,7 +818,6 @@ cyber:
                   action: "FLAG"
                   note: "preferred_risk_credit"
               inclusive_max: false
-          
         - name: low
           min_score: 20
           max_score: 40
@@ -860,6 +864,12 @@ cyber:
           weight: 0.4
           cap: 1.4
           floor: 0.75
+      exposure_integration:          
+        method: parallel
+        exposure_weight: 0.60
+        complexity_weight: 0.40
+        combined_modifier_cap: 3.00
+        combined_modifier_floor: 0.40
     
       # Increased Limit Factors (ILF)
       ilf_curve:
@@ -881,292 +891,14 @@ cyber:
         - {min_pct: 0.020, max_pct: null, credit: 0.20}    # >2% of limit
         
       taxes_fees_rate: 0.05
-  
-    # -------------------------------------------------------------------------
-    # TEST PROFILES
-    # -------------------------------------------------------------------------
-    # Predefined signal sets for actuarial validity testing
-    
-    test_profiles:
-      excellent_security:
-        description: "Enterprise with mature security program"
-        expected_tier: [1, 2]
-        expected_score_range: [750, 1000]
-        industry_classification: "TECHNOLOGY"
-        size_band: "LARGE"
-        geography: "US"
-        signals:
-          network_authority:
-            customer_quality: 88
-            partner_quality: 85
-            security_vendor: 92
-            industry_body: 85
-            certification_authority: 90
-            financial_relationship: 82
-            network_centrality: 78
-            second_degree: 75
-          technical_infrastructure:
-            tls_score: 95
-            security_headers: 90
-            email_auth: 92
-            dnssec: 85
-            exposure: 95
-            software_currency: 88
-            cve_exposure: 92
-            cloud_infrastructure: 90
-            waf_presence: 95
-            cdn_usage: 90
-          corporate_footprint:
-            security_page: 95
-            privacy_policy: 88
-            security_txt: 90
-            bug_bounty: 85
-            security_hiring: 80
-            technical_content: 78
-            developer_resources: 85
-            security_leadership: 90
-            compliance_badges: 92
-          public_record:
-            breach_history: 100
-            regulatory_action: 98
-            litigation_history: 95
-            credential_exposure: 88
-            dark_web: 92
-          structured_data:
-            security_rating: 88
-            esg_cyber: 82
-            credit_rating: 85
-
-      average_security:
-        description: "Mid-market company with basic security controls"
-        expected_tier: [2, 3]
-        expected_score_range: [500, 749]
-        industry_classification: "PROFESSIONAL_SERVICES"
-        size_band: "MEDIUM"
-        geography: "US"
-        signals:
-          network_authority:
-            customer_quality: 65
-            partner_quality: 60
-            security_vendor: 55
-            industry_body: 45
-            certification_authority: 50
-            financial_relationship: 68
-            network_centrality: 55
-            second_degree: 50
-          technical_infrastructure:
-            tls_score: 75
-            security_headers: 65
-            email_auth: 70
-            dnssec: 40
-            exposure: 72
-            software_currency: 65
-            cve_exposure: 68
-            cloud_infrastructure: 75
-            waf_presence: 60
-            cdn_usage: 55
-          corporate_footprint:
-            security_page: 55
-            privacy_policy: 70
-            security_txt: 30
-            bug_bounty: 20
-            security_hiring: 45
-            technical_content: 40
-            developer_resources: 50
-            security_leadership: 60
-            compliance_badges: 55
-          public_record:
-            breach_history: 80
-            regulatory_action: 85
-            litigation_history: 82
-            credential_exposure: 65
-            dark_web: 75
-          structured_data:
-            security_rating: 68
-            esg_cyber: 62
-            credit_rating: 70
-
-      poor_security:
-        description: "Company with significant security gaps"
-        expected_tier: [4, 5]
-        expected_score_range: [0, 499]
-        industry_classification: "RETAIL"
-        size_band: "SMALL"
-        geography: "US"
-        signals:
-          network_authority:
-            customer_quality: 40
-            partner_quality: 35
-            security_vendor: 25
-            industry_body: 15
-            certification_authority: 20
-            financial_relationship: 45
-            network_centrality: 30
-            second_degree: 25
-          technical_infrastructure:
-            tls_score: 45
-            security_headers: 30
-            email_auth: 35
-            dnssec: 10
-            exposure: 38
-            software_currency: 35
-            cve_exposure: 32
-            cloud_infrastructure: 50
-            waf_presence: 20
-            cdn_usage: 25
-          corporate_footprint:
-            security_page: 20
-            privacy_policy: 45
-            security_txt: 0
-            bug_bounty: 0
-            security_hiring: 15
-            technical_content: 10
-            developer_resources: 20
-            security_leadership: 25
-            compliance_badges: 15
-          public_record:
-            breach_history: 45
-            regulatory_action: 55
-            litigation_history: 50
-            credential_exposure: 35
-            dark_web: 40
-          structured_data:
-            security_rating: 42
-            esg_cyber: 38
-            credit_rating: 48
-
-      minimal_signals:
-        description: "New company with limited observable signals"
-        expected_tier: [3, 4]
-        expected_score_range: [400, 600]
-        industry_classification: "TECHNOLOGY"
-        size_band: "MICRO"
-        geography: "US"
-        signal_coverage: 0.35
-        signals:
-          technical_infrastructure:
-            tls_score: 70
-            security_headers: 60
-            email_auth: 65
-            exposure: 70
-          corporate_footprint:
-            privacy_policy: 60
-          public_record:
-            breach_history: 100  # No history = good
-            credential_exposure: 75
-
-      healthcare_high_risk:
-        description: "Healthcare entity with PHI exposure"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 750]
-        industry_classification: "HEALTHCARE"
-        size_band: "MEDIUM"
-        geography: "US"
-        direct_queries:
-          phi_handler: true
-        signals:
-          network_authority:
-            customer_quality: 70
-            partner_quality: 65
-            security_vendor: 72
-            industry_body: 75
-            certification_authority: 78
-            financial_relationship: 70
-            network_centrality: 55
-            second_degree: 50
-          technical_infrastructure:
-            tls_score: 80
-            security_headers: 72
-            email_auth: 78
-            dnssec: 55
-            exposure: 75
-            software_currency: 68
-            cve_exposure: 72
-            cloud_infrastructure: 78
-            waf_presence: 70
-            cdn_usage: 65
-          corporate_footprint:
-            security_page: 75
-            privacy_policy: 85
-            security_txt: 50
-            bug_bounty: 30
-            security_hiring: 60
-            technical_content: 45
-            developer_resources: 55
-            security_leadership: 72
-            compliance_badges: 80
-          public_record:
-            breach_history: 72
-            regulatory_action: 78
-            litigation_history: 75
-            credential_exposure: 68
-            dark_web: 72
-          structured_data:
-            security_rating: 72
-            esg_cyber: 68
-            credit_rating: 75
-
-      recent_breach:
-        description: "Company with recent material breach"
-        expected_tier: [4, 5]
-        expected_score_range: [250, 450]
-        industry_classification: "RETAIL"
-        size_band: "LARGE"
-        geography: "US"
-        direct_queries:
-          recent_incident: true
-        signals:
-          network_authority:
-            customer_quality: 60
-            partner_quality: 55
-            security_vendor: 65
-            industry_body: 50
-            certification_authority: 55
-            financial_relationship: 58
-            network_centrality: 62
-            second_degree: 55
-          technical_infrastructure:
-            tls_score: 72
-            security_headers: 65
-            email_auth: 70
-            dnssec: 45
-            exposure: 55
-            software_currency: 58
-            cve_exposure: 52
-            cloud_infrastructure: 70
-            waf_presence: 60
-            cdn_usage: 55
-          corporate_footprint:
-            security_page: 70
-            privacy_policy: 72
-            security_txt: 40
-            bug_bounty: 35
-            security_hiring: 75  # Hiring post-breach
-            technical_content: 45
-            developer_resources: 55
-            security_leadership: 78  # New CISO likely
-            compliance_badges: 60
-          public_record:
-            breach_history: 25   # Recent breach tanks this
-            regulatory_action: 45
-            litigation_history: 40
-            credential_exposure: 35
-            dark_web: 30
-          structured_data:
-            security_rating: 48
-            esg_cyber: 42
-            credit_rating: 65
 
     # -------------------------------------------------------------------------
-    # EXPOSURE SHADOW LAYER CONFIGURATION (Phase 17)
+    # EXPOSURE SHADOW LAYER CONFIGURATION 
     # -------------------------------------------------------------------------
     # Exposure magnitude and complexity scoring from observable signals.
     # Enables TIV estimation without client-provided data.
 
     exposure_shadow:
-      
-
-      # Exposure magnitude signal groups (TIV proxy)
       exposure_groups:
         - name: digital_footprint
           weight: 0.30
@@ -1454,14 +1186,6 @@ cyber:
           prior_score: 25.0
           confidence: 0.4
 
-      # Pricing integration configuration
-      pricing_integration:
-        method: parallel
-        exposure_weight: 0.60
-        complexity_weight: 0.40
-        combined_modifier_cap: 3.00
-        combined_modifier_floor: 0.40
-
       # Auto-apply rules for exposure decisions
       auto_apply_rules:
         - condition: "exposure_band == 'very_large' and confidence < 0.5"
@@ -1480,9 +1204,277 @@ cyber:
           action: apply_modifier
           modifier: "micro_exposure_credit"
 
-      # Monitoring configuration
-      monitoring:
-        refresh_frequency: monthly
-        band_change_alert: true
-        complexity_change_threshold: 15
-        cohort_recalibration_frequency: quarterly
+    # -------------------------------------------------------------------------
+    # TEST PROFILES
+    # -------------------------------------------------------------------------
+    # Predefined signal sets for actuarial validity testing
+    
+    test_profiles:
+      excellent_security:
+        description: "Enterprise with mature security program"
+        expected_tier: [1, 2]
+        expected_score_range: [750, 1000]
+        industry_classification: "TECHNOLOGY"
+        size_band: "LARGE"
+        geography: "US"
+        signals:
+          network_authority:
+            customer_quality: 88
+            partner_quality: 85
+            security_vendor: 92
+            industry_body: 85
+            certification_authority: 90
+            financial_relationship: 82
+            network_centrality: 78
+            second_degree: 75
+          technical_infrastructure:
+            tls_score: 95
+            security_headers: 90
+            email_auth: 92
+            dnssec: 85
+            exposure: 95
+            software_currency: 88
+            cve_exposure: 92
+            cloud_infrastructure: 90
+            waf_presence: 95
+            cdn_usage: 90
+          corporate_footprint:
+            security_page: 95
+            privacy_policy: 88
+            security_txt: 90
+            bug_bounty: 85
+            security_hiring: 80
+            technical_content: 78
+            developer_resources: 85
+            security_leadership: 90
+            compliance_badges: 92
+          public_record:
+            breach_history: 100
+            regulatory_action: 98
+            litigation_history: 95
+            credential_exposure: 88
+            dark_web: 92
+          structured_data:
+            security_rating: 88
+            esg_cyber: 82
+            credit_rating: 85
+
+      average_security:
+        description: "Mid-market company with basic security controls"
+        expected_tier: [2, 3]
+        expected_score_range: [500, 749]
+        industry_classification: "PROFESSIONAL_SERVICES"
+        size_band: "MEDIUM"
+        geography: "US"
+        signals:
+          network_authority:
+            customer_quality: 65
+            partner_quality: 60
+            security_vendor: 55
+            industry_body: 45
+            certification_authority: 50
+            financial_relationship: 68
+            network_centrality: 55
+            second_degree: 50
+          technical_infrastructure:
+            tls_score: 75
+            security_headers: 65
+            email_auth: 70
+            dnssec: 40
+            exposure: 72
+            software_currency: 65
+            cve_exposure: 68
+            cloud_infrastructure: 75
+            waf_presence: 60
+            cdn_usage: 55
+          corporate_footprint:
+            security_page: 55
+            privacy_policy: 70
+            security_txt: 30
+            bug_bounty: 20
+            security_hiring: 45
+            technical_content: 40
+            developer_resources: 50
+            security_leadership: 60
+            compliance_badges: 55
+          public_record:
+            breach_history: 80
+            regulatory_action: 85
+            litigation_history: 82
+            credential_exposure: 65
+            dark_web: 75
+          structured_data:
+            security_rating: 68
+            esg_cyber: 62
+            credit_rating: 70
+
+      poor_security:
+        description: "Company with significant security gaps"
+        expected_tier: [4, 5]
+        expected_score_range: [0, 499]
+        industry_classification: "RETAIL"
+        size_band: "SMALL"
+        geography: "US"
+        signals:
+          network_authority:
+            customer_quality: 40
+            partner_quality: 35
+            security_vendor: 25
+            industry_body: 15
+            certification_authority: 20
+            financial_relationship: 45
+            network_centrality: 30
+            second_degree: 25
+          technical_infrastructure:
+            tls_score: 45
+            security_headers: 30
+            email_auth: 35
+            dnssec: 10
+            exposure: 38
+            software_currency: 35
+            cve_exposure: 32
+            cloud_infrastructure: 50
+            waf_presence: 20
+            cdn_usage: 25
+          corporate_footprint:
+            security_page: 20
+            privacy_policy: 45
+            security_txt: 0
+            bug_bounty: 0
+            security_hiring: 15
+            technical_content: 10
+            developer_resources: 20
+            security_leadership: 25
+            compliance_badges: 15
+          public_record:
+            breach_history: 45
+            regulatory_action: 55
+            litigation_history: 50
+            credential_exposure: 35
+            dark_web: 40
+          structured_data:
+            security_rating: 42
+            esg_cyber: 38
+            credit_rating: 48
+
+      minimal_signals:
+        description: "New company with limited observable signals"
+        expected_tier: [3, 4]
+        expected_score_range: [400, 600]
+        industry_classification: "TECHNOLOGY"
+        size_band: "MICRO"
+        geography: "US"
+        signal_coverage: 0.35
+        signals:
+          technical_infrastructure:
+            tls_score: 70
+            security_headers: 60
+            email_auth: 65
+            exposure: 70
+          corporate_footprint:
+            privacy_policy: 60
+          public_record:
+            breach_history: 100  # No history = good
+            credential_exposure: 75
+
+      healthcare_high_risk:
+        description: "Healthcare entity with PHI exposure"
+        expected_tier: [2, 3]
+        expected_score_range: [550, 750]
+        industry_classification: "HEALTHCARE"
+        size_band: "MEDIUM"
+        geography: "US"
+        direct_queries:
+          phi_handler: true
+        signals:
+          network_authority:
+            customer_quality: 70
+            partner_quality: 65
+            security_vendor: 72
+            industry_body: 75
+            certification_authority: 78
+            financial_relationship: 70
+            network_centrality: 55
+            second_degree: 50
+          technical_infrastructure:
+            tls_score: 80
+            security_headers: 72
+            email_auth: 78
+            dnssec: 55
+            exposure: 75
+            software_currency: 68
+            cve_exposure: 72
+            cloud_infrastructure: 78
+            waf_presence: 70
+            cdn_usage: 65
+          corporate_footprint:
+            security_page: 75
+            privacy_policy: 85
+            security_txt: 50
+            bug_bounty: 30
+            security_hiring: 60
+            technical_content: 45
+            developer_resources: 55
+            security_leadership: 72
+            compliance_badges: 80
+          public_record:
+            breach_history: 72
+            regulatory_action: 78
+            litigation_history: 75
+            credential_exposure: 68
+            dark_web: 72
+          structured_data:
+            security_rating: 72
+            esg_cyber: 68
+            credit_rating: 75
+
+      recent_breach:
+        description: "Company with recent material breach"
+        expected_tier: [4, 5]
+        expected_score_range: [250, 450]
+        industry_classification: "RETAIL"
+        size_band: "LARGE"
+        geography: "US"
+        direct_queries:
+          recent_incident: true
+        signals:
+          network_authority:
+            customer_quality: 60
+            partner_quality: 55
+            security_vendor: 65
+            industry_body: 50
+            certification_authority: 55
+            financial_relationship: 58
+            network_centrality: 62
+            second_degree: 55
+          technical_infrastructure:
+            tls_score: 72
+            security_headers: 65
+            email_auth: 70
+            dnssec: 45
+            exposure: 55
+            software_currency: 58
+            cve_exposure: 52
+            cloud_infrastructure: 70
+            waf_presence: 60
+            cdn_usage: 55
+          corporate_footprint:
+            security_page: 70
+            privacy_policy: 72
+            security_txt: 40
+            bug_bounty: 35
+            security_hiring: 75  # Hiring post-breach
+            technical_content: 45
+            developer_resources: 55
+            security_leadership: 78  # New CISO likely
+            compliance_badges: 60
+          public_record:
+            breach_history: 25   # Recent breach tanks this
+            regulatory_action: 45
+            litigation_history: 40
+            credential_exposure: 35
+            dark_web: 30
+          structured_data:
+            security_rating: 48
+            esg_cyber: 42
+            credit_rating: 65
