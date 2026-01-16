@@ -20,7 +20,7 @@ Executive-level and foundational documentation for DSI.
 |----------|--------|----------|---------|
 | `Executive summary.pdf` | PDF | C-Suite, Board | One-page DSI overview and business case |
 | `The PageRank precedent.pdf` | PDF | Board | Analogy to Google's PageRank methodology |
-| `An Agentic Future - Global Technical Pricing.pdf` | PDF | Technical leadership | Detailed white paper on DSI approach |
+| `Whitepaper - Digital Signal Intelligence.pdf` | PDF | Technical leadership | Detailed white paper on DSI approach |
 | `Foundational Principles.md` | Markdown | Technical | Core DSI methodology and principles |
 
 ## Document Summaries
