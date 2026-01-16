@@ -33,7 +33,7 @@ This folder contains all DSI documentation including overviews, and case studies
 | `Foundational Principles.md` | Technical | Core DSI methodology |
 | `Pitch deck.pdf` | C-Suite, Board, Investors | DSI Pitch Deck |
 | `The PageRank precedent.pdf` | Board | Analogy to proven methodology |
-| `Whitepaper - Digital Signal Intelligenvce.docx` | Technical leadership | Detailed white paper |
+| `Whitepaper - Digital Signal Intelligenvce.pdf` | Technical leadership | Detailed white paper |
 
 ### Case Studies (`case_studies/`)
 
