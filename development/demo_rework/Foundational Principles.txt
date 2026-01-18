@@ -1,0 +1,231 @@
+TOPIC_NAME: Foundational Principles
+TOPIC_ID: foundational_principles
+TOPIC_TYPE: multi_section_topic
+TOPIC_NAVIGATION: sequential_sections (6 sections)
+TOPIC_LAYOUT: full_page_background + content_panel
+TOPIC_INTERACTIONS: static_cards, expandable_cards
+TOPIC_VISUAL: evolving_network_background (desktop_only)
+
+====================================================================
+GLOBAL_VISUAL_BACKGROUND
+TYPE: dynamic_network_canvas
+POSITION: full_page_behind_content
+OPACITY: 0.15 - 0.25
+MOTION: subtle, non-distracting
+TRANSITION: animate_on_section_change
+CANVAS_PERSISTENCE: true
+MOBILE_SUPPORT: none
+
+====================================================================
+SECTION 1 — WHY PRINCIPLES MATTER
+SECTION_ID: why_principles_matter
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: establish the need for strict methodological principles
+
+VISUAL_STATE:
+  NODE_COUNT: 20 - 40
+  EDGE_DENSITY: very_low
+  PALETTE:
+    PRIMARY: #0B3954 (cold blue)
+    SECONDARY: #7A9CB2 (muted blue)
+  MOTION_SPEED: very_slow
+  BEHAVIOUR:
+    - sparse nodes
+    - minimal edges
+    - slow twinkling
+    - represents the emergence of structure
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Underwriting Has No Guardrails
+    BODY: Traditional underwriting lacks methodological principles, leading to inconsistency, subjectivity, and non-repeatable decisions.
+
+  CARD_2:
+    TITLE: DSI Is a Methodology
+    BODY: DSI is not a model; it is a governed system with strict rules ensuring consistency, objectivity, and auditability.
+
+  CARD_3:
+    TITLE: Principles Enable Automation
+    BODY: Deterministic automation requires strict constraints. These principles prevent drift, bias, and subjective override.
+
+SUPPORTING_TEXT:
+  - Principles are the backbone of DSI’s reliability and agentic readiness.
+
+====================================================================
+SECTION 2 — THE TEN PRINCIPLES (OVERVIEW GRID)
+SECTION_ID: principles_overview
+SECTION_TYPE: static_ten_card_grid
+SECTION_PURPOSE: present all ten principles at a glance
+
+VISUAL_STATE:
+  NODE_COUNT: 40 - 70
+  EDGE_DENSITY: low
+  PALETTE:
+    PRIMARY: #0B3954 (blue)
+    SECONDARY: #4F6D82 (grey-blue)
+  MOTION_SPEED: slow
+  BEHAVIOUR:
+    - fragmented clusters begin to stabilise
+    - edges form rule-like structures
+
+CONTENT_CARDS:
+  CARD_1: { TITLE: External Observability, BODY: Signals must be obtainable without cooperation. }
+  CARD_2: { TITLE: Machine Readability, BODY: Signals must be analysable by automated systems. }
+  CARD_3: { TITLE: Network Authority, BODY: Relationship patterns reveal quality. }
+  CARD_4: { TITLE: Behavioural Inference, BODY: Observable behaviour outweighs stated intentions. }
+  CARD_5: { TITLE: Absence as a Signal, BODY: Missing expected signals are measurable negative indicators. }
+  CARD_6: { TITLE: Structured Data Utilisation, BODY: Authoritative structured data is incorporated directly. }
+  CARD_7: { TITLE: Minimal Direct Inquiry, BODY: Direct questions are optional and limited. }
+  CARD_8: { TITLE: Organisational-Level Assessment, BODY: Parent behaviour is a proxy for underlying assets. }
+  CARD_9: { TITLE: Simplicity in Scoring, BODY: Models follow a clear, auditable scoring flow. }
+  CARD_10: { TITLE: Agentic Readiness, BODY: Models must be executable by autonomous systems. }
+
+====================================================================
+SECTION 3 — OBSERVABILITY & MACHINE READABILITY
+SECTION_ID: observability_machine_readability
+SECTION_TYPE: side_by_side_two_card
+SECTION_PURPOSE: explain the foundational substrate principles
+
+VISUAL_STATE:
+  NODE_COUNT: 80 - 120
+  EDGE_DENSITY: medium
+  PALETTE:
+    PRIMARY: #0599AD (blue-teal)
+    SECONDARY: #0B3954 (blue)
+  MOTION_SPEED: medium
+  BEHAVIOUR:
+    - nodes become “visible”
+    - edges become “machine-readable”
+    - represents emergence of clarity
+
+CONTENT:
+  CARD_LEFT:
+    TITLE: External Observability
+    BODY: Signals must be obtainable without cooperation. This ensures independence, verifiability, and global scalability.
+
+  CARD_RIGHT:
+    TITLE: Machine Readability
+    BODY: Signals must be analysable by automated systems. This eliminates subjective interpretation and enables determinism.
+
+SUPPORTING_TEXT:
+  - These two principles form the foundation of the DSI substrate.
+  - Without them, automation and auditability are impossible.
+
+====================================================================
+SECTION 4 — NETWORK AUTHORITY, BEHAVIOURAL INFERENCE, ABSENCE AS A SIGNAL
+SECTION_ID: predictive_principles
+SECTION_TYPE: expandable_three_card_row
+SECTION_PURPOSE: explain the principles that make DSI predictive
+
+VISUAL_STATE:
+  NODE_COUNT: 120 - 160
+  EDGE_DENSITY: high
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: medium_fast
+  BEHAVIOUR:
+    - clusters form
+    - authority nodes glow
+    - missing nodes appear as negative space
+    - represents predictive insight
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Network Authority
+    BODY: Citation patterns reveal trust, maturity, and standing. This is the PageRank inheritance.
+    VALIDATION: Predictive across FI, Marine, Energy, Cyber, and Aerospace.
+
+  CARD_2:
+    TITLE: Behavioural Inference
+    BODY: Observable behaviour outweighs stated intentions. Hiring patterns, governance stability, and operational discipline are measurable.
+    VALIDATION: Visible in SVB, FTX, Boeing, Deepwater Horizon.
+
+  CARD_3:
+    TITLE: Absence as a Signal
+    BODY: Missing certifications, missing disclosures, missing security controls are measurable negative indicators.
+    VALIDATION: Predictive across SolarWinds, Equifax, Shadow Fleet, Colonial Pipeline.
+
+====================================================================
+SECTION 5 — STRUCTURED DATA, MINIMAL INQUIRY, ORGANISATIONAL-LEVEL ASSESSMENT
+SECTION_ID: practical_principles
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: explain the principles that make DSI practical and commercially viable
+
+VISUAL_STATE:
+  NODE_COUNT: 160 - 220
+  EDGE_DENSITY: very_high
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network stabilises
+    - hierarchical structure emerges
+    - represents operational viability
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Structured Data Utilisation
+    BODY: Authoritative structured data—credit ratings, filings, registries—anchors the model with high-confidence signals.
+
+  CARD_2:
+    TITLE: Minimal Direct Inquiry
+    BODY: Direct questions are optional and constrained to 5–10 binary or categorical items per model.
+
+  CARD_3:
+    TITLE: Organisational-Level Assessment
+    BODY: Risk is assessed at the organisational level; parent behaviour is a proxy for underlying assets.
+
+SUPPORTING_TEXT:
+  - These principles reduce friction, cost, and model fragility.
+  - They enable high straight-through processing rates.
+
+====================================================================
+SECTION 6 — SIMPLICITY IN SCORING & AGENTIC READINESS
+SECTION_ID: agentic_principles
+SECTION_TYPE: side_by_side_two_card
+SECTION_PURPOSE: explain the principles that make DSI agentic
+
+VISUAL_STATE:
+  NODE_COUNT: 220 - 300
+  EDGE_DENSITY: maximum
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - fully interconnected network
+    - smooth, confident motion
+    - represents the fully evolved DSI substrate
+
+CONTENT:
+  CARD_LEFT:
+    TITLE: Simplicity in Scoring
+    BODY: Models follow a clear, auditable scoring flow captured at the atomic grain. Complexity is the enemy of determinism.
+
+  CARD_RIGHT:
+    TITLE: Agentic Readiness
+    BODY: Models must be executable by autonomous systems. Deterministic modifiers and confidence scoring enable safe automation.
+
+SUPPORTING_TEXT:
+  - These principles ensure DSI is not just accurate, but operationally deployable.
+  - They are the bridge to autonomous underwriting.
+
+====================================================================
+INTERACTION_RULES:
+
+EXPANDABLE_CARD_BEHAVIOUR:
+  - default_state: collapsed
+  - on_click: expand_card
+  - expanded_state: show all BODY_* fields
+  - collapse_on_second_click: true
+  - only_one_expanded_at_a_time: false
+
+NAVIGATION_RULES:
+  - section_navigation: next_section / previous_section
+  - chevron_navigation: jump_to_section
+  - no_scrollbars_per_topic: true
+
+====================================================================
+END_OF_SPEC

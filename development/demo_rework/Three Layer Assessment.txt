@@ -1,0 +1,204 @@
+TOPIC_NAME: Three Layer Assessment
+TOPIC_ID: three_layer_assessment
+TOPIC_TYPE: multi_section_topic
+TOPIC_NAVIGATION: sequential_sections (5 sections)
+TOPIC_LAYOUT: full_page_background + content_panel
+TOPIC_INTERACTIONS: static_cards, expandable_cards
+TOPIC_VISUAL: evolving_network_background (desktop_only)
+
+====================================================================
+GLOBAL_VISUAL_BACKGROUND
+TYPE: dynamic_network_canvas
+POSITION: full_page_behind_content
+OPACITY: 0.15 - 0.25
+MOTION: subtle, non-distracting
+TRANSITION: animate_on_section_change
+CANVAS_PERSISTENCE: true
+MOBILE_SUPPORT: none
+
+====================================================================
+SECTION 1 — WHY THREE LAYERS?
+SECTION_ID: why_three_layers
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: explain why underwriting must be decomposed into three independent analytical layers
+
+VISUAL_STATE:
+  NODE_COUNT: 40 - 70
+  EDGE_DENSITY: low
+  PALETTE:
+    PRIMARY: #0B3954 (cold blue)
+    SECONDARY: #7A9CB2 (muted blue)
+  MOTION_SPEED: very_slow
+  BEHAVIOUR:
+    - sparse nodes
+    - early clustering
+    - represents conceptual separation emerging
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Traditional Conflation
+    BODY: Traditional underwriting merges risk quality, exposure magnitude, and loss propensity into a single subjective judgement.
+
+  CARD_2:
+    TITLE: Analytical Failure
+    BODY: This conflation prevents calibration, automation, and auditability. No one knows which factor drove the decision.
+
+  CARD_3:
+    TITLE: DSI Separation
+    BODY: DSI separates underwriting into three independent, measurable layers: Risk, Exposure, and Loss.
+
+SUPPORTING_TEXT:
+  - This decomposition is essential for determinism, calibration, and agentic execution.
+
+====================================================================
+SECTION 2 — THE RISK LAYER
+SECTION_ID: risk_layer
+SECTION_TYPE: static_four_card_grid
+SECTION_PURPOSE: define how DSI measures organisational risk quality
+
+VISUAL_STATE:
+  NODE_COUNT: 80 - 120
+  EDGE_DENSITY: medium
+  PALETTE:
+    PRIMARY: #0599AD (blue-teal)
+    SECONDARY: #0B3954 (blue)
+  MOTION_SPEED: medium
+  BEHAVIOUR:
+    - nodes cluster into risk-related structures
+    - edges strengthen around authority and behaviour signals
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Composite Risk Score (0–1000)
+    BODY: Weighted aggregation of signals across all seven canonical categories.
+
+  CARD_2:
+    TITLE: Risk Tier (1–5)
+    BODY: Composite scores map deterministically to risk tiers with predefined decision logic.
+
+  CARD_3:
+    TITLE: Confidence Score (0–1)
+    BODY: Reflects data availability, source reliability, and signal freshness.
+
+  CARD_4:
+    TITLE: Overrides, Referrals, Modifiers
+    BODY: Deterministic rules adjust tiers when specific signal conditions are met—no subjective judgement.
+
+SUPPORTING_TEXT:
+  - The Risk Layer answers: “How well is this organisation managed?”
+
+====================================================================
+SECTION 3 — THE EXPOSURE SHADOW LAYER
+SECTION_ID: exposure_layer
+SECTION_TYPE: expandable_three_card_row
+SECTION_PURPOSE: explain how DSI infers exposure magnitude without self-reported schedules
+
+VISUAL_STATE:
+  NODE_COUNT: 120 - 160
+  EDGE_DENSITY: high
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: medium_fast
+  BEHAVIOUR:
+    - nodes cluster into size/scale indicators
+    - edges represent organisational breadth and complexity
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Exposure Band
+    BODY: Classification of exposure magnitude using direct observables, high-confidence proxies, and inferred signals.
+
+  CARD_2:
+    TITLE: Complexity Category
+    BODY: Measures geographic dispersion, subsidiary count, technology heterogeneity, and regulatory footprint.
+
+  CARD_3:
+    TITLE: Honest Uncertainty
+    BODY: Outputs ranges with confidence (e.g., “$75M–$180M at 78% confidence”) instead of false-precision point estimates.
+
+SUPPORTING_TEXT:
+  - The Exposure Layer answers: “How large and complex is the insurable exposure?”
+
+====================================================================
+SECTION 4 — THE LOSS CORRELATION LAYER
+SECTION_ID: loss_layer
+SECTION_TYPE: static_four_card_grid
+SECTION_PURPOSE: explain how DSI infers loss propensity from behavioural and structural signals
+
+VISUAL_STATE:
+  NODE_COUNT: 160 - 220
+  EDGE_DENSITY: very_high
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - nodes pulse with behavioural patterns
+    - edges highlight deterioration or stability
+    - represents predictive loss inference
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Loss Propensity Score (0–100)
+    BODY: Measures likelihood of loss frequency based on behavioural and structural patterns.
+
+  CARD_2:
+    TITLE: Severity Propensity Score (0–100)
+    BODY: Measures likelihood of high-severity outcomes.
+
+  CARD_3:
+    TITLE: Loss Trend Band
+    BODY: Classifies trend direction: improving, stable, deteriorating.
+
+  CARD_4:
+    TITLE: Cohort Assignment
+    BODY: Entities are grouped into signal-derived peer cohorts for outlier detection and pricing.
+
+SUPPORTING_TEXT:
+  - The Loss Layer answers: “How likely is a loss event, and how severe might it be?”
+
+====================================================================
+SECTION 5 — COMBINING THE THREE LAYERS
+SECTION_ID: combining_layers
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: show how the layers integrate into pricing and decisioning
+
+VISUAL_STATE:
+  NODE_COUNT: 220 - 300
+  EDGE_DENSITY: maximum
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network fully interconnected
+    - edges pulse with multi-layer integration
+    - represents unified underwriting output
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Independent Inputs
+    BODY: Each layer is assessed independently using the same underlying signal infrastructure.
+
+  CARD_2:
+    TITLE: Unified Pricing Decision
+    BODY: Risk, Exposure, and Loss combine deterministically to produce a premium and decision.
+
+  CARD_3:
+    TITLE: Full Audit Trail
+    BODY: Every step, score, and modifier is captured at the atomic grain for auditability.
+
+SUPPORTING_TEXT:
+  - This architecture enables deterministic, agentic underwriting at scale.
+
+====================================================================
+INTERACTION_RULES:
+  - expandable_cards: expand/collapse on click
+  - static_cards: no interaction
+  - section_navigation: next_section / previous_section
+  - chevron_navigation: jump_to_section
+  - no_scrollbars_per_topic: true
+
+====================================================================
+END_OF_SPEC

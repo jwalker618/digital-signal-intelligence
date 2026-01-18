@@ -1,0 +1,169 @@
+TOPIC_NAME: Competitive Differentiation
+TOPIC_ID: competitive_differentiation
+TOPIC_TYPE: multi_section_topic
+TOPIC_NAVIGATION: sequential_sections (4 sections)
+TOPIC_LAYOUT: full_page_background + content_panel
+TOPIC_INTERACTIONS: static_cards, expandable_cards
+TOPIC_VISUAL: evolving_network_background (desktop_only)
+
+====================================================================
+GLOBAL_VISUAL_BACKGROUND
+TYPE: dynamic_network_canvas
+POSITION: full_page_behind_content
+OPACITY: 0.15 - 0.25
+MOTION: subtle, non-distracting
+TRANSITION: animate_on_section_change
+CANVAS_PERSISTENCE: true
+MOBILE_SUPPORT: none
+
+====================================================================
+SECTION 1 — WHY TRADITIONAL MODELS FAIL
+SECTION_ID: traditional_failure
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: establish the limitations of existing tools and approaches
+
+VISUAL_STATE:
+  NODE_COUNT: 40 - 70
+  EDGE_DENSITY: low
+  PALETTE:
+    PRIMARY: #0B3954 (cold blue)
+    SECONDARY: #7A9CB2 (muted blue)
+  MOTION_SPEED: very_slow
+  BEHAVIOUR:
+    - sparse nodes
+    - fragmented clusters
+    - represents the fractured nature of traditional underwriting
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Manual Interpretation
+    BODY: Traditional underwriting relies on subjective interpretation of unstructured documents.
+
+  CARD_2:
+    TITLE: Non-Deterministic Inputs
+    BODY: PDFs, spreadsheets, and emails cannot be reliably automated, regardless of AI sophistication.
+
+  CARD_3:
+    TITLE: Tool Fragmentation
+    BODY: Existing tools provide isolated insights but do not form a complete underwriting substrate.
+
+SUPPORTING_TEXT:
+  - Traditional models cannot scale, cannot automate, and cannot produce consistent outcomes.
+
+====================================================================
+SECTION 2 — WHY EXISTING SIGNAL PROVIDERS ARE NOT UNDERWRITING SYSTEMS
+SECTION_ID: signal_provider_limitations
+SECTION_TYPE: expandable_three_card_row
+SECTION_PURPOSE: clarify the categorical difference between DSI and existing vendors
+
+VISUAL_STATE:
+  NODE_COUNT: 80 - 120
+  EDGE_DENSITY: medium
+  PALETTE:
+    PRIMARY: #0599AD (blue-teal)
+    SECONDARY: #0B3954 (blue)
+  MOTION_SPEED: medium
+  BEHAVIOUR:
+    - nodes cluster around vendor categories
+    - edges highlight gaps in capability
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Cyber Rating Services (e.g., BitSight, SecurityScorecard)
+    BODY: Provide security posture scores but do not assign risk tiers, calculate premiums, or render decisions.
+    LIMITATION: Require underwriters to interpret and contextualise outputs manually.
+
+  CARD_2:
+    TITLE: Data Vendors (e.g., ESG, credit, market data)
+    BODY: Provide structured feeds but do not integrate signals into a unified underwriting workflow.
+    LIMITATION: Inputs, not underwriting systems.
+
+  CARD_3:
+    TITLE: Workflow & Automation Tools
+    BODY: Accelerate manual processes but do not replace the information substrate.
+    LIMITATION: Make the old process faster, not obsolete.
+
+SUPPORTING_TEXT:
+  - DSI is not a better data feed. It is a new underwriting substrate.
+
+====================================================================
+SECTION 3 — WHAT MAKES DSI FUNDAMENTALLY DIFFERENT
+SECTION_ID: dsi_difference
+SECTION_TYPE: static_four_card_grid
+SECTION_PURPOSE: articulate the categorical distinction between DSI and all competitors
+
+VISUAL_STATE:
+  NODE_COUNT: 120 - 160
+  EDGE_DENSITY: high
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: medium_fast
+  BEHAVIOUR:
+    - nodes form a coherent, unified network
+    - edges represent deterministic flows
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: A New Information Substrate
+    BODY: DSI replaces self-reported documents with observable digital signals, enabling deterministic automation.
+
+  CARD_2:
+    TITLE: Complete Underwriting System
+    BODY: DSI assigns risk tiers, estimates exposure, infers loss propensity, calculates premiums, and renders decisions.
+
+  CARD_3:
+    TITLE: Deterministic & Agentic
+    BODY: Every step is rule-based, auditable, and executable by autonomous systems.
+
+  CARD_4:
+    TITLE: Cross-Coverage Applicability
+    BODY: DSI applies to FI, Marine, Energy, Aerospace, Cyber, PI, D&O, and beyond.
+
+SUPPORTING_TEXT:
+  - DSI is a categorical shift, not an incremental improvement.
+
+====================================================================
+SECTION 4 — THE STRATEGIC ADVANTAGE
+SECTION_ID: strategic_advantage
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: show the commercial and operational advantages of DSI
+
+VISUAL_STATE:
+  NODE_COUNT: 160 - 220
+  EDGE_DENSITY: very_high
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network fully interconnected
+    - edges pulse with decisioning logic
+    - represents the complete DSI substrate
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Operational Efficiency
+    BODY: 60–80% straight-through processing, <60 seconds to quote, < $10 cost per submission.
+
+  CARD_2:
+    TITLE: Superior Risk Selection
+    BODY: Behavioural and structural signals identify deterioration before losses occur.
+
+  CARD_3:
+    TITLE: Portfolio Steering
+    BODY: Signal weighting can be tuned at the turn of a dial, enabling dynamic portfolio optimisation.
+
+SUPPORTING_TEXT:
+  - DSI is the first underwriting system designed for the agentic era.
+
+====================================================================
+INTERACTION_RULES:
+  - expandable_cards: expand/collapse on click
+  - static_cards: no interaction
+  - section_navigation: next_section / previous_section
+  - chevron_navigation: jump_to_section
+  - no_scrollbars_per_topic: true
+
+====================================================================
+END_OF_SPEC

@@ -1,0 +1,326 @@
+SPEC_NAME: Interact With DSI
+SPEC_ID: interact_with_dsi
+SPEC_TYPE: multi_page_module
+APPLIES_TO: interactive_demo_pages
+DEPENDENCIES:
+  - global_rules_system_architecture
+  - visual_identity_spec
+  - llm_ingestion_method_spec
+
+====================================================================
+PAGE 1 — HUMAN OVERSIGHT (UNCHANGED)
+====================================================================
+
+PAGE_NAME: Human Oversight
+PAGE_ID: human_oversight
+PAGE_TYPE: interactive_page
+STATUS: retained_without_modification
+
+DESCRIPTION:
+  The Human Oversight page remains exactly as implemented in the previous demo.
+  No changes to layout, content, interactions, or visual behaviour.
+  This page continues to demonstrate:
+    - deterministic decisioning
+    - human-in-the-loop review
+    - override logic
+    - audit trail visibility
+    - transparency of model reasoning
+
+RATIONALE:
+  This module already delivers a compelling, intuitive, and realistic interaction.
+  It aligns with the evolved DSI methodology and requires no redesign.
+
+====================================================================
+PAGE 2 — PORTFOLIO ADJUSTMENT (REMOVED)
+====================================================================
+
+PAGE_NAME: Portfolio Adjustment (Deprecated)
+PAGE_ID: portfolio_adjustment_old
+PAGE_TYPE: deprecated_page
+STATUS: removed_from_demo
+
+REMOVAL_REASON:
+  The previous Portfolio Adjustment module was:
+    - visually static
+    - numerically driven rather than behaviourally driven
+    - insufficiently intuitive
+    - lacking clear cause-and-effect feedback
+    - misaligned with the evolved DSI visual system
+    - not compelling enough for executive audiences
+
+REMOVAL_ACTIONS:
+  - remove page from navigation
+  - remove all associated components
+  - remove all sliders, tables, and numerical-only outputs
+  - remove all references in onboarding or transitions
+  - ensure no residual links remain in the codebase
+
+====================================================================
+PAGE 3 — PORTFOLIO STEERING (NEW)
+====================================================================
+
+PAGE_NAME: Portfolio Steering
+PAGE_ID: portfolio_steering
+PAGE_TYPE: interactive_page
+STATUS: new_page_added
+
+PAGE_PURPOSE:
+  Provide a compelling, visual, dynamic, and intuitive interface for adjusting
+  portfolio appetite using DSI signal weightings, with immediate, animated,
+  cause-and-effect feedback.
+
+PAGE_STRUCTURE:
+  - signal_weight_levers
+  - three_panel_visualisation
+  - dynamic_callouts
+  - scenario_presets
+  - portfolio_health_score
+  - loss_ratio_delta
+  - apply_changes_animation
+
+SECTION_1: signal_weight_levers
+  TYPE: interactive_lever_controls
+  LEVERS:
+    - governance_weight
+    - behavioural_deterioration_weight
+    - technical_hygiene_weight
+  RANGE: 0–100
+  DEFAULT: 50
+  BEHAVIOUR:
+    - tactile, animated, colour-coded
+    - movement triggers real-time recalibration
+    - each lever emits an "impact arc" pulse
+
+SECTION_2: three_panel_visualisation
+  TYPE: dynamic_visual_cluster_map
+  PANELS:
+    - portfolio_before
+    - adjustment_in_motion
+    - portfolio_after
+  NODE_COLOURS:
+    tier_1: green
+    tier_2: teal
+    tier_3: amber
+    tier_4: red
+    tier_5: dark_red
+  ANIMATION:
+    - nodes shift position
+    - clusters expand/contract
+    - outliers drift
+    - shockwave effect on lever movement
+
+SECTION_3: dynamic_callouts
+  TYPE: ephemeral_text_overlays
+  EXAMPLES:
+    - "12% of portfolio reclassified from Tier 2 ? Tier 3"
+    - "High-risk cluster detected"
+    - "Capital efficiency improved by 8%"
+
+SECTION_4: scenario_presets
+  TYPE: preset_buttons
+  PRESETS:
+    - hard_market_mode
+    - soft_market_mode
+    - cyber_shock_scenario
+    - regulatory_crackdown
+    - capital_constrained_mode
+
+SECTION_5: portfolio_health_score
+  TYPE: radial_gauge
+  RANGE: 0–100
+  COLOURS:
+    - red
+    - amber
+    - green
+
+SECTION_6: loss_ratio_delta
+  TYPE: numeric_delta_display
+  FORMAT: before_value ? after_value
+
+SECTION_7: apply_changes_animation
+  TYPE: cinematic_transition
+  SEQUENCE:
+    - collapse_to_point
+    - explode_to_new_configuration
+    - stabilise
+    - confirmation_panel
+
+====================================================================
+PAGE 4 — SIGNAL REACTOR (NEW)
+====================================================================
+
+PAGE_NAME: Signal Reactor
+PAGE_ID: signal_reactor
+PAGE_TYPE: interactive_page
+STATUS: new_page_added
+
+PAGE_PURPOSE:
+  Allow the user to manipulate the DSI signal substrate directly.
+  Provide a tactile, animated, exploratory interface that reveals how signals
+  interact, correlate, and reshape the underwriting landscape.
+
+PAGE_STRUCTURE:
+  - reactor_core
+  - signal_category_nodes
+  - correlation_shockwaves
+  - substrate_reconfiguration
+  - signal_inspector
+
+SECTION_1: reactor_core
+  TYPE: animated_network_sphere
+  BEHAVIOUR:
+    - glowing, rotating, pulsating
+    - responds to user input
+    - colour-coded by signal category
+
+SECTION_2: signal_category_nodes
+  TYPE: draggable_nodes
+  CATEGORIES:
+    - governance
+    - technical_infrastructure
+    - digital_footprint
+    - behavioural
+    - public_record
+    - structured_feeds
+    - direct_inquiry
+  INTERACTION:
+    - drag to increase/decrease influence
+    - network reshapes in real time
+
+SECTION_3: correlation_shockwaves
+  TYPE: animated_ripples
+  TRIGGER:
+    - node movement
+    - category emphasis
+  EFFECT:
+    - highlight correlated clusters
+    - reveal hidden patterns
+
+SECTION_4: substrate_reconfiguration
+  TYPE: dynamic_network_rebuild
+  BEHAVIOUR:
+    - nodes re-cluster
+    - edges strengthen/weaken
+    - colours shift based on weighting
+
+SECTION_5: signal_inspector
+  TYPE: click_to_reveal
+  OUTPUT:
+    - signal value
+    - confidence
+    - weight
+    - impact on composite score
+
+====================================================================
+PAGE 5 — UNDERWRITING ENGINE (NEW)
+====================================================================
+
+PAGE_NAME: Underwriting Engine
+PAGE_ID: underwriting_engine
+PAGE_TYPE: interactive_page
+STATUS: new_page_added
+
+PAGE_PURPOSE:
+  Provide a cinematic, mechanical, tactile representation of the
+  Three Layer Assessment:
+    - Risk
+    - Exposure
+    - Loss
+
+PAGE_STRUCTURE:
+  - engine_core
+  - risk_ring
+  - exposure_ring
+  - loss_ring
+  - layer_interactions
+  - decision_lock_in
+
+SECTION_1: engine_core
+  TYPE: animated_reactor
+  DESCRIPTION:
+    - three concentric rings
+    - glowing, rotating, mechanical
+
+SECTION_2: risk_ring
+  TYPE: interactive_outer_ring
+  INTERACTION:
+    - rotate to adjust composite score
+    - expand/contract to reveal signal groups
+
+SECTION_3: exposure_ring
+  TYPE: interactive_middle_ring
+  INTERACTION:
+    - expand to increase complexity
+    - contract to simplify exposure
+
+SECTION_4: loss_ring
+  TYPE: interactive_inner_ring
+  INTERACTION:
+    - tap to pulse severity
+    - rotate to adjust trend band
+
+SECTION_5: layer_interactions
+  TYPE: dynamic_interplay
+  BEHAVIOUR:
+    - rings influence each other
+    - visual feedback shows dependencies
+
+SECTION_6: decision_lock_in
+  TYPE: cinematic_moment
+  SEQUENCE:
+    - rings align
+    - engine glows
+    - underwriting decision appears
+
+====================================================================
+PAGE 6 — WHAT HAPPENS IF… (NEW)
+====================================================================
+
+PAGE_NAME: What Happens If
+PAGE_ID: what_happens_if
+PAGE_TYPE: interactive_page
+STATUS: new_page_added
+
+PAGE_PURPOSE:
+  Provide micro-simulations that demonstrate the predictive power of DSI.
+  Allow the user to explore scenarios and instantly see the impact.
+
+PAGE_STRUCTURE:
+  - scenario_buttons
+  - animated_simulation
+  - impact_metrics
+  - narrative_explanation
+
+SECTION_1: scenario_buttons
+  TYPE: scenario_selector
+  SCENARIOS:
+    - governance_collapse
+    - technical_hygiene_improves
+    - exposure_doubles
+    - behavioural_deterioration
+    - regulatory_action
+    - supply_chain_shock
+
+SECTION_2: animated_simulation
+  TYPE: dynamic_network_event
+  BEHAVIOUR:
+    - nodes flare
+    - clusters shift
+    - tiers change
+    - loss propensity adjusts
+
+SECTION_3: impact_metrics
+  TYPE: metric_panel
+  METRICS:
+    - tier_distribution_change
+    - loss_ratio_delta
+    - portfolio_health_change
+    - confidence_shift
+
+SECTION_4: narrative_explanation
+  TYPE: text_overlay
+  OUTPUT:
+    - human-readable explanation of what changed and why
+
+====================================================================
+END_OF_SPEC
