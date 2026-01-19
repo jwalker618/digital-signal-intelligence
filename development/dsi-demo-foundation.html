@@ -3454,6 +3454,944 @@
                 </div>
             </div>
 
+            <!-- ================================================================
+                 PARTITION D3: TOPIC 7 - END-TO-END MODEL ARCHITECTURE
+                 Source: development/demo_rework/EndToEnd Model Archiecture.txt
+                 6 Sections
+                 ================================================================ -->
+            <div id="page-end-to-end-architecture" class="page" data-page-type="topic" data-total-sections="6">
+
+                <!-- SECTION 1: Overview of the Model Cycle -->
+                <div id="end-to-end-architecture-section-1" class="section" data-visual-mode="stagnation">
+                    <div class="section-header">
+                        <h2>Overview of the Model Cycle</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Six Phases</div>
+                            <div class="card-body">
+                                <p>Discovery, Instantiation, Signals, Three Layer Assessment, Pricing, Decision.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Fourteen Steps</div>
+                            <div class="card-body">
+                                <p>Each phase contains discrete, deterministic steps captured at the atomic grain.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Immutable Model Version</div>
+                            <div class="card-body">
+                                <p>Every execution produces a fully persisted, immutable Model Version.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>This architecture ensures auditability, determinism, and agentic readiness.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('three-layer-assessment', 5)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous Topic
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 1 of 6</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Phase A - Discovery -->
+                <div id="end-to-end-architecture-section-2" class="section" data-visual-mode="stagnation">
+                    <div class="section-header">
+                        <h2>Phase A: Discovery (Step 0)</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Minimal Input</div>
+                            <div class="card-body">
+                                <p>Typically a client name and/or domain triggers the discovery process.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Website & Domain Validation</div>
+                            <div class="card-body">
+                                <p>DSI identifies the authoritative website and validates the domain with confidence scoring.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Corporate Identity Resolution</div>
+                            <div class="card-body">
+                                <p>Registry matching identifies the legal entity and corporate structure.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Output: discovered URL, domain, confidence score, and corporate identity.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 2 of 6</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Phase B - Model Instantiation -->
+                <div id="end-to-end-architecture-section-3" class="section" data-visual-mode="emergence">
+                    <div class="section-header">
+                        <h2>Phase B: Model Instantiation (Step 1)</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Configuration Instantiation</div>
+                            <div class="card-body">
+                                <p>The model loads a specific configuration using content-addressable storage.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Version Creation</div>
+                            <div class="card-body">
+                                <p>A new Model Version is created with a full audit trail.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Input Verification</div>
+                            <div class="card-body">
+                                <p>Inputs are validated against minimum viable requirements.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>This ensures reproducibility and traceability.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 3 of 6</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Phase C - Signals -->
+                <div id="end-to-end-architecture-section-4" class="section" data-visual-mode="growth">
+                    <div class="section-header">
+                        <h2>Phase C: Signals (Steps 2–4)</h2>
+                    </div>
+
+                    <div class="card-grid four-col compact">
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Parallel Extraction</div>
+                            <div class="card-body"><p>All configured signal pipelines execute in parallel for speed and consistency.</p></div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Normalisation (0–100)</div>
+                            <div class="card-body"><p>Raw signals are normalised using deterministic scoring algorithms.</p></div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Confidence Scoring (0–1)</div>
+                            <div class="card-body"><p>Confidence reflects availability, source reliability, and freshness.</p></div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Composite Signal Output</div>
+                            <div class="card-body"><p>Each signal produces a value and confidence pair.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>This phase produces the structured substrate for the Three Layer Assessment.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 4 of 6</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: Phase D - Three Layer Assessment -->
+                <div id="end-to-end-architecture-section-5" class="section" data-visual-mode="maturity">
+                    <div class="section-header">
+                        <h2>Phase D: Three Layer Assessment (Steps 5–7)</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Risk Layer</div>
+                            <div class="card-body">
+                                <p>Composite score, tier, confidence, overrides, referrals, deterministic modifiers.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Exposure Shadow Layer</div>
+                            <div class="card-body">
+                                <p>Exposure band, complexity category, confidence, and proxy hierarchy.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Loss Correlation Layer</div>
+                            <div class="card-body">
+                                <p>Loss propensity, severity propensity, trend band, cohort assignment.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Each layer is independent, measurable, and auditable.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 5 of 6</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 6: Phases E & F - Pricing and Decision -->
+                <div id="end-to-end-architecture-section-6" class="section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>Phases E & F: Pricing and Decision (Steps 8–13)</h2>
+                    </div>
+
+                    <div class="card-grid four-col compact">
+                        <div class="card static-card compact">
+                            <div class="card-title">Tier Resolution</div>
+                            <div class="card-body"><p>Final tier determined using maximum override rule.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Base Rate Calculation</div>
+                            <div class="card-body"><p>Three Layer Assessment determines the base-rate premium.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Deterministic Modifiers</div>
+                            <div class="card-body"><p>Industry loadings, complexity adjustments, and loss modifiers applied in sequence.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Final Decision</div>
+                            <div class="card-body"><p>Approve, Refer, or Decline with full audit trail persistence.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Total processing time: seconds, not days.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 6 of 6</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('retrospective-case-studies', 1)">
+                                Next Topic <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 PARTITION D3: TOPIC 8 - RETROSPECTIVE CASE STUDIES
+                 Source: development/demo_rework/Retrospective Case Studies.txt
+                 5 Sections
+                 ================================================================ -->
+            <div id="page-retrospective-case-studies" class="page" data-page-type="topic" data-total-sections="5">
+
+                <!-- SECTION 1: Purpose of Retrospective Validation -->
+                <div id="retrospective-case-studies-section-1" class="section" data-visual-mode="stagnation">
+                    <div class="section-header">
+                        <h2>Purpose of Retrospective Validation</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Validate the Substrate</div>
+                            <div class="card-body">
+                                <p>Retrospective analysis tests whether observable digital signals would have identified elevated risk before major losses.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Cross-Coverage Applicability</div>
+                            <div class="card-body">
+                                <p>Case studies span FI, Marine, Energy, Aerospace, and Cyber to demonstrate universality.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Predictive Patterns</div>
+                            <div class="card-body">
+                                <p>Governance failures, behavioural deterioration, and absence signals consistently appear before losses.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>DSI does not predict the future; it reveals what is already visible in the digital ecosystem.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('end-to-end-architecture', 6)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous Topic
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 1 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Financial Institutions -->
+                <div id="retrospective-case-studies-section-2" class="section" data-visual-mode="emergence">
+                    <div class="section-header">
+                        <h2>Financial Institutions</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card expandable-card">
+                            <div class="card-title">Silicon Valley Bank (2023)</div>
+                            <div class="card-body">
+                                <p>CRO vacancy, regulatory MRAs, extreme depositor concentration.</p>
+                            </div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI Output:</strong> DECLINE or REFER.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card">
+                            <div class="card-title">FTX (2022)</div>
+                            <div class="card-body">
+                                <p>No auditor, no independent board, no audited financials.</p>
+                            </div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI Output:</strong> DECLINE.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card">
+                            <div class="card-title">Signature Bank (2023)</div>
+                            <div class="card-body">
+                                <p>Crypto concentration, DOJ/SEC investigations, uninsured deposits.</p>
+                            </div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI Output:</strong> REFER or DECLINE.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>FI failures were preceded by clear governance and concentration signals.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 2 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Marine & Energy -->
+                <div id="retrospective-case-studies-section-3" class="section" data-visual-mode="growth">
+                    <div class="section-header">
+                        <h2>Marine & Energy</h2>
+                    </div>
+
+                    <div class="card-grid four-col compact">
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Shadow Fleet (2022–2024)</div>
+                            <div class="card-body"><p>No IG Club, non-IACS classification, sanctioned owners.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> DECLINE.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">MV Dali / Baltimore (2024)</div>
+                            <div class="card-body"><p>PSC deficiencies, electrical issues.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> REFER.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Deepwater Horizon (2010)</div>
+                            <div class="card-body"><p>Prior safety failures, OSHA history, safety culture issues.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> REFER + LOAD.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Piper Alpha (1988)</div>
+                            <div class="card-body"><p>Known maintenance issues, permit-to-work weaknesses.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> REFER.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Operational discipline and regulatory friction were visible long before the losses.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 3 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Cyber & Aerospace -->
+                <div id="retrospective-case-studies-section-4" class="section" data-visual-mode="maturity">
+                    <div class="section-header">
+                        <h2>Cyber & Aerospace</h2>
+                    </div>
+
+                    <div class="card-grid four-col compact">
+                        <div class="card expandable-card compact">
+                            <div class="card-title">SolarWinds (2020)</div>
+                            <div class="card-body"><p>Public GitHub credential exposure, weak security culture.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> DECLINE.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Equifax (2017)</div>
+                            <div class="card-body"><p>Patch failures, prior incidents, limited security visibility.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> DECLINE.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">23andMe (2023)</div>
+                            <div class="card-body"><p>Optional MFA, credential stuffing exposure, sensitive data.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> REFER or DECLINE.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card compact">
+                            <div class="card-title">Boeing 737 MAX (2018–2020)</div>
+                            <div class="card-body"><p>Disclosure gaps, FAA audit findings, supply chain issues.</p></div>
+                            <div class="card-expanded-content">
+                                <p class="dsi-output"><strong>DSI:</strong> REFER.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Behavioural deterioration is visible in digital signals long before catastrophic outcomes.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 4 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: Cross-Coverage Signal Effectiveness -->
+                <div id="retrospective-case-studies-section-5" class="section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>Cross-Coverage Signal Effectiveness</h2>
+                    </div>
+
+                    <div class="card-grid five-col compact">
+                        <div class="card static-card compact">
+                            <div class="card-title">Governance Stability</div>
+                            <div class="card-body"><p>Predictive across FI, Cyber, Aerospace, Energy.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Regulatory Findings</div>
+                            <div class="card-body"><p>Strong indicators across FI, Energy, Aerospace.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Transparency Gaps</div>
+                            <div class="card-body"><p>Predictive across FI, Cyber, Aerospace.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Concentration Risk</div>
+                            <div class="card-body"><p>Predictive across FI, Marine, Cyber.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Credential Hygiene</div>
+                            <div class="card-body"><p>Predictive across Cyber and tech sectors.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Across all coverages, 70–90% of major losses would have been flagged by DSI.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 5 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('competitive-differentiation', 1)">
+                                Next Topic <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 PARTITION D3: TOPIC 9 - COMPETITIVE DIFFERENTIATION
+                 Source: development/demo_rework/Competitive Differentiation.txt
+                 4 Sections
+                 ================================================================ -->
+            <div id="page-competitive-differentiation" class="page" data-page-type="topic" data-total-sections="4">
+
+                <!-- SECTION 1: Why Traditional Models Fail -->
+                <div id="competitive-differentiation-section-1" class="section" data-visual-mode="stagnation">
+                    <div class="section-header">
+                        <h2>Why Traditional Models Fail</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Manual Interpretation</div>
+                            <div class="card-body">
+                                <p>Traditional underwriting relies on subjective interpretation of unstructured documents.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Non-Deterministic Inputs</div>
+                            <div class="card-body">
+                                <p>PDFs, spreadsheets, and emails cannot be reliably automated, regardless of AI sophistication.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Tool Fragmentation</div>
+                            <div class="card-body">
+                                <p>Existing tools provide isolated insights but do not form a complete underwriting substrate.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Traditional models cannot scale, cannot automate, and cannot produce consistent outcomes.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('retrospective-case-studies', 5)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous Topic
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 1 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Signal Providers Are Not Underwriting Systems -->
+                <div id="competitive-differentiation-section-2" class="section" data-visual-mode="emergence">
+                    <div class="section-header">
+                        <h2>Signal Providers Are Not Underwriting Systems</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card expandable-card">
+                            <div class="card-title">Cyber Rating Services</div>
+                            <div class="card-body">
+                                <p>BitSight, SecurityScorecard provide scores but don't assign tiers, calculate premiums, or render decisions.</p>
+                            </div>
+                            <div class="card-expanded-content">
+                                <p class="limitation"><strong>Limitation:</strong> Require underwriters to interpret and contextualise outputs manually.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card">
+                            <div class="card-title">Data Vendors</div>
+                            <div class="card-body">
+                                <p>ESG, credit, and market data providers offer feeds but don't integrate into underwriting workflows.</p>
+                            </div>
+                            <div class="card-expanded-content">
+                                <p class="limitation"><strong>Limitation:</strong> Inputs, not underwriting systems.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card">
+                            <div class="card-title">Workflow & Automation Tools</div>
+                            <div class="card-body">
+                                <p>Accelerate manual processes but don't replace the information substrate.</p>
+                            </div>
+                            <div class="card-expanded-content">
+                                <p class="limitation"><strong>Limitation:</strong> Make the old process faster, not obsolete.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>DSI is not a better data feed. It is a new underwriting substrate.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 2 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: What Makes DSI Fundamentally Different -->
+                <div id="competitive-differentiation-section-3" class="section" data-visual-mode="growth">
+                    <div class="section-header">
+                        <h2>What Makes DSI Fundamentally Different</h2>
+                    </div>
+
+                    <div class="card-grid four-col compact">
+                        <div class="card static-card compact">
+                            <div class="card-title">A New Information Substrate</div>
+                            <div class="card-body"><p>DSI replaces self-reported documents with observable digital signals, enabling deterministic automation.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Complete Underwriting System</div>
+                            <div class="card-body"><p>DSI assigns risk tiers, estimates exposure, infers loss propensity, calculates premiums, and renders decisions.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Deterministic & Agentic</div>
+                            <div class="card-body"><p>Every step is rule-based, auditable, and executable by autonomous systems.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Cross-Coverage Applicability</div>
+                            <div class="card-body"><p>DSI applies to FI, Marine, Energy, Aerospace, Cyber, PI, D&O, and beyond.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>DSI is a categorical shift, not an incremental improvement.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 3 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: The Strategic Advantage -->
+                <div id="competitive-differentiation-section-4" class="section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>The Strategic Advantage</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Operational Efficiency</div>
+                            <div class="card-body">
+                                <p>60–80% straight-through processing, &lt;60 seconds to quote, &lt;$10 cost per submission.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Superior Risk Selection</div>
+                            <div class="card-body">
+                                <p>Behavioural and structural signals identify deterioration before losses occur.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Portfolio Steering</div>
+                            <div class="card-body">
+                                <p>Signal weighting can be tuned at the turn of a dial, enabling dynamic portfolio optimisation.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>DSI is the first underwriting system designed for the agentic era.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 4 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('economic-impact', 1)">
+                                Next Topic <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 PARTITION D3: TOPIC 10 - ECONOMIC IMPACT
+                 Source: development/demo_rework/Economic Impact.txt
+                 4 Sections
+                 ================================================================ -->
+            <div id="page-economic-impact" class="page" data-page-type="topic" data-total-sections="4">
+
+                <!-- SECTION 1: The Cost of Traditional Underwriting -->
+                <div id="economic-impact-section-1" class="section" data-visual-mode="stagnation">
+                    <div class="section-header">
+                        <h2>The Cost of Traditional Underwriting</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">High Operational Cost</div>
+                            <div class="card-body">
+                                <p>Manual underwriting costs $150–$500 per submission, driven by human review, follow-ups, and document processing.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Slow Cycle Times</div>
+                            <div class="card-body">
+                                <p>Submissions take days or weeks to process, reducing conversion and increasing broker leakage.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Poor Risk Selection</div>
+                            <div class="card-body">
+                                <p>Subjective interpretation leads to inconsistent decisions and adverse selection.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Traditional underwriting is economically inefficient, operationally slow, and strategically fragile.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('competitive-differentiation', 4)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous Topic
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 1 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: The Economic Value of DSI -->
+                <div id="economic-impact-section-2" class="section" data-visual-mode="emergence">
+                    <div class="section-header">
+                        <h2>The Economic Value of DSI</h2>
+                    </div>
+
+                    <div class="card-grid four-col compact">
+                        <div class="card static-card compact">
+                            <div class="card-title">60–80% STP</div>
+                            <div class="card-body"><p>Deterministic decisioning reduces human involvement and accelerates throughput.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">&lt;$10 Per Submission</div>
+                            <div class="card-body"><p>Automated processing dramatically reduces operational cost.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Improved Loss Ratios</div>
+                            <div class="card-body"><p>Better risk selection and early detection of deterioration reduce portfolio losses.</p></div>
+                        </div>
+                        <div class="card static-card compact">
+                            <div class="card-title">Faster Conversion</div>
+                            <div class="card-body"><p>Quotes delivered in seconds increase win rates and broker satisfaction.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>DSI transforms underwriting from a cost centre into a scalable, high-margin engine.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 2 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Portfolio-Level Impact -->
+                <div id="economic-impact-section-3" class="section" data-visual-mode="growth">
+                    <div class="section-header">
+                        <h2>Portfolio-Level Impact</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card expandable-card">
+                            <div class="card-title">Better Risk Segmentation</div>
+                            <div class="card-body">
+                                <p>Signal-derived tiers create sharper segmentation and reduce cross-subsidisation.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card">
+                            <div class="card-title">Dynamic Portfolio Steering</div>
+                            <div class="card-body">
+                                <p>Adjusting signal weights allows real-time optimisation of risk appetite and exposure mix.</p>
+                            </div>
+                        </div>
+                        <div class="card expandable-card">
+                            <div class="card-title">Capital Efficiency</div>
+                            <div class="card-body">
+                                <p>Improved loss ratios and reduced volatility lower capital requirements and increase ROE.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>DSI enables active portfolio management rather than passive accumulation.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 3 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Strategic Economic Advantage -->
+                <div id="economic-impact-section-4" class="section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>Strategic Economic Advantage</h2>
+                    </div>
+
+                    <div class="card-grid three-col">
+                        <div class="card static-card">
+                            <div class="card-title">Scalable Growth</div>
+                            <div class="card-body">
+                                <p>Underwriting capacity grows without proportional increases in headcount.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Competitive Pricing</div>
+                            <div class="card-body">
+                                <p>Better risk selection enables sharper pricing and improved market share.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Strategic Differentiation</div>
+                            <div class="card-body">
+                                <p>DSI creates a defensible moat: a proprietary underwriting substrate.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>The economic impact compounds over time, creating a structural advantage.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 4 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('orientation')">
+                                Return Home <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
