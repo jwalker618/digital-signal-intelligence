@@ -993,6 +993,773 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        /* ====================================================================
+         * PARTITION E: INTERACTIVE MODULE STYLES
+         * ==================================================================== */
+
+        /* --- INTERACTIVE SECTION BASE --- */
+        .interactive-section .section-subtitle {
+            font-size: var(--text-body-md);
+            color: var(--accent-4);
+            margin-top: var(--spacing-xs);
+        }
+
+        .interactive-container {
+            display: grid;
+            gap: var(--spacing-lg);
+            padding: var(--spacing-md);
+        }
+
+        /* --- HUMAN OVERSIGHT MODULE --- */
+        .human-oversight-module {
+            grid-template-columns: 1fr 2fr;
+        }
+
+        .entity-selector-panel h3,
+        .review-panel h3 {
+            font-size: var(--text-h3);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .entity-grid {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .entity-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .entity-card:hover {
+            border-color: var(--accent-1);
+            transform: translateX(4px);
+        }
+
+        .entity-card.selected {
+            border-color: var(--accent-5);
+            background: rgba(57, 211, 186, 0.1);
+        }
+
+        .entity-name {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .entity-tier {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-body-sm);
+            font-weight: 600;
+        }
+
+        .entity-tier.tier-2 { background: #0599AD; color: white; }
+        .entity-tier.tier-3 { background: #f59e0b; color: white; }
+        .entity-tier.tier-4 { background: #ef4444; color: white; }
+
+        .entity-status {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+            margin-top: var(--spacing-xs);
+        }
+
+        .review-panel {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .review-tier {
+            font-size: var(--text-h3);
+            font-weight: 700;
+            color: var(--accent-1);
+        }
+
+        .signal-summary h4,
+        .dsi-recommendation h4,
+        .override-controls h4,
+        .audit-trail h4 {
+            font-size: var(--text-body-lg);
+            margin-bottom: var(--spacing-sm);
+            color: var(--primary);
+        }
+
+        .signal-bars {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .signal-bar {
+            display: grid;
+            grid-template-columns: 120px 1fr 50px;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .signal-label {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        .signal-track {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .signal-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-5));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .signal-value {
+            font-size: var(--text-body-sm);
+            font-weight: 600;
+            color: var(--primary);
+            text-align: right;
+        }
+
+        .recommendation-box {
+            background: var(--primary);
+            color: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: var(--text-h3);
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .recommendation-box.approve { background: var(--accent-5); }
+        .recommendation-box.refer { background: #f59e0b; }
+        .recommendation-box.decline { background: #ef4444; }
+
+        .confidence-display {
+            text-align: center;
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        .override-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .btn-approve { background: var(--accent-5); color: white; }
+        .btn-refer { background: #f59e0b; color: white; }
+        .btn-decline { background: #ef4444; color: white; }
+
+        .override-reason label {
+            display: block;
+            font-size: var(--text-body-sm);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .override-reason select {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-body-md);
+        }
+
+        .audit-log {
+            background: #f8f8f8;
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-sm);
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: var(--text-body-sm);
+        }
+
+        .audit-entry {
+            padding: 2px 0;
+            color: var(--accent-4);
+        }
+
+        /* --- PORTFOLIO STEERING MODULE --- */
+        .portfolio-steering-module {
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: auto auto auto;
+        }
+
+        .lever-panel {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            grid-row: span 2;
+        }
+
+        .lever-control {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .lever-control label {
+            display: block;
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .lever-control input[type="range"] {
+            width: calc(100% - 50px);
+            -webkit-appearance: none;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .lever-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-1);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .lever-control input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .lever-value {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .scenario-presets {
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border);
+        }
+
+        .preset-btn {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: var(--text-body-sm);
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent-1);
+            background: rgba(5, 153, 173, 0.1);
+        }
+
+        .portfolio-viz {
+            display: flex;
+            gap: var(--spacing-md);
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .viz-panel {
+            flex: 1;
+            text-align: center;
+        }
+
+        .viz-panel h4 {
+            font-size: var(--text-body-md);
+            color: var(--accent-4);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .cluster-viz {
+            background: #f0f0f0;
+            border-radius: var(--radius-md);
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tier-distribution {
+            margin-top: var(--spacing-sm);
+            font-size: var(--text-body-sm);
+        }
+
+        .tier-dot { margin-right: 4px; }
+        .tier-dot.t1 { color: var(--accent-5); }
+        .tier-dot.t2 { color: var(--accent-1); }
+        .tier-dot.t3 { color: #f59e0b; }
+        .tier-dot.t4 { color: #ef4444; }
+        .tier-dot.t5 { color: #7f1d1d; }
+
+        .transition-indicator {
+            font-size: 32px;
+            color: var(--accent-1);
+            margin-top: var(--spacing-md);
+        }
+
+        .metrics-panel {
+            display: flex;
+            gap: var(--spacing-md);
+            grid-column: span 2;
+        }
+
+        .metric-card {
+            flex: 1;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-gauge {
+            position: relative;
+            height: 60px;
+        }
+
+        .metric-gauge svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-value {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: var(--text-h2);
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .metric-delta {
+            font-size: var(--text-h3);
+        }
+
+        .delta-before { color: var(--accent-4); }
+        .delta-arrow { color: var(--accent-1); margin: 0 8px; }
+        .delta-after { color: var(--accent-5); font-weight: 600; }
+
+        .metric-value {
+            font-size: var(--text-h3);
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .apply-changes {
+            grid-column: span 2;
+            text-align: center;
+        }
+
+        .btn-large {
+            padding: var(--spacing-md) var(--spacing-xl);
+            font-size: var(--text-body-lg);
+        }
+
+        /* --- SIGNAL REACTOR MODULE --- */
+        .signal-reactor-module {
+            grid-template-columns: 1fr 300px;
+            grid-template-rows: auto auto;
+        }
+
+        .reactor-core-container {
+            position: relative;
+            background: radial-gradient(circle, rgba(5, 153, 173, 0.1) 0%, transparent 70%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .reactor-glow {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(57, 211, 186, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .signal-categories {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .category-instruction {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .category-nodes {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .category-node {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: #f8f8f8;
+            border-radius: var(--radius-sm);
+            cursor: grab;
+            transition: all 0.2s;
+        }
+
+        .category-node:hover {
+            background: rgba(5, 153, 173, 0.1);
+        }
+
+        .node-circle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .node-circle.governance { background: var(--primary); }
+        .node-circle.technical { background: var(--accent-1); }
+        .node-circle.footprint { background: var(--accent-5); }
+        .node-circle.behavioural { background: #f59e0b; }
+        .node-circle.public { background: #8b5cf6; }
+        .node-circle.structured { background: #ec4899; }
+        .node-circle.inquiry { background: var(--accent-4); }
+
+        .signal-inspector {
+            grid-column: span 2;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .inspector-hint {
+            color: var(--accent-4);
+            font-style: italic;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-xs) 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-label { color: var(--accent-4); }
+        .detail-value { font-weight: 600; color: var(--primary); }
+
+        /* --- UNDERWRITING ENGINE MODULE --- */
+        .underwriting-engine-module {
+            grid-template-columns: 1fr 320px;
+            grid-template-rows: auto auto;
+        }
+
+        .engine-core-container {
+            position: relative;
+            background: radial-gradient(circle, rgba(11, 57, 84, 0.05) 0%, transparent 70%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+        }
+
+        .ring-labels {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .ring-label {
+            position: absolute;
+            font-size: var(--text-body-sm);
+            font-weight: 600;
+            color: var(--accent-4);
+            white-space: nowrap;
+        }
+
+        .ring-label.outer { top: -180px; left: 50%; transform: translateX(-50%); }
+        .ring-label.middle { top: -120px; left: 50%; transform: translateX(-50%); }
+        .ring-label.inner { top: -60px; left: 50%; transform: translateX(-50%); }
+
+        .layer-controls {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .layer-control {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .layer-control h4 {
+            font-size: var(--text-body-lg);
+            margin-bottom: var(--spacing-md);
+            color: var(--primary);
+        }
+
+        .layer-control.risk-control { border-left: 4px solid var(--accent-1); }
+        .layer-control.exposure-control { border-left: 4px solid var(--accent-5); }
+        .layer-control.loss-control { border-left: 4px solid #f59e0b; }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .control-row label {
+            flex: 1;
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        .control-row input[type="range"] {
+            width: 120px;
+        }
+
+        .control-row select {
+            flex: 1;
+            padding: var(--spacing-xs);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .tier-indicator {
+            text-align: center;
+            padding: var(--spacing-sm);
+            background: var(--accent-1);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+        }
+
+        .decision-output {
+            grid-column: span 2;
+            text-align: center;
+        }
+
+        .decision-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .decision-label {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .decision-value {
+            font-size: var(--text-h1);
+            font-weight: 700;
+            color: var(--accent-5);
+        }
+
+        .decision-value.refer { color: #f59e0b; }
+        .decision-value.decline { color: #ef4444; }
+
+        .decision-premium {
+            margin-top: var(--spacing-sm);
+            font-size: var(--text-body-lg);
+            color: var(--primary);
+        }
+
+        /* --- WHAT HAPPENS IF MODULE --- */
+        .what-happens-if-module {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+        }
+
+        .scenario-selector {
+            grid-column: span 2;
+        }
+
+        .scenario-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .scenario-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-lg);
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .scenario-btn:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-2px);
+        }
+
+        .scenario-btn.active {
+            border-color: var(--accent-5);
+            background: rgba(57, 211, 186, 0.1);
+        }
+
+        .scenario-icon {
+            font-size: 32px;
+        }
+
+        .scenario-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .scenario-desc {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        .simulation-viz {
+            position: relative;
+            background: #f0f0f0;
+            border-radius: var(--radius-lg);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .simulation-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-4);
+            font-style: italic;
+        }
+
+        .impact-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .impact-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+        }
+
+        .impact-label {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        .impact-value {
+            font-size: var(--text-h3);
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .narrative-panel {
+            grid-column: span 2;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .narrative-panel h4 {
+            margin-bottom: var(--spacing-sm);
+            color: var(--primary);
+        }
+
+        #narrative-text {
+            color: var(--accent-4);
+            line-height: 1.6;
+        }
+
+        /* --- RESPONSIVE ADJUSTMENTS FOR INTERACTIVE MODULES --- */
+        @media (max-width: 1024px) {
+            .human-oversight-module,
+            .portfolio-steering-module,
+            .signal-reactor-module,
+            .underwriting-engine-module,
+            .what-happens-if-module {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-panel,
+            .signal-inspector,
+            .decision-output,
+            .scenario-selector,
+            .narrative-panel {
+                grid-column: 1;
+            }
+
+            .scenario-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .scenario-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .portfolio-viz {
+                flex-direction: column;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -5329,6 +6096,341 @@
             },
 
             /* ----------------------------------------------------------------
+             * INTERACTIVE MODULE - Handles all interactive page functionality
+             * Partition F: Integration & Polish
+             * ---------------------------------------------------------------- */
+            interactive: {
+                // Entity data for Human Oversight module
+                entityData: {
+                    'techcorp': {
+                        name: 'TechCorp Solutions',
+                        tier: 2,
+                        signals: { governance: 78, technical: 82, behavioural: 71, public: 85 },
+                        recommendation: 'APPROVE',
+                        confidence: 0.87
+                    },
+                    'global-logistics': {
+                        name: 'Global Logistics Inc',
+                        tier: 3,
+                        signals: { governance: 62, technical: 58, behavioural: 55, public: 70 },
+                        recommendation: 'REFER',
+                        confidence: 0.72
+                    },
+                    'stellar-marine': {
+                        name: 'Stellar Marine Services',
+                        tier: 4,
+                        signals: { governance: 42, technical: 38, behavioural: 35, public: 48 },
+                        recommendation: 'DECLINE',
+                        confidence: 0.91
+                    }
+                },
+
+                currentEntity: null,
+
+                // Select entity for Human Oversight
+                selectEntity(entityId) {
+                    const entity = this.entityData[entityId];
+                    if (!entity) return;
+
+                    this.currentEntity = entityId;
+
+                    // Update selection UI
+                    document.querySelectorAll('.entity-card').forEach(card => {
+                        card.classList.toggle('selected', card.dataset.entity === entityId);
+                    });
+
+                    // Update review panel
+                    document.getElementById('review-entity-name').textContent = entity.name;
+                    document.getElementById('review-tier').textContent = `Tier ${entity.tier}`;
+
+                    // Update signal bars with animation
+                    Object.entries(entity.signals).forEach(([signal, value]) => {
+                        const fill = document.getElementById(`sig-${signal}`);
+                        const val = document.getElementById(`val-${signal}`);
+                        if (fill && val) {
+                            fill.style.width = `${value}%`;
+                            val.textContent = value;
+                        }
+                    });
+
+                    // Update recommendation
+                    const recBox = document.getElementById('recommendation-box');
+                    const recText = document.getElementById('recommendation-text');
+                    recText.textContent = entity.recommendation;
+                    recBox.className = 'recommendation-box ' + entity.recommendation.toLowerCase();
+
+                    // Update confidence
+                    document.getElementById('confidence-value').textContent =
+                        `${(entity.confidence * 100).toFixed(0)}%`;
+
+                    // Add audit entry
+                    this.addAuditEntry(`Entity selected: ${entity.name}`);
+                },
+
+                // Apply override in Human Oversight
+                applyOverride(decision) {
+                    if (!this.currentEntity) {
+                        alert('Please select an entity first');
+                        return;
+                    }
+
+                    const reason = document.getElementById('override-reason').value;
+                    if (!reason) {
+                        alert('Please select an override reason');
+                        return;
+                    }
+
+                    const entity = this.entityData[this.currentEntity];
+                    const recBox = document.getElementById('recommendation-box');
+                    const recText = document.getElementById('recommendation-text');
+
+                    recText.textContent = decision.toUpperCase();
+                    recBox.className = 'recommendation-box ' + decision;
+
+                    this.addAuditEntry(`OVERRIDE: ${entity.recommendation} → ${decision.toUpperCase()} (${reason})`);
+                },
+
+                // Add entry to audit log
+                addAuditEntry(message) {
+                    const log = document.getElementById('audit-log');
+                    const timestamp = new Date().toLocaleTimeString();
+                    const entry = document.createElement('div');
+                    entry.className = 'audit-entry';
+                    entry.textContent = `[${timestamp}] ${message}`;
+                    log.appendChild(entry);
+                    log.scrollTop = log.scrollHeight;
+                },
+
+                // Portfolio Steering - Update lever value display
+                updateLever(lever, value) {
+                    document.getElementById(`lever-val-${lever}`).textContent = value;
+                    this.simulatePortfolioChange();
+                },
+
+                // Portfolio Steering - Apply preset
+                applyPreset(preset) {
+                    const presets = {
+                        'hard-market': { governance: 80, behavioural: 75, technical: 60 },
+                        'soft-market': { governance: 40, behavioural: 45, technical: 50 },
+                        'cyber-shock': { governance: 50, behavioural: 60, technical: 95 },
+                        'regulatory': { governance: 90, behavioural: 70, technical: 55 }
+                    };
+
+                    const settings = presets[preset];
+                    if (!settings) return;
+
+                    Object.entries(settings).forEach(([lever, value]) => {
+                        document.getElementById(`lever-${lever}`).value = value;
+                        document.getElementById(`lever-val-${lever}`).textContent = value;
+                    });
+
+                    this.simulatePortfolioChange();
+                },
+
+                // Simulate portfolio changes
+                simulatePortfolioChange() {
+                    const governance = parseInt(document.getElementById('lever-governance').value);
+                    const behavioural = parseInt(document.getElementById('lever-behavioural').value);
+                    const technical = parseInt(document.getElementById('lever-technical').value);
+
+                    // Calculate simulated metrics
+                    const avgWeight = (governance + behavioural + technical) / 3;
+                    const lossRatio = Math.max(45, 75 - avgWeight * 0.3).toFixed(0);
+                    const health = Math.min(95, 50 + avgWeight * 0.45).toFixed(0);
+                    const reclassified = Math.floor(Math.abs(avgWeight - 50) * 0.8);
+
+                    // Update displays
+                    document.getElementById('loss-ratio-after').textContent = `${lossRatio}%`;
+                    document.getElementById('health-value').textContent = health;
+                    document.getElementById('reclassified-count').textContent = `${reclassified} entities`;
+
+                    // Update tier distribution simulation
+                    const distAfter = document.getElementById('dist-after');
+                    const t1 = Math.max(5, 12 + (avgWeight - 50) * 0.2).toFixed(0);
+                    const t2 = Math.max(15, 28 + (avgWeight - 50) * 0.15).toFixed(0);
+                    const t3 = 35;
+                    const t4 = Math.max(8, 18 - (avgWeight - 50) * 0.15).toFixed(0);
+                    const t5 = Math.max(2, 7 - (avgWeight - 50) * 0.1).toFixed(0);
+                    distAfter.innerHTML = `
+                        <span class="tier-dot t1">●</span>${t1}%
+                        <span class="tier-dot t2">●</span>${t2}%
+                        <span class="tier-dot t3">●</span>${t3}%
+                        <span class="tier-dot t4">●</span>${t4}%
+                        <span class="tier-dot t5">●</span>${t5}%
+                    `;
+                },
+
+                // Apply portfolio changes with animation
+                applyPortfolioChanges() {
+                    const btn = document.querySelector('.apply-changes .btn');
+                    btn.textContent = 'Applying...';
+                    btn.disabled = true;
+
+                    setTimeout(() => {
+                        btn.textContent = 'Changes Applied!';
+                        setTimeout(() => {
+                            btn.textContent = 'Apply Changes';
+                            btn.disabled = false;
+                        }, 2000);
+                    }, 1500);
+                },
+
+                // Underwriting Engine - Update Risk Layer
+                updateRiskLayer(score) {
+                    document.getElementById('risk-score-val').textContent = score;
+
+                    // Determine tier based on score
+                    let tier;
+                    if (score >= 800) tier = 1;
+                    else if (score >= 650) tier = 2;
+                    else if (score >= 500) tier = 3;
+                    else if (score >= 350) tier = 4;
+                    else tier = 5;
+
+                    document.getElementById('risk-tier').textContent = `Tier ${tier}`;
+                    this.updateDecision();
+                },
+
+                // Underwriting Engine - Update Exposure Layer
+                updateExposureLayer(band) {
+                    this.updateDecision();
+                },
+
+                // Underwriting Engine - Update Complexity
+                updateComplexity(value) {
+                    document.getElementById('complexity-val').textContent = value;
+                    this.updateDecision();
+                },
+
+                // Underwriting Engine - Update Loss Layer
+                updateLossLayer(type, value) {
+                    document.getElementById(`${type === 'propensity' ? 'loss-propensity' : 'severity'}-val`).textContent = value;
+                    this.updateDecision();
+                },
+
+                // Underwriting Engine - Calculate decision
+                updateDecision() {
+                    const riskScore = parseInt(document.getElementById('risk-score').value);
+                    const lossPropensity = parseInt(document.getElementById('loss-propensity').value);
+                    const severity = parseInt(document.getElementById('severity').value);
+                    const exposureBand = document.getElementById('exposure-band').value;
+
+                    // Calculate decision
+                    let decision, premium;
+                    const avgRisk = (riskScore / 10 + (100 - lossPropensity) + (100 - severity)) / 3;
+
+                    if (avgRisk >= 70) {
+                        decision = 'APPROVE';
+                        premium = this.calculatePremium(exposureBand, 0.8);
+                    } else if (avgRisk >= 50) {
+                        decision = 'REFER';
+                        premium = this.calculatePremium(exposureBand, 1.2);
+                    } else {
+                        decision = 'DECLINE';
+                        premium = '--';
+                    }
+
+                    const decisionEl = document.getElementById('decision-value');
+                    decisionEl.textContent = decision;
+                    decisionEl.className = 'decision-value ' + decision.toLowerCase();
+                    document.getElementById('premium-value').textContent = premium;
+                },
+
+                // Calculate premium based on exposure band
+                calculatePremium(band, modifier) {
+                    const basePremiums = {
+                        'low': 25000,
+                        'medium': 125000,
+                        'high': 450000,
+                        'extreme': 1500000
+                    };
+                    const base = basePremiums[band] || 125000;
+                    const premium = Math.round(base * modifier);
+                    return '$' + premium.toLocaleString();
+                },
+
+                // Lock decision with animation
+                lockDecision() {
+                    const decision = document.getElementById('decision-value').textContent;
+                    const btn = document.querySelector('.decision-output .btn');
+                    btn.textContent = 'Locking...';
+                    btn.disabled = true;
+
+                    setTimeout(() => {
+                        btn.textContent = `${decision} Locked`;
+                        btn.style.background = '#39D3BA';
+                    }, 1000);
+                },
+
+                // What Happens If - Run scenario
+                runScenario(scenario) {
+                    // Update button states
+                    document.querySelectorAll('.scenario-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.scenario === scenario);
+                    });
+
+                    // Hide overlay
+                    document.getElementById('sim-overlay').style.display = 'none';
+
+                    // Scenario impacts
+                    const scenarios = {
+                        'governance-collapse': {
+                            tierDist: '+18% Tier 4',
+                            lossRatio: '+12%',
+                            health: '-24',
+                            confidence: '-15%',
+                            narrative: 'Governance collapse detected: CRO resignation and multiple audit findings triggered immediate tier downgrades across 18% of the portfolio. Loss propensity increased significantly due to reduced oversight and control deterioration.'
+                        },
+                        'technical-improvement': {
+                            tierDist: '+8% Tier 1-2',
+                            lossRatio: '-5%',
+                            health: '+12',
+                            confidence: '+8%',
+                            narrative: 'Technical hygiene improvements detected: Enhanced security posture and infrastructure modernization led to tier upgrades for 8% of entities. Improved technical signals correlate with reduced loss propensity.'
+                        },
+                        'exposure-doubles': {
+                            tierDist: 'Unchanged',
+                            lossRatio: '+8%',
+                            health: '-10',
+                            confidence: '-20%',
+                            narrative: 'Major acquisition detected: Exposure doubled without proportional increase in governance signals. Confidence decreased significantly due to uncertainty in integration outcomes. Risk tier unchanged but premium loading required.'
+                        },
+                        'behavioural-deterioration': {
+                            tierDist: '+15% Tier 3-4',
+                            lossRatio: '+10%',
+                            health: '-18',
+                            confidence: '-12%',
+                            narrative: 'Behavioural deterioration detected: Hiring freeze and layoff signals preceded by reduced investment and operational discipline. Historical patterns suggest elevated loss frequency within 6-12 months.'
+                        },
+                        'regulatory-action': {
+                            tierDist: '+22% Tier 4-5',
+                            lossRatio: '+15%',
+                            health: '-28',
+                            confidence: '+5%',
+                            narrative: 'Regulatory enforcement action detected: Confirmed regulatory findings increase confidence in risk assessment but dramatically worsen risk profile. Immediate referral or decline recommended for affected entities.'
+                        },
+                        'supply-chain-shock': {
+                            tierDist: '+10% Tier 3',
+                            lossRatio: '+7%',
+                            health: '-15',
+                            confidence: '-25%',
+                            narrative: 'Supply chain compromise detected: Key vendor breach creates cascading risk across dependent entities. Confidence significantly reduced due to uncertain exposure scope. Monitoring escalation triggered.'
+                        }
+                    };
+
+                    const impact = scenarios[scenario];
+                    if (!impact) return;
+
+                    // Update metrics with animation
+                    document.getElementById('impact-tier-dist').textContent = impact.tierDist;
+                    document.getElementById('impact-loss-ratio').textContent = impact.lossRatio;
+                    document.getElementById('impact-health').textContent = impact.health;
+                    document.getElementById('impact-confidence').textContent = impact.confidence;
+                    document.getElementById('narrative-text').textContent = impact.narrative;
+                }
+            },
+
+            /* ----------------------------------------------------------------
              * INITIALIZATION
              * ---------------------------------------------------------------- */
             init() {
@@ -5347,7 +6449,7 @@
                 this.router.navigateTo('orientation');
 
                 this.state.isInitialized = true;
-                console.log('DSI Application Initialized - Partitions A & B Complete');
+                console.log('DSI Application Initialized - All Partitions Complete');
             }
         };
 
