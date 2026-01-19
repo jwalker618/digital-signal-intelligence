@@ -371,6 +371,628 @@
         .mb-md { margin-bottom: var(--spacing-md); }
         .mb-lg { margin-bottom: var(--spacing-lg); }
         .text-center { text-align: center; }
+
+        /* ====================================================================
+         * PARTITION B: COMPONENT LIBRARY
+         * Source: Global Rules and System Architecture
+         * ==================================================================== */
+
+        /* --- SECTION HEADER --- */
+        .section-header {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .section-header h2 {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .section-header .section-subtitle {
+            font-size: var(--text-body-lg);
+            color: var(--accent-4);
+            margin-bottom: 0;
+        }
+
+        /* --- BREADCRUMB --- */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .breadcrumb a {
+            color: var(--accent-1);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .breadcrumb .separator {
+            color: var(--border-light);
+        }
+
+        .breadcrumb .current {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* --- SUPPORTING TEXT --- */
+        .supporting-text {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-sm);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .supporting-text p {
+            margin-bottom: var(--spacing-xs);
+            color: var(--accent-4);
+        }
+
+        /* --- CARD BASE STYLES --- */
+        .card {
+            background: var(--background);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: var(--spacing-md);
+            transition: all var(--transition-medium);
+        }
+
+        .card-title {
+            font-family: var(--font-headers);
+            font-size: var(--text-body-lg);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .card-body {
+            font-size: var(--text-body-md);
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .card-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* --- STATIC CARD --- */
+        .static-card {
+            background: var(--accent-3);
+        }
+
+        .static-card:hover {
+            border-color: var(--accent-1);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        /* --- EXPANDABLE CARD --- */
+        .expandable-card {
+            cursor: pointer;
+            background: var(--background);
+        }
+
+        .expandable-card:hover {
+            border-color: var(--accent-1);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .expandable-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+
+        .expandable-card .card-toggle {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-1);
+            transition: transform var(--transition-medium);
+        }
+
+        .expandable-card.expanded .card-toggle {
+            transform: rotate(180deg);
+        }
+
+        .expandable-card .card-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-medium), margin var(--transition-medium);
+        }
+
+        .expandable-card.expanded .card-content {
+            max-height: 500px;
+            margin-top: var(--spacing-sm);
+        }
+
+        .expandable-card .card-content-inner {
+            padding-top: var(--spacing-sm);
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* Expanded state accent */
+        .expandable-card.expanded {
+            border-color: var(--accent-1);
+            border-left-width: 3px;
+        }
+
+        /* --- SIDE BY SIDE CARD --- */
+        .side-by-side-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+        }
+
+        .side-by-side-card {
+            padding: var(--spacing-lg);
+        }
+
+        .side-by-side-card.left {
+            animation: slideInLeft 0.5s ease forwards;
+        }
+
+        .side-by-side-card.right {
+            animation: slideInRight 0.5s ease forwards;
+        }
+
+        .side-by-side-card .card-purpose {
+            font-size: var(--text-body-sm);
+            color: var(--accent-1);
+            font-style: italic;
+            margin-top: var(--spacing-sm);
+        }
+
+        /* --- CARD GRIDS --- */
+        .card-grid {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .card-grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .card-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .card-grid-4 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .card-grid-5 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .card-grid-5 .card:nth-child(4),
+        .card-grid-5 .card:nth-child(5) {
+            grid-column: span 1;
+        }
+
+        .card-grid-7 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .card-grid-10 {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        /* --- NAVIGATION BUTTONS --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-xs);
+            padding: 12px 24px;
+            font-family: var(--font-body);
+            font-size: var(--text-body-md);
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--accent-1);
+            color: var(--text-inverse);
+            border-color: var(--accent-1);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-secondary {
+            background: var(--accent-3);
+            color: var(--text-primary);
+            border-color: var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-1);
+            color: var(--text-inverse);
+            border-color: var(--accent-1);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--accent-1);
+            border-color: transparent;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(5, 153, 173, 0.1);
+        }
+
+        /* Orientation mode button variants */
+        body.orientation-mode .btn-primary {
+            background: var(--accent-5);
+            border-color: var(--accent-5);
+            color: var(--primary);
+        }
+
+        body.orientation-mode .btn-primary:hover {
+            background: var(--text-inverse);
+            border-color: var(--text-inverse);
+        }
+
+        body.orientation-mode .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-inverse);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        body.orientation-mode .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- SECTION NAVIGATION --- */
+        .section-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .section-navigation .nav-prev,
+        .section-navigation .nav-next {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .section-navigation .section-indicator {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        /* Hide prev/next when at boundaries */
+        .section-navigation .nav-prev.disabled,
+        .section-navigation .nav-next.disabled {
+            visibility: hidden;
+        }
+
+        /* --- NAVIGATION CHEVRONS --- */
+        .nav-chevrons {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-xs);
+            margin-top: var(--spacing-md);
+        }
+
+        .chevron-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border-light);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .chevron-dot:hover {
+            background: var(--accent-1);
+            transform: scale(1.2);
+        }
+
+        .chevron-dot.active {
+            background: var(--accent-1);
+            transform: scale(1.3);
+        }
+
+        /* --- JOURNEY MAP (Vertical Step) --- */
+        .journey-map {
+            position: relative;
+            padding-left: var(--spacing-lg);
+        }
+
+        .journey-map::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-1), var(--accent-5));
+        }
+
+        .journey-step {
+            position: relative;
+            padding-bottom: var(--spacing-md);
+            opacity: 0;
+            transform: translateX(-10px);
+            animation: stepFadeIn 0.4s ease forwards;
+        }
+
+        .journey-step:last-child {
+            padding-bottom: 0;
+        }
+
+        .journey-step::before {
+            content: '';
+            position: absolute;
+            left: calc(-1 * var(--spacing-lg) + 6px);
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--background);
+            border: 2px solid var(--accent-1);
+        }
+
+        .journey-step.completed::before {
+            background: var(--accent-5);
+            border-color: var(--accent-5);
+        }
+
+        .journey-step-title {
+            font-family: var(--font-headers);
+            font-size: var(--text-body-lg);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .journey-step-desc {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        body.orientation-mode .journey-step-title {
+            color: var(--text-inverse);
+        }
+
+        body.orientation-mode .journey-step-desc {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        body.orientation-mode .journey-step::before {
+            background: var(--primary);
+            border-color: var(--accent-5);
+        }
+
+        @keyframes stepFadeIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Stagger animation delays for journey steps */
+        .journey-step:nth-child(1) { animation-delay: 0.1s; }
+        .journey-step:nth-child(2) { animation-delay: 0.2s; }
+        .journey-step:nth-child(3) { animation-delay: 0.3s; }
+        .journey-step:nth-child(4) { animation-delay: 0.4s; }
+        .journey-step:nth-child(5) { animation-delay: 0.5s; }
+
+        /* --- TOPIC LIST SIDEBAR --- */
+        .topic-list {
+            list-style: none;
+        }
+
+        .topic-list-item {
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .topic-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .topic-list-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+
+        .topic-list-link:hover {
+            color: var(--accent-1);
+        }
+
+        .topic-list-link .topic-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-3);
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        .topic-list-link:hover .topic-number {
+            background: var(--accent-1);
+            color: var(--text-inverse);
+        }
+
+        body.orientation-mode .topic-list-item {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.orientation-mode .topic-list-link {
+            color: var(--text-inverse);
+        }
+
+        body.orientation-mode .topic-list-link .topic-number {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent-5);
+        }
+
+        /* --- INTERACTIVE PAGE GRID --- */
+        .interactive-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .interactive-card {
+            background: var(--accent-3);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .interactive-card:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .interactive-card-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--background);
+            border-radius: 8px;
+            margin-bottom: var(--spacing-sm);
+            color: var(--accent-1);
+        }
+
+        .interactive-card-title {
+            font-family: var(--font-headers);
+            font-size: var(--text-body-lg);
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .interactive-card-desc {
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        body.orientation-mode .interactive-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.orientation-mode .interactive-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-5);
+        }
+
+        body.orientation-mode .interactive-card-icon {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent-5);
+        }
+
+        body.orientation-mode .interactive-card-title {
+            color: var(--text-inverse);
+        }
+
+        body.orientation-mode .interactive-card-desc {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* --- INSTRUCTION BLOCK --- */
+        .instruction-block {
+            background: var(--accent-3);
+            border-radius: 8px;
+            padding: var(--spacing-md);
+        }
+
+        .instruction-block ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .instruction-block li {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-xs) 0;
+            font-size: var(--text-body-sm);
+            color: var(--accent-4);
+        }
+
+        .instruction-block li svg {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            color: var(--accent-1);
+            margin-top: 2px;
+        }
+
+        body.orientation-mode .instruction-block {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        body.orientation-mode .instruction-block li {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        body.orientation-mode .instruction-block li svg {
+            color: var(--accent-5);
+        }
+
+        /* --- CENTERED LOGO BLOCK --- */
+        .logo-block {
+            text-align: center;
+            padding: var(--spacing-lg) 0;
+        }
+
+        .logo-block img,
+        .logo-block svg {
+            height: 48px;
+            width: auto;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .logo-block .tagline {
+            font-size: var(--text-body-md);
+            color: var(--accent-4);
+            font-style: italic;
+        }
+
+        body.orientation-mode .logo-block .tagline {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
     </style>
 </head>
 <body>
@@ -408,23 +1030,384 @@
 
             <!-- ORIENTATION PAGE (Entry Point) -->
             <div id="page-orientation" class="page" data-page-type="orientation">
-                <!-- Content will be added in Partition C -->
-                <div class="text-center" style="padding: 100px 0;">
-                    <h1>DSI Foundation Loaded</h1>
-                    <p class="text-large">Partition A: Foundation Infrastructure Complete</p>
-                    <p class="text-muted mt-md">Canvas, Header, Router, and Visual State Manager are operational.</p>
+                <!-- Content will be fully populated in Partition C -->
+                <div class="text-center" style="padding: 60px 0;">
+                    <h1 style="font-size: 32px; margin-bottom: 16px;">Welcome to Digital Signal Intelligence</h1>
+                    <p class="text-large" style="max-width: 600px; margin: 0 auto 32px auto;">
+                        This demo shows you what underwriting becomes when the information substrate changes.
+                    </p>
 
-                    <!-- Test Navigation -->
-                    <div class="mt-lg flex-center gap-md" style="flex-wrap: wrap;">
-                        <button class="nav-btn" onclick="DSI.visualState.setMode('stagnation')">Stagnation</button>
-                        <button class="nav-btn" onclick="DSI.visualState.setMode('emergence')">Emergence</button>
-                        <button class="nav-btn" onclick="DSI.visualState.setMode('growth')">Growth</button>
-                        <button class="nav-btn" onclick="DSI.visualState.setMode('maturity')">Maturity</button>
-                        <button class="nav-btn" onclick="DSI.visualState.setMode('agentic')">Agentic</button>
+                    <div class="flex-center gap-md mb-lg">
+                        <button class="btn btn-primary" onclick="DSI.router.navigateTo('component-demo', 1)">
+                            View Component Demo
+                        </button>
+                        <button class="btn btn-secondary" onclick="DSI.router.navigateTo('test-topic', 1)">
+                            Test Topic Navigation
+                        </button>
                     </div>
 
-                    <div class="mt-lg">
-                        <button class="nav-btn primary" onclick="DSI.router.navigateTo('test-topic', 1)">Test Topic Navigation</button>
+                    <!-- Visual State Controls -->
+                    <div class="instruction-block" style="max-width: 500px; margin: 0 auto;">
+                        <p class="text-small mb-sm" style="color: inherit;">Visual State Controls:</p>
+                        <div class="flex-center gap-sm" style="flex-wrap: wrap;">
+                            <button class="btn btn-secondary" onclick="DSI.visualState.setMode('stagnation')">Stagnation</button>
+                            <button class="btn btn-secondary" onclick="DSI.visualState.setMode('emergence')">Emergence</button>
+                            <button class="btn btn-secondary" onclick="DSI.visualState.setMode('growth')">Growth</button>
+                            <button class="btn btn-secondary" onclick="DSI.visualState.setMode('agentic')">Agentic</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPONENT DEMO PAGE (Partition B Showcase) -->
+            <div id="page-component-demo" class="page" data-page-type="topic" data-total-sections="4">
+
+                <!-- Section 1: Cards -->
+                <div id="component-demo-section-1" class="section" data-visual-mode="stagnation">
+                    <nav class="breadcrumb">
+                        <a href="#" onclick="DSI.router.navigateTo('orientation'); return false;">Home</a>
+                        <span class="separator">/</span>
+                        <span class="current">Component Library</span>
+                    </nav>
+
+                    <div class="section-header">
+                        <h2>Card Components</h2>
+                        <p class="section-subtitle">Static and expandable card variations</p>
+                    </div>
+
+                    <h3 class="mt-lg mb-md">Static Cards (3-Column Grid)</h3>
+                    <div class="card-grid card-grid-3">
+                        <div class="card static-card">
+                            <div class="card-title">Static Card 1</div>
+                            <div class="card-body">
+                                <p>This is a static card with no interactive behavior. Used for displaying fixed content.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Static Card 2</div>
+                            <div class="card-body">
+                                <p>Cards automatically size to their content and align in a responsive grid.</p>
+                            </div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Static Card 3</div>
+                            <div class="card-body">
+                                <p>Hover over cards to see the subtle border highlight effect.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-lg mb-md">Expandable Cards</h3>
+                    <div class="card-grid card-grid-2">
+                        <div class="card expandable-card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Expandable Card 1</div>
+                                    <div class="card-body">Click to expand and reveal more content.</div>
+                                </div>
+                                <div class="card-toggle">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="card-content-inner">
+                                    <p>This expanded content is revealed when the card is clicked. It can contain additional details, explanations, or any other content that should be hidden by default.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card expandable-card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Expandable Card 2</div>
+                                    <div class="card-body">Another expandable card example.</div>
+                                </div>
+                                <div class="card-toggle">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="card-content-inner">
+                                    <p>The expansion is animated smoothly. The left border accent indicates the card is in an expanded state.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="supporting-text">
+                        <p>Cards are the primary content containers. Use static cards for fixed information and expandable cards for progressive disclosure.</p>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev disabled"></div>
+                        <div class="section-indicator">Section 1 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Side-by-Side & Grids -->
+                <div id="component-demo-section-2" class="section" data-visual-mode="emergence">
+                    <nav class="breadcrumb">
+                        <a href="#" onclick="DSI.router.navigateTo('orientation'); return false;">Home</a>
+                        <span class="separator">/</span>
+                        <a href="#" onclick="DSI.router.goToSection(1); return false;">Component Library</a>
+                        <span class="separator">/</span>
+                        <span class="current">Layouts</span>
+                    </nav>
+
+                    <div class="section-header">
+                        <h2>Layout Components</h2>
+                        <p class="section-subtitle">Side-by-side cards and grid variations</p>
+                    </div>
+
+                    <h3 class="mt-lg mb-md">Side-by-Side Cards</h3>
+                    <div class="side-by-side-cards">
+                        <div class="card side-by-side-card left">
+                            <div class="card-title">Learn About DSI</div>
+                            <div class="card-body">
+                                <p>Explore the core concepts, the signal substrate, the model architecture, and the economic impact.</p>
+                            </div>
+                            <div class="card-purpose">This section builds understanding.</div>
+                        </div>
+                        <div class="card side-by-side-card right">
+                            <div class="card-title">Interact With DSI</div>
+                            <div class="card-body">
+                                <p>Manipulate signals, steer portfolios, explore scenarios, and experience the underwriting engine.</p>
+                            </div>
+                            <div class="card-purpose">This section builds intuition and excitement.</div>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-lg mb-md">4-Card Grid</h3>
+                    <div class="card-grid card-grid-4">
+                        <div class="card static-card"><div class="card-title">Card 1</div><div class="card-body">Content</div></div>
+                        <div class="card static-card"><div class="card-title">Card 2</div><div class="card-body">Content</div></div>
+                        <div class="card static-card"><div class="card-title">Card 3</div><div class="card-body">Content</div></div>
+                        <div class="card static-card"><div class="card-title">Card 4</div><div class="card-body">Content</div></div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                                Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 2 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Journey Map & Lists -->
+                <div id="component-demo-section-3" class="section" data-visual-mode="growth">
+                    <nav class="breadcrumb">
+                        <a href="#" onclick="DSI.router.navigateTo('orientation'); return false;">Home</a>
+                        <span class="separator">/</span>
+                        <a href="#" onclick="DSI.router.goToSection(1); return false;">Component Library</a>
+                        <span class="separator">/</span>
+                        <span class="current">Journey & Lists</span>
+                    </nav>
+
+                    <div class="section-header">
+                        <h2>Journey Map & Lists</h2>
+                        <p class="section-subtitle">Vertical step maps and topic lists</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px;">
+                        <div>
+                            <h3 class="mb-md">Journey Map</h3>
+                            <div class="journey-map">
+                                <div class="journey-step completed">
+                                    <div class="journey-step-title">Start with the Automation Myth</div>
+                                    <div class="journey-step-desc">Understand why underwriting cannot be automated using documents.</div>
+                                </div>
+                                <div class="journey-step completed">
+                                    <div class="journey-step-title">Explore the DSI Substrate</div>
+                                    <div class="journey-step-desc">See how signals replace self-reported information.</div>
+                                </div>
+                                <div class="journey-step">
+                                    <div class="journey-step-title">Understand the Model</div>
+                                    <div class="journey-step-desc">Learn how the Three Layer Assessment works.</div>
+                                </div>
+                                <div class="journey-step">
+                                    <div class="journey-step-title">Interact with the System</div>
+                                    <div class="journey-step-desc">Use the Signal Reactor, Underwriting Engine, and Portfolio Steering.</div>
+                                </div>
+                                <div class="journey-step">
+                                    <div class="journey-step-title">Simulate Scenarios</div>
+                                    <div class="journey-step-desc">Explore what happens when signals change.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="mb-md">Topic List</h3>
+                            <ul class="topic-list">
+                                <li class="topic-list-item">
+                                    <a href="#" class="topic-list-link" onclick="return false;">
+                                        <span class="topic-number">1</span>
+                                        <span>The Automation Myth</span>
+                                    </a>
+                                </li>
+                                <li class="topic-list-item">
+                                    <a href="#" class="topic-list-link" onclick="return false;">
+                                        <span class="topic-number">2</span>
+                                        <span>The PageRank Precedent</span>
+                                    </a>
+                                </li>
+                                <li class="topic-list-item">
+                                    <a href="#" class="topic-list-link" onclick="return false;">
+                                        <span class="topic-number">3</span>
+                                        <span>The Core Thesis</span>
+                                    </a>
+                                </li>
+                                <li class="topic-list-item">
+                                    <a href="#" class="topic-list-link" onclick="return false;">
+                                        <span class="topic-number">4</span>
+                                        <span>Signal Architecture</span>
+                                    </a>
+                                </li>
+                                <li class="topic-list-item">
+                                    <a href="#" class="topic-list-link" onclick="return false;">
+                                        <span class="topic-number">5</span>
+                                        <span>Three Layer Assessment</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                                Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 3 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                Next
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Interactive Grid & Buttons -->
+                <div id="component-demo-section-4" class="section" data-visual-mode="agentic">
+                    <nav class="breadcrumb">
+                        <a href="#" onclick="DSI.router.navigateTo('orientation'); return false;">Home</a>
+                        <span class="separator">/</span>
+                        <a href="#" onclick="DSI.router.goToSection(1); return false;">Component Library</a>
+                        <span class="separator">/</span>
+                        <span class="current">Interactive & Buttons</span>
+                    </nav>
+
+                    <div class="section-header">
+                        <h2>Interactive Components</h2>
+                        <p class="section-subtitle">Interactive page grid and button variants</p>
+                    </div>
+
+                    <h3 class="mt-lg mb-md">Interactive Page Grid</h3>
+                    <div class="interactive-grid">
+                        <div class="interactive-card" onclick="alert('Portfolio Steering clicked')">
+                            <div class="interactive-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v6l4 2"></path>
+                                </svg>
+                            </div>
+                            <div class="interactive-card-title">Portfolio Steering</div>
+                            <div class="interactive-card-desc">Adjust signal weights and observe portfolio impact.</div>
+                        </div>
+                        <div class="interactive-card" onclick="alert('Signal Reactor clicked')">
+                            <div class="interactive-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="interactive-card-title">Signal Reactor</div>
+                            <div class="interactive-card-desc">Explore how signals interact and correlate.</div>
+                        </div>
+                        <div class="interactive-card" onclick="alert('Underwriting Engine clicked')">
+                            <div class="interactive-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                            </div>
+                            <div class="interactive-card-title">Underwriting Engine</div>
+                            <div class="interactive-card-desc">See the three-layer assessment in action.</div>
+                        </div>
+                        <div class="interactive-card" onclick="alert('What Happens If clicked')">
+                            <div class="interactive-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                            </div>
+                            <div class="interactive-card-title">What Happens If</div>
+                            <div class="interactive-card-desc">Simulate scenarios and explore outcomes.</div>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-lg mb-md">Button Variants</h3>
+                    <div class="flex gap-md" style="flex-wrap: wrap;">
+                        <button class="btn btn-primary">Primary Button</button>
+                        <button class="btn btn-secondary">Secondary Button</button>
+                        <button class="btn btn-ghost">Ghost Button</button>
+                    </div>
+
+                    <h3 class="mt-lg mb-md">Navigation Chevrons</h3>
+                    <div class="nav-chevrons">
+                        <div class="chevron-dot active"></div>
+                        <div class="chevron-dot"></div>
+                        <div class="chevron-dot"></div>
+                        <div class="chevron-dot"></div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                                Previous
+                            </button>
+                        </div>
+                        <div class="section-indicator">Section 4 of 4</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('orientation')">
+                                Back to Home
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -432,65 +1415,85 @@
             <!-- TEST TOPIC PAGE (for demonstrating section navigation) -->
             <div id="page-test-topic" class="page" data-page-type="topic" data-total-sections="3">
                 <div id="test-topic-section-1" class="section" data-visual-mode="stagnation">
-                    <h2>Test Topic - Section 1</h2>
-                    <p>Visual Mode: Stagnation (20-70 nodes, low edges, cold blue)</p>
+                    <nav class="breadcrumb">
+                        <a href="#" onclick="DSI.router.navigateTo('orientation'); return false;">Home</a>
+                        <span class="separator">/</span>
+                        <span class="current">Test Topic</span>
+                    </nav>
+                    <div class="section-header">
+                        <h2>Test Topic - Section 1</h2>
+                        <p class="section-subtitle">Visual Mode: Stagnation</p>
+                    </div>
+                    <p>20-70 nodes, low edge density, cold blue palette. This represents the early stage of understanding.</p>
+
+                    <div class="card-grid card-grid-3 mt-lg">
+                        <div class="card static-card">
+                            <div class="card-title">Example Card 1</div>
+                            <div class="card-body">Content for section 1</div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Example Card 2</div>
+                            <div class="card-body">Content for section 1</div>
+                        </div>
+                        <div class="card static-card">
+                            <div class="card-title">Example Card 3</div>
+                            <div class="card-body">Content for section 1</div>
+                        </div>
+                    </div>
                 </div>
                 <div id="test-topic-section-2" class="section" data-visual-mode="emergence">
-                    <h2>Test Topic - Section 2</h2>
-                    <p>Visual Mode: Emergence (70-120 nodes, medium edges, teal)</p>
+                    <nav class="breadcrumb">
+                        <a href="#" onclick="DSI.router.navigateTo('orientation'); return false;">Home</a>
+                        <span class="separator">/</span>
+                        <a href="#" onclick="DSI.router.goToSection(1); return false;">Test Topic</a>
+                        <span class="separator">/</span>
+                        <span class="current">Section 2</span>
+                    </nav>
+                    <div class="section-header">
+                        <h2>Test Topic - Section 2</h2>
+                        <p class="section-subtitle">Visual Mode: Emergence</p>
+                    </div>
+                    <p>70-120 nodes, medium edge density, teal emerging. The network begins to form connections.</p>
                 </div>
                 <div id="test-topic-section-3" class="section" data-visual-mode="agentic">
-                    <h2>Test Topic - Section 3</h2>
-                    <p>Visual Mode: Agentic (220-300 nodes, maximum edges, green)</p>
+                    <nav class="breadcrumb">
+                        <a href="#" onclick="DSI.router.navigateTo('orientation'); return false;">Home</a>
+                        <span class="separator">/</span>
+                        <a href="#" onclick="DSI.router.goToSection(1); return false;">Test Topic</a>
+                        <span class="separator">/</span>
+                        <span class="current">Section 3</span>
+                    </nav>
+                    <div class="section-header">
+                        <h2>Test Topic - Section 3</h2>
+                        <p class="section-subtitle">Visual Mode: Agentic</p>
+                    </div>
+                    <p>220-300 nodes, maximum edge density, green accents. Full agentic system visualization.</p>
                 </div>
 
-                <!-- Section Navigation -->
-                <div class="section-nav mt-lg flex-between">
-                    <button class="nav-btn" onclick="DSI.router.prevSection()">← Previous</button>
-                    <span id="section-indicator" class="text-muted">Section 1 of 3</span>
-                    <button class="nav-btn" onclick="DSI.router.nextSection()">Next →</button>
+                <!-- Section Navigation (shared across all sections) -->
+                <div class="section-navigation" id="test-topic-nav">
+                    <div class="nav-prev">
+                        <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Previous
+                        </button>
+                    </div>
+                    <div class="section-indicator" id="section-indicator">Section 1 of 3</div>
+                    <div class="nav-next">
+                        <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                            Next
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
         </div>
     </main>
-
-    <!-- Temporary Button Styles (will be replaced by Component Library in Partition B) -->
-    <style>
-        .nav-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: var(--accent-3);
-            color: var(--text-primary);
-            border: 1px solid var(--border-light);
-            border-radius: 6px;
-            font-family: var(--font-body);
-            font-size: var(--text-body-md);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        .nav-btn:hover {
-            background: var(--accent-1);
-            color: white;
-            border-color: var(--accent-1);
-        }
-        .nav-btn.primary {
-            background: var(--accent-1);
-            color: white;
-            border-color: var(--accent-1);
-        }
-        .nav-btn.primary:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-        .section-nav {
-            padding-top: var(--spacing-lg);
-            border-top: 1px solid var(--border-light);
-        }
-    </style>
 
     <script>
         /* ====================================================================
@@ -757,6 +1760,100 @@
             },
 
             /* ----------------------------------------------------------------
+             * COMPONENTS MODULE - UI Component Behaviors (Partition B)
+             * ---------------------------------------------------------------- */
+            components: {
+                init() {
+                    this.initExpandableCards();
+                    this.initNavChevrons();
+                },
+
+                // Expandable Cards
+                initExpandableCards() {
+                    document.querySelectorAll('.expandable-card').forEach(card => {
+                        card.addEventListener('click', () => {
+                            card.classList.toggle('expanded');
+                        });
+                    });
+                },
+
+                // Navigation Chevrons
+                initNavChevrons() {
+                    document.querySelectorAll('.nav-chevrons').forEach(container => {
+                        container.querySelectorAll('.chevron-dot').forEach((dot, index) => {
+                            dot.addEventListener('click', () => {
+                                DSI.router.goToSection(index + 1);
+                                this.updateChevrons(container, index);
+                            });
+                        });
+                    });
+                },
+
+                updateChevrons(container, activeIndex) {
+                    container.querySelectorAll('.chevron-dot').forEach((dot, i) => {
+                        dot.classList.toggle('active', i === activeIndex);
+                    });
+                },
+
+                // Generate section navigation HTML
+                renderSectionNav(currentSection, totalSections) {
+                    const prevDisabled = currentSection <= 1 ? 'disabled' : '';
+                    const nextDisabled = currentSection >= totalSections ? 'disabled' : '';
+
+                    return `
+                        <div class="section-navigation">
+                            <div class="nav-prev ${prevDisabled}">
+                                <button class="btn btn-secondary" onclick="DSI.router.prevSection()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                    Previous
+                                </button>
+                            </div>
+                            <div class="section-indicator">
+                                Section ${currentSection} of ${totalSections}
+                            </div>
+                            <div class="nav-next ${nextDisabled}">
+                                <button class="btn btn-primary" onclick="DSI.router.nextSection()">
+                                    Next
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // Generate chevron navigation HTML
+                renderChevrons(totalSections, currentSection) {
+                    let dots = '';
+                    for (let i = 1; i <= totalSections; i++) {
+                        const active = i === currentSection ? 'active' : '';
+                        dots += `<div class="chevron-dot ${active}" data-section="${i}"></div>`;
+                    }
+                    return `<div class="nav-chevrons">${dots}</div>`;
+                },
+
+                // Generate breadcrumb HTML
+                renderBreadcrumb(items) {
+                    return `
+                        <nav class="breadcrumb">
+                            ${items.map((item, i) => {
+                                if (i === items.length - 1) {
+                                    return `<span class="current">${item.label}</span>`;
+                                }
+                                return `
+                                    <a href="#" onclick="DSI.router.navigateTo('${item.page}'); return false;">${item.label}</a>
+                                    <span class="separator">/</span>
+                                `;
+                            }).join('')}
+                        </nav>
+                    `;
+                }
+            },
+
+            /* ----------------------------------------------------------------
              * INITIALIZATION
              * ---------------------------------------------------------------- */
             init() {
@@ -765,6 +1862,9 @@
                 // Initialize canvas
                 this.canvas.init();
 
+                // Initialize components
+                this.components.init();
+
                 // Set initial visual state
                 this.visualState.setMode('agentic');
 
@@ -772,7 +1872,7 @@
                 this.router.navigateTo('orientation');
 
                 this.state.isInitialized = true;
-                console.log('DSI Application Initialized - Partition A Complete');
+                console.log('DSI Application Initialized - Partitions A & B Complete');
             }
         };
 
