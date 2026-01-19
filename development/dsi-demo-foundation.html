@@ -4384,6 +4384,581 @@
                         </div>
                         <div class="section-indicator">Section 4 of 4</div>
                         <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('human-oversight')">
+                                Try DSI <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 PARTITION E: INTERACTIVE MODULES
+                 5 Interactive Pages for hands-on DSI exploration
+                 ================================================================ -->
+
+            <!-- ================================================================
+                 INTERACTIVE MODULE 1: HUMAN OVERSIGHT
+                 Demonstrates deterministic decisioning with human-in-the-loop
+                 ================================================================ -->
+            <div id="page-human-oversight" class="page" data-page-type="interactive" data-total-sections="1">
+
+                <div id="human-oversight-section-1" class="section interactive-section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>Human Oversight</h2>
+                        <p class="section-subtitle">Explore deterministic decisioning with human-in-the-loop review</p>
+                    </div>
+
+                    <div class="interactive-container human-oversight-module">
+                        <!-- Entity Selection Panel -->
+                        <div class="entity-selector-panel">
+                            <h3>Select an Entity to Review</h3>
+                            <div class="entity-grid">
+                                <button class="entity-card" data-entity="techcorp" onclick="DSI.interactive.selectEntity('techcorp')">
+                                    <div class="entity-name">TechCorp Solutions</div>
+                                    <div class="entity-tier tier-2">Tier 2</div>
+                                    <div class="entity-status">Pending Review</div>
+                                </button>
+                                <button class="entity-card" data-entity="global-logistics" onclick="DSI.interactive.selectEntity('global-logistics')">
+                                    <div class="entity-name">Global Logistics Inc</div>
+                                    <div class="entity-tier tier-3">Tier 3</div>
+                                    <div class="entity-status">Referred</div>
+                                </button>
+                                <button class="entity-card" data-entity="stellar-marine" onclick="DSI.interactive.selectEntity('stellar-marine')">
+                                    <div class="entity-name">Stellar Marine Services</div>
+                                    <div class="entity-tier tier-4">Tier 4</div>
+                                    <div class="entity-status">High Risk Flag</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Review Panel -->
+                        <div class="review-panel" id="review-panel">
+                            <div class="review-header">
+                                <h3 id="review-entity-name">Select an entity to review</h3>
+                                <div class="review-tier" id="review-tier">--</div>
+                            </div>
+
+                            <div class="signal-summary">
+                                <h4>Signal Summary</h4>
+                                <div class="signal-bars">
+                                    <div class="signal-bar">
+                                        <span class="signal-label">Governance</span>
+                                        <div class="signal-track"><div class="signal-fill" id="sig-governance" style="width: 0%"></div></div>
+                                        <span class="signal-value" id="val-governance">--</span>
+                                    </div>
+                                    <div class="signal-bar">
+                                        <span class="signal-label">Technical</span>
+                                        <div class="signal-track"><div class="signal-fill" id="sig-technical" style="width: 0%"></div></div>
+                                        <span class="signal-value" id="val-technical">--</span>
+                                    </div>
+                                    <div class="signal-bar">
+                                        <span class="signal-label">Behavioural</span>
+                                        <div class="signal-track"><div class="signal-fill" id="sig-behavioural" style="width: 0%"></div></div>
+                                        <span class="signal-value" id="val-behavioural">--</span>
+                                    </div>
+                                    <div class="signal-bar">
+                                        <span class="signal-label">Public Record</span>
+                                        <div class="signal-track"><div class="signal-fill" id="sig-public" style="width: 0%"></div></div>
+                                        <span class="signal-value" id="val-public">--</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dsi-recommendation">
+                                <h4>DSI Recommendation</h4>
+                                <div class="recommendation-box" id="recommendation-box">
+                                    <span id="recommendation-text">Select an entity</span>
+                                </div>
+                                <div class="confidence-display">
+                                    Confidence: <span id="confidence-value">--</span>
+                                </div>
+                            </div>
+
+                            <div class="override-controls">
+                                <h4>Human Override</h4>
+                                <div class="override-buttons">
+                                    <button class="btn btn-approve" onclick="DSI.interactive.applyOverride('approve')">Approve</button>
+                                    <button class="btn btn-refer" onclick="DSI.interactive.applyOverride('refer')">Refer</button>
+                                    <button class="btn btn-decline" onclick="DSI.interactive.applyOverride('decline')">Decline</button>
+                                </div>
+                                <div class="override-reason">
+                                    <label>Override Reason (required):</label>
+                                    <select id="override-reason">
+                                        <option value="">Select reason...</option>
+                                        <option value="additional-info">Additional Information Received</option>
+                                        <option value="relationship">Existing Relationship</option>
+                                        <option value="market-conditions">Market Conditions</option>
+                                        <option value="risk-appetite">Risk Appetite Adjustment</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="audit-trail">
+                                <h4>Audit Trail</h4>
+                                <div class="audit-log" id="audit-log">
+                                    <div class="audit-entry">Ready for review...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('economic-impact', 4)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Back to Content
+                            </button>
+                        </div>
+                        <div class="section-indicator">Interactive Module 1 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('portfolio-steering')">
+                                Portfolio Steering <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 INTERACTIVE MODULE 2: PORTFOLIO STEERING
+                 Adjust portfolio appetite using signal weightings
+                 ================================================================ -->
+            <div id="page-portfolio-steering" class="page" data-page-type="interactive" data-total-sections="1">
+
+                <div id="portfolio-steering-section-1" class="section interactive-section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>Portfolio Steering</h2>
+                        <p class="section-subtitle">Adjust signal weightings and see real-time portfolio impact</p>
+                    </div>
+
+                    <div class="interactive-container portfolio-steering-module">
+                        <!-- Signal Weight Levers -->
+                        <div class="lever-panel">
+                            <h3>Signal Weight Adjustments</h3>
+                            <div class="lever-group">
+                                <div class="lever-control">
+                                    <label>Governance Weight</label>
+                                    <input type="range" id="lever-governance" min="0" max="100" value="50"
+                                           oninput="DSI.interactive.updateLever('governance', this.value)">
+                                    <span class="lever-value" id="lever-val-governance">50</span>
+                                </div>
+                                <div class="lever-control">
+                                    <label>Behavioural Deterioration</label>
+                                    <input type="range" id="lever-behavioural" min="0" max="100" value="50"
+                                           oninput="DSI.interactive.updateLever('behavioural', this.value)">
+                                    <span class="lever-value" id="lever-val-behavioural">50</span>
+                                </div>
+                                <div class="lever-control">
+                                    <label>Technical Hygiene</label>
+                                    <input type="range" id="lever-technical" min="0" max="100" value="50"
+                                           oninput="DSI.interactive.updateLever('technical', this.value)">
+                                    <span class="lever-value" id="lever-val-technical">50</span>
+                                </div>
+                            </div>
+
+                            <div class="scenario-presets">
+                                <h4>Scenario Presets</h4>
+                                <button class="preset-btn" onclick="DSI.interactive.applyPreset('hard-market')">Hard Market</button>
+                                <button class="preset-btn" onclick="DSI.interactive.applyPreset('soft-market')">Soft Market</button>
+                                <button class="preset-btn" onclick="DSI.interactive.applyPreset('cyber-shock')">Cyber Shock</button>
+                                <button class="preset-btn" onclick="DSI.interactive.applyPreset('regulatory')">Regulatory Focus</button>
+                            </div>
+                        </div>
+
+                        <!-- Three Panel Visualisation -->
+                        <div class="portfolio-viz">
+                            <div class="viz-panel">
+                                <h4>Before</h4>
+                                <div class="cluster-viz" id="viz-before">
+                                    <canvas id="cluster-before" width="200" height="200"></canvas>
+                                </div>
+                                <div class="tier-distribution" id="dist-before">
+                                    <span class="tier-dot t1">●</span>12%
+                                    <span class="tier-dot t2">●</span>28%
+                                    <span class="tier-dot t3">●</span>35%
+                                    <span class="tier-dot t4">●</span>18%
+                                    <span class="tier-dot t5">●</span>7%
+                                </div>
+                            </div>
+                            <div class="viz-panel viz-transition">
+                                <h4>Transition</h4>
+                                <div class="cluster-viz" id="viz-transition">
+                                    <canvas id="cluster-transition" width="200" height="200"></canvas>
+                                </div>
+                                <div class="transition-indicator">
+                                    <span class="arrow">→</span>
+                                </div>
+                            </div>
+                            <div class="viz-panel">
+                                <h4>After</h4>
+                                <div class="cluster-viz" id="viz-after">
+                                    <canvas id="cluster-after" width="200" height="200"></canvas>
+                                </div>
+                                <div class="tier-distribution" id="dist-after">
+                                    <span class="tier-dot t1">●</span>--
+                                    <span class="tier-dot t2">●</span>--
+                                    <span class="tier-dot t3">●</span>--
+                                    <span class="tier-dot t4">●</span>--
+                                    <span class="tier-dot t5">●</span>--
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Metrics Panel -->
+                        <div class="metrics-panel">
+                            <div class="metric-card">
+                                <div class="metric-label">Portfolio Health</div>
+                                <div class="metric-gauge" id="health-gauge">
+                                    <svg viewBox="0 0 100 50">
+                                        <path class="gauge-bg" d="M10,45 A35,35 0 0,1 90,45" fill="none" stroke="#E8E3DA" stroke-width="8"/>
+                                        <path class="gauge-fill" id="gauge-fill" d="M10,45 A35,35 0 0,1 50,10" fill="none" stroke="#39D3BA" stroke-width="8"/>
+                                    </svg>
+                                    <span class="gauge-value" id="health-value">72</span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Loss Ratio Delta</div>
+                                <div class="metric-delta">
+                                    <span class="delta-before">62%</span>
+                                    <span class="delta-arrow">→</span>
+                                    <span class="delta-after" id="loss-ratio-after">--</span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Reclassified</div>
+                                <div class="metric-value" id="reclassified-count">0 entities</div>
+                            </div>
+                        </div>
+
+                        <div class="apply-changes">
+                            <button class="btn btn-primary btn-large" onclick="DSI.interactive.applyPortfolioChanges()">
+                                Apply Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('human-oversight')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Human Oversight
+                            </button>
+                        </div>
+                        <div class="section-indicator">Interactive Module 2 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('signal-reactor')">
+                                Signal Reactor <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 INTERACTIVE MODULE 3: SIGNAL REACTOR
+                 Manipulate the DSI signal substrate directly
+                 ================================================================ -->
+            <div id="page-signal-reactor" class="page" data-page-type="interactive" data-total-sections="1">
+
+                <div id="signal-reactor-section-1" class="section interactive-section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>Signal Reactor</h2>
+                        <p class="section-subtitle">Explore how signals interact and reshape the underwriting landscape</p>
+                    </div>
+
+                    <div class="interactive-container signal-reactor-module">
+                        <!-- Reactor Core -->
+                        <div class="reactor-core-container">
+                            <canvas id="reactor-core" width="400" height="400"></canvas>
+                            <div class="reactor-glow"></div>
+                        </div>
+
+                        <!-- Signal Category Controls -->
+                        <div class="signal-categories">
+                            <h3>Signal Categories</h3>
+                            <p class="category-instruction">Drag nodes to adjust influence</p>
+                            <div class="category-nodes">
+                                <div class="category-node" data-category="governance" draggable="true">
+                                    <div class="node-circle governance"></div>
+                                    <span>Governance</span>
+                                </div>
+                                <div class="category-node" data-category="technical" draggable="true">
+                                    <div class="node-circle technical"></div>
+                                    <span>Technical</span>
+                                </div>
+                                <div class="category-node" data-category="footprint" draggable="true">
+                                    <div class="node-circle footprint"></div>
+                                    <span>Digital Footprint</span>
+                                </div>
+                                <div class="category-node" data-category="behavioural" draggable="true">
+                                    <div class="node-circle behavioural"></div>
+                                    <span>Behavioural</span>
+                                </div>
+                                <div class="category-node" data-category="public" draggable="true">
+                                    <div class="node-circle public"></div>
+                                    <span>Public Record</span>
+                                </div>
+                                <div class="category-node" data-category="structured" draggable="true">
+                                    <div class="node-circle structured"></div>
+                                    <span>Structured Feeds</span>
+                                </div>
+                                <div class="category-node" data-category="inquiry" draggable="true">
+                                    <div class="node-circle inquiry"></div>
+                                    <span>Direct Inquiry</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Signal Inspector -->
+                        <div class="signal-inspector" id="signal-inspector">
+                            <h4>Signal Inspector</h4>
+                            <div class="inspector-content">
+                                <p class="inspector-hint">Click a node to inspect</p>
+                                <div class="inspector-details" id="inspector-details" style="display: none;">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Signal:</span>
+                                        <span class="detail-value" id="inspect-signal">--</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Value:</span>
+                                        <span class="detail-value" id="inspect-value">--</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Confidence:</span>
+                                        <span class="detail-value" id="inspect-confidence">--</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Weight:</span>
+                                        <span class="detail-value" id="inspect-weight">--</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Impact:</span>
+                                        <span class="detail-value" id="inspect-impact">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('portfolio-steering')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Portfolio Steering
+                            </button>
+                        </div>
+                        <div class="section-indicator">Interactive Module 3 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('underwriting-engine')">
+                                Underwriting Engine <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 INTERACTIVE MODULE 4: UNDERWRITING ENGINE
+                 Three Layer Assessment visualisation
+                 ================================================================ -->
+            <div id="page-underwriting-engine" class="page" data-page-type="interactive" data-total-sections="1">
+
+                <div id="underwriting-engine-section-1" class="section interactive-section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>Underwriting Engine</h2>
+                        <p class="section-subtitle">Explore the Three Layer Assessment: Risk, Exposure, Loss</p>
+                    </div>
+
+                    <div class="interactive-container underwriting-engine-module">
+                        <!-- Engine Core with Three Rings -->
+                        <div class="engine-core-container">
+                            <canvas id="engine-core" width="500" height="500"></canvas>
+
+                            <!-- Ring Labels -->
+                            <div class="ring-labels">
+                                <div class="ring-label outer">RISK</div>
+                                <div class="ring-label middle">EXPOSURE</div>
+                                <div class="ring-label inner">LOSS</div>
+                            </div>
+                        </div>
+
+                        <!-- Layer Controls -->
+                        <div class="layer-controls">
+                            <div class="layer-control risk-control">
+                                <h4>Risk Layer</h4>
+                                <div class="control-row">
+                                    <label>Composite Score</label>
+                                    <input type="range" id="risk-score" min="0" max="1000" value="650"
+                                           oninput="DSI.interactive.updateRiskLayer(this.value)">
+                                    <span id="risk-score-val">650</span>
+                                </div>
+                                <div class="tier-indicator" id="risk-tier">Tier 2</div>
+                            </div>
+
+                            <div class="layer-control exposure-control">
+                                <h4>Exposure Layer</h4>
+                                <div class="control-row">
+                                    <label>Exposure Band</label>
+                                    <select id="exposure-band" onchange="DSI.interactive.updateExposureLayer(this.value)">
+                                        <option value="low">Low ($1M - $10M)</option>
+                                        <option value="medium" selected>Medium ($10M - $50M)</option>
+                                        <option value="high">High ($50M - $200M)</option>
+                                        <option value="extreme">Extreme ($200M+)</option>
+                                    </select>
+                                </div>
+                                <div class="control-row">
+                                    <label>Complexity</label>
+                                    <input type="range" id="complexity" min="1" max="5" value="3"
+                                           oninput="DSI.interactive.updateComplexity(this.value)">
+                                    <span id="complexity-val">3</span>
+                                </div>
+                            </div>
+
+                            <div class="layer-control loss-control">
+                                <h4>Loss Layer</h4>
+                                <div class="control-row">
+                                    <label>Loss Propensity</label>
+                                    <input type="range" id="loss-propensity" min="0" max="100" value="45"
+                                           oninput="DSI.interactive.updateLossLayer('propensity', this.value)">
+                                    <span id="loss-propensity-val">45</span>
+                                </div>
+                                <div class="control-row">
+                                    <label>Severity</label>
+                                    <input type="range" id="severity" min="0" max="100" value="60"
+                                           oninput="DSI.interactive.updateLossLayer('severity', this.value)">
+                                    <span id="severity-val">60</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Decision Output -->
+                        <div class="decision-output">
+                            <div class="decision-box" id="decision-box">
+                                <div class="decision-label">Underwriting Decision</div>
+                                <div class="decision-value" id="decision-value">APPROVE</div>
+                                <div class="decision-premium">
+                                    Indicated Premium: <span id="premium-value">$125,000</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="DSI.interactive.lockDecision()">
+                                Lock Decision
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('signal-reactor')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Signal Reactor
+                            </button>
+                        </div>
+                        <div class="section-indicator">Interactive Module 4 of 5</div>
+                        <div class="nav-next">
+                            <button class="btn btn-primary" onclick="DSI.router.navigateTo('what-happens-if')">
+                                What Happens If <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 INTERACTIVE MODULE 5: WHAT HAPPENS IF
+                 Micro-simulations demonstrating DSI predictive power
+                 ================================================================ -->
+            <div id="page-what-happens-if" class="page" data-page-type="interactive" data-total-sections="1">
+
+                <div id="what-happens-if-section-1" class="section interactive-section" data-visual-mode="agentic">
+                    <div class="section-header">
+                        <h2>What Happens If...</h2>
+                        <p class="section-subtitle">Explore scenarios and see the predictive power of DSI</p>
+                    </div>
+
+                    <div class="interactive-container what-happens-if-module">
+                        <!-- Scenario Selector -->
+                        <div class="scenario-selector">
+                            <h3>Select a Scenario</h3>
+                            <div class="scenario-buttons">
+                                <button class="scenario-btn" data-scenario="governance-collapse"
+                                        onclick="DSI.interactive.runScenario('governance-collapse')">
+                                    <span class="scenario-icon">⚠</span>
+                                    <span class="scenario-name">Governance Collapse</span>
+                                    <span class="scenario-desc">CRO resigns, audit findings surface</span>
+                                </button>
+                                <button class="scenario-btn" data-scenario="technical-improvement"
+                                        onclick="DSI.interactive.runScenario('technical-improvement')">
+                                    <span class="scenario-icon">↑</span>
+                                    <span class="scenario-name">Technical Improvement</span>
+                                    <span class="scenario-desc">Security posture upgraded</span>
+                                </button>
+                                <button class="scenario-btn" data-scenario="exposure-doubles"
+                                        onclick="DSI.interactive.runScenario('exposure-doubles')">
+                                    <span class="scenario-icon">×2</span>
+                                    <span class="scenario-name">Exposure Doubles</span>
+                                    <span class="scenario-desc">Major acquisition announced</span>
+                                </button>
+                                <button class="scenario-btn" data-scenario="behavioural-deterioration"
+                                        onclick="DSI.interactive.runScenario('behavioural-deterioration')">
+                                    <span class="scenario-icon">↓</span>
+                                    <span class="scenario-name">Behavioural Deterioration</span>
+                                    <span class="scenario-desc">Hiring freeze, layoffs begin</span>
+                                </button>
+                                <button class="scenario-btn" data-scenario="regulatory-action"
+                                        onclick="DSI.interactive.runScenario('regulatory-action')">
+                                    <span class="scenario-icon">⚖</span>
+                                    <span class="scenario-name">Regulatory Action</span>
+                                    <span class="scenario-desc">Enforcement action filed</span>
+                                </button>
+                                <button class="scenario-btn" data-scenario="supply-chain-shock"
+                                        onclick="DSI.interactive.runScenario('supply-chain-shock')">
+                                    <span class="scenario-icon">🔗</span>
+                                    <span class="scenario-name">Supply Chain Shock</span>
+                                    <span class="scenario-desc">Key vendor compromised</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Simulation Visualisation -->
+                        <div class="simulation-viz">
+                            <canvas id="simulation-canvas" width="400" height="300"></canvas>
+                            <div class="simulation-overlay" id="sim-overlay">
+                                <span>Select a scenario to simulate</span>
+                            </div>
+                        </div>
+
+                        <!-- Impact Metrics -->
+                        <div class="impact-metrics">
+                            <div class="impact-card">
+                                <div class="impact-label">Tier Distribution Change</div>
+                                <div class="impact-value" id="impact-tier-dist">--</div>
+                            </div>
+                            <div class="impact-card">
+                                <div class="impact-label">Loss Ratio Delta</div>
+                                <div class="impact-value" id="impact-loss-ratio">--</div>
+                            </div>
+                            <div class="impact-card">
+                                <div class="impact-label">Portfolio Health</div>
+                                <div class="impact-value" id="impact-health">--</div>
+                            </div>
+                            <div class="impact-card">
+                                <div class="impact-label">Confidence Shift</div>
+                                <div class="impact-value" id="impact-confidence">--</div>
+                            </div>
+                        </div>
+
+                        <!-- Narrative Explanation -->
+                        <div class="narrative-panel" id="narrative-panel">
+                            <h4>What DSI Detected</h4>
+                            <p id="narrative-text">Select a scenario above to see how DSI responds to changing conditions.</p>
+                        </div>
+                    </div>
+
+                    <div class="section-navigation">
+                        <div class="nav-prev">
+                            <button class="btn btn-secondary" onclick="DSI.router.navigateTo('underwriting-engine')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg> Underwriting Engine
+                            </button>
+                        </div>
+                        <div class="section-indicator">Interactive Module 5 of 5</div>
+                        <div class="nav-next">
                             <button class="btn btn-primary" onclick="DSI.router.navigateTo('orientation')">
                                 Return Home <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </button>
