@@ -6,7 +6,18 @@ Develop a single, coherent, production-ready DSI demonstration experience by int
 
 ## Status
 
-🔲 **Planning Complete** - Awaiting Approval
+✅ **Approved** - Execution In Progress
+
+## Design Decisions (User Confirmed)
+
+| Question | Decision |
+|----------|----------|
+| Logo Asset | Provided - Generate logo with teal diamond icon |
+| Human Oversight | Rebuild using dsi_gem3.html visual system as template |
+| Interactive Complexity | Full interactivity as much as possible |
+| Mobile Support | Not required - Desktop only |
+| Content Validation | Yes - validate each topic against spec |
+| Background Colors | White/clear for most pages; Orientation uses #0B3954 |
 
 ## Background
 
@@ -452,22 +463,6 @@ Each partition must pass before proceeding:
 | Interactive modules too complex | High | Start with simplified versions, iterate |
 | Specification ambiguity | Medium | Clarify with user before building |
 | Integration conflicts | Medium | Test each partition in isolation first |
-
----
-
-## Open Questions
-
-Before proceeding to execution, the following clarifications would help:
-
-1. **Logo Asset**: Is `generate_logo.png` available, or should a placeholder be used?
-
-2. **Human Oversight Page**: Should the existing implementation from `dsi_gem3.html` be retained exactly, or should it be rebuilt to match the new component library?
-
-3. **Interactive Module Complexity**: Should the interactive modules (Portfolio Steering, Signal Reactor, Underwriting Engine, What Happens If) be fully functional or visual mockups with limited interactivity?
-
-4. **Mobile Support Priority**: Should mobile view be a hard requirement or best-effort?
-
-5. **Content Validation**: Should each topic's content be validated against the spec before proceeding to the next partition?
 
 ---
 

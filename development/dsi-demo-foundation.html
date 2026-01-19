@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Signal Intelligence | Generate</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ====================================================================
+         * DSI DESIGN SYSTEM - PARTITION A: FOUNDATION
+         * Source: Global Rules, LLM Demo Specification
+         * ==================================================================== */
+
+        /* --- CSS VARIABLES (Design Tokens) --- */
+        :root {
+            /* CANONICAL PALETTE */
+            --primary: #0B3954;           /* Cold blue - headers, key nodes, navigation */
+            --accent-1: #0599AD;          /* Teal - active edges, signal highlights */
+            --accent-2: #000000;          /* Text, icons, overlays */
+            --accent-3: #E8E3DA;          /* Background panels and cards */
+            --accent-4: #7A766F;          /* Muted text and secondary UI */
+            --accent-5: #39D3BA;          /* Validation, scoring, motion accents */
+            --background: #FFFFFF;        /* Page background */
+
+            /* SEMANTIC COLORS */
+            --text-primary: #000000;
+            --text-secondary: #7A766F;
+            --text-inverse: #FFFFFF;
+            --border-light: #E5E5E5;
+            --border-accent: rgba(5, 153, 173, 0.3);
+
+            /* TYPOGRAPHY */
+            --font-headers: 'Inter', sans-serif;
+            --font-body: 'IBM Plex Sans', sans-serif;
+
+            /* FONT SIZES */
+            --text-h1: 24px;
+            --text-h2: 22px;
+            --text-h3: 20px;
+            --text-body-lg: 16px;
+            --text-body-md: 14px;
+            --text-body-sm: 12px;
+
+            /* DIMENSIONS */
+            --header-height: 64px;
+            --content-width-min: 760px;
+            --content-width-max: 980px;
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 32px;
+            --spacing-xl: 48px;
+
+            /* EFFECTS */
+            --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --transition-fast: 0.15s ease;
+            --transition-medium: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* --- RESET & BASE --- */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-size: var(--text-body-md);
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--background);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Body class for orientation page dark mode */
+        body.orientation-mode {
+            background-color: var(--primary);
+        }
+
+        /* --- SCROLLBAR STYLING --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--accent-3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-1);
+        }
+
+        /* ====================================================================
+         * CANVAS BACKDROP (Dynamic Network)
+         * ==================================================================== */
+        #network-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+
+        /* Canvas hidden when on white background pages */
+        body:not(.orientation-mode) #network-canvas {
+            opacity: 0.15;
+        }
+
+        /* ====================================================================
+         * HEADER BAR (Fixed Global Navigation)
+         * ==================================================================== */
+        .header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid var(--border-light);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* Orientation mode header - transparent on dark bg */
+        body.orientation-mode .header-bar {
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Home Button */
+        .home-button {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: var(--text-body-lg);
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: background var(--transition-fast);
+        }
+
+        .home-button:hover {
+            background: var(--accent-3);
+        }
+
+        body.orientation-mode .home-button {
+            color: var(--text-inverse);
+        }
+
+        body.orientation-mode .home-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .home-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Logo */
+        .header-logo {
+            height: 36px;
+            width: auto;
+        }
+
+        /* ====================================================================
+         * MAIN VIEWPORT & CONTENT PANEL
+         * ==================================================================== */
+        .viewport {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            padding-top: calc(var(--header-height) + var(--spacing-xl));
+            padding-bottom: var(--spacing-xl);
+            display: flex;
+            justify-content: center;
+            padding-left: var(--spacing-md);
+            padding-right: var(--spacing-md);
+        }
+
+        /* Content Panel - white card on most pages */
+        .content-panel {
+            width: 100%;
+            min-width: var(--content-width-min);
+            max-width: var(--content-width-max);
+            background: var(--background);
+            border-radius: 12px;
+            box-shadow: var(--shadow-subtle);
+            padding: var(--spacing-lg);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Orientation mode - no white panel, content directly on dark bg */
+        body.orientation-mode .content-panel {
+            background: transparent;
+            box-shadow: none;
+            max-width: 900px;
+        }
+
+        /* ====================================================================
+         * PAGE/SECTION CONTAINERS
+         * ==================================================================== */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* ====================================================================
+         * TYPOGRAPHY SYSTEM
+         * ==================================================================== */
+        h1, h2, h3, h4 {
+            font-family: var(--font-headers);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        h1 {
+            font-size: var(--text-h1);
+            color: var(--primary);
+        }
+
+        h2 {
+            font-size: var(--text-h2);
+            color: var(--primary);
+        }
+
+        h3 {
+            font-size: var(--text-h3);
+            color: var(--text-primary);
+        }
+
+        h4 {
+            font-size: var(--text-body-lg);
+            color: var(--text-primary);
+        }
+
+        p {
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-secondary);
+            max-width: 70ch;
+        }
+
+        .text-large {
+            font-size: var(--text-body-lg);
+        }
+
+        .text-small {
+            font-size: var(--text-body-sm);
+        }
+
+        .text-muted {
+            color: var(--accent-4);
+        }
+
+        .text-accent {
+            color: var(--accent-1);
+        }
+
+        /* Orientation mode text colors */
+        body.orientation-mode h1,
+        body.orientation-mode h2,
+        body.orientation-mode h3 {
+            color: var(--text-inverse);
+        }
+
+        body.orientation-mode p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* ====================================================================
+         * ANIMATIONS
+         * ==================================================================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ====================================================================
+         * UTILITY CLASSES
+         * ==================================================================== */
+        .hidden { display: none !important; }
+        .visible { display: block !important; }
+        .flex { display: flex; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; }
+        .gap-sm { gap: var(--spacing-sm); }
+        .gap-md { gap: var(--spacing-md); }
+        .gap-lg { gap: var(--spacing-lg); }
+        .mt-sm { margin-top: var(--spacing-sm); }
+        .mt-md { margin-top: var(--spacing-md); }
+        .mt-lg { margin-top: var(--spacing-lg); }
+        .mb-sm { margin-bottom: var(--spacing-sm); }
+        .mb-md { margin-bottom: var(--spacing-md); }
+        .mb-lg { margin-bottom: var(--spacing-lg); }
+        .text-center { text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Network Canvas Background -->
+    <canvas id="network-canvas"></canvas>
+
+    <!-- Fixed Header Bar -->
+    <header class="header-bar">
+        <button class="home-button" onclick="DSI.router.navigateTo('orientation')" aria-label="Go to Home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Home</span>
+        </button>
+
+        <!-- Generate Logo - Using inline SVG approximation of the provided logo -->
+        <svg class="header-logo" viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Diamond G icon -->
+            <g transform="translate(0, 2)">
+                <path d="M18 0L36 18L18 36L0 18L18 0Z" fill="none" stroke="#0B3954" stroke-width="3"/>
+                <rect x="8" y="12" width="16" height="3" rx="1.5" fill="#39D3BA"/>
+                <rect x="8" y="17" width="16" height="3" rx="1.5" fill="#0599AD"/>
+                <rect x="8" y="22" width="16" height="3" rx="1.5" fill="#0B3954"/>
+            </g>
+            <!-- Generate text -->
+            <text x="48" y="28" font-family="Inter, sans-serif" font-size="22" font-weight="600" fill="#0B3954">Generate</text>
+        </svg>
+    </header>
+
+    <!-- Main Viewport -->
+    <main class="viewport">
+        <div class="content-panel">
+
+            <!-- ORIENTATION PAGE (Entry Point) -->
+            <div id="page-orientation" class="page" data-page-type="orientation">
+                <!-- Content will be added in Partition C -->
+                <div class="text-center" style="padding: 100px 0;">
+                    <h1>DSI Foundation Loaded</h1>
+                    <p class="text-large">Partition A: Foundation Infrastructure Complete</p>
+                    <p class="text-muted mt-md">Canvas, Header, Router, and Visual State Manager are operational.</p>
+
+                    <!-- Test Navigation -->
+                    <div class="mt-lg flex-center gap-md" style="flex-wrap: wrap;">
+                        <button class="nav-btn" onclick="DSI.visualState.setMode('stagnation')">Stagnation</button>
+                        <button class="nav-btn" onclick="DSI.visualState.setMode('emergence')">Emergence</button>
+                        <button class="nav-btn" onclick="DSI.visualState.setMode('growth')">Growth</button>
+                        <button class="nav-btn" onclick="DSI.visualState.setMode('maturity')">Maturity</button>
+                        <button class="nav-btn" onclick="DSI.visualState.setMode('agentic')">Agentic</button>
+                    </div>
+
+                    <div class="mt-lg">
+                        <button class="nav-btn primary" onclick="DSI.router.navigateTo('test-topic', 1)">Test Topic Navigation</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TEST TOPIC PAGE (for demonstrating section navigation) -->
+            <div id="page-test-topic" class="page" data-page-type="topic" data-total-sections="3">
+                <div id="test-topic-section-1" class="section" data-visual-mode="stagnation">
+                    <h2>Test Topic - Section 1</h2>
+                    <p>Visual Mode: Stagnation (20-70 nodes, low edges, cold blue)</p>
+                </div>
+                <div id="test-topic-section-2" class="section" data-visual-mode="emergence">
+                    <h2>Test Topic - Section 2</h2>
+                    <p>Visual Mode: Emergence (70-120 nodes, medium edges, teal)</p>
+                </div>
+                <div id="test-topic-section-3" class="section" data-visual-mode="agentic">
+                    <h2>Test Topic - Section 3</h2>
+                    <p>Visual Mode: Agentic (220-300 nodes, maximum edges, green)</p>
+                </div>
+
+                <!-- Section Navigation -->
+                <div class="section-nav mt-lg flex-between">
+                    <button class="nav-btn" onclick="DSI.router.prevSection()">← Previous</button>
+                    <span id="section-indicator" class="text-muted">Section 1 of 3</span>
+                    <button class="nav-btn" onclick="DSI.router.nextSection()">Next →</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Temporary Button Styles (will be replaced by Component Library in Partition B) -->
+    <style>
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--accent-3);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: var(--text-body-md);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .nav-btn:hover {
+            background: var(--accent-1);
+            color: white;
+            border-color: var(--accent-1);
+        }
+        .nav-btn.primary {
+            background: var(--accent-1);
+            color: white;
+            border-color: var(--accent-1);
+        }
+        .nav-btn.primary:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        .section-nav {
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border-light);
+        }
+    </style>
+
+    <script>
+        /* ====================================================================
+         * DSI CORE APPLICATION ENGINE
+         * Partition A: Foundation Infrastructure
+         *
+         * Modules:
+         * - DSI.canvas: Network Canvas Physics Engine
+         * - DSI.visualState: Visual State Manager
+         * - DSI.router: Navigation Router
+         * ==================================================================== */
+
+        const DSI = {
+            // Application State
+            state: {
+                currentPage: 'orientation',
+                currentSection: 1,
+                totalSections: 1,
+                visualMode: 'agentic',
+                nodes: [],
+                isInitialized: false
+            },
+
+            /* ----------------------------------------------------------------
+             * CANVAS MODULE - Network Physics Engine
+             * ---------------------------------------------------------------- */
+            canvas: {
+                el: null,
+                ctx: null,
+                width: 0,
+                height: 0,
+                animationId: null,
+
+                init() {
+                    this.el = document.getElementById('network-canvas');
+                    this.ctx = this.el.getContext('2d');
+                    this.resize();
+                    window.addEventListener('resize', () => this.resize());
+                    this.loop();
+                },
+
+                resize() {
+                    this.width = window.innerWidth;
+                    this.height = window.innerHeight;
+                    this.el.width = this.width;
+                    this.el.height = this.height;
+                },
+
+                loop() {
+                    const config = DSI.visualState.getConfig();
+
+                    // Clear with trail effect
+                    this.ctx.fillStyle = DSI.state.currentPage === 'orientation'
+                        ? 'rgba(11, 57, 84, 0.15)'  // Dark blue trail for orientation
+                        : 'rgba(255, 255, 255, 0.15)'; // White trail for other pages
+                    this.ctx.fillRect(0, 0, this.width, this.height);
+
+                    // Update and draw nodes
+                    DSI.state.nodes.forEach((node, i) => {
+                        // Move
+                        node.x += node.vx;
+                        node.y += node.vy;
+
+                        // Bounce off walls
+                        if (node.x < 0 || node.x > this.width) node.vx *= -1;
+                        if (node.y < 0 || node.y > this.height) node.vy *= -1;
+
+                        // Draw node
+                        this.ctx.beginPath();
+                        this.ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                        this.ctx.fillStyle = node.color;
+                        this.ctx.fill();
+
+                        // Draw edges (connections to nearby nodes)
+                        if (config.edgeDensity > 0) {
+                            const connectionDistance = 50 + (config.edgeDensity * 30);
+                            DSI.state.nodes.slice(i + 1).forEach(other => {
+                                const dx = node.x - other.x;
+                                const dy = node.y - other.y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                                if (dist < connectionDistance) {
+                                    this.ctx.beginPath();
+                                    this.ctx.strokeStyle = `rgba(${config.edgeColor}, ${0.3 - dist / (connectionDistance * 3)})`;
+                                    this.ctx.lineWidth = 0.5;
+                                    this.ctx.moveTo(node.x, node.y);
+                                    this.ctx.lineTo(other.x, other.y);
+                                    this.ctx.stroke();
+                                }
+                            });
+                        }
+                    });
+
+                    this.animationId = requestAnimationFrame(() => this.loop());
+                },
+
+                spawnNodes(count, speed, palette) {
+                    DSI.state.nodes = [];
+                    for (let i = 0; i < count; i++) {
+                        DSI.state.nodes.push({
+                            x: Math.random() * this.width,
+                            y: Math.random() * this.height,
+                            vx: (Math.random() - 0.5) * speed,
+                            vy: (Math.random() - 0.5) * speed,
+                            radius: Math.random() * 2 + 1,
+                            color: palette[Math.floor(Math.random() * palette.length)]
+                        });
+                    }
+                }
+            },
+
+            /* ----------------------------------------------------------------
+             * VISUAL STATE MODULE - Controls canvas appearance per section
+             * ---------------------------------------------------------------- */
+            visualState: {
+                modes: {
+                    stagnation: {
+                        nodeCount: [20, 70],
+                        edgeDensity: 1,     // very_low
+                        speed: 0.2,
+                        palette: ['#0B3954', '#7A9CB2'],
+                        edgeColor: '11, 57, 84'  // RGB for edge opacity
+                    },
+                    emergence: {
+                        nodeCount: [70, 120],
+                        edgeDensity: 2,     // medium
+                        speed: 0.4,
+                        palette: ['#0599AD', '#0B3954'],
+                        edgeColor: '5, 153, 173'
+                    },
+                    growth: {
+                        nodeCount: [120, 160],
+                        edgeDensity: 3,     // high
+                        speed: 0.6,
+                        palette: ['#0599AD', '#39D3BA'],
+                        edgeColor: '5, 153, 173'
+                    },
+                    maturity: {
+                        nodeCount: [160, 220],
+                        edgeDensity: 4,     // very_high
+                        speed: 0.8,
+                        palette: ['#0599AD', '#39D3BA'],
+                        edgeColor: '57, 211, 186'
+                    },
+                    agentic: {
+                        nodeCount: [220, 300],
+                        edgeDensity: 5,     // maximum
+                        speed: 1.0,
+                        palette: ['#0599AD', '#39D3BA', '#0B3954'],
+                        edgeColor: '57, 211, 186'
+                    }
+                },
+
+                setMode(modeName) {
+                    const mode = this.modes[modeName];
+                    if (!mode) {
+                        console.warn(`Unknown visual mode: ${modeName}`);
+                        return;
+                    }
+
+                    DSI.state.visualMode = modeName;
+                    const nodeCount = mode.nodeCount[0] +
+                        Math.floor(Math.random() * (mode.nodeCount[1] - mode.nodeCount[0]));
+
+                    DSI.canvas.spawnNodes(nodeCount, mode.speed, mode.palette);
+                    console.log(`Visual mode set to: ${modeName} (${nodeCount} nodes)`);
+                },
+
+                getConfig() {
+                    const mode = this.modes[DSI.state.visualMode] || this.modes.agentic;
+                    return {
+                        edgeDensity: mode.edgeDensity,
+                        edgeColor: mode.edgeColor
+                    };
+                }
+            },
+
+            /* ----------------------------------------------------------------
+             * ROUTER MODULE - Handles page and section navigation
+             * ---------------------------------------------------------------- */
+            router: {
+                navigateTo(pageId, sectionNum = 1) {
+                    // Hide all pages
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+                    // Show target page
+                    const page = document.getElementById(`page-${pageId}`);
+                    if (!page) {
+                        console.warn(`Page not found: ${pageId}`);
+                        return;
+                    }
+
+                    page.classList.add('active');
+                    DSI.state.currentPage = pageId;
+
+                    // Handle page type
+                    const pageType = page.dataset.pageType;
+
+                    if (pageType === 'orientation') {
+                        document.body.classList.add('orientation-mode');
+                        DSI.visualState.setMode('agentic');
+                    } else {
+                        document.body.classList.remove('orientation-mode');
+                    }
+
+                    // Handle section navigation for topic pages
+                    if (pageType === 'topic') {
+                        DSI.state.totalSections = parseInt(page.dataset.totalSections) || 1;
+                        this.goToSection(sectionNum);
+                    }
+
+                    // Reset scroll
+                    window.scrollTo(0, 0);
+
+                    console.log(`Navigated to: ${pageId}, section: ${sectionNum}`);
+                },
+
+                goToSection(sectionNum) {
+                    const page = document.getElementById(`page-${DSI.state.currentPage}`);
+                    if (!page) return;
+
+                    // Clamp section number
+                    sectionNum = Math.max(1, Math.min(sectionNum, DSI.state.totalSections));
+                    DSI.state.currentSection = sectionNum;
+
+                    // Hide all sections
+                    page.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+                    // Show target section
+                    const sectionId = `${DSI.state.currentPage}-section-${sectionNum}`;
+                    const section = document.getElementById(sectionId);
+
+                    if (section) {
+                        section.classList.add('active');
+
+                        // Update visual mode based on section's data attribute
+                        const visualMode = section.dataset.visualMode;
+                        if (visualMode) {
+                            DSI.visualState.setMode(visualMode);
+                        }
+                    }
+
+                    // Update section indicator
+                    const indicator = document.getElementById('section-indicator');
+                    if (indicator) {
+                        indicator.textContent = `Section ${sectionNum} of ${DSI.state.totalSections}`;
+                    }
+
+                    // Reset scroll
+                    window.scrollTo(0, 0);
+                },
+
+                nextSection() {
+                    if (DSI.state.currentSection < DSI.state.totalSections) {
+                        this.goToSection(DSI.state.currentSection + 1);
+                    }
+                },
+
+                prevSection() {
+                    if (DSI.state.currentSection > 1) {
+                        this.goToSection(DSI.state.currentSection - 1);
+                    }
+                }
+            },
+
+            /* ----------------------------------------------------------------
+             * INITIALIZATION
+             * ---------------------------------------------------------------- */
+            init() {
+                if (this.state.isInitialized) return;
+
+                // Initialize canvas
+                this.canvas.init();
+
+                // Set initial visual state
+                this.visualState.setMode('agentic');
+
+                // Navigate to orientation page
+                this.router.navigateTo('orientation');
+
+                this.state.isInitialized = true;
+                console.log('DSI Application Initialized - Partition A Complete');
+            }
+        };
+
+        // Auto-initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', () => DSI.init());
+    </script>
+
+</body>
+</html>
