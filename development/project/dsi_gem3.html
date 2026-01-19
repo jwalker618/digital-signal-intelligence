@@ -247,616 +247,616 @@
 
     <div class="viewport">
         
-        <div id="app-container" 
-          <section id="orientation" class="app-section active-section" data-visual-mode="3">
-              <div style="text-align: center; margin-top: 10vh;">
-                  <h1 style="font-size: 4.5rem; margin-bottom: 2rem;">Digital Signal Intelligence</h1>
-                  <p style="font-size: 1.5rem; max-width: 800px; margin: 0 auto 3rem auto; color: var(--text-muted);">
-                      A new information substrate for insurance. Enabling deterministic, autonomous risk assessment at scale.
-                  </p>
-                  
-                  <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 4rem;">
-                      <button class="btn" onclick="app.navigateTo('automation-myth')">
-                          Start the Journey
-                      </button>
-                      <button class="btn btn-secondary" onclick="app.navigateTo('dashboard')">
-                          Skip to Interaction
-                      </button>
-                  </div>
-          
-                  <div class="card-grid" style="text-align: left;">
-                      <div class="dsi-card" onclick="app.navigateTo('automation-myth')">
-                          <div class="card-icon">📉</div>
-                          <h4>The Automation Myth</h4>
-                          <p>Why decades of transformation have failed to improve profitability.</p>
-                      </div>
-                      <div class="dsi-card" onclick="app.navigateTo('core-thesis')">
-                          <div class="card-icon">🧠</div>
-                          <h4>The Core Thesis</h4>
-                          <p>Shifting from documents (subjective) to signals (deterministic).</p>
-                      </div>
-                      <div class="dsi-card" onclick="app.navigateTo('signal-architecture')">
-                          <div class="card-icon">📡</div>
-                          <h4>Signal Architecture</h4>
-                          <p>The 7 canonical categories of digital risk observation.</p>
-                      </div>
-                      <div class="dsi-card" onclick="app.navigateTo('case-studies')">
-                          <div class="card-icon">🔎</div>
-                          <h4>Retrospective Case Studies</h4>
-                          <p>Would DSI have identified SVB, FTX, and Boeing?</p>
-                      </div>
-                  </div>
-              </div>
-          </section>
-          
-          <section id="automation-myth" class="app-section hidden-section" data-visual-mode="1">
-              <div class="breadcrumb">Learn / <span>The Problem</span></div>
-              <h1>The Automation Myth</h1>
-              [cite_start]<p class="lead">Decades of "digital transformation" have failed to structurally improve insurance profitability[cite: 1].</p>
-              
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 3rem;">
-                  <div>
-                      <h3>The Stagnation</h3>
-                      <p>Despite billions spent on OCR, NLP, and ingestion pipelines, the industry's combined ratio has remained flatlined around 97.5% for 20 years. [cite_start]The return on equity sits at a meager 2.49%[cite: 1].</p>
-                      <p><strong>The Core Assumption is Wrong:</strong> The industry assumes traditional underwriting inputs (PDFs, spreadsheets, emails) can be automated. They cannot. They are subjective, inconsistent, and infinite in format.</p>
-                      
-                      <div style="margin-top: 2rem; padding: 1.5rem; border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.1);">
-                          <h4 style="color: var(--danger); margin-bottom: 0.5rem;">The Reality</h4>
-                          <ul style="list-style: none; color: var(--text-muted);">
-                              <li>• Straight-Through Processing: <strong>5-15%</strong></li>
-                              <li>• Cost per Submission: <strong>$150 - $650</strong></li>
-                              <li>• Time to Quote: <strong>3-10 Days</strong></li>
-                          </ul>
-                      </div>
-                  </div>
-                  
-                  <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-light);">
-                      <h4 style="text-align: center; margin-bottom: 2rem;">20 Years of Combined Ratios</h4>
-                      <svg viewBox="0 0 400 200" style="width: 100%; height: auto;">
-                          <line x1="0" y1="100" x2="400" y2="100" stroke="var(--text-dim)" stroke-dasharray="4"/>
-                          <text x="360" y="90" fill="var(--text-dim)" font-size="10">Break-even</text>
-                          <polyline points="0,120 40,80 80,110 120,90 160,130 200,100 240,110 280,95 320,105 360,100 400,110" 
-                                    fill="none" stroke="var(--primary)" stroke-width="3"/>
-                          <circle cx="200" cy="100" r="4" fill="var(--danger)"/>
-                      </svg>
-                      <p style="text-align: center; font-size: 0.8rem; margin-top: 1rem;">The "Stagnation" (Visual Mode 1)</p>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('pagerank')">Next: The Precedent →</button>
-              </div>
-          </section>
-          
-          <section id="pagerank" class="app-section hidden-section" data-visual-mode="2">
-              <div class="breadcrumb">Learn / <span>The Precedent</span></div>
-              <h1>The Evolutionary Precedent</h1>
-              [cite_start]<p>DSI is not experimental. It follows the exact network-based principles that solved Search in 1998[cite: 2].</p>
-          
-              <div class="card-grid">
-                  <div class="dsi-card" style="border-top: 4px solid var(--danger);">
-                      <div class="card-icon" style="color: var(--danger);">1996</div>
-                      <h4>Keyword Search</h4>
-                      <p>Search engines relied on what pages <strong>said about themselves</strong> (Meta Keywords). This was subjective, spammable, and unverifiable.</p>
-                      <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
-                          <em>Parallel: Traditional Insurance Submissions</em>
-                      </div>
-                  </div>
-                  
-                  <div class="dsi-card" style="border-top: 4px solid var(--accent-1);">
-                      <div class="card-icon" style="color: var(--accent-1);">1998</div>
-                      <h4>PageRank</h4>
-                      <p>Google ignored keywords and analyzed the <strong>Citation Network</strong>. [cite_start]Authority was inferred from external links, not internal claims[cite: 3].</p>
-                      <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
-                          <em>Parallel: Digital Signal Intelligence</em>
-                      </div>
-                  </div>
-              </div>
-          
-              <h3>The Shift: Context via Attention</h3>
-              [cite_start]<p>Modern AI (Transformers, 2024) goes further, using "Self-Attention" to determine relationships between data points[cite: 4]. DSI applies this to risk: we map the "Hidden State" of an organization through its digital relationships.</p>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('core-thesis')">Next: The Core Thesis →</button>
-              </div>
-          </section>
-          
-          <section id="core-thesis" class="app-section hidden-section" data-visual-mode="2">
-              <div class="breadcrumb">Learn / <span>The Thesis</span></div>
-              <h1>The Core Thesis</h1>
-              [cite_start]<p>Shifting the information substrate from documents (Subjective) to signals (Deterministic)[cite: 1].</p>
-          
-              <div style="background: var(--bg-panel); border: 1px solid var(--border-accent); border-radius: 12px; padding: 3rem; margin: 2rem 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem;">
-                  
-                  <div style="text-align: center;">
-                      <h3 style="color: var(--text-muted);">The Old Substrate</h3>
-                      <div style="font-size: 3rem; margin: 1rem 0;">📄</div>
-                      <ul style="text-align: left; color: var(--text-dim); list-style: none;">
-                          <li>❌ Self-Reported</li>
-                          <li>❌ Static / Aged</li>
-                          <li>❌ Unstructured</li>
-                          <li>❌ High Friction</li>
-                      </ul>
-                  </div>
-          
-                  <div style="font-size: 2rem; color: var(--accent-1);">➔</div>
-          
-                  <div style="text-align: center;">
-                      <h3 style="color: var(--text-main);">The New Substrate</h3>
-                      <div style="font-size: 3rem; margin: 1rem 0;">📡</div>
-                      <ul style="text-align: left; color: var(--accent-2); list-style: none;">
-                          <li>✅ Externally Observable</li>
-                          <li>✅ Living Pulse (Decay)</li>
-                          <li>✅ Machine Readable</li>
-                          <li>✅ Zero Friction</li>
-                      </ul>
-                  </div>
-              </div>
-          
-              <p>Underwriting requires understanding two things: <strong>Governance</strong> (How well it is managed) and <strong>Exposure</strong> (How it behaves). DSI extracts these directly from the digital ecosystem.</p>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('foundational-principles')">Next: Principles →</button>
-              </div>
-          </section>
-          
-          <section id="foundational-principles" class="app-section hidden-section" data-visual-mode="2">
-              <div class="breadcrumb">Learn / <span>Rules of the Road</span></div>
-              <h1>Foundational Principles</h1>
-              <p>Ten mandatory principles ensure DSI operates consistently and autonomously.</p>
-          
-              <div class="card-grid">
-                  <div class="dsi-card">
-                      <h4>1. External Observability</h4>
-                      <p>Primary signals must be obtainable without cooperation.</p>
-                  </div>
-                  <div class="dsi-card">
-                      <h4>2. Machine Readability</h4>
-                      <p>All signals must be analysable by automated systems.</p>
-                  </div>
-                  <div class="dsi-card" style="border-color: var(--accent-1);">
-                      <h4>5. Absence as Signal</h4>
-                      <p>Missing data is not "unknown"—it is a risk indicator. (e.g., No security headers = Risk).</p>
-                  </div>
-                  <div class="dsi-card">
-                      <h4>10. Agentic Readiness</h4>
-                      <p>Models must be executable by autonomous systems.</p>
-                  </div>
-              </div>
-              
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('technical-manifesto')">Next: Technical Manifesto →</button>
-              </div>
-          </section>
-          
-          <section id="technical-manifesto" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Learn / <span>Deep Tech</span></div>
-              <h1>Technical Manifesto 2026</h1>
-              [cite_start]<p>The engineering specifications for the World Model simulation[cite: 1].</p>
-          
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
-                  
-                  <div style="background: rgba(5, 153, 173, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid var(--accent-1);">
-                      <h3 style="margin-top: 0; color: var(--accent-2);">Temporal Decay Logic</h3>
-                      <p>Information rots. [cite_start]The substrate is a "Living Pulse"[cite: 7].</p>
-                      <div style="margin-top: 1rem; font-family: var(--font-mono); font-size: 0.9rem;">
-                          Decay Formula: V(t) = V0 * (0.5)^(t/h)<br><br>
-                          Half-Lives:<br>
-                          • Governance: 180 Days<br>
-                          • Tech Hygiene: 90 Days
-                      </div>
-                  </div>
-          
-                  <div style="background: rgba(239, 68, 68, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid var(--danger);">
-                      <h3 style="margin-top: 0; color: var(--danger);">The Hard Gate</h3>
-                      [cite_start]<p>Determinism over discretion. [cite: 13]</p>
-                      <p>If <strong>Governance Score < 20</strong>:</p>
-                      <ul>
-                          <li>• Automatic Tier 10 (Decline)</li>
-                          <li>• Overrides all other signals</li>
-                          <li>• Prevents loss-chasing</li>
-                      </ul>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('signal-architecture')">Next: Signal Architecture →</button>
-              </div>
-          </section>
-          
-          <section id="signal-architecture" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Learn / <span>The Inputs</span></div>
-              <h1>Signal Architecture</h1>
-              <p>Seven canonical signal categories power deterministic underwriting.</p>
-          
-              <div class="card-grid">
-                  <div class="dsi-card">
-                      <div class="card-icon">🔗</div>
-                      <h4>1. Network Authority</h4>
-                      <p>Citations, certifications, client relationships, and supply chain position.</p>
-                  </div>
-                  <div class="dsi-card">
-                      <div class="card-icon">⚙️</div>
-                      <h4>2. Technical Infrastructure</h4>
-                      <p>TLS, DNS security, software currency, hosting hygiene.</p>
-                  </div>
-                  <div class="dsi-card">
-                      <div class="card-icon">📊</div>
-                      <h4>4. Behaviour</h4>
-                      <p>Change patterns, incident response speed, regulatory interaction.</p>
-                  </div>
-                  <div class="dsi-card">
-                      <div class="card-icon">📋</div>
-                      <h4>5. Public Record</h4>
-                      <p>Litigation, filings, breaches, and official registries.</p>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('end-to-end')">Next: E2E Architecture →</button>
-              </div>
-          </section>
-          
-          <section id="end-to-end" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Learn / <span>The Workflow</span></div>
-              <h1>End-to-End Model</h1>
-              <p>A deterministic pipeline from Discovery to Decision.</p>
-          
-              <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
-                  
-                  <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--text-dim);">
-                      <div style="font-weight: 700; color: var(--text-dim);">PHASE A</div>
-                      <div><strong>Discovery:</strong> Entity resolution from minimal input (Domain/Name).</div>
-                  </div>
-          
-                  <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-1);">
-                      <div style="font-weight: 700; color: var(--accent-1);">PHASE C</div>
-                      <div><strong>Signal Extraction:</strong> Parallel scraping of 35+ signal points.</div>
-                  </div>
-          
-                  <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-2);">
-                      <div style="font-weight: 700; color: var(--accent-2);">PHASE D</div>
-                      <div><strong>Assessment:</strong> Multi-Head Attention (Risk, Exposure, Loss).</div>
-                  </div>
-          
-                  <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--success);">
-                      <div style="font-weight: 700; color: var(--success);">PHASE F</div>
-                      <div><strong>Decision:</strong> Deterministic Pricing or Referral. Audit Trail persisted.</div>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('three-layer')">Next: Three Layer Assessment →</button>
-              </div>
-          </section>
-          
-          <section id="three-layer" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Learn / <span>Scoring Logic</span></div>
-              <h1>Three Layer Assessment</h1>
-              [cite_start]<p>De-conflating risk into independent dimensions[cite: 10].</p>
-          
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
-                  
-                  <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--accent-1);">
-                      <h3>1. Risk Layer</h3>
-                      <p><strong>"The Character"</strong></p>
-                      <p>How well is the entity managed? Derived from Governance and Hygiene signals.</p>
-                      <div style="margin-top: 1rem; font-weight: 700; color: var(--accent-1);">Output: Score 0-1000</div>
-                  </div>
-          
-                  <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--warning);">
-                      <h3>2. Exposure Layer</h3>
-                      <p><strong>"The Footprint"</strong></p>
-                      <p>How large is the blast radius? Derived from digital footprint, employee count, and revenue proxies.</p>
-                      <div style="margin-top: 1rem; font-weight: 700; color: var(--warning);">Output: Size Band</div>
-                  </div>
-          
-                  <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--danger);">
-                      <h3>3. Loss Layer</h3>
-                      <p><strong>"The Propensity"</strong></p>
-                      <p>What is the likelihood of a claim? Derived from historical correlation and cohort analysis.</p>
-                      <div style="margin-top: 1rem; font-weight: 700; color: var(--danger);">Output: Propensity 0-100</div>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('case-studies')">Next: Case Studies →</button>
-              </div>
-          </section>
-          
-          <section id="case-studies" class="app-section hidden-section" data-visual-mode="2">
-              <div class="breadcrumb">Learn / <span>Proof</span></div>
-              <h1>Retrospective Case Studies</h1>
-              <p>DSI does not predict the future; it reveals the truth already visible. These losses were flagged by signals months in advance.</p>
-          
-              <div style="margin-top: 2rem;">
-                  
-                  <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
-                      <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
-                          <span>Silicon Valley Bank (2023)</span>
-                          <span style="color: var(--danger);">AUTO-DECLINE</span>
-                      </summary>
-                      <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
-                          <p><strong>Loss:</strong> $200M+ D&O, $20B+ FDIC.</p>
-                          <p><strong>DSI Signals:</strong></p>
-                          <ul>
-                              <li>• CRO Role Vacant for 8 months (Critical Governance Gap).</li>
-                              <li>• 90% Uninsured Deposits (Extreme Concentration).</li>
-                              <li>• Regulatory MRA backlog observable.</li>
-                          </ul>
-                      </div>
-                  </details>
-          
-                  <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
-                      <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
-                          <span>FTX (2022)</span>
-                          <span style="color: var(--danger);">AUTO-DECLINE</span>
-                      </summary>
-                      <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
-                          <p><strong>Loss:</strong> $8B+ Fraud.</p>
-                          <p><strong>DSI Signals (Absence as Signal):</strong></p>
-                          <ul>
-                              <li>• No Big 4 Auditor.</li>
-                              <li>• No Independent Board Members.</li>
-                              <li>• Opaque corporate registry structure.</li>
-                          </ul>
-                      </div>
-                  </details>
-          
-                  <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
-                      <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
-                          <span>SolarWinds (2020)</span>
-                          <span style="color: var(--danger);">AUTO-DECLINE</span>
-                      </summary>
-                      <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
-                          <p><strong>Loss:</strong> Global Supply Chain Compromise.</p>
-                          <p><strong>DSI Signals:</strong></p>
-                          <ul>
-                              <li>• "solarwinds123" password leaked on public repo (Credential Hygiene).</li>
-                              <li>• Update server vulnerability observable from public internet.</li>
-                          </ul>
-                      </div>
-                  </details>
-          
-              </div>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('competitive-differentiation')">Next: Differentiation →</button>
-              </div>
-          </section>
-          
-          <section id="competitive-differentiation" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Learn / <span>The Market</span></div>
-              <h1>Competitive Differentiation</h1>
-              <p>DSI is not a better data feed. It is a new operating system.</p>
-          
-              <div style="overflow-x: auto; margin-top: 2rem;">
-                  <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                      <thead>
-                          <tr style="border-bottom: 2px solid var(--border-light);">
-                              <th style="padding: 1rem;">Feature</th>
-                              <th style="padding: 1rem; color: var(--text-muted);">Traditional</th>
-                              <th style="padding: 1rem; color: var(--accent-1);">DSI</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr style="border-bottom: 1px solid var(--border-light);">
-                              <td style="padding: 1rem; font-weight: 600;">Input</td>
-                              <td style="padding: 1rem;">PDFs, Excel (Subjective)</td>
-                              <td style="padding: 1rem; color: var(--accent-2);">Digital Signals (Deterministic)</td>
-                          </tr>
-                          <tr style="border-bottom: 1px solid var(--border-light);">
-                              <td style="padding: 1rem; font-weight: 600;">Scalability</td>
-                              <td style="padding: 1rem;">Linear (Staff Heavy)</td>
-                              <td style="padding: 1rem; color: var(--accent-2);">Logarithmic (Agentic)</td>
-                          </tr>
-                          <tr style="border-bottom: 1px solid var(--border-light);">
-                              <td style="padding: 1rem; font-weight: 600;">Integrity</td>
-                              <td style="padding: 1rem;">Manual Noise</td>
-                              <td style="padding: 1rem; color: var(--accent-2);">Audit-Persistent</td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
-          
-              <div style="margin-top: 3rem; text-align: right;">
-                  <button class="btn" onclick="app.navigateTo('economic-impact')">Next: The Bottom Line →</button>
-              </div>
-          </section>
-          
-          <section id="economic-impact" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Learn / <span>ROI</span></div>
-              <h1>The Bottom Line</h1>
-              <p>Structural profitability improvement through expense reduction and loss avoidance.</p>
-          
-              <div class="card-grid">
-                  <div class="dsi-card">
-                      <h4>Expense Ratio</h4>
-                      <div style="font-size: 2.5rem; font-weight: 700; color: var(--success); margin: 0.5rem 0;">13%</div>
-                      <p>Down from 35% industry average. Savings in acquisition, admin, and processing.</p>
-                  </div>
-                  
-                  <div class="dsi-card">
-                      <h4>Loss Ratio</h4>
-                      <div style="font-size: 2.5rem; font-weight: 700; color: var(--success); margin: 0.5rem 0;">-12 pts</div>
-                      <p>Driven by "Hard Gate" avoidance of bad risks and continuous portfolio pruning.</p>
-                  </div>
-          
-                  <div class="dsi-card">
-                      <h4>Profit Impact</h4>
-                      <div style="font-size: 2.5rem; font-weight: 700; color: var(--accent-1); margin: 0.5rem 0;">$150M</div>
-                      <p>On a $500M book, DSI generates ~$150M in additional underwriting profit.</p>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 4rem; text-align: center; padding: 2rem; border: 1px solid var(--accent-2); border-radius: 12px; background: rgba(57, 211, 186, 0.05);">
-                  <h3 style="margin-top: 0; color: var(--accent-2);">Ready to Interact?</h3>
-                  <p>You have seen the theory. Now control the World Model.</p>
-                  <button class="btn" style="margin-top: 1rem;" onclick="app.navigateTo('dashboard')">Launch DSI Interactive →</button>
-              </div>
-          </section>          
-          <section id="dashboard" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Interact / <span>Command Center</span></div>
-              <h1>DSI Interactive Dashboard</h1>
-              <p class="lead">Monitor the live signal pipeline and manage agentic underwriting performance.</p>
-          
-              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
-                  
-                  <div style="background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem;">
-                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                          <h3 style="margin: 0;">Live Submission Pipeline</h3>
-                          <span class="badge badge-success">System: Active</span>
-                      </div>
-                      
-                      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                          <thead>
-                              <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-dim);">
-                                  <th style="padding: 10px;">Entity</th>
-                                  <th style="padding: 10px;">Risk Score</th>
-                                  <th style="padding: 10px;">Tier</th>
-                                  <th style="padding: 10px;">Action</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              <tr style="border-bottom: 1px solid var(--border-light);">
-                                  <td style="padding: 10px;">Global Dynamics Inc.</td>
-                                  <td style="padding: 10px; color: var(--success);">842</td>
-                                  <td style="padding: 10px;">Tier 1</td>
-                                  <td style="padding: 10px;"><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="app.navigateTo('underwriting-engine')">View Audit</button></td>
-                              </tr>
-                              <tr style="border-bottom: 1px solid var(--border-light);">
-                                  <td style="padding: 10px;">Horizon Logistics</td>
-                                  <td style="padding: 10px; color: var(--warning);">415</td>
-                                  <td style="padding: 10px;">Tier 5</td>
-                                  <td style="padding: 10px;"><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="app.navigateTo('underwriting-engine')">Review</button></td>
-                              </tr>
-                              <tr style="border-bottom: 1px solid var(--border-light);">
-                                  <td style="padding: 10px;">Apex Cyber-Sec</td>
-                                  <td style="padding: 10px; color: var(--danger);">182</td>
-                                  <td style="padding: 10px;">Tier 10</td>
-                                  <td style="padding: 10px;"><span style="color: var(--danger); font-weight: 700;">AUTO-DECLINE</span></td>
-                              </tr>
-                          </tbody>
-                      </table>
-                  </div>
-          
-                  <div style="background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem;">
-                      <h3 style="margin-bottom: 1rem;">Portfolio Steering</h3>
-                      <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem;">Adjust the "Gravitational Re-Clustering" of the World Model.</p>
-                      
-                      <div style="margin-bottom: 2rem;">
-                          <label style="display: block; font-size: 0.8rem; margin-bottom: 0.5rem;">Risk Appetite</label>
-                          <input type="range" min="1" max="100" value="40" style="width: 100%;">
-                          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.3rem;">
-                              <span>Conservative</span>
-                              <span>Aggressive</span>
-                          </div>
-                      </div>
-          
-                      <div style="padding: 1rem; background: rgba(5, 153, 173, 0.1); border-radius: 8px; border: 1px solid var(--accent-1);">
-                          <h4 style="font-size: 0.9rem; color: var(--accent-1); margin-bottom: 0.5rem;">Engine Impact</h4>
-                          <div style="font-size: 1.2rem; font-weight: 700;">64% STP Rate</div>
-                          <p style="font-size: 0.7rem; margin-top: 0.3rem;">Current steering setting optimizes for Growth over Loss Avoidance.</p>
-                      </div>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-                  <button class="btn" onclick="app.navigateTo('underwriting-engine')">Deep Dive: Underwriting Engine</button>
-                  <button class="btn btn-secondary" onclick="app.navigateTo('what-happens-if')">Scenario Simulation</button>
-              </div>
-          </section>
-          
-          <section id="underwriting-engine" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Interact / <span>Underwriting Engine</span></div>
-              <h1>Multi-Head Attention Engine</h1>
-              <p>Deterministic assessment for <strong>Horizon Logistics</strong> (Submission ID: #DS-9902)</p>
-          
-              <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-                  
-                  <div class="dsi-card" style="border-bottom: 4px solid var(--accent-1);">
-                      <h4 style="color: var(--accent-1);">Risk Layer</h4>
-                      <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">415</div>
-                      <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
-                          <li>Governance: 62/100</li>
-                          <li>Tech Hygiene: 22/100 (🚨 Warning)</li>
-                          <li>Network Authority: 48/100</li>
-                      </ul>
-                  </div>
-          
-                  <div class="dsi-card" style="border-bottom: 4px solid var(--warning);">
-                      <h4 style="color: var(--warning);">Exposure Layer</h4>
-                      <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">Band D</div>
-                      <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
-                          <li>Employees: 250 - 500</li>
-                          <li>Revenue Proxy: $100M</li>
-                          <li>Digital Footprint: High</li>
-                      </ul>
-                  </div>
-          
-                  <div class="dsi-card" style="border-bottom: 4px solid var(--danger);">
-                      <h4 style="color: var(--danger);">Loss Propensity</h4>
-                      <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">6.2%</div>
-                      <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
-                          <li>Cohort Frequency: 4.1%</li>
-                          <li>Sector Severity: High</li>
-                          <li>Deterioration: Stable</li>
-                      </ul>
-                  </div>
-              </div>
-          
-              <div style="margin-top: 2rem; background: var(--bg-panel); border: 2px solid var(--warning); border-radius: 12px; padding: 2rem; text-align: center;">
-                  <h3 style="margin-top: 0;">Deterministic Decision: <span style="color: var(--warning);">REFERRAL</span></h3>
-                  <p style="max-width: 600px; margin: 0.5rem auto 1.5rem auto;">
-                      Automated pricing is locked due to <strong>Low Tech Hygiene</strong>. Signal shows 4 critical ports exposed. Manual verification of patching schedule required.
-                  </p>
-                  <div style="display: flex; gap: 1rem; justify-content: center;">
-                      <button class="btn btn-secondary">Download Audit Trail (JSON)</button>
-                      <button class="btn">Override & Quote</button>
-                  </div>
-              </div>
-          </section>
-          
-          <section id="what-happens-if" class="app-section hidden-section" data-visual-mode="3">
-              <div class="breadcrumb">Interact / <span>Simulations</span></div>
-              <h1>Scenario Simulation</h1>
-              <p>Test the resilience of the DSI World Model against macro and micro shocks.</p>
-          
-              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-top: 2rem;">
-                  
-                  <div style="display: flex; flex-direction: column; gap: 1rem;">
-                      <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
-                          <strong>Governance Collapse</strong><br>
-                          <small>Simulate mass board resignation at Tier 1 entities.</small>
-                      </button>
-                      <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
-                          <strong>Supply Chain Shock</strong><br>
-                          <small>Infect a major software vendor and trace the blast radius.</small>
-                      </button>
-                      <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
-                          <strong>Hygiene Improvement</strong><br>
-                          <small>Force-update all entities to TLS 1.3.</small>
-                      </button>
-                  </div>
-          
-                  <div style="background: #000; border-radius: 12px; padding: 2rem; position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                      <div style="position: absolute; width: 10px; height: 10px; background: var(--accent-1); border-radius: 50%; box-shadow: 0 0 15px var(--accent-1); left: 20%; top: 30%;"></div>
-                      <div style="position: absolute; width: 8px; height: 8px; background: var(--accent-2); border-radius: 50%; left: 60%; top: 70%;"></div>
-                      <div style="position: absolute; width: 12px; height: 12px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 20px var(--danger); left: 80%; top: 20%;"></div>
-                      
-                      <div style="z-index: 10; text-align: center;">
-                          <div style="font-family: var(--font-mono); color: var(--accent-1); font-size: 1.2rem; margin-bottom: 1rem;">>> SIMULATION READY</div>
-                          <button class="btn" style="background: transparent; border: 1px solid var(--accent-1);">Run Simulation</button>
-                      </div>
-                      
-                      <canvas id="sim-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.3;"></canvas>
-                  </div>
-              </div>
-          </section>
-          class="content-container">
+        <div id="app-container" class="content-container">
             <div style="text-align: center; padding-top: 10vh;">
                 <h1 style="color: var(--text-dim);">Initializing World Model...</h1>
             </div>
+
+            <section id="orientation" class="app-section active-section" data-visual-mode="3">
+                <div style="text-align: center; margin-top: 10vh;">
+                    <h1 style="font-size: 4.5rem; margin-bottom: 2rem;">Digital Signal Intelligence</h1>
+                    <p style="font-size: 1.5rem; max-width: 800px; margin: 0 auto 3rem auto; color: var(--text-muted);">
+                        A new information substrate for insurance. Enabling deterministic, autonomous risk assessment at scale.
+                    </p>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 4rem;">
+                        <button class="btn" onclick="app.navigateTo('automation-myth')">
+                            Start the Journey
+                        </button>
+                        <button class="btn btn-secondary" onclick="app.navigateTo('dashboard')">
+                            Skip to Interaction
+                        </button>
+                    </div>
+            
+                    <div class="card-grid" style="text-align: left;">
+                        <div class="dsi-card" onclick="app.navigateTo('automation-myth')">
+                            <div class="card-icon">📉</div>
+                            <h4>The Automation Myth</h4>
+                            <p>Why decades of transformation have failed to improve profitability.</p>
+                        </div>
+                        <div class="dsi-card" onclick="app.navigateTo('core-thesis')">
+                            <div class="card-icon">🧠</div>
+                            <h4>The Core Thesis</h4>
+                            <p>Shifting from documents (subjective) to signals (deterministic).</p>
+                        </div>
+                        <div class="dsi-card" onclick="app.navigateTo('signal-architecture')">
+                            <div class="card-icon">📡</div>
+                            <h4>Signal Architecture</h4>
+                            <p>The 7 canonical categories of digital risk observation.</p>
+                        </div>
+                        <div class="dsi-card" onclick="app.navigateTo('case-studies')">
+                            <div class="card-icon">🔎</div>
+                            <h4>Retrospective Case Studies</h4>
+                            <p>Would DSI have identified SVB, FTX, and Boeing?</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="automation-myth" class="app-section hidden-section" data-visual-mode="1">
+                <div class="breadcrumb">Learn / <span>The Problem</span></div>
+                <h1>The Automation Myth</h1>
+                [cite_start]<p class="lead">Decades of "digital transformation" have failed to structurally improve insurance profitability[cite: 1].</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 3rem;">
+                    <div>
+                        <h3>The Stagnation</h3>
+                        <p>Despite billions spent on OCR, NLP, and ingestion pipelines, the industry's combined ratio has remained flatlined around 97.5% for 20 years. [cite_start]The return on equity sits at a meager 2.49%[cite: 1].</p>
+                        <p><strong>The Core Assumption is Wrong:</strong> The industry assumes traditional underwriting inputs (PDFs, spreadsheets, emails) can be automated. They cannot. They are subjective, inconsistent, and infinite in format.</p>
+                        
+                        <div style="margin-top: 2rem; padding: 1.5rem; border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.1);">
+                            <h4 style="color: var(--danger); margin-bottom: 0.5rem;">The Reality</h4>
+                            <ul style="list-style: none; color: var(--text-muted);">
+                                <li>• Straight-Through Processing: <strong>5-15%</strong></li>
+                                <li>• Cost per Submission: <strong>$150 - $650</strong></li>
+                                <li>• Time to Quote: <strong>3-10 Days</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-light);">
+                        <h4 style="text-align: center; margin-bottom: 2rem;">20 Years of Combined Ratios</h4>
+                        <svg viewBox="0 0 400 200" style="width: 100%; height: auto;">
+                            <line x1="0" y1="100" x2="400" y2="100" stroke="var(--text-dim)" stroke-dasharray="4"/>
+                            <text x="360" y="90" fill="var(--text-dim)" font-size="10">Break-even</text>
+                            <polyline points="0,120 40,80 80,110 120,90 160,130 200,100 240,110 280,95 320,105 360,100 400,110" 
+                                      fill="none" stroke="var(--primary)" stroke-width="3"/>
+                            <circle cx="200" cy="100" r="4" fill="var(--danger)"/>
+                        </svg>
+                        <p style="text-align: center; font-size: 0.8rem; margin-top: 1rem;">The "Stagnation" (Visual Mode 1)</p>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('pagerank')">Next: The Precedent →</button>
+                </div>
+            </section>
+            
+            <section id="pagerank" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>The Precedent</span></div>
+                <h1>The Evolutionary Precedent</h1>
+                [cite_start]<p>DSI is not experimental. It follows the exact network-based principles that solved Search in 1998[cite: 2].</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card" style="border-top: 4px solid var(--danger);">
+                        <div class="card-icon" style="color: var(--danger);">1996</div>
+                        <h4>Keyword Search</h4>
+                        <p>Search engines relied on what pages <strong>said about themselves</strong> (Meta Keywords). This was subjective, spammable, and unverifiable.</p>
+                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
+                            <em>Parallel: Traditional Insurance Submissions</em>
+                        </div>
+                    </div>
+                    
+                    <div class="dsi-card" style="border-top: 4px solid var(--accent-1);">
+                        <div class="card-icon" style="color: var(--accent-1);">1998</div>
+                        <h4>PageRank</h4>
+                        <p>Google ignored keywords and analyzed the <strong>Citation Network</strong>. [cite_start]Authority was inferred from external links, not internal claims[cite: 3].</p>
+                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
+                            <em>Parallel: Digital Signal Intelligence</em>
+                        </div>
+                    </div>
+                </div>
+            
+                <h3>The Shift: Context via Attention</h3>
+                [cite_start]<p>Modern AI (Transformers, 2024) goes further, using "Self-Attention" to determine relationships between data points[cite: 4]. DSI applies this to risk: we map the "Hidden State" of an organization through its digital relationships.</p>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('core-thesis')">Next: The Core Thesis →</button>
+                </div>
+            </section>
+            
+            <section id="core-thesis" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>The Thesis</span></div>
+                <h1>The Core Thesis</h1>
+                [cite_start]<p>Shifting the information substrate from documents (Subjective) to signals (Deterministic)[cite: 1].</p>
+            
+                <div style="background: var(--bg-panel); border: 1px solid var(--border-accent); border-radius: 12px; padding: 3rem; margin: 2rem 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem;">
+                    
+                    <div style="text-align: center;">
+                        <h3 style="color: var(--text-muted);">The Old Substrate</h3>
+                        <div style="font-size: 3rem; margin: 1rem 0;">📄</div>
+                        <ul style="text-align: left; color: var(--text-dim); list-style: none;">
+                            <li>❌ Self-Reported</li>
+                            <li>❌ Static / Aged</li>
+                            <li>❌ Unstructured</li>
+                            <li>❌ High Friction</li>
+                        </ul>
+                    </div>
+            
+                    <div style="font-size: 2rem; color: var(--accent-1);">➔</div>
+            
+                    <div style="text-align: center;">
+                        <h3 style="color: var(--text-main);">The New Substrate</h3>
+                        <div style="font-size: 3rem; margin: 1rem 0;">📡</div>
+                        <ul style="text-align: left; color: var(--accent-2); list-style: none;">
+                            <li>✅ Externally Observable</li>
+                            <li>✅ Living Pulse (Decay)</li>
+                            <li>✅ Machine Readable</li>
+                            <li>✅ Zero Friction</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <p>Underwriting requires understanding two things: <strong>Governance</strong> (How well it is managed) and <strong>Exposure</strong> (How it behaves). DSI extracts these directly from the digital ecosystem.</p>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('foundational-principles')">Next: Principles →</button>
+                </div>
+            </section>
+            
+            <section id="foundational-principles" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>Rules of the Road</span></div>
+                <h1>Foundational Principles</h1>
+                <p>Ten mandatory principles ensure DSI operates consistently and autonomously.</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card">
+                        <h4>1. External Observability</h4>
+                        <p>Primary signals must be obtainable without cooperation.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <h4>2. Machine Readability</h4>
+                        <p>All signals must be analysable by automated systems.</p>
+                    </div>
+                    <div class="dsi-card" style="border-color: var(--accent-1);">
+                        <h4>5. Absence as Signal</h4>
+                        <p>Missing data is not "unknown"—it is a risk indicator. (e.g., No security headers = Risk).</p>
+                    </div>
+                    <div class="dsi-card">
+                        <h4>10. Agentic Readiness</h4>
+                        <p>Models must be executable by autonomous systems.</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('technical-manifesto')">Next: Technical Manifesto →</button>
+                </div>
+            </section>
+            
+            <section id="technical-manifesto" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>Deep Tech</span></div>
+                <h1>Technical Manifesto 2026</h1>
+                [cite_start]<p>The engineering specifications for the World Model simulation[cite: 1].</p>
+            
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    
+                    <div style="background: rgba(5, 153, 173, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid var(--accent-1);">
+                        <h3 style="margin-top: 0; color: var(--accent-2);">Temporal Decay Logic</h3>
+                        <p>Information rots. [cite_start]The substrate is a "Living Pulse"[cite: 7].</p>
+                        <div style="margin-top: 1rem; font-family: var(--font-mono); font-size: 0.9rem;">
+                            Decay Formula: V(t) = V0 * (0.5)^(t/h)<br><br>
+                            Half-Lives:<br>
+                            • Governance: 180 Days<br>
+                            • Tech Hygiene: 90 Days
+                        </div>
+                    </div>
+            
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid var(--danger);">
+                        <h3 style="margin-top: 0; color: var(--danger);">The Hard Gate</h3>
+                        [cite_start]<p>Determinism over discretion. [cite: 13]</p>
+                        <p>If <strong>Governance Score < 20</strong>:</p>
+                        <ul>
+                            <li>• Automatic Tier 10 (Decline)</li>
+                            <li>• Overrides all other signals</li>
+                            <li>• Prevents loss-chasing</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('signal-architecture')">Next: Signal Architecture →</button>
+                </div>
+            </section>
+            
+            <section id="signal-architecture" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>The Inputs</span></div>
+                <h1>Signal Architecture</h1>
+                <p>Seven canonical signal categories power deterministic underwriting.</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card">
+                        <div class="card-icon">🔗</div>
+                        <h4>1. Network Authority</h4>
+                        <p>Citations, certifications, client relationships, and supply chain position.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <div class="card-icon">⚙️</div>
+                        <h4>2. Technical Infrastructure</h4>
+                        <p>TLS, DNS security, software currency, hosting hygiene.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <div class="card-icon">📊</div>
+                        <h4>4. Behaviour</h4>
+                        <p>Change patterns, incident response speed, regulatory interaction.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <div class="card-icon">📋</div>
+                        <h4>5. Public Record</h4>
+                        <p>Litigation, filings, breaches, and official registries.</p>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('end-to-end')">Next: E2E Architecture →</button>
+                </div>
+            </section>
+            
+            <section id="end-to-end" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>The Workflow</span></div>
+                <h1>End-to-End Model</h1>
+                <p>A deterministic pipeline from Discovery to Decision.</p>
+            
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+                    
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--text-dim);">
+                        <div style="font-weight: 700; color: var(--text-dim);">PHASE A</div>
+                        <div><strong>Discovery:</strong> Entity resolution from minimal input (Domain/Name).</div>
+                    </div>
+            
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-1);">
+                        <div style="font-weight: 700; color: var(--accent-1);">PHASE C</div>
+                        <div><strong>Signal Extraction:</strong> Parallel scraping of 35+ signal points.</div>
+                    </div>
+            
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-2);">
+                        <div style="font-weight: 700; color: var(--accent-2);">PHASE D</div>
+                        <div><strong>Assessment:</strong> Multi-Head Attention (Risk, Exposure, Loss).</div>
+                    </div>
+            
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--success);">
+                        <div style="font-weight: 700; color: var(--success);">PHASE F</div>
+                        <div><strong>Decision:</strong> Deterministic Pricing or Referral. Audit Trail persisted.</div>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('three-layer')">Next: Three Layer Assessment →</button>
+                </div>
+            </section>
+            
+            <section id="three-layer" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>Scoring Logic</span></div>
+                <h1>Three Layer Assessment</h1>
+                [cite_start]<p>De-conflating risk into independent dimensions[cite: 10].</p>
+            
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+                    
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--accent-1);">
+                        <h3>1. Risk Layer</h3>
+                        <p><strong>"The Character"</strong></p>
+                        <p>How well is the entity managed? Derived from Governance and Hygiene signals.</p>
+                        <div style="margin-top: 1rem; font-weight: 700; color: var(--accent-1);">Output: Score 0-1000</div>
+                    </div>
+            
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--warning);">
+                        <h3>2. Exposure Layer</h3>
+                        <p><strong>"The Footprint"</strong></p>
+                        <p>How large is the blast radius? Derived from digital footprint, employee count, and revenue proxies.</p>
+                        <div style="margin-top: 1rem; font-weight: 700; color: var(--warning);">Output: Size Band</div>
+                    </div>
+            
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--danger);">
+                        <h3>3. Loss Layer</h3>
+                        <p><strong>"The Propensity"</strong></p>
+                        <p>What is the likelihood of a claim? Derived from historical correlation and cohort analysis.</p>
+                        <div style="margin-top: 1rem; font-weight: 700; color: var(--danger);">Output: Propensity 0-100</div>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('case-studies')">Next: Case Studies →</button>
+                </div>
+            </section>
+            
+            <section id="case-studies" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>Proof</span></div>
+                <h1>Retrospective Case Studies</h1>
+                <p>DSI does not predict the future; it reveals the truth already visible. These losses were flagged by signals months in advance.</p>
+            
+                <div style="margin-top: 2rem;">
+                    
+                    <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
+                        <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
+                            <span>Silicon Valley Bank (2023)</span>
+                            <span style="color: var(--danger);">AUTO-DECLINE</span>
+                        </summary>
+                        <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
+                            <p><strong>Loss:</strong> $200M+ D&O, $20B+ FDIC.</p>
+                            <p><strong>DSI Signals:</strong></p>
+                            <ul>
+                                <li>• CRO Role Vacant for 8 months (Critical Governance Gap).</li>
+                                <li>• 90% Uninsured Deposits (Extreme Concentration).</li>
+                                <li>• Regulatory MRA backlog observable.</li>
+                            </ul>
+                        </div>
+                    </details>
+            
+                    <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
+                        <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
+                            <span>FTX (2022)</span>
+                            <span style="color: var(--danger);">AUTO-DECLINE</span>
+                        </summary>
+                        <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
+                            <p><strong>Loss:</strong> $8B+ Fraud.</p>
+                            <p><strong>DSI Signals (Absence as Signal):</strong></p>
+                            <ul>
+                                <li>• No Big 4 Auditor.</li>
+                                <li>• No Independent Board Members.</li>
+                                <li>• Opaque corporate registry structure.</li>
+                            </ul>
+                        </div>
+                    </details>
+            
+                    <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
+                        <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
+                            <span>SolarWinds (2020)</span>
+                            <span style="color: var(--danger);">AUTO-DECLINE</span>
+                        </summary>
+                        <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
+                            <p><strong>Loss:</strong> Global Supply Chain Compromise.</p>
+                            <p><strong>DSI Signals:</strong></p>
+                            <ul>
+                                <li>• "solarwinds123" password leaked on public repo (Credential Hygiene).</li>
+                                <li>• Update server vulnerability observable from public internet.</li>
+                            </ul>
+                        </div>
+                    </details>
+            
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('competitive-differentiation')">Next: Differentiation →</button>
+                </div>
+            </section>
+            
+            <section id="competitive-differentiation" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>The Market</span></div>
+                <h1>Competitive Differentiation</h1>
+                <p>DSI is not a better data feed. It is a new operating system.</p>
+            
+                <div style="overflow-x: auto; margin-top: 2rem;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-light);">
+                                <th style="padding: 1rem;">Feature</th>
+                                <th style="padding: 1rem; color: var(--text-muted);">Traditional</th>
+                                <th style="padding: 1rem; color: var(--accent-1);">DSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 1rem; font-weight: 600;">Input</td>
+                                <td style="padding: 1rem;">PDFs, Excel (Subjective)</td>
+                                <td style="padding: 1rem; color: var(--accent-2);">Digital Signals (Deterministic)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 1rem; font-weight: 600;">Scalability</td>
+                                <td style="padding: 1rem;">Linear (Staff Heavy)</td>
+                                <td style="padding: 1rem; color: var(--accent-2);">Logarithmic (Agentic)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 1rem; font-weight: 600;">Integrity</td>
+                                <td style="padding: 1rem;">Manual Noise</td>
+                                <td style="padding: 1rem; color: var(--accent-2);">Audit-Persistent</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('economic-impact')">Next: The Bottom Line →</button>
+                </div>
+            </section>
+            
+            <section id="economic-impact" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>ROI</span></div>
+                <h1>The Bottom Line</h1>
+                <p>Structural profitability improvement through expense reduction and loss avoidance.</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card">
+                        <h4>Expense Ratio</h4>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--success); margin: 0.5rem 0;">13%</div>
+                        <p>Down from 35% industry average. Savings in acquisition, admin, and processing.</p>
+                    </div>
+                    
+                    <div class="dsi-card">
+                        <h4>Loss Ratio</h4>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--success); margin: 0.5rem 0;">-12 pts</div>
+                        <p>Driven by "Hard Gate" avoidance of bad risks and continuous portfolio pruning.</p>
+                    </div>
+            
+                    <div class="dsi-card">
+                        <h4>Profit Impact</h4>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--accent-1); margin: 0.5rem 0;">$150M</div>
+                        <p>On a $500M book, DSI generates ~$150M in additional underwriting profit.</p>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 4rem; text-align: center; padding: 2rem; border: 1px solid var(--accent-2); border-radius: 12px; background: rgba(57, 211, 186, 0.05);">
+                    <h3 style="margin-top: 0; color: var(--accent-2);">Ready to Interact?</h3>
+                    <p>You have seen the theory. Now control the World Model.</p>
+                    <button class="btn" style="margin-top: 1rem;" onclick="app.navigateTo('dashboard')">Launch DSI Interactive →</button>
+                </div>
+            </section>
+            <section id="dashboard" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Interact / <span>Command Center</span></div>
+                <h1>DSI Interactive Dashboard</h1>
+                <p class="lead">Monitor the live signal pipeline and manage agentic underwriting performance.</p>
+            
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="margin: 0;">Live Submission Pipeline</h3>
+                            <span class="badge badge-success">System: Active</span>
+                        </div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-dim);">
+                                    <th style="padding: 10px;">Entity</th>
+                                    <th style="padding: 10px;">Risk Score</th>
+                                    <th style="padding: 10px;">Tier</th>
+                                    <th style="padding: 10px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <td style="padding: 10px;">Global Dynamics Inc.</td>
+                                    <td style="padding: 10px; color: var(--success);">842</td>
+                                    <td style="padding: 10px;">Tier 1</td>
+                                    <td style="padding: 10px;"><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="app.navigateTo('underwriting-engine')">View Audit</button></td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <td style="padding: 10px;">Horizon Logistics</td>
+                                    <td style="padding: 10px; color: var(--warning);">415</td>
+                                    <td style="padding: 10px;">Tier 5</td>
+                                    <td style="padding: 10px;"><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="app.navigateTo('underwriting-engine')">Review</button></td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <td style="padding: 10px;">Apex Cyber-Sec</td>
+                                    <td style="padding: 10px; color: var(--danger);">182</td>
+                                    <td style="padding: 10px;">Tier 10</td>
+                                    <td style="padding: 10px;"><span style="color: var(--danger); font-weight: 700;">AUTO-DECLINE</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+            
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem;">Portfolio Steering</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem;">Adjust the "Gravitational Re-Clustering" of the World Model.</p>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <label style="display: block; font-size: 0.8rem; margin-bottom: 0.5rem;">Risk Appetite</label>
+                            <input type="range" min="1" max="100" value="40" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.3rem;">
+                                <span>Conservative</span>
+                                <span>Aggressive</span>
+                            </div>
+                        </div>
+            
+                        <div style="padding: 1rem; background: rgba(5, 153, 173, 0.1); border-radius: 8px; border: 1px solid var(--accent-1);">
+                            <h4 style="font-size: 0.9rem; color: var(--accent-1); margin-bottom: 0.5rem;">Engine Impact</h4>
+                            <div style="font-size: 1.2rem; font-weight: 700;">64% STP Rate</div>
+                            <p style="font-size: 0.7rem; margin-top: 0.3rem;">Current steering setting optimizes for Growth over Loss Avoidance.</p>
+                        </div>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button class="btn" onclick="app.navigateTo('underwriting-engine')">Deep Dive: Underwriting Engine</button>
+                    <button class="btn btn-secondary" onclick="app.navigateTo('what-happens-if')">Scenario Simulation</button>
+                </div>
+            </section>
+            
+            <section id="underwriting-engine" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Interact / <span>Underwriting Engine</span></div>
+                <h1>Multi-Head Attention Engine</h1>
+                <p>Deterministic assessment for <strong>Horizon Logistics</strong> (Submission ID: #DS-9902)</p>
+            
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    
+                    <div class="dsi-card" style="border-bottom: 4px solid var(--accent-1);">
+                        <h4 style="color: var(--accent-1);">Risk Layer</h4>
+                        <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">415</div>
+                        <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
+                            <li>Governance: 62/100</li>
+                            <li>Tech Hygiene: 22/100 (🚨 Warning)</li>
+                            <li>Network Authority: 48/100</li>
+                        </ul>
+                    </div>
+            
+                    <div class="dsi-card" style="border-bottom: 4px solid var(--warning);">
+                        <h4 style="color: var(--warning);">Exposure Layer</h4>
+                        <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">Band D</div>
+                        <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
+                            <li>Employees: 250 - 500</li>
+                            <li>Revenue Proxy: $100M</li>
+                            <li>Digital Footprint: High</li>
+                        </ul>
+                    </div>
+            
+                    <div class="dsi-card" style="border-bottom: 4px solid var(--danger);">
+                        <h4 style="color: var(--danger);">Loss Propensity</h4>
+                        <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">6.2%</div>
+                        <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
+                            <li>Cohort Frequency: 4.1%</li>
+                            <li>Sector Severity: High</li>
+                            <li>Deterioration: Stable</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 2rem; background: var(--bg-panel); border: 2px solid var(--warning); border-radius: 12px; padding: 2rem; text-align: center;">
+                    <h3 style="margin-top: 0;">Deterministic Decision: <span style="color: var(--warning);">REFERRAL</span></h3>
+                    <p style="max-width: 600px; margin: 0.5rem auto 1.5rem auto;">
+                        Automated pricing is locked due to <strong>Low Tech Hygiene</strong>. Signal shows 4 critical ports exposed. Manual verification of patching schedule required.
+                    </p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button class="btn btn-secondary">Download Audit Trail (JSON)</button>
+                        <button class="btn">Override & Quote</button>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="what-happens-if" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Interact / <span>Simulations</span></div>
+                <h1>Scenario Simulation</h1>
+                <p>Test the resilience of the DSI World Model against macro and micro shocks.</p>
+            
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-top: 2rem;">
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
+                            <strong>Governance Collapse</strong><br>
+                            <small>Simulate mass board resignation at Tier 1 entities.</small>
+                        </button>
+                        <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
+                            <strong>Supply Chain Shock</strong><br>
+                            <small>Infect a major software vendor and trace the blast radius.</small>
+                        </button>
+                        <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
+                            <strong>Hygiene Improvement</strong><br>
+                            <small>Force-update all entities to TLS 1.3.</small>
+                        </button>
+                    </div>
+            
+                    <div style="background: #000; border-radius: 12px; padding: 2rem; position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <div style="position: absolute; width: 10px; height: 10px; background: var(--accent-1); border-radius: 50%; box-shadow: 0 0 15px var(--accent-1); left: 20%; top: 30%;"></div>
+                        <div style="position: absolute; width: 8px; height: 8px; background: var(--accent-2); border-radius: 50%; left: 60%; top: 70%;"></div>
+                        <div style="position: absolute; width: 12px; height: 12px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 20px var(--danger); left: 80%; top: 20%;"></div>
+                        
+                        <div style="z-index: 10; text-align: center;">
+                            <div style="font-family: var(--font-mono); color: var(--accent-1); font-size: 1.2rem; margin-bottom: 1rem;">>> SIMULATION READY</div>
+                            <button class="btn" style="background: transparent; border: 1px solid var(--accent-1);">Run Simulation</button>
+                        </div>
+                        
+                        <canvas id="sim-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.3;"></canvas>
+                    </div>
+                </div>
+            </section>          
         </div>
 
     </div>
