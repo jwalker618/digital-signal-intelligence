@@ -1,0 +1,36 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 900 200"
+  width="900"
+  height="200"
+>
+  <!-- Icon -->
+  <g transform="translate(20,20)">
+    <!-- Diamond -->
+    <path
+      d="M80 0 L160 80 L80 160 L0 80 Z"
+      fill="none"
+      stroke="#159e9c"
+      stroke-width="18"
+      stroke-linejoin="round"
+    />
+
+    <!-- Inner bars -->
+    <path d="M52 48 H128 L112 64 H36 Z" fill="#3fd2c7"/>
+    <path d="M40 76 H140 L124 92 H24 Z" fill="#3fd2c7"/>
+    <path d="M52 104 H128 L112 120 H36 Z" fill="#3fd2c7"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text
+    x="220"
+    y="130"
+    font-size="96"
+    font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-weight="800"
+    fill="#159e9c"
+    letter-spacing="-1"
+  >
+    Generate
+  </text>
+</svg>
