@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Signal Intelligence | Generate</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ====================================================================
+         * DSI DEMO v2 - PHASE 19.1.A: FOUNDATION
+         * ==================================================================== */
+
+        /* --- CSS VARIABLES --- */
+        :root {
+            /* Core palette */
+            --blue-primary: #0B3954;
+            --teal-accent: #39D3BA;
+            --white: #FFFFFF;
+            --black: #000000;
+
+            /* Typography */
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+            /* Spacing */
+            --header-height: 60px;
+            --content-max-width: 1200px;
+            --content-padding: 40px;
+
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-medium: 0.3s ease;
+        }
+
+        /* --- RESET --- */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--white);
+            background-color: var(--blue-primary);
+            overflow-x: hidden;
+        }
+
+        /* --- APP CONTAINER --- */
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background-color: var(--blue-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 1000;
+        }
+
+        .header.hidden {
+            display: none;
+        }
+
+        .home-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--teal-accent);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity var(--transition-fast);
+        }
+
+        .home-button:hover {
+            opacity: 0.8;
+        }
+
+        .home-button svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--teal-accent);
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo svg {
+            height: 40px;
+            width: auto;
+        }
+
+        .header-logo-text {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--teal-accent);
+            letter-spacing: 0px;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding-top: 0;
+        }
+
+        .main-content.with-header {
+            padding-top: var(--header-height);
+        }
+
+        /* --- SECTIONS (Pages) --- */
+        .section {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .section.active {
+            display: flex;
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* ====================================================================
+         * PHASE 19.1.B: LANDING PAGE
+         * ==================================================================== */
+
+        .landing-page {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .landing-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .landing-logo svg {
+            height: 60px;
+            width: auto;
+        }
+
+        .landing-logo-text {
+            font-size: 42px;
+            font-weight: 600;
+            color: var(--teal-accent);
+            letter-spacing: -1px;
+        }
+
+        .landing-title {
+            font-size: 52px;
+            font-weight: 300;
+            color: var(--teal-accent);
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .landing-subtitle {
+            font-size: 26px;
+            font-weight: 400;
+            color: var(--white);
+            margin-bottom: 50px;
+        }
+
+        .landing-abstract {
+            max-width: 900px;
+            margin-bottom: 30px;
+        }
+
+        .landing-abstract-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .landing-abstract-text {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.7;
+        }
+
+        .landing-ip {
+            max-width: 900px;
+            margin-bottom: 50px;
+        }
+
+        .landing-ip-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .landing-ip-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .landing-begin-btn {
+            background: transparent;
+            border: none;
+            color: var(--teal-accent);
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            cursor: pointer;
+            padding: 20px 60px;
+            transition: all var(--transition-fast);
+        }
+
+        .landing-begin-btn:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 20px rgba(57, 211, 186, 0.5);
+        }
+
+        /* ====================================================================
+         * PHASE 19.1.B: ORIENTATION PAGE
+         * ==================================================================== */
+
+        .orientation-page {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+        }
+
+        .orientation-header-section {
+            text-align: left;
+            margin-bottom: 50px;
+            padding-left: 30px;
+        }
+
+        .orientation-title {
+            font-size: 42px;
+            font-weight: 300;
+            color: var(--teal-accent);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .orientation-subtitle {
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--white);
+        }
+
+        .orientation-cards {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            padding: 0 30px;
+        }
+
+        .orientation-card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 480px;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .orientation-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .orientation-card-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orientation-card-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .orientation-card-title {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--black);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .orientation-card-list {
+            color: var(--black);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .orientation-card-list-label {
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .orientation-card-list ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .orientation-card-list li {
+            position: relative;
+            padding-left: 8px;
+        }
+
+        .orientation-card-list li::before {
+            content: "-";
+            position: absolute;
+            left: -12px;
+            color: var(--black);
+        }
+
+        /* ====================================================================
+         * WHITE CONTENT BOX (for future sections)
+         * ==================================================================== */
+
+        .content-page {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .content-box {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 50px 60px;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 500px;
+            color: var(--black);
+            position: relative;
+        }
+
+        .content-box-title {
+            font-size: 38px;
+            font-weight: 300;
+            color: var(--teal-accent);
+            margin-bottom: 6px;
+        }
+
+        .content-box-subtitle {
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--blue-primary);
+            margin-bottom: 30px;
+        }
+
+        /* ====================================================================
+         * NAVIGATION CHEVRONS
+         * ==================================================================== */
+
+        .nav-chevron {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: opacity var(--transition-fast);
+            padding: 10px;
+        }
+
+        .nav-chevron:hover {
+            opacity: 0.7;
+        }
+
+        .nav-chevron.hidden {
+            display: none;
+        }
+
+        .nav-chevron-left {
+            left: 15px;
+        }
+
+        .nav-chevron-right {
+            right: 15px;
+        }
+
+        .nav-chevron-shape {
+            width: 50px;
+            height: 90px;
+            background-color: var(--teal-accent);
+            clip-path: polygon(100% 0%, 100% 100%, 0% 50%);
+        }
+
+        .nav-chevron-right .nav-chevron-shape {
+            clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+        }
+
+        .nav-chevron-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--teal-accent);
+            margin-top: 8px;
+        }
+
+        /* ====================================================================
+         * UTILITY CLASSES
+         * ==================================================================== */
+
+        .text-teal {
+            color: var(--teal-accent);
+        }
+
+        .text-blue {
+            color: var(--blue-primary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- HEADER (hidden on landing) -->
+        <header class="header hidden" id="header">
+            <a class="home-button" onclick="goToSection('orientation')">
+                <!-- Home Icon -->
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span>Home</span>
+            </a>
+            <div class="header-logo">
+                <!-- Generate Logo - Diamond with horizontal stripes -->
+                <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Diamond outline -->
+                    <path fill="none" stroke="#39D3BA" stroke-width="2.5" d="M30 5 L55 30 L30 55 L5 30 Z"/>
+                    <!-- Horizontal stripes -->
+                    <line x1="12" y1="24" x2="48" y2="24" stroke="#39D3BA" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="10" y1="30" x2="50" y2="30" stroke="#39D3BA" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="12" y1="36" x2="48" y2="36" stroke="#39D3BA" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <span class="header-logo-text">Generate</span>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content" id="mainContent">
+
+            <!-- ============================================================
+                 LANDING PAGE
+                 ============================================================ -->
+            <section class="section active" id="section-landing">
+                <div class="landing-page">
+                    <!-- Logo - Diamond with horizontal stripes -->
+                    <div class="landing-logo">
+                        <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Diamond outline -->
+                            <path fill="none" stroke="#39D3BA" stroke-width="2.5" d="M30 5 L55 30 L30 55 L5 30 Z"/>
+                            <!-- Horizontal stripes -->
+                            <line x1="12" y1="24" x2="48" y2="24" stroke="#39D3BA" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="10" y1="30" x2="50" y2="30" stroke="#39D3BA" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="12" y1="36" x2="48" y2="36" stroke="#39D3BA" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                        <span class="landing-logo-text">Generate</span>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 class="landing-title">Digital Signal Intelligence</h1>
+                    <h2 class="landing-subtitle">A New Information Substrate for Insurance</h2>
+
+                    <!-- Abstract -->
+                    <div class="landing-abstract">
+                        <div class="landing-abstract-label">Abstract:</div>
+                        <p class="landing-abstract-text">
+                            Digital Signal Intelligence (DSI) defines a new, externally observable information substrate for insurance, enabling deterministic, autonomous risk assessment, exposure estimation, loss propensity inference, and pricing at scale.
+                        </p>
+                    </div>
+
+                    <!-- IP Statement -->
+                    <div class="landing-ip">
+                        <div class="landing-ip-label">IP Statement:</div>
+                        <p class="landing-ip-text">
+                            &copy; John Walker. All rights reserved.<br><br>
+                            Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner. Unauthorised use is strictly prohibited.
+                        </p>
+                    </div>
+
+                    <!-- BEGIN Button -->
+                    <button class="landing-begin-btn" onclick="beginDemo()">BEGIN</button>
+                </div>
+
+                <!-- Footer -->
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
+                 ORIENTATION PAGE
+                 ============================================================ -->
+            <section class="section" id="section-orientation">
+                <div class="orientation-page">
+                    <!-- Title Section -->
+                    <div class="orientation-header-section">
+                        <h1 class="orientation-title">Digital Signal Intelligence</h1>
+                        <h2 class="orientation-subtitle">A New Information Substrate for Insurance</h2>
+                    </div>
+
+                    <!-- Two Cards -->
+                    <div class="orientation-cards">
+                        <!-- Learn about DSI Card -->
+                        <div class="orientation-card" onclick="goToSection('automationMyth')">
+                            <div class="orientation-card-icon">
+                                <!-- Head with lightbulb/idea icon -->
+                                <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Head silhouette -->
+                                    <path d="M25 70 L25 55 Q15 50 12 40 Q8 25 20 15 Q30 5 45 8 Q60 12 62 30 Q63 42 55 50 L55 70"
+                                          fill="none" stroke="#39D3BA" stroke-width="2.5" stroke-linecap="round"/>
+                                    <!-- Lightbulb inside head -->
+                                    <circle cx="40" cy="32" r="10" fill="none" stroke="#39D3BA" stroke-width="2.5"/>
+                                    <path d="M36 42 L44 42 M37 45 L43 45" stroke="#39D3BA" stroke-width="2" stroke-linecap="round"/>
+                                    <!-- Light rays -->
+                                    <path d="M40 18 L40 14 M50 22 L54 18 M54 32 L58 32 M30 22 L26 18 M26 32 L22 32"
+                                          stroke="#39D3BA" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <h3 class="orientation-card-title">Learn about DSI</h3>
+                            <div class="orientation-card-list">
+                                <div class="orientation-card-list-label">Explore topics such as:</div>
+                                <ul>
+                                    <li>The Automation Myth</li>
+                                    <li>The PageRank Precedent</li>
+                                    <li>The Core Thesis</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Interact with DSI Card -->
+                        <div class="orientation-card" onclick="goToSection('humanOversight')">
+                            <div class="orientation-card-icon">
+                                <!-- Hand with touch/ripple effect -->
+                                <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Ripple circles at top -->
+                                    <circle cx="40" cy="18" r="6" fill="#39D3BA"/>
+                                    <circle cx="40" cy="18" r="12" fill="none" stroke="#39D3BA" stroke-width="2" opacity="0.7"/>
+                                    <circle cx="40" cy="18" r="18" fill="none" stroke="#39D3BA" stroke-width="1.5" opacity="0.4"/>
+                                    <!-- Hand/finger pointing up -->
+                                    <path d="M40 24 L40 45
+                                             M40 45 L35 52 L32 62
+                                             M40 45 L45 52 L48 62
+                                             M35 52 L30 58
+                                             M45 52 L50 58"
+                                          stroke="#39D3BA" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h3 class="orientation-card-title">Interact with DSI</h3>
+                            <div class="orientation-card-list">
+                                <div class="orientation-card-list-label">Experience the tool across sections such as:</div>
+                                <ul>
+                                    <li>Human Oversight</li>
+                                    <li>Portfolio Steering</li>
+                                    <li>What Happens If</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
+                 PLACEHOLDER SECTIONS (for testing navigation)
+                 ============================================================ -->
+            <section class="section" id="section-automationMyth">
+                <div class="content-page">
+                    <div class="content-box">
+                        <h1 class="content-box-title">The Automation Myth</h1>
+                        <h2 class="content-box-subtitle">Decades of Poor Returns</h2>
+                        <p style="color: #666; font-style: italic;">
+                            [Content for The Automation Myth will be implemented in Phase 19.1.C]
+                        </p>
+                    </div>
+                </div>
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+        </main>
+
+        <!-- Navigation Chevrons -->
+        <div class="nav-chevron nav-chevron-left hidden" id="navBack" onclick="goToPreviousSection()">
+            <div class="nav-chevron-shape"></div>
+            <span class="nav-chevron-label">Back</span>
+        </div>
+        <div class="nav-chevron nav-chevron-right hidden" id="navNext" onclick="goToNextSection()">
+            <div class="nav-chevron-shape"></div>
+            <span class="nav-chevron-label">Next</span>
+        </div>
+    </div>
+
+    <script>
+        /* ====================================================================
+         * DSI DEMO v2 - NAVIGATION STATE MACHINE
+         * ==================================================================== */
+
+        // Section order (excluding landing which is one-time)
+        const SECTIONS = [
+            'landing',
+            'orientation',
+            'automationMyth',
+            'informationSubstrate',
+            'coreThesis',
+            'whyNow',
+            'foundationalPrinciples',
+            'endToEndArchitecture',
+            'threeLayerAssessment',
+            'signalArchitecture',
+            'competitiveDifferentiation',
+            'market',
+            'economicImpact',
+            'conclusion'
+        ];
+
+        // Current state
+        let currentSection = 'landing';
+        let currentSlideIndex = 0;
+        let hasBegun = false;
+
+        // Section slide counts (for multi-slide sections)
+        const SECTION_SLIDES = {
+            landing: 1,
+            orientation: 1,
+            automationMyth: 1,
+            informationSubstrate: 2,
+            coreThesis: 1,
+            whyNow: 5,
+            foundationalPrinciples: 1,
+            endToEndArchitecture: 6, // 1 main + 5 worked example
+            threeLayerAssessment: 4, // 1 main + 3 details
+            signalArchitecture: 2,   // 1 main + 1 case studies
+            competitiveDifferentiation: 1,
+            market: 1,
+            economicImpact: 2,       // 1 main + 1 detail
+            conclusion: 1
+        };
+
+        /**
+         * Initialize the demo
+         */
+        function initDemo() {
+            // Check if user has already begun (for page refresh handling)
+            const savedSection = sessionStorage.getItem('dsi_currentSection');
+            if (savedSection && savedSection !== 'landing') {
+                hasBegun = true;
+                goToSection(savedSection);
+            }
+        }
+
+        /**
+         * Begin the demo (from landing page)
+         */
+        function beginDemo() {
+            hasBegun = true;
+            sessionStorage.setItem('dsi_hasBegun', 'true');
+            goToSection('orientation');
+        }
+
+        /**
+         * Navigate to a specific section
+         */
+        function goToSection(sectionId, slideIndex = 0) {
+            // Prevent returning to landing after begin
+            if (sectionId === 'landing' && hasBegun) {
+                sectionId = 'orientation';
+            }
+
+            // Update state
+            currentSection = sectionId;
+            currentSlideIndex = slideIndex;
+            sessionStorage.setItem('dsi_currentSection', sectionId);
+
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show target section
+            const targetSection = document.getElementById(`section-${sectionId}`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Update header visibility
+            updateHeader();
+
+            // Update navigation chevrons
+            updateNavigation();
+        }
+
+        /**
+         * Navigate to next section
+         */
+        function goToNextSection() {
+            const currentIndex = SECTIONS.indexOf(currentSection);
+            if (currentIndex < SECTIONS.length - 1) {
+                goToSection(SECTIONS[currentIndex + 1]);
+            }
+        }
+
+        /**
+         * Navigate to previous section
+         */
+        function goToPreviousSection() {
+            const currentIndex = SECTIONS.indexOf(currentSection);
+            // Don't go back to landing
+            if (currentIndex > 1) {
+                goToSection(SECTIONS[currentIndex - 1]);
+            } else if (currentIndex === 1) {
+                // At orientation, can't go back
+                return;
+            }
+        }
+
+        /**
+         * Update header visibility
+         */
+        function updateHeader() {
+            const header = document.getElementById('header');
+            const mainContent = document.getElementById('mainContent');
+
+            if (currentSection === 'landing') {
+                header.classList.add('hidden');
+                mainContent.classList.remove('with-header');
+            } else {
+                header.classList.remove('hidden');
+                mainContent.classList.add('with-header');
+            }
+        }
+
+        /**
+         * Update navigation chevrons
+         */
+        function updateNavigation() {
+            const navBack = document.getElementById('navBack');
+            const navNext = document.getElementById('navNext');
+            const currentIndex = SECTIONS.indexOf(currentSection);
+
+            // Hide nav on landing and orientation
+            if (currentSection === 'landing' || currentSection === 'orientation') {
+                navBack.classList.add('hidden');
+                navNext.classList.add('hidden');
+                return;
+            }
+
+            // Show/hide back button (never show on first content section after orientation)
+            if (currentIndex > 2) {
+                navBack.classList.remove('hidden');
+            } else {
+                navBack.classList.add('hidden');
+            }
+
+            // Show/hide next button (hide on last section)
+            if (currentIndex < SECTIONS.length - 1) {
+                navNext.classList.remove('hidden');
+            } else {
+                navNext.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Keyboard navigation
+         */
+        document.addEventListener('keydown', (e) => {
+            if (currentSection === 'landing') return;
+
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                goToNextSection();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                goToPreviousSection();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                goToSection('orientation');
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initDemo);
+    </script>
+</body>
+</html>
