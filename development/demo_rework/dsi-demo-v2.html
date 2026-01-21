@@ -796,6 +796,61 @@
             background: #e74c3c;
         }
 
+        /* Expandable rows */
+        .expandable-row {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .expandable-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .expandable-header:hover {
+            background: #eef0f2;
+        }
+
+        .expandable-header h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--blue-primary);
+            margin: 0;
+        }
+
+        .expandable-header p {
+            font-size: 13px;
+            color: #666;
+            margin: 5px 0 0 0;
+        }
+
+        .expand-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--teal-accent);
+            color: white;
+            border: none;
+            font-size: 20px;
+            font-weight: 300;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--transition-fast);
+        }
+
+        .expand-btn:hover {
+            transform: scale(1.1);
+        }
+
         /* ====================================================================
          * NAVIGATION CHEVRONS
          * ==================================================================== */
@@ -1567,6 +1622,67 @@
 
                             <div class="slide-indicator">Worked Example - Step 5 of 5</div>
                         </div>
+                    </div>
+                </div>
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
+                 THREE LAYER ASSESSMENT (main + 3 detail slides)
+                 ============================================================ -->
+            <section class="section" id="section-threeLayerAssessment">
+                <div class="content-page">
+                    <div class="content-box">
+                        <h1 class="content-box-title">Three Layer Assessment</h1>
+                        <h2 class="content-box-subtitle">Decoupling Complexity for Absolute Clarity</h2>
+
+                        <!-- Main Slide -->
+                        <div class="slide-container active" id="tla-slide-main">
+                            <div class="content-box-body">
+                                <p>Traditional underwriting conflates risk quality, exposure magnitude, and loss propensity into a single subjective judgement. DSI separates them into three independent, measurable layers.</p>
+                            </div>
+
+                            <!-- Risk Row -->
+                            <div class="expandable-row">
+                                <div class="expandable-header" onclick="goToSlide('threeLayerAssessment', 1)">
+                                    <div>
+                                        <h4>Risk Layer</h4>
+                                        <p>Utilising a PageRank-inspired digital signal citation framework to assess organisational quality.</p>
+                                    </div>
+                                    <button class="expand-btn">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Exposure Row -->
+                            <div class="expandable-row">
+                                <div class="expandable-header" onclick="goToSlide('threeLayerAssessment', 2)">
+                                    <div>
+                                        <h4>Exposure Layer</h4>
+                                        <p>A deterministic inference of an organisation's exposure magnitude without self-reported schedules.</p>
+                                    </div>
+                                    <button class="expand-btn">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Loss Row -->
+                            <div class="expandable-row">
+                                <div class="expandable-header" onclick="goToSlide('threeLayerAssessment', 3)">
+                                    <div>
+                                        <h4>Loss Layer</h4>
+                                        <p>Correlating real-time signal behaviours with historical loss patterns to infer propensity.</p>
+                                    </div>
+                                    <button class="expand-btn">+</button>
+                                </div>
+                            </div>
+
+                            <div class="content-tagline">
+                                Independent layers enable calibration, auditability, and agentic execution.
+                            </div>
+                        </div>
+
+                        <!-- Detail slides will be added in G2 -->
                     </div>
                 </div>
                 <footer class="footer">
