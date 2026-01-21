@@ -1682,7 +1682,105 @@
                             </div>
                         </div>
 
-                        <!-- Detail slides will be added in G2 -->
+                        <!-- Risk Analysis Detail -->
+                        <div class="slide-container" id="tla-slide-1">
+                            <button class="exit-btn" onclick="goToSlide('threeLayerAssessment', 0)">Exit detail</button>
+
+                            <div class="subsection-header">Risk Analysis</div>
+
+                            <div class="content-box-body">
+                                <p>The Risk Layer assesses organisational quality across six dimensions:</p>
+
+                                <div class="metrics-grid" style="grid-template-columns: 1fr;">
+                                    <div class="metric-item">
+                                        <div class="metric-label">1. Governance Stability</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Board composition, C-suite tenure, audit committee structure</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">2. Network Authority</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Backlink quality, partner relationships, citation patterns</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">3. Technical Posture</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Security controls, infrastructure maturity, patch cadence</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">4. Operational Discipline</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Hiring patterns, headcount stability, employee sentiment</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">5. Financial Health</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Credit signals, filing patterns, revenue trajectory</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">6. Regulatory Standing</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Compliance history, enforcement actions, disclosure quality</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide-indicator">Risk Layer Detail</div>
+                        </div>
+
+                        <!-- Exposure Shadow Layer Detail -->
+                        <div class="slide-container" id="tla-slide-2">
+                            <button class="exit-btn" onclick="goToSlide('threeLayerAssessment', 0)">Exit detail</button>
+
+                            <div class="subsection-header">Exposure Shadow Layer</div>
+
+                            <div class="content-box-body">
+                                <p>The Exposure Layer infers organisational scale and complexity without self-reported schedules:</p>
+
+                                <div class="metrics-grid" style="grid-template-columns: 1fr;">
+                                    <div class="metric-item">
+                                        <div class="metric-label">1. Exposure Band</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Classification of exposure magnitude using direct observables (employee count, office footprint), high-confidence proxies (revenue estimates, technology spend), and inferred signals (subsidiary count, geographic dispersion).</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">2. Complexity Category</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Measures organisational complexity: geographic dispersion, subsidiary count, technology heterogeneity, and regulatory footprint. Outputs: Simple, Moderate, Complex, Highly Complex.</div>
+                                    </div>
+                                </div>
+
+                                <div class="content-box-summary">
+                                    <p class="highlight">Outputs ranges with confidence (e.g., "$75M–$180M at 78% confidence") instead of false-precision point estimates.</p>
+                                </div>
+                            </div>
+
+                            <div class="slide-indicator">Exposure Layer Detail</div>
+                        </div>
+
+                        <!-- Loss Correlation Layer Detail -->
+                        <div class="slide-container" id="tla-slide-3">
+                            <button class="exit-btn" onclick="goToSlide('threeLayerAssessment', 0)">Exit detail</button>
+
+                            <div class="subsection-header">Loss Correlation Layer</div>
+
+                            <div class="content-box-body">
+                                <p>The Loss Layer infers propensity from behavioural patterns correlated with historical loss data:</p>
+
+                                <div class="metrics-grid" style="grid-template-columns: 1fr;">
+                                    <div class="metric-item">
+                                        <div class="metric-label">1. Loss Propensity Score (0–100)</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Measures likelihood of loss frequency based on behavioural and structural patterns. Signals: governance changes, hiring freeze, security posture deterioration.</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">2. Severity Propensity Score (0–100)</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Measures likelihood of high-severity outcomes. Signals: concentration risk, complexity, regulatory exposure.</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">3. Loss Trend Band</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Classifies trend direction: Improving, Stable, Deteriorating. Based on signal velocity over 90/180/365 day windows.</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">4. Cohort Assignment</div>
+                                        <div class="metric-value" style="font-size: 14px; font-weight: 400;">Entities are grouped into signal-derived peer cohorts for outlier detection and pricing calibration.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide-indicator">Loss Layer Detail</div>
+                        </div>
                     </div>
                 </div>
                 <footer class="footer">
