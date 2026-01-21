@@ -469,6 +469,57 @@
             color: var(--blue-primary);
         }
 
+        /* Principles Grid */
+        .principles-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 40px;
+            margin: 30px 0;
+        }
+
+        .principle-item {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .principle-number {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            background: var(--teal-accent);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .principle-content h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--blue-primary);
+            margin-bottom: 4px;
+        }
+
+        .principle-content p {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .content-tagline {
+            text-align: center;
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--teal-accent);
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
         /* ====================================================================
          * NAVIGATION CHEVRONS
          * ==================================================================== */
@@ -778,6 +829,102 @@
                             <p>The core assumption is that traditional underwriting inputs can be automated.</p>
                             <p>This assumption is incorrect.</p>
                             <p class="highlight">The inputs themselves are the constraint.</p>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
+                 FOUNDATIONAL PRINCIPLES
+                 ============================================================ -->
+            <section class="section" id="section-foundationalPrinciples">
+                <div class="content-page">
+                    <div class="content-box">
+                        <h1 class="content-box-title">Foundational Principles</h1>
+                        <h2 class="content-box-subtitle">Ensuring Consistent and Autonomous Operations</h2>
+
+                        <div class="content-box-body">
+                            <p>DSI is governed by ten foundational principles that ensure every assessment is consistent, objective, and executable by autonomous systems.</p>
+                        </div>
+
+                        <div class="principles-grid">
+                            <div class="principle-item">
+                                <div class="principle-number">1</div>
+                                <div class="principle-content">
+                                    <h4>External Observability</h4>
+                                    <p>Signals must be obtainable without cooperation from the insured.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">6</div>
+                                <div class="principle-content">
+                                    <h4>Structured Data Utilisation</h4>
+                                    <p>Authoritative structured data is incorporated directly.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">2</div>
+                                <div class="principle-content">
+                                    <h4>Machine Readability</h4>
+                                    <p>Signals must be analysable by automated systems.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">7</div>
+                                <div class="principle-content">
+                                    <h4>Minimal Direct Inquiry</h4>
+                                    <p>Direct questions are optional and limited.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">3</div>
+                                <div class="principle-content">
+                                    <h4>Network Authority</h4>
+                                    <p>Relationship patterns reveal quality and standing.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">8</div>
+                                <div class="principle-content">
+                                    <h4>Organisational-Level Assessment</h4>
+                                    <p>Parent behaviour is a proxy for underlying assets.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">4</div>
+                                <div class="principle-content">
+                                    <h4>Behavioural Inference</h4>
+                                    <p>Observable behaviour outweighs stated intentions.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">9</div>
+                                <div class="principle-content">
+                                    <h4>Simplicity in Scoring</h4>
+                                    <p>Models follow a clear, auditable scoring flow.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">5</div>
+                                <div class="principle-content">
+                                    <h4>Absence as a Signal</h4>
+                                    <p>Missing expected signals are measurable negative indicators.</p>
+                                </div>
+                            </div>
+                            <div class="principle-item">
+                                <div class="principle-number">10</div>
+                                <div class="principle-content">
+                                    <h4>Agentic Readiness</h4>
+                                    <p>Models must be executable by autonomous systems.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="content-tagline">
+                            Ensuring consistency, objectivity, and agentic readiness in every assessment.
                         </div>
                     </div>
                 </div>
