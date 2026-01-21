@@ -634,6 +634,88 @@
             color: #999;
         }
 
+        /* Intra-section navigation button */
+        .goto-btn {
+            display: inline-block;
+            background: var(--teal-accent);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: none;
+            margin-top: 20px;
+        }
+
+        .goto-btn:hover {
+            background: #2cb8a0;
+            transform: translateY(-2px);
+        }
+
+        /* Section subsection header */
+        .subsection-header {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--teal-accent);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        /* Info table for Why Now slides */
+        .info-table {
+            width: 100%;
+            margin: 25px 0;
+        }
+
+        .info-table tr {
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-table td {
+            padding: 15px 10px;
+            vertical-align: top;
+        }
+
+        .info-table td:first-child {
+            width: 140px;
+            font-weight: 600;
+            color: var(--blue-primary);
+        }
+
+        .info-table td:last-child {
+            color: #333;
+        }
+
+        /* Three-column cards */
+        .three-col-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+        }
+
+        .info-card h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--blue-primary);
+            margin-bottom: 12px;
+        }
+
+        .info-card p {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+        }
+
         /* ====================================================================
          * NAVIGATION CHEVRONS
          * ==================================================================== */
@@ -1033,6 +1115,154 @@
                             </div>
 
                             <div class="slide-indicator">Slide 2 of 2</div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
+                 WHY NOW? (5 slides)
+                 ============================================================ -->
+            <section class="section" id="section-whyNow">
+                <div class="content-page">
+                    <div class="content-box">
+                        <h1 class="content-box-title">Digital Signal Intelligence: Why Now?</h1>
+                        <h2 class="content-box-subtitle">The Convergence of Foundational Technologies</h2>
+
+                        <!-- Slide 1: A Revolutionary Insight -->
+                        <div class="slide-container active" id="whyNow-slide-1">
+                            <div class="content-box-body">
+                                <p>DSI is not an experiment. It is the application of proven methodologies to a domain that has resisted automation for decades.</p>
+                            </div>
+
+                            <div class="subsection-header">A Revolutionary Insight</div>
+
+                            <table class="info-table">
+                                <tr>
+                                    <td>The Challenge</td>
+                                    <td>In 1998, the web was growing exponentially, but no one could rank pages by importance or relevance.</td>
+                                </tr>
+                                <tr>
+                                    <td>The Solution</td>
+                                    <td>PageRank treated links as citations — a page cited by important pages is itself important.</td>
+                                </tr>
+                                <tr>
+                                    <td>The Result</td>
+                                    <td>Google became the most valuable company on Earth by understanding that network structure reveals authority.</td>
+                                </tr>
+                            </table>
+
+                            <button class="goto-btn" onclick="goToSlide('whyNow', 1)">Go to: Graph Propagation →</button>
+                            <div class="slide-indicator">Slide 1 of 5</div>
+                        </div>
+
+                        <!-- Slide 2: Graph Propagation -->
+                        <div class="slide-container" id="whyNow-slide-2">
+                            <div class="content-box-body">
+                                <p>The insight that network relationships reveal hidden properties has propagated across industries.</p>
+                            </div>
+
+                            <div class="subsection-header">Graph Propagation</div>
+
+                            <div class="three-col-cards">
+                                <div class="info-card">
+                                    <h4>Consumer Finance (FICO)</h4>
+                                    <p>Credit scores use network analysis to assess borrower risk based on payment relationships and credit utilisation patterns.</p>
+                                </div>
+                                <div class="info-card">
+                                    <h4>Threat Intelligence</h4>
+                                    <p>Recorded Future maps relationships between threat actors, vulnerabilities, and targets to predict cyber attacks.</p>
+                                </div>
+                                <div class="info-card">
+                                    <h4>Financial Networks</h4>
+                                    <p>JP Morgan and Palantir use graph analysis to detect fraud, money laundering, and systemic risk.</p>
+                                </div>
+                            </div>
+
+                            <button class="goto-btn" onclick="goToSlide('whyNow', 2)">Go to: The Birth of Modern AI →</button>
+                            <div class="slide-indicator">Slide 2 of 5</div>
+                        </div>
+
+                        <!-- Slide 3: The Birth of Modern AI -->
+                        <div class="slide-container" id="whyNow-slide-3">
+                            <div class="content-box-body">
+                                <p>The Transformer architecture revolutionised AI by enabling machines to understand context and relationships at scale.</p>
+                            </div>
+
+                            <div class="subsection-header">The Birth of Modern AI</div>
+
+                            <table class="info-table">
+                                <tr>
+                                    <td>The Evolution</td>
+                                    <td>Attention mechanisms (2017) allowed models to weigh the importance of different inputs dynamically.</td>
+                                </tr>
+                                <tr>
+                                    <td>The Connection</td>
+                                    <td>Like PageRank, Transformers learn which relationships matter — attention is citation at the token level.</td>
+                                </tr>
+                                <tr>
+                                    <td>The Link</td>
+                                    <td>DSI uses these architectures to extract, weight, and propagate signals across organisational networks.</td>
+                                </tr>
+                            </table>
+
+                            <button class="goto-btn" onclick="goToSlide('whyNow', 3)">Go to: The Next Frontier →</button>
+                            <div class="slide-indicator">Slide 3 of 5</div>
+                        </div>
+
+                        <!-- Slide 4: The Next Frontier -->
+                        <div class="slide-container" id="whyNow-slide-4">
+                            <div class="content-box-body">
+                                <p>World Models represent the next evolution: systems that understand cause and effect, not just correlation.</p>
+                            </div>
+
+                            <div class="subsection-header">The Next Frontier</div>
+
+                            <div class="content-box-body">
+                                <p><strong>World Models</strong> are AI systems that build internal representations of how entities behave over time. They enable:</p>
+                                <ul style="margin: 15px 0 15px 30px; color: #333;">
+                                    <li>Simulation of future states based on current signals</li>
+                                    <li>Counterfactual reasoning ("what if this signal changed?")</li>
+                                    <li>Continuous calibration against real-world outcomes</li>
+                                </ul>
+                                <p>DSI is designed to feed World Models with the structured, observable signals they require.</p>
+                            </div>
+
+                            <button class="goto-btn" onclick="goToSlide('whyNow', 4)">Go to: The Bottom Line →</button>
+                            <div class="slide-indicator">Slide 4 of 5</div>
+                        </div>
+
+                        <!-- Slide 5: The Bottom Line -->
+                        <div class="slide-container" id="whyNow-slide-5">
+                            <div class="content-box-body">
+                                <p>DSI stands on the shoulders of proven technologies, not speculative research.</p>
+                            </div>
+
+                            <div class="subsection-header">The Bottom Line</div>
+
+                            <div class="three-col-cards" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="info-card">
+                                    <h4>Not Experimental</h4>
+                                    <p>PageRank, graph propagation, and Transformers are battle-tested at global scale.</p>
+                                </div>
+                                <div class="info-card">
+                                    <h4>Unprecedented Scale</h4>
+                                    <p>Modern infrastructure can process millions of signals per second at marginal cost.</p>
+                                </div>
+                                <div class="info-card">
+                                    <h4>Global Reach</h4>
+                                    <p>Digital footprints exist for every organisation, in every market, in every language.</p>
+                                </div>
+                                <div class="info-card">
+                                    <h4>Predictive Power</h4>
+                                    <p>Retrospective analysis shows 70-90% of major losses were preceded by visible signals.</p>
+                                </div>
+                            </div>
+
+                            <div class="slide-indicator">Slide 5 of 5</div>
                         </div>
                     </div>
                 </div>
