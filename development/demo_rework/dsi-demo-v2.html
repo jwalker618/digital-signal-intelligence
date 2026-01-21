@@ -8,7 +8,8 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400&display=swap" rel="stylesheet">
 
     <style>
         /* ====================================================================
@@ -25,11 +26,13 @@
 
             /* Typography */
             --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
             /* Spacing */
             --header-height: 60px;
             --content-max-width: 1200px;
             --content-padding: 40px;
+            --landing-left-margin: 80px;
 
             /* Transitions */
             --transition-fast: 0.2s ease;
@@ -73,6 +76,7 @@
             justify-content: space-between;
             padding: 0 30px;
             z-index: 1000;
+            border-bottom: 3px solid var(--teal-accent);
         }
 
         .header.hidden {
@@ -151,88 +155,105 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            padding: 40px;
-            text-align: center;
+            align-items: flex-start;
+            padding: 60px var(--landing-left-margin);
+            text-align: left;
         }
 
         .landing-logo {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin-bottom: 40px;
+            justify-content: flex-start;
+            margin-bottom: 50px;
         }
 
         .landing-logo svg {
-            height: 80px;
+            height: 100px;
             width: auto;
         }
 
         .landing-title {
-            font-size: 52px;
-            font-weight: 300;
+            font-family: var(--font-main);
+            font-size: 56px;
+            font-weight: 800;
             color: var(--teal-accent);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             letter-spacing: -1px;
         }
 
         .landing-subtitle {
-            font-size: 26px;
+            font-family: var(--font-main);
+            font-size: 28px;
             font-weight: 400;
             color: var(--white);
             margin-bottom: 50px;
         }
 
         .landing-abstract {
-            max-width: 900px;
+            max-width: 800px;
             margin-bottom: 30px;
         }
 
         .landing-abstract-label {
+            font-family: var(--font-body);
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 400;
             color: var(--white);
             margin-bottom: 8px;
         }
 
         .landing-abstract-text {
+            font-family: var(--font-body);
             font-size: 15px;
+            font-weight: 300;
             color: rgba(255, 255, 255, 0.9);
             line-height: 1.7;
         }
 
         .landing-ip {
-            max-width: 900px;
-            margin-bottom: 50px;
+            max-width: 800px;
+            margin-bottom: 40px;
         }
 
         .landing-ip-label {
+            font-family: var(--font-body);
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 400;
             color: var(--white);
             margin-bottom: 8px;
         }
 
         .landing-ip-text {
+            font-family: var(--font-body);
             font-size: 12px;
+            font-weight: 300;
             color: rgba(255, 255, 255, 0.7);
             line-height: 1.6;
+        }
+
+        .landing-divider {
+            width: 200px;
+            height: 3px;
+            background-color: var(--teal-accent);
+            margin-bottom: 40px;
         }
 
         .landing-begin-btn {
             background: transparent;
             border: none;
             color: var(--teal-accent);
-            font-size: 32px;
-            font-weight: 600;
+            font-family: var(--font-main);
+            font-size: 36px;
+            font-weight: 800;
             letter-spacing: 4px;
             cursor: pointer;
-            padding: 20px 60px;
+            padding: 0;
             transition: all var(--transition-fast);
+            text-align: left;
         }
 
         .landing-begin-btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
             text-shadow: 0 0 20px rgba(57, 211, 186, 0.5);
         }
 
@@ -254,15 +275,17 @@
         }
 
         .orientation-title {
-            font-size: 42px;
-            font-weight: 300;
+            font-family: var(--font-main);
+            font-size: 48px;
+            font-weight: 800;
             color: var(--teal-accent);
             margin-bottom: 8px;
             letter-spacing: -0.5px;
         }
 
         .orientation-subtitle {
-            font-size: 22px;
+            font-family: var(--font-main);
+            font-size: 24px;
             font-weight: 400;
             color: var(--white);
         }
@@ -361,10 +384,11 @@
             border-radius: 8px;
             padding: 50px 60px;
             width: 100%;
-            max-width: 1100px;
-            min-height: 500px;
+            max-width: 1400px;
+            min-height: 600px;
             color: var(--black);
             position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         .content-box-title {
@@ -449,9 +473,40 @@
             display: none !important;
         }
 
+        /* ====================================================================
+         * NODE VISUAL BACKGROUND (Canvas)
+         * ==================================================================== */
+
+        #node-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Ensure content is above canvas */
+        .header {
+            z-index: 1000;
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-chevron {
+            z-index: 100;
+        }
+
     </style>
 </head>
 <body>
+    <!-- Node Visual Background Canvas -->
+    <canvas id="node-canvas"></canvas>
+
     <div id="app">
         <!-- HEADER (hidden on landing) -->
         <header class="header hidden" id="header">
@@ -517,6 +572,9 @@
                             Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner. Unauthorised use is strictly prohibited.
                         </p>
                     </div>
+
+                    <!-- Teal Divider Line -->
+                    <div class="landing-divider"></div>
 
                     <!-- BEGIN Button -->
                     <button class="landing-begin-btn" onclick="beginDemo()">BEGIN</button>
@@ -814,6 +872,96 @@
 
         // Initialize on load
         document.addEventListener('DOMContentLoaded', initDemo);
+
+        /* ====================================================================
+         * NODE VISUAL BACKGROUND - Animated Canvas
+         * ==================================================================== */
+
+        const NodeVisual = {
+            canvas: null,
+            ctx: null,
+            width: 0,
+            height: 0,
+            nodes: [],
+            animationFrame: null,
+
+            init() {
+                this.canvas = document.getElementById('node-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                this.spawnNodes();
+                this.loop();
+            },
+
+            resize() {
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+            },
+
+            spawnNodes() {
+                this.nodes = [];
+                // Agentic mode: 300 nodes with connections
+                const count = 300;
+                const speed = 1.2;
+
+                for (let i = 0; i < count; i++) {
+                    this.nodes.push({
+                        x: Math.random() * this.width,
+                        y: Math.random() * this.height,
+                        vx: (Math.random() - 0.5) * speed,
+                        vy: (Math.random() - 0.5) * speed,
+                        radius: Math.random() * 2 + 1
+                    });
+                }
+            },
+
+            loop() {
+                // Trail effect - semi-transparent fill
+                this.ctx.fillStyle = 'rgba(11, 57, 84, 0.15)';
+                this.ctx.fillRect(0, 0, this.width, this.height);
+
+                const safeColor = '#39D3BA'; // Teal accent
+
+                this.nodes.forEach(node => {
+                    // 1. Move
+                    node.x += node.vx;
+                    node.y += node.vy;
+
+                    // 2. Bounce off walls
+                    if (node.x < 0 || node.x > this.width) node.vx *= -1;
+                    if (node.y < 0 || node.y > this.height) node.vy *= -1;
+
+                    // 3. Draw node
+                    this.ctx.beginPath();
+                    this.ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = safeColor;
+                    this.ctx.fill();
+
+                    // 4. Draw connections to nearby nodes
+                    this.nodes.forEach(other => {
+                        const dx = node.x - other.x;
+                        const dy = node.y - other.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 60 && dist > 0) {
+                            this.ctx.beginPath();
+                            this.ctx.strokeStyle = `rgba(57, 211, 186, ${0.15 - dist / 400})`;
+                            this.ctx.lineWidth = 0.5;
+                            this.ctx.moveTo(node.x, node.y);
+                            this.ctx.lineTo(other.x, other.y);
+                            this.ctx.stroke();
+                        }
+                    });
+                });
+
+                this.animationFrame = requestAnimationFrame(() => this.loop());
+            }
+        };
+
+        // Initialize node visual on load
+        document.addEventListener('DOMContentLoaded', () => NodeVisual.init());
     </script>
 </body>
 </html>
