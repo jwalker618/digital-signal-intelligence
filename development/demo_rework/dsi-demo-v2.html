@@ -578,6 +578,62 @@
             background: #f8f9fa;
         }
 
+        /* Multi-slide sections */
+        .slide-container {
+            display: none;
+            width: 100%;
+        }
+
+        .slide-container.active {
+            display: block;
+        }
+
+        /* Circle visual for Information Substrate */
+        .maelstrom-circle {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: var(--teal-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 40px auto;
+            transition: all 0.6s ease;
+            cursor: pointer;
+        }
+
+        .maelstrom-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(57, 211, 186, 0.4);
+        }
+
+        .maelstrom-circle-text {
+            color: var(--white);
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            padding: 30px;
+            line-height: 1.5;
+        }
+
+        /* Chaotic network visual */
+        .chaos-network {
+            width: 100%;
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        /* Slide indicator */
+        .slide-indicator {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #999;
+        }
+
         /* ====================================================================
          * NAVIGATION CHEVRONS
          * ==================================================================== */
@@ -887,6 +943,96 @@
                             <p>The core assumption is that traditional underwriting inputs can be automated.</p>
                             <p>This assumption is incorrect.</p>
                             <p class="highlight">The inputs themselves are the constraint.</p>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
+                 INFORMATION SUBSTRATE PROBLEM (2 slides)
+                 ============================================================ -->
+            <section class="section" id="section-informationSubstrate">
+                <div class="content-page">
+                    <div class="content-box">
+                        <h1 class="content-box-title">The Information Substrate Problem</h1>
+                        <h2 class="content-box-subtitle">An Insurmountable Issue</h2>
+
+                        <!-- Slide 1: The Maelstrom -->
+                        <div class="slide-container active" id="infoSubstrate-slide-1">
+                            <div class="content-box-body">
+                                <p>Traditional insurance inputs exist in infinite formats with no canonical schema nor deterministic structure.</p>
+                            </div>
+
+                            <div class="maelstrom-circle" onclick="goToSlide('informationSubstrate', 1)">
+                                <div class="maelstrom-circle-text">
+                                    Click to see<br/>the maelstrom
+                                </div>
+                            </div>
+
+                            <div class="slide-indicator">Slide 1 of 2</div>
+                        </div>
+
+                        <!-- Slide 2: The Chaos Revealed -->
+                        <div class="slide-container" id="infoSubstrate-slide-2">
+                            <div class="chaos-network">
+                                <svg viewBox="0 0 600 300" style="width: 100%; height: auto;" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Chaotic document representations -->
+                                    <rect x="50" y="30" width="60" height="45" fill="#e74c3c" opacity="0.7" transform="rotate(15 80 52)"/>
+                                    <text x="80" y="55" font-size="8" fill="white" text-anchor="middle">PDF</text>
+
+                                    <rect x="150" y="60" width="55" height="40" fill="#27ae60" opacity="0.7" transform="rotate(-10 177 80)"/>
+                                    <text x="177" y="82" font-size="8" fill="white" text-anchor="middle">Excel</text>
+
+                                    <rect x="90" y="120" width="50" height="35" fill="#3498db" opacity="0.7" transform="rotate(25 115 137)"/>
+                                    <text x="115" y="140" font-size="8" fill="white" text-anchor="middle">Email</text>
+
+                                    <rect x="250" y="40" width="65" height="50" fill="#9b59b6" opacity="0.7" transform="rotate(-20 282 65)"/>
+                                    <text x="282" y="68" font-size="8" fill="white" text-anchor="middle">Word</text>
+
+                                    <rect x="200" y="140" width="45" height="55" fill="#e67e22" opacity="0.7" transform="rotate(8 222 167)"/>
+                                    <text x="222" y="170" font-size="8" fill="white" text-anchor="middle">Scan</text>
+
+                                    <rect x="350" y="80" width="70" height="40" fill="#1abc9c" opacity="0.7" transform="rotate(-5 385 100)"/>
+                                    <text x="385" y="102" font-size="8" fill="white" text-anchor="middle">Spreadsheet</text>
+
+                                    <rect x="420" y="150" width="55" height="45" fill="#e74c3c" opacity="0.7" transform="rotate(12 447 172)"/>
+                                    <text x="447" y="175" font-size="8" fill="white" text-anchor="middle">Broker</text>
+
+                                    <rect x="500" y="60" width="50" height="35" fill="#3498db" opacity="0.7" transform="rotate(-15 525 77)"/>
+                                    <text x="525" y="80" font-size="8" fill="white" text-anchor="middle">Form</text>
+
+                                    <rect x="320" y="200" width="60" height="40" fill="#27ae60" opacity="0.7" transform="rotate(5 350 220)"/>
+                                    <text x="350" y="222" font-size="8" fill="white" text-anchor="middle">CSV</text>
+
+                                    <rect x="480" y="220" width="55" height="45" fill="#9b59b6" opacity="0.7" transform="rotate(-8 507 242)"/>
+                                    <text x="507" y="245" font-size="8" fill="white" text-anchor="middle">Notes</text>
+
+                                    <!-- Chaotic connection lines -->
+                                    <line x1="80" y1="75" x2="177" y2="60" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="115" y1="120" x2="222" y2="140" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="177" y1="100" x2="282" y2="90" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="282" y1="90" x2="385" y2="80" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="385" y1="120" x2="447" y2="150" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="447" y1="195" x2="350" y2="200" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="222" y1="195" x2="350" y2="200" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="525" y1="95" x2="447" y2="150" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                    <line x1="350" y1="240" x2="507" y2="220" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                                </svg>
+                            </div>
+
+                            <div class="content-box-body">
+                                <p>No extraction system, including modern or future AI models, can consistently transform these heterogeneous inputs into a reliable underwriting substrate.</p>
+                                <p>A system built on these inputs cannot achieve deterministic automation.</p>
+                            </div>
+
+                            <div class="content-box-summary">
+                                <p class="highlight">Autonomous underwriting requires the information substrate to change.</p>
+                            </div>
+
+                            <div class="slide-indicator">Slide 2 of 2</div>
                         </div>
                     </div>
                 </div>
@@ -1336,6 +1482,26 @@
                 // At orientation, can't go back
                 return;
             }
+        }
+
+        /**
+         * Navigate to specific slide within current section
+         */
+        function goToSlide(sectionId, slideIndex) {
+            // Get all slide containers in this section
+            const section = document.getElementById(`section-${sectionId}`);
+            if (!section) return;
+
+            const slides = section.querySelectorAll('.slide-container');
+            slides.forEach((slide, index) => {
+                if (index === slideIndex) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            currentSlideIndex = slideIndex;
         }
 
         /**
