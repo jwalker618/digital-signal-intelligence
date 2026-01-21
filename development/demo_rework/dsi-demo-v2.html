@@ -716,6 +716,86 @@
             line-height: 1.6;
         }
 
+        /* Exit button for sub-slides */
+        .exit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid var(--teal-accent);
+            color: var(--teal-accent);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .exit-btn:hover {
+            background: var(--teal-accent);
+            color: var(--white);
+        }
+
+        /* Worked example label */
+        .example-label {
+            display: inline-block;
+            background: var(--blue-primary);
+            color: var(--white);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        /* Metrics display */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--teal-accent);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--blue-primary);
+        }
+
+        /* Decision badge */
+        .decision-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+
+        .decision-badge.refer {
+            background: #f39c12;
+        }
+
+        .decision-badge.decline {
+            background: #e74c3c;
+        }
+
         /* ====================================================================
          * NAVIGATION CHEVRONS
          * ==================================================================== */
@@ -1332,7 +1412,161 @@
                             <button class="goto-btn" onclick="goToSlide('endToEndArchitecture', 1)">See a worked example →</button>
                         </div>
 
-                        <!-- Worked Example Slides will be added in F2 -->
+                        <!-- Worked Example Slide 1: Discovery & Instantiation -->
+                        <div class="slide-container" id="e2e-slide-1">
+                            <button class="exit-btn" onclick="goToSlide('endToEndArchitecture', 0)">Exit example</button>
+                            <div class="example-label">Worked Example</div>
+
+                            <div class="content-box-body">
+                                <p><strong>Submission:</strong> TechFlow Inc. with domain hint techflow.io</p>
+                            </div>
+
+                            <div class="subsection-header">1. Discovery</div>
+                            <div class="content-box-body">
+                                <p>System resolves techflow.io to TechFlow Inc., identifies corporate structure, retrieves registration data, maps to industry taxonomy (SIC: 7372 - Software).</p>
+                            </div>
+
+                            <div class="subsection-header">2. Model Instantiation</div>
+                            <div class="content-box-body">
+                                <p>Cyber model instantiated with 35 signal categories. Geographic scope: US primary, UK subsidiary. Revenue band: $50M-$100M.</p>
+                            </div>
+
+                            <button class="goto-btn" onclick="goToSlide('endToEndArchitecture', 2)">Go to: Signals →</button>
+                            <div class="slide-indicator">Worked Example - Step 1 of 5</div>
+                        </div>
+
+                        <!-- Worked Example Slide 2: Signals -->
+                        <div class="slide-container" id="e2e-slide-2">
+                            <button class="exit-btn" onclick="goToSlide('endToEndArchitecture', 0)">Exit example</button>
+                            <div class="example-label">Worked Example</div>
+
+                            <div class="subsection-header">3. Signal Extraction</div>
+                            <div class="content-box-body">
+                                <p>Parallel extraction of 35 cyber-specific signals across 7 canonical categories:</p>
+                                <ul style="margin: 15px 0 15px 30px; color: #333;">
+                                    <li>Network Authority: 8 signals (DNS, SSL, domain age, backlinks)</li>
+                                    <li>Technical Infrastructure: 6 signals (tech stack, cloud providers)</li>
+                                    <li>Corporate Footprint: 5 signals (subsidiaries, jurisdictions)</li>
+                                    <li>Behaviour: 7 signals (hiring patterns, news sentiment)</li>
+                                    <li>Public Record: 4 signals (filings, regulatory)</li>
+                                    <li>Structured Data: 3 signals (credit, financials)</li>
+                                    <li>Direct Inquiry: 2 signals (MFA policy, incident response)</li>
+                                </ul>
+                                <p><strong>Extraction time:</strong> 12.3 seconds</p>
+                            </div>
+
+                            <button class="goto-btn" onclick="goToSlide('endToEndArchitecture', 3)">Go to: Three Layer Assessment →</button>
+                            <div class="slide-indicator">Worked Example - Step 2 of 5</div>
+                        </div>
+
+                        <!-- Worked Example Slide 3: Three Layer Assessment -->
+                        <div class="slide-container" id="e2e-slide-3">
+                            <button class="exit-btn" onclick="goToSlide('endToEndArchitecture', 0)">Exit example</button>
+                            <div class="example-label">Worked Example</div>
+
+                            <div class="subsection-header">4. Three Layer Assessment</div>
+
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <div class="metric-label">Composite Risk Score</div>
+                                    <div class="metric-value">782 / 1000 → Tier 2</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Exposure Band</div>
+                                    <div class="metric-value">Medium ($10M-$50M TIV)</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Complexity Score</div>
+                                    <div class="metric-value">Moderate</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Loss Propensity</div>
+                                    <div class="metric-value">Low (28/100)</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Severity Propensity</div>
+                                    <div class="metric-value">Moderate (42/100)</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Confidence</div>
+                                    <div class="metric-value">0.87</div>
+                                </div>
+                            </div>
+
+                            <button class="goto-btn" onclick="goToSlide('endToEndArchitecture', 4)">Go to: Pricing →</button>
+                            <div class="slide-indicator">Worked Example - Step 3 of 5</div>
+                        </div>
+
+                        <!-- Worked Example Slide 4: Pricing -->
+                        <div class="slide-container" id="e2e-slide-4">
+                            <button class="exit-btn" onclick="goToSlide('endToEndArchitecture', 0)">Exit example</button>
+                            <div class="example-label">Worked Example</div>
+
+                            <div class="subsection-header">5. Pricing</div>
+
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <div class="metric-label">Limit Requested</div>
+                                    <div class="metric-value">$5,000,000</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Base Rate</div>
+                                    <div class="metric-value">0.45% of Limit</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Loss Modifier</div>
+                                    <div class="metric-value">0.90 (favourable)</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Final Premium</div>
+                                    <div class="metric-value" style="color: var(--teal-accent);">$20,250</div>
+                                </div>
+                            </div>
+
+                            <div class="content-box-body">
+                                <p>Premium calculated deterministically from risk tier, exposure band, and loss propensity. No subjective adjustment applied.</p>
+                            </div>
+
+                            <button class="goto-btn" onclick="goToSlide('endToEndArchitecture', 5)">Go to: Decision →</button>
+                            <div class="slide-indicator">Worked Example - Step 4 of 5</div>
+                        </div>
+
+                        <!-- Worked Example Slide 5: Decision -->
+                        <div class="slide-container" id="e2e-slide-5">
+                            <button class="exit-btn" onclick="goToSlide('endToEndArchitecture', 0)">Exit example</button>
+                            <div class="example-label">Worked Example</div>
+
+                            <div class="subsection-header">6. Decision</div>
+
+                            <div style="text-align: center;">
+                                <div class="decision-badge">AUTO-APPROVE</div>
+                            </div>
+
+                            <div class="metrics-grid" style="margin-top: 25px;">
+                                <div class="metric-item">
+                                    <div class="metric-label">Decision Basis</div>
+                                    <div class="metric-value">Tier 2, No Triggers</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Confidence</div>
+                                    <div class="metric-value">0.87</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Processing Time</div>
+                                    <div class="metric-value">47 seconds</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-label">Audit Trail</div>
+                                    <div class="metric-value">Full (142 data points)</div>
+                                </div>
+                            </div>
+
+                            <div class="content-box-summary">
+                                <p class="highlight">Every step, score, and modifier persisted at atomic grain for complete auditability.</p>
+                            </div>
+
+                            <div class="slide-indicator">Worked Example - Step 5 of 5</div>
+                        </div>
                     </div>
                 </div>
                 <footer class="footer">
