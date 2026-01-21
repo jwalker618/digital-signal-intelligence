@@ -411,6 +411,64 @@
             margin-bottom: 30px;
         }
 
+        .content-box-body {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .content-box-body p {
+            margin-bottom: 15px;
+        }
+
+        .content-box-summary {
+            margin-top: 30px;
+        }
+
+        .content-box-summary p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .content-box-summary .highlight {
+            color: var(--teal-accent);
+            font-weight: 600;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--blue-primary);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .chart-callout {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--blue-primary);
+        }
+
         /* ====================================================================
          * NAVIGATION CHEVRONS
          * ==================================================================== */
@@ -669,9 +727,58 @@
                     <div class="content-box">
                         <h1 class="content-box-title">The Automation Myth</h1>
                         <h2 class="content-box-subtitle">Decades of Poor Returns</h2>
-                        <p style="color: #666; font-style: italic;">
-                            [Content for The Automation Myth will be implemented in Phase 19.1.C]
-                        </p>
+
+                        <div class="content-box-body">
+                            <p>The insurance industry has invested heavily in automation for decades, yet the Lloyd's market combined ratio tells a sobering story of persistent underperformance.</p>
+                        </div>
+
+                        <!-- Chart: Lloyd's Combined Ratios -->
+                        <div class="chart-container">
+                            <div class="chart-title">Lloyd's Market Combined Ratio (2004-2023)</div>
+                            <svg class="chart-svg" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Grid lines -->
+                                <line x1="60" y1="250" x2="760" y2="250" stroke="#ddd" stroke-width="1"/>
+                                <line x1="60" y1="200" x2="760" y2="200" stroke="#ddd" stroke-width="1"/>
+                                <line x1="60" y1="150" x2="760" y2="150" stroke="#ddd" stroke-width="1"/>
+                                <line x1="60" y1="100" x2="760" y2="100" stroke="#ddd" stroke-width="1"/>
+                                <line x1="60" y1="50" x2="760" y2="50" stroke="#ddd" stroke-width="1"/>
+
+                                <!-- Y-axis labels -->
+                                <text x="50" y="255" font-size="11" fill="#666" text-anchor="end">80%</text>
+                                <text x="50" y="205" font-size="11" fill="#666" text-anchor="end">90%</text>
+                                <text x="50" y="155" font-size="11" fill="#666" text-anchor="end">100%</text>
+                                <text x="50" y="105" font-size="11" fill="#666" text-anchor="end">110%</text>
+                                <text x="50" y="55" font-size="11" fill="#666" text-anchor="end">120%</text>
+
+                                <!-- Break-even line (100%) -->
+                                <line x1="60" y1="150" x2="760" y2="150" stroke="#E53E3E" stroke-width="2" stroke-dasharray="8,4"/>
+                                <text x="770" y="154" font-size="10" fill="#E53E3E">Break-even</text>
+
+                                <!-- Combined ratio line (simulated data showing volatility around 95-105%) -->
+                                <polyline fill="none" stroke="#0B3954" stroke-width="3"
+                                    points="80,170 115,140 150,180 185,160 220,175 255,145 290,190 325,155 360,165 395,130 430,185 465,170 500,195 535,160 570,140 605,175 640,155 675,165 710,150 745,160"/>
+
+                                <!-- 10-Year Average line -->
+                                <line x1="60" y1="163" x2="760" y2="163" stroke="#39D3BA" stroke-width="2"/>
+                                <text x="770" y="167" font-size="10" fill="#39D3BA">10Y Avg</text>
+
+                                <!-- X-axis labels (years) -->
+                                <text x="80" y="275" font-size="10" fill="#666" text-anchor="middle">04</text>
+                                <text x="185" y="275" font-size="10" fill="#666" text-anchor="middle">07</text>
+                                <text x="290" y="275" font-size="10" fill="#666" text-anchor="middle">10</text>
+                                <text x="395" y="275" font-size="10" fill="#666" text-anchor="middle">13</text>
+                                <text x="500" y="275" font-size="10" fill="#666" text-anchor="middle">16</text>
+                                <text x="605" y="275" font-size="10" fill="#666" text-anchor="middle">19</text>
+                                <text x="710" y="275" font-size="10" fill="#666" text-anchor="middle">22</text>
+                            </svg>
+                            <div class="chart-callout">A 2.49% return over a decade</div>
+                        </div>
+
+                        <div class="content-box-summary">
+                            <p>The core assumption is that traditional underwriting inputs can be automated.</p>
+                            <p>This assumption is incorrect.</p>
+                            <p class="highlight">The inputs themselves are the constraint.</p>
+                        </div>
                     </div>
                 </div>
                 <footer class="footer">
