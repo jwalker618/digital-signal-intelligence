@@ -520,6 +520,64 @@
             border-top: 1px solid #eee;
         }
 
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comparison-table th {
+            background: var(--blue-primary);
+            color: var(--white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .comparison-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .comparison-table th:last-child {
+            border-radius: 0 8px 0 0;
+            background: var(--teal-accent);
+        }
+
+        .comparison-table td {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .comparison-table td:first-child {
+            font-weight: 600;
+            color: var(--blue-primary);
+            width: 140px;
+        }
+
+        .comparison-table td:last-child {
+            color: #0599ad;
+            font-weight: 500;
+        }
+
+        .comparison-table tr:last-child td:first-child {
+            border-radius: 0 0 0 8px;
+        }
+
+        .comparison-table tr:last-child td:last-child {
+            border-radius: 0 0 8px 0;
+        }
+
+        .comparison-table tr:hover td {
+            background: #f8f9fa;
+        }
+
         /* ====================================================================
          * NAVIGATION CHEVRONS
          * ==================================================================== */
@@ -829,6 +887,67 @@
                             <p>The core assumption is that traditional underwriting inputs can be automated.</p>
                             <p>This assumption is incorrect.</p>
                             <p class="highlight">The inputs themselves are the constraint.</p>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
+                 COMPETITIVE DIFFERENTIATION
+                 ============================================================ -->
+            <section class="section" id="section-competitiveDifferentiation">
+                <div class="content-page">
+                    <div class="content-box">
+                        <h1 class="content-box-title">Competitive Differentiation</h1>
+                        <h2 class="content-box-subtitle">Why the Traditional Model Fails Where DSI Wins</h2>
+
+                        <div class="content-box-body">
+                            <p>The fundamental difference between DSI and traditional underwriting is not incremental improvement — it is a categorical shift in the information substrate.</p>
+                        </div>
+
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Traditional</th>
+                                    <th>Digital Signal Intelligence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Input</td>
+                                    <td>Submissions (PDFs, Excel, Word)</td>
+                                    <td>Digital Ecosystem</td>
+                                </tr>
+                                <tr>
+                                    <td>Process</td>
+                                    <td>Manual, OCR, NLP</td>
+                                    <td>Deterministic Processing</td>
+                                </tr>
+                                <tr>
+                                    <td>Integrity</td>
+                                    <td>High "Manual Noise" ratio</td>
+                                    <td>Zero-Touch, Audit-Persistent</td>
+                                </tr>
+                                <tr>
+                                    <td>Adjustment</td>
+                                    <td>Subjective Overrides</td>
+                                    <td>Rule-Based Deterministic Modifiers</td>
+                                </tr>
+                                <tr>
+                                    <td>Scalability</td>
+                                    <td>Limited by manual "Stare & Compare"</td>
+                                    <td>Unlimited Agentic Readiness</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="content-box-summary">
+                            <p>Traditional models optimise within the constraints of broken inputs.</p>
+                            <p class="highlight">DSI eliminates the constraints entirely.</p>
                         </div>
                     </div>
                 </div>
