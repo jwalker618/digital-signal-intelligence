@@ -1789,6 +1789,166 @@
             </section>
 
             <!-- ============================================================
+                 SIGNAL ARCHITECTURE
+                 ============================================================ -->
+            <section class="section" id="section-signalArchitecture">
+                <div class="content-page">
+                    <div class="content-box">
+                        <!-- Main Slide -->
+                        <div class="slide-container active" data-slide="0">
+                            <h1 class="content-box-title">Signal Architecture</h1>
+                            <h2 class="content-box-subtitle">Canonical Categorisation</h2>
+
+                            <div class="content-box-body">
+                                <p>DSI organises digital signals into seven canonical categories, ensuring comprehensive and consistent coverage across all assessed entities.</p>
+                            </div>
+
+                            <!-- 7 Categories Visual -->
+                            <div style="margin: 40px 0;">
+                                <svg viewBox="0 0 800 320" style="width: 100%; max-width: 750px; height: auto; display: block; margin: 0 auto;" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Category boxes -->
+                                    <rect x="20" y="20" width="140" height="50" rx="6" fill="#f5f5f5" stroke="#ddd"/>
+                                    <text x="90" y="50" text-anchor="middle" fill="#333" font-size="11" font-weight="500">Network Authority</text>
+
+                                    <rect x="20" y="80" width="140" height="50" rx="6" fill="#f5f5f5" stroke="#ddd"/>
+                                    <text x="90" y="110" text-anchor="middle" fill="#333" font-size="11" font-weight="500">Technical Infrastructure</text>
+
+                                    <rect x="20" y="140" width="140" height="50" rx="6" fill="#f5f5f5" stroke="#ddd"/>
+                                    <text x="90" y="170" text-anchor="middle" fill="#333" font-size="11" font-weight="500">Corporate Footprint</text>
+
+                                    <rect x="20" y="200" width="140" height="50" rx="6" fill="#f5f5f5" stroke="#ddd"/>
+                                    <text x="90" y="230" text-anchor="middle" fill="#333" font-size="11" font-weight="500">Behaviour</text>
+
+                                    <rect x="20" y="260" width="140" height="50" rx="6" fill="#f5f5f5" stroke="#ddd"/>
+                                    <text x="90" y="290" text-anchor="middle" fill="#333" font-size="11" font-weight="500">Public Record</text>
+
+                                    <rect x="180" y="140" width="140" height="50" rx="6" fill="#f5f5f5" stroke="#ddd"/>
+                                    <text x="250" y="170" text-anchor="middle" fill="#333" font-size="11" font-weight="500">Structured Data</text>
+
+                                    <rect x="180" y="200" width="140" height="50" rx="6" fill="#f5f5f5" stroke="#ddd"/>
+                                    <text x="250" y="230" text-anchor="middle" fill="#333" font-size="11" font-weight="500">Direct Inquiry</text>
+
+                                    <!-- Arrows -->
+                                    <path d="M160 45 L380 155" stroke="#39D3BA" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                                    <path d="M160 105 L380 155" stroke="#39D3BA" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                                    <path d="M160 165 L380 165" stroke="#39D3BA" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                                    <path d="M160 225 L380 175" stroke="#39D3BA" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                                    <path d="M160 285 L380 185" stroke="#39D3BA" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                                    <path d="M320 165 L380 165" stroke="#39D3BA" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                                    <path d="M320 225 L380 175" stroke="#39D3BA" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+                                    <!-- Arrow marker -->
+                                    <defs>
+                                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                            <polygon points="0 0, 10 3.5, 0 7" fill="#39D3BA"/>
+                                        </marker>
+                                    </defs>
+
+                                    <!-- Risk Profile Circle -->
+                                    <circle cx="460" cy="165" r="60" fill="#0B3954" stroke="#39D3BA" stroke-width="3"/>
+                                    <text x="460" y="158" text-anchor="middle" fill="white" font-size="13" font-weight="600">Risk</text>
+                                    <text x="460" y="175" text-anchor="middle" fill="white" font-size="13" font-weight="600">Profile</text>
+
+                                    <!-- Output arrow -->
+                                    <path d="M520 165 L600 165" stroke="#39D3BA" stroke-width="3" fill="none" marker-end="url(#arrowhead2)"/>
+                                    <defs>
+                                        <marker id="arrowhead2" markerWidth="12" markerHeight="9" refX="11" refY="4.5" orient="auto">
+                                            <polygon points="0 0, 12 4.5, 0 9" fill="#39D3BA"/>
+                                        </marker>
+                                    </defs>
+
+                                    <!-- Decision output -->
+                                    <rect x="610" y="135" width="120" height="60" rx="8" fill="#39D3BA"/>
+                                    <text x="670" y="160" text-anchor="middle" fill="white" font-size="12" font-weight="600">Decision</text>
+                                    <text x="670" y="178" text-anchor="middle" fill="white" font-size="11">Output</text>
+                                </svg>
+                            </div>
+
+                            <!-- Case Studies Button -->
+                            <div style="text-align: center; margin: 30px 0;">
+                                <button class="goto-btn" onclick="goToSlide('signalArchitecture', 1)">See how signals would have caught historic losses</button>
+                            </div>
+
+                            <div class="content-tagline">
+                                Seven categories. Universal coverage. Deterministic output.
+                            </div>
+                        </div>
+
+                        <!-- Case Studies Slide -->
+                        <div class="slide-container" data-slide="1">
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                                <button class="exit-btn" onclick="goToSlide('signalArchitecture', 0)">Exit case-studies</button>
+                            </div>
+
+                            <h1 class="content-box-title">Retrospective Case-Studies</h1>
+                            <h2 class="content-box-subtitle">Would DSI have caught them?</h2>
+
+                            <div class="content-box-body">
+                                <p>Applying DSI's canonical signal categories retrospectively reveals that major losses across coverage lines exhibited observable warning signals.</p>
+                            </div>
+
+                            <!-- Case Study Cards -->
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 30px 0;">
+                                <!-- Marine -->
+                                <div class="info-card">
+                                    <div class="info-card-header">Marine: Shadow Fleet (2022-2024)</div>
+                                    <div class="info-card-body">
+                                        <p><strong>Signals:</strong> No IG Club membership, non-IACS classification, sanctioned owners.</p>
+                                        <p style="margin-top: 10px;"><span style="background: #dc3545; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">DECLINE</span></p>
+                                    </div>
+                                </div>
+
+                                <!-- Energy -->
+                                <div class="info-card">
+                                    <div class="info-card-header">Energy: Deepwater Horizon (2010)</div>
+                                    <div class="info-card-body">
+                                        <p><strong>Signals:</strong> Prior safety failures, OSHA history, safety culture issues.</p>
+                                        <p style="margin-top: 10px;"><span style="background: #fd7e14; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">REFER + LOAD</span></p>
+                                    </div>
+                                </div>
+
+                                <!-- FI -->
+                                <div class="info-card">
+                                    <div class="info-card-header">Financial Institutions: SVB (2023)</div>
+                                    <div class="info-card-body">
+                                        <p><strong>Signals:</strong> CRO vacancy, regulatory MRAs, extreme depositor concentration.</p>
+                                        <p style="margin-top: 10px;"><span style="background: #dc3545; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">DECLINE</span></p>
+                                    </div>
+                                </div>
+
+                                <!-- Cyber -->
+                                <div class="info-card">
+                                    <div class="info-card-header">Cyber: SolarWinds (2020)</div>
+                                    <div class="info-card-body">
+                                        <p><strong>Signals:</strong> Public GitHub credential exposure, weak security culture.</p>
+                                        <p style="margin-top: 10px;"><span style="background: #dc3545; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">DECLINE</span></p>
+                                    </div>
+                                </div>
+
+                                <!-- Aerospace -->
+                                <div class="info-card">
+                                    <div class="info-card-header">Aerospace: Boeing 737 MAX (2018-2020)</div>
+                                    <div class="info-card-body">
+                                        <p><strong>Signals:</strong> Disclosure gaps, FAA audit findings, supply chain quality issues.</p>
+                                        <p style="margin-top: 10px;"><span style="background: #fd7e14; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">REFER</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="content-tagline">
+                                Across all coverages, 70-90% of major losses would have been flagged by DSI.
+                            </div>
+
+                            <div class="slide-indicator">Case Studies</div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer">
+                    &copy; John Walker. All rights reserved.
+                </footer>
+            </section>
+
+            <!-- ============================================================
                  CONCLUSION
                  ============================================================ -->
             <section class="section" id="section-conclusion">
