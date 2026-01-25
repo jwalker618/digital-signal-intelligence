@@ -947,22 +947,55 @@ cyber:
     # ---------------------------------------------------------------------------
     
     pricing:
+      # Loss Integration
+      # Calculation: (frequency_multiplier × frequency_weight) + (severity_multiplier × severity_weight)
+      # Result constrained by band floor/cap
+      # All components stored at atomic level for auditability
       loss_integration:
         method: multiplicative
-        frequency:
-          weight: 0.6
-          cap: 1.5
-          floor: 0.7
-        severity: 
-          weight: 0.4
-          cap: 1.4
-          floor: 0.75
-      exposure_integration:          
-        method: parallel
+        frequency_weight: 0.6
+        severity_weight: 0.4
+        band_constraints:
+          very_low:
+            floor: 0.55
+            cap: 0.75
+          low:
+            floor: 0.75
+            cap: 0.95
+          moderate:
+            floor: 0.95
+            cap: 1.05
+          elevated:
+            floor: 1.10
+            cap: 1.30
+          high:
+            floor: 1.30
+            cap: 1.60
+
+      # Exposure Integration
+      # Calculation: (exposure_modifier × exposure_weight) + (complexity_modifier × complexity_weight)
+      # Result constrained by band floor/cap
+      # All components stored at atomic level for auditability
+      exposure_integration:
+        method: multiplicative
         exposure_weight: 0.60
         complexity_weight: 0.40
-        combined_modifier_cap: 3.00
-        combined_modifier_floor: 0.40
+        band_constraints:
+          micro:
+            floor: 0.40
+            cap: 0.60
+          small:
+            floor: 0.60
+            cap: 0.85
+          medium:
+            floor: 0.90
+            cap: 1.10
+          large:
+            floor: 1.30
+            cap: 1.70
+          very_large:
+            floor: 2.00
+            cap: 3.00
     
       # Increased Limit Factors (ILF)
       ilf_curve:
