@@ -324,6 +324,21 @@ cyber:
           weight: 0.2
           confidence_threshold: 0.9
 
+      # Exposure-specific signal groups (no risk/loss contribution)
+      - id: "exposure_magnitude"
+        name: "Exposure Magnitude"
+        description: "Observable signals indicating organizational size and TIV proxy"
+        exposure:
+          contributes_to: magnitude
+          test_scores: {large: 75, medium: 50, small: 25}
+
+      - id: "exposure_complexity"
+        name: "Exposure Complexity"
+        description: "Observable signals indicating operational and structural complexity"
+        exposure:
+          contributes_to: complexity
+          test_scores: {complex: 70, moderate: 45, simple: 20}
+
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
     # Each is a underlying feature for the previously defined groups
@@ -529,6 +544,11 @@ cyber:
           risk:
             weight: 0.05
             score_condition: false
+          exposure:
+            # Also contributes to exposure magnitude (same signal, different interpretation)
+            weight: 0.04
+            proxy_tier: INFERRED_PROXY
+            group: digital_footprint
 
         - id: "waf_presence"
           name: "WAF Presence"
@@ -749,7 +769,259 @@ cyber:
             correlation_type: both
             correlation_direction: negative
             normalizer: categorical_map
-  
+
+      # -----------------------------------------------------------------------
+      # EXPOSURE MAGNITUDE SIGNALS
+      # Signals indicating organizational size (TIV proxy)
+      # -----------------------------------------------------------------------
+      exposure_magnitude:
+        # Digital Footprint Indicators
+        - id: "dns_complexity"
+          name: "DNS Complexity"
+          description: "Number and structure of DNS records"
+          inference_utility_function: dns_complexity_basefunction
+          exposure:
+            weight: 0.08
+            proxy_tier: INFERRED_PROXY
+            group: digital_footprint
+
+        - id: "subdomain_count"
+          name: "Subdomain Count"
+          description: "Count of active subdomains"
+          inference_utility_function: subdomain_enumeration_basefunction
+          exposure:
+            weight: 0.06
+            proxy_tier: INFERRED_PROXY
+            group: digital_footprint
+
+        - id: "ip_footprint"
+          name: "IP Address Footprint"
+          description: "Size of IP address footprint"
+          inference_utility_function: ip_footprint_basefunction
+          exposure:
+            weight: 0.06
+            proxy_tier: INFERRED_PROXY
+            group: digital_footprint
+
+        - id: "ssl_certificate_count"
+          name: "SSL Certificate Count"
+          description: "Number of active SSL certificates"
+          inference_utility_function: ssl_certificate_count_basefunction
+          exposure:
+            weight: 0.06
+            proxy_tier: INFERRED_PROXY
+            group: digital_footprint
+
+        - id: "cloud_scale"
+          name: "Cloud Infrastructure Scale"
+          description: "Estimated cloud infrastructure scale"
+          inference_utility_function: cloud_scale_basefunction
+          exposure:
+            weight: 0.04
+            proxy_tier: INFERRED_PROXY
+            group: digital_footprint
+
+        # Corporate Size Indicators
+        - id: "employee_estimate"
+          name: "Employee Count Estimate"
+          description: "Estimated employee count from observable signals"
+          inference_utility_function: employee_estimate_basefunction
+          exposure:
+            weight: 0.12
+            proxy_tier: INFERRED_PROXY
+            group: corporate_indicators
+
+        - id: "location_count"
+          name: "Location Count"
+          description: "Number of office/operational locations"
+          inference_utility_function: location_count_basefunction
+          exposure:
+            weight: 0.08
+            proxy_tier: INFERRED_PROXY
+            group: corporate_indicators
+
+        - id: "job_posting_volume"
+          name: "Job Posting Volume"
+          description: "Active job posting volume"
+          inference_utility_function: job_posting_volume_basefunction
+          exposure:
+            weight: 0.06
+            proxy_tier: INFERRED_PROXY
+            group: corporate_indicators
+
+        - id: "funding_signals"
+          name: "Funding Signals"
+          description: "Observable funding/investment indicators"
+          inference_utility_function: funding_signals_basefunction
+          exposure:
+            weight: 0.06
+            proxy_tier: INFERRED_PROXY
+            group: corporate_indicators
+
+        # Public Financial Observables (when available)
+        - id: "market_cap"
+          name: "Market Capitalization"
+          description: "Public market capitalization"
+          inference_utility_function: market_cap_basefunction
+          exposure:
+            weight: 0.12
+            proxy_tier: DIRECT_OBSERVABLE
+            group: public_financials
+
+        - id: "revenue_estimate"
+          name: "Revenue Estimate"
+          description: "Revenue from filings or estimates"
+          inference_utility_function: revenue_estimate_basefunction
+          exposure:
+            weight: 0.10
+            proxy_tier: DIRECT_OBSERVABLE
+            group: public_financials
+
+        - id: "asset_value"
+          name: "Total Asset Value"
+          description: "Total assets from financials"
+          inference_utility_function: asset_value_basefunction
+          exposure:
+            weight: 0.08
+            proxy_tier: DIRECT_OBSERVABLE
+            group: public_financials
+
+        # Industry Context (cohort-based)
+        - id: "industry_tiv_benchmark"
+          name: "Industry TIV Benchmark"
+          description: "Industry average TIV benchmark"
+          inference_utility_function: industry_tiv_benchmark_basefunction
+          exposure:
+            weight: 0.04
+            proxy_tier: COHORT_INFERENCE
+            group: industry_context
+
+        - id: "peer_group_tiv"
+          name: "Peer Group TIV"
+          description: "Similar peer group TIV estimate"
+          inference_utility_function: peer_group_tiv_basefunction
+          exposure:
+            weight: 0.04
+            proxy_tier: COHORT_INFERENCE
+            group: industry_context
+
+      # -----------------------------------------------------------------------
+      # EXPOSURE COMPLEXITY SIGNALS
+      # Signals indicating operational/structural complexity
+      # -----------------------------------------------------------------------
+      exposure_complexity:
+        # Geographic Dispersion
+        - id: "country_count"
+          name: "Country Count"
+          description: "Number of countries with operational presence"
+          inference_utility_function: country_count_basefunction
+          exposure:
+            weight: 0.12
+            proxy_tier: INFERRED_PROXY
+            group: geographic_dispersion
+
+        - id: "timezone_spread"
+          name: "Timezone Spread"
+          description: "Timezone coverage span"
+          inference_utility_function: timezone_spread_basefunction
+          exposure:
+            weight: 0.08
+            proxy_tier: INFERRED_PROXY
+            group: geographic_dispersion
+
+        - id: "geo_ip_diversity"
+          name: "Geographic IP Diversity"
+          description: "Geographic distribution of IP addresses"
+          inference_utility_function: geo_ip_diversity_basefunction
+          exposure:
+            weight: 0.08
+            proxy_tier: INFERRED_PROXY
+            group: geographic_dispersion
+
+        - id: "regional_domains"
+          name: "Regional Domains"
+          description: "Regional domain count (ccTLDs)"
+          inference_utility_function: regional_domains_basefunction
+          exposure:
+            weight: 0.05
+            proxy_tier: INFERRED_PROXY
+            group: geographic_dispersion
+
+        # Structural Complexity
+        - id: "subsidiary_count"
+          name: "Subsidiary Count"
+          description: "Number of subsidiaries/entities"
+          inference_utility_function: subsidiary_count_basefunction
+          exposure:
+            weight: 0.12
+            proxy_tier: INFERRED_PROXY
+            group: structural_complexity
+
+        - id: "brand_count"
+          name: "Brand Count"
+          description: "Number of distinct brands"
+          inference_utility_function: brand_count_basefunction
+          exposure:
+            weight: 0.08
+            proxy_tier: INFERRED_PROXY
+            group: structural_complexity
+
+        - id: "acquisition_activity"
+          name: "Acquisition Activity"
+          description: "Recent M&A activity level"
+          inference_utility_function: acquisition_activity_basefunction
+          exposure:
+            weight: 0.07
+            proxy_tier: INFERRED_PROXY
+            group: structural_complexity
+
+        # Technical Heterogeneity
+        - id: "tech_stack_diversity"
+          name: "Technology Stack Diversity"
+          description: "Variety of detected technologies"
+          inference_utility_function: tech_stack_diversity_basefunction
+          exposure:
+            weight: 0.10
+            proxy_tier: INFERRED_PROXY
+            group: technical_heterogeneity
+
+        - id: "multi_cloud_indicator"
+          name: "Multi-Cloud Indicator"
+          description: "Multi-cloud deployment indicator"
+          inference_utility_function: multi_cloud_basefunction
+          exposure:
+            weight: 0.08
+            proxy_tier: INFERRED_PROXY
+            group: technical_heterogeneity
+
+        - id: "legacy_technology"
+          name: "Legacy Technology Presence"
+          description: "Legacy technology presence indicators"
+          inference_utility_function: legacy_technology_basefunction
+          exposure:
+            weight: 0.10
+            proxy_tier: INFERRED_PROXY
+            group: technical_heterogeneity
+
+        # Regulatory Jurisdictions
+        - id: "regulatory_jurisdiction_count"
+          name: "Regulatory Jurisdiction Count"
+          description: "Number of regulatory jurisdictions"
+          inference_utility_function: regulatory_jurisdiction_count_basefunction
+          exposure:
+            weight: 0.06
+            proxy_tier: INFERRED_PROXY
+            group: regulatory_jurisdictions
+
+        - id: "compliance_framework_count"
+          name: "Compliance Framework Count"
+          description: "Number of compliance frameworks"
+          inference_utility_function: compliance_framework_count_basefunction
+          exposure:
+            weight: 0.06
+            proxy_tier: INFERRED_PROXY
+            group: regulatory_jurisdictions
+
     # ---------------------------------------------------------------------------
     # TIER THRESHOLDS
     # ---------------------------------------------------------------------------
@@ -1019,194 +1291,66 @@ cyber:
       taxes_fees_rate: 0.05
 
     # -------------------------------------------------------------------------
-    # EXPOSURE SHADOW LAYER CONFIGURATION 
+    # EXPOSURE SCORING CONFIGURATION
     # -------------------------------------------------------------------------
-    # Exposure magnitude and complexity scoring from observable signals.
-    # Enables TIV estimation without client-provided data.
+    # Groups signals from signal_features into magnitude and complexity scoring.
+    # Signals are defined once in signal_features with exposure: subsections.
+    # This section defines how those signals are grouped for scoring.
 
-    exposure_shadow:
-      exposure_groups:
+    exposure_scoring:
+      # Magnitude groups (TIV proxy) - references signals from exposure_magnitude
+      magnitude_groups:
         - name: digital_footprint
           weight: 0.30
           confidence_threshold: 0.6
           description: "Observable digital presence indicators"
-          features:
-            - id: dns_complexity
-              weight: 0.25
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number and structure of DNS records"
-            - id: subdomain_count
-              weight: 0.20
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Count of active subdomains"
-            - id: ip_footprint
-              weight: 0.20
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Size of IP address footprint"
-            - id: ssl_certificates
-              weight: 0.20
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number of active SSL certificates"
-            - id: cloud_infrastructure
-              weight: 0.15
-              proxy_tier: INFERRED_PROXY
-              normalizer: percentile
-              description: "Estimated cloud infrastructure scale"
+          signals: [dns_complexity, subdomain_count, ip_footprint, ssl_certificate_count, cloud_scale, cloud_infrastructure]
 
         - name: corporate_indicators
           weight: 0.25
           confidence_threshold: 0.7
           description: "Observable corporate size indicators"
-          features:
-            - id: employee_estimate
-              weight: 0.35
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Estimated employee count from signals"
-            - id: location_count
-              weight: 0.25
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number of office/operational locations"
-            - id: job_postings
-              weight: 0.20
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Active job posting volume"
-            - id: funding_signals
-              weight: 0.20
-              proxy_tier: INFERRED_PROXY
-              normalizer: percentile
-              description: "Observable funding/investment indicators"
+          signals: [employee_estimate, location_count, job_posting_volume, funding_signals]
 
         - name: public_financials
           weight: 0.25
           confidence_threshold: 0.8
           description: "Direct financial observables (when available)"
-          features:
-            - id: market_cap
-              weight: 0.40
-              proxy_tier: DIRECT_OBSERVABLE
-              normalizer: log_scale
-              description: "Public market capitalization"
-            - id: revenue_estimate
-              weight: 0.35
-              proxy_tier: DIRECT_OBSERVABLE
-              normalizer: log_scale
-              description: "Revenue from filings or estimates"
-            - id: asset_value
-              weight: 0.25
-              proxy_tier: DIRECT_OBSERVABLE
-              normalizer: log_scale
-              description: "Total assets from financials"
+          signals: [market_cap, revenue_estimate, asset_value]
 
         - name: industry_context
           weight: 0.20
           confidence_threshold: 0.5
           description: "Industry and sector-based priors"
-          features:
-            - id: industry_avg_tiv
-              weight: 0.50
-              proxy_tier: COHORT_INFERENCE
-              normalizer: percentile
-              description: "Industry average TIV benchmark"
-            - id: peer_group_tiv
-              weight: 0.50
-              proxy_tier: COHORT_INFERENCE
-              normalizer: percentile
-              description: "Similar peer group TIV estimate"
+          signals: [industry_tiv_benchmark, peer_group_tiv]
 
-      # Complexity signal groups (operational complexity proxy)
+      # Complexity groups - references signals from exposure_complexity
       complexity_groups:
         - name: geographic_dispersion
           weight: 0.30
           confidence_threshold: 0.6
           description: "Geographic spread of operations"
-          features:
-            - id: country_count
-              weight: 0.35
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number of countries with presence"
-            - id: timezone_spread
-              weight: 0.25
-              proxy_tier: INFERRED_PROXY
-              normalizer: linear
-              description: "Timezone coverage span"
-            - id: geo_ip_diversity
-              weight: 0.25
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Geographic IP distribution"
-            - id: regional_domains
-              weight: 0.15
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Regional domain count (ccTLDs)"
+          signals: [country_count, timezone_spread, geo_ip_diversity, regional_domains]
 
         - name: structural_complexity
           weight: 0.25
           confidence_threshold: 0.7
           description: "Organizational structure complexity"
-          features:
-            - id: subsidiary_count
-              weight: 0.40
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number of subsidiaries/entities"
-            - id: brand_count
-              weight: 0.30
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number of distinct brands"
-            - id: acquisition_activity
-              weight: 0.30
-              proxy_tier: INFERRED_PROXY
-              normalizer: linear
-              description: "Recent M&A activity level"
+          signals: [subsidiary_count, brand_count, acquisition_activity]
 
         - name: technical_heterogeneity
           weight: 0.25
           confidence_threshold: 0.6
           description: "Technology stack diversity"
-          features:
-            - id: tech_stack_diversity
-              weight: 0.35
-              proxy_tier: INFERRED_PROXY
-              normalizer: linear
-              description: "Variety of detected technologies"
-            - id: cloud_multi
-              weight: 0.30
-              proxy_tier: INFERRED_PROXY
-              normalizer: binary
-              description: "Multi-cloud indicator"
-            - id: legacy_indicators
-              weight: 0.35
-              proxy_tier: INFERRED_PROXY
-              normalizer: linear
-              description: "Legacy technology presence"
+          signals: [tech_stack_diversity, multi_cloud_indicator, legacy_technology]
 
         - name: regulatory_jurisdictions
           weight: 0.20
           confidence_threshold: 0.7
           description: "Regulatory jurisdiction complexity"
-          features:
-            - id: regulatory_count
-              weight: 0.50
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number of regulatory jurisdictions"
-            - id: compliance_frameworks
-              weight: 0.50
-              proxy_tier: INFERRED_PROXY
-              normalizer: log_scale
-              description: "Number of compliance frameworks"
+          signals: [regulatory_jurisdiction_count, compliance_framework_count]
 
-      # Cohort priors for fallback estimation
+      # Cohort priors for fallback estimation when signal coverage is low
       cohort_priors:
         - cohort_id: tech_startup
           name: "Technology Startup"
