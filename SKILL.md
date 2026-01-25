@@ -43,8 +43,13 @@ When starting any DSI work:
 | 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
 | 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
 | 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
+| 19 | DSI Demo Production Build | 🔄 In Progress | `development/project/phase_19.md` |
+| 20 | Config Architecture & Org Graph | ✅ Complete | `development/project/phase_20.md` |
+| 21 | Loss Correlation Implementation | 🔲 Not Started | TBD |
+| 22 | Exposure Shadow Implementation | 🔲 Not Started | TBD |
+| 23 | Organisational Graph Runtime | 🔲 Not Started | TBD |
 
-**Current State**: Core framework complete and validated. Architecture restructured (Phase 18) - signals, layers, and coverages now at root level. 50 free production extractors with global coverage. Routing module complete with jurisdiction-aware routing, extractor tiers, and multi-source aggregation. 13 routed inference functions integrated. Routing cache with TTL support. Loss Signal Correlation Layer specification complete (Phase 16). Exposure Shadow Layer specification complete (Phase 17). Comprehensive repository review completed January 2026.
+**Current State**: Core framework complete and validated. Architecture restructured (Phase 18). Configuration architecture unified (Phase 20) - signals now defined once with risk/loss/exposure subsections. Organisational Graph schema created. Demo build in progress (Phase 19). Phases 16/17 specifications complete, runtime implementation deferred to Phases 21/22. Phases 21-23 represent the path to World Model capability per the Vision Paper.
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -372,10 +377,15 @@ digital-signal-intelligence/
 ├── docs/                            # Documentation
 │   ├── overview/
 │   │   ├── Foundational Principles.md    # Core DSI principles
-│   │   └── White Paper - Digital Signal Intelligence.docx  # Detailed whitepaper
+│   │   ├── Visionpaper - Digital Signal Intelligence.pdf  # World Model vision
+│   │   └── Whitepaper - Digital Signal Intelligence.pdf   # Detailed whitepaper
+│   ├── Configuration Architecture.md # ✅ PHASE 20 - Config layer documentation
 │   ├── agent_interaction/
 │   │   └── dsi_specification.md     # Agent integration spec
 │   └── case_studies/                # Loss case studies
+│
+├── schemas/                         # ✅ PHASE 20 - Organisation-wide schemas
+│   └── organisational_graph.yaml    # Graph schema for World Model
 │
 ├── development/                     # Development documentation
 │   ├── project/                     # Phase documents
@@ -454,7 +464,8 @@ digital-signal-intelligence/
 │
 ├── coverages/                       # YAML coverage configurations
 │   ├── aerospace/config.yaml        ✅ 21 signals
-│   ├── cyber/config.yaml            ✅ 35 signals
+│   ├── cyber/config.yaml            ✅ 35 signals (original)
+│   ├── cyber/config_rework.yaml     ✅ PHASE 20 - Unified signal architecture (62 signals)
 │   ├── do/config.yaml               ✅ 46 signals
 │   ├── energy/config.yaml           ✅ 44 signals
 │   ├── fi/config.yaml               ✅ ~40 signals
@@ -681,28 +692,55 @@ This section consolidates all pending, optional, and planned work items. Complet
 | Item | Phase | Priority | Notes |
 |------|-------|----------|-------|
 | ~~Restructure: Extract signals to root level~~ | 18 | ~~Critical~~ ✅ | **COMPLETE** - See `development/project/phase_18.md` |
-| Implement Phase 16 (Loss Correlation Layer) | 16 | High | Specification complete. Now implement in `layers/loss/` |
-| Implement Phase 17 (Exposure Shadow Layer) | 17 | High | Specification complete. Now implement in `layers/exposure/` |
-| Tag v1.0.0 release | 14 | High | Awaiting final validation |
-| Add unit tests for critical modules | - | High | Test coverage at ~12.6% |
-| Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Medium | See `development/extractor_implementation_plan.md` |
-| Fix remaining config typos (inference_utility_function) | - | Medium | 23 function name typos |
+| ~~Config architecture unification~~ | 20 | ~~Critical~~ ✅ | **COMPLETE** - Unified signal definitions for risk/loss/exposure |
+| Complete DSI Demo Production Build | 19 | High | In Progress - partitioned development approach |
+| Implement Loss Correlation Runtime | 21 | High | Config ready (Phase 20). Implement scorer, monitoring, integration |
+| Implement Exposure Shadow Runtime | 22 | High | Config ready (Phase 20). Implement magnitude, complexity calculators |
+| Implement Organisational Graph Runtime | 23 | Medium | Schema ready (Phase 20). Implement node/edge creation, derivatives |
+| Tag v1.0.0 release | 14 | Medium | Awaiting Phase 19 demo completion |
+| Add unit tests for critical modules | - | Medium | Test coverage at ~12.6% |
+| Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Low | See `development/extractor_implementation_plan.md` |
+| Fix remaining config typos (inference_utility_function) | - | Low | 23 function name typos |
 
-### Restructuring Status (Phase 18) - COMPLETE
+### Architecture & Configuration Status
 
-✅ The architecture restructuring has been completed. Signals are now a **shared infrastructure** at repository root, feeding:
+#### Phase 18 (Architecture Restructuring) - COMPLETE ✅
 
-1. **Risk Layer** (`layers/risk/`) - existing risk scoring (Steps 5a, 9a)
-2. **Exposure Shadow Layer** (`layers/exposure/`) - Phase 17 (Steps 5b, 9b)
-3. **Loss Correlation Layer** (`layers/loss/`) - Phase 16 (Steps 5c, 9c)
-
-The restructuring completed:
+Signals are now a **shared infrastructure** at repository root:
 - ✅ Extracted `signals/` to repository root
 - ✅ Created `layers/` directory for assessment layer implementations
 - ✅ Updated all imports and references
-- ✅ Maintained backwards compatibility via `technical_pricing/__init__.py`
 
-**Phases 16 and 17 are now unblocked** and can be implemented in their proper locations.
+#### Phase 20 (Configuration Architecture) - COMPLETE ✅
+
+Configuration now supports unified signal architecture:
+- ✅ Signals defined once with `risk:`, `loss:`, `exposure:` subsections
+- ✅ 27 new exposure signals with inference functions
+- ✅ Banding-based pricing integration (loss and exposure consistent)
+- ✅ Organisational Graph schema created (`schemas/organisational_graph.yaml`)
+- ✅ Configuration Architecture documentation (`docs/Configuration Architecture.md`)
+- ✅ Analysis layer separation (empirical parameters external to config)
+
+**Key Files**:
+- `coverages/cyber/config_rework.yaml` - Unified signal architecture
+- `schemas/organisational_graph.yaml` - Graph schema for World Model
+- `docs/Configuration Architecture.md` - Documentation
+
+### Implementation Roadmap (Phases 21-23)
+
+```
+Phase 20 (Config) ──► Phase 21 (Loss Runtime) ──► Phase 23 (Graph Runtime)
+        │                                                    ▲
+        └──────────► Phase 22 (Exposure Runtime) ────────────┘
+```
+
+| Phase | Objective | Prerequisites | Key Components |
+|-------|-----------|---------------|----------------|
+| 21 | Loss Correlation Runtime | Phase 20 config | LossCorrelationScorer, LossMonitoringEngine, pricing integration |
+| 22 | Exposure Shadow Runtime | Phase 20 config | ExposureMagnitudeCalculator, ComplexityCalculator, pricing integration |
+| 23 | Organisational Graph Runtime | Phase 20 schema, 21, 22 | NodeFactory, EdgeInferencer, DerivativeCalculator, AuthorityPropagation |
+
+**Phases 21 and 22 are now unblocked** by Phase 20 configuration work.
 
 ### Optional Enhancements
 
