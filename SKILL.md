@@ -40,8 +40,8 @@ When starting any DSI work:
 | 13 | LLM Builder | ✅ Complete |  `development/project/phase_13.md` |
 | 14 | Examples | ✅ Complete |  `development/project/phase_14.md` |
 | 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
-| 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
-| 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
+| 16 | Loss Correlation | ✅ Complete |  `development/project/phase_16.md` |
+| 17 | Exposure Shadow Layer | ✅ Complete | `development/project/phase_17.md` |
 | 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
 | 19 | DSI Demo Production Build | 🔄 In Progress | `development/project/phase_19.md` |
 | 20 | Config Architecture & Org Graph | ✅ Complete | `development/project/phase_20.md` |
