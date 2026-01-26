@@ -11,12 +11,15 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 When starting any DSI work:
 
 1. **Read this SKILL.md first**
-1. **Follow the link to the Development documentation indicated in Implementation Status. If this cannot be found, it must be  created first**
-1. **Review development/project/ for the relevant items**: Contains phase development plans
+1. **Follow the link to the Development documentation indicated in Implementation Status. If this cannot be found, it must be created first**
+1. **Review development/project/ for the relevant phase development plans**: Contains phase development plans
+1. **Do not proceed with work without a phase development plan**: These are required
+1. **Always seek clarification if a request is unclear** 
 1. **Reference YAML config** for the coverage you're working on
+1. **Never hardcode** - if it's in YAML, read it from YAML
+1. **Ensure the foundational principles are followed at all stages**: `docs/overview/Foundational Principles.md`
 1. **Follow the standard patterns** - don't invent new structures
 1. **Follow the 14-step workflow** - don't skip or reorder steps
-1. **Never hardcode** - if it's in YAML, read it from YAML
 1. **Check technical_pricing/cross_walk/by_coverage.json** for common concepts
 1. **For loss correlation work**: Review `loss/correlation_layer/development/` specification documents
 1. **For exposure shadow work**: Review `exposure/shadow_layer/development/` specification documents
@@ -40,16 +43,14 @@ When starting any DSI work:
 | 13 | LLM Builder | ✅ Complete |  `development/project/phase_13.md` |
 | 14 | Examples | ✅ Complete |  `development/project/phase_14.md` |
 | 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
-| 16 | Loss Correlation | ✅ Complete |  `development/project/phase_16.md` |
-| 17 | Exposure Shadow Layer | ✅ Complete | `development/project/phase_17.md` |
+| 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
+| 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
 | 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
 | 19 | DSI Demo Production Build | 🔄 In Progress | `development/project/phase_19.md` |
 | 20 | Config Architecture & Org Graph | ✅ Complete | `development/project/phase_20.md` |
 | 21 | Loss Correlation Implementation | 🔲 Not Started | TBD |
 | 22 | Exposure Shadow Implementation | 🔲 Not Started | TBD |
 | 23 | Organisational Graph Runtime | 🔲 Not Started | TBD |
-
-**Current State**: Core framework complete and validated. Architecture restructured (Phase 18). Configuration architecture unified (Phase 20) - signals now defined once with risk/loss/exposure subsections. Organisational Graph schema created. Demo build in progress (Phase 19). Phases 16/17 specifications complete, runtime implementation deferred to Phases 21/22. Phases 21-23 represent the path to World Model capability per the Vision Paper.
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -68,11 +69,13 @@ When starting any DSI work:
 
 ## What is DSI?
 
-Digital Signal Intelligence (DSI) is insurance underwriting based on **observable digital signals** rather than self-reported documentation. Core insight: who trusts/partners/certifies an entity reveals risk quality more reliably than what they claim about themselves.
+Digital Signal Intelligence (DSI) is a new insurance information substrate based on **observable digital signals** rather than self-reported documentation. Core insight: who trusts/partners/certifies an entity reveals risk quality more reliably than what they claim about themselves.
 
-All Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
+Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
 
-The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital Signal Intelligence.docx`
+The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital Signal Intelligence.pdf`
+
+The detailed visionpaper can be found here: `docs/overview/Visionpaper - Digital Signal Intelligence.pdf`
 
 -----
 
@@ -168,23 +171,7 @@ The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital S
 
 ## Model Process Workflow
 
-The complete model execution follows this extended workflow (Step 0 discovery + Steps 1-13 pricing, with parallel assessment at Steps 5 and 9):
-
-```
-Steps 1-4: Setup & Signal Extraction
-     │
-     ▼
-Steps 5a/5b/5c: THREE-LAYER PARALLEL SCORING ←── Same signals, different weights
-     │
-     ▼
-Steps 6-8: Conditions & Overrides
-     │
-     ▼
-Steps 9a/9b/9c: CAPTURE ALL THREE LAYER OUTPUTS
-     │
-     ▼
-Steps 10-13: Pricing & Decision (uses all three layers)
-```
+The complete model execution follows this workflow:
 
 ### Step 1: Model Configuration Instantiation
 
@@ -377,6 +364,8 @@ digital-signal-intelligence/
 ├── docs/                            # Documentation
 │   ├── overview/
 │   │   ├── Foundational Principles.md    # Core DSI principles
+│   │   ├── Pitch deck.pdf    # DSI Executive summary and pitch
+│   │   ├── The PageRank Precedent.pdf    # DSI grounding in existing principles
 │   │   ├── Visionpaper - Digital Signal Intelligence.pdf  # World Model vision
 │   │   └── Whitepaper - Digital Signal Intelligence.pdf   # Detailed whitepaper
 │   ├── Configuration Architecture.md # ✅ PHASE 20 - Config layer documentation
@@ -502,7 +491,7 @@ Legend: ✅ Complete | 🔲 Not Started
 The codebase is now organized into four main areas:
 
 | Area | Purpose | Contents |
-|------|---------|----------|
+|-|-|-|
 | `signal_architecture/` | Signal processing | signals, discovery, orchestration |
 | `infrastructure/` | Support systems | api, db, analytics, builder, integrations |
 | `layers/` | Assessment layers | risk, exposure, loss |
@@ -690,7 +679,7 @@ This section consolidates all pending, optional, and planned work items. Complet
 ### Mandatory Pending Items
 
 | Item | Phase | Priority | Notes |
-|------|-------|----------|-------|
+|-|-|-|-|
 | ~~Restructure: Extract signals to root level~~ | 18 | ~~Critical~~ ✅ | **COMPLETE** - See `development/project/phase_18.md` |
 | ~~Config architecture unification~~ | 20 | ~~Critical~~ ✅ | **COMPLETE** - Unified signal definitions for risk/loss/exposure |
 | Complete DSI Demo Production Build | 19 | High | In Progress - partitioned development approach |
@@ -735,7 +724,7 @@ Phase 20 (Config) ──► Phase 21 (Loss Runtime) ──► Phase 23 (Graph Ru
 ```
 
 | Phase | Objective | Prerequisites | Key Components |
-|-------|-----------|---------------|----------------|
+|-|-|-|-|
 | 21 | Loss Correlation Runtime | Phase 20 config | LossCorrelationScorer, LossMonitoringEngine, pricing integration |
 | 22 | Exposure Shadow Runtime | Phase 20 config | ExposureMagnitudeCalculator, ComplexityCalculator, pricing integration |
 | 23 | Organisational Graph Runtime | Phase 20 schema, 21, 22 | NodeFactory, EdgeInferencer, DerivativeCalculator, AuthorityPropagation |
@@ -745,7 +734,7 @@ Phase 20 (Config) ──► Phase 21 (Loss Runtime) ──► Phase 23 (Graph Ru
 ### Optional Enhancements
 
 | Item | Phase | Description |
-|------|-------|-------------|
+|-|-|-|
 | ML module | 8 | Gradient boosting, anomaly detection, clustering |
 | Performance dashboards | 8 | Visualization of model performance |
 | Natural language search | 9 | Query portfolio with natural language |
@@ -760,7 +749,7 @@ Phase 20 (Config) ──► Phase 21 (Loss Runtime) ──► Phase 23 (Graph Ru
 Based on retrospective analysis of major insurance losses (2019-2024). See `development/` for full analysis.
 
 | Priority | Area | Description | Reference |
-|----------|------|-------------|-----------|
+|-|-|-|-|
 | 1 | Marine | Port state control deficiencies, pre-departure systems status | Baltimore/Dali analysis |
 | 2 | Aerospace | Certification transparency, supply chain quality | Boeing 737 MAX analysis |
 | 3 | Cross-Coverage | Real-time regulatory monitoring | SVB, BP Deepwater analysis |
@@ -768,7 +757,7 @@ Based on retrospective analysis of major insurance losses (2019-2024). See `deve
 ### Reference Documents
 
 | Document | Location | Purpose |
-|----------|----------|---------|
+|-|-|-|
 | Historical Loss Analysis | `development/historical_loss_analysis.md` | Case-by-case DSI signal mapping |
 | Signal Mapping | `development/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
 | Retrospective Case Studies | `development/retrospective_case_study_detail.md` | Comprehensive loss analysis |
