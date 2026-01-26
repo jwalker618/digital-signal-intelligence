@@ -1,3 +1,15 @@
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+
+## A New Information Substrate for Insurance
+
+| Item | Value |
+|-|-|
+|Version|0.1.0|
+|Date|January 2025|
+|Classification|Configuration Architecture|
+
+---
+
 # Configuration Architecture
 
 ## Overview
@@ -12,45 +24,45 @@ DSI uses a layered architecture that separates concerns and enables different sp
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    ORGANISATION-WIDE SCHEMA                              │
-│                  (schemas/organisational_graph.yaml)                     │
-│                                                                          │
-│  Owned by: Data Architecture / Ontology Team                             │
-│  Defines: Node types, edge types, derivatives, graph operations          │
-│  Changes: Rarely (major architectural decisions)                         │
+│                    ORGANISATION-WIDE SCHEMA                             │
+│                  (schemas/organisational_graph.yaml)                    │
+│                                                                         │
+│  Owned by: Data Architecture / Ontology Team                            │
+│  Defines: Node types, edge types, derivatives, graph operations         │
+│  Changes: Rarely (major architectural decisions)                        │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     │ references
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                     COVERAGE CONFIGURATION                               │
-│                 (coverages/{coverage}/config.yaml)                       │
-│                                                                          │
-│  Owned by: Product / Actuarial Team                                      │
-│  Defines: Signals, weights, bands, pricing parameters                    │
-│  Changes: Regularly (tuning, new signals)                                │
+│                     COVERAGE CONFIGURATION                              │
+│                 (coverages/{coverage}/config.yaml)                      │
+│                                                                         │
+│  Owned by: Product / Actuarial Team                                     │
+│  Defines: Signals, weights, bands, pricing parameters                   │
+│  Changes: Regularly (tuning, new signals)                               │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     │ informed by
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        ANALYSIS OUTPUTS                                  │
-│              (analysis_outputs/{coverage}_v{date}.yaml)                  │
-│                                                                          │
-│  Owned by: Actuarial / Data Science Team                                 │
-│  Defines: Empirically-derived parameters (lag, normalizer coefficients)  │
-│  Changes: Periodically (model recalibration)                             │
+│                        ANALYSIS OUTPUTS                                 │
+│              (analysis_outputs/{coverage}_v{date}.yaml)                 │
+│                                                                         │
+│  Owned by: Actuarial / Data Science Team                                │
+│  Defines: Empirically-derived parameters (lag, normalizer coefficients) │
+│  Changes: Periodically (model recalibration)                            │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     │ combined into
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         MODEL VERSION                                    │
-│                 (models/{coverage}_v{version}.yaml)                      │
-│                                                                          │
-│  Owned by: Model Governance                                              │
-│  Contains: Locked snapshot of config + analysis at deployment            │
-│  Changes: Never (immutable once deployed)                                │
+│                         MODEL VERSION                                   │
+│                 (models/{coverage}_v{version}.yaml)                     │
+│                                                                         │
+│  Owned by: Model Governance                                             │
+│  Contains: Locked snapshot of config + analysis at deployment           │
+│  Changes: Never (immutable once deployed)                               │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -271,7 +283,7 @@ Exposure signals are grouped into two categories:
 ### Magnitude Groups (TIV Proxy)
 
 | Group | Purpose | Example Signals |
-|-------|---------|-----------------|
+|-|-|-|
 | digital_footprint | Digital scale | subdomain_count, ssl_certificate_count |
 | corporate_indicators | Business scale | employee_estimate, location_count |
 | public_financials | Direct financials | market_cap, revenue_estimate |
@@ -280,7 +292,7 @@ Exposure signals are grouped into two categories:
 ### Complexity Groups
 
 | Group | Purpose | Example Signals |
-|-------|---------|-----------------|
+|-|-|-|
 | geographic_dispersion | Where they operate | country_count, timezone_spread |
 | structural_complexity | Corporate structure | subsidiary_count, brand_count |
 | technical_heterogeneity | Tech stack variety | tech_stack_diversity, multi_cloud_indicator |
@@ -315,7 +327,7 @@ The Organisational Graph schema (`schemas/organisational_graph.yaml`) defines:
 Computed from signal time-series:
 
 | Derivative | Indicates | Early Warning Of |
-|------------|-----------|------------------|
+|-|-|-|
 | Entropy | Control decay | Security degradation |
 | Velocity | Change rate vs governance | Operational overload |
 | Drift | Deviation from peers | Emerging fragility |
@@ -397,7 +409,7 @@ The same signals serve:
 ## Summary
 
 | Layer | Owner | Contents | Changes |
-|-------|-------|----------|---------|
+|-|-|-|-|
 | Org Graph Schema | Data Architecture | Node/edge types, derivatives | Rarely |
 | Coverage Config | Product/Actuarial | Signals, weights, bands | Regularly |
 | Analysis Output | Data Science | Empirical parameters | Periodically |
