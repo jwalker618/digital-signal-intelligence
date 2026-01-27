@@ -17,7 +17,7 @@ CANVAS_PERSISTENCE: true
 MOBILE_SUPPORT: none
 
 ====================================================================
-SECTION 1 — THE PURPOSE OF SIGNAL ARCHITECTURE
+SECTION 1 â€” THE PURPOSE OF SIGNAL ARCHITECTURE
 SECTION_ID: signal_architecture_purpose
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: introduce why signals exist and what they replace
@@ -45,13 +45,13 @@ CONTENT_CARDS:
 
   CARD_3:
     TITLE: Capture Behaviour and Maturity
-    BODY: Signals reveal how an organisation behaves over time—its stability, discipline, and operational quality.
+    BODY: Signals reveal how an organisation behaves over timeâ€”its stability, discipline, and operational quality.
 
 SUPPORTING_TEXT:
-  - Signal Architecture is the backbone of DSI’s objectivity and predictive power.
+  - Signal Architecture is the backbone of DSIâ€™s objectivity and predictive power.
 
 ====================================================================
-SECTION 2 — THE SEVEN CANONICAL CATEGORIES
+SECTION 2 â€” THE SEVEN CANONICAL CATEGORIES
 SECTION_ID: canonical_categories
 SECTION_TYPE: static_seven_card_grid
 SECTION_PURPOSE: present the full taxonomy of DSI signals
@@ -80,10 +80,10 @@ SUPPORTING_TEXT:
   - Every DSI model must declare which categories it uses and how.
 
 ====================================================================
-SECTION 3 — ABSENCE AS A SIGNAL
+SECTION 3 â€” ABSENCE AS A SIGNAL
 SECTION_ID: absence_signal
 SECTION_TYPE: side_by_side_two_card
-SECTION_PURPOSE: explain one of DSI’s most important principles
+SECTION_PURPOSE: explain one of DSIâ€™s most important principles
 
 VISUAL_STATE:
   NODE_COUNT: 120 - 160
@@ -104,13 +104,13 @@ CONTENT:
 
   CARD_RIGHT:
     TITLE: Predictive Negative Indicators
-    BODY: Missing certifications, missing security controls, missing governance disclosures, missing filings—all correlate with elevated risk.
+    BODY: Missing certifications, missing security controls, missing governance disclosures, missing filingsâ€”all correlate with elevated risk.
 
 SUPPORTING_TEXT:
   - Absence signals differentiate entities that appear identical in traditional underwriting.
 
 ====================================================================
-SECTION 4 — CONFIDENCE AS A FIRST-CLASS METRIC
+SECTION 4 â€” CONFIDENCE AS A FIRST-CLASS METRIC
 SECTION_ID: confidence_metric
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: explain how confidence is calculated and propagated
@@ -143,7 +143,7 @@ SUPPORTING_TEXT:
   - Confidence propagates through composite scoring and determines decisioning authority.
 
 ====================================================================
-SECTION 5 — SIGNAL NORMALISATION & SCORING
+SECTION 5 â€” SIGNAL NORMALISATION & SCORING
 SECTION_ID: signal_scoring
 SECTION_TYPE: expandable_three_card_row
 SECTION_PURPOSE: explain how raw signals become deterministic model inputs
@@ -162,16 +162,16 @@ VISUAL_STATE:
 
 EXPANDABLE_CARDS:
   CARD_1:
-    TITLE: Normalisation (0–100)
-    BODY: All signals are normalised to a 0–100 scale using defined scoring algorithms.
+    TITLE: Normalisation (0â€“100)
+    BODY: All signals are normalised to a 0â€“100 scale using defined scoring algorithms.
 
   CARD_2:
-    TITLE: Composite Scoring (0–1000)
+    TITLE: Composite Scoring (0â€“1000)
     BODY: Weighted aggregation produces a composite score that maps directly to risk tiers.
 
   CARD_3:
     TITLE: Deterministic Modifiers
-    BODY: Rule-based adjustments apply after scoring—no subjective judgement permitted.
+    BODY: Rule-based adjustments apply after scoringâ€”no subjective judgement permitted.
 
 SUPPORTING_TEXT:
   - This process ensures every model cycle is auditable, repeatable, and agentic.
