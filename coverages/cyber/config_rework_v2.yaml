@@ -89,7 +89,7 @@ cyber:
         
     # -------------------------------------------------------------------------
     # SIGNAL REGISTRY
-    # All inference functions are defined one, with a consistent naming id.
+    # All inference functions are defined once, with a consistent naming id.
     # Allows ease of reuse throughout configuration.
     # -------------------------------------------------------------------------   
     
