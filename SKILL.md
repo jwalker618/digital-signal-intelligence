@@ -73,9 +73,9 @@ Digital Signal Intelligence (DSI) is a new insurance information substrate based
 
 Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
 
-The detailed whitepaper can be found here: `docs/overview/Whitepaper - Digital Signal Intelligence.pdf`
+The detailed whitepaper can be found here: `docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf`
 
-The detailed visionpaper can be found here: `docs/overview/Visionpaper - Digital Signal Intelligence.pdf`
+The detailed visionpaper can be found here: `docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf`
 
 -----
 
@@ -345,7 +345,7 @@ Final output for next steps:
 
 -----
 
-## File Structure (Current - Phase 18.1 Complete)
+## File Structure
 
 ```
 # Repository Root
@@ -363,22 +363,25 @@ digital-signal-intelligence/
 │
 ├── docs/                            # Documentation
 │   ├── overview/
+│   │   ├── Configuration Architecture.md    # ✅ PHASE 20 - Config layer documentation
 │   │   ├── Foundational Principles.md    # Core DSI principles
-│   │   ├── Pitch deck.pdf    # DSI Executive summary and pitch
-│   │   ├── The PageRank Precedent.pdf    # DSI grounding in existing principles
-│   │   ├── Visionpaper - Digital Signal Intelligence.pdf  # World Model vision
-│   │   └── Whitepaper - Digital Signal Intelligence.pdf   # Detailed whitepaper
-│   ├── Configuration Architecture.md # ✅ PHASE 20 - Config layer documentation
+│   │   ├── Pitch_deck.pdf    # DSI Executive summary and pitch
+│   │   ├── The_PageRank_Precedent.pdf    # DSI grounding in existing principles
+│   │   ├── Visionpaper_Digital_Signal_Intelligence.pdf  # World Model vision
+│   │   └── Whitepaper_Digital_Signal_Intelligence.pdf   # Detailed whitepaper
+|   |
 │   ├── agent_interaction/
 │   │   └── dsi_specification.md     # Agent integration spec
+|   |
 │   └── case_studies/                # Loss case studies
+│       └── Retrospective_loss_case_studies.pdf   # Detailed retrospective loss analysis
 │
 ├── schemas/                         # ✅ PHASE 20 - Organisation-wide schemas
 │   └── organisational_graph.yaml    # Graph schema for World Model
 │
 ├── development/                     # Development documentation
 │   ├── project/                     # Phase documents
-│   │   ├── phase_1.md ... phase_18.md   # Implementation phases
+│   │   ├── phase_1.md ... phase_#.md   # Implementation phases
 │   │   └── original.md              # Master SKILL document
 │   └── ...                          # Analysis and methodology docs
 │
@@ -453,13 +456,7 @@ digital-signal-intelligence/
 │
 ├── coverages/                       # YAML coverage configurations
 │   ├── aerospace/config.yaml        ✅ 21 signals
-│   ├── cyber/config.yaml            ✅ 35 signals (original)
-│   ├── cyber/config_rework.yaml     ✅ PHASE 20 - Unified signal architecture (62 signals)
-│   ├── do/config.yaml               ✅ 46 signals
-│   ├── energy/config.yaml           ✅ 44 signals
-│   ├── fi/config.yaml               ✅ ~40 signals
-│   ├── marine/config.yaml           ✅ ~38 signals
-│   └── pi/config.yaml               ✅ ~35 signals
+│   └── #other coverages#/config.yaml            
 │
 ├── exposure/                        # Exposure Shadow Layer specs (PHASE 17)
 │   └── shadow_layer/development/    ✅ Specification documents
@@ -472,7 +469,7 @@ digital-signal-intelligence/
 ├── demo/                            ✅ Live demos and examples
 │   ├── server.py                    ✅ FastAPI demo server
 │   ├── examples/                    ✅ Coverage examples + hybrid routing
-│   └── html_dashboards/             ✅ Interactive HTML demos
+│   └── html/                        ✅ Interactive HTML demos
 │
 └── deploy/                          ✅ Deployment configs
     ├── docker/
@@ -488,7 +485,7 @@ Legend: ✅ Complete | 🔲 Not Started
 
 **STATUS: ✅ COMPLETE** - Architecture refined with logical groupings.
 
-The codebase is now organized into four main areas:
+The codebase is now organised into four main areas:
 
 | Area | Purpose | Contents |
 |-|-|-|
