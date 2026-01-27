@@ -8,7 +8,7 @@ DEPENDENCIES:
   - llm_ingestion_method_spec
 
 ====================================================================
-PAGE 1 — HUMAN OVERSIGHT (UNCHANGED)
+PAGE 1 â€” HUMAN OVERSIGHT (UNCHANGED)
 ====================================================================
 
 PAGE_NAME: Human Oversight
@@ -31,7 +31,7 @@ RATIONALE:
   It aligns with the evolved DSI methodology and requires no redesign.
 
 ====================================================================
-PAGE 2 — PORTFOLIO ADJUSTMENT (REMOVED)
+PAGE 2 â€” PORTFOLIO ADJUSTMENT (REMOVED)
 ====================================================================
 
 PAGE_NAME: Portfolio Adjustment (Deprecated)
@@ -56,7 +56,7 @@ REMOVAL_ACTIONS:
   - ensure no residual links remain in the codebase
 
 ====================================================================
-PAGE 3 — PORTFOLIO STEERING (NEW)
+PAGE 3 â€” PORTFOLIO STEERING (NEW)
 ====================================================================
 
 PAGE_NAME: Portfolio Steering
@@ -84,7 +84,7 @@ SECTION_1: signal_weight_levers
     - governance_weight
     - behavioural_deterioration_weight
     - technical_hygiene_weight
-  RANGE: 0–100
+  RANGE: 0â€“100
   DEFAULT: 50
   BEHAVIOUR:
     - tactile, animated, colour-coded
@@ -127,7 +127,7 @@ SECTION_4: scenario_presets
 
 SECTION_5: portfolio_health_score
   TYPE: radial_gauge
-  RANGE: 0–100
+  RANGE: 0â€“100
   COLOURS:
     - red
     - amber
@@ -146,7 +146,7 @@ SECTION_7: apply_changes_animation
     - confirmation_panel
 
 ====================================================================
-PAGE 4 — SIGNAL REACTOR (NEW)
+PAGE 4 â€” SIGNAL REACTOR (NEW)
 ====================================================================
 
 PAGE_NAME: Signal Reactor
@@ -212,7 +212,7 @@ SECTION_5: signal_inspector
     - impact on composite score
 
 ====================================================================
-PAGE 5 — UNDERWRITING ENGINE (NEW)
+PAGE 5 â€” UNDERWRITING ENGINE (NEW)
 ====================================================================
 
 PAGE_NAME: Underwriting Engine
@@ -273,7 +273,7 @@ SECTION_6: decision_lock_in
     - underwriting decision appears
 
 ====================================================================
-PAGE 6 — WHAT HAPPENS IF… (NEW)
+PAGE 6 â€” WHAT HAPPENS IFâ€¦ (NEW)
 ====================================================================
 
 PAGE_NAME: What Happens If
