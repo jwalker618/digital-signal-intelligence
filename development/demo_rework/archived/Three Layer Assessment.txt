@@ -17,7 +17,7 @@ CANVAS_PERSISTENCE: true
 MOBILE_SUPPORT: none
 
 ====================================================================
-SECTION 1 ó WHY THREE LAYERS?
+SECTION 1 ‚Äî WHY THREE LAYERS?
 SECTION_ID: why_three_layers
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: explain why underwriting must be decomposed into three independent analytical layers
@@ -51,7 +51,7 @@ SUPPORTING_TEXT:
   - This decomposition is essential for determinism, calibration, and agentic execution.
 
 ====================================================================
-SECTION 2 ó THE RISK LAYER
+SECTION 2 ‚Äî THE RISK LAYER
 SECTION_ID: risk_layer
 SECTION_TYPE: static_four_card_grid
 SECTION_PURPOSE: define how DSI measures organisational risk quality
@@ -69,26 +69,26 @@ VISUAL_STATE:
 
 CONTENT_CARDS:
   CARD_1:
-    TITLE: Composite Risk Score (0ñ1000)
+    TITLE: Composite Risk Score (0‚Äì1000)
     BODY: Weighted aggregation of signals across all seven canonical categories.
 
   CARD_2:
-    TITLE: Risk Tier (1ñ5)
+    TITLE: Risk Tier (1‚Äì5)
     BODY: Composite scores map deterministically to risk tiers with predefined decision logic.
 
   CARD_3:
-    TITLE: Confidence Score (0ñ1)
+    TITLE: Confidence Score (0‚Äì1)
     BODY: Reflects data availability, source reliability, and signal freshness.
 
   CARD_4:
     TITLE: Overrides, Referrals, Modifiers
-    BODY: Deterministic rules adjust tiers when specific signal conditions are metóno subjective judgement.
+    BODY: Deterministic rules adjust tiers when specific signal conditions are met‚Äîno subjective judgement.
 
 SUPPORTING_TEXT:
-  - The Risk Layer answers: ìHow well is this organisation managed?î
+  - The Risk Layer answers: ‚ÄúHow well is this organisation managed?‚Äù
 
 ====================================================================
-SECTION 3 ó THE EXPOSURE SHADOW LAYER
+SECTION 3 ‚Äî THE EXPOSURE SHADOW LAYER
 SECTION_ID: exposure_layer
 SECTION_TYPE: expandable_three_card_row
 SECTION_PURPOSE: explain how DSI infers exposure magnitude without self-reported schedules
@@ -115,13 +115,13 @@ EXPANDABLE_CARDS:
 
   CARD_3:
     TITLE: Honest Uncertainty
-    BODY: Outputs ranges with confidence (e.g., ì$75Mñ$180M at 78% confidenceî) instead of false-precision point estimates.
+    BODY: Outputs ranges with confidence (e.g., ‚Äú$75M‚Äì$180M at 78% confidence‚Äù) instead of false-precision point estimates.
 
 SUPPORTING_TEXT:
-  - The Exposure Layer answers: ìHow large and complex is the insurable exposure?î
+  - The Exposure Layer answers: ‚ÄúHow large and complex is the insurable exposure?‚Äù
 
 ====================================================================
-SECTION 4 ó THE LOSS CORRELATION LAYER
+SECTION 4 ‚Äî THE LOSS CORRELATION LAYER
 SECTION_ID: loss_layer
 SECTION_TYPE: static_four_card_grid
 SECTION_PURPOSE: explain how DSI infers loss propensity from behavioural and structural signals
@@ -140,11 +140,11 @@ VISUAL_STATE:
 
 CONTENT_CARDS:
   CARD_1:
-    TITLE: Loss Propensity Score (0ñ100)
+    TITLE: Loss Propensity Score (0‚Äì100)
     BODY: Measures likelihood of loss frequency based on behavioural and structural patterns.
 
   CARD_2:
-    TITLE: Severity Propensity Score (0ñ100)
+    TITLE: Severity Propensity Score (0‚Äì100)
     BODY: Measures likelihood of high-severity outcomes.
 
   CARD_3:
@@ -156,10 +156,10 @@ CONTENT_CARDS:
     BODY: Entities are grouped into signal-derived peer cohorts for outlier detection and pricing.
 
 SUPPORTING_TEXT:
-  - The Loss Layer answers: ìHow likely is a loss event, and how severe might it be?î
+  - The Loss Layer answers: ‚ÄúHow likely is a loss event, and how severe might it be?‚Äù
 
 ====================================================================
-SECTION 5 ó COMBINING THE THREE LAYERS
+SECTION 5 ‚Äî COMBINING THE THREE LAYERS
 SECTION_ID: combining_layers
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: show how the layers integrate into pricing and decisioning
