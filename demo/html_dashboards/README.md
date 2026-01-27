@@ -4,7 +4,7 @@
 
 | Item | Value |
 |-|-|
-|Version|0.1.0|
+|Version|0.2.0|
 |Date|January 2025|
 |Classification|demonstration|
 
@@ -12,35 +12,28 @@
 
 # Standalone HTML Demos
 
-Interactive HTML demonstrations that work directly in any web browser without requiring Python or a server installation.
+Interactive HTML demonstration that work directly in any web browser without requiring Python or a server installation.
 
 ## Available Demos
 
 | Demo | Description | Use Case |
-|------|-------------|----------|
-| `index.html` | Portal to all standalone demos | Starting point |
-| `signal-scoring.html` | Interactive signal weight exploration | Learn how signals contribute to scores |
-| `tier-visualization.html` | Score-to-tier mapping | Understand tier boundaries |
-| `pricing-calculator.html` | Premium calculation with ILF curves | Explore pricing mechanics |
-| `workflow-animation.html` | Animated 14-step workflow | Understand DSI workflow |
-| `coverage-comparison.html` | Compare all 7 coverage types | See signal weight differences |
-| `dashboard.html` | Signal-level analysis dashboard | Explore individual signal scores and contributions |
-| `workflow.html` | Workflow visualization dashboard | Understand the 14-step DSI workflow |
-| `portfolio_dashboard.html` | Portfolio management interface | Analyse portfolio-level risk distribution |
+|-|-|-|
+| `interact_with_dsi.html` | All elements of the white and vision paper | Complete interaction demo |
+
 
 ## Usage
 
-Simply open any `.html` file directly in your web browser:
+Simply open `.html` file directly in your web browser:
 
 ```bash
 # macOS
-open index.html
+open interact_with_dsi.html
 
 # Linux
-xdg-open index.html
+xdg-open interact_with_dsi.html
 
 # Windows
-start index.html
+start interact_with_dsi.html
 ```
 
 Or navigate to the file in your file browser and double-click it.
