@@ -35,7 +35,7 @@ PAGE_STRUCTURE:
   - brand_reinforcement
 
 ====================================================================
-SECTION 1 — HERO STATEMENT
+SECTION 1 â€” HERO STATEMENT
 ====================================================================
 
 SECTION_ID: hero_statement
@@ -52,7 +52,7 @@ VISUAL_BEHAVIOUR:
   - primary colour: #0B3954
 
 ====================================================================
-SECTION 2 — PURPOSE BLOCK
+SECTION 2 â€” PURPOSE BLOCK
 ====================================================================
 
 SECTION_ID: purpose_block
@@ -62,14 +62,14 @@ CONTENT:
   SENTENCE_1:
     "DSI replaces self-reported documents with observable digital signals."
   SENTENCE_2:
-    "This demo lets you understand the system — and then interact with it."
+    "This demo lets you understand the system â€” and then interact with it."
 
 VISUAL_BEHAVIOUR:
   - appear after hero_statement
   - muted colour: #7A766F
 
 ====================================================================
-SECTION 3 — TWO PILLAR EXPLANATION
+SECTION 3 â€” TWO PILLAR EXPLANATION
 ====================================================================
 
 SECTION_ID: two_pillar_explanation
@@ -94,7 +94,7 @@ VISUAL_BEHAVIOUR:
   - accent colour: #0599AD
 
 ====================================================================
-SECTION 4 — JOURNEY MAP
+SECTION 4 â€” JOURNEY MAP
 ====================================================================
 
 SECTION_ID: journey_map
@@ -127,7 +127,7 @@ VISUAL_BEHAVIOUR:
   - accent colour: #39D3BA
 
 ====================================================================
-SECTION 5 — NAVIGATION INSTRUCTIONS
+SECTION 5 â€” NAVIGATION INSTRUCTIONS
 ====================================================================
 
 SECTION_ID: navigation_instructions
@@ -144,7 +144,7 @@ VISUAL_BEHAVIOUR:
   - iconography: home_symbol.svg
 
 ====================================================================
-SECTION 6 — BRAND REINFORCEMENT
+SECTION 6 â€” BRAND REINFORCEMENT
 ====================================================================
 
 SECTION_ID: brand_reinforcement
@@ -152,7 +152,7 @@ SECTION_TYPE: centered_logo_block
 
 CONTENT:
   - generate_logo.png (top-right globally, repeated here centered for emphasis)
-  - tagline: "Generate — Intelligence for the Agentic Era"
+  - tagline: "Generate â€” Intelligence for the Agentic Era"
 
 VISUAL_BEHAVIOUR:
   - logo glow effect (subtle)
