@@ -17,10 +17,10 @@ CANVAS_PERSISTENCE: true
 MOBILE_SUPPORT: none
 
 ====================================================================
-SECTION 1 — PURPOSE OF RETROSPECTIVE VALIDATION
+SECTION 1 â€” PURPOSE OF RETROSPECTIVE VALIDATION
 SECTION_ID: retrospective_purpose
 SECTION_TYPE: static_three_card_row
-SECTION_PURPOSE: explain why retrospective analysis is essential to proving DSI’s predictive power
+SECTION_PURPOSE: explain why retrospective analysis is essential to proving DSIâ€™s predictive power
 
 VISUAL_STATE:
   NODE_COUNT: 40 - 70
@@ -51,7 +51,7 @@ SUPPORTING_TEXT:
   - DSI does not predict the future; it reveals what is already visible in the digital ecosystem.
 
 ====================================================================
-SECTION 2 — FINANCIAL INSTITUTIONS
+SECTION 2 â€” FINANCIAL INSTITUTIONS
 SECTION_ID: fi_case_studies
 SECTION_TYPE: expandable_three_card_row
 SECTION_PURPOSE: show how DSI would have flagged major FI failures
@@ -87,7 +87,7 @@ SUPPORTING_TEXT:
   - FI failures were preceded by clear governance and concentration signals.
 
 ====================================================================
-SECTION 3 — MARINE & ENERGY
+SECTION 3 â€” MARINE & ENERGY
 SECTION_ID: marine_energy_case_studies
 SECTION_TYPE: expandable_four_card_grid
 SECTION_PURPOSE: demonstrate signal visibility in physical and operational domains
@@ -105,7 +105,7 @@ VISUAL_STATE:
 
 EXPANDABLE_CARDS:
   CARD_1:
-    TITLE: Shadow Fleet (2022–2024)
+    TITLE: Shadow Fleet (2022â€“2024)
     BODY: No IG Club membership, non-IACS classification, sanctioned owners.
     DSI_OUTPUT: DECLINE.
 
@@ -128,7 +128,7 @@ SUPPORTING_TEXT:
   - Operational discipline and regulatory friction were visible long before the losses.
 
 ====================================================================
-SECTION 4 — CYBER & AEROSPACE
+SECTION 4 â€” CYBER & AEROSPACE
 SECTION_ID: cyber_aerospace_case_studies
 SECTION_TYPE: expandable_four_card_grid
 SECTION_PURPOSE: show how behavioural and technical signals reveal cyber and aerospace risk
@@ -161,7 +161,7 @@ EXPANDABLE_CARDS:
     DSI_OUTPUT: REFER or DECLINE.
 
   CARD_4:
-    TITLE: Boeing 737 MAX (2018–2020)
+    TITLE: Boeing 737 MAX (2018â€“2020)
     BODY: Disclosure gaps, FAA audit findings, supply chain quality issues.
     DSI_OUTPUT: REFER.
 
@@ -169,7 +169,7 @@ SUPPORTING_TEXT:
   - Behavioural deterioration is visible in digital signals long before catastrophic outcomes.
 
 ====================================================================
-SECTION 5 — CROSS-COVERAGE SIGNAL EFFECTIVENESS
+SECTION 5 â€” CROSS-COVERAGE SIGNAL EFFECTIVENESS
 SECTION_ID: cross_coverage_effectiveness
 SECTION_TYPE: static_five_card_grid
 SECTION_PURPOSE: summarise the universal predictive power of signals
@@ -208,7 +208,7 @@ CONTENT_CARDS:
     BODY: Predictive across Cyber and any tech-dependent sector.
 
 SUPPORTING_TEXT:
-  - Across all coverages, 70–90% of major losses would have been flagged by DSI.
+  - Across all coverages, 70â€“90% of major losses would have been flagged by DSI.
 
 ====================================================================
 INTERACTION_RULES:
