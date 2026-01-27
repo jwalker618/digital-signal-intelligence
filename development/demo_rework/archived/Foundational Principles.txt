@@ -17,7 +17,7 @@ CANVAS_PERSISTENCE: true
 MOBILE_SUPPORT: none
 
 ====================================================================
-SECTION 1 ó WHY PRINCIPLES MATTER
+SECTION 1 ‚Äî WHY PRINCIPLES MATTER
 SECTION_ID: why_principles_matter
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: establish the need for strict methodological principles
@@ -49,10 +49,10 @@ CONTENT_CARDS:
     BODY: Deterministic automation requires strict constraints. These principles prevent drift, bias, and subjective override.
 
 SUPPORTING_TEXT:
-  - Principles are the backbone of DSIís reliability and agentic readiness.
+  - Principles are the backbone of DSI‚Äôs reliability and agentic readiness.
 
 ====================================================================
-SECTION 2 ó THE TEN PRINCIPLES (OVERVIEW GRID)
+SECTION 2 ‚Äî THE TEN PRINCIPLES (OVERVIEW GRID)
 SECTION_ID: principles_overview
 SECTION_TYPE: static_ten_card_grid
 SECTION_PURPOSE: present all ten principles at a glance
@@ -81,7 +81,7 @@ CONTENT_CARDS:
   CARD_10: { TITLE: Agentic Readiness, BODY: Models must be executable by autonomous systems. }
 
 ====================================================================
-SECTION 3 ó OBSERVABILITY & MACHINE READABILITY
+SECTION 3 ‚Äî OBSERVABILITY & MACHINE READABILITY
 SECTION_ID: observability_machine_readability
 SECTION_TYPE: side_by_side_two_card
 SECTION_PURPOSE: explain the foundational substrate principles
@@ -94,8 +94,8 @@ VISUAL_STATE:
     SECONDARY: #0B3954 (blue)
   MOTION_SPEED: medium
   BEHAVIOUR:
-    - nodes become ìvisibleî
-    - edges become ìmachine-readableî
+    - nodes become ‚Äúvisible‚Äù
+    - edges become ‚Äúmachine-readable‚Äù
     - represents emergence of clarity
 
 CONTENT:
@@ -112,7 +112,7 @@ SUPPORTING_TEXT:
   - Without them, automation and auditability are impossible.
 
 ====================================================================
-SECTION 4 ó NETWORK AUTHORITY, BEHAVIOURAL INFERENCE, ABSENCE AS A SIGNAL
+SECTION 4 ‚Äî NETWORK AUTHORITY, BEHAVIOURAL INFERENCE, ABSENCE AS A SIGNAL
 SECTION_ID: predictive_principles
 SECTION_TYPE: expandable_three_card_row
 SECTION_PURPOSE: explain the principles that make DSI predictive
@@ -147,7 +147,7 @@ EXPANDABLE_CARDS:
     VALIDATION: Predictive across SolarWinds, Equifax, Shadow Fleet, Colonial Pipeline.
 
 ====================================================================
-SECTION 5 ó STRUCTURED DATA, MINIMAL INQUIRY, ORGANISATIONAL-LEVEL ASSESSMENT
+SECTION 5 ‚Äî STRUCTURED DATA, MINIMAL INQUIRY, ORGANISATIONAL-LEVEL ASSESSMENT
 SECTION_ID: practical_principles
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: explain the principles that make DSI practical and commercially viable
@@ -167,11 +167,11 @@ VISUAL_STATE:
 CONTENT_CARDS:
   CARD_1:
     TITLE: Structured Data Utilisation
-    BODY: Authoritative structured dataócredit ratings, filings, registriesóanchors the model with high-confidence signals.
+    BODY: Authoritative structured data‚Äîcredit ratings, filings, registries‚Äîanchors the model with high-confidence signals.
 
   CARD_2:
     TITLE: Minimal Direct Inquiry
-    BODY: Direct questions are optional and constrained to 5ñ10 binary or categorical items per model.
+    BODY: Direct questions are optional and constrained to 5‚Äì10 binary or categorical items per model.
 
   CARD_3:
     TITLE: Organisational-Level Assessment
@@ -182,7 +182,7 @@ SUPPORTING_TEXT:
   - They enable high straight-through processing rates.
 
 ====================================================================
-SECTION 6 ó SIMPLICITY IN SCORING & AGENTIC READINESS
+SECTION 6 ‚Äî SIMPLICITY IN SCORING & AGENTIC READINESS
 SECTION_ID: agentic_principles
 SECTION_TYPE: side_by_side_two_card
 SECTION_PURPOSE: explain the principles that make DSI agentic
