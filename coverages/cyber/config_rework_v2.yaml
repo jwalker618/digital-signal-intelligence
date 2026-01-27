@@ -56,75 +56,116 @@ cyber:
     direct_queries:     
       - id: "mfa_enabled"
         question: "Is multi-factor authentication enabled for all remote access??"
-        bands:
-          - return: false
-            override: null
-            action: "FLAG"
-            note: "MFA not enabled - increased ransomware risk" 
+        query_condition:
+          - {return: false, action: "FLAG", override: null, applied: null, note: "MFA not enabled - increased ransomware risk"}
       - id: "security_training"
         question: "Do all employees complete annual cyber security training?"
-        bands:
-          - return: false
-            override: null
-            action: "FLAG"
-            note: "No security training - increased phishing risk"
+        query_condition:
+          - {return: false, action: "FLAG", override: null, applied: null, note: "No security training - increased phishing risk"}
       - id: "phi_handler"
         question: "Do you process Protected Health Information (PHI)"
-        bands:
-          - return: true
-            override: null
-            action: "MODIFIER"
-            modifier: 1.25
-            note: "PHI handler - HIPAA exposure"
+        query_condition:
+          - {return: true, action: "MODIFIER", override: null, applied: 1.25, note: "PHI handler - HIPAA exposure"}
       - id: "pci_scope"
         question: "Do you store payment card data (PCI scope)"
-        bands:
-          - return: true
-            override: null
-            action: "MODIFIER"
-            modifier: 1.15
-            note: "PCI scope - card data exposure"
+        query_condition:
+          - {return: true, action: "MODIFIER", override: null, applied: 1.15, note: "PCI scope - card data exposure"}
       - id: "incident_response_plan"
         question: "Do you have a documented incident response plan?"
-        bands:
-          - return: false 
-            override: null
-            action: "FLAG" 
-            note: "No IR plan - extended breach impact likely"
+        query_condition:
+          - {return: false, action: "FLAG", override: null, applied: null, note: "No IR plan - extended breach impact likely"}
       - id: "edr_deployed"
         question: "Is endpoint detection and response (EDR) deployed on all endpoints?"
-        bands:
-          - return: false 
-            override: null
-            action: "FLAG"
-            note: "No EDR - reduced threat detection"
+        query_condition:
+          - {return: false, action: "FLAG", override: null, applied: null, note: "No EDR - reduced threat detection"}
       - id: "immutable_backups"
         question: "Are backups maintained offline or immutable?"
-        bands:
-          - return: false
-            override: null
-            action: "FLAG"
-            note: "No immutable backups - ransomware recovery risk"
+        query_condition:
+          - {return: false, action: "FLAG", override: null, applied: null, note: "No immutable backups - ransomware recovery risk"}
       - id: "recent_incident"
         question: "Have you experienced a material cyber incident in the past 3 years?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            note: "Recent incident - requires manual review"
-
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Recent incident - requires manual review"}
+        
     # -------------------------------------------------------------------------
     # SIGNAL REGISTRY
     # All inference functions are defined one, with a consistent naming id.
     # Allows ease of reuse throughout configuration.
-    # ------------------------------------------------------------------------- 
-    signal_registry:
+    # -------------------------------------------------------------------------   
     
-      # --- ORGANISATIONAL PROFILE ---
+    signal_registry:
+  
       - id: tls_configuration
         inference_utility_function: tls_configuration_basefunction
+        normaliser: 
+          type: linear
+        categories: {}
+        signals:
+          group: technical_infrastructure
+          risk:
+            correlation_direction: positive
+            weight: 0.12
+          loss:
+            severity: {}
+            frequency:
+              correlation_direction: negative
+              weight: 0.25
+          exposure:
+            proxy_tier: inferred
+            size:
+              correlation_direction: positive
+              weight: 0.6
+            complexity: {}
+
+      - id: security_vendor_presence
+        inference_utility_function: security_vendor_basefunction
+        normaliser: 
+          type: categorical_map
+          bands: 
+            - {min: 0, max: 25, applied: 0.80} 
+            - {min: 26, max: 50, applied: 1.00} 
+            - {min: 51, max: 75, applied: 1.20} 
+            - {min: 76, max: 100, applied: 1.40}
+        categories: {} 
+        signals:
+          group: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+            score_condition:
+              - {min: 0, max: 25, action: "FLAG", override: null, note: "No tier-1 security vendors detected"}
+          loss:
+            severity:
+              correlation_direction: negative
+              weight: 0.35
+            frequency:
+              correlation_direction: negative
+              weight: 0.35
+          exposure:
+            proxy_tier: inferred
+            size:
+              correlation_direction: positive
+              weight: 0.6
+            complexity: {}
+              
       - id: industry_classification
         inference_utility_function: industry_classification_basefunction
+        normaliser: {}
+        categories: 
+          group: industry_classification
+          features:
+            - {cat: "TECHNOLOGY", label: "Technology", applied: 1.15}
+            - {cat: "FINANCIAL_SERVICES", label: "Financial Services", applied: 1.40}
+            - {cat: "HEALTHCARE", label: "Healthcare", applied: 1.50}
+            - {cat: "RETAIL", label: "Retail", applied: 1.25}
+            - {cat: "MANUFACTURING", label: "Manufacturing", applied: 0.95}
+            - {cat: "PROFESSIONAL_SERVICES", label: "Professional Services", applied: 1.10}
+            - {cat: "EDUCATION", label: "Education", applied: 1.05}
+            - {cat: "GOVERMENT", label: "Goverment", applied: 0.90}
+            - {cat: "ENERGY", label: "Energy", applied: 1.20}
+            - {cat: "OTHER", label: "Other", applied: 1.00}
+        signals: {}
+        
       - id: company_size
         inference_utility_function: company_size_basefunction
       - id: operational_geography
@@ -133,8 +174,6 @@ cyber:
         inference_utility_function: customer_quality_basefunction
       - id: partner_quality
         inference_utility_function: partner_quality_basefunction
-      - id: security_vendor_presence
-        inference_utility_function: security_vendor_basefunction
       - id: industry_body_membership
         inference_utility_function: industry_body_basefunction
       - id: certification_authority_presence
