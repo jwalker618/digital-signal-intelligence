@@ -17,7 +17,7 @@ CANVAS_PERSISTENCE: true (same canvas across all sections)
 MOBILE_SUPPORT: none (desktop only)
 
 ====================================================================
-SECTION 1 — THE TWO PROPERTIES OF AN ORGANISATION
+SECTION 1 â€” THE TWO PROPERTIES OF AN ORGANISATION
 SECTION_ID: two_properties
 SECTION_TYPE: static_two_card_grid
 SECTION_PURPOSE: introduce the foundational thesis of DSI
@@ -50,7 +50,7 @@ SUPPORTING_TEXT:
   - DSI replaces them with observable digital signals.
 
 ====================================================================
-SECTION 2 — WHY TRADITIONAL UNDERWRITING CANNOT MEASURE THESE PROPERTIES
+SECTION 2 â€” WHY TRADITIONAL UNDERWRITING CANNOT MEASURE THESE PROPERTIES
 SECTION_ID: traditional_failure
 SECTION_TYPE: static_four_card_grid
 SECTION_PURPOSE: explain the substrate problem
@@ -89,10 +89,10 @@ SUPPORTING_TEXT:
   - The information substrate must change.
 
 ====================================================================
-SECTION 3 — OBSERVABLE DIGITAL SIGNALS AS THE NEW SUBSTRATE
+SECTION 3 â€” OBSERVABLE DIGITAL SIGNALS AS THE NEW SUBSTRATE
 SECTION_ID: digital_signals
 SECTION_TYPE: static_four_card_grid
-SECTION_PURPOSE: introduce DSI’s replacement substrate
+SECTION_PURPOSE: introduce DSIâ€™s replacement substrate
 
 VISUAL_STATE:
   NODE_COUNT: 80 - 120
@@ -121,14 +121,14 @@ CONTENT_CARDS:
 
   CARD_4:
     TITLE: Absence as a Signal
-    BODY: Missing expected signals—certifications, disclosures, security controls—are measurable negative indicators.
+    BODY: Missing expected signalsâ€”certifications, disclosures, security controlsâ€”are measurable negative indicators.
 
 SUPPORTING_TEXT:
   - Signals are structured, verifiable, and machine-readable.
   - This enables deterministic, autonomous underwriting.
 
 ====================================================================
-SECTION 4 — EMPIRICAL VALIDATION (RETROSPECTIVE LOSS CASE STUDIES)
+SECTION 4 â€” EMPIRICAL VALIDATION (RETROSPECTIVE LOSS CASE STUDIES)
 SECTION_ID: empirical_validation
 SECTION_TYPE: expandable_four_card_grid
 SECTION_PURPOSE: prove the Core Thesis using real-world losses
@@ -163,11 +163,11 @@ EXPANDABLE_CARDS:
 
   CARD_4:
     TITLE: Predictive Power
-    BODY: DSI would have flagged 70–90% of major losses for referral, loading, or declinature.
+    BODY: DSI would have flagged 70â€“90% of major losses for referral, loading, or declinature.
     VALIDATION: Demonstrated across all five coverage areas.
 
 ====================================================================
-SECTION 5 — UNIVERSALITY ACROSS COVERAGES
+SECTION 5 â€” UNIVERSALITY ACROSS COVERAGES
 SECTION_ID: universality
 SECTION_TYPE: static_five_card_grid
 SECTION_PURPOSE: show the Core Thesis applies to all major commercial lines
@@ -210,10 +210,10 @@ SUPPORTING_TEXT:
   - DSI provides a universal substrate.
 
 ====================================================================
-SECTION 6 — DETERMINISM, CONFIDENCE, AND AGENTIC READINESS
+SECTION 6 â€” DETERMINISM, CONFIDENCE, AND AGENTIC READINESS
 SECTION_ID: determinism_agentic
 SECTION_TYPE: side_by_side_two_card
-SECTION_PURPOSE: connect the Core Thesis to DSI’s execution model
+SECTION_PURPOSE: connect the Core Thesis to DSIâ€™s execution model
 
 VISUAL_STATE:
   NODE_COUNT: 220 - 300
