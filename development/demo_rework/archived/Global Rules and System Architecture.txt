@@ -20,8 +20,8 @@ SAFE_AREAS:
 
 CONTENT_PANEL:
   WIDTH:
-    desktop: 760–980px
-    tablet: 600–760px
+    desktop: 760â€“980px
+    tablet: 600â€“760px
     mobile: 100% width (background disabled)
   BACKGROUND: #FFFFFF
   BORDER_RADIUS: 12px
@@ -51,7 +51,7 @@ HEADER_CONTENT:
   RIGHT_SIDE:
     - GENERATE_LOGO (see asset rules)
     - POSITION: top_right
-    - SIZE: 32–40px height
+    - SIZE: 32â€“40px height
     - BEHAVIOUR: static, non-interactive
 
 REMOVED_ELEMENTS:
@@ -70,7 +70,7 @@ GLOBAL ASSET RULES
 
 LOGO_REQUIREMENTS:
   - The Generate logo must be provided as a .png file.
-  - Expected format: PNG, transparent background, 2× resolution recommended.
+  - Expected format: PNG, transparent background, 2Ã— resolution recommended.
   - Developer workflow:
       1. User provides correct .png asset.
       2. Asset stored in /assets/logo/generate_logo.png
@@ -81,7 +81,7 @@ LOGO_PLACEMENT:
   - fixed position
   - padding-right: 24px
   - padding-top: 12px
-  - height: 32–40px
+  - height: 32â€“40px
   - width: auto
 
 ASSET REPLACEMENT WORKFLOW:
@@ -96,7 +96,7 @@ GLOBAL VISUAL SYSTEM RULES
 BACKGROUND_CANVAS:
   TYPE: dynamic_network_canvas
   POSITION: full_page_behind_content
-  OPACITY: 0.15–0.25
+  OPACITY: 0.15â€“0.25
   MOTION: subtle, non-distracting
   MOBILE: disabled (performance + clarity)
 
@@ -177,7 +177,7 @@ TOPIC-TO-TOPIC TRANSITION RULES
 TRANSITION_MODEL:
   - fade_out current topic
   - fade_in next topic
-  - background canvas resets to topic’s SECTION 1 VISUAL_STATE
+  - background canvas resets to topicâ€™s SECTION 1 VISUAL_STATE
   - header remains static (Home left, logo right)
 
 ENTRY_BEHAVIOUR:
