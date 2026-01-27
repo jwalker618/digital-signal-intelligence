@@ -97,7 +97,7 @@ cyber:
       - id: industry_classification
         inference_utility_function: industry_classification_basefunction
         categories:
-          group: industry_classification
+          groupid: industry_classification
           features:
             - {cat: "TECHNOLOGY", label: "Technology", applied: 1.15}
             - {cat: "FINANCIAL_SERVICES", label: "Financial Services", applied: 1.40}
@@ -113,7 +113,7 @@ cyber:
       - id: size_band
         inference_utility_function: company_size_basefunction
         categories:
-          group: size_band
+          groupid: size_band
           features:
             - {cat: "MICRO", label: "Micro", applied: 0.40}
             - {cat: "SMALL", label: "Small", applied: 0.60}
@@ -125,7 +125,7 @@ cyber:
       - id: geography
         inference_utility_function: operational_base_basefunction
         categories:
-          group: geography
+          groupid: geography
           features:
             - {cat: "US", label: "United States", applied: 1.00}
             - {cat: "UK", label: "United Kingdom", applied: 1.05}
@@ -143,7 +143,7 @@ cyber:
             - {min: 51, max: 75, applied: 1.20}
             - {min: 76, max: 100, applied: 1.40}
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.25
@@ -167,7 +167,7 @@ cyber:
         normaliser:
           type: percentile
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -181,7 +181,7 @@ cyber:
         normaliser:
           type: percentile
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -198,7 +198,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -208,7 +208,7 @@ cyber:
         normaliser:
           type: categorical_map
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -222,7 +222,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -232,7 +232,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -242,7 +242,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: network_authority
+          groupid: network_authority
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -252,7 +252,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.12
@@ -271,7 +271,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -288,7 +288,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.12
@@ -298,7 +298,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -308,7 +308,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.18
@@ -321,7 +321,7 @@ cyber:
         normaliser:
           type: percentile
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -338,7 +338,7 @@ cyber:
         normaliser:
           type: log_scale
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.18
@@ -355,7 +355,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -369,7 +369,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -379,7 +379,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: technical_infrastructure
+          groupid: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -389,7 +389,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: public_record
+          groupid: public_record
           risk:
             correlation_direction: positive
             weight: 0.35
@@ -402,7 +402,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: public_record
+          groupid: public_record
           risk:
             correlation_direction: positive
             weight: 0.25
@@ -412,7 +412,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: public_record
+          groupid: public_record
           risk:
             correlation_direction: positive
             weight: 0.20
@@ -422,7 +422,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: public_record
+          groupid: public_record
           risk:
             correlation_direction: positive
             weight: 0.20
@@ -432,7 +432,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: public_record
+          groupid: public_record
           risk:
             correlation_direction: positive
             weight: 0.20
@@ -442,7 +442,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: structured_data
+          groupid: structured_data
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -456,7 +456,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: structured_data
+          groupid: structured_data
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -466,7 +466,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: structured_data
+          groupid: structured_data
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -476,7 +476,7 @@ cyber:
         normaliser:
           type: categorical_map
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -490,7 +490,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -500,7 +500,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.08
@@ -510,7 +510,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -520,7 +520,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.12
@@ -530,7 +530,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.08
@@ -540,7 +540,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.07
@@ -550,7 +550,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -567,7 +567,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -581,7 +581,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -591,7 +591,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -601,7 +601,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -611,7 +611,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -621,7 +621,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -631,7 +631,7 @@ cyber:
         normaliser:
           type: linear
         signals:
-          group: corporate_footprint
+          groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.05
@@ -648,17 +648,17 @@ cyber:
         label: "Industry Classification"
         description: "Industry classification derived from public records"
         impact: "modifier" 
-        inference_id: industry_classification_basefunction
+        default_cat: "OTHER"
       - id: "size_band"
         label: "Size Band"
         description: "Company size classification"
         impact: "modifier"
-        inference_id: company_size_basefunction
+        default_cat: "OTHER"
       - id: "geography"
         label: "geography"
         description: "Primary operational geography"
         impact: "modifier"
-        inference_id: operational_base_basefunction
+        default_cat: "OTHER"
         
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
@@ -673,83 +673,56 @@ cyber:
         description: "Industry relationships, partnerships, and counterparty quality"
         risk:
           weight: 0.15
-          score_condition: false
         loss:
           weight: 0.15
-          confidence_threshold: 0.5
+        exposure:
+          weight: 0.15
         
       - id: "technical_infrastructure"
         label: "Technical Infrastructure"
         description: "Observable technical security implementation"
         risk:
           weight: 0.35
-          score_condition: true
-          bands:
-            - max: 30
-              override: 5
-              action: "DECLINE"
-              note: "Critical technical deficiencies"
-            - max: 45
-              override: 4
-              action: "REFER"
-              note: "Significant technical concerns"
-          inclusive_max: false
+          score_condition: 
+            - {max: 30, action: "DECLINE", override: 5, note: "Critical technical deficiencies"}
+            - {max: 45, action: "REFER", override: 4, note: "Significant technical concerns"}
         loss:
           weight: 0.35
-          confidence_threshold: 0.7      
+        exposure:
+          weight: 0.35
         
       - id: "corporate_footprint"
         label: "Corporate Footprint"
         description: "Signals from company's digital presence and security posture"
         risk:
           weight: 0.15
-          score_condition: false
         loss:
           weight: 0.25
-          confidence_threshold: 0.6
+        exposure:
+          weight: 0.15
         
       - id: "public_record"
         label: "Public Record"
         description: "Breach history, regulatory actions, and public disclosures"
         risk:
           weight: 0.25
-          score_condition: true
-          bands:
-            - max: 30
-              override: 5
-              action: "DECLINE"
-              note: "Severe breach/regulatory history"
-            - max: 45
-              override: 4
-              action: "REFER"
-              note: "Material breach history"
-          inclusive_max: false
+          score_condition: 
+            - {max: 30, action: "DECLINE", override: 5, note: "Severe breach/regulatory history"}
+            - {max: 45, action: "REFER", override: 4, note: "Material breach history"}
         loss:
           weight: 0.2
-          confidence_threshold: 0.8
+        exposure:
+          weight: 0.25
      
       - id: "structured_data"
         label: "Structured Data"
         description: "Third-party security ratings and scores"
         risk:
           weight: 0.10
-          score_condition: false
         loss:
           weight: 0.2
-          confidence_threshold: 0.9
-
-      # Exposure-specific signal groups (no risk/loss contribution)
-      - id: "exposure_magnitude"
-        label: "Exposure Magnitude"
-        description: "Observable signals indicating organizational size and TIV proxy"
         exposure:
-          contributes_to: magnitude
-
-      - id: "exposure_complexity"
-        label: "Exposure Complexity"
-        description: "Observable signals indicating operational and structural complexity"
-        exposure:
-          contributes_to: complexity
+          weight: 0.10
 
     # ---------------------------------------------------------------------------
     # RISK TIER BANDINGS
@@ -759,8 +732,8 @@ cyber:
       bands:
         - id: 1
           label: "PREFERRED"
-          min_score: 800
-          max_score: 1000
+          min: 800
+          max: 1000
           description: "Excellent risk - automatic approval, preferred pricing"
           actions:
             auto_approve: true
@@ -771,8 +744,8 @@ cyber:
             
         - id: 2        
           label: "STANDARD_PLUS"
-          min_score: 650
-          max_score: 799
+          min: 650
+          max: 799
           description: "Good risk - automatic approval, standard pricing"
           actions:
             auto_approve: true
@@ -783,8 +756,8 @@ cyber:
             
         - id: 3        
           label: "STANDARD"
-          min_score: 500
-          max_score: 649
+          min: 500
+          max: 649
           description: "Average risk - may require referral"
           actions:
             auto_approve: false
@@ -795,8 +768,8 @@ cyber:
           
         - id: 4        
           label: "SUBSTANDARD"
-          min_score: 350
-          max_score: 499
+          min: 350
+          max: 499
           description: "Elevated risk - requires senior review"
           actions:
             auto_approve: false
@@ -807,8 +780,8 @@ cyber:
           
         - id: 5        
           label: "DECLINE"
-          min_score: 0
-          max_score: 349
+          min: 0
+          max: 349
           description: "Unacceptable risk - decline"
           actions:
             auto_approve: false
@@ -828,8 +801,8 @@ cyber:
       bands:
         - id: 1
           label: "VERY_LOW"
-          min_score: 0
-          max_score: 20
+          min: 0
+          max: 20
           description: "very low risk of loss"
           modifier:
             frequency_weight: 0.6
@@ -839,8 +812,8 @@ cyber:
           
         - id: 2
           label: "LOW"
-          min_score: 20
-          max_score: 40
+          min_: 20
+          max: 40
           description: "low risk of loss"
           modifier:
             frequency_weight: 0.6
@@ -850,8 +823,8 @@ cyber:
 
         - id: 3
           label: "MODERATE"
-          min_score: 40
-          max_score: 60
+          min: 40
+          max: 60
           description: "moderate risk of loss"
           modifier:
             frequency_weight: 0.6
@@ -861,8 +834,8 @@ cyber:
             
         - id: 4 
           label: "ELEVATED"
-          min_score: 60
-          max_score: 80
+          min: 60
+          max: 80
           description: "elevated risk of loss"
           modifier:
             frequency_weight: 0.6
@@ -872,8 +845,8 @@ cyber:
           
         - id: 5
           label: "HIGH"
-          min_score: 80
-          max_score: 100
+          min: 80
+          max: 100
           description: "high risk of loss"
           modifier:
             frequency_weight: 0.6
@@ -899,8 +872,8 @@ cyber:
         bands:
           - id: 1
             label: "MICRO"
-            min_score: 0
-            max_score: 20
+            min: 0
+            max: 20
             description: "micro exposure value ($0 - $1M)"
             modifier:
               implied_tiv_thresholds: [0, 1000000]
@@ -908,8 +881,8 @@ cyber:
                       
           - id: 2
             label: "SMALL"
-            min_score: 20
-            max_score: 40
+            min: 20
+            max: 40
             description: "small exposure value ($1M - $10M)"
             modifier:
               implied_tiv_thresholds: [1000000, 10000000]
@@ -917,8 +890,8 @@ cyber:
             
           - id: 3
             label: "MEDIUM"
-            min_score: 40
-            max_score: 60
+            min: 40
+            max: 60
             description: "medium exposure value ($10M - $50M)"
             modifier:
               implied_tiv_thresholds: [10000000, 50000000]
@@ -926,8 +899,8 @@ cyber:
             
           - id: 4
             label: "LARGE"
-            min_score: 60
-            max_score: 80
+            min: 60
+            max: 80
             description: "large exposure value ($50M - $250M)"
             modifier:
               implied_tiv_thresholds: [50000000, 250000000]
@@ -935,8 +908,8 @@ cyber:
             
           - id: 5
             label: "VERY_LARGE"
-            min_score: 80
-            max_score: 100
+            min: 80
+            max: 100
             description: "very large exposure value ($250M+)"
             modifier:
               implied_tiv_thresholds: [250000000, 1000000000]
@@ -946,40 +919,40 @@ cyber:
         bands:
           - id: 1
             label: "SIMPLE COMPLEXITY"
-            min_score: 0
-            max_score: 20
+            min: 0
+            max: 20
             description: "simple complex exposure"
             modifier:
               applied: 0.85
               
           - id: 2
             label: "MODERATELY COMPLEX"
-            min_score: 20
-            max_score: 40
+            min: 20
+            max: 40
             description: "moderately complex exposure"
             modifier:
               applied: 0.95 
             
           - id: 3
             label: "COMPLEX"
-            min_score: 40
-            max_score: 60
+            min: 40
+            max: 60
             description: "complex exposure"
             modifier:
               applied: 1.10
             
           - id: 4
             label: "HIGHLY COMPLEX"
-            min_score: 60
-            max_score: 80
+            min: 60
+            max: 80
             description: "highly complex exposure"
             modifier:
               applied: 1.30
             
           - id: 5
             label: "EXTREMELY COMPLEX"
-            min_score: 80
-            max_score: 100
+            min: 80
+            max: 100
             description: "extremely complex exposure"
             modifier:
               applied: 1.60  
