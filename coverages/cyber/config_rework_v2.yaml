@@ -114,6 +114,151 @@ cyber:
             note: "Recent incident - requires manual review"
 
     # -------------------------------------------------------------------------
+    # SIGNAL REGISTRY
+    # All inference functions are defined one, with a consistent naming id.
+    # Allows ease of reuse throughout configuration.
+    # ------------------------------------------------------------------------- 
+    signal_registry:
+    
+      # --- ORGANISATIONAL PROFILE ---
+      - id: tls_configuration
+        inference_utility_function: tls_configuration_basefunction
+      - id: industry_classification
+        inference_utility_function: industry_classification_basefunction
+      - id: company_size
+        inference_utility_function: company_size_basefunction
+      - id: operational_geography
+        inference_utility_function: operational_base_basefunction
+      - id: customer_quality
+        inference_utility_function: customer_quality_basefunction
+      - id: partner_quality
+        inference_utility_function: partner_quality_basefunction
+      - id: security_vendor_presence
+        inference_utility_function: security_vendor_basefunction
+      - id: industry_body_membership
+        inference_utility_function: industry_body_basefunction
+      - id: certification_authority_presence
+        inference_utility_function: certification_authority_basefunction
+      - id: financial_relationships
+        inference_utility_function: financial_relationship_basefunction
+      - id: network_centrality
+        inference_utility_function: network_centrality_basefunction
+      - id: second_degree_connections
+        inference_utility_function: second_degree_basefunction
+    
+      # --- SECURITY CONTROLS & POSTURE ---
+      - id: security_headers
+        inference_utility_function: security_headers_basefunction
+      - id: email_authentication
+        inference_utility_function: email_authentication_basefunction
+      - id: dnssec_status
+        inference_utility_function: dnssec_basefunction
+      - id: network_exposure
+        inference_utility_function: network_exposure_basefunction
+      - id: software_currency
+        inference_utility_function: software_currency_basefunction
+      - id: cve_exposure
+        inference_utility_function: cve_exposure_basefunction
+      - id: cloud_infrastructure
+        inference_utility_function: cloud_infrastructure_basefunction
+      - id: waf_presence
+        inference_utility_function: waf_presence_basefunction
+      - id: cdn_usage
+        inference_utility_function: cdn_usage_basefunction
+      - id: security_page_presence
+        inference_utility_function: security_page_basefunction
+      - id: privacy_policy_presence
+        inference_utility_function: privacy_policy_basefunction
+      - id: security_txt_presence
+        inference_utility_function: security_txt_basefunction
+      - id: bug_bounty_presence
+        inference_utility_function: bug_bounty_basefunction
+      - id: security_hiring_activity
+        inference_utility_function: security_hiring_basefunction
+      - id: technical_content_quality
+        inference_utility_function: technical_quality_basefunction
+      - id: developer_resources
+        inference_utility_function: developer_resources_basefunction
+      - id: security_leadership_presence
+        inference_utility_function: security_leadership_basefunction
+      - id: compliance_badges
+        inference_utility_function: compliance_badges_basefunction
+    
+      # --- RISK HISTORY & EXTERNAL SIGNALS ---
+      - id: breach_history
+        inference_utility_function: breach_history_basefunction
+      - id: regulatory_actions
+        inference_utility_function: regulatory_action_basefunction
+      - id: litigation_history
+        inference_utility_function: litigation_history_basefunction
+      - id: credential_exposure
+        inference_utility_function: credential_exposure_basefunction
+      - id: dark_web_presence
+        inference_utility_function: dark_web_basefunction
+      - id: security_rating
+        inference_utility_function: security_rating_basefunction
+      - id: esg_cyber_alignment
+        inference_utility_function: esg_cyber_basefunction
+      - id: credit_rating
+        inference_utility_function: credit_rating_basefunction
+    
+      # --- DIGITAL FOOTPRINT & INFRASTRUCTURE ---
+      - id: dns_complexity
+        inference_utility_function: dns_complexity_basefunction
+      - id: subdomain_count
+        inference_utility_function: subdomain_enumeration_basefunction
+      - id: ip_footprint
+        inference_utility_function: ip_footprint_basefunction
+      - id: ssl_certificate_count
+        inference_utility_function: ssl_certificate_count_basefunction
+      - id: cloud_scale
+        inference_utility_function: cloud_scale_basefunction
+      - id: employee_estimate
+        inference_utility_function: employee_estimate_basefunction
+      - id: location_count
+        inference_utility_function: location_count_basefunction
+      - id: job_posting_volume
+        inference_utility_function: job_posting_volume_basefunction
+      - id: funding_signals
+        inference_utility_function: funding_signals_basefunction
+      - id: market_cap
+        inference_utility_function: market_cap_basefunction
+      - id: revenue_estimate
+        inference_utility_function: revenue_estimate_basefunction
+      - id: asset_value
+        inference_utility_function: asset_value_basefunction
+      - id: industry_tiv_benchmark
+        inference_utility_function: industry_tiv_benchmark_basefunction
+      - id: peer_group_tiv
+        inference_utility_function: peer_group_tiv_basefunction
+    
+      # --- ORGANISATIONAL COMPLEXITY & STRUCTURE ---
+      - id: country_count
+        inference_utility_function: country_count_basefunction
+      - id: timezone_spread
+        inference_utility_function: timezone_spread_basefunction
+      - id: geo_ip_diversity
+        inference_utility_function: geo_ip_diversity_basefunction
+      - id: regional_domains
+        inference_utility_function: regional_domains_basefunction
+      - id: subsidiary_count
+        inference_utility_function: subsidiary_count_basefunction
+      - id: brand_count
+        inference_utility_function: brand_count_basefunction
+      - id: acquisition_activity
+        inference_utility_function: acquisition_activity_basefunction
+      - id: tech_stack_diversity
+        inference_utility_function: tech_stack_diversity_basefunction
+      - id: multi_cloud_indicator
+        inference_utility_function: multi_cloud_basefunction
+      - id: legacy_technology_presence
+        inference_utility_function: legacy_technology_basefunction
+      - id: regulatory_jurisdiction_count
+        inference_utility_function: regulatory_jurisdiction_count_basefunction
+      - id: compliance_framework_count
+        inference_utility_function: compliance_framework_count_basefunction
+        
+    # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
     # Categorical groups can either
     # a) impact base premium after generation (impact: "MODIFIER")
