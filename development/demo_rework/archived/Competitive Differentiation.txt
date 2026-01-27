@@ -17,7 +17,7 @@ CANVAS_PERSISTENCE: true
 MOBILE_SUPPORT: none
 
 ====================================================================
-SECTION 1 — WHY TRADITIONAL MODELS FAIL
+SECTION 1 â€” WHY TRADITIONAL MODELS FAIL
 SECTION_ID: traditional_failure
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: establish the limitations of existing tools and approaches
@@ -51,7 +51,7 @@ SUPPORTING_TEXT:
   - Traditional models cannot scale, cannot automate, and cannot produce consistent outcomes.
 
 ====================================================================
-SECTION 2 — WHY EXISTING SIGNAL PROVIDERS ARE NOT UNDERWRITING SYSTEMS
+SECTION 2 â€” WHY EXISTING SIGNAL PROVIDERS ARE NOT UNDERWRITING SYSTEMS
 SECTION_ID: signal_provider_limitations
 SECTION_TYPE: expandable_three_card_row
 SECTION_PURPOSE: clarify the categorical difference between DSI and existing vendors
@@ -87,7 +87,7 @@ SUPPORTING_TEXT:
   - DSI is not a better data feed. It is a new underwriting substrate.
 
 ====================================================================
-SECTION 3 — WHAT MAKES DSI FUNDAMENTALLY DIFFERENT
+SECTION 3 â€” WHAT MAKES DSI FUNDAMENTALLY DIFFERENT
 SECTION_ID: dsi_difference
 SECTION_TYPE: static_four_card_grid
 SECTION_PURPOSE: articulate the categorical distinction between DSI and all competitors
@@ -124,7 +124,7 @@ SUPPORTING_TEXT:
   - DSI is a categorical shift, not an incremental improvement.
 
 ====================================================================
-SECTION 4 — THE STRATEGIC ADVANTAGE
+SECTION 4 â€” THE STRATEGIC ADVANTAGE
 SECTION_ID: strategic_advantage
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: show the commercial and operational advantages of DSI
@@ -144,7 +144,7 @@ VISUAL_STATE:
 CONTENT_CARDS:
   CARD_1:
     TITLE: Operational Efficiency
-    BODY: 60–80% straight-through processing, <60 seconds to quote, < $10 cost per submission.
+    BODY: 60â€“80% straight-through processing, <60 seconds to quote, < $10 cost per submission.
 
   CARD_2:
     TITLE: Superior Risk Selection
