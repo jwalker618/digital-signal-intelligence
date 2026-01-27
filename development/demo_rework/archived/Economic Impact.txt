@@ -17,7 +17,7 @@ CANVAS_PERSISTENCE: true
 MOBILE_SUPPORT: none
 
 ====================================================================
-SECTION 1 — THE COST OF TRADITIONAL UNDERWRITING
+SECTION 1 â€” THE COST OF TRADITIONAL UNDERWRITING
 SECTION_ID: traditional_cost
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: quantify the economic drag created by manual, document-driven underwriting
@@ -37,7 +37,7 @@ VISUAL_STATE:
 CONTENT_CARDS:
   CARD_1:
     TITLE: High Operational Cost
-    BODY: Manual underwriting costs $150–$500 per submission, driven by human review, follow-ups, and document processing.
+    BODY: Manual underwriting costs $150â€“$500 per submission, driven by human review, follow-ups, and document processing.
 
   CARD_2:
     TITLE: Slow Cycle Times
@@ -51,10 +51,10 @@ SUPPORTING_TEXT:
   - Traditional underwriting is economically inefficient, operationally slow, and strategically fragile.
 
 ====================================================================
-SECTION 2 — THE ECONOMIC VALUE OF DSI
+SECTION 2 â€” THE ECONOMIC VALUE OF DSI
 SECTION_ID: dsi_value
 SECTION_TYPE: static_four_card_grid
-SECTION_PURPOSE: quantify the economic uplift created by DSI’s deterministic substrate
+SECTION_PURPOSE: quantify the economic uplift created by DSIâ€™s deterministic substrate
 
 VISUAL_STATE:
   NODE_COUNT: 80 - 120
@@ -69,7 +69,7 @@ VISUAL_STATE:
 
 CONTENT_CARDS:
   CARD_1:
-    TITLE: 60–80% Straight-Through Processing
+    TITLE: 60â€“80% Straight-Through Processing
     BODY: Deterministic decisioning reduces human involvement and accelerates throughput.
 
   CARD_2:
@@ -88,7 +88,7 @@ SUPPORTING_TEXT:
   - DSI transforms underwriting from a cost centre into a scalable, high-margin engine.
 
 ====================================================================
-SECTION 3 — PORTFOLIO-LEVEL IMPACT
+SECTION 3 â€” PORTFOLIO-LEVEL IMPACT
 SECTION_ID: portfolio_impact
 SECTION_TYPE: expandable_three_card_row
 SECTION_PURPOSE: show how DSI improves portfolio performance and capital efficiency
@@ -121,7 +121,7 @@ SUPPORTING_TEXT:
   - DSI enables active portfolio management rather than passive accumulation.
 
 ====================================================================
-SECTION 4 — STRATEGIC ECONOMIC ADVANTAGE
+SECTION 4 â€” STRATEGIC ECONOMIC ADVANTAGE
 SECTION_ID: strategic_economics
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: articulate the long-term economic advantage of adopting DSI
