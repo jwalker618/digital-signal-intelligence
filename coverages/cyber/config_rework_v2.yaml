@@ -296,111 +296,111 @@ cyber:
           label: "Technology"
           description: ""      
           modifier: 
-            value: 1.15    
+            applied: 1.15    
         - cat: "FINANCIAL_SERVICES" 
           label: "Financial Services" 
           description: ""     
           modifier: 
-            value: 1.40
+            applied: 1.40
         - cat: "HEALTHCARE"
           label: "Healthcare"
           description: ""     
           modifier: 
-            value: 1.50
+            applied: 1.50
         - cat: "RETAIL"
           label: "Retail"
           description: ""     
           modifier: 
-            value: 1.25
+            applied: 1.25
         - cat: "MANUFACTURING"
           label: "Manufacturing"
           description: ""     
           modifier: 
-            value: 0.95
+            applied: 0.95
         - cat: "PROFESSIONAL_SERVICES"
           label: "Professional Services"
           description: ""     
           modifier: 
-            value: 1.10
+            applied: 1.10
         - cat: "EDUCATION"
           label: "Education"
           description: ""     
           modifier: 
-            value: 1.05
+            applied: 1.05
         - cat: "GOVERNMENT"
           label: "Government"
           description: ""    
           modifier: 
-            value:0.90
+            applied: 0.90
         - cat: "ENERGY"
           label: "Energy & Utilities"
           description: ""     
           modifier: 
-            value: 1.20
+            applied: 1.20
         - cat: "OTHER"
           label: "Other" 
           description: ""     
           modifier: 
-            value: 1.00
+            applied: 1.00
           
       size_band:
         - cat: "MICRO"
           label: "Micro"
           description: ""     
           modifier: 
-            value: 0.40
+            applied: 0.40
         - cat: "SMALL"
           label: "Small"
           description: ""     
           modifier: 
-            value: 0.60
+            applied: 0.60
         - cat: "MEDIUM"
           label: "Medium"
           description: ""     
           modifier: 
-            value: 1.00
+            applied: 1.00
         - cat: "LARGE"
           label: "Large"
           description: ""     
           modifier: 
-            value: 2.00
+            applied: 2.00
         - cat: "ENTERPRISE"
           label: "Enterprise"
           description: ""   
           modifier: 
-            value: 4.00  
+            applied: 4.00  
         - cat: "OTHER"
           label: "Other"
           description: ""  
           modifier: 
-            value: 1.00 
+            applied: 1.00 
           
       geography:
         - cat: "US" 
           label: "United States"
           description: ""     
           modifier: 
-            value: 1.00
+            applied: 1.00
         - cat: "UK"
           label: "United Kingdom"
           description: ""     
           modifier: 
-            value: 1.05
+            applied: 1.05
         - cat: "EU"
           label: "European Union"
           description: ""     
           modifier: 
-            value: 1.10 
+            applied: 1.10 
         - cat: "APAC"
           label: "Asia Pacific"
           description: ""     
           modifier: 
-            value: 1.15    
+            applied: 1.15    
         - cat: "OTHER" 
           label: "Other"
           description: ""     
           modifier: 
-            value: 1.25
+            applied: 1.25
           
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
