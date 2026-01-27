@@ -28,18 +28,17 @@ This folder contains all DSI documentation including overviews, and case studies
 
 | Document | Audience | Purpose |
 |-|-|-|
-| `Call to action.pdf` | C-Suite, Board | One-page argument hook |
-| `Executive summary.pdf` | C-Suite, Board | One-page DSI overview |
 | `Foundational Principles.md` | Technical | Core DSI methodology |
-| `Pitch deck.pdf` | C-Suite, Board, Investors | DSI Pitch Deck |
-| `The PageRank precedent.pdf` | Board | Analogy to proven methodology |
-| `Whitepaper - Digital Signal Intelligenvce.pdf` | Technical leadership | Detailed white paper |
+| `Pitch_deck.pdf` | C-Suite, Board, Investors | DSI Pitch Deck |
+| `The_PageRank_Precedent.pdf` | Board | Analogy to proven methodology |
+| `Whitepaper_Digital_Signal_Intelligenvce.pdf` | Technical leadership | Detailed white paper |
+| `Visionpaper_Digital_Signal_Intelligenvce.pdf` | Technical leadership | Detailed vision paper |
 
 ### Case Studies (`case_studies/`)
 
 | Document | Purpose |
 |-|-|
-| `retrospective_loss_case_studies.pdf` | Cross-coverage loss analysis (FI, Marine, Energy, Aerospace) |
+| `Retrospective_loss_case_studies.pdf` | Cross-coverage loss analysis (FI, Marine, Energy etc) |
 
 
 ## Related Documentation
