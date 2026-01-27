@@ -498,6 +498,20 @@ cyber:
     # Each is a underlying feature for the previously defined groups
     # Each group contributes to the group score
     # Weights must add to 1
+    #
+    #
+    # loss:
+    #  weight: 0.00
+    ##    How important is this signal?
+    #  correlation_type: frequency / severity / both 
+    ##    What does the signal predict?
+    #  correlation_direction: positive / negative. 
+    ##    Positive: higher signal = lower loss propensity 
+    ##    Negative: higher signal = higher loss propensity
+    #  normalizer: linear / log_scale / percentile / categorical_map
+    ##    How do I transform this signal?
+    #
+    #
     # -------------------------------------------------------------------------
   
     signal_features:
@@ -960,6 +974,7 @@ cyber:
       # -----------------------------------------------------------------------
       exposure_magnitude:
         # Digital Footprint Indicators
+
         - id: "dns_complexity"
           name: "DNS Complexity"
           description: "Number and structure of DNS records"
