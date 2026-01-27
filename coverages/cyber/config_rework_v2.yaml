@@ -142,7 +142,7 @@ cyber:
             - {min: 26, max: 50, applied: 1.00}
             - {min: 51, max: 75, applied: 1.20}
             - {min: 76, max: 100, applied: 1.40}
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -166,7 +166,7 @@ cyber:
         inference_utility_function: customer_quality_basefunction
         normaliser:
           type: percentile
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -180,7 +180,7 @@ cyber:
         inference_utility_function: partner_quality_basefunction
         normaliser:
           type: percentile
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -197,7 +197,7 @@ cyber:
         inference_utility_function: industry_body_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -207,7 +207,7 @@ cyber:
         inference_utility_function: certification_authority_basefunction
         normaliser:
           type: categorical_map
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -221,7 +221,7 @@ cyber:
         inference_utility_function: financial_relationship_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -231,7 +231,7 @@ cyber:
         inference_utility_function: network_centrality_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -241,7 +241,7 @@ cyber:
         inference_utility_function: second_degree_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: network_authority
           risk:
             correlation_direction: positive
@@ -251,7 +251,7 @@ cyber:
         inference_utility_function: tls_configuration_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -270,7 +270,7 @@ cyber:
         inference_utility_function: security_headers_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -287,7 +287,7 @@ cyber:
         inference_utility_function: email_authentication_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -297,7 +297,7 @@ cyber:
         inference_utility_function: dnssec_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -307,7 +307,7 @@ cyber:
         inference_utility_function: network_exposure_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -320,7 +320,7 @@ cyber:
         inference_utility_function: software_currency_basefunction
         normaliser:
           type: percentile
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -337,7 +337,7 @@ cyber:
         inference_utility_function: cve_exposure_basefunction
         normaliser:
           type: log_scale
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -354,7 +354,7 @@ cyber:
         inference_utility_function: cloud_infrastructure_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -368,7 +368,7 @@ cyber:
         inference_utility_function: waf_presence_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -378,7 +378,7 @@ cyber:
         inference_utility_function: cdn_usage_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: technical_infrastructure
           risk:
             correlation_direction: positive
@@ -388,7 +388,7 @@ cyber:
         inference_utility_function: breach_history_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: public_record
           risk:
             correlation_direction: positive
@@ -401,7 +401,7 @@ cyber:
         inference_utility_function: regulatory_action_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: public_record
           risk:
             correlation_direction: positive
@@ -411,7 +411,7 @@ cyber:
         inference_utility_function: litigation_history_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: public_record
           risk:
             correlation_direction: positive
@@ -421,7 +421,7 @@ cyber:
         inference_utility_function: credential_exposure_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: public_record
           risk:
             correlation_direction: positive
@@ -431,7 +431,7 @@ cyber:
         inference_utility_function: dark_web_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: public_record
           risk:
             correlation_direction: positive
@@ -441,7 +441,7 @@ cyber:
         inference_utility_function: security_rating_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: structured_data
           risk:
             correlation_direction: positive
@@ -455,7 +455,7 @@ cyber:
         inference_utility_function: esg_cyber_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: structured_data
           risk:
             correlation_direction: positive
@@ -465,7 +465,7 @@ cyber:
         inference_utility_function: credit_rating_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: structured_data
           risk:
             correlation_direction: positive
@@ -475,7 +475,7 @@ cyber:
         inference_utility_function: security_page_basefunction
         normaliser:
           type: categorical_map
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -489,7 +489,7 @@ cyber:
         inference_utility_function: privacy_policy_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -499,7 +499,7 @@ cyber:
         inference_utility_function: security_txt_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -509,7 +509,7 @@ cyber:
         inference_utility_function: bug_bounty_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -519,7 +519,7 @@ cyber:
         inference_utility_function: security_hiring_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -529,7 +529,7 @@ cyber:
         inference_utility_function: technical_quality_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -539,7 +539,7 @@ cyber:
         inference_utility_function: developer_resources_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -549,7 +549,7 @@ cyber:
         inference_utility_function: security_leadership_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -566,7 +566,7 @@ cyber:
         inference_utility_function: compliance_badges_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -580,7 +580,7 @@ cyber:
         inference_utility_function: dns_complexity_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -590,7 +590,7 @@ cyber:
         inference_utility_function: subdomain_enumeration_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -600,7 +600,7 @@ cyber:
         inference_utility_function: ip_footprint_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -610,7 +610,7 @@ cyber:
         inference_utility_function: ssl_certificate_count_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -620,7 +620,7 @@ cyber:
         inference_utility_function: job_posting_volume_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
@@ -630,99 +630,99 @@ cyber:
         inference_utility_function: funding_signals_basefunction
         normaliser:
           type: linear
-        signals:
+        three_layer_assessment:
           groupid: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.05
-
+        
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
     # Categorical groups can either
     # a) impact base premium after generation (impact: "MODIFIER")
     # b) be the basis of premium (impact: "PREMIUM")
     # Note: only one categorical group be the basis of premium
-    # -------------------------------------------------------------------------
-    categorical_groups:
-      - id: "industry_classification"
-        label: "Industry Classification"
-        description: "Industry classification derived from public records"
-        impact: "modifier" 
-        default_cat: "OTHER"
-      - id: "size_band"
-        label: "Size Band"
-        description: "Company size classification"
-        impact: "modifier"
-        default_cat: "OTHER"
-      - id: "geography"
-        label: "geography"
-        description: "Primary operational geography"
-        impact: "modifier"
-        default_cat: "OTHER"
-        
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
+    
+    # THREE LAYER ASSESSMENT
     # Each group is the product of its underlying features
     # Each group contributes to the composite score
     # Weights must add to 1
     # -------------------------------------------------------------------------
     
-    signal_groups:
-      - id: "network_authority"
-        label: "Network Authority"
-        description: "Industry relationships, partnerships, and counterparty quality"
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-        
-      - id: "technical_infrastructure"
-        label: "Technical Infrastructure"
-        description: "Observable technical security implementation"
-        risk:
-          weight: 0.35
-          score_condition: 
-            - {max: 30, action: "DECLINE", override: 5, note: "Critical technical deficiencies"}
-            - {max: 45, action: "REFER", override: 4, note: "Significant technical concerns"}
-        loss:
-          weight: 0.35
-        exposure:
-          weight: 0.35
-        
-      - id: "corporate_footprint"
-        label: "Corporate Footprint"
-        description: "Signals from company's digital presence and security posture"
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.25
-        exposure:
-          weight: 0.15
-        
-      - id: "public_record"
-        label: "Public Record"
-        description: "Breach history, regulatory actions, and public disclosures"
-        risk:
-          weight: 0.25
-          score_condition: 
-            - {max: 30, action: "DECLINE", override: 5, note: "Severe breach/regulatory history"}
-            - {max: 45, action: "REFER", override: 4, note: "Material breach history"}
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.25
-     
-      - id: "structured_data"
-        label: "Structured Data"
-        description: "Third-party security ratings and scores"
-        risk:
-          weight: 0.10
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.10
+    groups: 
+      categories:
+        - id: "industry_classification"
+          label: "Industry Classification"
+          description: "Industry classification derived from public records"
+          impact: "modifier" 
+          default_cat: "OTHER"
+        - id: "size_band"
+          label: "Size Band"
+          description: "Company size classification"
+          impact: "modifier"
+          default_cat: "OTHER"
+        - id: "geography"
+          label: "geography"
+          description: "Primary operational geography"
+          impact: "modifier"
+          default_cat: "OTHER"
+      
+      three_layer_assessment:
+        - id: "network_authority"
+          label: "Network Authority"
+          description: "Industry relationships, partnerships, and counterparty quality"
+          risk:
+            weight: 0.15
+          loss:
+            weight: 0.15
+          exposure:
+            weight: 0.15
+          
+        - id: "technical_infrastructure"
+          label: "Technical Infrastructure"
+          description: "Observable technical security implementation"
+          risk:
+            weight: 0.35
+            score_condition: 
+              - {max: 30, action: "DECLINE", override: 5, note: "Critical technical deficiencies"}
+              - {max: 45, action: "REFER", override: 4, note: "Significant technical concerns"}
+          loss:
+            weight: 0.35
+          exposure:
+            weight: 0.35
+          
+        - id: "corporate_footprint"
+          label: "Corporate Footprint"
+          description: "Signals from company's digital presence and security posture"
+          risk:
+            weight: 0.15
+          loss:
+            weight: 0.25
+          exposure:
+            weight: 0.15
+          
+        - id: "public_record"
+          label: "Public Record"
+          description: "Breach history, regulatory actions, and public disclosures"
+          risk:
+            weight: 0.25
+            score_condition: 
+              - {max: 30, action: "DECLINE", override: 5, note: "Severe breach/regulatory history"}
+              - {max: 45, action: "REFER", override: 4, note: "Material breach history"}
+          loss:
+            weight: 0.2
+          exposure:
+            weight: 0.25
+       
+        - id: "structured_data"
+          label: "Structured Data"
+          description: "Third-party security ratings and scores"
+          risk:
+            weight: 0.10
+          loss:
+            weight: 0.2
+          exposure:
+            weight: 0.10
 
     # ---------------------------------------------------------------------------
     # RISK TIER BANDINGS
@@ -1003,120 +1003,3 @@ cyber:
         - {min_pct: 0.020, max_pct: null, credit: 0.20}    # >2% of limit
         
       taxes_fees_rate: 0.05
-
-    # -------------------------------------------------------------------------
-    # EXPOSURE SCORING CONFIGURATION
-    # -------------------------------------------------------------------------
-    # Groups signals from signal_features into magnitude and complexity scoring.
-    # Signals are defined once in signal_features with exposure: subsections.
-    # This section defines how those signals are grouped for scoring.
-
-    exposure_scoring:
-      # Magnitude groups (TIV proxy) - references signals from exposure_magnitude
-      magnitude_groups:
-        - name: digital_footprint
-          weight: 0.30
-          confidence_threshold: 0.6
-          description: "Observable digital presence indicators"
-          signals: [dns_complexity, subdomain_count, ip_footprint, ssl_certificate_count, cloud_scale, cloud_infrastructure]
-
-        - name: corporate_indicators
-          weight: 0.25
-          confidence_threshold: 0.7
-          description: "Observable corporate size indicators"
-          signals: [employee_estimate, location_count, job_posting_volume, funding_signals]
-
-        - name: public_financials
-          weight: 0.25
-          confidence_threshold: 0.8
-          description: "Direct financial observables (when available)"
-          signals: [market_cap, revenue_estimate, asset_value]
-
-        - name: industry_context
-          weight: 0.20
-          confidence_threshold: 0.5
-          description: "Industry and sector-based priors"
-          signals: [industry_tiv_benchmark, peer_group_tiv]
-
-      # Complexity groups - references signals from exposure_complexity
-      complexity_groups:
-        - name: geographic_dispersion
-          weight: 0.30
-          confidence_threshold: 0.6
-          description: "Geographic spread of operations"
-          signals: [country_count, timezone_spread, geo_ip_diversity, regional_domains]
-
-        - name: structural_complexity
-          weight: 0.25
-          confidence_threshold: 0.7
-          description: "Organizational structure complexity"
-          signals: [subsidiary_count, brand_count, acquisition_activity]
-
-        - name: technical_heterogeneity
-          weight: 0.25
-          confidence_threshold: 0.6
-          description: "Technology stack diversity"
-          signals: [tech_stack_diversity, multi_cloud_indicator, legacy_technology]
-
-        - name: regulatory_jurisdictions
-          weight: 0.20
-          confidence_threshold: 0.7
-          description: "Regulatory jurisdiction complexity"
-          signals: [regulatory_jurisdiction_count, compliance_framework_count]
-
-      # Cohort priors for fallback estimation when signal coverage is low
-      cohort_priors:
-        - cohort_id: tech_startup
-          name: "Technology Startup"
-          sector: technology
-          size_indicator: startup
-          prior_band: small
-          prior_score: 30.0
-          confidence: 0.4
-        - cohort_id: tech_enterprise
-          name: "Technology Enterprise"
-          sector: technology
-          size_indicator: enterprise
-          prior_band: large
-          prior_score: 70.0
-          confidence: 0.5
-        - cohort_id: healthcare_mid
-          name: "Healthcare Mid-Market"
-          sector: healthcare
-          size_indicator: midmarket
-          prior_band: medium
-          prior_score: 50.0
-          confidence: 0.45
-        - cohort_id: financial_large
-          name: "Financial Services Large"
-          sector: financial_services
-          size_indicator: large
-          prior_band: very_large
-          prior_score: 85.0
-          confidence: 0.55
-        - cohort_id: retail_smb
-          name: "Retail SMB"
-          sector: retail
-          size_indicator: smb
-          prior_band: small
-          prior_score: 25.0
-          confidence: 0.4
-
-      # Auto-apply rules for exposure decisions
-      auto_apply_rules:
-        - condition: "exposure_band == 'very_large' and confidence < 0.5"
-          action: refer
-          reason: "Very large exposure with low confidence - verify manually"
-
-        - condition: "exposure_band in ['large', 'very_large'] and proxy_tier == 'COHORT_INFERENCE'"
-          action: refer
-          reason: "Large exposure based on cohort inference - direct data needed"
-
-        - condition: "complexity_category == 'extremely_complex'"
-          action: flag
-          reason: "Extremely complex structure - consider enhanced underwriting"
-
-        - condition: "exposure_band == 'micro' and confidence >= 0.7"
-          action: apply_modifier
-          modifier: "micro_exposure_credit"
-            credit_rating: 65
