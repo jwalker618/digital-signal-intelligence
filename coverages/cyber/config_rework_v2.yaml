@@ -267,20 +267,20 @@ cyber:
     # -------------------------------------------------------------------------
     categorical_groups:
       - id: "industry_classification"
-        name: "Industry Classification"
+        label: "Industry Classification"
         description: "Industry classification derived from public records"
         impact: "modifier" 
-        inference_utility_function: industry_classification_basefunction
+        inference_id: industry_classification_basefunction
       - id: "size_band"
-        name: "Size Band"
+        label: "Size Band"
         description: "Company size classification"
         impact: "modifier"
-        inference_utility_function: company_size_basefunction
+        inference_id: company_size_basefunction
       - id: "geography"
-        name: "geography"
+        label: "geography"
         description: "Primary operational geography"
         impact: "modifier"
-        inference_utility_function: operational_base_basefunction
+        inference_id: operational_base_basefunction
         
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -294,93 +294,114 @@ cyber:
       industry_classification:
         - cat: "TECHNOLOGY"
           label: "Technology"
-          modifier: 1.15
-          description: ""         
+          description: ""      
+          modifier: 
+            value: 1.15    
         - cat: "FINANCIAL_SERVICES" 
           label: "Financial Services" 
-          modifier: 1.40
           description: ""     
+          modifier: 
+            value: 1.40
         - cat: "HEALTHCARE"
           label: "Healthcare"
-          modifier: 1.50
           description: ""     
+          modifier: 
+            value: 1.50
         - cat: "RETAIL"
           label: "Retail"
-          modifier: 1.25
           description: ""     
+          modifier: 
+            value: 1.25
         - cat: "MANUFACTURING"
           label: "Manufacturing"
-          modifier: 0.95
           description: ""     
+          modifier: 
+            value: 0.95
         - cat: "PROFESSIONAL_SERVICES"
           label: "Professional Services"
-          modifier: 1.10
           description: ""     
+          modifier: 
+            value: 1.10
         - cat: "EDUCATION"
           label: "Education"
-          modifier: 1.05
           description: ""     
+          modifier: 
+            value: 1.05
         - cat: "GOVERNMENT"
           label: "Government"
-          modifier: 0.90
-          description: ""     
+          description: ""    
+          modifier: 
+            value:0.90
         - cat: "ENERGY"
           label: "Energy & Utilities"
-          modifier: 1.20
           description: ""     
+          modifier: 
+            value: 1.20
         - cat: "OTHER"
           label: "Other" 
-          modifier: 1.00
           description: ""     
-  
+          modifier: 
+            value: 1.00
+          
       size_band:
         - cat: "MICRO"
           label: "Micro"
-          modifier: 0.40
           description: ""     
+          modifier: 
+            value: 0.40
         - cat: "SMALL"
           label: "Small"
-          modifier: 0.60
           description: ""     
+          modifier: 
+            value: 0.60
         - cat: "MEDIUM"
           label: "Medium"
-          modifier: 1.00
           description: ""     
+          modifier: 
+            value: 1.00
         - cat: "LARGE"
           label: "Large"
           description: ""     
-          modifier: 2.00
+          modifier: 
+            value: 2.00
         - cat: "ENTERPRISE"
           label: "Enterprise"
-          modifier: 4.00 
-          description: ""     
+          description: ""   
+          modifier: 
+            value: 4.00  
         - cat: "OTHER"
           label: "Other"
-          modifier: 1.00 
           description: ""  
+          modifier: 
+            value: 1.00 
           
       geography:
         - cat: "US" 
           label: "United States"
-          modifier: 1.00
           description: ""     
+          modifier: 
+            value: 1.00
         - cat: "UK"
           label: "United Kingdom"
-          modifier: 1.05
           description: ""     
+          modifier: 
+            value: 1.05
         - cat: "EU"
           label: "European Union"
-          modifier: 1.10 
           description: ""     
+          modifier: 
+            value: 1.10 
         - cat: "APAC"
           label: "Asia Pacific"
-          modifier: 1.15
           description: ""     
+          modifier: 
+            value: 1.15    
         - cat: "OTHER" 
           label: "Other"
-          modifier: 1.25
           description: ""     
-
+          modifier: 
+            value: 1.25
+          
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
     # Each group is the product of its underlying features
@@ -390,22 +411,20 @@ cyber:
     
     signal_groups:
       - id: "network_authority"
-        name: "Network Authority"
+        label: "Network Authority"
         description: "Industry relationships, partnerships, and counterparty quality"
         risk:
           weight: 0.15
-          test_scores: {excellent: 90, average: 70, poor: 40}
           score_condition: false
         loss:
           weight: 0.15
           confidence_threshold: 0.5
         
       - id: "technical_infrastructure"
-        name: "Technical Infrastructure"
+        label: "Technical Infrastructure"
         description: "Observable technical security implementation"
         risk:
           weight: 0.35
-          test_scores: {excellent: 92, average: 68, poor: 35}
           score_condition: true
           bands:
             - max: 30
@@ -419,25 +438,23 @@ cyber:
           inclusive_max: false
         loss:
           weight: 0.35
-          confidence_threshold: 0.7
+          confidence_threshold: 0.7      
         
       - id: "corporate_footprint"
-        name: "Corporate Footprint"
+        label: "Corporate Footprint"
         description: "Signals from company's digital presence and security posture"
         risk:
           weight: 0.15
-          test_scores: {excellent: 88, average: 65, poor: 38}
           score_condition: false
         loss:
           weight: 0.25
           confidence_threshold: 0.6
         
       - id: "public_record"
-        name: "Public Record"
+        label: "Public Record"
         description: "Breach history, regulatory actions, and public disclosures"
         risk:
           weight: 0.25
-          test_scores: {excellent: 95, average: 72, poor: 30}
           score_condition: true
           bands:
             - max: 30
@@ -454,11 +471,10 @@ cyber:
           confidence_threshold: 0.8
      
       - id: "structured_data"
-        name: "Structured Data"
+        label: "Structured Data"
         description: "Third-party security ratings and scores"
         risk:
           weight: 0.10
-          test_scores: {excellent: 88, average: 68, poor: 42}
           score_condition: false
         loss:
           weight: 0.2
@@ -466,18 +482,16 @@ cyber:
 
       # Exposure-specific signal groups (no risk/loss contribution)
       - id: "exposure_magnitude"
-        name: "Exposure Magnitude"
+        label: "Exposure Magnitude"
         description: "Observable signals indicating organizational size and TIV proxy"
         exposure:
           contributes_to: magnitude
-          test_scores: {large: 75, medium: 50, small: 25}
 
       - id: "exposure_complexity"
-        name: "Exposure Complexity"
+        label: "Exposure Complexity"
         description: "Observable signals indicating operational and structural complexity"
         exposure:
           contributes_to: complexity
-          test_scores: {complex: 70, moderate: 45, simple: 20}
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -1296,9 +1310,12 @@ cyber:
     # EXPOSURE TIER BANDINGS
     # Score ranges from 0-100   
     # Exposure returns two bandings - size and complexity. Each is the product of a banding excercise based on score.
+    # size = organisational size and TIV proxy
+    # complexity = operational and structural complexity
     # Calculation: (exposure_modifier × exposure_weight) + (complexity_modifier × complexity_weight)
     # All components stored at atomic level for auditability
-    # ---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------  
+    
     exposure:
       size_weight: 0.60
       complexity_weight: 0.40
