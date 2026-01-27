@@ -102,7 +102,7 @@ VISUAL BACKGROUND INGESTION
 
 BACKGROUND_CANVAS:
   TYPE: dynamic_network_canvas
-  OPACITY: 0.15–0.25
+  OPACITY: 0.15â€“0.25
   MOTION: subtle
   TRANSITION: animate_on_section_change
   MOBILE_SUPPORT: none
@@ -126,7 +126,7 @@ LOGO_ASSET:
   NAME: generate_logo.png
   FORMAT: PNG
   POSITION: top_right of header
-  SIZE: 32–40px height
+  SIZE: 32â€“40px height
   BEHAVIOUR: static, non-interactive
 
 LOGO_REPLACEMENT:
