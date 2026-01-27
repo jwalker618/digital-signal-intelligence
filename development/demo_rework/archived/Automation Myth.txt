@@ -17,7 +17,7 @@ CANVAS_PERSISTENCE: true
 MOBILE_SUPPORT: none
 
 ====================================================================
-SECTION 1 — THE INDUSTRY’S 20-YEAR STAGNATION
+SECTION 1 â€” THE INDUSTRYâ€™S 20-YEAR STAGNATION
 SECTION_ID: industry_stagnation
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: establish the scale and persistence of the problem
@@ -37,7 +37,7 @@ VISUAL_STATE:
 CONTENT_CARDS:
   CARD_1:
     TITLE: Flat Performance
-    BODY: Twenty years of Lloyd’s combined ratios show no structural improvement. The market has flat-lined.
+    BODY: Twenty years of Lloydâ€™s combined ratios show no structural improvement. The market has flat-lined.
 
   CARD_2:
     TITLE: Billions Spent
@@ -51,7 +51,7 @@ SUPPORTING_TEXT:
   - The industry has not failed due to lack of effort. It has failed due to a false assumption.
 
 ====================================================================
-SECTION 2 — THE FALSE ASSUMPTION
+SECTION 2 â€” THE FALSE ASSUMPTION
 SECTION_ID: false_assumption
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: expose the core misconception behind failed automation efforts
@@ -85,7 +85,7 @@ SUPPORTING_TEXT:
   - The problem is not the tools. The problem is the inputs.
 
 ====================================================================
-SECTION 3 — THE INFORMATION SUBSTRATE PROBLEM
+SECTION 3 â€” THE INFORMATION SUBSTRATE PROBLEM
 SECTION_ID: substrate_problem
 SECTION_TYPE: static_four_card_grid
 SECTION_PURPOSE: explain why automation has failed for two decades
@@ -123,7 +123,7 @@ SUPPORTING_TEXT:
   - The substrate is the bottleneck. Not the workflow. Not the model. The substrate.
 
 ====================================================================
-SECTION 4 — WHY AI CANNOT FIX THIS
+SECTION 4 â€” WHY AI CANNOT FIX THIS
 SECTION_ID: ai_limitation
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: make the argument airtight: even future AI cannot solve the substrate problem
@@ -157,7 +157,7 @@ SUPPORTING_TEXT:
   - Automation requires structured, observable, verifiable inputs. AI cannot manufacture them.
 
 ====================================================================
-SECTION 5 — THE SUBSTRATE MUST CHANGE
+SECTION 5 â€” THE SUBSTRATE MUST CHANGE
 SECTION_ID: substrate_change
 SECTION_TYPE: static_three_card_row
 SECTION_PURPOSE: set up the transition to DSI
