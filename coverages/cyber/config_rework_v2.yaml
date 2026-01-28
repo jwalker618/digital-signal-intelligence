@@ -1,32 +1,20 @@
 # =============================================================================
-# DSI Model Configuration
-# 
-# This file holds all the relvant configuration types for a single coverage.
-# For example,
-# coverage:         the actual coverage cohort, eg aerospace
-#   configuration:  the specific configuration file under that coverage, eg aerospace_general
-# 
-# There can be multiple configurations saved under a coverage.
-# 
-# A configuration is the single source of truth for:
-#   - 1) direct (optional) queries
-#   - 2) categorical features
-#   - 3) signal groups and siganl features
-#   - 4) all elements of the three layer assessment
-#   - the source and impact of 1- 4
-#   - tier definitions
-#   - other pricing parameters
-#   - test profiles for validation
+# DSI Model Configuration - Cyber Coverage
+# =============================================================================
 #
-# A configuration is augmented by:
-# 1) analysis - analysis_outputs/{coverage}_v{date}.yaml - defined empirically-derived parameters (lag, normalizer coefficients)
-# 2) organisational graph - schemas/organisational_graph{coverage}.yaml - defined node types, edge types, derivatives, graph operations 
-# 
-# When a technical model is generated:
-# - the completed selected configuration is persisted. This allows the model to be regenerated based on its original specification.
-# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-# 
-# All DSI foundational principles must be adhered to.
+# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
+# 1. Signals defined once in signal_registry with group_id reference
+# 2. source: score (default) uses 0-100 inference return
+# 3. source: metadata.field uses inference metadata with bands/categories
+# 4. Categorical groups apply modifiers (applied:), not scores
+# 5. score_condition applies actions/overrides at signal or group level
+# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
+# 7. Normalisation handled by inference functions, not config
+#
+# AUGMENTED BY:
+# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
+#
 # =============================================================================
 
 cyber:
@@ -34,70 +22,79 @@ cyber:
     metadata:
       name: "DSI Cyber Technical Pricing Model"
       description: "Cyber liability model based on externally observable technical signals"
-      version: "2.0.0"
+      version: "2.1.0"
       product_types:
         - "cyber_liability"
         - "network_security"
         - "privacy_liability"
         - "cyber_extortion"
       applicable_markets: ["us", "uk", "eu", "apac"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      minimum_viable_input: ["client name (domain optional)", "Limit in USD"]
       min_premium: 5000
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # Direct queries are binary questions of no more than 10 that cannot be externally observed. Created as a future provision for agents.
-    # Direct queries can either:
-    # a) impact base premium after generation (impact: "MODIFIER")
-    # b) create a note for the file (impact: "FLAG").
-    # c) override the tier allocation (impact: "REFER").    
-    # -------------------------------------------------------------------------
-    direct_queries:     
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed (max 10)
+    # Actions: FLAG | MODIFIER | REFER
+    # =========================================================================
+    direct_queries:
       - id: "mfa_enabled"
-        question: "Is multi-factor authentication enabled for all remote access??"
+        question: "Is multi-factor authentication enabled for all remote access?"
         query_condition:
           - {return: false, action: "FLAG", override: null, applied: null, note: "MFA not enabled - increased ransomware risk"}
+
       - id: "security_training"
         question: "Do all employees complete annual cyber security training?"
         query_condition:
           - {return: false, action: "FLAG", override: null, applied: null, note: "No security training - increased phishing risk"}
+
       - id: "phi_handler"
-        question: "Do you process Protected Health Information (PHI)"
+        question: "Do you process Protected Health Information (PHI)?"
         query_condition:
           - {return: true, action: "MODIFIER", override: null, applied: 1.25, note: "PHI handler - HIPAA exposure"}
+
       - id: "pci_scope"
-        question: "Do you store payment card data (PCI scope)"
+        question: "Do you store payment card data (PCI scope)?"
         query_condition:
           - {return: true, action: "MODIFIER", override: null, applied: 1.15, note: "PCI scope - card data exposure"}
+
       - id: "incident_response_plan"
         question: "Do you have a documented incident response plan?"
         query_condition:
           - {return: false, action: "FLAG", override: null, applied: null, note: "No IR plan - extended breach impact likely"}
+
       - id: "edr_deployed"
         question: "Is endpoint detection and response (EDR) deployed on all endpoints?"
         query_condition:
           - {return: false, action: "FLAG", override: null, applied: null, note: "No EDR - reduced threat detection"}
+
       - id: "immutable_backups"
         question: "Are backups maintained offline or immutable?"
         query_condition:
           - {return: false, action: "FLAG", override: null, applied: null, note: "No immutable backups - ransomware recovery risk"}
+
       - id: "recent_incident"
         question: "Have you experienced a material cyber incident in the past 3 years?"
         query_condition:
           - {return: true, action: "REFER", override: 4, applied: null, note: "Recent incident - requires manual review"}
-        
-    # -------------------------------------------------------------------------
-    # COMPLETE SIGNAL REGISTRY
-    # All inference functions are defined once, with a consistent naming id.
-    # Allows ease of reuse throughout configuration.
-    # -------------------------------------------------------------------------   
+
+    # =========================================================================
+    # SIGNAL REGISTRY
+    # All signals defined once with group_id reference
+    # proxy_tier at signal level; normalisation in inference functions
+    # =========================================================================
     signal_registry:
 
+      # -----------------------------------------------------------------------
+      # CATEGORICAL SIGNALS
+      # Return discrete categories that apply as pricing modifiers
+      # -----------------------------------------------------------------------
       - id: industry_classification
         inference_utility_function: industry_classification_basefunction
+        proxy_tier: INFERRED_PROXY
         categories:
-          groupid: industry_classification
+          group_id: industry_classification
           features:
             - {cat: "TECHNOLOGY", label: "Technology", applied: 1.15}
             - {cat: "FINANCIAL_SERVICES", label: "Financial Services", applied: 1.40}
@@ -106,14 +103,15 @@ cyber:
             - {cat: "MANUFACTURING", label: "Manufacturing", applied: 0.95}
             - {cat: "PROFESSIONAL_SERVICES", label: "Professional Services", applied: 1.10}
             - {cat: "EDUCATION", label: "Education", applied: 1.05}
-            - {cat: "GOVERMENT", label: "Government", applied: 0.90}
+            - {cat: "GOVERNMENT", label: "Government", applied: 0.90}
             - {cat: "ENERGY", label: "Energy", applied: 1.20}
             - {cat: "OTHER", label: "Other", applied: 1.00}
-    
+
       - id: size_band
         inference_utility_function: company_size_basefunction
+        proxy_tier: INFERRED_PROXY
         categories:
-          groupid: size_band
+          group_id: size_band
           features:
             - {cat: "MICRO", label: "Micro", applied: 0.40}
             - {cat: "SMALL", label: "Small", applied: 0.60}
@@ -121,34 +119,33 @@ cyber:
             - {cat: "LARGE", label: "Large", applied: 2.00}
             - {cat: "ENTERPRISE", label: "Enterprise", applied: 4.00}
             - {cat: "OTHER", label: "Other", applied: 1.00}
-    
+
       - id: geography
         inference_utility_function: operational_base_basefunction
+        proxy_tier: INFERRED_PROXY
         categories:
-          groupid: geography
+          group_id: geography
           features:
             - {cat: "US", label: "United States", applied: 1.00}
             - {cat: "UK", label: "United Kingdom", applied: 1.05}
             - {cat: "EU", label: "European Union", applied: 1.10}
             - {cat: "APAC", label: "Asia Pacific", applied: 1.15}
             - {cat: "OTHER", label: "Other", applied: 1.25}
-    
+
+      # -----------------------------------------------------------------------
+      # NETWORK AUTHORITY SIGNALS
+      # Industry relationships, partnerships, and counterparty quality
+      # -----------------------------------------------------------------------
       - id: security_vendor_presence
         inference_utility_function: security_vendor_basefunction
-        normaliser:
-          type: categorical_map
-          bands:
-            - {min: 0, max: 25, applied: 0.80}
-            - {min: 26, max: 50, applied: 1.00}
-            - {min: 51, max: 75, applied: 1.20}
-            - {min: 76, max: 100, applied: 1.40}
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.25
             score_condition:
-              - {min: 0, max: 25, action: "FLAG", note: "No tier-1 security vendors detected"}
+              - {max: 25, action: "FLAG", note: "No tier-1 security vendors detected"}
           loss:
             severity:
               correlation_direction: negative
@@ -157,17 +154,15 @@ cyber:
               correlation_direction: negative
               weight: 0.35
           exposure:
-            proxy_tier: inferred
             size:
               correlation_direction: positive
-              weight: 0.6
-        
+              weight: 0.15
+
       - id: customer_quality
         inference_utility_function: customer_quality_basefunction
-        normaliser:
-          type: percentile
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -175,13 +170,12 @@ cyber:
             severity:
               correlation_direction: negative
               weight: 0.15
-    
+
       - id: partner_quality
         inference_utility_function: partner_quality_basefunction
-        normaliser:
-          type: percentile
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -192,23 +186,21 @@ cyber:
             severity:
               correlation_direction: negative
               weight: 0.20
-    
+
       - id: industry_body_membership
         inference_utility_function: industry_body_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
-    
+
       - id: certification_authority_presence
         inference_utility_function: certification_authority_basefunction
-        normaliser:
-          type: categorical_map
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
@@ -216,43 +208,51 @@ cyber:
             frequency:
               correlation_direction: negative
               weight: 0.30
-    
+
       - id: financial_relationships
         inference_utility_function: financial_relationship_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.05
-    
-      - id: network_centrality
-        inference_utility_function: network_centrality_basefunction
-        normaliser:
-          type: linear
-        three_layer_assessment:
-          groupid: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-    
-      - id: second_degree_connections
-        inference_utility_function: second_degree_basefunction
-        normaliser:
-          type: linear
-        three_layer_assessment:
-          groupid: network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.05
 
+      - id: network_centrality
+        inference_utility_function: network_centrality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+          exposure:
+            complexity:
+              correlation_direction: positive
+              weight: 0.10
+
+      - id: second_degree_connections
+        inference_utility_function: second_degree_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+          exposure:
+            complexity:
+              correlation_direction: positive
+              weight: 0.05
+
+      # -----------------------------------------------------------------------
+      # TECHNICAL INFRASTRUCTURE SIGNALS
+      # Observable technical security implementation
+      # -----------------------------------------------------------------------
       - id: tls_configuration
         inference_utility_function: tls_configuration_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.12
@@ -261,17 +261,15 @@ cyber:
               correlation_direction: negative
               weight: 0.25
           exposure:
-            proxy_tier: inferred
             size:
               correlation_direction: positive
-              weight: 0.6
+              weight: 0.10
 
       - id: security_headers
         inference_utility_function: security_headers_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -282,46 +280,46 @@ cyber:
             severity:
               correlation_direction: negative
               weight: 0.30
-    
+
       - id: email_authentication
         inference_utility_function: email_authentication_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.12
-    
+
       - id: dnssec_status
         inference_utility_function: dnssec_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
-    
+
       - id: network_exposure
         inference_utility_function: network_exposure_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.18
             score_condition:
               - {max: 30, action: "DECLINE", override: 5, note: "Dangerous network exposure"}
               - {max: 45, action: "REFER", override: 4, note: "Elevated network exposure"}
-    
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: software_currency
         inference_utility_function: software_currency_basefunction
-        normaliser:
-          type: percentile
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -332,13 +330,12 @@ cyber:
             severity:
               correlation_direction: negative
               weight: 0.25
-    
+
       - id: cve_exposure
         inference_utility_function: cve_exposure_basefunction
-        normaliser:
-          type: log_scale
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.18
@@ -349,324 +346,440 @@ cyber:
             frequency:
               correlation_direction: positive
               weight: 0.20
-    
+
       - id: cloud_infrastructure
         inference_utility_function: cloud_infrastructure_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
           exposure:
-            proxy_tier: INFERRED_PROXY
             size:
-              weight: 0.04
-    
+              source: metadata.resource_count
+              bands:
+                - {min: 0, max: 50, score: 20}
+                - {min: 51, max: 200, score: 40}
+                - {min: 201, max: 500, score: 60}
+                - {min: 501, max: 1000, score: 80}
+                - {min: 1001, max: null, score: 100}
+              weight: 0.15
+            complexity:
+              source: metadata.provider_count
+              bands:
+                - {min: 1, max: 1, score: 20}
+                - {min: 2, max: 2, score: 40}
+                - {min: 3, max: 4, score: 60}
+                - {min: 5, max: null, score: 80}
+              weight: 0.10
+
       - id: waf_presence
         inference_utility_function: waf_presence_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
-    
+
       - id: cdn_usage
         inference_utility_function: cdn_usage_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.05
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.05
+
+      # -----------------------------------------------------------------------
+      # PUBLIC RECORD SIGNALS
+      # Breach history, regulatory actions, and public disclosures
+      # -----------------------------------------------------------------------
       - id: breach_history
         inference_utility_function: breach_history_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: public_record
+          group_id: public_record
           risk:
             correlation_direction: positive
             weight: 0.35
             score_condition:
               - {max: 35, action: "DECLINE", override: 5, note: "Severe or recent breach history"}
               - {max: 50, action: "REFER", override: 4, note: "Material breach history"}
+          loss:
+            frequency:
+              source: metadata.breach_count
+              bands:
+                - {min: 0, max: 0, score: 95}
+                - {min: 1, max: 1, score: 60}
+                - {min: 2, max: 3, score: 40}
+                - {min: 4, max: null, score: 20}
+              weight: 0.40
+            severity:
+              correlation_direction: negative
+              weight: 0.30
 
       - id: regulatory_actions
         inference_utility_function: regulatory_action_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: public_record
+          group_id: public_record
           risk:
             correlation_direction: positive
             weight: 0.25
-    
+          exposure:
+            complexity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: litigation_history
         inference_utility_function: litigation_history_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: public_record
+          group_id: public_record
           risk:
             correlation_direction: positive
             weight: 0.20
-    
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.30
+
       - id: credential_exposure
         inference_utility_function: credential_exposure_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: public_record
+          group_id: public_record
           risk:
             correlation_direction: positive
             weight: 0.20
-    
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: dark_web_presence
         inference_utility_function: dark_web_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: public_record
+          group_id: public_record
           risk:
             correlation_direction: positive
             weight: 0.20
-    
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
+      # -----------------------------------------------------------------------
+      # STRUCTURED DATA SIGNALS
+      # Third-party security ratings and scores
+      # -----------------------------------------------------------------------
       - id: security_rating
         inference_utility_function: security_rating_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: structured_data
+          group_id: structured_data
           risk:
             correlation_direction: positive
-            weight: 0.10
+            weight: 0.40
           loss:
             frequency:
               correlation_direction: negative
-              weight: 0.20
-    
+              weight: 0.35
+            severity:
+              correlation_direction: negative
+              weight: 0.35
+
       - id: esg_cyber_alignment
         inference_utility_function: esg_cyber_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: structured_data
+          group_id: structured_data
           risk:
             correlation_direction: positive
-            weight: 0.10
-    
+            weight: 0.30
+
       - id: credit_rating
         inference_utility_function: credit_rating_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: structured_data
+          group_id: structured_data
           risk:
             correlation_direction: positive
-            weight: 0.10
+            weight: 0.30
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.20
 
+      # -----------------------------------------------------------------------
+      # CORPORATE FOOTPRINT SIGNALS
+      # Digital presence and security posture indicators
+      # -----------------------------------------------------------------------
       - id: security_page_presence
         inference_utility_function: security_page_basefunction
-        normaliser:
-          type: categorical_map
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.15
+            weight: 0.12
           loss:
             severity:
               correlation_direction: negative
               weight: 0.35
-    
+
       - id: privacy_policy_presence
         inference_utility_function: privacy_policy_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-    
-      - id: security_txt_presence
-        inference_utility_function: security_txt_basefunction
-        normaliser:
-          type: linear
-        three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.08
-    
-      - id: bug_bounty_presence
-        inference_utility_function: bug_bounty_basefunction
-        normaliser:
-          type: linear
+
+      - id: security_txt_presence
+        inference_utility_function: security_txt_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.15
-    
-      - id: security_hiring_activity
-        inference_utility_function: security_hiring_basefunction
-        normaliser:
-          type: linear
+            weight: 0.06
+
+      - id: bug_bounty_presence
+        inference_utility_function: bug_bounty_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.12
-    
+
+      - id: security_hiring_activity
+        inference_utility_function: security_hiring_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: technical_content_quality
         inference_utility_function: technical_quality_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.08
-    
+            weight: 0.06
+
       - id: developer_resources
         inference_utility_function: developer_resources_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.07
-    
+            weight: 0.06
+          exposure:
+            complexity:
+              correlation_direction: positive
+              weight: 0.08
+
       - id: security_leadership_presence
         inference_utility_function: security_leadership_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.15
+            weight: 0.12
           loss:
             frequency:
               correlation_direction: negative
               weight: 0.40
             severity:
               correlation_direction: negative
-              weight: 0.40
-    
+              weight: 0.25
+
       - id: compliance_badges
         inference_utility_function: compliance_badges_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.10
+            weight: 0.08
           loss:
             frequency:
               correlation_direction: negative
               weight: 0.25
+          exposure:
+            complexity:
+              source: metadata.certification_count
+              bands:
+                - {min: 0, max: 0, score: 30}
+                - {min: 1, max: 2, score: 50}
+                - {min: 3, max: 5, score: 70}
+                - {min: 6, max: null, score: 90}
+              weight: 0.10
 
       - id: dns_complexity
         inference_utility_function: dns_complexity_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
-            correlation_direction: positive
-            weight: 0.10
-    
+            correlation_direction: negative
+            weight: 0.05
+          exposure:
+            complexity:
+              correlation_direction: positive
+              weight: 0.12
+
       - id: subdomain_count
         inference_utility_function: subdomain_enumeration_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
-            correlation_direction: positive
-            weight: 0.10
-    
+            correlation_direction: negative
+            weight: 0.05
+          exposure:
+            size:
+              source: metadata.subdomain_count
+              bands:
+                - {min: 0, max: 10, score: 20}
+                - {min: 11, max: 50, score: 40}
+                - {min: 51, max: 200, score: 60}
+                - {min: 201, max: 500, score: 80}
+                - {min: 501, max: null, score: 100}
+              weight: 0.10
+            complexity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: ip_footprint
         inference_utility_function: ip_footprint_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
-            correlation_direction: positive
-            weight: 0.10
-    
+            correlation_direction: negative
+            weight: 0.05
+          exposure:
+            size:
+              source: metadata.ip_count
+              bands:
+                - {min: 0, max: 5, score: 20}
+                - {min: 6, max: 20, score: 40}
+                - {min: 21, max: 100, score: 60}
+                - {min: 101, max: 500, score: 80}
+                - {min: 501, max: null, score: 100}
+              weight: 0.10
+
       - id: ssl_certificate_count
         inference_utility_function: ssl_certificate_count_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.10
-    
+            weight: 0.05
+          exposure:
+            size:
+              source: metadata.certificate_count
+              bands:
+                - {min: 0, max: 5, score: 20}
+                - {min: 6, max: 20, score: 40}
+                - {min: 21, max: 50, score: 60}
+                - {min: 51, max: 100, score: 80}
+                - {min: 101, max: null, score: 100}
+              weight: 0.05
+
       - id: job_posting_volume
         inference_utility_function: job_posting_volume_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.05
-    
+          exposure:
+            size:
+              source: metadata.posting_count
+              bands:
+                - {min: 0, max: 5, score: 20}
+                - {min: 6, max: 20, score: 40}
+                - {min: 21, max: 50, score: 60}
+                - {min: 51, max: 100, score: 80}
+                - {min: 101, max: null, score: 100}
+              weight: 0.10
+
       - id: funding_signals
         inference_utility_function: funding_signals_basefunction
-        normaliser:
-          type: linear
+        proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          groupid: corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.05
-        
-    # -------------------------------------------------------------------------
-    # CATEGORICAL GROUPS
-    # Categorical groups can either
-    # a) impact base premium after generation (impact: "MODIFIER")
-    # b) be the basis of premium (impact: "PREMIUM")
-    # Note: only one categorical group be the basis of premium
-    
-    # THREE LAYER ASSESSMENT
-    # Each group is the product of its underlying features
-    # Each group contributes to the composite score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-    
-    groups: 
+          exposure:
+            size:
+              source: metadata.funding_amount
+              bands:
+                - {min: 0, max: 1000000, score: 20}
+                - {min: 1000001, max: 10000000, score: 40}
+                - {min: 10000001, max: 50000000, score: 60}
+                - {min: 50000001, max: 100000000, score: 80}
+                - {min: 100000001, max: null, score: 100}
+              weight: 0.10
+
+    # =========================================================================
+    # GROUPS
+    # Categorical modifiers and three-layer assessment groupings
+    # =========================================================================
+    groups:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL GROUPS
+      # Apply pricing modifiers (applied:), not scores
+      # -----------------------------------------------------------------------
       categories:
         - id: "industry_classification"
           label: "Industry Classification"
           description: "Industry classification derived from public records"
-          impact: "modifier" 
+          impact: "MODIFIER"
           default_cat: "OTHER"
+
         - id: "size_band"
           label: "Size Band"
           description: "Company size classification"
-          impact: "modifier"
+          impact: "MODIFIER"
           default_cat: "OTHER"
+
         - id: "geography"
-          label: "geography"
+          label: "Geography"
           description: "Primary operational geography"
-          impact: "modifier"
+          impact: "MODIFIER"
           default_cat: "OTHER"
-      
+
+      # -----------------------------------------------------------------------
+      # THREE-LAYER ASSESSMENT GROUPS
+      # Aggregate signals into scoring dimensions
+      # Weights within each dimension must sum to 1.0
+      # -----------------------------------------------------------------------
       three_layer_assessment:
         - id: "network_authority"
           label: "Network Authority"
@@ -677,20 +790,20 @@ cyber:
             weight: 0.15
           exposure:
             weight: 0.15
-          
+
         - id: "technical_infrastructure"
           label: "Technical Infrastructure"
           description: "Observable technical security implementation"
           risk:
             weight: 0.35
-            score_condition: 
+            score_condition:
               - {max: 30, action: "DECLINE", override: 5, note: "Critical technical deficiencies"}
               - {max: 45, action: "REFER", override: 4, note: "Significant technical concerns"}
           loss:
             weight: 0.35
           exposure:
             weight: 0.35
-          
+
         - id: "corporate_footprint"
           label: "Corporate Footprint"
           description: "Signals from company's digital presence and security posture"
@@ -699,35 +812,35 @@ cyber:
           loss:
             weight: 0.25
           exposure:
-            weight: 0.15
-          
+            weight: 0.25
+
         - id: "public_record"
           label: "Public Record"
           description: "Breach history, regulatory actions, and public disclosures"
           risk:
             weight: 0.25
-            score_condition: 
+            score_condition:
               - {max: 30, action: "DECLINE", override: 5, note: "Severe breach/regulatory history"}
               - {max: 45, action: "REFER", override: 4, note: "Material breach history"}
           loss:
-            weight: 0.2
+            weight: 0.15
           exposure:
-            weight: 0.25
-       
+            weight: 0.15
+
         - id: "structured_data"
           label: "Structured Data"
           description: "Third-party security ratings and scores"
           risk:
             weight: 0.10
           loss:
-            weight: 0.2
+            weight: 0.10
           exposure:
             weight: 0.10
 
-    # ---------------------------------------------------------------------------
-    # RISK TIER BANDINGS
-    # Score ranges from 0-1000
-    # ---------------------------------------------------------------------------
+    # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
     risk_tier_bands:
       bands:
         - id: 1
@@ -737,199 +850,197 @@ cyber:
             bands: {min: 800, max: 1000}
             action: "APPROVE"
             application: {method: "PREMIUM_BASE", value: 8000}
- 
-        - id: 2        
+
+        - id: 2
           label: "STANDARD_PLUS"
           description: "Good risk - automatic approval, standard pricing"
           interpretation:
             bands: {min: 650, max: 799}
             action: "APPROVE"
-            application: {method: "PREMIUM_BASE", value: 12000}          
-            
-        - id: 3        
+            application: {method: "PREMIUM_BASE", value: 12000}
+
+        - id: 3
           label: "STANDARD"
           description: "Average risk - may require referral"
           interpretation:
             bands: {min: 500, max: 649}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", value: 18000}              
-          
-        - id: 4        
+            application: {method: "PREMIUM_BASE", value: 18000}
+
+        - id: 4
           label: "SUBSTANDARD"
           description: "Elevated risk - requires senior review"
           interpretation:
-            bands: {min: 350, max: 449}
+            bands: {min: 350, max: 499}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", value: 300000}     
-          
-        - id: 5        
+            application: {method: "PREMIUM_BASE", value: 30000}
+
+        - id: 5
           label: "DECLINE"
           description: "Unacceptable risk - decline"
           interpretation:
             bands: {min: 0, max: 349}
             action: "DECLINE"
-            application: {method: "PREMIUM_BASE", value: 500000}  
+            application: {method: "PREMIUM_BASE", value: 50000}
 
-    # ---------------------------------------------------------------------------
-    # LOSS TIER BANDINGS
-    # Score ranges from 0-100
-    # Calculation: (frequency_multiplier × frequency_weight) + (severity_multiplier × severity_weight)
-    # Result constrained by band floor/cap
-    # All components stored at atomic level for auditability    
-    # ---------------------------------------------------------------------------
+    # =========================================================================
+    # LOSS TIER BANDS
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
         - id: 1
           label: "VERY_LOW"
-          description: "very low risk of loss"
+          description: "Very low risk of loss"
           interpretation:
-            bands: {min: 0, max: 20}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, cap: 0.55, floor: 0.75}    
-          
+            bands: {min: 80, max: 100}
+            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 0.55, cap: 0.75}
+
         - id: 2
           label: "LOW"
-          description: "low risk of loss"
+          description: "Low risk of loss"
           interpretation:
-            bands: {min: 21, max: 40}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, cap: 0.75, floor: 0.95}   
+            bands: {min: 60, max: 79}
+            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 0.75, cap: 0.95}
 
         - id: 3
           label: "MODERATE"
-          description: "moderate risk of loss"
+          description: "Moderate risk of loss"
           interpretation:
-            bands: {min: 41, max: 60}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, cap: 0.95, floor: 1.05}  
-            
-        - id: 4 
+            bands: {min: 40, max: 59}
+            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 0.95, cap: 1.05}
+
+        - id: 4
           label: "ELEVATED"
-          description: "elevated risk of loss"
+          description: "Elevated risk of loss"
           interpretation:
-            bands: {min: 61, max: 80}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, cap: 1.05, floor: 1.3}  
-          
+            bands: {min: 20, max: 39}
+            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 1.05, cap: 1.30}
+
         - id: 5
           label: "HIGH"
-          description: "high risk of loss"
+          description: "High risk of loss"
           interpretation:
-            bands: {min: 81, max: 100}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, cap: 1.3, floor: 1.6}  
+            bands: {min: 0, max: 19}
+            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 1.30, cap: 1.60}
 
-    # ---------------------------------------------------------------------------
-    # EXPOSURE TIER BANDINGS
-    # Score ranges from 0-100   
-    # Exposure returns two bandings - size and complexity. Each is the product of a banding excercise based on score.
-    # size = organisational size and TIV proxy
-    # complexity = operational and structural complexity
-    # Calculation: (exposure_modifier × exposure_weight) + (complexity_modifier × complexity_weight)
-    # All components stored at atomic level for auditability
-    # ---------------------------------------------------------------------------  
-    
+    # =========================================================================
+    # EXPOSURE TIER BANDS
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
     exposure:
       size:
         weight: 0.60
         bands:
           - id: 1
-              label: "MICRO"
-              description: "micro exposure value ($0 - $1M)"
-              interpretation:
-                bands: {min: 0, max: 20}
-                application: {applied: 0.50, implied_thresholds: [0, 1000000]}   
-            
-            - id: 2
-              label: "SMALL"
-              description: "small exposure value ($1M - $10M)"
-              interpretation:
-                bands: {min: 21, max: 40}
-                application: {applied: 0.75, implied_thresholds: [1000000, 10000000]}   
-              
-            - id: 3
-              label: "MEDIUM"
-              description: "medium exposure value ($10M - $50M)"
-              interpretation:
-                bands: {min: 41, max: 60}
-                application: {applied: 1.00, implied_thresholds: [10000000, 50000000]}  
-              
-            - id: 4
-              label: "LARGE"
-              description: "large exposure value ($50M - $250M)"
-              interpretation:
-                bands: {min: 61, max: 80}
-                application: {applied: 1.50, implied_thresholds: [50000000, 250000000]}  
-              
-            - id: 5
-              label: "VERY_LARGE"
-              description: "very large exposure value ($250M+)"
-              interpretation:
-                bands: {min: 81, max: 100}
-                application: {applied: 2.50, implied_thresholds: [250000000, 1000000000]}  
-        
+            label: "MICRO"
+            description: "Micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {applied: 0.50, implied_thresholds: [0, 1000000]}
+
+          - id: 2
+            label: "SMALL"
+            description: "Small exposure value ($1M - $10M)"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {applied: 0.75, implied_thresholds: [1000000, 10000000]}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium exposure value ($10M - $50M)"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {applied: 1.00, implied_thresholds: [10000000, 50000000]}
+
+          - id: 4
+            label: "LARGE"
+            description: "Large exposure value ($50M - $250M)"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {applied: 1.50, implied_thresholds: [50000000, 250000000]}
+
+          - id: 5
+            label: "VERY_LARGE"
+            description: "Very large exposure value ($250M+)"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {applied: 2.50, implied_thresholds: [250000000, 1000000000]}
+
       complexity:
         weight: 0.40
         bands:
           - id: 1
-            label: "SIMPLE COMPLEXITY"
-            description: "simple complex exposure"
+            label: "SIMPLE"
+            description: "Simple operational complexity"
             interpretation:
               bands: {min: 0, max: 20}
-              application: {applied: 0.85}  
-              
+              application: {applied: 0.85}
+
           - id: 2
-            label: "MODERATELY COMPLEX"
-            description: "moderately complex exposure"
+            label: "MODERATE"
+            description: "Moderate operational complexity"
             interpretation:
               bands: {min: 21, max: 40}
-              application: {applied: 0.95}  
-            
+              application: {applied: 0.95}
+
           - id: 3
             label: "COMPLEX"
-            description: "complex exposure"
+            description: "Complex operations"
             interpretation:
               bands: {min: 41, max: 60}
-              application: {applied: 1.10} 
-            
+              application: {applied: 1.10}
+
           - id: 4
-            label: "HIGHLY COMPLEX"
-            description: "highly complex exposure"
+            label: "HIGHLY_COMPLEX"
+            description: "Highly complex operations"
             interpretation:
               bands: {min: 61, max: 80}
-              application: {applied: 1.30} 
-            
+              application: {applied: 1.30}
+
           - id: 5
-            label: "EXTREMELY COMPLEX"
-            description: "extremely complex exposure"
+            label: "EXTREMELY_COMPLEX"
+            description: "Extremely complex operations"
             interpretation:
               bands: {min: 81, max: 100}
-              application: {applied: 1.60} 
+              application: {applied: 1.60}
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations
+    # =========================================================================
     limit_bandings:
       - id: 1
         limit: 1000000
         deductible: 25000
+
       - id: 2
         limit: 5000000
         deductible: 50000
+
       - id: 3
         limit: 10000000
         deductible: 100000
+
       - id: 4
         limit: 25000000
         deductible: 250000
+
       - id: 5
         limit: 50000000
         deductible: 500000
 
-    # ---------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # ---------------------------------------------------------------------------
-    
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
- 
-      # Increased Limit Factors (ILF)
+
       ilf_curve:
-        base_limit: 1000000  # $1M base
+        base_limit: 1000000
         factors:
           - {limit: 1000000, factor: 1.00}
           - {limit: 2000000, factor: 1.70}
@@ -938,12 +1049,11 @@ cyber:
           - {limit: 25000000, factor: 9.00}
           - {limit: 50000000, factor: 14.00}
           - {limit: 100000000, factor: 22.00}
-      
-      # Deductible credits (as percentage of limit)
+
       deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}   # 0.1-0.5% of limit
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}   # 0.5-1% of limit
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}   # 1-2% of limit
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}    # >2% of limit
-        
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
       taxes_fees_rate: 0.05
