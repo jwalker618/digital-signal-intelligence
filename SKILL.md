@@ -52,6 +52,22 @@ When starting any DSI work:
 | 22 | Exposure Shadow Implementation | 🔲 Not Started | TBD |
 | 23 | Organisational Graph Runtime | 🔲 Not Started | TBD |
 
+### DSI Comprehensive Restructure (Active)
+
+| Phase | Name | Status | Development documentation |
+|-|-|-|-|
+| R1 | Master Configuration Layout | 🔄 In Progress | `development/project/dsi_restructure_plan.md` |
+| R2 | Signal Architecture Alignment | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R3 | Coverage Configuration Rebuilds | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R4 | Infrastructure Builder Revision | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R5 | Infrastructure Verification | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R6 | Layer Implementations | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R7 | Model Configuration Validation | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R8 | Organisational Graph Runtime | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R9 | Performance Enhancement (Rust) | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R10 | Documentation & Cleanup | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R11 | Testing | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
 - ✅ Signal analytics module fixed (import order corrected)
@@ -541,6 +557,8 @@ Common concepts appear across multiple coverages with different signal paths. Re
 
 **CRITICAL: The YAML config is the single source of truth. Never hardcode values that exist in config.**
 
+**Reference:** `coverages/master_config_layout.yaml` - VERSION 2.0
+
 ```yaml
 coverage:                          # Domain (e.g., aerospace, cyber, marine)
   configuration:                   # Instantiable model (e.g., aerospace_general)
@@ -549,74 +567,143 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
       version: str
       min_premium: float
       markets: list[str]
-      
-    required_inputs:               # Minimum viable inputs (Step 3)
-      - entity_id
-      - tiv                        # Or revenue, payroll, etc.
-      
+      minimum_viable_input:        # IMPORTANT: Must include basis if MULTIPLIER used
+        - entity_id
+        - tiv                      # Or revenue, payroll, limit, etc.
+
     direct_queries:                # Boolean questions (Step 7)
       - id: str
         question: str
-        impacts:
-          - type: tier_override | referral | note | modifier
-            value: int | str | float
-            
-    categorical_groups:            # Groups that impact pricing
-      - group_name
-      
-    categorical_features:          # Categories within groups + modifiers
-      group_name:
-        category_a: 1.0            # Base
-        category_b: 1.15           # 15% loading
-        
-    signal_groups:                 # Groups with weights (sum to 1.0)
-      - name: str
+        query_condition:
+          - return: bool           # Trigger on true or false
+            action: FLAG | MODIFIER | REFER
+            override: int|null     # For REFER - tier override
+            applied: float|null    # For MODIFIER - multiplicative
+            note: str              # Required for FLAG
+
+    signal_registry:               # All signals defined once
+      - id: str
+        inference_utility_function: str
+        proxy_tier: DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE
+        three_layer_assessment:
+          group_id: str            # Links to groups.three_layer_assessment
+
+          # Each dimension can have banded score_conditions
+          risk:
+            weight: float
+            correlation_direction: positive | negative
+            score_conditions:      # BANDED - multiple thresholds (OPTIONAL)
+              - threshold: int     # e.g., 20
+                comparison: "<="   # >=, <=, ==, >, <
+                action: MODIFIER
+                applied: 0.85      # 15% credit
+                note: str
+              - threshold: int     # e.g., 80
+                comparison: ">="
+                action: FLAG
+                note: str          # Required for FLAG
+              - threshold: int     # e.g., 95
+                comparison: ">="
+                action: REFER
+                override: int|null # Optional tier override
+
+          loss:
+            severity:
+              weight: float
+              correlation_direction: str
+              score_conditions: [...]  # Same banded structure
+            frequency:
+              weight: float
+              correlation_direction: str
+              score_conditions: [...]
+
+          exposure:
+            size:
+              weight: float
+              correlation_direction: str
+              score_conditions: [...]
+            complexity:
+              weight: float
+              correlation_direction: str
+              score_conditions: [...]
+
+    groups:
+      categories:                  # Categorical modifier groups
+        - id: str
+          label: str
+          impact: MODIFIER | PREMIUM_BASE
+
+      three_layer_assessment:      # Score-contributing groups
+        - id: str
+          label: str
+          risk:
+            weight: float          # Sum to 1.0 across all groups
+            score_conditions: [...] # Group-level banded conditions
+          loss:
+            weight: float
+            score_conditions: [...]
+          exposure:
+            weight: float
+            score_conditions: [...]
+
+    risk_tier_bands:               # Score → tier → premium
+      bands:
+        - id: int                  # Tier 1 = best
+          label: str
+          interpretation:
+            bands:
+              min: int
+              max: int
+            action: APPROVE | REFER | DECLINE
+            application:
+              # METHOD 1: Fixed base premium
+              method: PREMIUM_BASE
+              value: int
+              # METHOD 2: Rate × basis (alternative)
+              # method: MULTIPLIER
+              # applied: float     # Rate (e.g., 0.0035)
+              # basis: str         # Field from minimum_viable_input
+
+    loss_tier_bands:               # Loss score → modifiers
+      bands:
+        - id: int
+          label: str
+          interpretation:
+            bands: {min: int, max: int}
+            application:
+              frequency_modifier: float
+              severity_modifier: float
+      constraints:
+        floor: float               # e.g., 0.75
+        cap: float                 # e.g., 1.50
+
+    exposure:                      # Exposure score → modifiers
+      size:
         weight: float
-        conditions:                # Group-level conditions (Step 6)
-          - condition_type: str
-            condition_value: any
-            action: tier_override | referral | note
-            action_value: any
-            
-    signal_features:               # Signals within groups (sum to 1.0 per group)
-      group_name:
-        - name: str
-          weight: float
-          inference_function: str
-          categorizer_type: str
-          categorizer_params: dict
-          conditions:              # Signal-level conditions (Step 6)
-            - condition_type: str
-              condition_value: any
-              action: tier_override | referral | note
-              action_value: any
-              
-    tier_thresholds:               # Score → tier → premium basis
-      - tier: 1
-        min_score: 800
-        max_score: 1000
-        base_premium: 10000        # Option A: pure
-        # OR
-        rate: 0.005                # Option B: metric-based
-        rate_basis: tiv
-        decision: approve          # approve | refer | decline
-        
-    limit_bands:                   # ILF table (Step 12)
-      - limit: 1000000
-        ilf: 1.0
-      - limit: 2000000
-        ilf: 1.5
-        
-    deductible_credits:            # Deductible → credit factor
-      10000: 1.0
-      25000: 0.95
-      50000: 0.90
-      
-    test_profiles:                 # Validation scenarios
-      - name: str
-        inputs: dict
-        expected: dict
+        bands:
+          - id: int
+            label: str
+            interpretation:
+              bands: {min: int, max: int}
+              application:
+                method: MODIFIER | MULTIPLIER
+                applied: float
+                basis: str|null    # For MULTIPLIER
+      complexity:
+        weight: float
+        bands: [...]
 ```
+
+### score_conditions Evaluation Rules
+
+1. **Applies to:** signal_registry signals and groups ONLY (NOT tier bands)
+2. **MODIFIER:** ALL matching conditions apply multiplicatively
+3. **FLAG:** ALL matching conditions captured
+4. **REFER:** FIRST matching triggers referral
+5. **Required fields:**
+   - MODIFIER: `applied` (float)
+   - FLAG: `note` (string)
+   - REFER: `override` optional (tier)
 
 -----
 
@@ -639,10 +726,12 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 
 ### Workflow Rules
 
-1. **Conditions cannot modify premium**: Only tier override, referral, or note (Step 6)
-1. **Direct queries can modify premium**: Via modifiers applied after base premium (Step 7)
+1. **score_conditions can use MODIFIER action**: Applies multiplicatively to final premium (Step 6)
+1. **Direct queries can use MODIFIER action**: Via modifiers applied after base premium (Step 7)
+1. **All matching MODIFIER conditions stack**: Multiplicatively combined
 1. **Maximum tier override wins**: When multiple overrides, apply worst tier (Step 8)
 1. **Every interaction is versioned**: Full audit trail via model versions (Step 2)
+1. **MULTIPLIER method requires basis**: basis field must be in minimum_viable_input
 
 ### Three-Layer Assessment Rules
 
@@ -708,9 +797,11 @@ Configuration now supports unified signal architecture:
 - ✅ Analysis layer separation (empirical parameters external to config)
 
 **Key Files**:
-- `coverages/cyber/config_rework.yaml` - Unified signal architecture
+- `coverages/cyber/config.yaml` - Unified signal architecture (renamed from config_rework_v2.yaml)
+- `coverages/master_config_layout.yaml` - Master configuration template (VERSION 2.0)
 - `schemas/organisational_graph.yaml` - Graph schema for World Model
 - `docs/Configuration Architecture.md` - Documentation
+- `development/project/dsi_restructure_plan.md` - Comprehensive restructure plan
 
 ### Implementation Roadmap (Phases 21-23)
 
