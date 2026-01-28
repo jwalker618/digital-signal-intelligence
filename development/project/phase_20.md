@@ -12,7 +12,7 @@ This phase establishes the configuration foundation required for implementing Ph
 
 ## Status
 
-✅ **Complete** - Configuration restructuring and schema creation done
+✅ **Structure Agreed** - Master config layout finalised with all structural decisions
 
 ## Relationship to Other Phases
 
@@ -21,15 +21,15 @@ Phase 18 (Architecture)     Phase 19 (Demo)
         │                        │
         │                        │ (parallel)
         ▼                        ▼
-┌───────────────────────────────────────────────────────────┐
-│                      PHASE 20                              │
-│         Configuration Architecture & Org Graph             │
-│                                                            │
-│  - Unified signal architecture (risk/loss/exposure)        │
-│  - Organisational Graph schema                             │
-│  - Pricing integration standardisation                     │
-│  - Analysis layer separation                               │
-└───────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                      PHASE 20                                  │
+│         Configuration Architecture & Org Graph                 │
+│                                                                │
+│  - Unified signal architecture (risk/loss/exposure)            │
+│  - source: score vs source: metadata.field pattern             │
+│  - Organisational Graph schema                                 │
+│  - Pricing integration standardisation                         │
+└───────────────────────────────────────────────────────────────┘
         │
         │ enables
         ▼
@@ -42,36 +42,107 @@ Phase 18 (Architecture)     Phase 19 (Demo)
 
 ## Key Deliverables
 
-### 1. Unified Signal Architecture
+### 1. Master Config Layout
 
-**File**: `coverages/cyber/config_rework.yaml`
+**File**: `coverages/cyber/master_config_layout.yaml`
 
-Signals are now defined once with dimension-specific subsections:
+Defines the complete structure for coverage configurations with all structural decisions:
+
+| Structural Principle | Description |
+|---------------------|-------------|
+| Unified signal registry | Signals defined once with `group_id` reference |
+| `source: score` (default) | Uses 0-100 inference return |
+| `source: metadata.field` | Uses inference metadata with bands/categories mapping |
+| Categorical groups | Apply modifiers (`applied:`), not scores |
+| `score_condition` | Applies actions/overrides at signal or group level |
+| `proxy_tier` | At signal level (DIRECT_OBSERVABLE, INFERRED_PROXY, COHORT_INFERENCE) |
+| `group_id` | snake_case naming consistently |
+
+### 2. Unified Signal Architecture
+
+Signals are defined once with dimension-specific subsections:
 
 ```yaml
-signal_features:
-  technical_infrastructure:
-    - id: "tls_score"
-      inference_utility_function: tls_configuration_basefunction
+signal_registry:
+  - id: "{signal_id}"
+    inference_utility_function: "{function_name}"
+    proxy_tier: INFERRED_PROXY
+    three_layer_assessment:
+      group_id: technical_infrastructure    # Same group for all dimensions
+
       risk:
-        weight: 0.12
+        # source: score                     # DEFAULT - omit if using score
+        correlation_direction: positive
+        weight: 0.10
+
       loss:
-        weight: 0.25
-        correlation_type: frequency
-        correlation_direction: negative
-      exposure:  # Optional - only if signal contributes to exposure
-        weight: 0.04
-        proxy_tier: INFERRED_PROXY
-        group: digital_footprint
+        severity:
+          correlation_direction: negative
+          weight: 0.35
+        frequency:
+          source: metadata.incident_count   # Can use metadata
+          bands:
+            - {min: 0, max: 0, score: 95}
+            - {min: 1, max: 2, score: 60}
+            - {min: 3, max: null, score: 25}
+          weight: 0.35
+
+      exposure:
+        size:
+          source: metadata.resource_count
+          bands:
+            - {min: 0, max: 100, score: 20}
+            - {min: 101, max: 500, score: 40}
+            - {min: 501, max: null, score: 80}
+          weight: 0.08
+        complexity:
+          source: metadata.provider_type
+          categories:
+            - {match: "SINGLE", score: 30}
+            - {match: "MULTI", score: 70}
+            - {match: null, score: 50}      # default/catch-all
+          weight: 0.06
 ```
 
-**Benefits**:
-- Single source of truth for signal definitions
-- One inference function call serves all dimensions
-- Consistent monitoring across risk, loss, and exposure
-- Clear which signals contribute to which dimensions
+**Key Decisions**:
+- `source: score` is the default; only specify when using metadata
+- `source: metadata.*` requires `bands:` (numeric) or `categories:` (text)
+- Bands/categories return `score` values (0-100), not modifiers
+- Exposure uses the SAME groups as risk/loss (not separate exposure groups)
+- Modifiers come from `score_condition`, not from bands
 
-### 2. Organisational Graph Schema
+### 3. Metadata Source Patterns
+
+When using inference metadata instead of score:
+
+**Numeric Metadata with Bands**:
+```yaml
+source: metadata.resource_count
+bands:
+  - min: 0
+    max: 100
+    score: 20                 # Score contribution (0-100)
+  - min: 101
+    max: 500
+    score: 40
+  - min: 501
+    max: null                 # null = no upper limit
+    score: 80
+```
+
+**Text Metadata with Categories**:
+```yaml
+source: metadata.dominant_region
+categories:
+  - match: "US"
+    score: 50
+  - match: "EU"
+    score: 70                 # GDPR complexity
+  - match: null               # null = default/catch-all
+    score: 60
+```
+
+### 4. Organisational Graph Schema
 
 **File**: `schemas/organisational_graph.yaml`
 
@@ -87,78 +158,75 @@ Organisation-wide schema defining the encoder for the World Model:
 
 **Ownership**: Data Architecture / Ontology Team (coverage-agnostic)
 
-### 3. Pricing Integration Standardisation
+### 5. Groups Structure
 
-Both loss and exposure now use consistent banding approach:
-
+**Categorical Groups** - Apply pricing modifiers (not scores):
 ```yaml
-loss_integration:
-  method: multiplicative
-  frequency_weight: 0.6
-  severity_weight: 0.4
-  band_constraints:
-    elevated:
-      floor: 1.10
-      cap: 1.30
-
-exposure_integration:
-  method: multiplicative
-  exposure_weight: 0.60
-  complexity_weight: 0.40
-  band_constraints:
-    large:
-      floor: 1.30
-      cap: 1.70
+groups:
+  categories:
+    - id: "industry_classification"
+      label: "Industry Classification"
+      impact: "MODIFIER"              # Underlying signals have applied: values
+      default_cat: "OTHER"
 ```
 
-**Calculation**: `(component_1 × weight_1) + (component_2 × weight_2)`, constrained by band floor/cap
-
-### 4. Exposure Scoring Restructure
-
-Replaced `exposure_shadow` (inline signal definitions) with `exposure_scoring` (grouping references):
-
-**Before**:
+**Three-Layer Assessment Groups** - Aggregate signal scores:
 ```yaml
-exposure_shadow:
-  exposure_groups:
-    - name: digital_footprint
-      features:
-        - id: dns_complexity      # Defined inline - duplicates signal_features
-          weight: 0.25
-```
-
-**After**:
-```yaml
-signal_features:
-  exposure_magnitude:
-    - id: "dns_complexity"        # Defined once with inference function
-      inference_utility_function: dns_complexity_basefunction
+groups:
+  three_layer_assessment:
+    - id: "technical_infrastructure"
+      label: "Technical Infrastructure"
+      risk:
+        weight: 0.35                  # Group weights sum to 1.0
+        score_condition:
+          - {max: 30, action: "DECLINE", note: "..."}
+      loss:
+        weight: 0.35
       exposure:
-        weight: 0.08
-        group: digital_footprint
-
-exposure_scoring:
-  magnitude_groups:
-    - name: digital_footprint
-      signals: [dns_complexity, subdomain_count, ...]  # References to signals
+        weight: 0.35                  # Same groups for all dimensions
 ```
 
-### 5. Documentation
+### 6. Pricing Integration
 
-**File**: `docs/Configuration Architecture.md`
+**Loss Tier Bands**:
+```yaml
+loss_tier_bands:
+  bands:
+    - id: 1
+      label: "VERY_LOW"
+      interpretation:
+        bands: {min: 0, max: 20}
+        application:
+          frequency_weight: 0.6
+          severity_weight: 0.4
+          floor: 0.55
+          cap: 0.75
+```
 
-Comprehensive documentation covering:
-- Layered architecture (schema → config → analysis → model)
-- Three dimensions (risk, loss, exposure)
-- Pricing integration patterns
-- Organisational graph integration
-- Analysis layer separation
+**Exposure Tier Bands**:
+```yaml
+exposure:
+  size:
+    weight: 0.60
+    bands:
+      - id: 1
+        label: "MICRO"
+        interpretation:
+          bands: {min: 0, max: 20}
+          application:
+            applied: 0.50
+            implied_thresholds: [0, 1000000]
+  complexity:
+    weight: 0.40
+    bands:
+      - ...
+```
 
 ## Architectural Decisions
 
 ### Decision 1: Unified vs Separate Signal Definitions
 
-**Decision**: Unified - signals defined once in `signal_features`
+**Decision**: Unified - signals defined once in `signal_registry`
 
 **Rationale**:
 - Prevents signal definition drift between layers
@@ -166,7 +234,47 @@ Comprehensive documentation covering:
 - Clear visibility into which signals contribute to which dimensions
 - Enables "collect once, analyse many ways" pattern
 
-### Decision 2: Organisational Graph in Coverage Config vs Separate
+### Decision 2: source: score vs source: metadata.field
+
+**Decision**: Explicit source binding with default to score
+
+**Rationale**:
+- Makes clear when score vs metadata is used
+- Prevents need for separate inference functions for exposure/loss
+- Metadata sources require explicit band/category mapping
+- Keeps normalization logic in inference functions (not config)
+
+### Decision 3: Bands/Categories Return Scores, Not Modifiers
+
+**Decision**: Bands/categories return `score:` (0-100), not `applied:`
+
+**Rationale**:
+- Scores aggregate within groups before tier banding
+- Tier bands then apply modifiers based on combined group score
+- `score_condition` handles action/modifier application
+- Clean separation: signals contribute scores, tiers apply modifiers
+
+### Decision 4: Exposure Uses Same Groups as Risk/Loss
+
+**Decision**: No separate exposure_magnitude/exposure_complexity groups
+
+**Rationale**:
+- Maintains consistency across all three dimensions
+- Signals contribute to network_authority, technical_infrastructure, etc. for all dimensions
+- Exposure size/complexity are sub-dimensions within signals, not separate group hierarchies
+- Reduces configuration complexity
+
+### Decision 5: Normaliser at Inference Function Level
+
+**Decision**: Remove `normaliser` from YAML; handled by inference functions
+
+**Rationale**:
+- Inference functions return normalized 0-100 scores
+- Analysis parameters (log scale, percentile bins) are empirically derived
+- Config defines WHAT to use; inference defines HOW to normalize
+- Exception: categorical_map patterns captured as bands/categories in metadata sources
+
+### Decision 6: Organisational Graph in Separate Schema
 
 **Decision**: Separate schema file with coverage config bindings
 
@@ -176,101 +284,88 @@ Comprehensive documentation covering:
 - Different change cadences (schema rarely, config frequently)
 - Enables cross-coverage consistency
 
-### Decision 3: Analysis Parameters in Config vs External
-
-**Decision**: External - analysis outputs stored separately
-
-**Rationale**:
-- `lag_months`, normalizer coefficients are empirically derived
-- Separation enables actuarial ownership of analysis layer
-- Config defines WHAT to correlate; analysis determines HOW
-- Versioned analysis outputs enable model reproducibility
-
-### Decision 4: Exposure Shadow as Separate Section vs Integrated
-
-**Decision**: Integrated - exposure signals in `signal_features`
-
-**Rationale**:
-- Consistent with risk and loss pattern
-- Enables signal reuse (e.g., `cloud_infrastructure` for both risk and exposure)
-- Single source of truth for inference functions
-- Grouping done via references, not inline definitions
-
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `coverages/cyber/config_rework.yaml` | Unified signal architecture, exposure restructure |
-| `schemas/organisational_graph.yaml` | **NEW** - Graph schema |
-| `docs/Configuration Architecture.md` | **NEW** - Documentation |
-
-## New Signal Groups Added
-
-| Group | Purpose | Signal Count |
-|-------|---------|--------------|
-| `exposure_magnitude` | TIV proxy signals | 15 signals |
-| `exposure_complexity` | Complexity proxy signals | 12 signals |
+| `coverages/cyber/master_config_layout.yaml` | **UPDATED** - Complete annotated structure |
+| `coverages/cyber/config_rework_v2.yaml` | Working implementation (to be updated) |
+| `schemas/organisational_graph.yaml` | Graph schema |
+| `docs/Configuration Architecture.md` | Documentation |
 
 ## Implementation Tasks
 
 | Task | Status |
 |------|--------|
-| Add `exposure:` subsection support to signal_features | ✅ Complete |
-| Create exposure_magnitude signal group | ✅ Complete |
-| Create exposure_complexity signal group | ✅ Complete |
-| Add 27 new exposure signals with inference functions | ✅ Complete |
-| Update cloud_infrastructure with exposure subsection | ✅ Complete |
-| Replace exposure_shadow with exposure_scoring | ✅ Complete |
-| Implement banding-based pricing integration | ✅ Complete |
+| Agree unified signal registry structure | ✅ Complete |
+| Agree source: score vs source: metadata pattern | ✅ Complete |
+| Agree bands/categories return scores not modifiers | ✅ Complete |
+| Agree exposure uses same groups as risk/loss | ✅ Complete |
+| Agree normaliser at inference function level | ✅ Complete |
+| Agree proxy_tier at signal level | ✅ Complete |
+| Agree group_id snake_case naming | ✅ Complete |
+| Agree loss supports metadata sources | ✅ Complete |
+| Create complete master_config_layout.yaml | ✅ Complete |
 | Create organisational_graph.yaml schema | ✅ Complete |
 | Create Configuration Architecture documentation | ✅ Complete |
-| Add loss section to network_authority signals | ✅ Complete |
-| Fix YAML syntax errors in propensity_band | ✅ Complete |
+| Apply structure to config_rework_v2.yaml | ⏳ Pending |
+| Apply structure to all coverage YAMLs | ⏳ Pending |
 
-## Outstanding Items (Deferred to Future Phases)
+## Outstanding Items (Next Steps)
 
-| Item | Target Phase | Notes |
-|------|--------------|-------|
+| Item | Target | Notes |
+|------|--------|-------|
+| Apply agreed structure to config_rework_v2.yaml | Phase 20b | Implement all signals with new pattern |
+| Validate weights sum to 1.0 within groups | Phase 20b | Automated validation |
+| Apply structure to all coverage YAMLs | Phase 20b | Systematic application |
 | Implement loss correlation runtime | Phase 21 | Uses config structure from this phase |
 | Implement exposure scoring runtime | Phase 22 | Uses config structure from this phase |
-| Implement graph bindings in coverage config | Phase 23 | Reference schema from coverage |
-| Create analysis output template | Phase 21 | Structure for empirical parameters |
-| Update test_profiles with exposure signals | TBD | Test values for new signals |
-| Validate YAML with linter | TBD | Syntax validation |
+| Implement graph bindings | Phase 23 | Reference schema from coverage |
 
 ## Verification
 
 After implementation:
 
-1. **Config Structure**: Verify `config_rework.yaml` passes YAML linting
-2. **Signal Completeness**: Verify all exposure signals have inference functions
-3. **Weight Validation**: Verify weights sum to 1.0 within groups
-4. **Schema Validation**: Verify `organisational_graph.yaml` is valid YAML
-5. **Documentation**: Verify all sections of Configuration Architecture.md are accurate
+1. **Config Structure**: Verify `config_rework_v2.yaml` follows master layout
+2. **Source Binding**: Verify all metadata sources have bands or categories
+3. **Weight Validation**: Verify weights sum to 1.0 within groups per dimension
+4. **Score Returns**: Verify bands/categories use `score:` not `applied:`
+5. **Group Consistency**: Verify exposure uses same groups as risk/loss
+6. **Schema Validation**: Verify all YAML files are valid
 
-## Next Steps
+## Summary of Agreed Structure
 
-### Phase 21: Loss Correlation Layer Implementation
+```
+signal_registry:
+  - id: signal_id
+    inference_utility_function: function_name
+    proxy_tier: DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE
 
-Implement the runtime components for loss correlation using the unified signal architecture:
-- Loss propensity scorer using `loss:` subsections from signals
-- Pricing integration using `loss_integration` config
-- Referral rules from `propensity_band` auto-apply conditions
+    # For categorical signals (modifiers)
+    categories:
+      group_id: category_group
+      features:
+        - {cat: "CODE", label: "Label", applied: 1.15}
 
-### Phase 22: Exposure Shadow Layer Implementation
+    # For scored signals (scores)
+    three_layer_assessment:
+      group_id: assessment_group
 
-Implement the runtime components for exposure estimation using the unified signal architecture:
-- Exposure magnitude calculator using `exposure_magnitude` signals
-- Complexity calculator using `exposure_complexity` signals
-- Pricing integration using `exposure_integration` config
+      risk:
+        source: score | metadata.field     # default: score
+        bands: [...] | categories: [...]   # if metadata source
+        correlation_direction: positive | negative
+        weight: float
+        score_condition: [...]             # optional actions
 
-### Phase 23: Organisational Graph Runtime
+      loss:
+        severity: {source, bands/categories, correlation_direction, weight}
+        frequency: {source, bands/categories, correlation_direction, weight}
 
-Implement graph instantiation and operations:
-- Node creation from signal data
-- Edge inference from relationships
-- Derivative calculation (entropy, velocity, drift)
-- Authority propagation (PageRank-style)
+      exposure:
+        size: {source, bands/categories, correlation_direction, weight}
+        complexity: {source, bands/categories, correlation_direction, weight}
+```
 
 ---
 
