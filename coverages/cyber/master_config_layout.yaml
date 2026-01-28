@@ -51,7 +51,7 @@
         query_condition:
           - return: {boolean}              # Trigger condition (true or false)
             action: "{action}"             # FLAG | MODIFIER | REFER
-            override: {tier|null}          # Force tier (1-5) or null
+            override: {tier|null}          # Force tier (1-#, typically 5) or null
             applied: {float|null}          # Modifier multiplier or null
             note: "{explanation}"          # Explanation text
 
@@ -249,7 +249,7 @@
     # =========================================================================
     risk_tier_bands:
       bands:
-        - id: {integer}                    # Tier number (1 = best, 5 = worst)
+        - id: {integer}                    # Tier number (1 = best, typically 5 = worst)
           label: "{TIER_LABEL}"            # e.g., PREFERRED, STANDARD, DECLINE
           description: "{tier_meaning}"
           interpretation:
