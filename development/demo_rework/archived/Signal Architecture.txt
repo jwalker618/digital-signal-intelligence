@@ -1,0 +1,188 @@
+TOPIC_NAME: Signal Architecture
+TOPIC_ID: signal_architecture
+TOPIC_TYPE: multi_section_topic
+TOPIC_NAVIGATION: sequential_sections (5 sections)
+TOPIC_LAYOUT: full_page_background + content_panel
+TOPIC_INTERACTIONS: static_cards, expandable_cards
+TOPIC_VISUAL: evolving_network_background (desktop_only)
+
+====================================================================
+GLOBAL_VISUAL_BACKGROUND
+TYPE: dynamic_network_canvas
+POSITION: full_page_behind_content
+OPACITY: 0.15 - 0.25
+MOTION: subtle, non-distracting
+TRANSITION: animate_on_section_change
+CANVAS_PERSISTENCE: true
+MOBILE_SUPPORT: none
+
+====================================================================
+SECTION 1 — THE PURPOSE OF SIGNAL ARCHITECTURE
+SECTION_ID: signal_architecture_purpose
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: introduce why signals exist and what they replace
+
+VISUAL_STATE:
+  NODE_COUNT: 40 - 70
+  EDGE_DENSITY: low
+  PALETTE:
+    PRIMARY: #0B3954 (cold blue)
+    SECONDARY: #7A9CB2 (muted blue)
+  MOTION_SPEED: very_slow
+  BEHAVIOUR:
+    - sparse nodes
+    - early clustering
+    - represents the emergence of structure
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Replace Self-Reporting
+    BODY: Signals replace subjective, inconsistent, self-reported documents with observable, verifiable data.
+
+  CARD_2:
+    TITLE: Enable Deterministic Automation
+    BODY: Signals provide the structured, machine-readable substrate required for autonomous underwriting.
+
+  CARD_3:
+    TITLE: Capture Behaviour and Maturity
+    BODY: Signals reveal how an organisation behaves over time—its stability, discipline, and operational quality.
+
+SUPPORTING_TEXT:
+  - Signal Architecture is the backbone of DSI’s objectivity and predictive power.
+
+====================================================================
+SECTION 2 — THE SEVEN CANONICAL CATEGORIES
+SECTION_ID: canonical_categories
+SECTION_TYPE: static_seven_card_grid
+SECTION_PURPOSE: present the full taxonomy of DSI signals
+
+VISUAL_STATE:
+  NODE_COUNT: 80 - 120
+  EDGE_DENSITY: medium
+  PALETTE:
+    PRIMARY: #0599AD (blue-teal)
+    SECONDARY: #0B3954 (blue)
+  MOTION_SPEED: medium
+  BEHAVIOUR:
+    - nodes cluster into seven groups
+    - edges form category boundaries
+
+CONTENT_CARDS:
+  CARD_1: { TITLE: Network Authority Signals, BODY: Trust, citation, and relationship patterns across digital ecosystems. }
+  CARD_2: { TITLE: Technical Infrastructure Signals, BODY: TLS, DNS, exposed services, software currency, hosting quality. }
+  CARD_3: { TITLE: Corporate Digital Footprint Signals, BODY: Website structure, content recency, hiring activity, leadership visibility. }
+  CARD_4: { TITLE: Behavioural Signals, BODY: Operational discipline, change velocity, incident response, regulatory engagement. }
+  CARD_5: { TITLE: Public Record Signals, BODY: Filings, litigation, registries, IP records, enforcement actions. }
+  CARD_6: { TITLE: Structured Data Feed Signals, BODY: Credit ratings, ESG scores, market data, classification society records. }
+  CARD_7: { TITLE: Direct Inquiry Signals (Optional), BODY: Minimal binary or categorical questions used only when necessary. }
+
+SUPPORTING_TEXT:
+  - Every DSI model must declare which categories it uses and how.
+
+====================================================================
+SECTION 3 — ABSENCE AS A SIGNAL
+SECTION_ID: absence_signal
+SECTION_TYPE: side_by_side_two_card
+SECTION_PURPOSE: explain one of DSI’s most important principles
+
+VISUAL_STATE:
+  NODE_COUNT: 120 - 160
+  EDGE_DENSITY: high
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: medium_fast
+  BEHAVIOUR:
+    - missing nodes appear as negative space
+    - edges highlight gaps
+    - represents the power of absence
+
+CONTENT:
+  CARD_LEFT:
+    TITLE: Missing Data Is Not Unknown
+    BODY: Traditional underwriting treats missing data as a gap requiring manual follow-up. DSI treats absence as a measurable indicator.
+
+  CARD_RIGHT:
+    TITLE: Predictive Negative Indicators
+    BODY: Missing certifications, missing security controls, missing governance disclosures, missing filings—all correlate with elevated risk.
+
+SUPPORTING_TEXT:
+  - Absence signals differentiate entities that appear identical in traditional underwriting.
+
+====================================================================
+SECTION 4 — CONFIDENCE AS A FIRST-CLASS METRIC
+SECTION_ID: confidence_metric
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: explain how confidence is calculated and propagated
+
+VISUAL_STATE:
+  NODE_COUNT: 160 - 220
+  EDGE_DENSITY: very_high
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - edges strengthen or weaken based on confidence
+    - network becomes more stable
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Data Availability
+    BODY: Confidence reflects whether the signal was successfully extracted from its source.
+
+  CARD_2:
+    TITLE: Source Reliability
+    BODY: Authoritative sources carry higher confidence than unverified or low-quality sources.
+
+  CARD_3:
+    TITLE: Signal Freshness
+    BODY: Recent data increases confidence; stale data reduces it.
+
+SUPPORTING_TEXT:
+  - Confidence propagates through composite scoring and determines decisioning authority.
+
+====================================================================
+SECTION 5 — SIGNAL NORMALISATION & SCORING
+SECTION_ID: signal_scoring
+SECTION_TYPE: expandable_three_card_row
+SECTION_PURPOSE: explain how raw signals become deterministic model inputs
+
+VISUAL_STATE:
+  NODE_COUNT: 220 - 300
+  EDGE_DENSITY: maximum
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network fully interconnected
+    - edges pulse with scoring activity
+    - represents the complete signal substrate
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Normalisation (0–100)
+    BODY: All signals are normalised to a 0–100 scale using defined scoring algorithms.
+
+  CARD_2:
+    TITLE: Composite Scoring (0–1000)
+    BODY: Weighted aggregation produces a composite score that maps directly to risk tiers.
+
+  CARD_3:
+    TITLE: Deterministic Modifiers
+    BODY: Rule-based adjustments apply after scoring—no subjective judgement permitted.
+
+SUPPORTING_TEXT:
+  - This process ensures every model cycle is auditable, repeatable, and agentic.
+
+====================================================================
+INTERACTION_RULES:
+  - expandable_cards: expand/collapse on click
+  - static_cards: no interaction
+  - section_navigation: next_section / previous_section
+  - chevron_navigation: jump_to_section
+  - no_scrollbars_per_topic: true
+
+====================================================================
+END_OF_SPEC

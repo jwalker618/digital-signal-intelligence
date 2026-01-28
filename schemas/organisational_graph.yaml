@@ -1,0 +1,428 @@
+# =============================================================================
+# ORGANISATIONAL GRAPH SCHEMA
+# =============================================================================
+#
+# This schema defines the structure of the Organisational Graph - the
+# computational representation of entity behaviour described in the DSI
+# Vision Paper.
+#
+# The Organisational Graph transforms continuous digital signals into a
+# coherent, machine-readable topology that enables:
+#   - Causal simulation (World Model)
+#   - PageRank-style authority propagation
+#   - Behavioural derivative calculation (entropy, velocity, drift)
+#
+# This schema is ORGANISATION-WIDE, not coverage-specific. Individual
+# coverage configs (cyber, D&O, marine) reference this schema and define
+# how their signals attach to nodes and edges.
+#
+# Ownership: Data Architecture / Ontology Team
+# Change frequency: Rare (major architectural decisions only)
+#
+# =============================================================================
+
+schema:
+  name: "DSI Organisational Graph Schema"
+  version: "1.0.0"
+  description: "Organisation-wide schema for entity representation"
+
+# -----------------------------------------------------------------------------
+# NODE TYPES
+# -----------------------------------------------------------------------------
+# Nodes represent entities in the graph. Each node type has defined
+# attributes and can have signals attached via coverage config bindings.
+
+node_types:
+  - type: organisation
+    description: "The root entity being assessed (the insured)"
+    attributes:
+      - name: entity_id
+        type: string
+        required: true
+        description: "Unique identifier for the organisation"
+      - name: legal_name
+        type: string
+        required: true
+      - name: primary_domain
+        type: string
+        required: false
+      - name: incorporation_jurisdiction
+        type: string
+        required: false
+      - name: industry_classification
+        type: categorical
+        required: false
+    signal_categories:
+      # Signals from these categories can attach to organisation nodes
+      - public_record
+      - structured_data
+      - corporate_footprint
+
+  - type: asset
+    description: "Digital or physical assets owned/operated by the organisation"
+    subtypes:
+      - domain
+      - ip_address
+      - certificate
+      - cloud_resource
+      - application
+      - data_store
+    attributes:
+      - name: asset_id
+        type: string
+        required: true
+      - name: asset_subtype
+        type: enum
+        values: [domain, ip_address, certificate, cloud_resource, application, data_store]
+        required: true
+      - name: discovered_date
+        type: datetime
+        required: true
+      - name: last_observed
+        type: datetime
+        required: true
+      - name: status
+        type: enum
+        values: [active, inactive, unknown]
+        required: true
+    signal_categories:
+      - technical_infrastructure
+      - exposure_magnitude
+
+  - type: partner
+    description: "External entities with relationships to the organisation"
+    subtypes:
+      - vendor
+      - customer
+      - certification_body
+      - financial_institution
+      - technology_partner
+    attributes:
+      - name: partner_id
+        type: string
+        required: true
+      - name: partner_subtype
+        type: enum
+        values: [vendor, customer, certification_body, financial_institution, technology_partner]
+        required: true
+      - name: partner_name
+        type: string
+        required: true
+      - name: relationship_start
+        type: datetime
+        required: false
+      - name: tier
+        type: enum
+        values: [tier_1, tier_2, tier_3, unknown]
+        required: false
+        description: "Quality tier of the partner (tier_1 = highest quality)"
+    signal_categories:
+      - network_authority
+
+  - type: person
+    description: "Key individuals associated with the organisation"
+    subtypes:
+      - leadership
+      - security_team
+      - board_member
+    attributes:
+      - name: person_id
+        type: string
+        required: true
+      - name: role_type
+        type: enum
+        values: [leadership, security_team, board_member]
+        required: true
+      - name: role_title
+        type: string
+        required: false
+      - name: public_visibility
+        type: boolean
+        required: false
+        description: "Whether the person has public presence (LinkedIn, speaking, etc.)"
+    signal_categories:
+      - corporate_footprint
+
+  - type: process
+    description: "Observable business processes"
+    subtypes:
+      - hiring
+      - security_operations
+      - compliance
+      - incident_response
+    attributes:
+      - name: process_id
+        type: string
+        required: true
+      - name: process_type
+        type: enum
+        values: [hiring, security_operations, compliance, incident_response]
+        required: true
+      - name: observable_indicators
+        type: list
+        required: false
+        description: "List of signals that evidence this process"
+    signal_categories:
+      - corporate_footprint
+
+  - type: jurisdiction
+    description: "Geographic or regulatory jurisdictions"
+    subtypes:
+      - geographic
+      - regulatory
+    attributes:
+      - name: jurisdiction_id
+        type: string
+        required: true
+      - name: jurisdiction_type
+        type: enum
+        values: [geographic, regulatory]
+        required: true
+      - name: name
+        type: string
+        required: true
+      - name: complexity_weight
+        type: float
+        required: false
+        description: "Relative complexity of operating in this jurisdiction"
+    signal_categories:
+      - exposure_complexity
+
+# -----------------------------------------------------------------------------
+# EDGE TYPES
+# -----------------------------------------------------------------------------
+# Edges represent relationships between nodes. Each edge type has defined
+# properties and propagation rules for authority/risk flow.
+
+edge_types:
+  - type: dependency
+    description: "Operational dependency relationship"
+    valid_source_types: [organisation, asset, process]
+    valid_target_types: [asset, partner, process]
+    properties:
+      - name: criticality
+        type: enum
+        values: [critical, high, medium, low]
+        description: "How critical this dependency is to operations"
+      - name: redundancy
+        type: boolean
+        description: "Whether redundant alternatives exist"
+    propagation:
+      direction: downstream  # Risk propagates from target to source
+      default_weight: 0.70
+      description: "If a dependency fails, risk flows to the dependent entity"
+
+  - type: trust
+    description: "Trust/authority relationship (PageRank-style)"
+    valid_source_types: [organisation, partner]
+    valid_target_types: [organisation, partner]
+    properties:
+      - name: trust_type
+        type: enum
+        values: [certification, partnership, customer, endorsement]
+      - name: public_evidence
+        type: boolean
+        description: "Whether this trust relationship is publicly evidenced"
+    propagation:
+      direction: bidirectional
+      default_weight: 0.85  # PageRank damping factor
+      description: "Authority flows between trusted entities"
+
+  - type: data_flow
+    description: "Data movement between entities"
+    valid_source_types: [organisation, asset, process]
+    valid_target_types: [asset, partner, jurisdiction]
+    properties:
+      - name: data_classification
+        type: enum
+        values: [public, internal, confidential, restricted, pii, phi, pci]
+      - name: volume
+        type: enum
+        values: [high, medium, low]
+    propagation:
+      direction: downstream
+      default_weight: 0.60
+      description: "Exposure propagates along data flows"
+
+  - type: ownership
+    description: "Ownership/control relationship"
+    valid_source_types: [organisation]
+    valid_target_types: [organisation, asset]
+    properties:
+      - name: ownership_percentage
+        type: float
+        description: "Percentage ownership (0-100)"
+      - name: control_type
+        type: enum
+        values: [full, majority, minority, operational]
+    propagation:
+      direction: downstream
+      default_weight: 0.90
+      description: "Parent behaviour strongly predicts subsidiary behaviour"
+
+  - type: operates_in
+    description: "Operational presence in a jurisdiction"
+    valid_source_types: [organisation]
+    valid_target_types: [jurisdiction]
+    properties:
+      - name: presence_type
+        type: enum
+        values: [headquarters, subsidiary, branch, remote_workforce, customers_only]
+    propagation:
+      direction: none  # Complexity aggregates, doesn't propagate
+      description: "Contributes to complexity score"
+
+  - type: employment
+    description: "Employment relationship"
+    valid_source_types: [organisation]
+    valid_target_types: [person]
+    properties:
+      - name: employment_type
+        type: enum
+        values: [employee, contractor, board]
+      - name: tenure_months
+        type: integer
+    propagation:
+      direction: bidirectional
+      default_weight: 0.50
+      description: "Leadership quality reflects on organisation and vice versa"
+
+# -----------------------------------------------------------------------------
+# BEHAVIOURAL DERIVATIVES
+# -----------------------------------------------------------------------------
+# Derivatives are computed from signal time-series to detect early warning
+# indicators. These are the "leading indicators" described in the Vision Paper.
+
+derivatives:
+  - name: entropy
+    description: "Control decay indicator - is the organisation losing structural coherence?"
+    calculation_method: weighted_stddev_of_deltas
+    window_days: 90
+    source_signal_categories:
+      - technical_infrastructure
+      - corporate_footprint
+    interpretation: |
+      High entropy indicates:
+      - Digital footprint becoming more chaotic
+      - Unmanaged assets proliferating
+      - Security controls degrading inconsistently
+    thresholds:
+      warning: 0.15
+      critical: 0.30
+
+  - name: velocity
+    description: "Operational overload indicator - is change outpacing governance?"
+    calculation_method: ratio_of_change_rates
+    window_days: 90
+    numerator_signals:
+      # Signals indicating rapid change
+      categories: [exposure_magnitude]
+      specific: [job_posting_volume, acquisition_activity, subdomain_count]
+    denominator_signals:
+      # Signals indicating governance capacity
+      categories: [corporate_footprint]
+      specific: [security_leadership, compliance_framework_count]
+    interpretation: |
+      Velocity > 1.0 indicates change outpacing governance:
+      - Hiring velocity exceeding IT provisioning
+      - Product releases outpacing security review
+      - M&A activity without integration capacity
+    thresholds:
+      warning: 1.5
+      critical: 2.5
+
+  - name: drift
+    description: "Emerging fragility indicator - is the organisation diverging from healthy peers?"
+    calculation_method: mahalanobis_distance_from_cohort
+    window_days: 180
+    cohort_definition:
+      keys: [industry_classification, size_band]
+    interpretation: |
+      High drift indicates:
+      - Behaviours becoming anomalous relative to peers
+      - Movement toward state-space associated with higher loss propensity
+      - Potential emerging risk not yet reflected in point-in-time scoring
+    thresholds:
+      warning: 2.0   # standard deviations
+      critical: 3.0
+
+  - name: concentration
+    description: "Single-point-of-failure indicator"
+    calculation_method: herfindahl_index
+    applies_to_edges: [dependency, data_flow]
+    interpretation: |
+      High concentration indicates:
+      - Over-reliance on single vendor/partner
+      - Data concentrated in single location/provider
+      - Critical processes without redundancy
+    thresholds:
+      warning: 0.25  # HHI scale
+      critical: 0.50
+
+  - name: fragility
+    description: "Resilience indicator - ability to absorb shocks"
+    calculation_method: composite
+    components:
+      - derivative: entropy
+        weight: 0.30
+      - derivative: velocity
+        weight: 0.25
+      - derivative: concentration
+        weight: 0.25
+      - signal_category_health: technical_infrastructure
+        weight: 0.20
+    interpretation: |
+      High fragility indicates:
+      - Organisation may not withstand exogenous shock
+      - Recovery from incident likely to be prolonged
+      - Consider enhanced underwriting or coverage restrictions
+
+# -----------------------------------------------------------------------------
+# PROXY TIERS
+# -----------------------------------------------------------------------------
+# Quality tiers for signal sources, used in confidence calculations.
+
+proxy_tiers:
+  - tier: DIRECT_OBSERVABLE
+    confidence_weight: 1.0
+    description: "Hard data from authoritative sources (SEC filings, market data)"
+
+  - tier: INFERRED_PROXY
+    confidence_weight: 0.7
+    description: "Estimated from observable signals (employee count from LinkedIn)"
+
+  - tier: COHORT_INFERENCE
+    confidence_weight: 0.4
+    description: "Fallback to industry/size cohort when direct signals unavailable"
+
+# -----------------------------------------------------------------------------
+# GRAPH OPERATIONS
+# -----------------------------------------------------------------------------
+# Standard operations that can be performed on the graph.
+
+graph_operations:
+  - operation: authority_propagation
+    description: "PageRank-style authority flow through trust edges"
+    algorithm: pagerank
+    parameters:
+      damping_factor: 0.85
+      max_iterations: 100
+      convergence_threshold: 0.0001
+    applicable_edges: [trust, ownership]
+
+  - operation: risk_propagation
+    description: "Risk flow through dependency and data_flow edges"
+    algorithm: weighted_propagation
+    parameters:
+      max_hops: 3
+    applicable_edges: [dependency, data_flow]
+
+  - operation: exposure_aggregation
+    description: "Aggregate exposure across jurisdictions and assets"
+    algorithm: weighted_sum
+    applicable_edges: [operates_in, ownership]
+
+  - operation: cohort_comparison
+    description: "Compare entity to peer cohort"
+    algorithm: z_score
+    cohort_keys: [industry_classification, size_band, geography]

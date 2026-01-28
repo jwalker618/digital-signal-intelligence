@@ -281,21 +281,14 @@ The demo server allows all origins by default. For production, configure proper 
 
 ## Additional Demos
 
-### HTML Demos (`/html_dashboards`)
+### HTML Demos (`/html`)
 
 No-install interactive demos that work directly in your browser:
 
 | Demo | Description |
 |-|-|
-| `index.html` | Portal to all standalone demos |
-| `signal_scoring.html` | Interactive signal weight exploration |
-| `tier_visualization.html` | Score-to-tier mapping |
-| `pricing_calculator.html` | Premium calculation with ILF curves |
-| `workflow_animation.html` | Animated 14-step workflow |
-| `coverage_comparison.html` | Compare all 7 coverage types |
-| `dashboard.html` | Signal-level analysis |
-| `workflow.html` | Workflow visualization |
-| `portfolio_dashboard.html` | Portfolio management |
+| `interact_with_dsi.html` | User interaction with white and vision paper concepts  |
+
 
 ## Contributing
 

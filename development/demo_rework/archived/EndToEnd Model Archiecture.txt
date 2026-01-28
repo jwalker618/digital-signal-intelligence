@@ -1,0 +1,236 @@
+TOPIC_NAME: End-to-End Model Architecture
+TOPIC_ID: end_to_end_model_architecture
+TOPIC_TYPE: multi_section_topic
+TOPIC_NAVIGATION: sequential_sections (6 sections)
+TOPIC_LAYOUT: full_page_background + content_panel
+TOPIC_INTERACTIONS: static_cards, expandable_cards
+TOPIC_VISUAL: evolving_network_background (desktop_only)
+
+====================================================================
+GLOBAL_VISUAL_BACKGROUND
+TYPE: dynamic_network_canvas
+POSITION: full_page_behind_content
+OPACITY: 0.15 - 0.25
+MOTION: subtle, non-distracting
+TRANSITION: animate_on_section_change
+CANVAS_PERSISTENCE: true
+MOBILE_SUPPORT: none
+
+====================================================================
+SECTION 1 — OVERVIEW OF THE MODEL CYCLE
+SECTION_ID: model_cycle_overview
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: introduce the 6-phase, 14-step architecture
+
+VISUAL_STATE:
+  NODE_COUNT: 40 - 70
+  EDGE_DENSITY: low
+  PALETTE:
+    PRIMARY: #0B3954 (cold blue)
+    SECONDARY: #7A9CB2 (muted blue)
+  MOTION_SPEED: very_slow
+  BEHAVIOUR:
+    - sparse nodes
+    - early structural emergence
+    - represents the beginning of the model cycle
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Six Phases
+    BODY: Discovery, Instantiation, Signals, Three Layer Assessment, Pricing, Decision.
+
+  CARD_2:
+    TITLE: Fourteen Steps
+    BODY: Each phase contains discrete, deterministic steps captured at the atomic grain.
+
+  CARD_3:
+    TITLE: Immutable Model Version
+    BODY: Every execution produces a fully persisted, immutable Model Version.
+
+SUPPORTING_TEXT:
+  - This architecture ensures auditability, determinism, and agentic readiness.
+
+====================================================================
+SECTION 2 — PHASE A: DISCOVERY (STEP 0)
+SECTION_ID: phase_discovery
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: explain entity identification and corporate resolution
+
+VISUAL_STATE:
+  NODE_COUNT: 70 - 100
+  EDGE_DENSITY: medium_low
+  PALETTE:
+    PRIMARY: #0B3954 (blue)
+    SECONDARY: #0599AD (blue-teal transition)
+  MOTION_SPEED: medium
+  BEHAVIOUR:
+    - nodes cluster around identity resolution
+    - edges represent entity matching
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Minimal Input
+    BODY: Typically a client name and/or domain triggers the discovery process.
+
+  CARD_2:
+    TITLE: Website & Domain Validation
+    BODY: DSI identifies the authoritative website and validates the domain with confidence scoring.
+
+  CARD_3:
+    TITLE: Corporate Identity Resolution
+    BODY: Registry matching identifies the legal entity and corporate structure.
+
+SUPPORTING_TEXT:
+  - Output: discovered URL, domain, confidence score, and corporate identity.
+
+====================================================================
+SECTION 3 — PHASE B: MODEL INSTANTIATION (STEP 1)
+SECTION_ID: phase_instantiation
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: explain configuration instantiation and audit trail creation
+
+VISUAL_STATE:
+  NODE_COUNT: 100 - 140
+  EDGE_DENSITY: medium
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #0B3954 (blue)
+  MOTION_SPEED: medium_fast
+  BEHAVIOUR:
+    - nodes align into configuration structures
+    - edges represent content-addressable storage
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Configuration Instantiation
+    BODY: The model loads a specific configuration using content-addressable storage.
+
+  CARD_2:
+    TITLE: Version Creation
+    BODY: A new Model Version is created with a full audit trail.
+
+  CARD_3:
+    TITLE: Input Verification
+    BODY: Inputs are validated against minimum viable requirements.
+
+SUPPORTING_TEXT:
+  - This ensures reproducibility and traceability.
+
+====================================================================
+SECTION 4 — PHASE C: SIGNALS (STEPS 2–4)
+SECTION_ID: phase_signals
+SECTION_TYPE: expandable_four_card_grid
+SECTION_PURPOSE: explain parallel extraction, normalisation, and confidence scoring
+
+VISUAL_STATE:
+  NODE_COUNT: 140 - 180
+  EDGE_DENSITY: high
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - nodes pulse with extraction activity
+    - edges represent parallel pipelines
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Parallel Extraction
+    BODY: All configured signal pipelines execute in parallel for speed and consistency.
+
+  CARD_2:
+    TITLE: Normalisation (0–100)
+    BODY: Raw signals are normalised using deterministic scoring algorithms.
+
+  CARD_3:
+    TITLE: Confidence Scoring (0–1)
+    BODY: Confidence reflects availability, source reliability, and freshness.
+
+  CARD_4:
+    TITLE: Composite Signal Output
+    BODY: Each signal produces a value and confidence pair.
+
+SUPPORTING_TEXT:
+  - This phase produces the structured substrate for the Three Layer Assessment.
+
+====================================================================
+SECTION 5 — PHASE D: THREE LAYER ASSESSMENT (STEPS 5–7)
+SECTION_ID: phase_three_layers
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: summarise how Risk, Exposure, and Loss are independently assessed
+
+VISUAL_STATE:
+  NODE_COUNT: 180 - 240
+  EDGE_DENSITY: very_high
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network clusters into three major structures
+    - edges represent independent analytical flows
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Risk Layer
+    BODY: Composite score, tier, confidence, overrides, referrals, deterministic modifiers.
+
+  CARD_2:
+    TITLE: Exposure Shadow Layer
+    BODY: Exposure band, complexity category, confidence, and proxy hierarchy.
+
+  CARD_3:
+    TITLE: Loss Correlation Layer
+    BODY: Loss propensity, severity propensity, trend band, cohort assignment.
+
+SUPPORTING_TEXT:
+  - Each layer is independent, measurable, and auditable.
+
+====================================================================
+SECTION 6 — PHASES E & F: PRICING AND DECISION (STEPS 8–13)
+SECTION_ID: phase_pricing_decision
+SECTION_TYPE: static_four_card_grid
+SECTION_PURPOSE: explain deterministic pricing and final decisioning
+
+VISUAL_STATE:
+  NODE_COUNT: 240 - 320
+  EDGE_DENSITY: maximum
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network fully interconnected
+    - edges pulse with pricing logic
+    - represents final agentic execution
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Tier Resolution
+    BODY: Final tier determined using maximum override rule.
+
+  CARD_2:
+    TITLE: Base Rate Calculation
+    BODY: Three Layer Assessment determines the base-rate premium.
+
+  CARD_3:
+    TITLE: Deterministic Modifiers
+    BODY: Industry loadings, complexity adjustments, and loss modifiers applied in sequence.
+
+  CARD_4:
+    TITLE: Final Decision
+    BODY: Approve, Refer, or Decline with full audit trail persistence.
+
+SUPPORTING_TEXT:
+  - Total processing time: seconds, not days.
+
+====================================================================
+INTERACTION_RULES:
+  - expandable_cards: expand/collapse on click
+  - static_cards: no interaction
+  - section_navigation: next_section / previous_section
+  - chevron_navigation: jump_to_section
+  - no_scrollbars_per_topic: true
+
+====================================================================
+END_OF_SPEC

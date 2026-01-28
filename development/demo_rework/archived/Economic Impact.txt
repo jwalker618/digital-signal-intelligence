@@ -1,0 +1,166 @@
+TOPIC_NAME: Economic Impact
+TOPIC_ID: economic_impact
+TOPIC_TYPE: multi_section_topic
+TOPIC_NAVIGATION: sequential_sections (4 sections)
+TOPIC_LAYOUT: full_page_background + content_panel
+TOPIC_INTERACTIONS: static_cards, expandable_cards
+TOPIC_VISUAL: evolving_network_background (desktop_only)
+
+====================================================================
+GLOBAL_VISUAL_BACKGROUND
+TYPE: dynamic_network_canvas
+POSITION: full_page_behind_content
+OPACITY: 0.15 - 0.25
+MOTION: subtle, non-distracting
+TRANSITION: animate_on_section_change
+CANVAS_PERSISTENCE: true
+MOBILE_SUPPORT: none
+
+====================================================================
+SECTION 1 — THE COST OF TRADITIONAL UNDERWRITING
+SECTION_ID: traditional_cost
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: quantify the economic drag created by manual, document-driven underwriting
+
+VISUAL_STATE:
+  NODE_COUNT: 40 - 70
+  EDGE_DENSITY: low
+  PALETTE:
+    PRIMARY: #0B3954 (cold blue)
+    SECONDARY: #7A9CB2 (muted blue)
+  MOTION_SPEED: very_slow
+  BEHAVIOUR:
+    - sparse nodes
+    - fragmented clusters
+    - represents inefficiency and friction
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: High Operational Cost
+    BODY: Manual underwriting costs $150–$500 per submission, driven by human review, follow-ups, and document processing.
+
+  CARD_2:
+    TITLE: Slow Cycle Times
+    BODY: Submissions take days or weeks to process, reducing conversion and increasing broker leakage.
+
+  CARD_3:
+    TITLE: Poor Risk Selection
+    BODY: Subjective interpretation leads to inconsistent decisions and adverse selection.
+
+SUPPORTING_TEXT:
+  - Traditional underwriting is economically inefficient, operationally slow, and strategically fragile.
+
+====================================================================
+SECTION 2 — THE ECONOMIC VALUE OF DSI
+SECTION_ID: dsi_value
+SECTION_TYPE: static_four_card_grid
+SECTION_PURPOSE: quantify the economic uplift created by DSI’s deterministic substrate
+
+VISUAL_STATE:
+  NODE_COUNT: 80 - 120
+  EDGE_DENSITY: medium
+  PALETTE:
+    PRIMARY: #0599AD (blue-teal)
+    SECONDARY: #0B3954 (blue)
+  MOTION_SPEED: medium
+  BEHAVIOUR:
+    - nodes cluster into coherent structures
+    - edges represent efficiency gains
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: 60–80% Straight-Through Processing
+    BODY: Deterministic decisioning reduces human involvement and accelerates throughput.
+
+  CARD_2:
+    TITLE: <$10 Cost Per Submission
+    BODY: Automated processing dramatically reduces operational cost.
+
+  CARD_3:
+    TITLE: Improved Loss Ratios
+    BODY: Better risk selection and early detection of deterioration reduce portfolio losses.
+
+  CARD_4:
+    TITLE: Faster Conversion
+    BODY: Quotes delivered in seconds increase win rates and broker satisfaction.
+
+SUPPORTING_TEXT:
+  - DSI transforms underwriting from a cost centre into a scalable, high-margin engine.
+
+====================================================================
+SECTION 3 — PORTFOLIO-LEVEL IMPACT
+SECTION_ID: portfolio_impact
+SECTION_TYPE: expandable_three_card_row
+SECTION_PURPOSE: show how DSI improves portfolio performance and capital efficiency
+
+VISUAL_STATE:
+  NODE_COUNT: 120 - 160
+  EDGE_DENSITY: high
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: medium_fast
+  BEHAVIOUR:
+    - nodes cluster into portfolio structures
+    - edges represent capital flows and risk distribution
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Better Risk Segmentation
+    BODY: Signal-derived tiers create sharper segmentation and reduce cross-subsidisation.
+
+  CARD_2:
+    TITLE: Dynamic Portfolio Steering
+    BODY: Adjusting signal weights allows real-time optimisation of risk appetite and exposure mix.
+
+  CARD_3:
+    TITLE: Capital Efficiency
+    BODY: Improved loss ratios and reduced volatility lower capital requirements and increase ROE.
+
+SUPPORTING_TEXT:
+  - DSI enables active portfolio management rather than passive accumulation.
+
+====================================================================
+SECTION 4 — STRATEGIC ECONOMIC ADVANTAGE
+SECTION_ID: strategic_economics
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: articulate the long-term economic advantage of adopting DSI
+
+VISUAL_STATE:
+  NODE_COUNT: 160 - 220
+  EDGE_DENSITY: very_high
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network fully interconnected
+    - edges pulse with economic flows
+    - represents the complete economic engine
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Scalable Growth
+    BODY: Underwriting capacity grows without proportional increases in headcount.
+
+  CARD_2:
+    TITLE: Competitive Pricing
+    BODY: Better risk selection enables sharper pricing and improved market share.
+
+  CARD_3:
+    TITLE: Strategic Differentiation
+    BODY: DSI creates a defensible moat: a proprietary underwriting substrate.
+
+SUPPORTING_TEXT:
+  - The economic impact compounds over time, creating a structural advantage.
+
+====================================================================
+INTERACTION_RULES:
+  - expandable_cards: expand/collapse on click
+  - static_cards: no interaction
+  - section_navigation: next_section / previous_section
+  - chevron_navigation: jump_to_section
+  - no_scrollbars_per_topic: true
+
+====================================================================
+END_OF_SPEC

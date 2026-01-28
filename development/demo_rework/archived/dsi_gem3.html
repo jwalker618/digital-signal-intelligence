@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Signal Intelligence | The World Model</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* * ====================================================================
+         * GLOBAL RULES & VISUAL SYSTEM (Source: Global Rules.txt)
+         * ====================================================================
+         */
+        :root {
+            /* CORE PALETTE */
+            --bg-deep: #02121C;       /* The Void */
+            --bg-surface: rgba(11, 57, 84, 0.4);
+            --bg-panel: rgba(2, 18, 28, 0.85);
+            
+            --primary: #0B3954;       /* Cold Blue (Stagnation) */
+            --accent-1: #0599AD;      /* Teal (Emergence) */
+            --accent-2: #39D3BA;      /* Bio-Digital Green (Agentic) */
+            
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+            --text-dim: #475569;
+
+            /* SEMANTIC COLORS */
+            --danger: #EF4444;        /* Hard Gate Trigger */
+            --warning: #F59E0B;
+            --success: #39D3BA;
+
+            /* BORDERS & EFFECTS */
+            --border-light: rgba(255, 255, 255, 0.1);
+            --border-accent: rgba(5, 153, 173, 0.3);
+            --glass-blur: blur(12px);
+            
+            /* TYPOGRAPHY */
+            --font-display: 'Inter', sans-serif;
+            --font-body: 'IBM Plex Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* DIMENSIONS */
+            --nav-height: 70px;
+            --content-width: 1200px;
+        }
+
+        /* RESET & BASE */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            font-size: 16px;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-1); }
+
+        /* * ====================================================================
+         * COMPONENT LIBRARY (Source: Global Rules.txt)
+         * ====================================================================
+         */
+
+        /* CANVAS BACKDROP */
+        #world-model-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* NAVIGATION (Global Header) */
+        .nav-global {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--nav-height);
+            background: rgba(2, 18, 28, 0.8);
+            backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid var(--border-light);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        .brand-logo svg { height: 32px; width: 32px; color: var(--accent-2); }
+
+        .nav-status {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); animation: pulse 2s infinite; }
+
+        /* MAIN LAYOUT */
+        .viewport {
+            position: relative;
+            z-index: 10;
+            margin-top: var(--nav-height);
+            min-height: calc(100vh - var(--nav-height));
+            display: flex;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .content-container {
+            width: 100%;
+            max-width: var(--content-width);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* TYPOGRAPHY COMPONENTS */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem; }
+        h1 { font-size: 3.5rem; line-height: 1.1; }
+        h2 { font-size: 2.5rem; color: var(--accent-1); }
+        h3 { font-size: 1.5rem; color: var(--text-main); margin-top: 2rem; }
+        
+        p { margin-bottom: 1.5rem; color: var(--text-muted); max-width: 70ch; }
+        strong { color: var(--text-main); font-weight: 600; }
+
+        /* INTERACTIVE CARDS */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .dsi-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-light);
+            padding: 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dsi-card:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .dsi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--accent-1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .dsi-card:hover::before { opacity: 1; }
+
+        .card-icon { font-size: 2rem; margin-bottom: 1rem; color: var(--accent-2); }
+        
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: var(--accent-1);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn:hover { background: var(--accent-2); color: var(--bg-deep); }
+        
+        .btn-secondary { background: transparent; border: 1px solid var(--border-light); color: var(--text-main); }
+        .btn-secondary:hover { border-color: var(--accent-1); color: var(--accent-1); background: rgba(5, 153, 173, 0.1); }
+
+        /* BREADCRUMB & UTILS */
+        .breadcrumb {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+        .breadcrumb span { color: var(--accent-1); }
+
+        .hidden-section { display: none; }
+        .active-section { display: block; animation: fadeIn 0.4s ease; }
+
+        /* ANIMATIONS */
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="world-model-canvas"></canvas>
+
+    <nav class="nav-global">
+        <div class="brand-lockup" onclick="app.navigateTo('orientation')">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <span>GENERATE | DSI</span>
+        </div>
+        <div class="nav-status">
+            <div class="status-dot"></div>
+            <span id="visual-state-label">SYSTEM AGENTIC</span>
+        </div>
+    </nav>
+
+    <div class="viewport">
+        
+        <div id="app-container" class="content-container">
+            <div style="text-align: center; padding-top: 10vh;">
+                <h1 style="color: var(--text-dim);">Initializing World Model...</h1>
+            </div>
+
+            <section id="orientation" class="app-section active-section" data-visual-mode="3">
+                <div style="text-align: center; margin-top: 10vh;">
+                    <h1 style="font-size: 4.5rem; margin-bottom: 2rem;">Digital Signal Intelligence</h1>
+                    <p style="font-size: 1.5rem; max-width: 800px; margin: 0 auto 3rem auto; color: var(--text-muted);">
+                        A new information substrate for insurance. Enabling deterministic, autonomous risk assessment at scale.
+                    </p>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 4rem;">
+                        <button class="btn" onclick="app.navigateTo('automation-myth')">
+                            Start the Journey
+                        </button>
+                        <button class="btn btn-secondary" onclick="app.navigateTo('dashboard')">
+                            Skip to Interaction
+                        </button>
+                    </div>
+            
+                    <div class="card-grid" style="text-align: left;">
+                        <div class="dsi-card" onclick="app.navigateTo('automation-myth')">
+                            <div class="card-icon">📉</div>
+                            <h4>The Automation Myth</h4>
+                            <p>Why decades of transformation have failed to improve profitability.</p>
+                        </div>
+                        <div class="dsi-card" onclick="app.navigateTo('core-thesis')">
+                            <div class="card-icon">🧠</div>
+                            <h4>The Core Thesis</h4>
+                            <p>Shifting from documents (subjective) to signals (deterministic).</p>
+                        </div>
+                        <div class="dsi-card" onclick="app.navigateTo('signal-architecture')">
+                            <div class="card-icon">📡</div>
+                            <h4>Signal Architecture</h4>
+                            <p>The 7 canonical categories of digital risk observation.</p>
+                        </div>
+                        <div class="dsi-card" onclick="app.navigateTo('case-studies')">
+                            <div class="card-icon">🔎</div>
+                            <h4>Retrospective Case Studies</h4>
+                            <p>Would DSI have identified SVB, FTX, and Boeing?</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="automation-myth" class="app-section hidden-section" data-visual-mode="1">
+                <div class="breadcrumb">Learn / <span>The Problem</span></div>
+                <h1>The Automation Myth</h1>
+                [cite_start]<p class="lead">Decades of "digital transformation" have failed to structurally improve insurance profitability[cite: 1].</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 3rem;">
+                    <div>
+                        <h3>The Stagnation</h3>
+                        <p>Despite billions spent on OCR, NLP, and ingestion pipelines, the industry's combined ratio has remained flatlined around 97.5% for 20 years. [cite_start]The return on equity sits at a meager 2.49%[cite: 1].</p>
+                        <p><strong>The Core Assumption is Wrong:</strong> The industry assumes traditional underwriting inputs (PDFs, spreadsheets, emails) can be automated. They cannot. They are subjective, inconsistent, and infinite in format.</p>
+                        
+                        <div style="margin-top: 2rem; padding: 1.5rem; border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.1);">
+                            <h4 style="color: var(--danger); margin-bottom: 0.5rem;">The Reality</h4>
+                            <ul style="list-style: none; color: var(--text-muted);">
+                                <li>• Straight-Through Processing: <strong>5-15%</strong></li>
+                                <li>• Cost per Submission: <strong>$150 - $650</strong></li>
+                                <li>• Time to Quote: <strong>3-10 Days</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-light);">
+                        <h4 style="text-align: center; margin-bottom: 2rem;">20 Years of Combined Ratios</h4>
+                        <svg viewBox="0 0 400 200" style="width: 100%; height: auto;">
+                            <line x1="0" y1="100" x2="400" y2="100" stroke="var(--text-dim)" stroke-dasharray="4"/>
+                            <text x="360" y="90" fill="var(--text-dim)" font-size="10">Break-even</text>
+                            <polyline points="0,120 40,80 80,110 120,90 160,130 200,100 240,110 280,95 320,105 360,100 400,110" 
+                                      fill="none" stroke="var(--primary)" stroke-width="3"/>
+                            <circle cx="200" cy="100" r="4" fill="var(--danger)"/>
+                        </svg>
+                        <p style="text-align: center; font-size: 0.8rem; margin-top: 1rem;">The "Stagnation" (Visual Mode 1)</p>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('pagerank')">Next: The Precedent →</button>
+                </div>
+            </section>
+            
+            <section id="pagerank" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>The Precedent</span></div>
+                <h1>The Evolutionary Precedent</h1>
+                [cite_start]<p>DSI is not experimental. It follows the exact network-based principles that solved Search in 1998[cite: 2].</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card" style="border-top: 4px solid var(--danger);">
+                        <div class="card-icon" style="color: var(--danger);">1996</div>
+                        <h4>Keyword Search</h4>
+                        <p>Search engines relied on what pages <strong>said about themselves</strong> (Meta Keywords). This was subjective, spammable, and unverifiable.</p>
+                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
+                            <em>Parallel: Traditional Insurance Submissions</em>
+                        </div>
+                    </div>
+                    
+                    <div class="dsi-card" style="border-top: 4px solid var(--accent-1);">
+                        <div class="card-icon" style="color: var(--accent-1);">1998</div>
+                        <h4>PageRank</h4>
+                        <p>Google ignored keywords and analyzed the <strong>Citation Network</strong>. [cite_start]Authority was inferred from external links, not internal claims[cite: 3].</p>
+                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
+                            <em>Parallel: Digital Signal Intelligence</em>
+                        </div>
+                    </div>
+                </div>
+            
+                <h3>The Shift: Context via Attention</h3>
+                [cite_start]<p>Modern AI (Transformers, 2024) goes further, using "Self-Attention" to determine relationships between data points[cite: 4]. DSI applies this to risk: we map the "Hidden State" of an organization through its digital relationships.</p>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('core-thesis')">Next: The Core Thesis →</button>
+                </div>
+            </section>
+            
+            <section id="core-thesis" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>The Thesis</span></div>
+                <h1>The Core Thesis</h1>
+                [cite_start]<p>Shifting the information substrate from documents (Subjective) to signals (Deterministic)[cite: 1].</p>
+            
+                <div style="background: var(--bg-panel); border: 1px solid var(--border-accent); border-radius: 12px; padding: 3rem; margin: 2rem 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem;">
+                    
+                    <div style="text-align: center;">
+                        <h3 style="color: var(--text-muted);">The Old Substrate</h3>
+                        <div style="font-size: 3rem; margin: 1rem 0;">📄</div>
+                        <ul style="text-align: left; color: var(--text-dim); list-style: none;">
+                            <li>❌ Self-Reported</li>
+                            <li>❌ Static / Aged</li>
+                            <li>❌ Unstructured</li>
+                            <li>❌ High Friction</li>
+                        </ul>
+                    </div>
+            
+                    <div style="font-size: 2rem; color: var(--accent-1);">➔</div>
+            
+                    <div style="text-align: center;">
+                        <h3 style="color: var(--text-main);">The New Substrate</h3>
+                        <div style="font-size: 3rem; margin: 1rem 0;">📡</div>
+                        <ul style="text-align: left; color: var(--accent-2); list-style: none;">
+                            <li>✅ Externally Observable</li>
+                            <li>✅ Living Pulse (Decay)</li>
+                            <li>✅ Machine Readable</li>
+                            <li>✅ Zero Friction</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <p>Underwriting requires understanding two things: <strong>Governance</strong> (How well it is managed) and <strong>Exposure</strong> (How it behaves). DSI extracts these directly from the digital ecosystem.</p>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('foundational-principles')">Next: Principles →</button>
+                </div>
+            </section>
+            
+            <section id="foundational-principles" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>Rules of the Road</span></div>
+                <h1>Foundational Principles</h1>
+                <p>Ten mandatory principles ensure DSI operates consistently and autonomously.</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card">
+                        <h4>1. External Observability</h4>
+                        <p>Primary signals must be obtainable without cooperation.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <h4>2. Machine Readability</h4>
+                        <p>All signals must be analysable by automated systems.</p>
+                    </div>
+                    <div class="dsi-card" style="border-color: var(--accent-1);">
+                        <h4>5. Absence as Signal</h4>
+                        <p>Missing data is not "unknown"—it is a risk indicator. (e.g., No security headers = Risk).</p>
+                    </div>
+                    <div class="dsi-card">
+                        <h4>10. Agentic Readiness</h4>
+                        <p>Models must be executable by autonomous systems.</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('technical-manifesto')">Next: Technical Manifesto →</button>
+                </div>
+            </section>
+            
+            <section id="technical-manifesto" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>Deep Tech</span></div>
+                <h1>Technical Manifesto 2026</h1>
+                [cite_start]<p>The engineering specifications for the World Model simulation[cite: 1].</p>
+            
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    
+                    <div style="background: rgba(5, 153, 173, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid var(--accent-1);">
+                        <h3 style="margin-top: 0; color: var(--accent-2);">Temporal Decay Logic</h3>
+                        <p>Information rots. [cite_start]The substrate is a "Living Pulse"[cite: 7].</p>
+                        <div style="margin-top: 1rem; font-family: var(--font-mono); font-size: 0.9rem;">
+                            Decay Formula: V(t) = V0 * (0.5)^(t/h)<br><br>
+                            Half-Lives:<br>
+                            • Governance: 180 Days<br>
+                            • Tech Hygiene: 90 Days
+                        </div>
+                    </div>
+            
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid var(--danger);">
+                        <h3 style="margin-top: 0; color: var(--danger);">The Hard Gate</h3>
+                        [cite_start]<p>Determinism over discretion. [cite: 13]</p>
+                        <p>If <strong>Governance Score < 20</strong>:</p>
+                        <ul>
+                            <li>• Automatic Tier 10 (Decline)</li>
+                            <li>• Overrides all other signals</li>
+                            <li>• Prevents loss-chasing</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('signal-architecture')">Next: Signal Architecture →</button>
+                </div>
+            </section>
+            
+            <section id="signal-architecture" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>The Inputs</span></div>
+                <h1>Signal Architecture</h1>
+                <p>Seven canonical signal categories power deterministic underwriting.</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card">
+                        <div class="card-icon">🔗</div>
+                        <h4>1. Network Authority</h4>
+                        <p>Citations, certifications, client relationships, and supply chain position.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <div class="card-icon">⚙️</div>
+                        <h4>2. Technical Infrastructure</h4>
+                        <p>TLS, DNS security, software currency, hosting hygiene.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <div class="card-icon">📊</div>
+                        <h4>4. Behaviour</h4>
+                        <p>Change patterns, incident response speed, regulatory interaction.</p>
+                    </div>
+                    <div class="dsi-card">
+                        <div class="card-icon">📋</div>
+                        <h4>5. Public Record</h4>
+                        <p>Litigation, filings, breaches, and official registries.</p>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('end-to-end')">Next: E2E Architecture →</button>
+                </div>
+            </section>
+            
+            <section id="end-to-end" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>The Workflow</span></div>
+                <h1>End-to-End Model</h1>
+                <p>A deterministic pipeline from Discovery to Decision.</p>
+            
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+                    
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--text-dim);">
+                        <div style="font-weight: 700; color: var(--text-dim);">PHASE A</div>
+                        <div><strong>Discovery:</strong> Entity resolution from minimal input (Domain/Name).</div>
+                    </div>
+            
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-1);">
+                        <div style="font-weight: 700; color: var(--accent-1);">PHASE C</div>
+                        <div><strong>Signal Extraction:</strong> Parallel scraping of 35+ signal points.</div>
+                    </div>
+            
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-2);">
+                        <div style="font-weight: 700; color: var(--accent-2);">PHASE D</div>
+                        <div><strong>Assessment:</strong> Multi-Head Attention (Risk, Exposure, Loss).</div>
+                    </div>
+            
+                    <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--success);">
+                        <div style="font-weight: 700; color: var(--success);">PHASE F</div>
+                        <div><strong>Decision:</strong> Deterministic Pricing or Referral. Audit Trail persisted.</div>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('three-layer')">Next: Three Layer Assessment →</button>
+                </div>
+            </section>
+            
+            <section id="three-layer" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>Scoring Logic</span></div>
+                <h1>Three Layer Assessment</h1>
+                [cite_start]<p>De-conflating risk into independent dimensions[cite: 10].</p>
+            
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+                    
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--accent-1);">
+                        <h3>1. Risk Layer</h3>
+                        <p><strong>"The Character"</strong></p>
+                        <p>How well is the entity managed? Derived from Governance and Hygiene signals.</p>
+                        <div style="margin-top: 1rem; font-weight: 700; color: var(--accent-1);">Output: Score 0-1000</div>
+                    </div>
+            
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--warning);">
+                        <h3>2. Exposure Layer</h3>
+                        <p><strong>"The Footprint"</strong></p>
+                        <p>How large is the blast radius? Derived from digital footprint, employee count, and revenue proxies.</p>
+                        <div style="margin-top: 1rem; font-weight: 700; color: var(--warning);">Output: Size Band</div>
+                    </div>
+            
+                    <div style="background: var(--bg-panel); padding: 2rem; border-radius: 12px; border-top: 4px solid var(--danger);">
+                        <h3>3. Loss Layer</h3>
+                        <p><strong>"The Propensity"</strong></p>
+                        <p>What is the likelihood of a claim? Derived from historical correlation and cohort analysis.</p>
+                        <div style="margin-top: 1rem; font-weight: 700; color: var(--danger);">Output: Propensity 0-100</div>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('case-studies')">Next: Case Studies →</button>
+                </div>
+            </section>
+            
+            <section id="case-studies" class="app-section hidden-section" data-visual-mode="2">
+                <div class="breadcrumb">Learn / <span>Proof</span></div>
+                <h1>Retrospective Case Studies</h1>
+                <p>DSI does not predict the future; it reveals the truth already visible. These losses were flagged by signals months in advance.</p>
+            
+                <div style="margin-top: 2rem;">
+                    
+                    <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
+                        <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
+                            <span>Silicon Valley Bank (2023)</span>
+                            <span style="color: var(--danger);">AUTO-DECLINE</span>
+                        </summary>
+                        <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
+                            <p><strong>Loss:</strong> $200M+ D&O, $20B+ FDIC.</p>
+                            <p><strong>DSI Signals:</strong></p>
+                            <ul>
+                                <li>• CRO Role Vacant for 8 months (Critical Governance Gap).</li>
+                                <li>• 90% Uninsured Deposits (Extreme Concentration).</li>
+                                <li>• Regulatory MRA backlog observable.</li>
+                            </ul>
+                        </div>
+                    </details>
+            
+                    <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
+                        <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
+                            <span>FTX (2022)</span>
+                            <span style="color: var(--danger);">AUTO-DECLINE</span>
+                        </summary>
+                        <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
+                            <p><strong>Loss:</strong> $8B+ Fraud.</p>
+                            <p><strong>DSI Signals (Absence as Signal):</strong></p>
+                            <ul>
+                                <li>• No Big 4 Auditor.</li>
+                                <li>• No Independent Board Members.</li>
+                                <li>• Opaque corporate registry structure.</li>
+                            </ul>
+                        </div>
+                    </details>
+            
+                    <details style="background: var(--bg-panel); margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-light);">
+                        <summary style="padding: 1.5rem; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between;">
+                            <span>SolarWinds (2020)</span>
+                            <span style="color: var(--danger);">AUTO-DECLINE</span>
+                        </summary>
+                        <div style="padding: 1.5rem; border-top: 1px solid var(--border-light);">
+                            <p><strong>Loss:</strong> Global Supply Chain Compromise.</p>
+                            <p><strong>DSI Signals:</strong></p>
+                            <ul>
+                                <li>• "solarwinds123" password leaked on public repo (Credential Hygiene).</li>
+                                <li>• Update server vulnerability observable from public internet.</li>
+                            </ul>
+                        </div>
+                    </details>
+            
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('competitive-differentiation')">Next: Differentiation →</button>
+                </div>
+            </section>
+            
+            <section id="competitive-differentiation" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>The Market</span></div>
+                <h1>Competitive Differentiation</h1>
+                <p>DSI is not a better data feed. It is a new operating system.</p>
+            
+                <div style="overflow-x: auto; margin-top: 2rem;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-light);">
+                                <th style="padding: 1rem;">Feature</th>
+                                <th style="padding: 1rem; color: var(--text-muted);">Traditional</th>
+                                <th style="padding: 1rem; color: var(--accent-1);">DSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 1rem; font-weight: 600;">Input</td>
+                                <td style="padding: 1rem;">PDFs, Excel (Subjective)</td>
+                                <td style="padding: 1rem; color: var(--accent-2);">Digital Signals (Deterministic)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 1rem; font-weight: 600;">Scalability</td>
+                                <td style="padding: 1rem;">Linear (Staff Heavy)</td>
+                                <td style="padding: 1rem; color: var(--accent-2);">Logarithmic (Agentic)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 1rem; font-weight: 600;">Integrity</td>
+                                <td style="padding: 1rem;">Manual Noise</td>
+                                <td style="padding: 1rem; color: var(--accent-2);">Audit-Persistent</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            
+                <div style="margin-top: 3rem; text-align: right;">
+                    <button class="btn" onclick="app.navigateTo('economic-impact')">Next: The Bottom Line →</button>
+                </div>
+            </section>
+            
+            <section id="economic-impact" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Learn / <span>ROI</span></div>
+                <h1>The Bottom Line</h1>
+                <p>Structural profitability improvement through expense reduction and loss avoidance.</p>
+            
+                <div class="card-grid">
+                    <div class="dsi-card">
+                        <h4>Expense Ratio</h4>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--success); margin: 0.5rem 0;">13%</div>
+                        <p>Down from 35% industry average. Savings in acquisition, admin, and processing.</p>
+                    </div>
+                    
+                    <div class="dsi-card">
+                        <h4>Loss Ratio</h4>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--success); margin: 0.5rem 0;">-12 pts</div>
+                        <p>Driven by "Hard Gate" avoidance of bad risks and continuous portfolio pruning.</p>
+                    </div>
+            
+                    <div class="dsi-card">
+                        <h4>Profit Impact</h4>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--accent-1); margin: 0.5rem 0;">$150M</div>
+                        <p>On a $500M book, DSI generates ~$150M in additional underwriting profit.</p>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 4rem; text-align: center; padding: 2rem; border: 1px solid var(--accent-2); border-radius: 12px; background: rgba(57, 211, 186, 0.05);">
+                    <h3 style="margin-top: 0; color: var(--accent-2);">Ready to Interact?</h3>
+                    <p>You have seen the theory. Now control the World Model.</p>
+                    <button class="btn" style="margin-top: 1rem;" onclick="app.navigateTo('dashboard')">Launch DSI Interactive →</button>
+                </div>
+            </section>
+            <section id="dashboard" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Interact / <span>Command Center</span></div>
+                <h1>DSI Interactive Dashboard</h1>
+                <p class="lead">Monitor the live signal pipeline and manage agentic underwriting performance.</p>
+            
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="margin: 0;">Live Submission Pipeline</h3>
+                            <span class="badge badge-success">System: Active</span>
+                        </div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-dim);">
+                                    <th style="padding: 10px;">Entity</th>
+                                    <th style="padding: 10px;">Risk Score</th>
+                                    <th style="padding: 10px;">Tier</th>
+                                    <th style="padding: 10px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <td style="padding: 10px;">Global Dynamics Inc.</td>
+                                    <td style="padding: 10px; color: var(--success);">842</td>
+                                    <td style="padding: 10px;">Tier 1</td>
+                                    <td style="padding: 10px;"><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="app.navigateTo('underwriting-engine')">View Audit</button></td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <td style="padding: 10px;">Horizon Logistics</td>
+                                    <td style="padding: 10px; color: var(--warning);">415</td>
+                                    <td style="padding: 10px;">Tier 5</td>
+                                    <td style="padding: 10px;"><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="app.navigateTo('underwriting-engine')">Review</button></td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <td style="padding: 10px;">Apex Cyber-Sec</td>
+                                    <td style="padding: 10px; color: var(--danger);">182</td>
+                                    <td style="padding: 10px;">Tier 10</td>
+                                    <td style="padding: 10px;"><span style="color: var(--danger); font-weight: 700;">AUTO-DECLINE</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+            
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem;">Portfolio Steering</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem;">Adjust the "Gravitational Re-Clustering" of the World Model.</p>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <label style="display: block; font-size: 0.8rem; margin-bottom: 0.5rem;">Risk Appetite</label>
+                            <input type="range" min="1" max="100" value="40" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.3rem;">
+                                <span>Conservative</span>
+                                <span>Aggressive</span>
+                            </div>
+                        </div>
+            
+                        <div style="padding: 1rem; background: rgba(5, 153, 173, 0.1); border-radius: 8px; border: 1px solid var(--accent-1);">
+                            <h4 style="font-size: 0.9rem; color: var(--accent-1); margin-bottom: 0.5rem;">Engine Impact</h4>
+                            <div style="font-size: 1.2rem; font-weight: 700;">64% STP Rate</div>
+                            <p style="font-size: 0.7rem; margin-top: 0.3rem;">Current steering setting optimizes for Growth over Loss Avoidance.</p>
+                        </div>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button class="btn" onclick="app.navigateTo('underwriting-engine')">Deep Dive: Underwriting Engine</button>
+                    <button class="btn btn-secondary" onclick="app.navigateTo('what-happens-if')">Scenario Simulation</button>
+                </div>
+            </section>
+            
+            <section id="underwriting-engine" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Interact / <span>Underwriting Engine</span></div>
+                <h1>Multi-Head Attention Engine</h1>
+                <p>Deterministic assessment for <strong>Horizon Logistics</strong> (Submission ID: #DS-9902)</p>
+            
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    
+                    <div class="dsi-card" style="border-bottom: 4px solid var(--accent-1);">
+                        <h4 style="color: var(--accent-1);">Risk Layer</h4>
+                        <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">415</div>
+                        <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
+                            <li>Governance: 62/100</li>
+                            <li>Tech Hygiene: 22/100 (🚨 Warning)</li>
+                            <li>Network Authority: 48/100</li>
+                        </ul>
+                    </div>
+            
+                    <div class="dsi-card" style="border-bottom: 4px solid var(--warning);">
+                        <h4 style="color: var(--warning);">Exposure Layer</h4>
+                        <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">Band D</div>
+                        <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
+                            <li>Employees: 250 - 500</li>
+                            <li>Revenue Proxy: $100M</li>
+                            <li>Digital Footprint: High</li>
+                        </ul>
+                    </div>
+            
+                    <div class="dsi-card" style="border-bottom: 4px solid var(--danger);">
+                        <h4 style="color: var(--danger);">Loss Propensity</h4>
+                        <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">6.2%</div>
+                        <ul style="font-size: 0.8rem; padding-left: 1.2rem; color: var(--text-dim);">
+                            <li>Cohort Frequency: 4.1%</li>
+                            <li>Sector Severity: High</li>
+                            <li>Deterioration: Stable</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div style="margin-top: 2rem; background: var(--bg-panel); border: 2px solid var(--warning); border-radius: 12px; padding: 2rem; text-align: center;">
+                    <h3 style="margin-top: 0;">Deterministic Decision: <span style="color: var(--warning);">REFERRAL</span></h3>
+                    <p style="max-width: 600px; margin: 0.5rem auto 1.5rem auto;">
+                        Automated pricing is locked due to <strong>Low Tech Hygiene</strong>. Signal shows 4 critical ports exposed. Manual verification of patching schedule required.
+                    </p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button class="btn btn-secondary">Download Audit Trail (JSON)</button>
+                        <button class="btn">Override & Quote</button>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="what-happens-if" class="app-section hidden-section" data-visual-mode="3">
+                <div class="breadcrumb">Interact / <span>Simulations</span></div>
+                <h1>Scenario Simulation</h1>
+                <p>Test the resilience of the DSI World Model against macro and micro shocks.</p>
+            
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-top: 2rem;">
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
+                            <strong>Governance Collapse</strong><br>
+                            <small>Simulate mass board resignation at Tier 1 entities.</small>
+                        </button>
+                        <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
+                            <strong>Supply Chain Shock</strong><br>
+                            <small>Infect a major software vendor and trace the blast radius.</small>
+                        </button>
+                        <button class="btn btn-secondary" style="text-align: left; padding: 1.5rem;">
+                            <strong>Hygiene Improvement</strong><br>
+                            <small>Force-update all entities to TLS 1.3.</small>
+                        </button>
+                    </div>
+            
+                    <div style="background: #000; border-radius: 12px; padding: 2rem; position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <div style="position: absolute; width: 10px; height: 10px; background: var(--accent-1); border-radius: 50%; box-shadow: 0 0 15px var(--accent-1); left: 20%; top: 30%;"></div>
+                        <div style="position: absolute; width: 8px; height: 8px; background: var(--accent-2); border-radius: 50%; left: 60%; top: 70%;"></div>
+                        <div style="position: absolute; width: 12px; height: 12px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 20px var(--danger); left: 80%; top: 20%;"></div>
+                        
+                        <div style="z-index: 10; text-align: center;">
+                            <div style="font-family: var(--font-mono); color: var(--accent-1); font-size: 1.2rem; margin-bottom: 1rem;">>> SIMULATION READY</div>
+                            <button class="btn" style="background: transparent; border: 1px solid var(--accent-1);">Run Simulation</button>
+                        </div>
+                        
+                        <canvas id="sim-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.3;"></canvas>
+                    </div>
+                </div>
+            </section>          
+        </div>
+
+    </div>
+
+    <script>
+        /*
+         * ====================================================================
+         * DSI WORLD MODEL ENGINE v2.0
+         * Handles: Canvas Physics, Global State, Routing
+         * ====================================================================
+         */
+
+        const DSI_CORE = {
+            state: {
+                currentView: 'orientation',
+                visualMode: 3, // 1=Stagnation, 2=Emergence, 3=Agentic
+                riskAppetite: 50, // 0-100
+                nodes: []
+            },
+
+            // --- CANVAS PHYSICS ENGINE ---
+            physics: {
+                canvas: null,
+                ctx: null,
+                width: 0,
+                height: 0,
+                animationFrame: null,
+
+                init() {
+                    this.canvas = document.getElementById('world-model-canvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.resize();
+                    window.addEventListener('resize', () => this.resize());
+                    this.spawnNodes(DSI_CORE.state.visualMode);
+                    this.loop();
+                },
+
+                resize() {
+                    this.width = window.innerWidth;
+                    this.height = window.innerHeight;
+                    this.canvas.width = this.width;
+                    this.canvas.height = this.height;
+                },
+
+                setVisualMode(mode) {
+                    DSI_CORE.state.visualMode = mode;
+                    const labels = ["STAGNATION", "EMERGENCE", "AGENTIC"];
+                    const colors = ["#0B3954", "#7A9CB2", "#39D3BA"];
+                    
+                    document.getElementById('visual-state-label').innerText = `SYSTEM ${labels[mode-1]}`;
+                    document.getElementById('visual-state-label').style.color = colors[mode-1];
+                    document.querySelector('.status-dot').style.background = colors[mode-1];
+                    
+                    this.spawnNodes(mode);
+                },
+
+                spawnNodes(mode) {
+                    DSI_CORE.state.nodes = [];
+                    // Stage 1: 30 nodes (Low), Stage 2: 100 nodes (Mid), Stage 3: 300 nodes (High)
+                    const count = mode === 1 ? 30 : mode === 2 ? 100 : 300;
+                    const speed = mode === 1 ? 0.2 : mode === 2 ? 0.5 : 1.2;
+
+                    for (let i = 0; i < count; i++) {
+                        DSI_CORE.state.nodes.push({
+                            x: Math.random() * this.width,
+                            y: Math.random() * this.height,
+                            vx: (Math.random() - 0.5) * speed,
+                            vy: (Math.random() - 0.5) * speed,
+                            radius: Math.random() * 2 + (mode === 3 ? 1 : 2),
+                            // Risk Type: 10% High Risk (Red), 20% Medium (Orange), Rest Safe (Theme Color)
+                            type: Math.random() > 0.9 ? 'risk' : Math.random() > 0.7 ? 'warn' : 'safe'
+                        });
+                    }
+                },
+
+                loop() {
+                    this.ctx.fillStyle = 'rgba(2, 18, 28, 0.2)'; // Trail effect
+                    this.ctx.fillRect(0, 0, this.width, this.height);
+
+                    // Colors based on state
+                    const safeColor = DSI_CORE.state.visualMode === 1 ? '#0B3954' : 
+                                      DSI_CORE.state.visualMode === 2 ? '#7A9CB2' : '#39D3BA';
+
+                    const centerX = this.width / 2;
+                    const centerY = this.height / 2;
+
+                    DSI_CORE.state.nodes.forEach(node => {
+                        // 1. Move
+                        node.x += node.vx;
+                        node.y += node.vy;
+
+                        // 2. Bounce off walls
+                        if (node.x < 0 || node.x > this.width) node.vx *= -1;
+                        if (node.y < 0 || node.y > this.height) node.vy *= -1;
+
+                        // 3. Steering Behavior (Agentic Mode Only)
+                        if (DSI_CORE.state.visualMode === 3) {
+                            // Risk Appetite Slider Logic:
+                            // Low Appetite (0) -> Repel Risks from center
+                            // High Appetite (100) -> Allow Risks in center
+                            if (node.type === 'risk') {
+                                const dx = centerX - node.x;
+                                const dy = centerY - node.y;
+                                const dist = Math.sqrt(dx*dx + dy*dy);
+                                
+                                // Repulsion Force
+                                const repulsionStrength = (100 - DSI_CORE.state.riskAppetite) * 0.0001;
+                                if (dist < 400) {
+                                    node.vx -= dx * repulsionStrength;
+                                    node.vy -= dy * repulsionStrength;
+                                }
+                            }
+                        }
+
+                        // 4. Draw
+                        this.ctx.beginPath();
+                        this.ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                        this.ctx.fillStyle = node.type === 'risk' ? '#EF4444' : 
+                                             node.type === 'warn' ? '#F59E0B' : safeColor;
+                        this.ctx.fill();
+
+                        // 5. Connections (Agentic Mode Only)
+                        if (DSI_CORE.state.visualMode === 3) {
+                            DSI_CORE.state.nodes.forEach(other => {
+                                const dx = node.x - other.x;
+                                const dy = node.y - other.y;
+                                const dist = Math.sqrt(dx*dx + dy*dy);
+                                if (dist < 60) {
+                                    this.ctx.beginPath();
+                                    this.ctx.strokeStyle = `rgba(57, 211, 186, ${0.15 - dist/400})`;
+                                    this.ctx.lineWidth = 0.5;
+                                    this.ctx.moveTo(node.x, node.y);
+                                    this.ctx.lineTo(other.x, other.y);
+                                    this.ctx.stroke();
+                                }
+                            });
+                        }
+                    });
+
+                    this.animationFrame = requestAnimationFrame(() => this.loop());
+                }
+            },
+
+            // --- ROUTER & APP CONTROLLER ---
+            app: {
+                init() {
+                    DSI_CORE.physics.init();
+                    // NOTE: Content injection happens in Part 2
+                    console.log("DSI System Initialized. Waiting for Modules...");
+                },
+
+                navigateTo(viewId) {
+                    // Hide all sections
+                    document.querySelectorAll('.app-section').forEach(el => {
+                        el.style.display = 'none';
+                        el.classList.remove('active-section');
+                    });
+                    
+                    // Show target
+                    const target = document.getElementById(viewId);
+                    if (target) {
+                        target.style.display = 'block';
+                        target.classList.add('active-section');
+                        window.scrollTo(0,0);
+                        
+                        // Update Visual State based on Page Type
+                        // Orientation/Interact = Agentic (3)
+                        // History/Theory = Stagnation/Emergence (1 or 2)
+                        const mode = target.dataset.visualMode ? parseInt(target.dataset.visualMode) : 3;
+                        DSI_CORE.physics.setVisualMode(mode);
+                    }
+                },
+                
+                updateAppetite(val) {
+                    DSI_CORE.state.riskAppetite = val;
+                    const label = document.getElementById('appetite-label');
+                    if(label) label.innerText = `${val}%`;
+                }
+            }
+        };
+
+        // Expose to window for HTML onclick events
+        window.app = DSI_CORE.app;
+        
+        // Auto-init
+        window.addEventListener('DOMContentLoaded', () => {
+            DSI_CORE.app.init();
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+SPEC_NAME: DSI Orientation Page
+SPEC_ID: dsi_orientation_page
+SPEC_TYPE: single_page_meta_layer
+APPLIES_TO: entire_demo_experience
+DEPENDENCIES:
+  - global_rules_system_architecture
+  - visual_identity_spec
+  - llm_ingestion_method_spec
+
+====================================================================
+PAGE METADATA
+====================================================================
+
+PAGE_NAME: Orientation
+PAGE_ID: orientation
+PAGE_TYPE: meta_page
+STATUS: new_page_added
+
+PAGE_PURPOSE:
+  Provide a clear, elegant, minimal framing for the entire DSI demo.
+  Explain the structure, the journey, and how to explore the system.
+  Set expectations and create anticipation.
+  Connect the conceptual (Learn About DSI) and experiential (Interact With DSI) halves.
+
+====================================================================
+PAGE STRUCTURE
+====================================================================
+
+PAGE_STRUCTURE:
+  - hero_statement
+  - purpose_block
+  - two_pillar_explanation
+  - journey_map
+  - navigation_instructions
+  - brand_reinforcement
+
+====================================================================
+SECTION 1 — HERO STATEMENT
+====================================================================
+
+SECTION_ID: hero_statement
+SECTION_TYPE: centered_text_block
+
+CONTENT:
+  TITLE: "Welcome to Digital Signal Intelligence"
+  SUBTITLE: 
+    "This demo shows you what underwriting becomes when the information substrate changes."
+
+VISUAL_BEHAVIOUR:
+  - fade_in on page load
+  - slight upward motion
+  - primary colour: #0B3954
+
+====================================================================
+SECTION 2 — PURPOSE BLOCK
+====================================================================
+
+SECTION_ID: purpose_block
+SECTION_TYPE: two_sentence_block
+
+CONTENT:
+  SENTENCE_1:
+    "DSI replaces self-reported documents with observable digital signals."
+  SENTENCE_2:
+    "This demo lets you understand the system — and then interact with it."
+
+VISUAL_BEHAVIOUR:
+  - appear after hero_statement
+  - muted colour: #7A766F
+
+====================================================================
+SECTION 3 — TWO PILLAR EXPLANATION
+====================================================================
+
+SECTION_ID: two_pillar_explanation
+SECTION_TYPE: side_by_side_cards
+
+CARD_LEFT:
+  TITLE: Learn About DSI
+  BODY:
+    "Explore the core concepts, the signal substrate, the model architecture, and the economic impact."
+  PURPOSE:
+    "This section builds understanding."
+
+CARD_RIGHT:
+  TITLE: Interact With DSI
+  BODY:
+    "Manipulate signals, steer portfolios, explore scenarios, and experience the underwriting engine."
+  PURPOSE:
+    "This section builds intuition and excitement."
+
+VISUAL_BEHAVIOUR:
+  - cards slide in from left and right
+  - accent colour: #0599AD
+
+====================================================================
+SECTION 4 — JOURNEY MAP
+====================================================================
+
+SECTION_ID: journey_map
+SECTION_TYPE: vertical_step_map
+
+STEPS:
+  STEP_1:
+    TITLE: "Start with the Automation Myth"
+    DESCRIPTION: "Understand why underwriting cannot be automated using documents."
+
+  STEP_2:
+    TITLE: "Explore the DSI Substrate"
+    DESCRIPTION: "See how signals replace self-reported information."
+
+  STEP_3:
+    TITLE: "Understand the Model"
+    DESCRIPTION: "Learn how the Three Layer Assessment works."
+
+  STEP_4:
+    TITLE: "Interact with the System"
+    DESCRIPTION: "Use the Signal Reactor, Underwriting Engine, and Portfolio Steering."
+
+  STEP_5:
+    TITLE: "Simulate Scenarios"
+    DESCRIPTION: "Explore what happens when signals change."
+
+VISUAL_BEHAVIOUR:
+  - each step appears sequentially
+  - connecting line animates downward
+  - accent colour: #39D3BA
+
+====================================================================
+SECTION 5 — NAVIGATION INSTRUCTIONS
+====================================================================
+
+SECTION_ID: navigation_instructions
+SECTION_TYPE: instruction_block
+
+CONTENT:
+  - "Use the Home button (top-left) to return here at any time."
+  - "Use the chevrons inside each topic to move between sections."
+  - "Use the topic list on the left to explore Learn About DSI."
+  - "Use the interactive modules to experience DSI in motion."
+
+VISUAL_BEHAVIOUR:
+  - simple fade_in
+  - iconography: home_symbol.svg
+
+====================================================================
+SECTION 6 — BRAND REINFORCEMENT
+====================================================================
+
+SECTION_ID: brand_reinforcement
+SECTION_TYPE: centered_logo_block
+
+CONTENT:
+  - generate_logo.png (top-right globally, repeated here centered for emphasis)
+  - tagline: "Generate — Intelligence for the Agentic Era"
+
+VISUAL_BEHAVIOUR:
+  - logo glow effect (subtle)
+  - fade_in after navigation_instructions
+
+====================================================================
+END_OF_SPEC

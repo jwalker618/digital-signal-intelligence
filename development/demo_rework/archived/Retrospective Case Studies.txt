@@ -1,0 +1,222 @@
+TOPIC_NAME: Retrospective Loss Case Studies
+TOPIC_ID: retrospective_case_studies
+TOPIC_TYPE: multi_section_topic
+TOPIC_NAVIGATION: sequential_sections (5 sections)
+TOPIC_LAYOUT: full_page_background + content_panel
+TOPIC_INTERACTIONS: static_cards, expandable_cards
+TOPIC_VISUAL: evolving_network_background (desktop_only)
+
+====================================================================
+GLOBAL_VISUAL_BACKGROUND
+TYPE: dynamic_network_canvas
+POSITION: full_page_behind_content
+OPACITY: 0.15 - 0.25
+MOTION: subtle, non-distracting
+TRANSITION: animate_on_section_change
+CANVAS_PERSISTENCE: true
+MOBILE_SUPPORT: none
+
+====================================================================
+SECTION 1 — PURPOSE OF RETROSPECTIVE VALIDATION
+SECTION_ID: retrospective_purpose
+SECTION_TYPE: static_three_card_row
+SECTION_PURPOSE: explain why retrospective analysis is essential to proving DSI’s predictive power
+
+VISUAL_STATE:
+  NODE_COUNT: 40 - 70
+  EDGE_DENSITY: low
+  PALETTE:
+    PRIMARY: #0B3954 (cold blue)
+    SECONDARY: #7A9CB2 (muted blue)
+  MOTION_SPEED: very_slow
+  BEHAVIOUR:
+    - sparse nodes
+    - early pattern emergence
+    - represents the beginning of insight
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Validate the Substrate
+    BODY: Retrospective analysis tests whether observable digital signals would have identified elevated risk before major losses.
+
+  CARD_2:
+    TITLE: Cross-Coverage Applicability
+    BODY: Case studies span FI, Marine, Energy, Aerospace, and Cyber to demonstrate universality.
+
+  CARD_3:
+    TITLE: Predictive Patterns
+    BODY: Governance failures, behavioural deterioration, and absence signals consistently appear before losses.
+
+SUPPORTING_TEXT:
+  - DSI does not predict the future; it reveals what is already visible in the digital ecosystem.
+
+====================================================================
+SECTION 2 — FINANCIAL INSTITUTIONS
+SECTION_ID: fi_case_studies
+SECTION_TYPE: expandable_three_card_row
+SECTION_PURPOSE: show how DSI would have flagged major FI failures
+
+VISUAL_STATE:
+  NODE_COUNT: 80 - 120
+  EDGE_DENSITY: medium
+  PALETTE:
+    PRIMARY: #0599AD (blue-teal)
+    SECONDARY: #0B3954 (blue)
+  MOTION_SPEED: medium
+  BEHAVIOUR:
+    - nodes cluster around governance and regulatory signals
+    - edges highlight concentration and authority patterns
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Silicon Valley Bank (2023)
+    BODY: CRO vacancy, regulatory MRAs, extreme depositor concentration.
+    DSI_OUTPUT: DECLINE or REFER.
+
+  CARD_2:
+    TITLE: FTX (2022)
+    BODY: No auditor, no independent board, no audited financials.
+    DSI_OUTPUT: DECLINE.
+
+  CARD_3:
+    TITLE: Signature Bank (2023)
+    BODY: Crypto concentration, DOJ/SEC investigations, uninsured deposits.
+    DSI_OUTPUT: REFER or DECLINE.
+
+SUPPORTING_TEXT:
+  - FI failures were preceded by clear governance and concentration signals.
+
+====================================================================
+SECTION 3 — MARINE & ENERGY
+SECTION_ID: marine_energy_case_studies
+SECTION_TYPE: expandable_four_card_grid
+SECTION_PURPOSE: demonstrate signal visibility in physical and operational domains
+
+VISUAL_STATE:
+  NODE_COUNT: 120 - 160
+  EDGE_DENSITY: high
+  PALETTE:
+    PRIMARY: #0599AD (teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: medium_fast
+  BEHAVIOUR:
+    - nodes cluster into operational and safety structures
+    - edges highlight regulatory and classification signals
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: Shadow Fleet (2022–2024)
+    BODY: No IG Club membership, non-IACS classification, sanctioned owners.
+    DSI_OUTPUT: DECLINE.
+
+  CARD_2:
+    TITLE: MV Dali / Baltimore Bridge (2024)
+    BODY: PSC deficiencies, electrical issues (if available).
+    DSI_OUTPUT: REFER.
+
+  CARD_3:
+    TITLE: Deepwater Horizon (2010)
+    BODY: Prior safety failures, OSHA history, safety culture issues.
+    DSI_OUTPUT: REFER + LOAD.
+
+  CARD_4:
+    TITLE: Piper Alpha (1988)
+    BODY: Known maintenance issues, permit-to-work weaknesses.
+    DSI_OUTPUT: REFER.
+
+SUPPORTING_TEXT:
+  - Operational discipline and regulatory friction were visible long before the losses.
+
+====================================================================
+SECTION 4 — CYBER & AEROSPACE
+SECTION_ID: cyber_aerospace_case_studies
+SECTION_TYPE: expandable_four_card_grid
+SECTION_PURPOSE: show how behavioural and technical signals reveal cyber and aerospace risk
+
+VISUAL_STATE:
+  NODE_COUNT: 160 - 220
+  EDGE_DENSITY: very_high
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - nodes pulse with security posture signals
+    - edges highlight deterioration patterns
+
+EXPANDABLE_CARDS:
+  CARD_1:
+    TITLE: SolarWinds (2020)
+    BODY: Public GitHub credential exposure, weak security culture, exposed update infrastructure.
+    DSI_OUTPUT: DECLINE.
+
+  CARD_2:
+    TITLE: Equifax (2017)
+    BODY: Patch failures, prior incidents, limited security culture visibility.
+    DSI_OUTPUT: DECLINE.
+
+  CARD_3:
+    TITLE: 23andMe (2023)
+    BODY: Optional MFA, credential stuffing exposure, high-sensitivity data.
+    DSI_OUTPUT: REFER or DECLINE.
+
+  CARD_4:
+    TITLE: Boeing 737 MAX (2018–2020)
+    BODY: Disclosure gaps, FAA audit findings, supply chain quality issues.
+    DSI_OUTPUT: REFER.
+
+SUPPORTING_TEXT:
+  - Behavioural deterioration is visible in digital signals long before catastrophic outcomes.
+
+====================================================================
+SECTION 5 — CROSS-COVERAGE SIGNAL EFFECTIVENESS
+SECTION_ID: cross_coverage_effectiveness
+SECTION_TYPE: static_five_card_grid
+SECTION_PURPOSE: summarise the universal predictive power of signals
+
+VISUAL_STATE:
+  NODE_COUNT: 220 - 300
+  EDGE_DENSITY: maximum
+  PALETTE:
+    PRIMARY: #0599AD (bright teal)
+    SECONDARY: #39D3BA (accent green)
+  MOTION_SPEED: fast
+  BEHAVIOUR:
+    - network fully interconnected
+    - edges highlight cross-coverage patterns
+    - represents universal applicability
+
+CONTENT_CARDS:
+  CARD_1:
+    TITLE: Governance Stability
+    BODY: Predictive across FI, Cyber, Aerospace, and Energy.
+
+  CARD_2:
+    TITLE: Regulatory & Audit Findings
+    BODY: Strong indicators across FI, Energy, and Aerospace.
+
+  CARD_3:
+    TITLE: Transparency Gaps
+    BODY: Predictive across FI, Cyber, and Aerospace.
+
+  CARD_4:
+    TITLE: Concentration Risk
+    BODY: Predictive across FI, Marine, and Cyber.
+
+  CARD_5:
+    TITLE: Credential & Patch Hygiene
+    BODY: Predictive across Cyber and any tech-dependent sector.
+
+SUPPORTING_TEXT:
+  - Across all coverages, 70–90% of major losses would have been flagged by DSI.
+
+====================================================================
+INTERACTION_RULES:
+  - expandable_cards: expand/collapse on click
+  - static_cards: no interaction
+  - section_navigation: next_section / previous_section
+  - chevron_navigation: jump_to_section
+  - no_scrollbars_per_topic: true
+
+====================================================================
+END_OF_SPEC
