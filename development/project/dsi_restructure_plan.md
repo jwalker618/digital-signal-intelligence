@@ -1,8 +1,8 @@
 # DSI Comprehensive Restructure Plan
 
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2026-01-28
-**Status:** DRAFT - Awaiting Approval
+**Status:** APPROVED
 
 ---
 
@@ -24,6 +24,47 @@ This plan consolidates all outstanding work into an optimised execution sequence
 
 **Estimated Phases:** 11 major phases with sub-tasks
 **Dependencies:** Clearly mapped to ensure optimal execution order
+
+---
+
+## Continuous Documentation Requirement
+
+**SKILL.md must be updated throughout execution** to maintain an accurate record of progress and serve as the authoritative development guide.
+
+### Update Triggers
+
+SKILL.md must be updated when:
+1. A phase is started (status → 🔄 In Progress)
+2. A phase is completed (status → ✅ Complete)
+3. New components are added (update File Structure)
+4. Architecture changes are made (update Architecture Overview)
+5. New validation rules are added (update Critical Rules)
+6. New signals/inference functions are implemented (update relevant sections)
+
+### Update Content
+
+Each update should include:
+- **Implementation Status table** - Current phase status
+- **Validation Status** - Any new validations performed
+- **File Structure** - New files/directories added
+- **Outstanding Work** - Items completed, new items identified
+- **Architecture changes** - If structure changes
+
+### Phase-Specific SKILL.md Updates
+
+| After Phase | SKILL.md Updates Required |
+|-------------|---------------------------|
+| 1 | Update YAML Config Structure section with new score_conditions, MULTIPLIER |
+| 2 | Update signal architecture sections, add signal enhancement documentation |
+| 3 | Update coverage-specific documentation, crosswalk |
+| 4 | Update builder documentation |
+| 5 | Update infrastructure sections |
+| 6 | Update layer documentation, workflow diagram |
+| 7 | Update validation rules in Critical Rules section |
+| 8 | Add Organisational Graph section, update architecture |
+| 9 | Add Rust components section, update performance notes |
+| 10 | Comprehensive update - all sections current |
+| 11 | Final validation, test coverage documentation |
 
 ---
 
@@ -89,25 +130,52 @@ score_condition:
   note: <string>    # For flagging
 ```
 
-**New Structure:**
+**New Structure (Banded - supports multiple conditions):**
 ```yaml
-score_condition:
-  threshold: <value>
-  comparison: ">=" | "<=" | "==" | ">" | "<"
-  action: "FLAG" | "MODIFIER" | "REFER"
-  # Action-specific fields:
-  override: <tier>      # For REFER with tier override
-  applied: <float>      # For MODIFIER - multiplicative to final premium
-  note: <string>        # For FLAG and general documentation
+# score_conditions is now a LIST allowing multiple banded thresholds
+score_conditions:    # Note: plural - list of conditions
+  - threshold: 20
+    comparison: "<="
+    action: "MODIFIER"
+    applied: 0.90      # 10% credit for excellent score
+    note: "Excellent performance band"
+  - threshold: 40
+    comparison: "<="
+    action: "MODIFIER"
+    applied: 0.95      # 5% credit for good score
+    note: "Good performance band"
+  - threshold: 80
+    comparison: ">="
+    action: "FLAG"
+    note: "Poor performance - review required"
+  - threshold: 95
+    comparison: ">="
+    action: "REFER"
+    override: 4        # Force to tier 4 if extremely poor
+    note: "Critical threshold exceeded"
 ```
+
+**Condition Evaluation Logic:**
+- Conditions are evaluated in order (first match wins, or all matching apply depending on action)
+- MODIFIER actions: All matching conditions apply multiplicatively
+- FLAG actions: All matching flags are captured
+- REFER actions: First matching REFER triggers referral
+
+**Action-specific fields:**
+- `override: <tier>` - For REFER with tier override
+- `applied: <float>` - For MODIFIER - multiplicative to final premium
+- `note: <string>` - For FLAG and general documentation (required for FLAG)
+
+**Applies to:** signal_registry signals and groups ONLY (not tier bands)
 
 **Tasks:**
 | ID | Task | Details |
 |----|------|---------|
 | 1.1.1 | Define MODIFIER action schema | `applied` field as float, multiplicative to final premium |
-| 1.1.2 | Update score_condition in signal_registry | Support FLAG \| MODIFIER \| REFER for risk, loss, exposure |
-| 1.1.3 | Update score_condition in groups | Same actions available at group level |
+| 1.1.2 | Update score_conditions in signal_registry | Support banded FLAG \| MODIFIER \| REFER for risk, loss, exposure |
+| 1.1.3 | Update score_conditions in groups | Same banded actions available at group level |
 | 1.1.4 | Document action precedence | How multiple modifiers combine (multiplicative chain) |
+| 1.1.5 | Implement condition evaluation logic | First-match vs all-match per action type |
 
 ### 1.2 Risk Tier Bands - MULTIPLIER Method
 
@@ -162,7 +230,7 @@ loss_tier_bands:
     severity_modifier: 0.90
 ```
 
-**New Structure (adding score_condition):**
+**New Structure (NO score_condition on tier bands - only frequency/severity modifiers):**
 ```yaml
 loss_tier_bands:
   - tier: 1
@@ -171,21 +239,25 @@ loss_tier_bands:
     label: "VERY_LOW"
     frequency_modifier: 0.85
     severity_modifier: 0.90
-    score_condition:              # NEW: Optional tier-level condition
-      threshold: 150              # Within-tier threshold
-      comparison: ">="
-      action: "MODIFIER"
-      applied: 0.95               # Additional 5% credit for very low loss
-      note: "Exceptional loss profile"
+  - tier: 2
+    min_score: 201
+    max_score: 400
+    label: "LOW"
+    frequency_modifier: 0.92
+    severity_modifier: 0.95
+  # ... etc
 ```
+
+**Note:** score_conditions apply ONLY to signal_registry and groups, NOT to tier bands.
+Tier bands define the mapping from score to modifiers. Conditional logic is handled at the signal/group level.
 
 **Tasks:**
 | ID | Task | Details |
 |----|------|---------|
-| 1.3.1 | Add score_condition to loss_tier_bands | Optional, same schema as risk |
-| 1.3.2 | Define modifier interaction | How loss modifiers combine with tier modifiers |
-| 1.3.3 | Add to loss signal_registry | score_condition per signal for loss dimension |
-| 1.3.4 | Add to loss groups | score_condition per group for loss dimension |
+| 1.3.1 | Define loss_tier_bands structure | Score ranges → frequency/severity modifiers |
+| 1.3.2 | Define modifier interaction | How loss modifiers combine with other modifiers |
+| 1.3.3 | Add score_conditions to loss signal_registry | Banded conditions per signal for loss dimension |
+| 1.3.4 | Add score_conditions to loss groups | Banded conditions per group for loss dimension |
 
 ### 1.4 Exposure Tier Bands Enhancement
 
@@ -200,7 +272,7 @@ exposure:
       base_modifier: 0.90
 ```
 
-**New Structure (adding score_condition and MULTIPLIER):**
+**New Structure (NO score_condition on tier bands - application method only):**
 ```yaml
 exposure:
   size_tier_bands:
@@ -214,22 +286,36 @@ exposure:
         # For MULTIPLIER:
         # applied: 0.002
         # basis: "tiv"
-      score_condition:            # NEW: Optional
-        threshold: 25
-        comparison: "<="
-        action: "MODIFIER"
+    - tier: 2
+      label: "SMALL"
+      min_tiv: 1000001
+      max_tiv: 5000000
+      application:
+        method: "MODIFIER"
         applied: 0.95
-        note: "Very small exposure - additional credit"
+    # ... etc
+
+  complexity_tier_bands:
+    - tier: 1
+      label: "SIMPLE"
+      modifier: 1.00
+    - tier: 2
+      label: "MODERATE"
+      modifier: 1.10
+    # ... etc
 ```
+
+**Note:** score_conditions apply ONLY to signal_registry and groups, NOT to tier bands.
+Tier bands define the mapping from size/complexity to modifiers. Conditional logic is handled at the signal/group level.
 
 **Tasks:**
 | ID | Task | Details |
 |----|------|---------|
-| 1.4.1 | Add score_condition to exposure size_tier_bands | Optional, same schema |
-| 1.4.2 | Add score_condition to complexity_tier_bands | Optional, same schema |
+| 1.4.1 | Define exposure size_tier_bands structure | TIV ranges → application method/modifier |
+| 1.4.2 | Define complexity_tier_bands structure | Complexity → modifier |
 | 1.4.3 | Add MULTIPLIER option to exposure bands | Alternative to flat modifier |
-| 1.4.4 | Add to exposure signal_registry | score_condition per signal for exposure dimension |
-| 1.4.5 | Add to exposure groups | score_condition per group for exposure dimension |
+| 1.4.4 | Add score_conditions to exposure signal_registry | Banded conditions per signal for exposure dimension |
+| 1.4.5 | Add score_conditions to exposure groups | Banded conditions per group for exposure dimension |
 
 ### 1.5 Master Config Layout Document
 
@@ -355,6 +441,28 @@ class SignalMetadata:
 | 2.4.3 | Create pipeline registry | Central mapping of signal → pipeline components |
 | 2.4.4 | Add pipeline validation | Runtime check that all components exist |
 
+### 2.5 Signal Enhancement Implementation
+
+**Reference:** SKILL.md Signal Enhancement Recommendations (from retrospective loss analysis)
+
+| Priority | Coverage | Enhancement | Details |
+|----------|----------|-------------|---------|
+| 1 | **Marine** | Port state control deficiencies | Pre-departure systems status signals |
+| 1 | **Marine** | Classification society quality | Flag state enforcement indicators |
+| 2 | **Aerospace** | Certification transparency | FAA/EASA certification status signals |
+| 2 | **Aerospace** | Supply chain quality | Supplier audit and quality signals |
+| 3 | **Cross-Coverage** | Real-time regulatory monitoring | Active enforcement tracking |
+
+**Tasks:**
+| ID | Task | Details |
+|----|------|---------|
+| 2.5.1 | Implement Marine port state signals | Port state control deficiency extractors/inference |
+| 2.5.2 | Implement Marine classification signals | Classification society quality inference |
+| 2.5.3 | Implement Aerospace certification signals | FAA/EASA certification transparency |
+| 2.5.4 | Implement Aerospace supply chain signals | Supplier quality tracking |
+| 2.5.5 | Implement cross-coverage regulatory signals | Real-time regulatory monitoring |
+| 2.5.6 | Map enhancements to config sections | Ensure configs reference new signals |
+
 ### Phase 2 Deliverables
 
 - [ ] Inference function inventory with implementation status
@@ -378,17 +486,20 @@ For each coverage, the rebuild follows this process:
 ```
 1. Export current config values (preserve business logic)
 2. Apply new master_config_layout.yaml structure
-3. Add score_condition to signals (risk, loss, exposure)
-4. Add score_condition to groups (risk, loss, exposure)
-5. Update tier bands with new structure
+3. Add banded score_conditions to signals (risk, loss, exposure)
+4. Add banded score_conditions to groups (risk, loss, exposure)
+5. Update tier bands with new structure (NO score_conditions on tier bands)
 6. Add MODIFIER actions where appropriate
 7. Configure MULTIPLIER method where applicable
-8. Validate weights sum to 1.0 (per group, per layer)
-9. Validate all metadata references
-10. Validate all inference function references
-11. Run config validation
-12. Generate test profiles
+8. Incorporate signal enhancements from Phase 2.5 (coverage-specific)
+9. Validate weights sum to 1.0 (per group, per layer)
+10. Validate all metadata references
+11. Validate all inference function references
+12. Run config validation
+13. Generate test profiles
 ```
+
+**Important:** Signal enhancements identified in SKILL.md (Marine port state, Aerospace certification, Cross-Coverage regulatory) must be incorporated during the rebuild.
 
 ### 3.2 Coverage-Specific Tasks
 
@@ -436,9 +547,11 @@ For each coverage, the rebuild follows this process:
 | 3.2.4.2 | Add loss score_conditions | Classification/flag → loss propensity |
 | 3.2.4.3 | Add exposure score_conditions | Vessel value/routes → exposure |
 | 3.2.4.4 | Configure MULTIPLIER tiers | Hull value-based pricing |
-| 3.2.4.5 | Validate all weights | Sum to 1.0 per group per layer |
-| 3.2.4.6 | Validate inference functions | All signals have valid functions |
-| 3.2.4.7 | Update test profiles | Reflect new structure |
+| 3.2.4.5 | **Add port state control signals** | Per SKILL.md Priority 1 enhancement |
+| 3.2.4.6 | **Add classification society signals** | Per SKILL.md Priority 1 enhancement |
+| 3.2.4.7 | Validate all weights | Sum to 1.0 per group per layer |
+| 3.2.4.8 | Validate inference functions | All signals have valid functions |
+| 3.2.4.9 | Update test profiles | Reflect new structure |
 
 #### 3.2.5 Directors & Officers (`coverages/do/config.yaml`)
 
@@ -472,9 +585,11 @@ For each coverage, the rebuild follows this process:
 | 3.2.7.2 | Add loss score_conditions | Certification/safety → loss propensity |
 | 3.2.7.3 | Add exposure score_conditions | Fleet value/operations → exposure |
 | 3.2.7.4 | Configure MULTIPLIER tiers | Hull value-based pricing |
-| 3.2.7.5 | Validate all weights | Sum to 1.0 per group per layer |
-| 3.2.7.6 | Validate inference functions | All signals have valid functions |
-| 3.2.7.7 | Update test profiles | Reflect new structure |
+| 3.2.7.5 | **Add certification transparency signals** | Per SKILL.md Priority 2 enhancement (FAA/EASA) |
+| 3.2.7.6 | **Add supply chain quality signals** | Per SKILL.md Priority 2 enhancement |
+| 3.2.7.7 | Validate all weights | Sum to 1.0 per group per layer |
+| 3.2.7.8 | Validate inference functions | All signals have valid functions |
+| 3.2.7.9 | Update test profiles | Reflect new structure |
 
 ### 3.3 Cross-Coverage Validation
 
@@ -976,11 +1091,13 @@ class ConfigValidator:
 
 ---
 
-## Phase 9: Performance Enhancement
+## Phase 9: Performance Enhancement (Rust Implementation)
 
-**Objective:** Evaluate and implement Rust for performance-critical components.
+**Objective:** Implement Rust for performance-critical components to achieve 10-50x speedup for graph computations and 5-20x speedup for signal extraction.
 
 **Prerequisites:** Phase 6 complete (can run parallel with 7-8)
+
+**Decision:** Rust implementation is MANDATORY based on performance requirements.
 
 ### 9.1 Performance Baseline
 
@@ -991,35 +1108,44 @@ class ConfigValidator:
 | 9.1.3 | Define performance targets | Target improvements per component |
 | 9.1.4 | Create benchmark suite | Reproducible performance tests |
 
-### 9.2 Rust Evaluation
+### 9.2 Rust Infrastructure Setup
 
 | ID | Task | Details |
 |----|------|---------|
-| 9.2.1 | Create dsi-core Rust crate | Basic project structure |
-| 9.2.2 | Implement proof-of-concept | One component in Rust |
-| 9.2.3 | Create PyO3 bindings | Python integration |
-| 9.2.4 | Benchmark comparison | Rust vs Python performance |
-| 9.2.5 | Evaluate development impact | Build complexity, maintainability |
-| 9.2.6 | Make go/no-go decision | Based on benchmarks and complexity |
+| 9.2.1 | Create dsi-core Rust crate | Cargo project structure |
+| 9.2.2 | Set up PyO3 bindings | Python integration framework |
+| 9.2.3 | Configure maturin build | Python wheel generation |
+| 9.2.4 | Set up CI/CD pipeline | Rust build, test, publish |
+| 9.2.5 | Create development documentation | Rust contribution guide |
 
-### 9.3 Rust Implementation (if approved)
+### 9.3 Rust Component Implementation
 
 | ID | Task | Details |
 |----|------|---------|
-| 9.3.1 | Implement graph computations | PageRank, propagation in Rust |
-| 9.3.2 | Implement derivative calculations | Entropy, velocity, drift in Rust |
-| 9.3.3 | Implement signal extraction core | Network I/O, parsing in Rust |
-| 9.3.4 | Create Python package | dsi_core with seamless integration |
-| 9.3.5 | Update CI/CD | Rust build integration |
-| 9.3.6 | Document Rust components | Developer guide |
+| 9.3.1 | Implement graph computations | PageRank, authority propagation in Rust |
+| 9.3.2 | Implement derivative calculations | Entropy, velocity, drift, concentration, fragility |
+| 9.3.3 | Implement signal extraction core | Network I/O, HTML parsing, DNS queries |
+| 9.3.4 | Implement config validation | WASM compilation for browser validation |
+| 9.3.5 | Create Python package | dsi_core with seamless Python integration |
+| 9.3.6 | Write Rust unit tests | Comprehensive test coverage for Rust code |
+
+### 9.4 Integration and Benchmarking
+
+| ID | Task | Details |
+|----|------|---------|
+| 9.4.1 | Integrate with Python codebase | Replace Python implementations with Rust |
+| 9.4.2 | Benchmark comparison | Measure actual speedup vs targets |
+| 9.4.3 | Performance regression tests | Ensure no degradation |
+| 9.4.4 | Document performance gains | Report on actual improvements |
 
 ### Phase 9 Deliverables
 
 - [ ] Performance baseline report
-- [ ] Rust evaluation report with recommendation
-- [ ] (If approved) dsi-core Rust crate
-- [ ] (If approved) Python bindings
-- [ ] Performance comparison report
+- [ ] dsi-core Rust crate with full implementation
+- [ ] PyO3 Python bindings (dsi_core package)
+- [ ] CI/CD integration for Rust builds
+- [ ] Performance comparison report (target: 10-50x graph, 5-20x extraction)
+- [ ] Rust developer documentation
 
 ---
 
@@ -1220,9 +1346,11 @@ Performance Tests (10%)
 | 6 | Layer Implementations | Phase 3 | High |
 | 7 | Model Configuration Validation | Phase 6 | Medium |
 | 8 | Organisational Graph Runtime | Phases 6, 7 | High |
-| 9 | Performance Enhancement (Rust) | Phase 6 (parallel with 7-8) | Medium |
-| 10 | Documentation & Cleanup | Phases 7, 8 | Medium |
+| 9 | Performance Enhancement (Rust) | Phase 6 (parallel with 7-8) | High |
+| 10 | Documentation & Cleanup | Phases 7, 8, 9 | Medium |
 | 11 | Testing | All previous phases | High |
+
+**Note:** SKILL.md is updated continuously throughout all phases (see Continuous Documentation Requirement).
 
 ### Parallelisation Opportunities
 
@@ -1253,13 +1381,16 @@ Phase 1 ──► Phase 2 ──► Phase 3 ──► Phase 6 ──► Phase 7 
 
 - [ ] All 7 coverages rebuilt and validated
 - [ ] Three-layer assessment fully operational
+- [ ] Banded score_conditions working (signal_registry and groups)
 - [ ] MODIFIER and MULTIPLIER working in production
+- [ ] Signal enhancements implemented (Marine, Aerospace, Cross-Coverage)
 - [ ] Organisational Graph runtime complete
 - [ ] Validation framework catching all config errors
+- [ ] Rust components delivering target performance (10-50x graph, 5-20x extraction)
 - [ ] Test coverage >= 80%
+- [ ] SKILL.md current and comprehensive
 - [ ] Documentation current and complete
 - [ ] No redundant files in repository
-- [ ] Performance targets met
 
 ---
 
@@ -1277,15 +1408,60 @@ See Phase 7 detailed rules
 
 See Phase 11 coverage targets
 
-### Appendix D: Rust Component Candidates
+### Appendix D: Rust Components (Mandatory Implementation)
 
-- Graph computations (PageRank, propagation)
-- Derivative calculations (entropy, velocity, drift)
-- Signal extraction core (network I/O, parsing)
-- Config validation (WASM for browser)
+| Component | Purpose | Target Speedup |
+|-----------|---------|----------------|
+| Graph computations | PageRank, authority propagation | 10-50x |
+| Derivative calculations | Entropy, velocity, drift, concentration, fragility | 10-50x |
+| Signal extraction core | Network I/O, HTML parsing, DNS queries | 5-20x |
+| Config validation | WASM compilation for browser-based validation | N/A (new capability) |
+
+### Appendix E: Banded Score Conditions Reference
+
+```yaml
+# Example: Complete banded score_conditions structure
+signal_registry:
+  - id: security_posture
+    name: "Security Posture Score"
+    # ... other fields ...
+    risk:
+      weight: 0.15
+      score_conditions:
+        - threshold: 20
+          comparison: "<="
+          action: "MODIFIER"
+          applied: 0.85
+          note: "Excellent security - 15% premium credit"
+        - threshold: 40
+          comparison: "<="
+          action: "MODIFIER"
+          applied: 0.92
+          note: "Good security - 8% premium credit"
+        - threshold: 75
+          comparison: ">="
+          action: "FLAG"
+          note: "Below average security posture"
+        - threshold: 90
+          comparison: ">="
+          action: "REFER"
+          override: 4
+          note: "Critical security deficiency - force tier 4"
+    loss:
+      weight: 0.20
+      score_conditions:
+        - threshold: 30
+          comparison: "<="
+          action: "MODIFIER"
+          applied: 0.90
+          note: "Low loss propensity"
+    exposure:
+      weight: 0.10
+      # No conditions - weight only
+```
 
 ---
 
-**Document Status:** DRAFT
-**Awaiting:** User approval before execution
-**Next Action:** Review and confirm plan, then begin Phase 1
+**Document Status:** APPROVED
+**Approved:** 2026-01-28
+**Next Action:** Begin Phase 1 execution
