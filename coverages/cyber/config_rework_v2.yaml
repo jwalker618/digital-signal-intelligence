@@ -35,7 +35,7 @@ cyber:
       name: "DSI Cyber Technical Pricing Model"
       description: "Cyber liability model based on externally observable technical signals"
       version: "2.0.0"
-      coverage_types:
+      product_types:
         - "cyber_liability"
         - "network_security"
         - "privacy_liability"
