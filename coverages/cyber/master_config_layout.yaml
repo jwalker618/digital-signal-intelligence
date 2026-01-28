@@ -1,225 +1,349 @@
-#coverage, eg aerospace
-cyber:
-  #the specific configuration file under that coverage, eg aerospace_general
-  cyber_general:
+# =============================================================================
+# DSI MODEL CONFIGURATION - MASTER LAYOUT
+# =============================================================================
+#
+# This file defines the complete structure for a coverage configuration.
+# All field names, types, and relationships are annotated.
+#
+# STRUCTURAL PRINCIPLES:
+# 1. Signals are defined once in signal_registry
+# 2. Each signal specifies which group it contributes to via group_id
+# 3. Three dimensions: risk (tier), loss (frequency/severity), exposure (size/complexity)
+# 4. source: score (default) uses the 0-100 inference return
+# 5. source: metadata.field uses inference metadata with bands/categories mapping
+# 6. Categorical groups apply modifiers (applied:), not scores
+# 7. score_condition applies actions/overrides based on score thresholds
+#
+# AUGMENTED BY:
+# - analysis_outputs/{coverage}_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
+#
+# =============================================================================
+
+{coverage}:                                # e.g., cyber, professional_liability
+  {configuration}:                         # e.g., cyber_general, cyber_tech
+
+    # =========================================================================
+    # METADATA
+    # Configuration identification and constraints
+    # =========================================================================
     metadata:
-      #friendly configuration name
-      name: "DSI Cyber Technical Pricing Model"
-      #friendly configuration description
-      description: "Cyber liability model based on externally observable technical signals"
-      #configuration version no
-      version: "0.0.0"
-      #specific product offerings for this coverage 
-      product_types:
-        - "cyber_liability"
-      #applicable markets, should be driven by availability of signals to allow tailoring by locale.
-      applicable_markets: ["us", "uk", "eu", "apac"]
-      #minimum data inpts for model
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
-      #smallest premium offering
-      min_premium: 5000
-      #currency for all outputs
-      default_currency: "USD"
+      name: "{string}"                     # Human-readable configuration name
+      description: "{string}"              # Purpose description
+      version: "{semver}"                  # Semantic version (major.minor.patch)
+      product_types:                       # Applicable product lines
+        - "{product_type}"
+      applicable_markets:                  # Geographic markets
+        - "{market_code}"                  # e.g., us, uk, eu, apac
+      minimum_viable_input:                # Required inputs for pricing
+        - "{input_description}"
+      min_premium: {integer}               # Minimum premium floor
+      default_currency: "{currency}"       # ISO 4217 currency code
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # Direct queries are binary, no more than 10, and cannot be externally observed.
-    # Direct queries can either:
-    # a) impact base premium after generation (impact: "MODIFIER")
-    # b) create a note for the file (impact: "FLAG", set note).
-    # c) override the tier allocation (impact: "REFER", set override to tier or applied > 0).   
-    # -------------------------------------------------------------------------
-    direct_queries:     
-      - id: "mfa_enabled"
-        question: "Is multi-factor authentication enabled for all remote access??"
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed
+    # Maximum 10 queries per configuration
+    # =========================================================================
+    direct_queries:
+      - id: "{query_id}"                   # Unique identifier
+        question: "{question_text}"        # Question presented to user
         query_condition:
-          - {return: false, action: "FLAG", override: null, applied: null, note: "MFA not enabled - increased ransomware risk"}
-        
-    # -------------------------------------------------------------------------
-    # COMPLETE SIGNAL REGISTRY
-    # All inference functions are defined once, with a consistent naming id.
-    # Allows ease of reuse throughout configuration.
-    # -------------------------------------------------------------------------   
-    signal_registry:
-      #unique id name
-      - id: industry_classification
-        #the function that returns the data used by this signla
-        inference_utility_function: industry_classification_basefunction
-        normaliser:
-          #can be linear, percentile, log_scale, categorical_map
-          type: categorical_map
-          #only applicable for categorical map
-          bands:
-            - {min: 0, max: 25, applied: 0.80}
-        categories:
-          #link to groups: categories. Only one signal category can close into one category group.
-          groupid: industry_classification
-          #expected feauture return. Can either have applied: ("MODIFIER") or value: ("PREMIUM_BASE"). 
-          #note: only one categorical group can be used tomderive premium in any one configuration
-          features:
-            - {cat: "TECHNOLOGY", label: "Technology", applied: 1.15}
-        three_layer_assessment:
-          #link to groups: three_layer_assessment for amalgamation
-          groupid: network_authority
-          risk:
-          #positive = high signal score = low propensity, negative = high signal score = high propensity  
-          correlation_direction: positive
-            #how much does this signal contribute to the weighted group. Must add to 1.
-            weight: 0.25
-            # optional score condition based on signal bandings
-            # Can either:
-            # a) impact base premium after generation (impact: "MODIFIER")
-            # b) create a note for the file (impact: "FLAG", set note).
-            # c) override the tier allocation (impact: "REFER", set override to tier or applied > 0).
-            score_condition:
-              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: "No tier-1 security vendors detected"}
-          loss:
-            #how large is a potential loss
-            severity:
-              correlation_direction: negative
-              weight: 0.35
-              score_condition:
-              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: NA"}
-            #how frequently will potential losses occur
-            frequency:
-              correlation_direction: negative
-              weight: 0.35
-              score_condition:
-              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: "NA"}
-          exposure:
-            proxy_tier: inferred
-            size:
-              correlation_direction: positive
-              weight: 0.6
-              score_condition:
-              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: NA"}
-            complexity:
-              correlation_direction: positive
-              weight: 0.6      
-              score_condition:
-              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: NA"}
-  
-    # -------------------------------------------------------------------------
-    # CATEGORICAL GROUPS
-    # Categorical groups can either
-    # a) impact base premium after generation (impact: "MODIFIER")
-    # b) be the basis of premium (impact: "PREMIUM")
-    # Note: only one categorical group be the basis of premium
-    
-    # THREE LAYER ASSESSMENT
-    # Each group is the product of its underlying features
-    # Each group contributes to the composite score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-    groups: 
-      categories:
-        - id: "industry_classification"
-          label: "Industry Classification"
-          description: "Industry classification derived from public records"
-          # "MODIFIER" - underlying items will have an applied: entry, "PREMIUM_BASE" - underlying items will have an value: entry.
-          impact: "MODIFIER"
-          # if no specific inference function return can be matched to a feature in signal_registry/categories, this is the default set (must match an available item)
-          default_cat: "OTHER"   
-      three_layer_assessment:
-        - id: "technical_infrastructure"
-          label: "Technical Infrastructure"
-          description: "Observable technical security implementation"
-          risk:
-            weight: 0.35
-            score_condition: 
-              - {max: 30, action: "DECLINE", override: 5, note: "Critical technical deficiencies"}
-              - {max: 45, action: "REFER", override: 4, note: "Significant technical concerns"}
-          loss:
-            weight: 0.35
-          exposure:
-            weight: 0.35
+          - return: {boolean}              # Trigger condition (true or false)
+            action: "{action}"             # FLAG | MODIFIER | REFER
+            override: {tier|null}          # Force tier (1-5) or null
+            applied: {float|null}          # Modifier multiplier or null
+            note: "{explanation}"          # Explanation text
 
-    # ---------------------------------------------------------------------------
-    # RISK TIER BANDINGS
-    # Score ranges from 0-1000
-    # ---------------------------------------------------------------------------
+    # =========================================================================
+    # SIGNAL REGISTRY
+    # Complete definition of all signals used in this configuration
+    # Signals are defined once and reference groups for aggregation
+    # =========================================================================
+    signal_registry:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL SIGNAL PATTERN
+      # Returns discrete categories that apply as pricing modifiers
+      # These do NOT contribute to three_layer_assessment scores
+      # -----------------------------------------------------------------------
+      - id: "{signal_id}"                  # Unique signal identifier
+        inference_utility_function: "{function_name}"  # Function that returns data
+        proxy_tier: "{tier}"               # DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE
+        categories:
+          group_id: "{category_group}"     # Links to groups.categories
+          features:                        # Expected return values
+            - cat: "{CATEGORY_CODE}"       # Enum value returned by inference
+              label: "{Display Label}"     # Human-readable label
+              applied: {float}             # Pricing modifier (1.0 = neutral)
+
+      # -----------------------------------------------------------------------
+      # SCORED SIGNAL PATTERN - USING SCORE (DEFAULT)
+      # Returns 0-100 score, contributes to three_layer_assessment
+      # source: score is implicit when not specified
+      # -----------------------------------------------------------------------
+      - id: "{signal_id}"
+        inference_utility_function: "{function_name}"
+        proxy_tier: "{tier}"
+        three_layer_assessment:
+          group_id: "{group_id}"           # Links to groups.three_layer_assessment
+
+          # RISK DIMENSION
+          # Contributes to risk tier calculation
+          risk:
+            # source: score                # DEFAULT - uses 0-100 inference score (omit if using default)
+            correlation_direction: "{direction}"  # positive = high score = good | negative = high score = bad
+            weight: {float}                # Weight within group (group weights sum to 1.0)
+            score_condition:               # OPTIONAL - threshold-based actions
+              - max: {integer}             # Triggers if score <= max
+                action: "{action}"         # FLAG | REFER | DECLINE
+                override: {tier|null}      # Force tier assignment
+                note: "{explanation}"
+
+          # LOSS DIMENSION
+          # Contributes to loss modifier via frequency and severity
+          loss:
+            severity:
+              # source: score              # DEFAULT
+              correlation_direction: "{direction}"
+              weight: {float}
+            frequency:
+              # source: score              # DEFAULT
+              correlation_direction: "{direction}"
+              weight: {float}
+
+          # EXPOSURE DIMENSION
+          # Contributes to exposure modifier via size and complexity
+          exposure:
+            size:
+              # source: score              # DEFAULT
+              correlation_direction: "{direction}"
+              weight: {float}
+            complexity:
+              # source: score              # DEFAULT
+              correlation_direction: "{direction}"
+              weight: {float}
+
+      # -----------------------------------------------------------------------
+      # SCORED SIGNAL PATTERN - USING METADATA
+      # Uses inference metadata fields instead of score
+      # Requires bands (numeric) or categories (text) to map to scores
+      # -----------------------------------------------------------------------
+      - id: "{signal_id}"
+        inference_utility_function: "{function_name}"
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: "{group_id}"
+
+          # Risk uses default score
+          risk:
+            correlation_direction: positive
+            weight: {float}
+
+          # Exposure uses metadata fields
+          exposure:
+            # SIZE - using numeric metadata with bands
+            size:
+              source: metadata.{field_name}    # Use metadata field instead of score
+              bands:                            # REQUIRED for numeric metadata
+                - min: 0                        # Inclusive minimum
+                  max: 100                      # Inclusive maximum
+                  score: 20                     # Score contribution (0-100)
+                - min: 101
+                  max: 500
+                  score: 40
+                - min: 501
+                  max: 1000
+                  score: 60
+                - min: 1001
+                  max: null                     # null = no upper limit
+                  score: 80
+              correlation_direction: positive
+              weight: {float}
+
+            # COMPLEXITY - using text metadata with categories
+            complexity:
+              source: metadata.{field_name}    # Use metadata field
+              categories:                       # REQUIRED for text metadata
+                - match: "{VALUE_1}"            # Exact string match
+                  score: 30
+                - match: "{VALUE_2}"
+                  score: 50
+                - match: "{VALUE_3}"
+                  score: 70
+                - match: null                   # null = default/catch-all
+                  score: 50
+              correlation_direction: positive
+              weight: {float}
+
+          # Loss can also use metadata
+          loss:
+            frequency:
+              source: metadata.{field_name}
+              bands:
+                - min: 0
+                  max: 0
+                  score: 95                     # No incidents = high score
+                - min: 1
+                  max: 2
+                  score: 60
+                - min: 3
+                  max: null
+                  score: 25                     # Many incidents = low score
+              correlation_direction: positive
+              weight: {float}
+            severity:
+              # Uses default score
+              correlation_direction: negative
+              weight: {float}
+
+    # =========================================================================
+    # GROUPS
+    # Defines categorical modifiers and three-layer assessment groupings
+    # =========================================================================
+    groups:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL GROUPS
+      # Apply pricing modifiers based on discrete classifications
+      # Referenced by signal_registry.categories.group_id
+      # These are MODIFIERS, not score contributors
+      # -----------------------------------------------------------------------
+      categories:
+        - id: "{category_group_id}"        # Unique group identifier
+          label: "{Display Label}"         # Human-readable name
+          description: "{purpose}"         # Group purpose
+          impact: "{impact_type}"          # MODIFIER | PREMIUM_BASE
+          default_cat: "{DEFAULT_CODE}"    # Fallback category code
+
+      # -----------------------------------------------------------------------
+      # THREE-LAYER ASSESSMENT GROUPS
+      # Aggregate signals into scoring dimensions
+      # Referenced by signal_registry.three_layer_assessment.group_id
+      # -----------------------------------------------------------------------
+      three_layer_assessment:
+        - id: "{group_id}"                 # Unique group identifier
+          label: "{Display Label}"
+          description: "{purpose}"
+
+          # RISK - weights across all groups must sum to 1.0
+          risk:
+            weight: {float}
+            score_condition:               # OPTIONAL - group-level thresholds
+              - max: {integer}
+                action: "{action}"
+                override: {tier|null}
+                note: "{explanation}"
+
+          # LOSS - weights across all groups must sum to 1.0
+          loss:
+            weight: {float}
+
+          # EXPOSURE - weights across all groups must sum to 1.0
+          exposure:
+            weight: {float}
+
+    # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
     risk_tier_bands:
       bands:
-        - id: 1
-          label: "PREFERRED"
-          description: "Excellent risk - automatic approval, preferred pricing"
+        - id: {integer}                    # Tier number (1 = best, 5 = worst)
+          label: "{TIER_LABEL}"            # e.g., PREFERRED, STANDARD, DECLINE
+          description: "{tier_meaning}"
           interpretation:
-            # the composite score that this tier attaches to.
-            bands: {min: 800, max: 1000}
-            # action taken by process. Can be "APPROVE", "DECLINE", "REFER"
-            action: "APPROVE"
-            # "MODIFIER" - underlying items will have an applied: entry, "PREMIUM_BASE" - underlying items will have an value: entry.
-            application: {method: "PREMIUM_BASE", value: 8000}
-            
-    # ---------------------------------------------------------------------------
-    # LOSS TIER BANDINGS
-    # Score ranges from 0-100
-    # Calculation: (frequency_multiplier × frequency_weight) + (severity_multiplier × severity_weight)
-    # Result constrained by band floor/cap
-    # All components stored at atomic level for auditability    
-    # ---------------------------------------------------------------------------
+            bands:
+              min: {integer}               # Minimum score (inclusive)
+              max: {integer}               # Maximum score (inclusive)
+            action: "{action}"             # APPROVE | REFER | DECLINE
+            application:
+              method: "{method}"           # PREMIUM_BASE
+              value: {integer}             # Base premium for tier
+
+    # =========================================================================
+    # LOSS TIER BANDS
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
-        - id: 1
-          label: "VERY_LOW"
-          description: "very low risk of loss"
+        - id: {integer}
+          label: "{LOSS_LABEL}"            # e.g., VERY_LOW, MODERATE, HIGH
+          description: "{loss_meaning}"
           interpretation:
-            bands: {min: 0, max: 20}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, cap: 0.55, floor: 0.75}   
-          
-    # ---------------------------------------------------------------------------
-    # EXPOSURE TIER BANDINGS
-    # Score ranges from 0-100   
-    # Exposure returns two bandings - size and complexity. Each is the product of a banding excercise based on score.
-    # size = organisational size and TIV proxy
-    # complexity = operational and structural complexity
-    # Calculation: (exposure_modifier × exposure_weight) + (complexity_modifier × complexity_weight)
-    # All components stored at atomic level for auditability
-    # ---------------------------------------------------------------------------  
-    
+            bands:
+              min: {integer}               # Score range minimum
+              max: {integer}               # Score range maximum
+            application:
+              frequency_weight: {float}    # Weight for frequency component
+              severity_weight: {float}     # Weight for severity component
+              floor: {float}               # Minimum modifier (e.g., 0.75)
+              cap: {float}                 # Maximum modifier (e.g., 1.30)
+
+    # =========================================================================
+    # EXPOSURE TIER BANDS
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
     exposure:
       size:
-        weight: 0.6
+        weight: {float}                    # e.g., 0.60
         bands:
-          - id: 1
-            label: "MICRO"
-            description: "micro exposure value ($0 - $1M)"
+          - id: {integer}
+            label: "{SIZE_LABEL}"          # e.g., MICRO, SMALL, LARGE
+            description: "{size_meaning}"
             interpretation:
-              bands: {min: 0, max: 20}
-              application: {applied: 0.50, implied_thresholds: [0, 1000000]}   
-  
+              bands:
+                min: {integer}             # Score range minimum
+                max: {integer}             # Score range maximum
+              application:
+                applied: {float}           # Size modifier
+                implied_thresholds:        # OPTIONAL - TIV reference for interpretation
+                  - {min_value}
+                  - {max_value}
+
       complexity:
-        weight: 0.40
+        weight: {float}                    # e.g., 0.40
         bands:
-          - id: 1
-            label: "SIMPLE COMPLEXITY"
-            description: "simple complex exposure"
+          - id: {integer}
+            label: "{COMPLEXITY_LABEL}"    # e.g., SIMPLE, COMPLEX
+            description: "{complexity_meaning}"
             interpretation:
-              bands: {min: 0, max: 20}
-              application: {applied: 0.50}  
+              bands:
+                min: {integer}
+                max: {integer}
+              application:
+                applied: {float}           # Complexity modifier
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations offered
+    # =========================================================================
     limit_bandings:
-      - id: 1
-        limit: 1000000
-        deductible: 25000
+      - id: {integer}
+        limit: {integer}                   # Policy limit
+        deductible: {integer}              # Standard deductible for limit
 
-    # ---------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # ---------------------------------------------------------------------------
-    
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
- 
-      # Increased Limit Factors (ILF)
+
+      # Increased Limit Factors
       ilf_curve:
-        base_limit: 1000000  # $1M base
+        base_limit: {integer}              # Base limit for ILF = 1.00
         factors:
-          - {limit: 1000000, factor: 1.00}
-      
-      # Deductible credits (as percentage of limit)
+          - limit: {integer}
+            factor: {float}                # ILF multiplier
+
+      # Deductible credits (percentage of limit)
       deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}   # 0.1-0.5% of limit
-        
-      taxes_fees_rate: 0.05
+        - min_pct: {float}                 # Minimum deductible as % of limit
+          max_pct: {float|null}            # Maximum (null = no upper bound)
+          credit: {float}                  # Premium credit
+
+      # Tax and fee loading
+      taxes_fees_rate: {float}             # e.g., 0.05 = 5%
