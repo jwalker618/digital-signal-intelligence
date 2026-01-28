@@ -1,0 +1,225 @@
+#coverage, eg aerospace
+cyber:
+  #the specific configuration file under that coverage, eg aerospace_general
+  cyber_general:
+    metadata:
+      #friendly configuration name
+      name: "DSI Cyber Technical Pricing Model"
+      #friendly configuration description
+      description: "Cyber liability model based on externally observable technical signals"
+      #configuration version no
+      version: "0.0.0"
+      #specific product offerings for this coverage 
+      product_types:
+        - "cyber_liability"
+      #applicable markets, should be driven by availability of signals to allow tailoring by locale.
+      applicable_markets: ["us", "uk", "eu", "apac"]
+      #minimum data inpts for model
+      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      #smallest premium offering
+      min_premium: 5000
+      #currency for all outputs
+      default_currency: "USD"
+
+    # -------------------------------------------------------------------------
+    # DIRECT OPTIONAL QUERIES
+    # Direct queries are binary, no more than 10, and cannot be externally observed.
+    # Direct queries can either:
+    # a) impact base premium after generation (impact: "MODIFIER")
+    # b) create a note for the file (impact: "FLAG", set note).
+    # c) override the tier allocation (impact: "REFER", set override to tier or applied > 0).   
+    # -------------------------------------------------------------------------
+    direct_queries:     
+      - id: "mfa_enabled"
+        question: "Is multi-factor authentication enabled for all remote access??"
+        query_condition:
+          - {return: false, action: "FLAG", override: null, applied: null, note: "MFA not enabled - increased ransomware risk"}
+        
+    # -------------------------------------------------------------------------
+    # COMPLETE SIGNAL REGISTRY
+    # All inference functions are defined once, with a consistent naming id.
+    # Allows ease of reuse throughout configuration.
+    # -------------------------------------------------------------------------   
+    signal_registry:
+      #unique id name
+      - id: industry_classification
+        #the function that returns the data used by this signla
+        inference_utility_function: industry_classification_basefunction
+        normaliser:
+          #can be linear, percentile, log_scale, categorical_map
+          type: categorical_map
+          #only applicable for categorical map
+          bands:
+            - {min: 0, max: 25, applied: 0.80}
+        categories:
+          #link to groups: categories. Only one signal category can close into one category group.
+          groupid: industry_classification
+          #expected feauture return. Can either have applied: ("MODIFIER") or value: ("PREMIUM_BASE"). 
+          #note: only one categorical group can be used tomderive premium in any one configuration
+          features:
+            - {cat: "TECHNOLOGY", label: "Technology", applied: 1.15}
+        three_layer_assessment:
+          #link to groups: three_layer_assessment for amalgamation
+          groupid: network_authority
+          risk:
+          #positive = high signal score = low propensity, negative = high signal score = high propensity  
+          correlation_direction: positive
+            #how much does this signal contribute to the weighted group. Must add to 1.
+            weight: 0.25
+            # optional score condition based on signal bandings
+            # Can either:
+            # a) impact base premium after generation (impact: "MODIFIER")
+            # b) create a note for the file (impact: "FLAG", set note).
+            # c) override the tier allocation (impact: "REFER", set override to tier or applied > 0).
+            score_condition:
+              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: "No tier-1 security vendors detected"}
+          loss:
+            #how large is a potential loss
+            severity:
+              correlation_direction: negative
+              weight: 0.35
+              score_condition:
+              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: NA"}
+            #how frequently will potential losses occur
+            frequency:
+              correlation_direction: negative
+              weight: 0.35
+              score_condition:
+              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: "NA"}
+          exposure:
+            proxy_tier: inferred
+            size:
+              correlation_direction: positive
+              weight: 0.6
+              score_condition:
+              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: NA"}
+            complexity:
+              correlation_direction: positive
+              weight: 0.6      
+              score_condition:
+              - {min: 0, max: 25, action: "FLAG", override: null, applied: null, note: NA"}
+  
+    # -------------------------------------------------------------------------
+    # CATEGORICAL GROUPS
+    # Categorical groups can either
+    # a) impact base premium after generation (impact: "MODIFIER")
+    # b) be the basis of premium (impact: "PREMIUM")
+    # Note: only one categorical group be the basis of premium
+    
+    # THREE LAYER ASSESSMENT
+    # Each group is the product of its underlying features
+    # Each group contributes to the composite score
+    # Weights must add to 1
+    # -------------------------------------------------------------------------
+    groups: 
+      categories:
+        - id: "industry_classification"
+          label: "Industry Classification"
+          description: "Industry classification derived from public records"
+          # "MODIFIER" - underlying items will have an applied: entry, "PREMIUM_BASE" - underlying items will have an value: entry.
+          impact: "MODIFIER"
+          # if no specific inference function return can be matched to a feature in signal_registry/categories, this is the default set (must match an available item)
+          default_cat: "OTHER"   
+      three_layer_assessment:
+        - id: "technical_infrastructure"
+          label: "Technical Infrastructure"
+          description: "Observable technical security implementation"
+          risk:
+            weight: 0.35
+            score_condition: 
+              - {max: 30, action: "DECLINE", override: 5, note: "Critical technical deficiencies"}
+              - {max: 45, action: "REFER", override: 4, note: "Significant technical concerns"}
+          loss:
+            weight: 0.35
+          exposure:
+            weight: 0.35
+
+    # ---------------------------------------------------------------------------
+    # RISK TIER BANDINGS
+    # Score ranges from 0-1000
+    # ---------------------------------------------------------------------------
+    risk_tier_bands:
+      bands:
+        - id: 1
+          label: "PREFERRED"
+          description: "Excellent risk - automatic approval, preferred pricing"
+          interpretation:
+            # the composite score that this tier attaches to.
+            bands: {min: 800, max: 1000}
+            # action taken by process. Can be "APPROVE", "DECLINE", "REFER"
+            action: "APPROVE"
+            # "MODIFIER" - underlying items will have an applied: entry, "PREMIUM_BASE" - underlying items will have an value: entry.
+            application: {method: "PREMIUM_BASE", value: 8000}
+            
+    # ---------------------------------------------------------------------------
+    # LOSS TIER BANDINGS
+    # Score ranges from 0-100
+    # Calculation: (frequency_multiplier × frequency_weight) + (severity_multiplier × severity_weight)
+    # Result constrained by band floor/cap
+    # All components stored at atomic level for auditability    
+    # ---------------------------------------------------------------------------
+    loss_tier_bands:
+      bands:
+        - id: 1
+          label: "VERY_LOW"
+          description: "very low risk of loss"
+          interpretation:
+            bands: {min: 0, max: 20}
+            application: {frequency_weight: 0.6, severity_weight: 0.4, cap: 0.55, floor: 0.75}   
+          
+    # ---------------------------------------------------------------------------
+    # EXPOSURE TIER BANDINGS
+    # Score ranges from 0-100   
+    # Exposure returns two bandings - size and complexity. Each is the product of a banding excercise based on score.
+    # size = organisational size and TIV proxy
+    # complexity = operational and structural complexity
+    # Calculation: (exposure_modifier × exposure_weight) + (complexity_modifier × complexity_weight)
+    # All components stored at atomic level for auditability
+    # ---------------------------------------------------------------------------  
+    
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {applied: 0.50, implied_thresholds: [0, 1000000]}   
+  
+      complexity:
+        weight: 0.40
+        bands:
+          - id: 1
+            label: "SIMPLE COMPLEXITY"
+            description: "simple complex exposure"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {applied: 0.50}  
+
+    # -------------------------------------------------------------------------
+    # LIMIT BANDINGS
+    # -------------------------------------------------------------------------
+    limit_bandings:
+      - id: 1
+        limit: 1000000
+        deductible: 25000
+
+    # ---------------------------------------------------------------------------
+    # PRICING PARAMETERS
+    # ---------------------------------------------------------------------------
+    
+    pricing:
+ 
+      # Increased Limit Factors (ILF)
+      ilf_curve:
+        base_limit: 1000000  # $1M base
+        factors:
+          - {limit: 1000000, factor: 1.00}
+      
+      # Deductible credits (as percentage of limit)
+      deductible_credits:
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}   # 0.1-0.5% of limit
+        
+      taxes_fees_rate: 0.05
