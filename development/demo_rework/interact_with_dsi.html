@@ -3,472 +3,427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Signal Intelligence | Agentic Workflow</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Generate | Digital Signal Intelligence OS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- CORE VARIABLES --- */
+        /* --- CORE DESIGN SYSTEM --- */
         :root {
-            --bg-deep: #050b14;
-            --bg-panel: #0f172a;
-            --bg-card: #1e293b;
+            --bg-void: #020408;
+            --bg-panel: #0b1221;
+            --bg-surface: #131c31;
             
-            --teal-primary: #06b6d4;
-            --teal-glow: #22d3ee;
+            --teal-primary: #22d3ee;
+            --teal-dim: #0e7490;
             --blue-accent: #3b82f6;
             
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
             
-            --red-risk: #ef4444;
-            --amber-warn: #f59e0b;
-            --green-safe: #10b981;
+            --risk-critical: #ef4444;
+            --risk-high: #f97316;
+            --risk-med: #eab308;
+            --risk-low: #10b981;
             
-            --font-main: 'Inter', sans-serif;
-            --font-mono: 'IBM Plex Mono', monospace;
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
         }
 
-        /* --- RESET & BASE --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: var(--font-main); background: var(--bg-deep); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* --- UTILS --- */
-        .hidden { display: none !important; }
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .justify-center { justify-content: center; }
-        .gap-2 { gap: 0.5rem; }
-        .gap-4 { gap: 1rem; }
-        .w-full { width: 100%; }
-        .h-full { height: 100%; }
-        .text-teal { color: var(--teal-primary); }
-        .text-mono { font-family: var(--font-mono); }
-        .text-xs { font-size: 0.75rem; }
-        .text-sm { font-size: 0.875rem; }
-        .font-bold { font-weight: 700; }
-        
-        /* --- ANIMATED BACKGROUND --- */
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.3; }
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- BACKGROUND ANIMATION --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+        }
 
         /* --- HEADER --- */
-        .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(5, 11, 20, 0.8); backdrop-filter: blur(10px); z-index: 50; }
-        .nav-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 13px; }
-        .nav-btn:hover { border-color: var(--teal-primary); color: var(--teal-primary); }
-        .header-logo svg { height: 32px; width: auto; fill: white; }
+        header {
+            height: 60px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(11, 18, 33, 0.8);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 50;
+        }
 
-        /* --- STAGE --- */
-        .stage { flex: 1; position: relative; z-index: 10; overflow: hidden; display: flex; flex-direction: column; }
-        .view { flex: 1; display: none; flex-direction: column; padding: 30px; height: 100%; overflow-y: auto; animation: fadeIn 0.4s ease; }
+        .nav-group { display: flex; gap: 15px; }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { border-color: var(--teal-primary); color: var(--text-main); }
+        .nav-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+        .logo-container svg { height: 28px; width: auto; }
+
+        /* --- STAGE MANAGEMENT --- */
+        .stage { flex: 1; position: relative; z-index: 10; display: flex; }
+        .view { display: none; width: 100%; height: 100%; flex-direction: column; animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .view.active { display: flex; }
 
         /* --- LANDING --- */
-        #view-landing { align-items: center; justify-content: space-between; padding: 60px 20px; text-align: center; }
-        .landing-logo svg { height: 80px; margin-bottom: 20px; }
-        .landing-content { max-width: 800px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
-        .landing-title { font-size: 48px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; background: linear-gradient(to right, white, var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .landing-sub { font-size: 20px; color: var(--text-muted); font-weight: 300; max-width: 600px; line-height: 1.5; }
-        .begin-container { margin-top: auto; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-        .btn-start { background: var(--teal-primary); color: var(--bg-deep); font-size: 18px; font-weight: 700; padding: 16px 60px; border-radius: 8px; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 1px; }
-        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(6, 182, 212, 0.4); }
-        .ip-text { font-size: 10px; color: rgba(255,255,255,0.2); max-width: 600px; text-align: center; line-height: 1.4; }
+        #view-landing { align-items: center; justify-content: center; text-align: center; }
+        .landing-hero { margin-bottom: 40px; }
+        .landing-hero svg { height: 120px; width: auto; margin-bottom: 30px; }
+        .landing-title { font-size: 56px; font-weight: 800; letter-spacing: -2px; margin-bottom: 10px; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .landing-sub { font-size: 18px; color: var(--text-muted); font-weight: 400; max-width: 500px; margin: 0 auto 40px; }
+        
+        .btn-cta {
+            background: var(--teal-primary);
+            color: #0f172a;
+            font-family: var(--font-code);
+            font-weight: 700;
+            font-size: 16px;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .btn-cta:hover { box-shadow: 0 0 25px rgba(34, 211, 238, 0.4); transform: translateY(-2px); }
+        
+        .ip-footer { position: absolute; bottom: 20px; font-size: 10px; color: rgba(255,255,255,0.15); max-width: 700px; text-align: center; line-height: 1.4; }
 
-        /* --- ORIENTATION --- */
-        .flow-wrapper { display: flex; flex: 1; align-items: center; justify-content: center; gap: 40px; }
-        .flow-step { width: 220px; height: 160px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; position: relative; }
-        .flow-step:hover { border-color: var(--teal-primary); transform: translateY(-5px); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
-        .flow-step::after { content: '→'; position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 24px; color: rgba(255,255,255,0.1); }
-        .flow-step:last-child::after { display: none; }
-        .flow-icon { font-size: 32px; margin-bottom: 12px; }
-        .flow-label { font-weight: 700; font-size: 16px; margin-bottom: 4px; color: white; }
-        .flow-desc { font-size: 12px; color: var(--text-muted); text-align: center; padding: 0 15px; }
+        /* --- ORIENTATION (FLOW) --- */
+        #view-orientation { align-items: center; justify-content: center; }
+        .flow-container { display: flex; align-items: center; gap: 40px; position: relative; }
+        /* Connecting line */
+        .flow-container::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255,255,255,0.1); z-index: -1; }
         
-        .future-box { border: 1px dashed var(--teal-primary); background: rgba(6, 182, 212, 0.05); }
-        .future-badge { position: absolute; top: -10px; background: var(--teal-primary); color: var(--bg-deep); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+        .node-card {
+            width: 240px; height: 320px;
+            background: var(--bg-surface);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .node-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--teal-primary); box-shadow: 0 20px 40px rgba(0,0,0,0.4); z-index: 10; }
+        
+        .node-icon { font-size: 40px; margin-bottom: 20px; filter: grayscale(100%); transition: filter 0.3s; }
+        .node-card:hover .node-icon { filter: grayscale(0%); }
+        
+        .node-title { font-weight: 700; font-size: 18px; margin-bottom: 10px; color: var(--text-main); }
+        .node-detail { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; opacity: 0.7; }
+        
+        .node-future { border: 1px dashed var(--teal-dim); background: rgba(34, 211, 238, 0.03); }
+        .future-tag { position: absolute; top: 15px; right: 15px; font-size: 9px; font-weight: 800; color: var(--teal-primary); text-transform: uppercase; letter-spacing: 1px; border: 1px solid var(--teal-dim); padding: 2px 6px; border-radius: 4px; }
 
-        /* --- MODULE LAYOUTS --- */
-        .module-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; height: 100%; overflow: hidden; }
-        .sidebar { background: var(--bg-panel); border-right: 1px solid rgba(255,255,255,0.05); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
-        .main-view { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
-        .panel { background: var(--bg-card); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; display: flex; flex-direction: column; }
-        
-        /* --- DISCOVERY: AGENTIC QUEUE --- */
-        .queue-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .queue-item:hover { background: rgba(255,255,255,0.05); }
-        .queue-item.active { background: rgba(6, 182, 212, 0.1); border-left: 3px solid var(--teal-primary); }
-        .q-name { font-weight: 600; font-size: 14px; display: block; }
-        .q-meta { font-size: 11px; color: var(--text-muted); }
-        .q-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); text-transform: uppercase; }
-        
-        .terminal { background: #000; padding: 20px; font-family: var(--font-mono); font-size: 12px; color: var(--teal-glow); height: 100%; overflow-y: auto; }
-        .term-line { margin-bottom: 4px; opacity: 0; animation: fadeIn 0.1s forwards; }
-        
-        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; flex: 1; }
-        .comp-card { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; }
-        .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .comp-logo { width: 32px; height: 32px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; }
-        
-        .signal-row { display: flex; justify-content: space-between; font-size: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
-        .sig-val { font-family: var(--font-mono); font-weight: 700; }
-        .val-good { color: var(--green-safe); }
-        .val-warn { color: var(--amber-warn); }
-        .val-bad { color: var(--red-risk); }
+        /* --- WORKBENCH LAYOUT (Live Intake + Assessment) --- */
+        .workbench-grid { display: grid; grid-template-columns: 350px 1fr; height: 100%; }
+        .queue-panel { border-right: 1px solid rgba(255,255,255,0.1); background: var(--bg-panel); display: flex; flex-direction: column; }
+        .dossier-panel { background: var(--bg-void); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* --- THREE LAYER --- */
-        .layer-stack { display: flex; flex-direction: column; gap: 15px; height: 100%; }
-        .layer-card { flex: 1; background: var(--bg-card); border-radius: 12px; display: flex; padding: 0; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; transition: transform 0.3s; }
-        .layer-card:hover { transform: scale(1.01); }
-        .layer-visual { width: 100px; display: flex; align-items: center; justify-content: center; font-size: 32px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
-        .layer-content { padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .layer-title { font-size: 18px; font-weight: 700; margin-bottom: 5px; color: white; }
-        .layer-logic { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; margin-top: 10px; border-left: 2px solid var(--teal-primary); }
-        .layer-score-box { padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 120px; border-left: 1px solid rgba(255,255,255,0.1); }
-        .score-big { font-size: 36px; font-weight: 800; font-family: var(--font-mono); }
-
-        /* --- WHAT-IF --- */
-        .network-canvas-container { position: relative; flex: 1; background: #000; border-radius: 12px; overflow: hidden; }
-        .shock-btn { width: 100%; padding: 15px; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; color: white; }
-        .shock-btn:hover, .shock-btn.active { background: rgba(239, 68, 68, 0.1); border-color: var(--red-risk); }
-        .shock-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-        /* --- UNDERWRITING --- */
-        .pricing-waterfall { display: flex; flex-direction: column; gap: 5px; margin-top: 20px; }
-        .price-step { display: flex; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 13px; }
-        .price-final { background: var(--teal-primary); color: var(--bg-deep); font-weight: 800; font-size: 16px; padding: 15px; margin-top: 10px; }
+        .queue-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .queue-list { overflow-y: auto; flex: 1; }
         
+        .queue-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background 0.2s;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+        .queue-item:hover { background: rgba(255,255,255,0.03); }
+        .queue-item.active { background: rgba(34, 211, 238, 0.08); border-left: 3px solid var(--teal-primary); }
+        
+        .co-name { font-weight: 600; font-size: 14px; color: var(--text-main); display: block; margin-bottom: 2px; }
+        .co-meta { font-size: 11px; color: var(--text-muted); font-family: var(--font-code); }
+        
+        .status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; align-self: start; }
+        .st-approve { background: rgba(16, 185, 129, 0.2); color: var(--risk-low); }
+        .st-refer { background: rgba(234, 179, 8, 0.2); color: var(--risk-med); }
+        .st-decline { background: rgba(239, 68, 68, 0.2); color: var(--risk-critical); }
+
+        /* Dossier Styles */
+        .dossier-header { padding: 25px 40px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); }
+        .dossier-score { font-family: var(--font-code); font-size: 32px; font-weight: 700; color: var(--teal-primary); }
+        
+        .dossier-content { padding: 40px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        
+        .section-header { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        
+        /* Signal Bars */
+        .signal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; }
+        .sig-bar-bg { width: 100px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0 10px; position: relative; }
+        .sig-bar-fill { height: 100%; border-radius: 2px; }
+        .sig-val { font-family: var(--font-code); width: 30px; text-align: right; }
+
+        /* Three Layer Cards */
+        .layer-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+        .layer-title { font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .layer-metric { font-family: var(--font-code); font-size: 18px; }
+        .peer-comp { font-size: 11px; color: var(--text-muted); margin-top: 5px; display: flex; align-items: center; gap: 6px; }
+        .trend-up { color: var(--risk-critical); } /* Bad for risk */
+        .trend-down { color: var(--risk-low); } /* Good for risk */
+
+        .analysis-btn { position: absolute; bottom: 30px; right: 30px; background: var(--text-main); color: var(--bg-void); padding: 12px 24px; border-radius: 30px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.2s; z-index: 20; }
+        .analysis-btn:hover { transform: scale(1.05); }
+
+        /* --- PORTFOLIO STEERING --- */
+        #view-steering { padding: 40px; display: grid; grid-template-rows: auto 1fr; gap: 30px; }
+        .ticker-tape { display: flex; gap: 20px; padding: 15px; background: var(--bg-surface); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; white-space: nowrap; font-family: var(--font-code); font-size: 12px; }
+        .tick-item { color: var(--text-muted); }
+        .tick-item span { color: var(--text-main); font-weight: 700; }
+        
+        .steering-dash { display: grid; grid-template-columns: 300px 1fr; gap: 30px; height: 100%; }
+        .policy-panel { background: var(--bg-panel); border-radius: 12px; padding: 25px; }
+        
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 6px; }
+        .toggle-switch { width: 40px; height: 20px; background: #334155; border-radius: 10px; position: relative; cursor: pointer; transition: background 0.2s; }
+        .toggle-switch::after { content: ''; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.2s; }
+        .toggle-switch.on { background: var(--teal-primary); }
+        .toggle-switch.on::after { transform: translateX(20px); }
+
+        .scenario-canvas { background: #000; border-radius: 12px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .scenario-overlay { position: absolute; top: 20px; left: 20px; pointer-events: none; }
+
         /* --- WORLD MODEL --- */
-        .timeline-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #334155; border-radius: 3px; outline: none; margin: 30px 0; }
-        .timeline-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--teal-primary); cursor: pointer; box-shadow: 0 0 10px var(--teal-primary); }
-        .prediction-graph { height: 200px; border-left: 2px solid #334155; border-bottom: 2px solid #334155; position: relative; margin-top: 20px; }
-        .trend-line { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; }
+        #view-world { position: relative; }
+        .world-ui { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 600px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 15px; }
+        .ai-prompt { background: transparent; border: none; color: var(--teal-primary); font-family: var(--font-code); font-size: 14px; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
+        .ai-prompt:focus { outline: none; border-color: var(--teal-primary); }
 
-        /* --- COMMON BTNS --- */
-        .btn-next { position: fixed; bottom: 30px; right: 30px; background: white; color: var(--bg-deep); padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; transition: transform 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-next:hover { transform: scale(1.05); }
-        .btn-action { background: var(--blue-accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; }
-        .btn-action:hover { background: #2563eb; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <canvas id="bg-canvas"></canvas>
 
-    <header class="header hidden" id="main-header">
-        <div class="flex items-center gap-4">
+    <header id="main-header" style="display: none;">
+        <div class="nav-group">
             <button class="nav-btn" onclick="goHome()">
-                <span>🏠</span> Home
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                Home
             </button>
             <button class="nav-btn" onclick="location.reload()">
-                <span>⟳</span> Reset
+                <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                Reset
             </button>
         </div>
-        <div class="header-logo">
+        <div class="logo-container">
             <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
                 <g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)">
                     <path d="m 272.55,154.21 q -15.09,0 -26.40,-6.63 q -11.31,-6.63 -17.60,-18.72 q -6.28,-12.08 -6.28,-28.29 q 0,-16.97 6.56,-28.99 q 6.56,-12.08 17.88,-18.44 q 11.31,-6.35 25.43,-6.35 q 9.22,0 17.32,2.65 q 8.10,2.65 14.39,7.61 q 6.28,4.89 10.2,11.66 q 3.98,6.77 4.82,15.09 H 293.30 q -0.69,-3.49 -2.37,-6.28 q -1.67,-2.79 -4.26,-4.75 q -2.58,-1.95 -6.00,-3.00 q -3.42,-1.04 -7.61,-1.04 q -8.10,0 -13.83,3.84 q -5.65,3.77 -8.66,10.89 q -3.00,7.05 -3.00,17.11 q 0,9.99 3.00,17.11 q 3.07,7.05 8.80,10.82 q 5.79,3.77 13.97,3.77 q 6.70,0 11.59,-2.30 q 4.89,-2.30 7.47,-6.42 q 2.65,-4.19 2.65,-9.71 l 5.58,0.48 H 274.23 V 95.87 h 45.41 v 14.11 q 0,13.20 -6.00,23.19 q -5.93,9.92 -16.55,15.50 q -10.54,5.51 -24.52,5.51 z m 91.77,0 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 69.42,-41.77 v 40.10 H 409.72 V 78.76 h 23.75 v 19.77 h -3.56 q 3.42,-9.78 9.92,-15.57 q 6.49,-5.79 17.11,-5.79 q 8.03,0 13.69,3.49 q 5.65,3.42 8.66,9.92 q 3.00,6.49 3.00,15.57 v 46.38 h -24.03 v -41.35 q 0,-6.56 -3.14,-9.99 q -3.14,-3.49 -8.87,-3.49 q -3.77,0 -6.63,1.60 q -2.79,1.60 -4.33,4.89 q -1.53,3.21 -1.53,8.24 z m 95.40,41.77 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 45.38,-1.67 V 78.76 h 23.26 v 12.99 h 0.20 q 2.02,-7.05 6.28,-10.13 q 4.33,-3.14 11.73,-3.14 q 1.95,0 3.49,0.06 q 1.60,0 3.07,0.06 v 19.84 q -1.32,-0.06 -4.12,-0.13 q -2.72,-0.06 -5.37,-0.06 q -4.26,0 -7.54,1.95 q -3.28,1.88 -5.16,5.58 q -1.81,3.70 -1.81,8.94 v 37.79 z m 76.84,1.25 q -7.40,0 -13.13,-2.37 q -5.65,-2.44 -8.94,-7.26 q -3.21,-4.89 -3.21,-12.22 q 0,-6.21 2.23,-10.40 q 2.23,-4.26 6.14,-6.91 q 3.98,-2.65 9.15,-3.98 q 5.23,-1.39 11.10,-1.88 q 6.56,-0.55 10.54,-1.18 q 3.98,-0.69 5.72,-1.88 q 1.74,-1.25 1.74,-3.49 v -0.34 q 0,-2.23 -1.25,-3.84 q -1.25,-1.67 -3.56,-2.58 q -2.30,-0.97 -5.44,-0.97 q -3.35,0 -5.79,1.04 q -2.44,0.97 -3.84,2.86 q -1.39,1.81 -1.67,4.33 h -22.35 q 0.55,-8.03 4.68,-13.69 q 4.12,-5.72 11.59,-8.73 q 7.54,-3.07 18.23,-3.07 q 8.03,0 14.18,1.74 q 6.21,1.67 10.47,5.03 q 4.26,3.28 6.42,8.10 q 2.16,4.75 2.16,10.82 v 49.67 h -23.47 v -10.33 h -0.27 q -2.23,3.98 -5.23,6.56 q -3.00,2.51 -6.98,3.77 q -3.98,1.25 -9.22,1.25 z m 7.33,-15.71 q 3.98,0 7.19,-1.53 q 3.28,-1.53 5.16,-4.19 q 1.88,-2.72 1.88,-6.35 v -6.70 q -0.97,0.41 -2.30,0.83 q -1.32,0.41 -3.00,0.76 q -1.60,0.34 -3.56,0.69 q -1.95,0.34 -4.19,0.76 q -3.21,0.48 -5.72,1.53 q -2.44,1.04 -3.91,2.79 q -1.39,1.67 -1.39,4.12 0,2.30 1.25,3.91 q 1.25,1.60 3.42,2.51 q 2.23,0.83 5.16,0.83 z M 754.98,78.76 V 97.34 H 703.14 V 78.76 Z M 715.71,58.64 h 24.10 v 69.09 q 0,3.56 1.39,4.89 q 1.39,1.32 5.44,1.32 q 1.81,0 4.47,0 q 2.65,0 3.84,0 v 18.58 q -1.88,0 -5.72,0 q -3.84,0 -7.89,0 q -13.27,0 -19.49,-4.96 q -6.14,-5.03 -6.14,-15.78 z m 81.47,95.57 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z" fill="#FFFFFF"/>
                     <g transform="rotate(45,650.06,-166.77)">
                         <path fill="#FFFFFF" d="m 346.34,337 c -1.15,0 -2.09,0.37 -2.09,0.83 v 178.32 c 0,0.46 0.93,0.83 2.09,0.83 h 175.81 c 1.15,0 2.09,-0.37 2.09,-0.83 v -22.37 -20.07 l -17.93,20.34 -0.10,-0.09 c -0.11,0.38 -0.42,0.65 -0.80,0.65 L 397.68,494.49 h -29.35 c -0.86,0 -1.57,-0.27 -1.57,-0.62 V 360.12 c 0,-0.34 0.70,-0.62 1.57,-0.62 h 36.69 L 424.85,337 Z"/>
-                        <path fill="#39D3BA" d="m 458.18,337 -33.34,37.83 v 32.40 L 486.74,337 Z m 61.88,0 -95.23,108.03 v 24.19 l 7.72,0.01 1.20,-1.36 90.48,-102.91 v -27.23 c 0,-0.40 -0.51,-0.73 -1.15,-0.73 z m 4.18,66.03 -58.39,66.24 28.94,0.03 29.45,-33.41 z m 0,70.67 -0.39,0.44 h 0.39 z m -18.23,20.68 -0.11,0.12 h 0.11 z"/>
+                        <path fill="#22d3ee" d="m 458.18,337 -33.34,37.83 v 32.40 L 486.74,337 Z m 61.88,0 -95.23,108.03 v 24.19 l 7.72,0.01 1.20,-1.36 90.48,-102.91 v -27.23 c 0,-0.40 -0.51,-0.73 -1.15,-0.73 z m 4.18,66.03 -58.39,66.24 28.94,0.03 29.45,-33.41 z m 0,70.67 -0.39,0.44 h 0.39 z m -18.23,20.68 -0.11,0.12 h 0.11 z"/>
                     </g>
                 </g>
             </svg>
         </div>
-        <div style="width: 140px;"></div> </header>
+    </header>
 
     <main class="stage">
 
         <div id="view-landing" class="view active">
-            <div class="landing-logo">
-                <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)"><path d="m 272.55,154.21 q -15.09,0 -26.40,-6.63 q -11.31,-6.63 -17.60,-18.72 q -6.28,-12.08 -6.28,-28.29 q 0,-16.97 6.56,-28.99 q 6.56,-12.08 17.88,-18.44 q 11.31,-6.35 25.43,-6.35 q 9.22,0 17.32,2.65 q 8.10,2.65 14.39,7.61 q 6.28,4.89 10.2,11.66 q 3.98,6.77 4.82,15.09 H 293.30 q -0.69,-3.49 -2.37,-6.28 q -1.67,-2.79 -4.26,-4.75 q -2.58,-1.95 -6.00,-3.00 q -3.42,-1.04 -7.61,-1.04 q -8.10,0 -13.83,3.84 q -5.65,3.77 -8.66,10.89 q -3.00,7.05 -3.00,17.11 q 0,9.99 3.00,17.11 q 3.07,7.05 8.80,10.82 q 5.79,3.77 13.97,3.77 q 6.70,0 11.59,-2.30 q 4.89,-2.30 7.47,-6.42 q 2.65,-4.19 2.65,-9.71 l 5.58,0.48 H 274.23 V 95.87 h 45.41 v 14.11 q 0,13.20 -6.00,23.19 q -5.93,9.92 -16.55,15.50 q -10.54,5.51 -24.52,5.51 z m 91.77,0 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 69.42,-41.77 v 40.10 H 409.72 V 78.76 h 23.75 v 19.77 h -3.56 q 3.42,-9.78 9.92,-15.57 q 6.49,-5.79 17.11,-5.79 q 8.03,0 13.69,3.49 q 5.65,3.42 8.66,9.92 q 3.00,6.49 3.00,15.57 v 46.38 h -24.03 v -41.35 q 0,-6.56 -3.14,-9.99 q -3.14,-3.49 -8.87,-3.49 q -3.77,0 -6.63,1.60 q -2.79,1.60 -4.33,4.89 q -1.53,3.21 -1.53,8.24 z m 95.40,41.77 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 45.38,-1.67 V 78.76 h 23.26 v 12.99 h 0.20 q 2.02,-7.05 6.28,-10.13 q 4.33,-3.14 11.73,-3.14 q 1.95,0 3.49,0.06 q 1.60,0 3.07,0.06 v 19.84 q -1.32,-0.06 -4.12,-0.13 q -2.72,-0.06 -5.37,-0.06 q -4.26,0 -7.54,1.95 q -3.28,1.88 -5.16,5.58 q -1.81,3.70 -1.81,8.94 v 37.79 z m 76.84,1.25 q -7.40,0 -13.13,-2.37 q -5.65,-2.44 -8.94,-7.26 q -3.21,-4.89 -3.21,-12.22 q 0,-6.21 2.23,-10.40 q 2.23,-4.26 6.14,-6.91 q 3.98,-2.65 9.15,-3.98 q 5.23,-1.39 11.10,-1.88 q 6.56,-0.55 10.54,-1.18 q 3.98,-0.69 5.72,-1.88 q 1.74,-1.25 1.74,-3.49 v -0.34 q 0,-2.23 -1.25,-3.84 q -1.25,-1.67 -3.56,-2.58 q -2.30,-0.97 -5.44,-0.97 q -3.35,0 -5.79,1.04 q -2.44,0.97 -3.84,2.86 q -1.39,1.81 -1.67,4.33 h -22.35 q 0.55,-8.03 4.68,-13.69 q 4.12,-5.72 11.59,-8.73 q 7.54,-3.07 18.23,-3.07 q 8.03,0 14.18,1.74 q 6.21,1.67 10.47,5.03 q 4.26,3.28 6.42,8.10 q 2.16,4.75 2.16,10.82 v 49.67 h -23.47 v -10.33 h -0.27 q -2.23,3.98 -5.23,6.56 q -3.00,2.51 -6.98,3.77 q -3.98,1.25 -9.22,1.25 z m 7.33,-15.71 q 3.98,0 7.19,-1.53 q 3.28,-1.53 5.16,-4.19 q 1.88,-2.72 1.88,-6.35 v -6.70 q -0.97,0.41 -2.30,0.83 q -1.32,0.41 -3.00,0.76 q -1.60,0.34 -3.56,0.69 q -1.95,0.34 -4.19,0.76 q -3.21,0.48 -5.72,1.53 q -2.44,1.04 -3.91,2.79 q -1.39,1.67 -1.39,4.12 0,2.30 1.25,3.91 q 1.25,1.60 3.42,2.51 q 2.23,0.83 5.16,0.83 z M 754.98,78.76 V 97.34 H 703.14 V 78.76 Z M 715.71,58.64 h 24.10 v 69.09 q 0,3.56 1.39,4.89 q 1.39,1.32 5.44,1.32 q 1.81,0 4.47,0 q 2.65,0 3.84,0 v 18.58 q -1.88,0 -5.72,0 q -3.84,0 -7.89,0 q -13.27,0 -19.49,-4.96 q -6.14,-5.03 -6.14,-15.78 z m 81.47,95.57 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z" fill="#FFFFFF"/><g transform="rotate(45,650.06,-166.77)"><path fill="#FFFFFF" d="m 346.34,337 c -1.15,0 -2.09,0.37 -2.09,0.83 v 178.32 c 0,0.46 0.93,0.83 2.09,0.83 h 175.81 c 1.15,0 2.09,-0.37 2.09,-0.83 v -22.37 -20.07 l -17.93,20.34 -0.10,-0.09 c -0.11,0.38 -0.42,0.65 -0.80,0.65 L 397.68,494.49 h -29.35 c -0.86,0 -1.57,-0.27 -1.57,-0.62 V 360.12 c 0,-0.34 0.70,-0.62 1.57,-0.62 h 36.69 L 424.85,337 Z"/><path fill="#39D3BA" d="m 458.18,337 -33.34,37.83 v 32.40 L 486.74,337 Z m 61.88,0 -95.23,108.03 v 24.19 l 7.72,0.01 1.20,-1.36 90.48,-102.91 v -27.23 c 0,-0.40 -0.51,-0.73 -1.15,-0.73 z m 4.18,66.03 -58.39,66.24 28.94,0.03 29.45,-33.41 z m 0,70.67 -0.39,0.44 h 0.39 z m -18.23,20.68 -0.11,0.12 h 0.11 z"/></g></g></svg>
+            <div class="landing-hero">
+                <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)">
+                        <path d="m 272.55,154.21 q -15.09,0 -26.40,-6.63 q -11.31,-6.63 -17.60,-18.72 q -6.28,-12.08 -6.28,-28.29 q 0,-16.97 6.56,-28.99 q 6.56,-12.08 17.88,-18.44 q 11.31,-6.35 25.43,-6.35 q 9.22,0 17.32,2.65 q 8.10,2.65 14.39,7.61 q 6.28,4.89 10.2,11.66 q 3.98,6.77 4.82,15.09 H 293.30 q -0.69,-3.49 -2.37,-6.28 q -1.67,-2.79 -4.26,-4.75 q -2.58,-1.95 -6.00,-3.00 q -3.42,-1.04 -7.61,-1.04 q -8.10,0 -13.83,3.84 q -5.65,3.77 -8.66,10.89 q -3.00,7.05 -3.00,17.11 q 0,9.99 3.00,17.11 q 3.07,7.05 8.80,10.82 q 5.79,3.77 13.97,3.77 q 6.70,0 11.59,-2.30 q 4.89,-2.30 7.47,-6.42 q 2.65,-4.19 2.65,-9.71 l 5.58,0.48 H 274.23 V 95.87 h 45.41 v 14.11 q 0,13.20 -6.00,23.19 q -5.93,9.92 -16.55,15.50 q -10.54,5.51 -24.52,5.51 z m 91.77,0 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 69.42,-41.77 v 40.10 H 409.72 V 78.76 h 23.75 v 19.77 h -3.56 q 3.42,-9.78 9.92,-15.57 q 6.49,-5.79 17.11,-5.79 q 8.03,0 13.69,3.49 q 5.65,3.42 8.66,9.92 q 3.00,6.49 3.00,15.57 v 46.38 h -24.03 v -41.35 q 0,-6.56 -3.14,-9.99 q -3.14,-3.49 -8.87,-3.49 q -3.77,0 -6.63,1.60 q -2.79,1.60 -4.33,4.89 q -1.53,3.21 -1.53,8.24 z m 95.40,41.77 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 45.38,-1.67 V 78.76 h 23.26 v 12.99 h 0.20 q 2.02,-7.05 6.28,-10.13 q 4.33,-3.14 11.73,-3.14 q 1.95,0 3.49,0.06 q 1.60,0 3.07,0.06 v 19.84 q -1.32,-0.06 -4.12,-0.13 q -2.72,-0.06 -5.37,-0.06 q -4.26,0 -7.54,1.95 q -3.28,1.88 -5.16,5.58 q -1.81,3.70 -1.81,8.94 v 37.79 z m 76.84,1.25 q -7.40,0 -13.13,-2.37 q -5.65,-2.44 -8.94,-7.26 q -3.21,-4.89 -3.21,-12.22 q 0,-6.21 2.23,-10.40 q 2.23,-4.26 6.14,-6.91 q 3.98,-2.65 9.15,-3.98 q 5.23,-1.39 11.10,-1.88 q 6.56,-0.55 10.54,-1.18 q 3.98,-0.69 5.72,-1.88 q 1.74,-1.25 1.74,-3.49 v -0.34 q 0,-2.23 -1.25,-3.84 q -1.25,-1.67 -3.56,-2.58 q -2.30,-0.97 -5.44,-0.97 q -3.35,0 -5.79,1.04 q -2.44,0.97 -3.84,2.86 q -1.39,1.81 -1.67,4.33 h -22.35 q 0.55,-8.03 4.68,-13.69 q 4.12,-5.72 11.59,-8.73 q 7.54,-3.07 18.23,-3.07 q 8.03,0 14.18,1.74 q 6.21,1.67 10.47,5.03 q 4.26,3.28 6.42,8.10 q 2.16,4.75 2.16,10.82 v 49.67 h -23.47 v -10.33 h -0.27 q -2.23,3.98 -5.23,6.56 q -3.00,2.51 -6.98,3.77 q -3.98,1.25 -9.22,1.25 z m 7.33,-15.71 q 3.98,0 7.19,-1.53 q 3.28,-1.53 5.16,-4.19 q 1.88,-2.72 1.88,-6.35 v -6.70 q -0.97,0.41 -2.30,0.83 q -1.32,0.41 -3.00,0.76 q -1.60,0.34 -3.56,0.69 q -1.95,0.34 -4.19,0.76 q -3.21,0.48 -5.72,1.53 q -2.44,1.04 -3.91,2.79 q -1.39,1.67 -1.39,4.12 0,2.30 1.25,3.91 q 1.25,1.60 3.42,2.51 q 2.23,0.83 5.16,0.83 z M 754.98,78.76 V 97.34 H 703.14 V 78.76 Z M 715.71,58.64 h 24.10 v 69.09 q 0,3.56 1.39,4.89 q 1.39,1.32 5.44,1.32 q 1.81,0 4.47,0 q 2.65,0 3.84,0 v 18.58 q -1.88,0 -5.72,0 q -3.84,0 -7.89,0 q -13.27,0 -19.49,-4.96 q -6.14,-5.03 -6.14,-15.78 z m 81.47,95.57 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z" fill="#FFFFFF"/>
+                        <g transform="rotate(45,650.06,-166.77)">
+                            <path fill="#FFFFFF" d="m 346.34,337 c -1.15,0 -2.09,0.37 -2.09,0.83 v 178.32 c 0,0.46 0.93,0.83 2.09,0.83 h 175.81 c 1.15,0 2.09,-0.37 2.09,-0.83 v -22.37 -20.07 l -17.93,20.34 -0.10,-0.09 c -0.11,0.38 -0.42,0.65 -0.80,0.65 L 397.68,494.49 h -29.35 c -0.86,0 -1.57,-0.27 -1.57,-0.62 V 360.12 c 0,-0.34 0.70,-0.62 1.57,-0.62 h 36.69 L 424.85,337 Z"/>
+                            <path fill="#22d3ee" d="m 458.18,337 -33.34,37.83 v 32.40 L 486.74,337 Z m 61.88,0 -95.23,108.03 v 24.19 l 7.72,0.01 1.20,-1.36 90.48,-102.91 v -27.23 c 0,-0.40 -0.51,-0.73 -1.15,-0.73 z m 4.18,66.03 -58.39,66.24 28.94,0.03 29.45,-33.41 z m 0,70.67 -0.39,0.44 h 0.39 z m -18.23,20.68 -0.11,0.12 h 0.11 z"/>
+                        </g>
+                    </g>
+                </svg>
             </div>
-            <div class="landing-content">
-                <h1 class="landing-title">Digital Signal Intelligence</h1>
-                <p class="landing-sub">A New Information Substrate for Insurance</p>
-            </div>
-            <div class="begin-container">
-                <button class="btn-start" onclick="navTo('orientation')">BEGIN DEMO</button>
-                <div class="ip-text">
-                    © John Walker. All rights reserved. Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner.
-                </div>
+            
+            <h1 class="landing-title">Digital Signal Intelligence</h1>
+            <p class="landing-sub">A New Information Substrate for Insurance</p>
+            
+            <button class="btn-cta" onclick="navTo('orientation')">BEGIN DEMO</button>
+            
+            <div class="ip-footer">
+                © John Walker. All rights reserved. Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner. Unauthorised use is strictly prohibited.
             </div>
         </div>
 
         <div id="view-orientation" class="view">
-            <h2 style="text-align:center; margin-bottom: 60px; font-weight: 300;">Capability Chain</h2>
-            <div class="flow-wrapper">
-                <div class="flow-step" onclick="navTo('discovery')">
-                    <div class="flow-icon">📡</div>
-                    <div class="flow-label">Discover</div>
-                    <div class="flow-desc">Agentic Signal Extraction</div>
-                </div>
-                <div class="flow-step" onclick="navTo('assessment')">
-                    <div class="flow-icon">🧠</div>
-                    <div class="flow-label">Understand</div>
-                    <div class="flow-desc">Three Layer Assessment</div>
-                </div>
-                <div class="flow-step" onclick="navTo('whatif')">
-                    <div class="flow-icon">⚡</div>
-                    <div class="flow-label">Predict</div>
-                    <div class="flow-desc">Portfolio Simulation</div>
-                </div>
-                <div class="flow-step" onclick="navTo('underwriting')">
-                    <div class="flow-icon">⚖️</div>
-                    <div class="flow-label">Decide</div>
-                    <div class="flow-desc">Underwriting Engine</div>
-                </div>
-                <div class="flow-step future-box" onclick="navTo('worldmodel')">
-                    <div class="future-badge">THE FUTURE</div>
-                    <div class="flow-icon" style="color:var(--teal-primary);">🌐</div>
-                    <div class="flow-label">World Model</div>
-                    <div class="flow-desc">Temporal & Counterfactual</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="view-discovery" class="view">
-            <div style="margin-bottom: 20px; font-size: 18px; font-weight: 700; color: var(--teal-primary);">Live Intake Queue</div>
-            <div class="module-grid">
-                <div class="sidebar">
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;">Flagged for Review (13)</div>
-                    <div id="intake-queue"></div>
+            <div class="flow-container">
+                <div class="node-card" onclick="navTo('workbench')">
+                    <div class="node-icon">📡</div>
+                    <div class="node-title">Workbench</div>
+                    <div class="node-detail">Live Intake, Signal Extraction & Three-Layer Assessment in a unified view.</div>
                 </div>
                 
-                <div class="panel">
-                    <div id="agent-empty" style="flex:1; display:flex; align-items:center; justify-content:center; color: var(--text-muted); flex-direction: column;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
-                        <div>Select a flagged entity to initialise DSI Agent</div>
-                    </div>
-                    
-                    <div id="agent-active" class="hidden h-full flex-col">
-                        <div class="terminal" id="term-log"></div>
-                        <div class="comparison-grid hidden" id="comp-view">
-                            <div class="comp-card">
-                                <div class="comp-header">
-                                    <div class="comp-logo">T</div>
-                                    <div>
-                                        <div id="target-name" class="font-bold">Target</div>
-                                        <div class="text-xs text-muted">Primary Analysis</div>
-                                    </div>
-                                </div>
-                                <div id="target-signals"></div>
-                            </div>
-                            <div class="comp-card" style="opacity: 0.7;">
-                                <div class="comp-header">
-                                    <div class="comp-logo">P</div>
-                                    <div>
-                                        <div id="peer-name" class="font-bold">Peer</div>
-                                        <div class="text-xs text-muted">Contextual Baseline</div>
-                                    </div>
-                                </div>
-                                <div id="peer-signals"></div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="node-card" onclick="navTo('steering')">
+                    <div class="node-icon">⚡</div>
+                    <div class="node-title">Portfolio Steering</div>
+                    <div class="node-detail">Real-time risk triage and scenario-based policy adjustment.</div>
                 </div>
-            </div>
-            <button class="btn-next hidden" id="disc-next" onclick="navTo('assessment')">Analysis Complete →</button>
-        </div>
-
-        <div id="view-assessment" class="view">
-            <div style="margin-bottom: 20px; font-size: 18px; font-weight: 700; color: var(--teal-primary);">Three Layer Assessment</div>
-            <div class="layer-stack">
                 
-                <div class="layer-card">
-                    <div class="layer-visual" style="color: var(--teal-primary);">⟁</div>
-                    <div class="layer-content">
-                        <div class="flex justify-between items-center">
-                            <div class="layer-title">Risk Layer</div>
-                            <div class="text-xs text-muted">Quality of Management</div>
-                        </div>
-                        <div class="layer-logic">
-                            INPUT: Technical Posture (40%) + Governance Signals (30%) + Network Authority (30%)
-                        </div>
-                    </div>
-                    <div class="layer-score-box">
-                        <div class="score-big text-teal" id="risk-val">--</div>
-                        <div class="text-xs">Composite</div>
-                    </div>
-                </div>
-
-                <div class="layer-card">
-                    <div class="layer-visual" style="color: var(--amber-warn);">◻</div>
-                    <div class="layer-content">
-                        <div class="flex justify-between items-center">
-                            <div class="layer-title">Exposure Layer</div>
-                            <div class="text-xs text-muted">Attack Surface Magnitude</div>
-                        </div>
-                        <div class="layer-logic">
-                            INPUT: Cloud Asset Density × Employee Count (Log) × Multi-Jurisdiction Factor
-                        </div>
-                    </div>
-                    <div class="layer-score-box">
-                        <div class="score-big" style="color:var(--amber-warn)" id="exp-val">--</div>
-                        <div class="text-xs">Complexity</div>
-                    </div>
-                </div>
-
-                <div class="layer-card">
-                    <div class="layer-visual" style="color: var(--red-risk);">▼</div>
-                    <div class="layer-content">
-                        <div class="flex justify-between items-center">
-                            <div class="layer-title">Loss Layer</div>
-                            <div class="text-xs text-muted">Propensity for Failure</div>
-                        </div>
-                        <div class="layer-logic">
-                            INPUT: Patch Latency (Trend) + Litigation Velocity + Peer Correlation
-                        </div>
-                    </div>
-                    <div class="layer-score-box">
-                        <div class="score-big" style="color:var(--red-risk)" id="loss-val">--</div>
-                        <div class="text-xs">Propensity</div>
-                    </div>
-                </div>
-
-            </div>
-            <button class="btn-next" onclick="navTo('whatif')">Predict Impact →</button>
-        </div>
-
-        <div id="view-whatif" class="view">
-            <div style="margin-bottom: 20px; font-size: 18px; font-weight: 700; color: var(--teal-primary);">What-If Engine + Portfolio Steering</div>
-            <div class="module-grid">
-                <div class="sidebar">
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;">Inject Systemic Shock</div>
-                    <button class="shock-btn" onclick="runShock('cve')">
-                        <div class="font-bold">⚡ Critical Vulnerability (Log4j)</div>
-                        <div class="shock-meta">Propagation: Tech Stack Dependencies</div>
-                    </button>
-                    <button class="shock-btn" onclick="runShock('cloud')">
-                        <div class="font-bold">☁️ Cloud Provider Outage</div>
-                        <div class="shock-meta">Propagation: Hosting Concentration</div>
-                    </button>
-                    <button class="shock-btn" onclick="runShock('reg')">
-                        <div class="font-bold">📋 Regulatory Fine (GDPR)</div>
-                        <div class="shock-meta">Propagation: Jurisdiction + Sector</div>
-                    </button>
-                    
-                    <div id="shock-results" class="hidden" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <div class="text-xs text-muted uppercase mb-2">Simulated Impact</div>
-                        <div class="flex justify-between mb-2">
-                            <span>Infected Nodes:</span>
-                            <span class="text-mono text-teal" id="res-nodes">0</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span>Capital Impact:</span>
-                            <span class="text-mono text-red" style="color:var(--red-risk)" id="res-cap">$0</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="network-canvas-container" id="net-container">
-                        <canvas id="net-canvas"></canvas>
-                        <div style="position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: rgba(255,255,255,0.3);">Real-time Portfolio Graph</div>
-                    </div>
+                <div class="node-card node-future" onclick="navTo('world')">
+                    <div class="future-tag">THE FUTURE</div>
+                    <div class="node-icon" style="color:var(--teal-primary)">🌐</div>
+                    <div class="node-title">World Model</div>
+                    <div class="node-detail">Causal simulation and temporal trajectory modelling.</div>
                 </div>
             </div>
-            <button class="btn-next" onclick="navTo('underwriting')">Pricing Decision →</button>
         </div>
 
-        <div id="view-underwriting" class="view">
-            <div style="margin-bottom: 20px; font-size: 18px; font-weight: 700; color: var(--teal-primary);">The Underwriting Engine</div>
-            <div class="module-grid">
-                <div class="sidebar">
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;">Workflow Log</div>
-                    <div id="uw-log" style="font-family: var(--font-mono); font-size: 11px; color: var(--teal-glow);">
-                        > Awaiting Execution...
+        <div id="view-workbench" class="view">
+            <div class="workbench-grid">
+                <div class="queue-panel">
+                    <div class="queue-header">
+                        <div style="font-size:12px; font-weight:700; color:var(--teal-primary); letter-spacing:1px;">LIVE INTAKE</div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Streaming Submissions...</div>
                     </div>
+                    <div class="queue-list" id="queue-container">
+                        </div>
                 </div>
-                <div class="panel" style="padding: 40px; align-items: center; justify-content: center;">
-                    <div id="uw-empty">
-                        <button class="btn-start" onclick="executeUnderwriting()">EXECUTE PRICING</button>
+
+                <div class="dossier-panel">
+                    <div id="dossier-empty" style="flex:1; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.1);">
+                        <div style="text-align:center;">
+                            <div style="font-size:40px; margin-bottom:10px;">🛡️</div>
+                            <div>Select an entity from the stream</div>
+                        </div>
                     </div>
-                    <div id="uw-results" class="hidden w-full" style="max-width: 500px;">
-                        <div class="text-center mb-4">
-                            <div class="text-xs text-muted uppercase">Final Decision</div>
-                            <div class="font-bold" style="font-size: 48px; color: var(--green-safe);" id="final-decision">APPROVED</div>
+
+                    <div id="dossier-content" class="dossier-content hidden">
+                        <div class="section-header">SIGNAL INTELLIGENCE</div>
+                        <div id="signal-container">
+                            </div>
+
+                        <div class="section-header" style="margin-top:40px;">THREE LAYER ASSESSMENT</div>
+                        
+                        <div class="layer-card">
+                            <div class="layer-title">
+                                <span>RISK LAYER</span>
+                                <span style="color:var(--teal-primary)">Quality of Management</span>
+                            </div>
+                            <div class="layer-metric" id="risk-metric">--</div>
+                            <div class="peer-comp" id="risk-peer">--</div>
+                        </div>
+
+                        <div class="layer-card">
+                            <div class="layer-title">
+                                <span>EXPOSURE LAYER</span>
+                                <span style="color:var(--risk-med)">Attack Surface</span>
+                            </div>
+                            <div class="layer-metric" id="exp-metric">--</div>
+                            <div class="peer-comp" id="exp-peer">--</div>
+                        </div>
+
+                        <div class="layer-card">
+                            <div class="layer-title">
+                                <span>LOSS LAYER</span>
+                                <span style="color:var(--risk-critical)">Failure Propensity</span>
+                            </div>
+                            <div class="layer-metric" id="loss-metric">--</div>
+                            <div class="peer-comp" id="loss-peer">--</div>
                         </div>
                         
-                        <div class="pricing-waterfall">
-                            <div class="price-step">
-                                <span>Base Rate (Tier 1)</span>
-                                <span class="text-mono">$150,000</span>
-                            </div>
-                            <div class="price-step">
-                                <span>Exposure Load (High)</span>
-                                <span class="text-mono text-teal">+ $45,000</span>
-                            </div>
-                            <div class="price-step">
-                                <span>Control Discount</span>
-                                <span class="text-mono" style="color:var(--green-safe)">- $12,500</span>
-                            </div>
-                            <div class="price-final flex justify-between rounded">
-                                <span>FINAL PREMIUM</span>
-                                <span class="text-mono" id="final-prem">$182,500</span>
-                            </div>
-                        </div>
-                    </div>
+                        <div style="height: 60px;"></div> </div>
+                    
+                    <button id="dossier-next" class="analysis-btn hidden" onclick="navTo('steering')">Access Portfolio Steering →</button>
                 </div>
             </div>
-            <button class="btn-next" onclick="navTo('worldmodel')">Future State →</button>
         </div>
 
-        <div id="view-worldmodel" class="view">
-            <div style="margin-bottom: 20px; font-size: 18px; font-weight: 700; color: var(--teal-primary);">The Living World Model</div>
-            <div class="module-grid" style="grid-template-columns: 1fr 1fr;">
-                <div class="panel" style="padding: 30px;">
-                    <div class="text-lg font-bold mb-2">Temporal Dynamics</div>
-                    <div class="text-sm text-muted mb-6">"Organisations are trajectories, not snapshots."</div>
+        <div id="view-steering" class="view">
+            <div class="ticker-tape" id="decision-ticker">
+                </div>
+
+            <div class="steering-dash">
+                <div class="policy-panel">
+                    <div class="section-header">ACTIVE POLICIES</div>
                     
-                    <input type="range" class="timeline-slider" min="0" max="24" value="24" oninput="updateTime(this.value)">
-                    <div class="flex justify-between text-xs text-muted">
-                        <span>24 Months Ago</span>
-                        <span>Today</span>
+                    <div class="toggle-row">
+                        <div>
+                            <div style="font-size:13px; font-weight:700;">Zero-Day Block</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Auto-Decline CVE > 9.0</div>
+                        </div>
+                        <div class="toggle-switch on" onclick="togglePolicy(this)"></div>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div>
+                            <div style="font-size:13px; font-weight:700;">Sector Cap: Crypto</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Refer > $5M Limit</div>
+                        </div>
+                        <div class="toggle-switch on" onclick="togglePolicy(this)"></div>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div>
+                            <div style="font-size:13px; font-weight:700;">Governance Weighting</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Boost ESG signals</div>
+                        </div>
+                        <div class="toggle-switch" onclick="togglePolicy(this)"></div>
                     </div>
                     
-                    <div class="prediction-graph">
-                        <canvas id="trend-canvas" width="400" height="200"></canvas>
-                    </div>
-                    <div class="flex justify-between mt-4">
-                        <div>
-                            <div class="text-xs text-muted">Historical Score</div>
-                            <div class="text-xl font-bold" id="hist-score">--</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-muted">Drift Velocity</div>
-                            <div class="text-xl font-bold text-teal" id="drift-vel">--</div>
-                        </div>
+                    <div class="section-header" style="margin-top:30px;">SCENARIO INJECTION</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="nav-btn" onclick="runShock(1)">Simulate Log4j</button>
+                        <button class="nav-btn" onclick="runShock(2)">Simulate AWS Outage</button>
                     </div>
                 </div>
-                
-                <div class="panel" style="padding: 30px;">
-                    <div class="text-lg font-bold mb-2">Counterfactual Simulation</div>
-                    <div class="text-sm text-muted mb-6">"What if history had been different?"</div>
-                    
-                    <div class="flex flex-col gap-4">
-                        <label class="flex items-center gap-2 p-3 rounded" style="background: rgba(255,255,255,0.05);">
-                            <input type="checkbox" id="cf-1" onchange="runCounterfactual()">
-                            <span class="text-sm">Patch applied within 48 hours of release</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-3 rounded" style="background: rgba(255,255,255,0.05);">
-                            <input type="checkbox" id="cf-2" onchange="runCounterfactual()">
-                            <span class="text-sm">CISO retained for full tenure</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-3 rounded" style="background: rgba(255,255,255,0.05);">
-                            <input type="checkbox" id="cf-3" onchange="runCounterfactual()">
-                            <span class="text-sm">Acquisition of 'VulnCorp' blocked</span>
-                        </label>
+
+                <div class="scenario-canvas" id="steering-canvas">
+                    <div class="scenario-overlay">
+                        <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Live Portfolio Graph</div>
+                        <div id="graph-stats" style="font-size:24px; font-weight:700; color:var(--text-main);">Healthy</div>
                     </div>
-                    
-                    <div id="cf-result" class="hidden mt-6 p-4 rounded border border-green-500 bg-green-900/20 text-green-400 text-sm">
-                        <div class="font-bold mb-1">SIMULATION OUTCOME</div>
-                        Predicted Loss Severity reduced by <strong>42%</strong>.
-                        <br>Suggested Premium Adjustment: <strong>-12.5%</strong>
+                    <canvas id="net-canvas" style="width:100%; height:100%;"></canvas>
+                </div>
+            </div>
+            
+            <button class="analysis-btn" style="position:fixed; bottom:30px; right:30px;" onclick="navTo('world')">Enter World Model →</button>
+        </div>
+
+        <div id="view-world" class="view">
+            <div id="world-viz" style="width:100%; height:100%; position:absolute; top:0; left:0;">
+                </div>
+            
+            <div class="world-ui">
+                <div class="section-header" style="color:var(--teal-primary); border-color:var(--teal-dim);">CAUSAL QUERY ENGINE</div>
+                <input type="text" class="ai-prompt" placeholder="Ask the World Model (e.g. 'Simulate cascading failure if Azure US-East goes down')..." readonly>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:10px; color:var(--text-muted);">
+                        <span style="color:var(--teal-primary)">●</span> Connected: 14,203 Nodes
                     </div>
+                    <div class="nav-btn" style="border-color:var(--teal-primary); color:var(--teal-primary);">INITIALISE SIMULATION</div>
                 </div>
             </div>
         </div>
@@ -476,299 +431,247 @@
     </main>
 
     <script>
-        // --- DATA ---
+        // --- DATASET ---
         const companies = [
-            { id: 0, name: "Cloudflare", peer: "Fastly", ind: "Tech", score: 847, risk: 92, exp: 88, loss: 12 },
-            { id: 1, name: "CrowdStrike", peer: "Palo Alto", ind: "Cyber", score: 812, risk: 88, exp: 65, loss: 15 },
-            { id: 2, name: "Boeing", peer: "Airbus", ind: "Aero", score: 584, risk: 45, exp: 95, loss: 72 },
-            { id: 3, name: "Petrobras", peer: "Exxon", ind: "Energy", score: 512, risk: 38, exp: 92, loss: 68 },
-            { id: 4, name: "Klarna", peer: "Affirm", ind: "Fintech", score: 756, risk: 72, exp: 55, loss: 22 },
-            { id: 5, name: "Shopify", peer: "BigCommerce", ind: "E-com", score: 789, risk: 78, exp: 62, loss: 18 },
-            { id: 6, name: "Delta Airlines", peer: "United", ind: "Trans", score: 620, risk: 55, exp: 85, loss: 45 },
-            { id: 7, name: "Pfizer", peer: "Moderna", ind: "Pharma", score: 710, risk: 68, exp: 75, loss: 28 },
-            { id: 8, name: "Goldman Sachs", peer: "Morgan Stanley", ind: "Finance", score: 695, risk: 65, exp: 98, loss: 35 },
-            { id: 9, name: "Marriott", peer: "Hilton", ind: "Hosp", score: 640, risk: 58, exp: 82, loss: 42 },
-            { id: 10, name: "Tesla", peer: "Ford", ind: "Auto", score: 725, risk: 70, exp: 78, loss: 30 },
-            { id: 11, name: "Netflix", peer: "Disney", ind: "Media", score: 805, risk: 82, exp: 60, loss: 14 },
-            { id: 12, name: "Uber", peer: "Lyft", ind: "Gig", score: 680, risk: 62, exp: 70, loss: 38 }
+            { name: "Cloudflare", ticker: "NET", score: 847, risk: "High", exp: "Global", loss: "Low", status: "approve" },
+            { name: "CrowdStrike", ticker: "CRWD", score: 812, risk: "High", exp: "Global", loss: "Low", status: "approve" },
+            { name: "Boeing", ticker: "BA", score: 584, risk: "Med", exp: "Complex", loss: "High", status: "refer" },
+            { name: "Petrobras", ticker: "PBR", score: 512, risk: "Low", exp: "Complex", loss: "High", status: "refer" },
+            { name: "Klarna", ticker: "KLAR", score: 756, risk: "High", exp: "Med", loss: "Med", status: "approve" },
+            { name: "Shopify", ticker: "SHOP", score: 789, risk: "High", exp: "Global", loss: "Low", status: "approve" },
+            { name: "Pemex", ticker: "PMX", score: 420, risk: "Low", exp: "Complex", loss: "Critical", status: "decline" },
+            { name: "Beazley", ticker: "BEZ", score: 795, risk: "High", exp: "Med", loss: "Low", status: "approve" },
+            { name: "Markel", ticker: "MKL", score: 760, risk: "High", exp: "Med", loss: "Low", status: "approve" },
+            { name: "Palo Alto", ticker: "PANW", score: 825, risk: "High", exp: "Global", loss: "Low", status: "approve" },
+            { name: "Rolls-Royce", ticker: "RR", score: 645, risk: "Med", exp: "Complex", loss: "Med", status: "refer" },
+            { name: "Caterpillar", ticker: "CAT", score: 710, risk: "Med", exp: "Global", loss: "Low", status: "approve" },
+            { name: "Atlassian", ticker: "TEAM", score: 805, risk: "High", exp: "Global", loss: "Low", status: "approve" }
         ];
 
-        let activeCompany = null;
-
         // --- NAVIGATION ---
-        function navTo(id) {
-            document.getElementById('main-header').classList.remove('hidden');
+        function navTo(viewId) {
+            document.getElementById('main-header').style.display = 'flex';
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
+            document.getElementById('view-' + viewId).classList.add('active');
             
-            if(id === 'discovery') initQueue();
-            if(id === 'whatif') initNetwork();
-            if(id === 'worldmodel') initTrend();
+            if(viewId === 'workbench') initWorkbench();
+            if(viewId === 'steering') initSteering();
+            if(viewId === 'world') initWorld();
         }
 
         function goHome() {
             navTo('orientation');
         }
 
-        // --- DISCOVERY LOGIC ---
-        function initQueue() {
-            const list = document.getElementById('intake-queue');
-            list.innerHTML = '';
-            companies.forEach(c => {
-                const div = document.createElement('div');
-                div.className = 'queue-item';
-                div.innerHTML = `
+        // --- WORKBENCH LOGIC ---
+        function initWorkbench() {
+            const container = document.getElementById('queue-container');
+            container.innerHTML = '';
+            
+            companies.forEach(co => {
+                const item = document.createElement('div');
+                item.className = 'queue-item';
+                
+                let statusClass = 'st-approve';
+                if(co.status === 'refer') statusClass = 'st-refer';
+                if(co.status === 'decline') statusClass = 'st-decline';
+                
+                item.innerHTML = `
                     <div>
-                        <span class="q-name">${c.name}</span>
-                        <span class="q-meta">${c.ind} • ${new Date().toLocaleTimeString()}</span>
+                        <span class="co-name">${co.name}</span>
+                        <span class="co-meta">${co.ticker} • ${Math.floor(Math.random()*10)}m ago</span>
                     </div>
-                    <span class="q-status ${c.score < 600 ? 'val-bad' : 'val-good'}">${c.score < 600 ? 'REVIEW' : 'OK'}</span>
+                    <span class="status-pill ${statusClass}">${co.status}</span>
                 `;
-                div.onclick = () => runAgent(c, div);
-                list.appendChild(div);
+                
+                item.onclick = () => loadDossier(co, item);
+                container.appendChild(item);
             });
         }
 
-        function runAgent(c, el) {
-            activeCompany = c;
-            
+        function loadDossier(co, itemEl) {
             // UI State
             document.querySelectorAll('.queue-item').forEach(i => i.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('agent-empty').classList.add('hidden');
-            document.getElementById('agent-active').classList.remove('hidden');
-            document.getElementById('comp-view').classList.add('hidden');
-            document.getElementById('agent-active').classList.add('flex');
-            
-            const term = document.getElementById('term-log');
-            term.innerHTML = '';
-            
-            // Terminal Sequence
-            const lines = [
-                `> INITIALISING AGENT FOR: ${c.name.toUpperCase()}`,
-                `> RESOLVING ENTITY ID... OK`,
-                `> CONNECTING TO DATA LAKE... OK`,
-                `> EXTRACTING SIGNALS (NETWORK, TECH, BEHAVIOUR)...`,
-                `> ANALYSING PEER: ${c.peer.toUpperCase()}...`,
-                `> CALIBRATING SCORES...`,
-                `> COMPLETE.`
+            itemEl.classList.add('active');
+            document.getElementById('dossier-empty').style.display = 'none';
+            document.getElementById('dossier-content').classList.remove('hidden');
+            document.getElementById('dossier-next').classList.remove('hidden');
+
+            // Signal Generation (Mock Data)
+            const signals = [
+                { name: "Network Authority", val: Math.floor(co.score / 10 + Math.random()*5) },
+                { name: "Tech Hygiene", val: Math.floor(co.score / 10 - Math.random()*5) },
+                { name: "Leadership Stability", val: Math.floor(co.score / 10 + Math.random()*10) },
+                { name: "Public Sentiment", val: Math.floor(co.score / 10) }
             ];
-            
-            let i = 0;
-            const interval = setInterval(() => {
-                if(i >= lines.length) {
-                    clearInterval(interval);
-                    showComparison(c);
-                } else {
-                    term.innerHTML += `<div class="term-line">> ${lines[i]}</div>`;
-                    i++;
-                }
-            }, 300);
-        }
 
-        function showComparison(c) {
-            document.getElementById('term-log').classList.add('hidden');
-            document.getElementById('comp-view').classList.remove('hidden');
-            document.getElementById('disc-next').classList.remove('hidden');
-            
-            // Set Headers
-            document.getElementById('target-name').innerText = c.name;
-            document.getElementById('peer-name').innerText = c.peer;
-            
-            // Generate Signals
-            const renderSig = (val) => {
-                const color = val > 80 ? 'val-good' : (val > 50 ? 'val-warn' : 'val-bad');
-                return `<span class="sig-val ${color}">${val}</span>`;
-            };
-            
-            const makeRow = (label, v1, v2) => `
-                <div class="signal-row">
-                    <span style="color:var(--text-muted)">${label}</span>
-                    <div style="display:flex; gap:20px; width: 100px; justify-content:space-between;">
-                        ${renderSig(v1)}
-                        <span style="opacity:0.3">|</span>
-                        ${renderSig(v2)}
+            let sigHtml = '';
+            signals.forEach(s => {
+                const color = s.val > 80 ? 'var(--risk-low)' : (s.val > 50 ? 'var(--risk-med)' : 'var(--risk-critical)');
+                sigHtml += `
+                    <div class="signal-row">
+                        <span style="color:var(--text-muted); width:140px;">${s.name}</span>
+                        <div class="sig-bar-bg">
+                            <div class="sig-bar-fill" style="width:${s.val}%; background:${color}"></div>
+                        </div>
+                        <span class="sig-val" style="color:${color}">${s.val}</span>
                     </div>
-                </div>`;
+                `;
+            });
+            document.getElementById('signal-container').innerHTML = sigHtml;
+
+            // 3 Layer
+            document.getElementById('risk-metric').innerText = `${Math.floor(co.score/10)}/100`;
+            document.getElementById('risk-peer').innerHTML = `<span class="trend-down">↑ 5%</span> better than peer`;
             
-            const peerScore = Math.floor(c.score * (0.9 + Math.random() * 0.2)); // Random peer variance
+            document.getElementById('exp-metric').innerText = co.exp;
+            document.getElementById('exp-peer').innerHTML = `<span class="trend-down">→ Stable</span> vs sector`;
             
-            let html = '';
-            html += makeRow('Composite Score', c.score, peerScore);
-            html += makeRow('Tech Hygiene', c.risk, Math.floor(c.risk * 0.9));
-            html += makeRow('Cloud Complexity', c.exp, Math.floor(c.exp * 1.1));
-            html += makeRow('Governance Index', 100 - c.loss, 100 - Math.floor(c.loss * 1.2));
-            
-            document.getElementById('target-signals').innerHTML = html;
-            
-            // Clone for peer just visual reference
-            document.getElementById('peer-signals').innerHTML = html;
-            
-            // Update Three Layer Views
-            document.getElementById('risk-val').innerText = c.risk;
-            document.getElementById('exp-val').innerText = c.exp;
-            document.getElementById('loss-val').innerText = c.loss + "%";
+            document.getElementById('loss-metric').innerText = co.loss;
+            document.getElementById('loss-peer').innerHTML = co.loss === 'Low' 
+                ? `<span class="trend-down">↓ 12%</span> propensity` 
+                : `<span class="trend-up">↑ 8%</span> propensity`;
         }
 
-        // --- WHAT IF / CANVAS ---
-        let netCtx, netNodes = [];
-        function initNetwork() {
-            const canvas = document.getElementById('net-canvas');
-            const container = document.getElementById('net-container');
-            canvas.width = container.offsetWidth;
-            canvas.height = container.offsetHeight;
-            netCtx = canvas.getContext('2d');
+        // --- STEERING LOGIC ---
+        let tickerInterval;
+        function initSteering() {
+            const tape = document.getElementById('decision-ticker');
+            tape.innerHTML = '';
             
-            // Create Nodes
-            netNodes = [];
-            for(let i=0; i<30; i++) {
-                netNodes.push({
+            // Initial fill
+            for(let i=0; i<10; i++) addTickerItem();
+            
+            if(tickerInterval) clearInterval(tickerInterval);
+            tickerInterval = setInterval(addTickerItem, 2000);
+            
+            initGraph();
+        }
+
+        function addTickerItem() {
+            const tape = document.getElementById('decision-ticker');
+            const co = companies[Math.floor(Math.random() * companies.length)];
+            const action = co.score > 600 ? "APPROVED" : "DECLINED";
+            const color = co.score > 600 ? "var(--risk-low)" : "var(--risk-critical)";
+            
+            const div = document.createElement('div');
+            div.className = 'tick-item';
+            div.innerHTML = `${co.ticker}: <span style="color:${color}">${action}</span> &nbsp;&nbsp;//&nbsp;&nbsp; `;
+            
+            tape.prepend(div);
+            if(tape.children.length > 20) tape.lastChild.remove();
+        }
+
+        function togglePolicy(el) {
+            el.classList.toggle('on');
+            // Simulate impact
+            const stats = document.getElementById('graph-stats');
+            stats.innerText = "Recalibrating...";
+            stats.style.color = "var(--teal-primary)";
+            setTimeout(() => {
+                stats.innerText = "Optimized";
+                stats.style.color = "var(--risk-low)";
+            }, 1000);
+        }
+
+        // --- GRAPH VIZ ---
+        function initGraph() {
+            const canvas = document.getElementById('net-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+            
+            const nodes = [];
+            for(let i=0; i<40; i++) {
+                nodes.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    r: Math.random() * 5 + 2,
-                    infected: false,
-                    links: []
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    infected: false
                 });
             }
-            // Link nodes
-            netNodes.forEach((n, i) => {
-                const target = netNodes[Math.floor(Math.random() * netNodes.length)];
-                if(target !== n) n.links.push(target);
-            });
             
-            drawNetwork();
-        }
-
-        function drawNetwork() {
-            netCtx.clearRect(0, 0, netCtx.canvas.width, netCtx.canvas.height);
-            netNodes.forEach(n => {
-                // Links
-                n.links.forEach(l => {
-                    netCtx.beginPath();
-                    netCtx.moveTo(n.x, n.y);
-                    netCtx.lineTo(l.x, l.y);
-                    netCtx.strokeStyle = n.infected && l.infected ? '#ef4444' : 'rgba(255,255,255,0.1)';
-                    netCtx.lineWidth = n.infected && l.infected ? 2 : 1;
-                    netCtx.stroke();
-                });
+            function animate() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0,0,canvas.width, canvas.height);
                 
-                // Node
-                netCtx.beginPath();
-                netCtx.arc(n.x, n.y, n.r, 0, Math.PI*2);
-                netCtx.fillStyle = n.infected ? '#ef4444' : '#06b6d4';
-                netCtx.fill();
-            });
-            requestAnimationFrame(drawNetwork);
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                
+                for(let i=0; i<nodes.length; i++) {
+                    const n = nodes[i];
+                    n.x += n.vx; n.y += n.vy;
+                    
+                    if(n.x < 0 || n.x > canvas.width) n.vx *= -1;
+                    if(n.y < 0 || n.y > canvas.height) n.vy *= -1;
+                    
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, n.infected ? 4 : 2, 0, Math.PI*2);
+                    ctx.fillStyle = n.infected ? '#ef4444' : '#22d3ee';
+                    ctx.fill();
+                    
+                    // Links
+                    for(let j=i+1; j<nodes.length; j++) {
+                        const n2 = nodes[j];
+                        const d = Math.hypot(n.x - n2.x, n.y - n2.y);
+                        if(d < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(n.x, n.y);
+                            ctx.lineTo(n2.x, n2.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+            window.nodes = nodes; // Expose for shock
         }
 
         function runShock(type) {
-            // Infect random nodes
-            let count = 0;
-            netNodes.forEach(n => {
-                if(Math.random() > 0.7) {
-                    n.infected = true;
-                    count++;
-                } else {
-                    n.infected = false;
-                }
+            const nodes = window.nodes;
+            const impact = type === 1 ? 0.3 : 0.6; // 30% or 60% infection
+            nodes.forEach(n => {
+                if(Math.random() < impact) n.infected = true;
             });
-            
-            document.getElementById('shock-results').classList.remove('hidden');
-            document.getElementById('res-nodes').innerText = count;
-            document.getElementById('res-cap').innerText = "+$" + (count * 1.5).toFixed(1) + "M";
-        }
-
-        // --- UNDERWRITING ---
-        function executeUnderwriting() {
-            document.getElementById('uw-empty').classList.add('hidden');
-            const log = document.getElementById('uw-log');
-            log.innerHTML = '';
-            
-            const c = activeCompany || companies[0];
-            const decision = c.score > 600 ? "APPROVED" : "REFERRED";
-            const color = c.score > 600 ? "var(--green-safe)" : "var(--amber-warn)";
-            const prem = (c.score * 150).toLocaleString();
-            
-            const steps = [
-                "INITIATING PRICING MODEL V4.2...",
-                `LOADING ENTITY: ${c.name.toUpperCase()}`,
-                `RETRIEVING LAYERS: R=${c.risk} E=${c.exp} L=${c.loss}`,
-                "APPLYING BASE RATE...",
-                "CALCULATING TECHNICAL ADJUSTMENTS...",
-                "CHECKING SANCTIONS...",
-                "GENERATING QUOTE..."
-            ];
-            
-            let i = 0;
-            const interval = setInterval(() => {
-                if(i >= steps.length) {
-                    clearInterval(interval);
-                    document.getElementById('uw-results').classList.remove('hidden');
-                    document.getElementById('final-decision').innerText = decision;
-                    document.getElementById('final-decision').style.color = color;
-                    document.getElementById('final-prem').innerText = "$" + prem;
-                } else {
-                    log.innerHTML += `<div>> ${steps[i]}</div>`;
-                    i++;
-                }
-            }, 400);
+            document.getElementById('graph-stats').innerText = "SHOCK DETECTED";
+            document.getElementById('graph-stats').style.color = "var(--risk-critical)";
         }
 
         // --- WORLD MODEL ---
-        function initTrend() {
-            // Simple canvas draw for trend
-            const canvas = document.getElementById('trend-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0,0,400,200);
-            
-            ctx.beginPath();
-            ctx.moveTo(0, 150);
-            ctx.bezierCurveTo(100, 140, 200, 100, 400, 50);
-            ctx.strokeStyle = '#06b6d4';
-            ctx.lineWidth = 3;
-            ctx.stroke();
+        function initWorld() {
+            const container = document.getElementById('world-viz');
+            // Simple particle effect for "Future AI" feel
+            // In a real app, this would be WebGL
+            // Keeping it simple for this single-file demo
         }
 
-        function updateTime(val) {
-            // Fake drift logic
-            const c = activeCompany || companies[0];
-            const drift = Math.floor((val / 24) * 50); 
-            document.getElementById('hist-score').innerText = c.score - drift;
-            document.getElementById('drift-vel').innerText = drift > 20 ? "High" : "Stable";
-        }
-
-        function runCounterfactual() {
-            document.getElementById('cf-result').classList.remove('hidden');
-        }
-
-        // --- BACKGROUND ANIMATION ---
+        // --- BACKGROUND ---
         const bgCanvas = document.getElementById('bg-canvas');
         const bgCtx = bgCanvas.getContext('2d');
         bgCanvas.width = window.innerWidth;
         bgCanvas.height = window.innerHeight;
         
-        const particles = Array.from({length: 50}, () => ({
+        const particles = Array.from({length: 60}, () => ({
             x: Math.random() * bgCanvas.width,
             y: Math.random() * bgCanvas.height,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5
+            s: Math.random() * 2
         }));
 
-        function animateBg() {
+        function drawBg() {
             bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
-            bgCtx.fillStyle = '#334155';
+            bgCtx.fillStyle = '#22d3ee';
             particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                if(p.x < 0 || p.x > bgCanvas.width) p.vx *= -1;
-                if(p.y < 0 || p.y > bgCanvas.height) p.vy *= -1;
+                p.y -= p.s * 0.5;
+                if(p.y < 0) p.y = bgCanvas.height;
+                bgCtx.globalAlpha = Math.random() * 0.5;
                 bgCtx.beginPath();
                 bgCtx.arc(p.x, p.y, 1, 0, Math.PI*2);
                 bgCtx.fill();
             });
-            requestAnimationFrame(animateBg);
+            requestAnimationFrame(drawBg);
         }
-        animateBg();
+        drawBg();
 
     </script>
 </body>
