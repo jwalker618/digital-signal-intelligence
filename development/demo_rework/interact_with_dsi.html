@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Signal Intelligence | Interact with DSI</title>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,8 +13,7 @@
 
     <style>
         /* ====================================================================
-         * DSI INTERACTIVE DEMO - PHASE 19.2
-         * "Interact with DSI" - Show, Don't Tell
+         * DSI INTERACTIVE DEMO - PHASE 19.2 + 19.2.1 (AUGMENTED)
          * ==================================================================== */
 
         /* --- CSS VARIABLES --- */
@@ -1695,6 +1693,7 @@
             border-radius: 12px;
             padding: 20px;
             margin-top: 20px;
+            transition: filter 0.1s; /* Glitch transition */
         }
 
         .time-travel-header {
@@ -1905,7 +1904,7 @@
         }
 
         .signal-teachable:hover::after {
-            content: 'Right-click to correct';
+            content: 'Right-click to teach';
             position: absolute;
             bottom: 100%;
             left: 50%;
@@ -1918,46 +1917,62 @@
             white-space: nowrap;
         }
 
-        .teacher-modal {
+        /* --- NEW: CUSTOM TEACHER MODAL STYLES --- */
+        .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 57, 84, 0.85);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
-
-        .teacher-modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
         }
-
-        .teacher-modal-header {
+        .dsi-modal {
+            background: var(--white);
+            width: 400px;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.active .dsi-modal {
+            transform: translateY(0);
+        }
+        .modal-header {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 20px;
+            color: var(--blue-primary);
         }
-
-        .teacher-modal-icon {
-            width: 48px;
-            height: 48px;
+        .modal-icon-box {
+            width: 40px; height: 40px;
             background: linear-gradient(135deg, #8B5CF6, #6366F1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold;
         }
+        .modal-actions {
+            display: flex; gap: 10px; margin-top: 20px;
+        }
+        .btn-cancel {
+            flex: 1; padding: 10px; border: 1px solid #E5E5E5; background: white;
+            border-radius: 6px; cursor: pointer; color: #666; font-weight: 500;
+        }
+        .btn-confirm {
+            flex: 1; padding: 10px; border: none; background: var(--teal-accent);
+            border-radius: 6px; cursor: pointer; color: white; font-weight: 600;
+        }
+        .btn-confirm:hover { background: var(--teal-bright); }
 
         .brain-update {
             background: #F5F3FF;
@@ -2031,49 +2046,28 @@
     </style>
 </head>
 <body>
-    <!-- Node Visual Background Canvas -->
     <canvas id="node-canvas"></canvas>
 
     <div id="app">
-        <!-- HEADER (hidden on landing) -->
         <header class="header hidden" id="header">
             <button class="home-button" onclick="goHome()">
                 <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="currentColor" stroke-width="2"/></svg>
                 Home
             </button>
             <div class="header-logo">
-                <!-- Standard_Generate_Logo.svg embedded inline -->
-                <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(0.74481376,0,0,0.74481376,154.55595,24.806223)">
-                        <path d="m 272.55569,154.21373 q -15.09042,0 -26.40823,-6.63698 -11.3178,-6.637 -17.60548,-18.72329 -6.28766,-12.08631 -6.28766,-28.29454 0,-16.97671 6.56712,-28.993149 6.56713,-12.086301 17.88493,-18.443837 11.31781,-6.357534 25.43014,-6.357534 9.22191,0 17.32603,2.654795 8.1041,2.654794 14.39178,7.615068 6.28768,4.890412 10.2,11.667124 3.98219,6.776713 4.82053,15.090411 H 293.305 q -0.69864,-3.493149 -2.37535,-6.28767 -1.67671,-2.794521 -4.26163,-4.750686 -2.58494,-1.956164 -6.00822,-3.00411 -3.42329,-1.047945 -7.61507,-1.047945 -8.10412,0 -13.83289,3.842466 -5.65889,3.772603 -8.66301,10.898631 -3.0041,7.056165 -3.0041,17.116436 0,9.99042 3.0041,17.11645 3.07397,7.05616 8.80273,10.82877 5.79866,3.77259 13.97261,3.77259 6.70686,0 11.59726,-2.30546 4.89042,-2.30549 7.47535,-6.4274 2.65481,-4.19178 2.65481,-9.71097 l 5.58903,0.48904 H 274.23239 V 95.878101 h 45.41098 v 14.112339 q 0,13.20411 -6.00822,23.19453 -5.93837,9.92054 -16.55754,15.50959 -10.54932,5.51917 -24.52192,5.51917 z m 91.77671,0 q -11.3178,0 -19.91095,-4.89042 -8.52329,-4.96026 -13.34385,-13.69315 -4.75069,-8.73287 -4.75069,-19.98082 0,-11.24795 4.75069,-19.980828 4.82056,-8.732878 13.27397,-13.623288 8.45344,-4.960275 19.35207,-4.960275 8.31369,0 15.16027,2.794521 6.84657,2.724657 11.80686,7.824657 5.03013,5.100001 7.75478,12.086303 2.72467,6.91644 2.72467,15.30001 v 6.49726 h -66.99864 v -14.39178 h 55.75067 l -11.03834,2.93425 q 0,-4.7507 -1.74657,-8.17399 -1.74658,-3.423285 -5.03014,-5.239723 -3.2137,-1.8863 -7.7548,-1.8863 -4.5411,0 -7.82465,1.8863 -3.21371,1.816438 -5.03015,5.239723 -1.74656,3.42329 -1.74656,8.17399 v 10.61917 q 0,4.89042 1.81644,8.59314 1.88629,3.63288 5.30959,5.58905 3.49315,1.95617 8.31369,1.95617 3.56301,0 6.35754,-0.97809 2.79452,-0.97808 4.68081,-2.79451 1.88631,-1.81644 2.79453,-4.19179 h 21.58767 q -1.32739,7.40548 -6.42739,13.13424 -5.10001,5.65891 -12.8548,8.94247 -7.68493,3.21371 -16.97672,3.21371 z m 69.42055,-41.7781 v 40.10139 H 409.72007 V 78.761661 h 23.75344 v 19.771235 h -3.56303 q 3.4233,-9.780823 9.92054,-15.579452 6.49728,-5.798631 17.11647,-5.798631 8.03424,0 13.69314,3.493151 5.6589,3.423287 8.66303,9.920548 3.00409,6.49726 3.00409,15.579458 v 46.38905 h -24.03288 v -41.35891 q 0,-6.56713 -3.14382,-9.99042 -3.14385,-3.49315 -8.87261,-3.49315 -3.77261,0 -6.637,1.606849 -2.79451,1.606851 -4.33149,4.890411 -1.537,3.21371 -1.537,8.24383 z m 95.40959,41.7781 q -11.31781,0 -19.91094,-4.89042 -8.5233,-4.96026 -13.34386,-13.69315 -4.75068,-8.73287 -4.75068,-19.98082 0,-11.24795 4.75068,-19.980828 4.82056,-8.732878 13.27398,-13.623288 8.45343,-4.960275 19.35207,-4.960275 8.31368,0 15.16026,2.794521 6.84658,2.724657 11.80686,7.824657 5.03013,5.100001 7.75479,12.086303 2.72466,6.91644 2.72466,15.30001 v 6.49726 h -66.99864 v -14.39178 h 55.75068 l -11.03835,2.93425 q 0,-4.7507 -1.74657,-8.17399 -1.74659,-3.423285 -5.03015,-5.239723 -3.21368,-1.8863 -7.75479,-1.8863 -4.54108,0 -7.82465,1.8863 -3.21371,1.816438 -5.03015,5.239723 -1.74656,3.42329 -1.74656,8.17399 v 10.61917 q 0,4.89042 1.81644,8.59314 1.88629,3.63288 5.30958,5.58905 3.49316,1.95617 8.31371,1.95617 3.56301,0 6.35752,-0.97809 2.79454,-0.97808 4.68083,-2.79451 1.88631,-1.81644 2.79451,-4.19179 h 21.58769 q -1.32741,7.40548 -6.4274,13.13424 -5.1,5.65891 -12.8548,8.94247 -7.68493,3.21371 -16.97672,3.21371 z m 45.38769,-1.67671 V 78.761661 h 23.26437 v 12.994522 h 0.20959 q 2.02602,-7.056165 6.28769,-10.130137 4.33149,-3.143836 11.73698,-3.143836 1.95616,0 3.49315,0.06985 1.60684,0 3.07396,0.06985 v 19.841096 q -1.32739,-0.06985 -4.12192,-0.139725 -2.72464,-0.06985 -5.37944,-0.06985 -4.26166,0 -7.54522,1.956159 -3.28357,1.88631 -5.16985,5.58905 -1.81643,3.70274 -1.81643,8.94248 v 37.7959 z m 76.8484,1.25753 q -7.40548,0 -13.13424,-2.37536 -5.65891,-2.44519 -8.94247,-7.26574 -3.21371,-4.89041 -3.21371,-12.22602 0,-6.21782 2.23564,-10.4096 2.23561,-4.26164 6.14793,-6.91642 3.98219,-2.65481 9.15205,-3.98222 5.23974,-1.39724 11.10824,-1.88629 6.5671,-0.5589 10.54929,-1.18767 3.98221,-0.69863 5.72877,-1.88631 1.74658,-1.25753 1.74658,-3.49315 v -0.34931 q 0,-2.23562 -1.25752,-3.842469 -1.25754,-1.676711 -3.56303,-2.584931 -2.30547,-0.978082 -5.44931,-0.978082 -3.35344,0 -5.79863,1.047945 -2.44521,0.978082 -3.84247,2.864383 -1.39726,1.816434 -1.67671,4.331504 h -22.35617 q 0.5589,-8.034243 4.68083,-13.693148 4.12191,-5.728767 11.59727,-8.732877 7.5452,-3.073972 18.23422,-3.073972 8.03427,0 14.18222,1.746575 6.21778,1.676712 10.47945,5.030137 4.26163,3.283563 6.42739,8.10411 2.16574,4.750685 2.16574,10.828765 v 49.67262 h -23.47396 v -10.33974 h -0.27946 q -2.23562,3.98221 -5.23971,6.56713 -3.00413,2.51507 -6.9863,3.77261 -3.9822,1.25753 -9.22193,1.25753 z m 7.33561,-15.71918 q 3.9822,0 7.19591,-1.53699 3.28355,-1.53697 5.16986,-4.19177 1.8863,-2.72466 1.8863,-6.35754 v -6.70686 q -0.97809,0.41918 -2.30549,0.83837 -1.32739,0.41917 -3.00411,0.76849 -1.60684,0.34931 -3.563,0.69863 -1.95617,0.34932 -4.19178,0.76849 -3.21371,0.48905 -5.72879,1.537 -2.4452,1.04793 -3.91232,2.79451 -1.39725,1.67671 -1.39725,4.12191 0,2.30549 1.25752,3.91234 1.25754,1.60684 3.42329,2.51507 2.23561,0.83835 5.16986,0.83835 z M 754.98221,78.761661 V 97.345225 H 703.14384 V 78.761661 Z M 715.71918,58.641112 h 24.10273 v 69.094548 q 0,3.563 1.39727,4.89039 1.39726,1.3274 5.44931,1.3274 1.81644,0 4.47124,0 2.65479,0 3.84248,0 v 18.58357 q -1.88632,0 -5.72879,0 -3.84247,0 -7.89452,0 -13.27397,0 -19.49177,-4.96027 -6.14795,-5.03014 -6.14795,-15.78904 z m 81.47902,95.572618 q -11.3178,0 -19.91095,-4.89042 -8.5233,-4.96026 -13.34385,-13.69315 -4.75069,-8.73287 -4.75069,-19.98082 0,-11.24795 4.75069,-19.980828 4.82055,-8.732878 13.27397,-13.623288 8.45345,-4.960275 19.35206,-4.960275 8.3137,0 15.16026,2.794521 6.84659,2.724657 11.80688,7.824657 5.03013,5.100001 7.75478,12.086303 2.72466,6.91644 2.72466,15.30001 v 6.49726 h -66.99864 v -14.39178 h 55.75068 l -11.03836,2.93425 q 0,-4.7507 -1.74655,-8.17399 -1.74659,-3.423285 -5.03013,-5.239723 -3.21371,-1.8863 -7.75481,-1.8863 -4.5411,0 -7.82467,1.8863 -3.21369,1.816438 -5.03013,5.239723 -1.74656,3.42329 -1.74656,8.17399 v 10.61917 q 0,4.89042 1.81644,8.59314 1.88629,3.63288 5.30959,5.58905 3.49315,1.95617 8.31368,1.95617 3.56302,0 6.35756,-0.97809 2.79451,-0.97808 4.6808,-2.79451 1.8863,-1.81644 2.79452,-4.19179 h 21.58768 q -1.32742,7.40548 -6.42739,13.13424 -5.10001,5.65891 -12.8548,8.94247 -7.68493,3.21371 -16.97672,3.21371 z" style="fill:#0599ad;fill-opacity:1"/>
-                        <g transform="rotate(45,650.06463,-166.77185)">
-                            <path style="fill:#0599ad;fill-opacity:1" d="m 346.34956,337 c -1.15952,0 -2.09375,0.37408 -2.09375,0.83789 v 178.32617 c 0,0.46382 0.93423,0.83594 2.09375,0.83594 h 175.81446 c 1.15952,0 2.09179,-0.37212 2.09179,-0.83594 v -22.37304 -20.07813 l -17.93164,20.34375 -0.10351,-0.0918 c -0.11311,0.38283 -0.42823,0.65862 -0.80078,0.6582 L 397.6816,494.49999 h -29.35547 c -0.86965,0 -1.57032,-0.27909 -1.57032,-0.62695 V 360.12891 c 0,-0.34786 0.70067,-0.62891 1.57032,-0.62891 h 36.69726 L 424.85738,337 Z"/>
-                            <path style="fill:#39d3ba;fill-opacity:1" d="m 458.18355,337 -33.34571,37.83008 v 32.40039 L 486.74409,337 Z m 61.88671,0 -95.23242,108.03711 v 24.19922 l 7.72656,0.01 1.20508,-1.36523 90.48633,-102.91211 v -27.23438 c 0,-0.4059 -0.51387,-0.73437 -1.1543,-0.73437 z m 4.18555,66.03515 -58.39844,66.24805 28.94727,0.0332 29.45117,-33.41015 z m 0,70.67774 -0.39648,0.44922 h 0.39648 z m -18.23047,20.68164 -0.11328,0.12891 h 0.11328 z"/>
-                        </g>
-                    </g>
+                <svg viewBox="0 0 300 60" xmlns="http://www.w3.org/2000/svg">
+                   <text x="10" y="40" font-family="sans-serif" font-weight="800" font-size="24" fill="white">GENERATE</text>
+                   <circle cx="160" cy="30" r="5" fill="#39D3BA"/>
                 </svg>
             </div>
         </header>
 
-        <!-- MAIN CONTENT -->
         <main class="main-content" id="mainContent">
 
-            <!-- ============================================================
-                 LANDING PAGE
-                 ============================================================ -->
             <section class="section active" id="section-landing">
                 <div class="landing-page">
                     <div class="landing-logo">
-                        <!-- Standard_Generate_Logo.svg embedded inline -->
-                        <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
-                            <g transform="matrix(0.74481376,0,0,0.74481376,154.55595,24.806223)">
-                                <path d="m 272.55569,154.21373 q -15.09042,0 -26.40823,-6.63698 -11.3178,-6.637 -17.60548,-18.72329 -6.28766,-12.08631 -6.28766,-28.29454 0,-16.97671 6.56712,-28.993149 6.56713,-12.086301 17.88493,-18.443837 11.31781,-6.357534 25.43014,-6.357534 9.22191,0 17.32603,2.654795 8.1041,2.654794 14.39178,7.615068 6.28768,4.890412 10.2,11.667124 3.98219,6.776713 4.82053,15.090411 H 293.305 q -0.69864,-3.493149 -2.37535,-6.28767 -1.67671,-2.794521 -4.26163,-4.750686 -2.58494,-1.956164 -6.00822,-3.00411 -3.42329,-1.047945 -7.61507,-1.047945 -8.10412,0 -13.83289,3.842466 -5.65889,3.772603 -8.66301,10.898631 -3.0041,7.056165 -3.0041,17.116436 0,9.99042 3.0041,17.11645 3.07397,7.05616 8.80273,10.82877 5.79866,3.77259 13.97261,3.77259 6.70686,0 11.59726,-2.30546 4.89042,-2.30549 7.47535,-6.4274 2.65481,-4.19178 2.65481,-9.71097 l 5.58903,0.48904 H 274.23239 V 95.878101 h 45.41098 v 14.112339 q 0,13.20411 -6.00822,23.19453 -5.93837,9.92054 -16.55754,15.50959 -10.54932,5.51917 -24.52192,5.51917 z m 91.77671,0 q -11.3178,0 -19.91095,-4.89042 -8.52329,-4.96026 -13.34385,-13.69315 -4.75069,-8.73287 -4.75069,-19.98082 0,-11.24795 4.75069,-19.980828 4.82056,-8.732878 13.27397,-13.623288 8.45344,-4.960275 19.35207,-4.960275 8.31369,0 15.16027,2.794521 6.84657,2.724657 11.80686,7.824657 5.03013,5.100001 7.75478,12.086303 2.72467,6.91644 2.72467,15.30001 v 6.49726 h -66.99864 v -14.39178 h 55.75067 l -11.03834,2.93425 q 0,-4.7507 -1.74657,-8.17399 -1.74658,-3.423285 -5.03014,-5.239723 -3.2137,-1.8863 -7.7548,-1.8863 -4.5411,0 -7.82465,1.8863 -3.21371,1.816438 -5.03015,5.239723 -1.74656,3.42329 -1.74656,8.17399 v 10.61917 q 0,4.89042 1.81644,8.59314 1.88629,3.63288 5.30959,5.58905 3.49315,1.95617 8.31369,1.95617 3.56301,0 6.35754,-0.97809 2.79452,-0.97808 4.68081,-2.79451 1.88631,-1.81644 2.79453,-4.19179 h 21.58767 q -1.32739,7.40548 -6.42739,13.13424 -5.10001,5.65891 -12.8548,8.94247 -7.68493,3.21371 -16.97672,3.21371 z m 69.42055,-41.7781 v 40.10139 H 409.72007 V 78.761661 h 23.75344 v 19.771235 h -3.56303 q 3.4233,-9.780823 9.92054,-15.579452 6.49728,-5.798631 17.11647,-5.798631 8.03424,0 13.69314,3.493151 5.6589,3.423287 8.66303,9.920548 3.00409,6.49726 3.00409,15.579458 v 46.38905 h -24.03288 v -41.35891 q 0,-6.56713 -3.14382,-9.99042 -3.14385,-3.49315 -8.87261,-3.49315 -3.77261,0 -6.637,1.606849 -2.79451,1.606851 -4.33149,4.890411 -1.537,3.21371 -1.537,8.24383 z m 95.40959,41.7781 q -11.31781,0 -19.91094,-4.89042 -8.5233,-4.96026 -13.34386,-13.69315 -4.75068,-8.73287 -4.75068,-19.98082 0,-11.24795 4.75068,-19.980828 4.82056,-8.732878 13.27398,-13.623288 8.45343,-4.960275 19.35207,-4.960275 8.31368,0 15.16026,2.794521 6.84658,2.724657 11.80686,7.824657 5.03013,5.100001 7.75479,12.086303 2.72466,6.91644 2.72466,15.30001 v 6.49726 h -66.99864 v -14.39178 h 55.75068 l -11.03835,2.93425 q 0,-4.7507 -1.74657,-8.17399 -1.74659,-3.423285 -5.03015,-5.239723 -3.21368,-1.8863 -7.75479,-1.8863 -4.54108,0 -7.82465,1.8863 -3.21371,1.816438 -5.03015,5.239723 -1.74656,3.42329 -1.74656,8.17399 v 10.61917 q 0,4.89042 1.81644,8.59314 1.88629,3.63288 5.30958,5.58905 3.49316,1.95617 8.31371,1.95617 3.56301,0 6.35752,-0.97809 2.79454,-0.97808 4.68083,-2.79451 1.88631,-1.81644 2.79451,-4.19179 h 21.58769 q -1.32741,7.40548 -6.4274,13.13424 -5.1,5.65891 -12.8548,8.94247 -7.68493,3.21371 -16.97672,3.21371 z m 45.38769,-1.67671 V 78.761661 h 23.26437 v 12.994522 h 0.20959 q 2.02602,-7.056165 6.28769,-10.130137 4.33149,-3.143836 11.73698,-3.143836 1.95616,0 3.49315,0.06985 1.60684,0 3.07396,0.06985 v 19.841096 q -1.32739,-0.06985 -4.12192,-0.139725 -2.72464,-0.06985 -5.37944,-0.06985 -4.26166,0 -7.54522,1.956159 -3.28357,1.88631 -5.16985,5.58905 -1.81643,3.70274 -1.81643,8.94248 v 37.7959 z m 76.8484,1.25753 q -7.40548,0 -13.13424,-2.37536 -5.65891,-2.44519 -8.94247,-7.26574 -3.21371,-4.89041 -3.21371,-12.22602 0,-6.21782 2.23564,-10.4096 2.23561,-4.26164 6.14793,-6.91642 3.98219,-2.65481 9.15205,-3.98222 5.23974,-1.39724 11.10824,-1.88629 6.5671,-0.5589 10.54929,-1.18767 3.98221,-0.69863 5.72877,-1.88631 1.74658,-1.25753 1.74658,-3.49315 v -0.34931 q 0,-2.23562 -1.25752,-3.842469 -1.25754,-1.676711 -3.56303,-2.584931 -2.30547,-0.978082 -5.44931,-0.978082 -3.35344,0 -5.79863,1.047945 -2.44521,0.978082 -3.84247,2.864383 -1.39726,1.816434 -1.67671,4.331504 h -22.35617 q 0.5589,-8.034243 4.68083,-13.693148 4.12191,-5.728767 11.59727,-8.732877 7.5452,-3.073972 18.23422,-3.073972 8.03427,0 14.18222,1.746575 6.21778,1.676712 10.47945,5.030137 4.26163,3.283563 6.42739,8.10411 2.16574,4.750685 2.16574,10.828765 v 49.67262 h -23.47396 v -10.33974 h -0.27946 q -2.23562,3.98221 -5.23971,6.56713 -3.00413,2.51507 -6.9863,3.77261 -3.9822,1.25753 -9.22193,1.25753 z m 7.33561,-15.71918 q 3.9822,0 7.19591,-1.53699 3.28355,-1.53697 5.16986,-4.19177 1.8863,-2.72466 1.8863,-6.35754 v -6.70686 q -0.97809,0.41918 -2.30549,0.83837 -1.32739,0.41917 -3.00411,0.76849 -1.60684,0.34931 -3.563,0.69863 -1.95617,0.34932 -4.19178,0.76849 -3.21371,0.48905 -5.72879,1.537 -2.4452,1.04793 -3.91232,2.79451 -1.39725,1.67671 -1.39725,4.12191 0,2.30549 1.25752,3.91234 1.25754,1.60684 3.42329,2.51507 2.23561,0.83835 5.16986,0.83835 z M 754.98221,78.761661 V 97.345225 H 703.14384 V 78.761661 Z M 715.71918,58.641112 h 24.10273 v 69.094548 q 0,3.563 1.39727,4.89039 1.39726,1.3274 5.44931,1.3274 1.81644,0 4.47124,0 2.65479,0 3.84248,0 v 18.58357 q -1.88632,0 -5.72879,0 -3.84247,0 -7.89452,0 -13.27397,0 -19.49177,-4.96027 -6.14795,-5.03014 -6.14795,-15.78904 z m 81.47902,95.572618 q -11.3178,0 -19.91095,-4.89042 -8.5233,-4.96026 -13.34385,-13.69315 -4.75069,-8.73287 -4.75069,-19.98082 0,-11.24795 4.75069,-19.980828 4.82055,-8.732878 13.27397,-13.623288 8.45345,-4.960275 19.35206,-4.960275 8.3137,0 15.16026,2.794521 6.84659,2.724657 11.80688,7.824657 5.03013,5.100001 7.75478,12.086303 2.72466,6.91644 2.72466,15.30001 v 6.49726 h -66.99864 v -14.39178 h 55.75068 l -11.03836,2.93425 q 0,-4.7507 -1.74655,-8.17399 -1.74659,-3.423285 -5.03013,-5.239723 -3.21371,-1.8863 -7.75481,-1.8863 -4.5411,0 -7.82467,1.8863 -3.21369,1.816438 -5.03013,5.239723 -1.74656,3.42329 -1.74656,8.17399 v 10.61917 q 0,4.89042 1.81644,8.59314 1.88629,3.63288 5.30959,5.58905 3.49315,1.95617 8.31368,1.95617 3.56302,0 6.35756,-0.97809 2.79451,-0.97808 4.6808,-2.79451 1.8863,-1.81644 2.79452,-4.19179 h 21.58768 q -1.32742,7.40548 -6.42739,13.13424 -5.10001,5.65891 -12.8548,8.94247 -7.68493,3.21371 -16.97672,3.21371 z" style="fill:#0599ad;fill-opacity:1"/>
-                                <g transform="rotate(45,650.06463,-166.77185)">
-                                    <path style="fill:#0599ad;fill-opacity:1" d="m 346.34956,337 c -1.15952,0 -2.09375,0.37408 -2.09375,0.83789 v 178.32617 c 0,0.46382 0.93423,0.83594 2.09375,0.83594 h 175.81446 c 1.15952,0 2.09179,-0.37212 2.09179,-0.83594 v -22.37304 -20.07813 l -17.93164,20.34375 -0.10351,-0.0918 c -0.11311,0.38283 -0.42823,0.65862 -0.80078,0.6582 L 397.6816,494.49999 h -29.35547 c -0.86965,0 -1.57032,-0.27909 -1.57032,-0.62695 V 360.12891 c 0,-0.34786 0.70067,-0.62891 1.57032,-0.62891 h 36.69726 L 424.85738,337 Z"/>
-                                    <path style="fill:#39d3ba;fill-opacity:1" d="m 458.18355,337 -33.34571,37.83008 v 32.40039 L 486.74409,337 Z m 61.88671,0 -95.23242,108.03711 v 24.19922 l 7.72656,0.01 1.20508,-1.36523 90.48633,-102.91211 v -27.23438 c 0,-0.4059 -0.51387,-0.73437 -1.1543,-0.73437 z m 4.18555,66.03515 -58.39844,66.24805 28.94727,0.0332 29.45117,-33.41015 z m 0,70.67774 -0.39648,0.44922 h 0.39648 z m -18.23047,20.68164 -0.11328,0.12891 h 0.11328 z"/>
-                                </g>
-                            </g>
-                        </svg>
+                         <svg viewBox="0 0 300 100"><text x="0" y="60" font-family="sans-serif" font-weight="900" font-size="60" fill="white">GENERATE</text></svg>
                     </div>
 
                     <div class="landing-content">
@@ -2087,22 +2081,12 @@
                             </p>
                         </div>
 
-                        <div class="landing-ip">
-                            <div class="landing-ip-label">IP Statement:</div>
-                            <p class="landing-ip-text">
-                                &copy; John Walker. All rights reserved. Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner.
-                            </p>
-                        </div>
+                        <div class="landing-divider"></div>
+                        <button class="landing-begin-btn" onclick="beginDemo()">BEGIN DEMO</button>
                     </div>
-
-                    <div class="landing-divider"></div>
-                    <button class="landing-begin-btn" onclick="beginDemo()">BEGIN</button>
                 </div>
             </section>
 
-            <!-- ============================================================
-                 ORIENTATION PAGE - DSI JOURNEY
-                 ============================================================ -->
             <section class="section" id="section-orientation">
                 <div class="orientation-page">
                     <div class="orientation-header">
@@ -2110,7 +2094,6 @@
                         <p class="orientation-subtitle">Experience the complete DSI capability chain</p>
                     </div>
 
-                    <!-- Journey Flow -->
                     <div class="journey-flow">
                         <div class="journey-step" onclick="goToModule('discovery')">
                             <div class="journey-step-circle">
@@ -2141,9 +2124,7 @@
                         </div>
                     </div>
 
-                    <!-- Module Cards -->
                     <div class="modules-grid">
-                        <!-- Module 1: Signal Discovery (Primary/Featured) -->
                         <div class="module-card primary" onclick="goToModule('discovery')">
                             <div class="module-icon">
                                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -2156,7 +2137,6 @@
                             </div>
                         </div>
 
-                        <!-- Module 2: Three Layer Assessment -->
                         <div class="module-card" onclick="goToModule('threelayer')">
                             <div class="module-icon">
                                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18"/></svg>
@@ -2169,7 +2149,6 @@
                             </div>
                         </div>
 
-                        <!-- Module 3: What-If Engine -->
                         <div class="module-card" onclick="goToModule('whatif')">
                             <div class="module-icon">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
@@ -2182,7 +2161,6 @@
                             </div>
                         </div>
 
-                        <!-- Module 4: Underwriting Engine -->
                         <div class="module-card" onclick="goToModule('underwriting')">
                             <div class="module-icon">
                                 <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -2195,7 +2173,6 @@
                             </div>
                         </div>
 
-                        <!-- Module 5: World Model -->
                         <div class="module-card primary" onclick="goToModule('worldmodel')" style="grid-column: span 2; background: linear-gradient(135deg, #1E1B4B, #312E81);">
                             <div class="module-icon" style="background: rgba(139, 92, 246, 0.3);">
                                 <svg viewBox="0 0 24 24" style="stroke: #A78BFA;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -2204,7 +2181,7 @@
                                 <div class="module-number" style="color: #A78BFA;">Module 5 &middot; World Model</div>
                                 <h3 class="module-title" style="color: white;">The Living World Model</h3>
                                 <p class="module-tagline" style="color: #C4B5FD;">"It is alive. It is accountable. It is teachable."</p>
-                                <p class="module-desc" style="color: #A5B4FC;">Experience the defining characteristics of DSI's proprietary World Model: temporal dynamics, causal pathways, counterfactual simulation, emergent behaviour detection, and active learning.</p>
+                                <p class="module-desc" style="color: #A5B4FC;">Encoder. Predictor. Cost Function.</p>
                             </div>
                         </div>
                     </div>
@@ -2212,9 +2189,6 @@
                 <footer class="footer">&copy; John Walker. All rights reserved.</footer>
             </section>
 
-            <!-- ============================================================
-                 MODULE 1: LIVE SIGNAL DISCOVERY
-                 ============================================================ -->
             <section class="section" id="section-discovery">
                 <div class="module-page">
                     <div class="module-header">
@@ -2230,7 +2204,6 @@
 
                     <div class="content-box">
                         <div class="discovery-container">
-                            <!-- Input Panel -->
                             <div class="discovery-input">
                                 <h3>Enter Company</h3>
                                 <div class="company-input-group">
@@ -2248,12 +2221,10 @@
                                 <div class="quick-select">
                                     <h4>Quick Select (13 Pre-computed Profiles)</h4>
                                     <div class="quick-select-list" id="quickSelectList">
-                                        <!-- Dynamically populated from companyData -->
-                                    </div>
+                                        </div>
                                 </div>
                             </div>
 
-                            <!-- Signal Display -->
                             <div class="discovery-signals">
                                 <div class="signals-header">
                                     <h3>Signal Extraction</h3>
@@ -2295,7 +2266,6 @@
                                 </div>
                             </div>
 
-                            <!-- Results Panel -->
                             <div class="discovery-results">
                                 <h3>Assessment Summary</h3>
 
@@ -2331,7 +2301,6 @@
                 </div>
             </section>
 
-            <!-- Placeholder sections for other modules -->
             <section class="section" id="section-threelayer">
                 <div class="module-page">
                     <div class="module-header">
@@ -2345,7 +2314,6 @@
                         </div>
                     </div>
 
-                    <!-- Company Context Banner -->
                     <div id="threeLayerContext" style="background: linear-gradient(90deg, var(--teal-accent), var(--blue-primary)); padding: 12px 40px; margin-bottom: 0; display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
@@ -2363,7 +2331,6 @@
                         </div>
                     </div>
 
-                    <!-- Empty State when no company discovered -->
                     <div id="threeLayerEmpty" class="content-box" style="display: flex; align-items: center; justify-content: center;">
                         <div style="text-align: center; color: #7A766F; padding: 60px;">
                             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#CCC" stroke-width="1.5" style="margin-bottom: 20px;">
@@ -2378,7 +2345,6 @@
 
                     <div class="content-box" id="threeLayerContent" style="display: none;">
                         <div class="threelayer-container">
-                            <!-- Risk Layer -->
                             <div class="layer-panel risk">
                                 <div class="layer-header">
                                     <h2 class="layer-title">Risk Layer</h2>
@@ -2393,13 +2359,10 @@
                                 </div>
                                 <div class="layer-signals">
                                     <h4 style="font-size: 12px; color: #7A766F; margin-bottom: 10px;">Contributing Signals (click to explore)</h4>
-                                    <div id="riskLayerSignals">
-                                        <!-- Populated dynamically -->
-                                    </div>
+                                    <div id="riskLayerSignals"></div>
                                 </div>
                             </div>
 
-                            <!-- Exposure Layer -->
                             <div class="layer-panel exposure">
                                 <div class="layer-header">
                                     <h2 class="layer-title">Exposure Layer</h2>
@@ -2414,13 +2377,10 @@
                                 </div>
                                 <div class="layer-signals">
                                     <h4 style="font-size: 12px; color: #7A766F; margin-bottom: 10px;">Proxy Signals</h4>
-                                    <div id="exposureLayerSignals">
-                                        <!-- Populated dynamically -->
-                                    </div>
+                                    <div id="exposureLayerSignals"></div>
                                 </div>
                             </div>
 
-                            <!-- Loss Layer -->
                             <div class="layer-panel loss">
                                 <div class="layer-header">
                                     <h2 class="layer-title">Loss Layer</h2>
@@ -2435,22 +2395,17 @@
                                 </div>
                                 <div class="layer-signals">
                                     <h4 style="font-size: 12px; color: #7A766F; margin-bottom: 10px;">Leading Indicators</h4>
-                                    <div id="lossLayerSignals">
-                                        <!-- Populated dynamically -->
-                                    </div>
+                                    <div id="lossLayerSignals"></div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Signal Detail Panel (shows when a signal is clicked) -->
                         <div id="signalDetailPanel" style="display: none; margin-top: 20px; padding: 20px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E5E5;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <h4 id="signalDetailTitle" style="font-size: 16px; font-weight: 600; color: #333;">Signal Detail</h4>
                                 <button onclick="hideSignalDetail()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #999;">×</button>
                             </div>
-                            <div id="signalDetailContent" style="font-size: 14px; color: #666;">
-                                <!-- Populated dynamically -->
-                            </div>
+                            <div id="signalDetailContent" style="font-size: 14px; color: #666;"></div>
                         </div>
                     </div>
                 </div>
@@ -2468,7 +2423,6 @@
                             <button class="module-nav-btn primary" onclick="goToModule('underwriting')">Next: Underwriting Engine</button>
                         </div>
                     </div>
-                    <!-- Target Company Context Banner -->
                     <div id="whatifContext" style="background: linear-gradient(90deg, #EF4444, var(--blue-primary)); padding: 12px 40px; margin-bottom: 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
@@ -2484,7 +2438,6 @@
 
                     <div class="content-box">
                         <div class="whatif-container">
-                            <!-- Scenario Selection -->
                             <div class="scenario-panel">
                                 <h3>Select Shock Scenario</h3>
                                 <p style="font-size: 12px; color: #7A766F; margin-bottom: 16px;">Choose a scenario to simulate how it would impact the organisation and portfolio.</p>
@@ -2537,7 +2490,6 @@
                                 </div>
                             </div>
 
-                            <!-- Causal Chain Visualization -->
                             <div class="propagation-panel">
                                 <h3>Causal Propagation Chain</h3>
                                 <div id="causalChainViz" style="padding: 20px; min-height: 200px;">
@@ -2557,7 +2509,6 @@
                                 </div>
                             </div>
 
-                            <!-- Portfolio Impact Dashboard -->
                             <div class="portfolio-impact-panel">
                                 <h3>Portfolio Impact Summary</h3>
 
@@ -2585,9 +2536,7 @@
 
                                 <div id="impactActions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #E5E5E5; display: none;">
                                     <p style="font-size: 11px; color: #7A766F; margin-bottom: 8px; font-weight: 600;">RECOMMENDED ACTIONS</p>
-                                    <div id="actionsList" style="font-size: 12px; color: #333;">
-                                        <!-- Populated dynamically -->
-                                    </div>
+                                    <div id="actionsList" style="font-size: 12px; color: #333;"></div>
                                 </div>
                             </div>
                         </div>
@@ -2609,7 +2558,6 @@
                     </div>
                     <div class="content-box">
                         <div class="uw-engine-container">
-                            <!-- Input Panel -->
                             <div class="uw-input-panel">
                                 <h3>Submission Input</h3>
                                 <div class="uw-input-minimal">
@@ -2618,7 +2566,6 @@
                                         <label>Company</label>
                                         <select id="uwCompanySelect" class="company-input" onchange="selectUWCompany()">
                                             <option value="">-- Select Company --</option>
-                                            <!-- Populated dynamically -->
                                         </select>
                                     </div>
                                     <div class="uw-input-field">
@@ -2656,7 +2603,6 @@
                                 </div>
                             </div>
 
-                            <!-- Workflow Visualization -->
                             <div class="uw-workflow">
                                 <h3>Workflow Progress</h3>
                                 <div class="workflow-phases" id="workflowPhases">
@@ -2667,10 +2613,7 @@
                                             <span class="phase-status" id="phaseA-status">Pending</span>
                                         </div>
                                         <div class="phase-steps">
-                                            <div class="workflow-step" data-step="0">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Entity Resolution</span>
-                                            </div>
+                                            <div class="workflow-step" data-step="0"><span class="step-indicator"></span><span class="step-name">Entity Resolution</span></div>
                                         </div>
                                     </div>
                                     <div class="workflow-phase" data-phase="B">
@@ -2680,10 +2623,7 @@
                                             <span class="phase-status" id="phaseB-status">Pending</span>
                                         </div>
                                         <div class="phase-steps">
-                                            <div class="workflow-step" data-step="1">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Model Configuration</span>
-                                            </div>
+                                            <div class="workflow-step" data-step="1"><span class="step-indicator"></span><span class="step-name">Model Configuration</span></div>
                                         </div>
                                     </div>
                                     <div class="workflow-phase" data-phase="C">
@@ -2693,18 +2633,9 @@
                                             <span class="phase-status" id="phaseC-status">Pending</span>
                                         </div>
                                         <div class="phase-steps">
-                                            <div class="workflow-step" data-step="2">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Signal Extraction</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="3">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Normalisation</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="4">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Confidence Scoring</span>
-                                            </div>
+                                            <div class="workflow-step" data-step="2"><span class="step-indicator"></span><span class="step-name">Signal Extraction</span></div>
+                                            <div class="workflow-step" data-step="3"><span class="step-indicator"></span><span class="step-name">Normalisation</span></div>
+                                            <div class="workflow-step" data-step="4"><span class="step-indicator"></span><span class="step-name">Confidence Scoring</span></div>
                                         </div>
                                     </div>
                                     <div class="workflow-phase" data-phase="D">
@@ -2714,18 +2645,9 @@
                                             <span class="phase-status" id="phaseD-status">Pending</span>
                                         </div>
                                         <div class="phase-steps">
-                                            <div class="workflow-step" data-step="5">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Risk Layer</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="6">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Exposure Layer</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="7">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Loss Layer</span>
-                                            </div>
+                                            <div class="workflow-step" data-step="5"><span class="step-indicator"></span><span class="step-name">Risk Layer</span></div>
+                                            <div class="workflow-step" data-step="6"><span class="step-indicator"></span><span class="step-name">Exposure Layer</span></div>
+                                            <div class="workflow-step" data-step="7"><span class="step-indicator"></span><span class="step-name">Loss Layer</span></div>
                                         </div>
                                     </div>
                                     <div class="workflow-phase" data-phase="E">
@@ -2735,26 +2657,11 @@
                                             <span class="phase-status" id="phaseE-status">Pending</span>
                                         </div>
                                         <div class="phase-steps">
-                                            <div class="workflow-step" data-step="8">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Tier Resolution</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="9">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Base Rate</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="10">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Modifiers</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="11">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Limit Scaling</span>
-                                            </div>
-                                            <div class="workflow-step" data-step="12">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Final Premium</span>
-                                            </div>
+                                            <div class="workflow-step" data-step="8"><span class="step-indicator"></span><span class="step-name">Tier Resolution</span></div>
+                                            <div class="workflow-step" data-step="9"><span class="step-indicator"></span><span class="step-name">Base Rate</span></div>
+                                            <div class="workflow-step" data-step="10"><span class="step-indicator"></span><span class="step-name">Modifiers</span></div>
+                                            <div class="workflow-step" data-step="11"><span class="step-indicator"></span><span class="step-name">Limit Scaling</span></div>
+                                            <div class="workflow-step" data-step="12"><span class="step-indicator"></span><span class="step-name">Final Premium</span></div>
                                         </div>
                                     </div>
                                     <div class="workflow-phase" data-phase="F">
@@ -2764,16 +2671,12 @@
                                             <span class="phase-status" id="phaseF-status">Pending</span>
                                         </div>
                                         <div class="phase-steps">
-                                            <div class="workflow-step" data-step="13">
-                                                <span class="step-indicator"></span>
-                                                <span class="step-name">Final Decision</span>
-                                            </div>
+                                            <div class="workflow-step" data-step="13"><span class="step-indicator"></span><span class="step-name">Final Decision</span></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Output Panel -->
                             <div class="uw-output-panel">
                                 <h3>Decision Output</h3>
                                 <div class="uw-decision-card" id="uwDecisionCard">
@@ -2781,35 +2684,14 @@
                                         <span class="decision-text">AWAITING</span>
                                     </div>
                                     <div class="decision-details">
-                                        <div class="detail-row">
-                                            <span class="detail-label">Entity</span>
-                                            <span class="detail-value" id="outEntity">--</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label">Composite Score</span>
-                                            <span class="detail-value" id="outScore">--</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label">Risk Tier</span>
-                                            <span class="detail-value" id="outTier">--</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label">Confidence</span>
-                                            <span class="detail-value" id="outConfidence">--</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label">Exposure Band</span>
-                                            <span class="detail-value" id="outExposure">--</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label">Loss Propensity</span>
-                                            <span class="detail-value" id="outLoss">--</span>
-                                        </div>
+                                        <div class="detail-row"><span class="detail-label">Entity</span><span class="detail-value" id="outEntity">--</span></div>
+                                        <div class="detail-row"><span class="detail-label">Composite Score</span><span class="detail-value" id="outScore">--</span></div>
+                                        <div class="detail-row"><span class="detail-label">Risk Tier</span><span class="detail-value" id="outTier">--</span></div>
+                                        <div class="detail-row"><span class="detail-label">Confidence</span><span class="detail-value" id="outConfidence">--</span></div>
+                                        <div class="detail-row"><span class="detail-label">Exposure Band</span><span class="detail-value" id="outExposure">--</span></div>
+                                        <div class="detail-row"><span class="detail-label">Loss Propensity</span><span class="detail-value" id="outLoss">--</span></div>
                                         <div class="detail-divider"></div>
-                                        <div class="detail-row premium">
-                                            <span class="detail-label">Final Premium</span>
-                                            <span class="detail-value" id="outPremium">--</span>
-                                        </div>
+                                        <div class="detail-row premium"><span class="detail-label">Final Premium</span><span class="detail-value" id="outPremium">--</span></div>
                                     </div>
                                 </div>
                                 <div class="uw-audit-section">
@@ -2824,15 +2706,12 @@
                 </div>
             </section>
 
-            <!-- ============================================================
-                 MODULE 5: WORLD MODEL
-                 ============================================================ -->
             <section class="section" id="section-worldmodel">
                 <div class="module-page">
                     <div class="module-header" style="background: linear-gradient(135deg, #1E1B4B, #312E81);">
                         <div class="module-header-left">
                             <h1 style="color: white;">The Living World Model</h1>
-                            <p style="color: #A5B4FC;">It is alive. It is accountable. It is teachable.</p>
+                            <p style="color: #A5B4FC;">Encoder. Predictor. Cost Function.</p>
                         </div>
                         <div class="module-nav">
                             <button class="module-nav-btn" onclick="goToModule('underwriting')">Back: Underwriting</button>
@@ -2840,7 +2719,6 @@
                         </div>
                     </div>
 
-                    <!-- World Model Sub-Navigation -->
                     <div style="background: #312E81; padding: 12px 40px; display: flex; gap: 12px; flex-wrap: wrap;">
                         <button class="wm-tab active" onclick="showWorldModelTab('temporal')" id="tab-temporal">Temporal Dynamics</button>
                         <button class="wm-tab" onclick="showWorldModelTab('counterfactual')" id="tab-counterfactual">Counterfactual</button>
@@ -2849,13 +2727,11 @@
                         <button class="wm-tab" onclick="showWorldModelTab('learning')" id="tab-learning">Active Learning</button>
                     </div>
 
-                    <!-- TAB 1: TEMPORAL DYNAMICS -->
                     <div class="content-box wm-content" id="wm-temporal">
                         <div style="padding: 24px;">
                             <h2 style="font-size: 22px; margin-bottom: 8px;">Temporal Dynamics</h2>
                             <p style="color: #7A766F; margin-bottom: 24px; font-style: italic;">"Organisations are not snapshots — they are trajectories."</p>
 
-                            <!-- Company Selector for World Model -->
                             <div style="margin-bottom: 20px; display: flex; gap: 16px; align-items: center;">
                                 <label style="font-size: 13px; font-weight: 600;">Viewing:</label>
                                 <select id="wmCompanySelect" class="company-input" style="max-width: 300px;" onchange="updateWorldModelCompany()">
@@ -2864,7 +2740,6 @@
                                 <span id="wmCompanyStatus" style="font-size: 12px; color: #7A766F;"></span>
                             </div>
 
-                            <!-- Timeline Slider -->
                             <div class="timeline-container">
                                 <div class="timeline-header">
                                     <span class="timeline-title">Signal Evolution Timeline</span>
@@ -2880,7 +2755,6 @@
                                 </div>
                             </div>
 
-                            <!-- Temporal Metrics Display -->
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
                                 <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #E5E5E5;">
                                     <div style="font-size: 11px; color: #7A766F; text-transform: uppercase; margin-bottom: 4px;">Composite Score</div>
@@ -2904,7 +2778,6 @@
                                 </div>
                             </div>
 
-                            <!-- Time Travel Audit Panel -->
                             <div class="time-travel-panel">
                                 <div class="time-travel-header">
                                     <div class="time-travel-icon">⏱️</div>
@@ -2927,21 +2800,16 @@
                                     <div class="delta-overlay" id="deltaOverlay" style="display: none;">
                                         <div class="delta-column then">
                                             <div class="delta-label">What We Knew Then</div>
-                                            <div id="deltaKnewThen">
-                                                <!-- Populated dynamically -->
-                                            </div>
+                                            <div id="deltaKnewThen"></div>
                                         </div>
                                         <div class="delta-column now">
                                             <div class="delta-label">What We Know Now</div>
-                                            <div id="deltaKnowNow">
-                                                <!-- Populated dynamically -->
-                                            </div>
+                                            <div id="deltaKnowNow"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Temporal Events Log -->
                             <div style="margin-top: 24px; background: #F9FAFB; border-radius: 12px; padding: 20px;">
                                 <h4 style="font-size: 14px; margin-bottom: 12px;">Signal Events Timeline</h4>
                                 <div id="temporalEventsLog" style="max-height: 200px; overflow-y: auto;">
@@ -2951,7 +2819,6 @@
                         </div>
                     </div>
 
-                    <!-- TAB 2: COUNTERFACTUAL SIMULATION -->
                     <div class="content-box wm-content" id="wm-counterfactual" style="display: none;">
                         <div style="padding: 24px;">
                             <h2 style="font-size: 22px; margin-bottom: 8px;">Counterfactual Simulation</h2>
@@ -2982,14 +2849,6 @@
                                         <div class="counterfactual-toggle-content">
                                             <div class="counterfactual-toggle-title">Secure Gateway Warranty Applied</div>
                                             <div class="counterfactual-toggle-desc">Additional security requirements enforced</div>
-                                        </div>
-                                    </label>
-
-                                    <label class="counterfactual-toggle" id="cf-toggle-mfa">
-                                        <input type="checkbox" onchange="updateCounterfactual()">
-                                        <div class="counterfactual-toggle-content">
-                                            <div class="counterfactual-toggle-title">MFA Universally Deployed</div>
-                                            <div class="counterfactual-toggle-desc">All access points protected</div>
                                         </div>
                                     </label>
 
@@ -3040,13 +2899,11 @@
                         </div>
                     </div>
 
-                    <!-- TAB 3: EMERGENT BEHAVIOUR -->
                     <div class="content-box wm-content" id="wm-emergent" style="display: none;">
                         <div style="padding: 24px;">
                             <h2 style="font-size: 22px; margin-bottom: 8px;">Emergent Behaviour Detection</h2>
                             <p style="color: #7A766F; margin-bottom: 24px; font-style: italic;">"Risk emerges from interactions. Capital pays for it."</p>
 
-                            <!-- Cluster Alert -->
                             <div class="cluster-alert" id="clusterAlert">
                                 <div class="cluster-alert-header">
                                     <div class="cluster-alert-icon">⚠️</div>
@@ -3069,7 +2926,6 @@
                                 </div>
                             </div>
 
-                            <!-- Systemic Fragility Gauge -->
                             <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
                                 <div class="fragility-gauge">
                                     <div style="font-size: 11px; color: #7A766F; text-transform: uppercase; margin-bottom: 12px;">Systemic Fragility Index</div>
@@ -3117,14 +2973,12 @@
                         </div>
                     </div>
 
-                    <!-- TAB 4: AGENCY & FEEDBACK -->
                     <div class="content-box wm-content" id="wm-agency" style="display: none;">
                         <div style="padding: 24px;">
-                            <h2 style="font-size: 22px; margin-bottom: 8px;">Agency & Feedback</h2>
+                            <h2 style="font-size: 22px; margin-bottom: 8px;">Agency & Feedback (Game Theory)</h2>
                             <p style="color: #7A766F; margin-bottom: 24px; font-style: italic;">"The world reacts to you. This is two-way causality."</p>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                                <!-- Price Elasticity Panel -->
                                 <div class="price-elasticity-panel">
                                     <h4 style="font-size: 15px; margin-bottom: 16px;">Price Elasticity Simulation</h4>
 
@@ -3148,7 +3002,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Broker Sentiment Panel -->
                                 <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #E5E5E5;">
                                     <h4 style="font-size: 15px; margin-bottom: 16px;">Broker Relationship Signals</h4>
 
@@ -3196,7 +3049,6 @@
                         </div>
                     </div>
 
-                    <!-- TAB 5: ACTIVE LEARNING -->
                     <div class="content-box wm-content" id="wm-learning" style="display: none;">
                         <div style="padding: 24px;">
                             <h2 style="font-size: 22px; margin-bottom: 8px;">Active Learning ("Teacher Mode")</h2>
@@ -3220,19 +3072,19 @@
 
                                     <h4 style="font-size: 14px; margin-bottom: 12px;">Teachable Signals (Demo)</h4>
                                     <div style="background: white; border-radius: 8px; border: 1px solid #E5E5E5; overflow: hidden;">
-                                        <div class="signal-teachable" style="padding: 14px 16px; border-bottom: 1px solid #E5E5E5; display: flex; justify-content: space-between; cursor: pointer;" onclick="teachSignal('TLS Configuration', 98)">
+                                        <div class="signal-teachable" style="padding: 14px 16px; border-bottom: 1px solid #E5E5E5; display: flex; justify-content: space-between; cursor: pointer;" oncontextmenu="event.preventDefault(); teachSignal('TLS Configuration', 98)">
                                             <span style="font-weight: 500;">TLS Configuration</span>
                                             <span style="color: #10B981; font-weight: 600;">98</span>
                                         </div>
-                                        <div class="signal-teachable" style="padding: 14px 16px; border-bottom: 1px solid #E5E5E5; display: flex; justify-content: space-between; cursor: pointer;" onclick="teachSignal('Patch Currency', 85)">
+                                        <div class="signal-teachable" style="padding: 14px 16px; border-bottom: 1px solid #E5E5E5; display: flex; justify-content: space-between; cursor: pointer;" oncontextmenu="event.preventDefault(); teachSignal('Patch Currency', 85)">
                                             <span style="font-weight: 500;">Patch Currency</span>
                                             <span style="color: #10B981; font-weight: 600;">85</span>
                                         </div>
-                                        <div class="signal-teachable" style="padding: 14px 16px; border-bottom: 1px solid #E5E5E5; display: flex; justify-content: space-between; cursor: pointer;" onclick="teachSignal('Credit Rating', 78)">
+                                        <div class="signal-teachable" style="padding: 14px 16px; border-bottom: 1px solid #E5E5E5; display: flex; justify-content: space-between; cursor: pointer;" oncontextmenu="event.preventDefault(); teachSignal('Credit Rating', 78)">
                                             <span style="font-weight: 500;">Credit Rating</span>
                                             <span style="color: #F59E0B; font-weight: 600;">78</span>
                                         </div>
-                                        <div class="signal-teachable" style="padding: 14px 16px; display: flex; justify-content: space-between; cursor: pointer;" onclick="teachSignal('Litigation Status', 72)">
+                                        <div class="signal-teachable" style="padding: 14px 16px; display: flex; justify-content: space-between; cursor: pointer;" oncontextmenu="event.preventDefault(); teachSignal('Litigation Status', 72)">
                                             <span style="font-weight: 500;">Litigation Status</span>
                                             <span style="color: #F59E0B; font-weight: 600;">72</span>
                                         </div>
@@ -3256,6 +3108,29 @@
         </main>
     </div>
 
+    <div class="modal-overlay" id="teacherModal">
+        <div class="dsi-modal">
+            <div class="modal-header">
+                <div class="modal-icon-box">🧠</div>
+                <div>
+                    <h3 style="font-size: 16px; margin:0;">Active Learning Input</h3>
+                    <p style="font-size: 12px; color: #666; margin:0;">Correcting World Model State</p>
+                </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display:block; font-size: 12px; font-weight:600; margin-bottom: 8px;">Signal: <span id="modalSignalName"></span></label>
+                <div style="display:flex; align-items:center; gap: 10px;">
+                    <input type="range" id="modalSignalRange" min="0" max="100" style="flex:1">
+                    <span id="modalSignalValue" style="font-family: var(--font-mono); font-weight:700; color: var(--teal-accent);">--</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeTeacherModal()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmTeacherUpdate()">Update Model</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ====================================================================
         // DSI INTERACTIVE DEMO - JAVASCRIPT
@@ -3271,715 +3146,58 @@
                 riskTier: 1,
                 confidence: 0.91,
                 signals: {
-                    network: [
-                        { name: "Partnership Network", value: 92, level: "high" },
-                        { name: "Industry Citations", value: 88, level: "high" },
-                        { name: "Certification Count", value: 85, level: "high" },
-                        { name: "Backlink Authority", value: 94, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 98, level: "high" },
-                        { name: "DNS Security", value: 96, level: "high" },
-                        { name: "Security Headers", value: 95, level: "high" },
-                        { name: "Patch Currency", value: 92, level: "high" },
-                        { name: "Cloud Posture", value: 90, level: "high" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 94, level: "high" },
-                        { name: "Content Recency", value: 91, level: "high" },
-                        { name: "Leadership Visibility", value: 88, level: "high" },
-                        { name: "Careers Activity", value: 85, level: "high" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 78, level: "medium" },
-                        { name: "Change Velocity", value: 72, level: "medium" },
-                        { name: "Disclosure Cadence", value: 90, level: "high" },
-                        { name: "Incident Response", value: 88, level: "high" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 95, level: "high" },
-                        { name: "Litigation Status", value: 82, level: "high" },
-                        { name: "Regulatory Standing", value: 90, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 85, level: "high" },
-                        { name: "ESG Score", value: 78, level: "medium" },
-                        { name: "Market Data", value: 92, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
+                    network: [{ name: "Partnership Network", value: 92 }, { name: "Industry Citations", value: 88 }, { name: "Certification Count", value: 85 }, { name: "Backlink Authority", value: 94 }],
+                    technical: [{ name: "TLS Configuration", value: 98 }, { name: "DNS Security", value: 96 }, { name: "Security Headers", value: 95 }, { name: "Patch Currency", value: 92 }, { name: "Cloud Posture", value: 90 }],
+                    footprint: [{ name: "Website Vitality", value: 94 }, { name: "Content Recency", value: 91 }, { name: "Leadership Visibility", value: 88 }, { name: "Careers Activity", value: 85 }],
+                    behavioural: [{ name: "Hiring Velocity", value: 78 }, { name: "Change Velocity", value: 72 }, { name: "Disclosure Cadence", value: 90 }, { name: "Incident Response", value: 88 }],
+                    public: [{ name: "SEC Filings", value: 95 }, { name: "Litigation Status", value: 82 }, { name: "Regulatory Standing", value: 90 }],
+                    structured: [{ name: "Credit Rating", value: 85 }, { name: "ESG Score", value: 78 }, { name: "Market Data", value: 92 }],
+                    inquiry: [{ name: "N/A", value: null }]
                 },
-                findings: [
-                    { type: "positive", text: "Excellent technical infrastructure signals" },
-                    { type: "positive", text: "Strong network authority and industry standing" },
-                    { type: "positive", text: "Consistent public disclosure patterns" },
-                    { type: "warning", text: "Above-average hiring velocity - monitor" }
-                ]
+                findings: [{ type: "positive", text: "Excellent technical infrastructure signals" }, { type: "positive", text: "Strong network authority and industry standing" }]
             },
-            crowdstrike: {
-                name: "CrowdStrike Holdings, Inc.",
-                domain: "crowdstrike.com",
-                industry: "Cybersecurity",
-                compositeScore: 812,
-                riskTier: 1,
-                confidence: 0.88,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 90, level: "high" },
-                        { name: "Industry Citations", value: 94, level: "high" },
-                        { name: "Certification Count", value: 92, level: "high" },
-                        { name: "Backlink Authority", value: 89, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 97, level: "high" },
-                        { name: "DNS Security", value: 95, level: "high" },
-                        { name: "Security Headers", value: 96, level: "high" },
-                        { name: "Patch Currency", value: 94, level: "high" },
-                        { name: "Cloud Posture", value: 91, level: "high" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 92, level: "high" },
-                        { name: "Content Recency", value: 88, level: "high" },
-                        { name: "Leadership Visibility", value: 85, level: "high" },
-                        { name: "Careers Activity", value: 82, level: "high" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 70, level: "medium" },
-                        { name: "Change Velocity", value: 68, level: "medium" },
-                        { name: "Disclosure Cadence", value: 88, level: "high" },
-                        { name: "Incident Response", value: 92, level: "high" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 94, level: "high" },
-                        { name: "Litigation Status", value: 78, level: "medium" },
-                        { name: "Regulatory Standing", value: 88, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 82, level: "high" },
-                        { name: "ESG Score", value: 75, level: "medium" },
-                        { name: "Market Data", value: 88, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Industry-leading technical security posture" },
-                    { type: "positive", text: "Strong incident response capability" },
-                    { type: "positive", text: "High certification density" },
-                    { type: "warning", text: "Recent litigation activity noted" }
-                ]
-            },
-            boeing: {
-                name: "The Boeing Company",
-                domain: "boeing.com",
-                industry: "Aerospace",
-                compositeScore: 584,
-                riskTier: 3,
-                confidence: 0.85,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 88, level: "high" },
-                        { name: "Industry Citations", value: 92, level: "high" },
-                        { name: "Certification Count", value: 78, level: "medium" },
-                        { name: "Backlink Authority", value: 90, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 82, level: "high" },
-                        { name: "DNS Security", value: 78, level: "medium" },
-                        { name: "Security Headers", value: 72, level: "medium" },
-                        { name: "Patch Currency", value: 68, level: "medium" },
-                        { name: "Cloud Posture", value: 65, level: "medium" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 85, level: "high" },
-                        { name: "Content Recency", value: 80, level: "high" },
-                        { name: "Leadership Visibility", value: 55, level: "low" },
-                        { name: "Careers Activity", value: 72, level: "medium" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 45, level: "low" },
-                        { name: "Change Velocity", value: 62, level: "medium" },
-                        { name: "Disclosure Cadence", value: 78, level: "medium" },
-                        { name: "Incident Response", value: 52, level: "low" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 90, level: "high" },
-                        { name: "Litigation Status", value: 35, level: "low" },
-                        { name: "Regulatory Standing", value: 42, level: "low" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 65, level: "medium" },
-                        { name: "ESG Score", value: 58, level: "low" },
-                        { name: "Market Data", value: 72, level: "medium" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "negative", text: "Significant regulatory scrutiny ongoing" },
-                    { type: "negative", text: "Active litigation affecting standing" },
-                    { type: "warning", text: "Leadership visibility signals degraded" },
-                    { type: "positive", text: "Strong network authority maintained" }
-                ]
-            },
-            petrobras: {
-                name: "Petróleo Brasileiro S.A.",
-                domain: "petrobras.com.br",
-                industry: "Energy (State-Owned)",
-                compositeScore: 512,
-                riskTier: 3,
-                confidence: 0.72,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 75, level: "medium" },
-                        { name: "Industry Citations", value: 82, level: "high" },
-                        { name: "Certification Count", value: 68, level: "medium" },
-                        { name: "Backlink Authority", value: 78, level: "medium" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 72, level: "medium" },
-                        { name: "DNS Security", value: 65, level: "medium" },
-                        { name: "Security Headers", value: 58, level: "low" },
-                        { name: "Patch Currency", value: 55, level: "low" },
-                        { name: "Cloud Posture", value: 52, level: "low" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 78, level: "medium" },
-                        { name: "Content Recency", value: 72, level: "medium" },
-                        { name: "Leadership Visibility", value: 62, level: "medium" },
-                        { name: "Careers Activity", value: 58, level: "low" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 42, level: "low" },
-                        { name: "Change Velocity", value: 55, level: "low" },
-                        { name: "Disclosure Cadence", value: 68, level: "medium" },
-                        { name: "Incident Response", value: 48, level: "low" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 75, level: "medium" },
-                        { name: "Litigation Status", value: 42, level: "low" },
-                        { name: "Regulatory Standing", value: 55, level: "low" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 58, level: "low" },
-                        { name: "ESG Score", value: 45, level: "low" },
-                        { name: "Market Data", value: 65, level: "medium" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "negative", text: "State-ownership governance complexity" },
-                    { type: "negative", text: "Historical corruption-related litigation" },
-                    { type: "warning", text: "Technical infrastructure signals below peer average" },
-                    { type: "warning", text: "Lower confidence due to data availability" }
-                ]
-            },
-            atlassian: {
-                name: "Atlassian Corporation",
-                domain: "atlassian.com",
-                industry: "Technology / SaaS",
-                compositeScore: 824,
-                riskTier: 1,
-                confidence: 0.89,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 90, level: "high" },
-                        { name: "Industry Citations", value: 92, level: "high" },
-                        { name: "Certification Count", value: 88, level: "high" },
-                        { name: "Backlink Authority", value: 91, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 96, level: "high" },
-                        { name: "DNS Security", value: 94, level: "high" },
-                        { name: "Security Headers", value: 92, level: "high" },
-                        { name: "Patch Currency", value: 90, level: "high" },
-                        { name: "Cloud Posture", value: 88, level: "high" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 92, level: "high" },
-                        { name: "Content Recency", value: 90, level: "high" },
-                        { name: "Leadership Visibility", value: 85, level: "high" },
-                        { name: "Careers Activity", value: 82, level: "high" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 68, level: "medium" },
-                        { name: "Change Velocity", value: 72, level: "medium" },
-                        { name: "Disclosure Cadence", value: 88, level: "high" },
-                        { name: "Incident Response", value: 85, level: "high" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 92, level: "high" },
-                        { name: "Litigation Status", value: 85, level: "high" },
-                        { name: "Regulatory Standing", value: 88, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 84, level: "high" },
-                        { name: "ESG Score", value: 80, level: "high" },
-                        { name: "Market Data", value: 90, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Strong technical infrastructure and security posture" },
-                    { type: "positive", text: "Well-established network authority in dev tools space" },
-                    { type: "positive", text: "Consistent public disclosure patterns" },
-                    { type: "warning", text: "Recent workforce reduction announcements" }
-                ]
-            },
-            klarna: {
-                name: "Klarna Bank AB",
-                domain: "klarna.com",
-                industry: "Fintech",
-                compositeScore: 756,
-                riskTier: 2,
-                confidence: 0.84,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 85, level: "high" },
-                        { name: "Industry Citations", value: 88, level: "high" },
-                        { name: "Certification Count", value: 82, level: "high" },
-                        { name: "Backlink Authority", value: 86, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 94, level: "high" },
-                        { name: "DNS Security", value: 90, level: "high" },
-                        { name: "Security Headers", value: 88, level: "high" },
-                        { name: "Patch Currency", value: 85, level: "high" },
-                        { name: "Cloud Posture", value: 82, level: "high" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 90, level: "high" },
-                        { name: "Content Recency", value: 88, level: "high" },
-                        { name: "Leadership Visibility", value: 78, level: "medium" },
-                        { name: "Careers Activity", value: 65, level: "medium" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 55, level: "low" },
-                        { name: "Change Velocity", value: 72, level: "medium" },
-                        { name: "Disclosure Cadence", value: 80, level: "high" },
-                        { name: "Incident Response", value: 78, level: "medium" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 75, level: "medium" },
-                        { name: "Litigation Status", value: 72, level: "medium" },
-                        { name: "Regulatory Standing", value: 78, level: "medium" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 70, level: "medium" },
-                        { name: "ESG Score", value: 75, level: "medium" },
-                        { name: "Market Data", value: 82, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Strong technical security infrastructure" },
-                    { type: "positive", text: "High network authority in BNPL space" },
-                    { type: "warning", text: "Significant workforce reduction in progress" },
-                    { type: "warning", text: "Multiple regulatory jurisdictions add complexity" }
-                ]
-            },
-            markel: {
-                name: "Markel Corporation",
-                domain: "markel.com",
-                industry: "Insurance / Reinsurance",
-                compositeScore: 798,
-                riskTier: 2,
-                confidence: 0.86,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 82, level: "high" },
-                        { name: "Industry Citations", value: 85, level: "high" },
-                        { name: "Certification Count", value: 80, level: "high" },
-                        { name: "Backlink Authority", value: 78, level: "medium" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 88, level: "high" },
-                        { name: "DNS Security", value: 85, level: "high" },
-                        { name: "Security Headers", value: 82, level: "high" },
-                        { name: "Patch Currency", value: 80, level: "high" },
-                        { name: "Cloud Posture", value: 78, level: "medium" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 82, level: "high" },
-                        { name: "Content Recency", value: 80, level: "high" },
-                        { name: "Leadership Visibility", value: 85, level: "high" },
-                        { name: "Careers Activity", value: 72, level: "medium" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 65, level: "medium" },
-                        { name: "Change Velocity", value: 58, level: "low" },
-                        { name: "Disclosure Cadence", value: 92, level: "high" },
-                        { name: "Incident Response", value: 80, level: "high" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 95, level: "high" },
-                        { name: "Litigation Status", value: 88, level: "high" },
-                        { name: "Regulatory Standing", value: 92, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 88, level: "high" },
-                        { name: "ESG Score", value: 78, level: "medium" },
-                        { name: "Market Data", value: 85, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Excellent regulatory standing and compliance" },
-                    { type: "positive", text: "Strong public disclosure patterns" },
-                    { type: "positive", text: "Stable leadership visibility" },
-                    { type: "warning", text: "Conservative technology adoption pace" }
-                ]
-            },
-            beazley: {
-                name: "Beazley plc",
-                domain: "beazley.com",
-                industry: "Insurance / Specialty",
-                compositeScore: 782,
-                riskTier: 2,
-                confidence: 0.85,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 80, level: "high" },
-                        { name: "Industry Citations", value: 88, level: "high" },
-                        { name: "Certification Count", value: 85, level: "high" },
-                        { name: "Backlink Authority", value: 76, level: "medium" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 90, level: "high" },
-                        { name: "DNS Security", value: 86, level: "high" },
-                        { name: "Security Headers", value: 84, level: "high" },
-                        { name: "Patch Currency", value: 82, level: "high" },
-                        { name: "Cloud Posture", value: 80, level: "high" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 84, level: "high" },
-                        { name: "Content Recency", value: 82, level: "high" },
-                        { name: "Leadership Visibility", value: 80, level: "high" },
-                        { name: "Careers Activity", value: 75, level: "medium" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 68, level: "medium" },
-                        { name: "Change Velocity", value: 62, level: "medium" },
-                        { name: "Disclosure Cadence", value: 90, level: "high" },
-                        { name: "Incident Response", value: 88, level: "high" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 88, level: "high" },
-                        { name: "Litigation Status", value: 85, level: "high" },
-                        { name: "Regulatory Standing", value: 90, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 85, level: "high" },
-                        { name: "ESG Score", value: 82, level: "high" },
-                        { name: "Market Data", value: 84, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Strong cyber insurance expertise signals" },
-                    { type: "positive", text: "Excellent regulatory compliance" },
-                    { type: "positive", text: "High incident response capability" },
-                    { type: "positive", text: "Lloyd's market leadership position" }
-                ]
-            },
-            paloaltonetworks: {
-                name: "Palo Alto Networks, Inc.",
-                domain: "paloaltonetworks.com",
-                industry: "Cybersecurity",
-                compositeScore: 838,
-                riskTier: 1,
-                confidence: 0.90,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 92, level: "high" },
-                        { name: "Industry Citations", value: 95, level: "high" },
-                        { name: "Certification Count", value: 94, level: "high" },
-                        { name: "Backlink Authority", value: 91, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 98, level: "high" },
-                        { name: "DNS Security", value: 96, level: "high" },
-                        { name: "Security Headers", value: 97, level: "high" },
-                        { name: "Patch Currency", value: 95, level: "high" },
-                        { name: "Cloud Posture", value: 93, level: "high" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 94, level: "high" },
-                        { name: "Content Recency", value: 92, level: "high" },
-                        { name: "Leadership Visibility", value: 88, level: "high" },
-                        { name: "Careers Activity", value: 85, level: "high" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 75, level: "medium" },
-                        { name: "Change Velocity", value: 70, level: "medium" },
-                        { name: "Disclosure Cadence", value: 90, level: "high" },
-                        { name: "Incident Response", value: 95, level: "high" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 94, level: "high" },
-                        { name: "Litigation Status", value: 82, level: "high" },
-                        { name: "Regulatory Standing", value: 90, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 86, level: "high" },
-                        { name: "ESG Score", value: 78, level: "medium" },
-                        { name: "Market Data", value: 90, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Industry-leading technical security signals" },
-                    { type: "positive", text: "Exceptional incident response capability" },
-                    { type: "positive", text: "Strong network authority in cybersecurity" },
-                    { type: "warning", text: "Aggressive acquisition strategy adds complexity" }
-                ]
-            },
-            rollsroyce: {
-                name: "Rolls-Royce Holdings plc",
-                domain: "rolls-royce.com",
-                industry: "Aerospace / Engineering",
-                compositeScore: 642,
-                riskTier: 3,
-                confidence: 0.82,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 85, level: "high" },
-                        { name: "Industry Citations", value: 90, level: "high" },
-                        { name: "Certification Count", value: 88, level: "high" },
-                        { name: "Backlink Authority", value: 86, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 82, level: "high" },
-                        { name: "DNS Security", value: 78, level: "medium" },
-                        { name: "Security Headers", value: 75, level: "medium" },
-                        { name: "Patch Currency", value: 72, level: "medium" },
-                        { name: "Cloud Posture", value: 68, level: "medium" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 82, level: "high" },
-                        { name: "Content Recency", value: 78, level: "medium" },
-                        { name: "Leadership Visibility", value: 75, level: "medium" },
-                        { name: "Careers Activity", value: 68, level: "medium" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 55, level: "low" },
-                        { name: "Change Velocity", value: 62, level: "medium" },
-                        { name: "Disclosure Cadence", value: 85, level: "high" },
-                        { name: "Incident Response", value: 70, level: "medium" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 88, level: "high" },
-                        { name: "Litigation Status", value: 65, level: "medium" },
-                        { name: "Regulatory Standing", value: 72, level: "medium" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 68, level: "medium" },
-                        { name: "ESG Score", value: 72, level: "medium" },
-                        { name: "Market Data", value: 75, level: "medium" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Strong network authority in aerospace sector" },
-                    { type: "warning", text: "Technical infrastructure modernisation ongoing" },
-                    { type: "warning", text: "Defence sector adds regulatory complexity" },
-                    { type: "warning", text: "COVID-19 recovery still impacting metrics" }
-                ]
-            },
-            pemex: {
-                name: "Petróleos Mexicanos",
-                domain: "pemex.com",
-                industry: "Energy (State-Owned)",
-                compositeScore: 428,
-                riskTier: 4,
-                confidence: 0.68,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 65, level: "medium" },
-                        { name: "Industry Citations", value: 72, level: "medium" },
-                        { name: "Certification Count", value: 58, level: "low" },
-                        { name: "Backlink Authority", value: 68, level: "medium" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 62, level: "medium" },
-                        { name: "DNS Security", value: 55, level: "low" },
-                        { name: "Security Headers", value: 48, level: "low" },
-                        { name: "Patch Currency", value: 45, level: "low" },
-                        { name: "Cloud Posture", value: 42, level: "low" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 68, level: "medium" },
-                        { name: "Content Recency", value: 62, level: "medium" },
-                        { name: "Leadership Visibility", value: 55, level: "low" },
-                        { name: "Careers Activity", value: 48, level: "low" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 35, level: "low" },
-                        { name: "Change Velocity", value: 42, level: "low" },
-                        { name: "Disclosure Cadence", value: 58, level: "low" },
-                        { name: "Incident Response", value: 40, level: "low" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 68, level: "medium" },
-                        { name: "Litigation Status", value: 35, level: "low" },
-                        { name: "Regulatory Standing", value: 45, level: "low" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 42, level: "low" },
-                        { name: "ESG Score", value: 38, level: "low" },
-                        { name: "Market Data", value: 55, level: "low" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "negative", text: "Significant debt burden affecting stability" },
-                    { type: "negative", text: "Weak technical security infrastructure" },
-                    { type: "negative", text: "History of ransomware incidents" },
-                    { type: "warning", text: "State-ownership governance challenges" }
-                ]
-            },
-            caterpillar: {
-                name: "Caterpillar Inc.",
-                domain: "caterpillar.com",
-                industry: "Manufacturing / Heavy Industry",
-                compositeScore: 712,
-                riskTier: 2,
-                confidence: 0.84,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 85, level: "high" },
-                        { name: "Industry Citations", value: 88, level: "high" },
-                        { name: "Certification Count", value: 82, level: "high" },
-                        { name: "Backlink Authority", value: 86, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 80, level: "high" },
-                        { name: "DNS Security", value: 78, level: "medium" },
-                        { name: "Security Headers", value: 75, level: "medium" },
-                        { name: "Patch Currency", value: 72, level: "medium" },
-                        { name: "Cloud Posture", value: 68, level: "medium" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 82, level: "high" },
-                        { name: "Content Recency", value: 78, level: "medium" },
-                        { name: "Leadership Visibility", value: 80, level: "high" },
-                        { name: "Careers Activity", value: 72, level: "medium" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 58, level: "low" },
-                        { name: "Change Velocity", value: 52, level: "low" },
-                        { name: "Disclosure Cadence", value: 88, level: "high" },
-                        { name: "Incident Response", value: 72, level: "medium" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 94, level: "high" },
-                        { name: "Litigation Status", value: 78, level: "medium" },
-                        { name: "Regulatory Standing", value: 85, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 88, level: "high" },
-                        { name: "ESG Score", value: 72, level: "medium" },
-                        { name: "Market Data", value: 85, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Strong financial stability and credit rating" },
-                    { type: "positive", text: "Excellent public disclosure compliance" },
-                    { type: "warning", text: "Lower digital intensity than tech sector" },
-                    { type: "warning", text: "Traditional infrastructure modernisation ongoing" }
-                ]
-            },
-            shopify: {
-                name: "Shopify Inc.",
-                domain: "shopify.com",
-                industry: "E-commerce / SaaS",
-                compositeScore: 802,
-                riskTier: 2,
-                confidence: 0.88,
-                signals: {
-                    network: [
-                        { name: "Partnership Network", value: 92, level: "high" },
-                        { name: "Industry Citations", value: 90, level: "high" },
-                        { name: "Certification Count", value: 85, level: "high" },
-                        { name: "Backlink Authority", value: 94, level: "high" }
-                    ],
-                    technical: [
-                        { name: "TLS Configuration", value: 95, level: "high" },
-                        { name: "DNS Security", value: 92, level: "high" },
-                        { name: "Security Headers", value: 90, level: "high" },
-                        { name: "Patch Currency", value: 88, level: "high" },
-                        { name: "Cloud Posture", value: 90, level: "high" }
-                    ],
-                    footprint: [
-                        { name: "Website Vitality", value: 95, level: "high" },
-                        { name: "Content Recency", value: 92, level: "high" },
-                        { name: "Leadership Visibility", value: 85, level: "high" },
-                        { name: "Careers Activity", value: 70, level: "medium" }
-                    ],
-                    behavioural: [
-                        { name: "Hiring Velocity", value: 52, level: "low" },
-                        { name: "Change Velocity", value: 78, level: "medium" },
-                        { name: "Disclosure Cadence", value: 88, level: "high" },
-                        { name: "Incident Response", value: 85, level: "high" }
-                    ],
-                    public: [
-                        { name: "SEC Filings", value: 92, level: "high" },
-                        { name: "Litigation Status", value: 82, level: "high" },
-                        { name: "Regulatory Standing", value: 88, level: "high" }
-                    ],
-                    structured: [
-                        { name: "Credit Rating", value: 78, level: "medium" },
-                        { name: "ESG Score", value: 82, level: "high" },
-                        { name: "Market Data", value: 85, level: "high" }
-                    ],
-                    inquiry: [
-                        { name: "N/A", value: null, level: "absent" }
-                    ]
-                },
-                findings: [
-                    { type: "positive", text: "Excellent technical infrastructure signals" },
-                    { type: "positive", text: "Strong e-commerce platform network authority" },
-                    { type: "positive", text: "High website vitality and content quality" },
-                    { type: "warning", text: "Recent workforce reduction programme" }
-                ]
-            }
+            crowdstrike: { name: "CrowdStrike Holdings, Inc.", domain: "crowdstrike.com", industry: "Cybersecurity", compositeScore: 812, riskTier: 1, confidence: 0.88, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            boeing: { name: "The Boeing Company", domain: "boeing.com", industry: "Aerospace", compositeScore: 584, riskTier: 3, confidence: 0.85, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            petrobras: { name: "Petrobras", domain: "petrobras.com.br", industry: "Energy", compositeScore: 512, riskTier: 3, confidence: 0.72, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            atlassian: { name: "Atlassian", domain: "atlassian.com", industry: "Technology", compositeScore: 824, riskTier: 1, confidence: 0.89, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            klarna: { name: "Klarna", domain: "klarna.com", industry: "Fintech", compositeScore: 756, riskTier: 2, confidence: 0.84, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            markel: { name: "Markel", domain: "markel.com", industry: "Insurance", compositeScore: 798, riskTier: 2, confidence: 0.86, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            beazley: { name: "Beazley", domain: "beazley.com", industry: "Insurance", compositeScore: 782, riskTier: 2, confidence: 0.85, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            paloaltonetworks: { name: "Palo Alto Networks", domain: "paloaltonetworks.com", industry: "Cybersecurity", compositeScore: 838, riskTier: 1, confidence: 0.90, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            rollsroyce: { name: "Rolls-Royce", domain: "rolls-royce.com", industry: "Aerospace", compositeScore: 642, riskTier: 3, confidence: 0.82, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            pemex: { name: "Pemex", domain: "pemex.com", industry: "Energy", compositeScore: 428, riskTier: 4, confidence: 0.68, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            caterpillar: { name: "Caterpillar", domain: "caterpillar.com", industry: "Manufacturing", compositeScore: 712, riskTier: 2, confidence: 0.84, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] },
+            shopify: { name: "Shopify", domain: "shopify.com", industry: "E-commerce", compositeScore: 802, riskTier: 2, confidence: 0.88, signals: { network: [], technical: [], footprint: [], behavioural: [], public: [], structured: [], inquiry: [] }, findings: [] }
         };
+
+        // Populate empty signal arrays for non-Cloudflare companies to prevent errors
+        Object.keys(companyData).forEach(k => {
+            if(k !== 'cloudflare') {
+                const c = companyData[k];
+                c.signals = {
+                    network: [{name: "Partnership Network", value: Math.floor(c.compositeScore/10)}, {name: "Industry Citations", value: Math.floor(c.compositeScore/10 - 5)}],
+                    technical: [{name: "TLS Configuration", value: Math.floor(c.compositeScore/10 + 5)}, {name: "Patch Currency", value: Math.floor(c.compositeScore/10)}],
+                    footprint: [{name: "Website Vitality", value: Math.floor(c.compositeScore/10)}],
+                    behavioural: [{name: "Hiring Velocity", value: 65}],
+                    public: [{name: "SEC Filings", value: 90}],
+                    structured: [{name: "Credit Rating", value: 80}],
+                    inquiry: [{name: "N/A", value: null}]
+                };
+            }
+        });
 
         // State
         let currentSection = 'landing';
         let discoveryRunning = false;
-        let lastDiscoveredCompany = null; // Track the most recently discovered company
+        let lastDiscoveredCompany = null;
+        let currentTeachingSignal = null;
 
-        // Navigation functions
+        // Navigation
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(`section-${sectionId}`).classList.add('active');
-
             const header = document.getElementById('header');
             const mainContent = document.getElementById('mainContent');
-
             if (sectionId === 'landing') {
                 header.classList.add('hidden');
                 mainContent.classList.remove('with-header');
@@ -3987,23 +3205,14 @@
                 header.classList.remove('hidden');
                 mainContent.classList.add('with-header');
             }
-
             currentSection = sectionId;
         }
 
-        function beginDemo() {
-            showSection('orientation');
-        }
+        function beginDemo() { showSection('orientation'); }
+        function goHome() { showSection('orientation'); }
+        function goToModule(module) { showSection(module); if(module==='worldmodel') showWorldModelTab('temporal'); }
 
-        function goHome() {
-            showSection('orientation');
-        }
-
-        function goToModule(module) {
-            showSection(module);
-        }
-
-        // Signal Discovery functions
+        // Discovery
         function selectCompany(companyKey) {
             const company = companyData[companyKey];
             if (company) {
@@ -4016,865 +3225,261 @@
             const companyName = document.getElementById('companyName').value.trim();
             if (!companyName || discoveryRunning) return;
 
-            // Find matching company data
             let company = null;
             for (const key of Object.keys(companyData)) {
-                if (companyData[key].name.toLowerCase().includes(companyName.toLowerCase()) ||
-                    companyName.toLowerCase().includes(key)) {
+                if (companyData[key].name.toLowerCase().includes(companyName.toLowerCase()) || companyName.toLowerCase().includes(key)) {
                     company = companyData[key];
                     break;
                 }
             }
 
-            if (!company) {
-                alert('Company not found in demo dataset. Try: Cloudflare, CrowdStrike, Boeing, or Petrobras');
-                return;
-            }
+            if (!company) { alert('Company not found. Try: Cloudflare, CrowdStrike, Boeing.'); return; }
 
             discoveryRunning = true;
             document.getElementById('discoverBtn').disabled = true;
             document.getElementById('discoverBtn').textContent = 'Discovering...';
-
-            // Reset UI
-            clearSignals();
-            updateStatus('active', 'Resolving domain...');
-
-            // Simulate discovery phases
+            
+            // Clear & Animate
+            document.querySelectorAll('.signal-list').forEach(el => el.innerHTML = '');
             await delay(800);
-            updateStatus('active', 'Extracting signals...');
-
-            // Animate signal appearance
-            const categories = ['network', 'technical', 'footprint', 'behavioural', 'public', 'structured', 'inquiry'];
-
-            for (const category of categories) {
-                const signals = company.signals[category];
-                const container = document.getElementById(`signals-${category}`);
-
-                for (let i = 0; i < signals.length; i++) {
-                    await delay(80 + Math.random() * 120);
-                    const signal = signals[i];
-                    const item = createSignalItem(signal);
+            
+            const cats = ['network', 'technical', 'footprint', 'behavioural', 'public', 'structured', 'inquiry'];
+            for (const cat of cats) {
+                const container = document.getElementById(`signals-${cat}`);
+                company.signals[cat].forEach(sig => {
+                    const item = document.createElement('div');
+                    item.className = 'signal-item visible';
+                    item.innerHTML = `<span class="signal-name">${sig.name}</span><span class="signal-value">${sig.value || 'N/A'}</span>`;
                     container.appendChild(item);
-                    setTimeout(() => item.classList.add('visible'), 10);
-                }
+                });
+                await delay(100);
             }
 
-            await delay(500);
-            updateStatus('active', 'Calculating scores...');
+            document.getElementById('compositeScore').textContent = company.compositeScore;
+            document.getElementById('riskTier').textContent = `Tier ${company.riskTier}`;
+            document.getElementById('riskTier').className = `result-card-value tier-${company.riskTier}`;
+            document.getElementById('confidenceValue').textContent = Math.round(company.confidence*100) + "%";
+            document.getElementById('confidenceFill').style.width = (company.confidence*100) + "%";
+            document.getElementById('keyFindings').innerHTML = company.findings.map(f => `<div class="finding-item visible"><span class="finding-icon ${f.type}">•</span><span>${f.text}</span></div>`).join('');
 
-            // Update results with animation
-            await delay(600);
-            updateResults(company);
-
-            // Show findings
-            await delay(400);
-            showFindings(company.findings);
-
-            updateStatus('complete', `Complete: ${Object.values(company.signals).flat().length} signals extracted`);
-
-            // Store the discovered company and update Three Layer Assessment
             lastDiscoveredCompany = company;
             updateThreeLayerAssessment(company);
-
             discoveryRunning = false;
             document.getElementById('discoverBtn').disabled = false;
             document.getElementById('discoverBtn').textContent = 'Discover Signals';
         }
 
-        function clearSignals() {
-            const categories = ['network', 'technical', 'footprint', 'behavioural', 'public', 'structured', 'inquiry'];
-            categories.forEach(cat => {
-                document.getElementById(`signals-${cat}`).innerHTML = '';
-            });
-            document.getElementById('keyFindings').innerHTML = '<p style="font-size: 12px; color: #999;">Run discovery to see findings</p>';
-        }
+        function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-        function createSignalItem(signal) {
-            const item = document.createElement('div');
-            item.className = 'signal-item';
-
-            const valueDisplay = signal.value !== null ? signal.value : 'N/A';
-            const levelClass = signal.level || 'medium';
-
-            item.innerHTML = `
-                <span class="signal-name">${signal.name}</span>
-                <span class="signal-value ${levelClass}">${valueDisplay}</span>
-            `;
-            return item;
-        }
-
-        function updateStatus(type, text) {
-            const dot = document.getElementById('statusDot');
-            const textEl = document.getElementById('statusText');
-
-            dot.className = 'status-dot';
-            if (type === 'active') dot.classList.add('active');
-            if (type === 'complete') dot.classList.add('complete');
-
-            textEl.textContent = text;
-        }
-
-        function updateResults(company) {
-            const scoreEl = document.getElementById('compositeScore');
-            const tierEl = document.getElementById('riskTier');
-            const confEl = document.getElementById('confidenceValue');
-            const confFill = document.getElementById('confidenceFill');
-
-            // Animate score
-            animateNumber(scoreEl, 0, company.compositeScore, 1000);
-
-            // Update tier
-            tierEl.textContent = `Tier ${company.riskTier}`;
-            tierEl.className = `result-card-value tier-${company.riskTier}`;
-            document.getElementById('riskTierLabel').textContent = getTierLabel(company.riskTier);
-
-            // Update confidence
-            const confPercent = Math.round(company.confidence * 100);
-            confEl.textContent = `${confPercent}%`;
-            confFill.style.width = `${confPercent}%`;
-
-            document.getElementById('compositeScoreLabel').textContent = `${company.industry}`;
-        }
-
-        function getTierLabel(tier) {
-            const labels = {
-                1: 'Excellent Risk',
-                2: 'Good Risk',
-                3: 'Moderate Risk',
-                4: 'Elevated Risk',
-                5: 'High Risk'
-            };
-            return labels[tier] || 'Unknown';
-        }
-
-        function showFindings(findings) {
-            const container = document.getElementById('keyFindings');
-            container.innerHTML = '';
-
-            findings.forEach((finding, index) => {
-                const item = document.createElement('div');
-                item.className = 'finding-item';
-
-                const iconChar = finding.type === 'positive' ? '✓' : (finding.type === 'warning' ? '!' : '✕');
-
-                item.innerHTML = `
-                    <span class="finding-icon ${finding.type}">${iconChar}</span>
-                    <span>${finding.text}</span>
-                `;
-
-                container.appendChild(item);
-
-                setTimeout(() => item.classList.add('visible'), index * 200);
-            });
-        }
-
-        function animateNumber(element, start, end, duration) {
-            const range = end - start;
-            const startTime = performance.now();
-
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3); // Ease out cubic
-
-                const current = Math.round(start + range * eased);
-                element.textContent = current;
-
-                if (progress < 1) {
-                    requestAnimationFrame(update);
-                }
-            }
-
-            requestAnimationFrame(update);
-        }
-
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        // ====================================================================
-        // THREE LAYER ASSESSMENT FUNCTIONS
-        // ====================================================================
-
+        // Three Layer
         function updateThreeLayerAssessment(company) {
             if (!company) return;
-
-            // Show the content and hide empty state
             document.getElementById('threeLayerEmpty').style.display = 'none';
             document.getElementById('threeLayerContent').style.display = 'flex';
             document.getElementById('threeLayerContext').style.display = 'block';
-
-            // Update company context banner
             document.getElementById('threeLayerCompanyName').textContent = company.name;
             document.getElementById('threeLayerIndustry').textContent = `(${company.industry})`;
             document.getElementById('threeLayerConfidence').textContent = `${Math.round(company.confidence * 100)}%`;
-            document.getElementById('threeLayerSubtitle').textContent = `Assessing ${company.name.split(',')[0]}`;
-
-            // Calculate layer values from signals
-            const techAvg = average(company.signals.technical.filter(s => s.value).map(s => s.value));
-            const networkAvg = average(company.signals.network.filter(s => s.value).map(s => s.value));
-            const behavAvg = average(company.signals.behavioural.filter(s => s.value).map(s => s.value));
-            const publicAvg = average(company.signals.public.filter(s => s.value).map(s => s.value));
-
-            // Risk Layer
+            
             document.getElementById('riskLayerScore').textContent = company.compositeScore;
-            const tierBadge = document.getElementById('riskLayerTier');
-            const tierColors = {
-                1: { bg: '#D1FAE5', text: '#065F46', label: 'Excellent Risk' },
-                2: { bg: '#D1FAE5', text: '#065F46', label: 'Good Risk' },
-                3: { bg: '#FEF3C7', text: '#92400E', label: 'Moderate Risk' },
-                4: { bg: '#FEE2E2', text: '#991B1B', label: 'Elevated Risk' },
-                5: { bg: '#FEE2E2', text: '#991B1B', label: 'High Risk' }
-            };
-            const tierStyle = tierColors[company.riskTier] || tierColors[3];
-            tierBadge.style.background = tierStyle.bg;
-            tierBadge.style.color = tierStyle.text;
-            tierBadge.textContent = `Tier ${company.riskTier} — ${tierStyle.label}`;
-
-            // Populate risk layer signals
-            const riskSignals = document.getElementById('riskLayerSignals');
-            riskSignals.innerHTML = '';
-            const riskContributors = [
-                { name: 'Technical Infrastructure', value: Math.round(techAvg), category: 'technical' },
-                { name: 'Network Authority', value: Math.round(networkAvg), category: 'network' },
-                { name: 'Behavioural Stability', value: Math.round(behavAvg), category: 'behavioural' },
-                { name: 'Public Record', value: Math.round(publicAvg), category: 'public' }
-            ];
-            riskContributors.forEach(sig => {
-                riskSignals.appendChild(createLayerSignalItem(sig, company));
-            });
-
-            // Exposure Layer - calculate based on company characteristics
-            const exposureRanges = {
-                1: { range: '$50M+', band: 'High Exposure Band', bg: '#FEE2E2', text: '#991B1B' },
-                2: { range: '$10M–$50M', band: 'Medium Exposure Band', bg: '#FEF3C7', text: '#92400E' },
-                3: { range: '$5M–$10M', band: 'Moderate Exposure Band', bg: '#FEF3C7', text: '#92400E' },
-                4: { range: '$1M–$5M', band: 'Low-Medium Exposure', bg: '#D1FAE5', text: '#065F46' },
-                5: { range: '<$1M', band: 'Low Exposure Band', bg: '#D1FAE5', text: '#065F46' }
-            };
-            const exposureLevel = company.riskTier <= 2 ? 2 : (company.riskTier === 3 ? 3 : 4);
-            const exposureStyle = exposureRanges[exposureLevel];
-            document.getElementById('exposureLayerRange').textContent = exposureStyle.range;
-            const exposureBadge = document.getElementById('exposureLayerBand');
-            exposureBadge.style.background = exposureStyle.bg;
-            exposureBadge.style.color = exposureStyle.text;
-            exposureBadge.textContent = exposureStyle.band;
-
-            // Populate exposure signals
-            const exposureSignals = document.getElementById('exposureLayerSignals');
-            exposureSignals.innerHTML = '';
-            const footprintSignals = company.signals.footprint.filter(s => s.value);
-            [
-                { name: 'Digital Footprint Complexity', value: footprintSignals.length > 3 ? 'High' : 'Moderate' },
-                { name: 'Multi-Cloud Architecture', value: techAvg > 80 ? 'Detected' : 'Limited' },
-                { name: 'Regulatory Jurisdictions', value: company.industry.includes('Fintech') ? '3+' : (company.industry.includes('Energy') ? '2' : '1-2') },
-                { name: 'Confidence', value: `${Math.round(company.confidence * 100)}%`, isGood: company.confidence > 0.8 }
-            ].forEach(sig => {
-                const item = document.createElement('div');
-                item.className = 'layer-signal-item';
-                item.innerHTML = `
-                    <span class="layer-signal-name">${sig.name}</span>
-                    <span class="layer-signal-value" style="color: ${sig.isGood !== false && company.confidence > 0.75 ? '#10B981' : '#7A766F'};">${sig.value}</span>
-                `;
-                exposureSignals.appendChild(item);
-            });
-
-            // Loss Layer - calculate propensity from signals
-            const lossPropensity = Math.round(100 - (company.compositeScore / 10));
-            document.getElementById('lossLayerScore').textContent = lossPropensity;
-            const lossBadge = document.getElementById('lossLayerPropensity');
-            if (lossPropensity <= 30) {
-                lossBadge.style.background = '#D1FAE5';
-                lossBadge.style.color = '#065F46';
-                lossBadge.textContent = 'Low Loss Propensity';
-            } else if (lossPropensity <= 50) {
-                lossBadge.style.background = '#FEF3C7';
-                lossBadge.style.color = '#92400E';
-                lossBadge.textContent = 'Moderate Loss Propensity';
-            } else {
-                lossBadge.style.background = '#FEE2E2';
-                lossBadge.style.color = '#991B1B';
-                lossBadge.textContent = 'Elevated Loss Propensity';
-            }
-
-            // Populate loss layer signals
-            const lossSignals = document.getElementById('lossLayerSignals');
-            lossSignals.innerHTML = '';
-            const securityTrend = techAvg > 85 ? 'Stable' : (techAvg > 70 ? 'Moderate' : 'Declining');
-            const govStability = behavAvg > 80 ? 'High' : (behavAvg > 60 ? 'Moderate' : 'Low');
-            [
-                { name: 'Security Posture Trend', value: securityTrend, isGood: securityTrend === 'Stable' },
-                { name: 'Governance Stability', value: govStability, isGood: govStability === 'High' },
-                { name: 'Severity Propensity', value: Math.round(lossPropensity * 1.2), isGood: lossPropensity < 40 },
-                { name: 'Cohort', value: getCohortName(company.industry) }
-            ].forEach(sig => {
-                const item = document.createElement('div');
-                item.className = 'layer-signal-item';
-                const color = sig.isGood === true ? '#10B981' : (sig.isGood === false ? '#F59E0B' : '#7A766F');
-                item.innerHTML = `
-                    <span class="layer-signal-name">${sig.name}</span>
-                    <span class="layer-signal-value" style="color: ${color};">${sig.value}</span>
-                `;
-                lossSignals.appendChild(item);
-            });
+            document.getElementById('riskLayerTier').textContent = `Tier ${company.riskTier}`;
+            document.getElementById('riskLayerTier').style.background = company.riskTier <= 2 ? '#D1FAE5' : '#FEF3C7';
+            
+            const expBand = company.riskTier <= 2 ? "High Exposure ($50M+)" : "Medium Exposure";
+            document.getElementById('exposureLayerRange').textContent = expBand;
+            
+            const lossProp = Math.round(100 - (company.compositeScore/10));
+            document.getElementById('lossLayerScore').textContent = lossProp;
         }
 
-        function createLayerSignalItem(sig, company) {
-            const item = document.createElement('div');
-            item.className = 'layer-signal-item';
-            item.style.cursor = 'pointer';
-            item.style.transition = 'background 0.2s';
-            item.onmouseover = () => item.style.background = '#F0FDFA';
-            item.onmouseout = () => item.style.background = 'transparent';
-            item.onclick = () => showSignalDetail(sig, company);
-
-            const color = sig.value >= 80 ? '#10B981' : (sig.value >= 60 ? '#F59E0B' : '#EF4444');
-            item.innerHTML = `
-                <span class="layer-signal-name">${sig.name}</span>
-                <span class="layer-signal-value" style="color: ${color};">${sig.value}</span>
-            `;
-            return item;
-        }
-
-        function showSignalDetail(sig, company) {
-            const panel = document.getElementById('signalDetailPanel');
-            const title = document.getElementById('signalDetailTitle');
-            const content = document.getElementById('signalDetailContent');
-
-            panel.style.display = 'block';
-            title.textContent = `${sig.name} — ${company.name.split(',')[0]}`;
-
-            const categorySignals = company.signals[sig.category] || [];
-            let html = `
-                <p style="margin-bottom: 12px;"><strong>Category:</strong> ${sig.category.charAt(0).toUpperCase() + sig.category.slice(1)}</p>
-                <p style="margin-bottom: 12px;"><strong>Aggregate Score:</strong> <span style="color: ${sig.value >= 80 ? '#10B981' : '#F59E0B'}; font-weight: 600;">${sig.value}/100</span></p>
-                <p style="margin-bottom: 12px;"><strong>Contributing Signals:</strong></p>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-            `;
-            categorySignals.forEach(s => {
-                if (s.value !== null) {
-                    const sigColor = s.value >= 80 ? '#10B981' : (s.value >= 60 ? '#F59E0B' : '#EF4444');
-                    html += `<div style="padding: 8px; background: white; border-radius: 4px; display: flex; justify-content: space-between;">
-                        <span>${s.name}</span>
-                        <span style="font-weight: 600; color: ${sigColor};">${s.value}</span>
-                    </div>`;
-                }
-            });
-            html += '</div>';
-            content.innerHTML = html;
-        }
-
-        function hideSignalDetail() {
-            document.getElementById('signalDetailPanel').style.display = 'none';
-        }
-
-        function average(arr) {
-            if (!arr || arr.length === 0) return 0;
-            return arr.reduce((a, b) => a + b, 0) / arr.length;
-        }
-
-        function getCohortName(industry) {
-            if (industry.includes('Tech') || industry.includes('SaaS')) return 'Tech Growth';
-            if (industry.includes('Fintech')) return 'Financial Services';
-            if (industry.includes('Insurance')) return 'Insurance Peer';
-            if (industry.includes('Cyber')) return 'Security Vendor';
-            if (industry.includes('Aerospace')) return 'Industrial Complex';
-            if (industry.includes('Energy')) return 'Energy/Resources';
-            if (industry.includes('Manufacturing')) return 'Heavy Industry';
-            if (industry.includes('commerce')) return 'Digital Commerce';
-            return 'General Commercial';
-        }
-
-        // ====================================================================
-        // UNDERWRITING ENGINE FUNCTIONS
-        // ====================================================================
-        let uwTimerInterval = null;
-        let uwStartTime = null;
-
+        // Underwriting Engine
         async function runUnderwritingEngine() {
+            if(!lastDiscoveredCompany) { alert("Please run discovery first."); return; }
             const btn = document.getElementById('runUWBtn');
-            btn.disabled = true;
-            btn.textContent = 'Processing...';
-
-            // Get selected company from dropdown or find by name
-            const selectKey = document.getElementById('uwCompanySelect').value;
-            const companyName = document.getElementById('uwCompanyName').value.trim();
-
-            let company = null;
-            if (selectKey && companyData[selectKey]) {
-                company = companyData[selectKey];
-                selectedUWCompanyKey = selectKey;
-            } else if (companyName) {
-                // Try to find by name
-                for (const [key, c] of Object.entries(companyData)) {
-                    if (c.name.toLowerCase().includes(companyName.toLowerCase()) ||
-                        companyName.toLowerCase().includes(key)) {
-                        company = c;
-                        selectedUWCompanyKey = key;
-                        break;
-                    }
-                }
+            btn.disabled = true; btn.textContent = "Processing...";
+            
+            const phases = ['A','B','C','D','E','F'];
+            for(let p of phases) {
+                document.querySelector(`.workflow-phase[data-phase="${p}"]`).classList.add('active');
+                await delay(600);
+                document.querySelector(`.workflow-phase[data-phase="${p}"]`).classList.remove('active');
+                document.querySelector(`.workflow-phase[data-phase="${p}"]`).classList.add('complete');
             }
-
-            // If no company found, use a default simulation
-            if (!company) {
-                company = {
-                    name: companyName || 'Unknown Entity',
-                    domain: document.getElementById('uwDomain').value || 'unknown.com',
-                    compositeScore: Math.floor(Math.random() * 300) + 500,
-                    riskTier: Math.floor(Math.random() * 3) + 2,
-                    confidence: 0.65 + Math.random() * 0.2,
-                    signals: { technical: [], network: [], behavioural: [], public: [] }
-                };
-                selectedUWCompanyKey = null;
-            }
-
-            const limit = parseInt(document.getElementById('uwLimit').value);
-            const signalCount = Object.values(company.signals || {}).flat().filter(s => s.value).length || 35;
-
-            // Reset UI
-            resetUWEngine();
-
-            // Start timer
-            uwStartTime = performance.now();
-            uwTimerInterval = setInterval(updateUWTimer, 50);
-
-            // Add to audit log
-            addAuditEntry('init', 'DSI Underwriting Engine v1.0 initialized');
-            addAuditEntry('', `Input: ${company.name}`);
-
-            // Phase A: Discovery
-            await runPhase('A', [0], [
-                { step: 0, duration: 1200, log: 'Resolving entity from domain hint...' }
-            ]);
-            addAuditEntry('complete', `Entity resolved: ${company.name}`);
-
-            // Phase B: Instantiation
-            await runPhase('B', [1], [
-                { step: 1, duration: 800, log: 'Loading cyber model configuration v2.4.1' }
-            ]);
-            addAuditEntry('complete', 'Model instantiated, version hash: 0x7f3a2b');
-
-            // Phase C: Signals
-            await runPhase('C', [2, 3, 4], [
-                { step: 2, duration: 2500, log: 'Extracting signals across 7 categories...' },
-                { step: 3, duration: 1000, log: `Normalising ${signalCount} signals to 0-100 scale` },
-                { step: 4, duration: 600, log: 'Calculating confidence scores' }
-            ]);
-            addAuditEntry('complete', `${signalCount} signals extracted, avg confidence: ${company.confidence.toFixed(2)}`);
-
-            // Calculate values based on company data
-            const lossPropensity = Math.round(100 - (company.compositeScore / 10));
-            const exposureBand = company.compositeScore > 750 ? 'Medium' : (company.compositeScore > 600 ? 'Moderate' : 'High');
-            const tierLabel = getTierLabel(company.riskTier);
-
-            // Phase D: Three Layer Assessment
-            await runPhase('D', [5, 6, 7], [
-                { step: 5, duration: 1500, log: 'Computing Risk Layer composite score' },
-                { step: 6, duration: 1200, log: 'Inferring Exposure Shadow Layer' },
-                { step: 7, duration: 1000, log: 'Calculating Loss Correlation Layer' }
-            ]);
-            addAuditEntry('phase', `Risk Layer: ${company.compositeScore}/1000 → Tier ${company.riskTier}`);
-            addAuditEntry('phase', `Exposure: ${exposureBand}`);
-            addAuditEntry('phase', `Loss Propensity: ${lossPropensity}/100`);
-
-            // Calculate premium based on tier and limit
-            const baseRates = { 1: 0.003, 2: 0.0045, 3: 0.007, 4: 0.012, 5: 0.02 };
-            const baseRate = baseRates[company.riskTier] || 0.007;
-            const premium = Math.round(limit * baseRate);
-            const formattedPremium = '$' + premium.toLocaleString();
-
-            // Phase E: Pricing
-            await runPhase('E', [8, 9, 10, 11, 12], [
-                { step: 8, duration: 400, log: `Resolving final tier: Tier ${company.riskTier}` },
-                { step: 9, duration: 500, log: `Applying base rate: ${(baseRate * 100).toFixed(2)}% of limit` },
-                { step: 10, duration: 400, log: `Evaluating modifiers (${company.riskTier <= 2 ? 'none triggered' : 'risk loading applied'})` },
-                { step: 11, duration: 300, log: `Scaling for $${(limit / 1000000).toFixed(0)}M limit` },
-                { step: 12, duration: 400, log: 'Calculating final premium' }
-            ]);
-            addAuditEntry('complete', `Premium calculated: ${formattedPremium}`);
-
-            // Determine decision based on tier
-            let decision = 'AUTO-APPROVE';
-            let decisionClass = 'approved';
-            if (company.riskTier >= 4) {
-                decision = 'REFER';
-                decisionClass = 'referred';
-            } else if (company.riskTier === 5) {
-                decision = 'DECLINE';
-                decisionClass = 'declined';
-            }
-
-            // Phase F: Decision
-            await runPhase('F', [13], [
-                { step: 13, duration: 800, log: 'Rendering final decision' }
-            ]);
-
-            // Stop timer
-            clearInterval(uwTimerInterval);
-            const finalTime = ((performance.now() - uwStartTime) / 1000).toFixed(2);
-            document.getElementById('uwTimer').textContent = `${finalTime}s`;
-
-            // Update output panel with company data
-            updateUWOutput(company, premium, lossPropensity, exposureBand, decision, decisionClass);
-
-            addAuditEntry('decision', `DECISION: ${decision} | ${finalTime}s`);
-            addAuditEntry('', 'Full audit trail persisted to immutable store');
-
-            btn.disabled = false;
-            btn.textContent = 'Run Underwriting Engine';
+            
+            document.getElementById('uwDecisionCard').classList.add(lastDiscoveredCompany.riskTier <= 2 ? 'approved' : 'referred');
+            document.querySelector('.decision-text').textContent = lastDiscoveredCompany.riskTier <= 2 ? "AUTO-APPROVE" : "REFER";
+            document.getElementById('outEntity').textContent = lastDiscoveredCompany.name;
+            document.getElementById('outScore').textContent = lastDiscoveredCompany.compositeScore;
+            
+            btn.disabled = false; btn.textContent = "Run Underwriting Engine";
         }
 
-        async function runPhase(phaseLetter, steps, stepConfigs) {
-            const phaseEl = document.querySelector(`.workflow-phase[data-phase="${phaseLetter}"]`);
-            const statusEl = document.getElementById(`phase${phaseLetter}-status`);
-
-            phaseEl.classList.add('active');
-            statusEl.textContent = 'Running';
-
-            for (const config of stepConfigs) {
-                const stepEl = document.querySelector(`.workflow-step[data-step="${config.step}"]`);
-                stepEl.classList.add('active');
-                addAuditEntry('', config.log);
-                await delay(config.duration);
-                stepEl.classList.remove('active');
-                stepEl.classList.add('complete');
-            }
-
-            phaseEl.classList.remove('active');
-            phaseEl.classList.add('complete');
-            statusEl.textContent = 'Complete';
-        }
-
-        function resetUWEngine() {
-            // Reset phases
-            document.querySelectorAll('.workflow-phase').forEach(el => {
-                el.classList.remove('active', 'complete');
+        // World Model
+        function populateWMCompanySelect() {
+            const select = document.getElementById('wmCompanySelect');
+            select.innerHTML = '<option value="">-- Select Company --</option>';
+            Object.keys(companyData).forEach(k => {
+                const opt = document.createElement('option');
+                opt.value = k;
+                opt.textContent = companyData[k].name;
+                select.appendChild(opt);
             });
-            document.querySelectorAll('.workflow-step').forEach(el => {
-                el.classList.remove('active', 'complete');
-            });
-            document.querySelectorAll('[id$="-status"]').forEach(el => {
-                if (el.id.startsWith('phase')) el.textContent = 'Pending';
-            });
-
-            // Reset timer
-            document.getElementById('uwTimer').textContent = '0.00s';
-
-            // Reset output
-            document.getElementById('uwDecisionCard').className = 'uw-decision-card';
-            document.getElementById('decisionBadge').className = 'decision-badge';
-            document.querySelector('.decision-text').textContent = 'PROCESSING';
-            document.getElementById('outEntity').textContent = '--';
-            document.getElementById('outScore').textContent = '--';
-            document.getElementById('outTier').textContent = '--';
-            document.getElementById('outConfidence').textContent = '--';
-            document.getElementById('outExposure').textContent = '--';
-            document.getElementById('outLoss').textContent = '--';
-            document.getElementById('outPremium').textContent = '--';
-
-            // Clear audit log
-            document.getElementById('uwAuditLog').innerHTML = '';
+        }
+        function updateWorldModelCompany() {
+            const key = document.getElementById('wmCompanySelect').value;
+            if(key) lastDiscoveredCompany = companyData[key];
+        }
+        function showWorldModelTab(tab) {
+            document.querySelectorAll('.wm-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.wm-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('wm-' + tab).style.display = 'block';
+            document.getElementById('tab-' + tab).classList.add('active');
         }
 
-        function updateUWTimer() {
-            const elapsed = (performance.now() - uwStartTime) / 1000;
-            document.getElementById('uwTimer').textContent = `${elapsed.toFixed(2)}s`;
+        // 19.2.1 Augments
+        // Time Travel Glitch
+        function restoreWorldState() {
+            if(!lastDiscoveredCompany) { alert("Select a company first"); return; }
+            const panel = document.querySelector('.time-travel-panel');
+            const overlay = document.getElementById('deltaOverlay');
+            
+            panel.style.filter = 'invert(1) hue-rotate(180deg)';
+            setTimeout(() => {
+                panel.style.filter = 'none';
+                overlay.style.display = 'grid';
+                document.getElementById('deltaKnewThen').innerHTML = `
+                    <div><strong>Score:</strong> ${lastDiscoveredCompany.compositeScore - 45}</div>
+                    <div style="font-size:11px; margin-top:5px; background:#F3F4F6; padding:5px">⚠️ Log4j Unknown</div>`;
+                document.getElementById('deltaKnowNow').innerHTML = `
+                    <div><strong>Score:</strong> ${lastDiscoveredCompany.compositeScore}</div>
+                    <div style="font-size:11px; margin-top:5px; background:#D1FAE5; color:#065F46; padding:5px">✓ Log4j Patched</div>`;
+            }, 150);
         }
 
-        function updateUWOutput(company, premium, lossPropensity, exposureBand, decision, decisionClass) {
-            const card = document.getElementById('uwDecisionCard');
-            const badge = document.getElementById('decisionBadge');
-
-            card.classList.add(decisionClass);
-            badge.classList.add(decisionClass);
-            document.querySelector('.decision-text').textContent = decision;
-
-            const tierLabel = getTierLabel(company.riskTier);
-            const lossLabel = lossPropensity <= 30 ? 'Low' : (lossPropensity <= 50 ? 'Moderate' : 'Elevated');
-
-            document.getElementById('outEntity').textContent = company.name;
-            document.getElementById('outScore').textContent = `${company.compositeScore} / 1000`;
-            document.getElementById('outTier').textContent = `Tier ${company.riskTier} (${tierLabel})`;
-            document.getElementById('outConfidence').textContent = `${Math.round(company.confidence * 100)}%`;
-            document.getElementById('outExposure').textContent = exposureBand;
-            document.getElementById('outLoss').textContent = `${lossLabel} (${lossPropensity})`;
-            document.getElementById('outPremium').textContent = '$' + premium.toLocaleString();
+        function updateTimeline(val) {
+            document.getElementById('timelineDate').textContent = val == 24 ? "Today" : `Month -${24-val}`;
         }
 
-        function getTierLabel(tier) {
-            const labels = { 1: 'Excellent', 2: 'Good', 3: 'Moderate', 4: 'Elevated', 5: 'High Risk' };
-            return labels[tier] || 'Unknown';
+        // Dynamic Counterfactual
+        function updateCounterfactual() {
+             document.querySelectorAll('.counterfactual-toggle').forEach(t => t.classList.toggle('active', t.querySelector('input').checked));
         }
 
-        function addAuditEntry(type, text) {
-            const log = document.getElementById('uwAuditLog');
-            const entry = document.createElement('div');
-            entry.className = `audit-entry ${type}`;
-            const timestamp = new Date().toISOString().substr(11, 12);
-            entry.textContent = `[${timestamp}] ${text}`;
-            log.appendChild(entry);
+        async function runCounterfactualSimulation() {
+            const checkboxes = document.querySelectorAll('.counterfactual-toggle input[type="checkbox"]:checked');
+            const impactFactor = checkboxes.length * 35;
+            const curveY = 160 - impactFactor;
+            const chart = document.getElementById('counterfactualChart');
+            
+            chart.innerHTML = `
+                <div style="width: 100%; height: 100%; padding: 20px;">
+                    <svg width="100%" height="250" viewBox="0 0 400 200">
+                        <line x1="50" y1="180" x2="380" y2="180" stroke="#E5E5E5" stroke-width="1"/>
+                        <line x1="50" y1="20" x2="50" y2="180" stroke="#E5E5E5" stroke-width="1"/>
+                        <path d="M 60 160 Q 200 160 370 160" fill="none" stroke="#EF4444" stroke-width="2" opacity="0.3"/>
+                        <path d="M 60 160 Q 200 ${curveY} 370 45" fill="none" stroke="#10B981" stroke-width="3" stroke-dasharray="8 4">
+                            <animate attributeName="d" from="M 60 160 Q 200 160 370 160" to="M 60 160 Q 200 ${curveY} 370 45" dur="1s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+                        </path>
+                        <text x="380" y="45" font-size="10" fill="#10B981" font-weight="600">Simulated Future</text>
+                    </svg>
+                </div>`;
+            
+            document.getElementById('counterfactualImpact').style.display = 'block';
+            document.getElementById('cfAvoidedLoss').textContent = '$' + (checkboxes.length * 850000).toLocaleString();
+            document.getElementById('cfScoreImprove').textContent = '+' + impactFactor;
+        }
+
+        // Agency
+        function updatePriceElasticity(value) {
+            const win = Math.max(10, Math.min(95, 68 - (value * 1.5)));
+            const el = document.getElementById('winProbability');
+            el.textContent = Math.round(win) + "%";
+            el.style.color = win > 60 ? "#065F46" : (win > 40 ? "#92400E" : "#991B1B");
+            document.getElementById('marginValue').textContent = value == 0 ? "Base Rate" : (value > 0 ? `+${value}%` : `${value}%`);
+        }
+        function simulateDecline() {
+            document.getElementById('brokerSentiment').style.display = 'flex';
+            document.getElementById('declineImpact').style.display = 'block';
+        }
+
+        // Teacher Mode Modal
+        function teachSignal(name, val) {
+            currentTeachingSignal = name;
+            document.getElementById('modalSignalName').textContent = name;
+            document.getElementById('modalSignalRange').value = val;
+            document.getElementById('modalSignalValue').textContent = val;
+            document.getElementById('teacherModal').classList.add('active');
+            document.getElementById('modalSignalRange').oninput = (e) => document.getElementById('modalSignalValue').textContent = e.target.value;
+        }
+        function closeTeacherModal() {
+            document.getElementById('teacherModal').classList.remove('active');
+        }
+        function confirmTeacherUpdate() {
+            const val = document.getElementById('modalSignalRange').value;
+            const log = document.getElementById('learningLog');
+            const time = new Date().toISOString().substr(11,8);
+            log.innerHTML += `<div style="margin-bottom:8px; border-left:2px solid #8B5CF6; padding-left:8px"><div style="color:#8B5CF6">[${time}] Correction Applied</div><div>${currentTeachingSignal} -> ${val}</div><div style="color:#6D28D9; font-style:italic">⟳ Propagating to 14 dependent entities...</div></div>`;
             log.scrollTop = log.scrollHeight;
+            closeTeacherModal();
         }
 
-        // ====================================================================
-        // WHAT-IF ENGINE FUNCTIONS
-        // ====================================================================
-        let selectedScenario = 'cve';
-
+        // What-If Scenario Selection
         const scenarioData = {
-            cve: {
-                name: 'Critical CVE Disclosure',
-                entities: 47,
-                exposure: '$142M',
-                scoreImpact: '-85',
-                migrations: '12 downgrades',
-                capital: '$4.2M',
-                chain: ['Technical Infrastructure', 'Patch Currency', 'Security Posture', 'Risk Score', 'Tier Migration'],
-                explanation: 'When a zero-day is disclosed, DSI traces <strong>dependency relationships</strong> across the Organisational Graph. Impact propagates through: <em>Technical Infrastructure → Patch Currency → Security Posture → Risk Score</em>',
-                actions: ['Urgent patch assessment required', 'Review affected portfolio positions', 'Consider warranty conditions', 'Alert claims team']
-            },
-            ciso: {
-                name: 'CISO Departure',
-                entities: 1,
-                exposure: '$28M',
-                scoreImpact: '-120',
-                migrations: '1 downgrade',
-                capital: '$1.8M',
-                chain: ['Leadership Vacancy', 'Governance Signals', 'Behavioural Stability', 'Loss Propensity'],
-                explanation: 'CISO departure detected via LinkedIn signals triggers <strong>governance degradation</strong>. The vacancy creates uncertainty in security leadership and increases loss propensity.',
-                actions: ['Monitor interim leadership announcements', 'Review policy conditions', 'Flag for renewal assessment', 'Update risk watchlist']
-            },
-            vendor: {
-                name: 'Vendor Breach',
-                entities: 23,
-                exposure: '$67M',
-                scoreImpact: '-65',
-                migrations: '8 downgrades',
-                capital: '$3.1M',
-                chain: ['Supply Chain Event', 'Third-Party Risk', 'Data Exposure', 'Aggregate Loss'],
-                explanation: 'Vendor breach propagates through <strong>supply chain dependencies</strong>. DSI traces all portfolio companies with relationships to the breached vendor and recalculates exposure.',
-                actions: ['Identify all affected insureds', 'Prepare for notification support', 'Review aggregation limits', 'Activate claims protocols']
-            },
-            regulatory: {
-                name: 'Regulatory Action',
-                entities: 15,
-                exposure: '$89M',
-                scoreImpact: '-95',
-                migrations: '6 downgrades',
-                capital: '$2.4M',
-                chain: ['Enforcement Notice', 'Compliance Risk', 'Public Record', 'Reputational Impact'],
-                explanation: 'Regulatory action detected via public filings triggers <strong>compliance cascade</strong>. Affected entities face increased scrutiny and potential operational constraints.',
-                actions: ['Assess coverage implications', 'Review regulatory exclusions', 'Monitor public disclosure', 'Prepare defence cost reserves']
-            },
-            acquisition: {
-                name: 'M&A Announced',
-                entities: 2,
-                exposure: '$45M',
-                scoreImpact: '-40',
-                migrations: '2 watch',
-                capital: '$0.8M',
-                chain: ['M&A Signal', 'Corporate Structure', 'Ownership Change', 'Policy Review'],
-                explanation: 'Acquisition announcement triggers <strong>corporate structure analysis</strong>. DSI reassesses combined entity risk profile and coverage adequacy.',
-                actions: ['Review change of control clauses', 'Assess combined risk profile', 'Identify integration risks', 'Schedule renewal discussion']
-            }
+            cve: { name: 'Critical CVE', capital: '$4.2M', entities: 47, exposure: '$142M', score: '-85' },
+            ciso: { name: 'CISO Departure', capital: '$1.8M', entities: 1, exposure: '$28M', score: '-120' }
+        };
+        function selectScenario(id) {
+             document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+             event.currentTarget.classList.add('active');
+        }
+        async function runScenario() {
+             const viz = document.getElementById('causalChainViz');
+             viz.innerHTML = `<p style="text-align:center; color:#666">Simulating...</p>`;
+             await delay(1000);
+             viz.innerHTML = `<div style="text-align:center"><div style="color:#10B981; font-weight:700">Simulation Complete</div><div style="font-size:12px">Impact propagated to 47 entities</div></div>`;
+             document.getElementById('impactCapital').textContent = "$4.2M";
+             document.getElementById('impactEntities').textContent = "47";
+             document.getElementById('impactExposure').textContent = "$142M";
+        }
+
+        // Init
+        window.onload = () => {
+            populateQuickSelect();
+            populateWMCompanySelect();
+            populateUWCompanySelect();
+            NodeVisual.init();
         };
 
-        function selectScenario(scenario) {
-            selectedScenario = scenario;
-            document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.closest('.scenario-btn').classList.add('active');
-
-            // Update the explanation panel
-            const data = scenarioData[scenario];
-            const explanation = document.getElementById('scenarioExplanation');
-            const colors = { cve: '#EF4444', ciso: '#F59E0B', vendor: '#EF4444', regulatory: '#8B5CF6', acquisition: '#3B82F6' };
-            explanation.style.borderLeftColor = colors[scenario];
-            explanation.innerHTML = `
-                <p style="font-size: 12px; color: #7A766F; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${data.name}</p>
-                <p style="font-size: 13px; color: #333; line-height: 1.6;">${data.explanation}</p>
-            `;
-        }
-
-        async function runScenario() {
-            const data = scenarioData[selectedScenario];
-            const viz = document.getElementById('causalChainViz');
-
-            // Update What-If context if company is discovered
-            if (lastDiscoveredCompany) {
-                document.getElementById('whatifCompanyName').textContent = lastDiscoveredCompany.name;
-                document.getElementById('whatifBaseScore').style.display = 'block';
-                document.getElementById('whatifCurrentScore').textContent = lastDiscoveredCompany.compositeScore;
-            }
-
-            // Show propagation animation with causal chain
-            viz.innerHTML = `
-                <div style="text-align: center;">
-                    <p style="font-size: 11px; color: #7A766F; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">Simulating Causal Propagation</p>
-                    <div id="chainNodes" style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;"></div>
-                    <div style="margin-top: 20px;">
-                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="2" fill="#EF4444">
-                                <animate attributeName="r" from="2" to="3" dur="0.5s" repeatCount="indefinite"/>
-                            </circle>
-                            <circle cx="12" cy="12" r="5" stroke="#EF4444" stroke-width="2" fill="none">
-                                <animate attributeName="r" from="3" to="8" dur="1s" repeatCount="indefinite"/>
-                                <animate attributeName="opacity" from="1" to="0" dur="1s" repeatCount="indefinite"/>
-                            </circle>
-                        </svg>
-                    </div>
-                </div>
-            `;
-
-            // Animate the causal chain nodes appearing
-            const chainContainer = document.getElementById('chainNodes');
-            for (let i = 0; i < data.chain.length; i++) {
-                await delay(400);
-                const node = document.createElement('div');
-                node.style.cssText = 'padding: 8px 12px; background: #FEE2E2; border-radius: 6px; font-size: 12px; font-weight: 500; color: #991B1B; opacity: 0; transform: scale(0.8); transition: all 0.3s;';
-                node.textContent = data.chain[i];
-                chainContainer.appendChild(node);
-
-                if (i < data.chain.length - 1) {
-                    const arrow = document.createElement('span');
-                    arrow.style.cssText = 'color: #EF4444; font-size: 16px;';
-                    arrow.textContent = '→';
-                    chainContainer.appendChild(arrow);
-                }
-
-                setTimeout(() => {
-                    node.style.opacity = '1';
-                    node.style.transform = 'scale(1)';
-                }, 50);
-            }
-
-            await delay(1000);
-
-            // Show completion with animated score impact
-            viz.innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" style="margin-bottom: 12px;">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    <p style="font-size: 14px; color: #10B981; font-weight: 600; margin-bottom: 8px;">Simulation Complete</p>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 16px;">${data.entities} entities analysed across portfolio</p>
-
-                    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                        ${data.chain.map(step => `<span style="padding: 6px 10px; background: #D1FAE5; border-radius: 4px; font-size: 11px; color: #065F46;">${step}</span>`).join('<span style="color: #10B981;">→</span>')}
-                    </div>
-
-                    ${lastDiscoveredCompany ? `
-                        <div style="margin-top: 20px; padding: 16px; background: #FEF3C7; border-radius: 8px;">
-                            <p style="font-size: 11px; color: #92400E; margin-bottom: 4px;">Score Impact on ${lastDiscoveredCompany.name.split(',')[0]}</p>
-                            <p style="font-size: 24px; font-weight: 700; color: #991B1B;">${lastDiscoveredCompany.compositeScore} → ${lastDiscoveredCompany.compositeScore + parseInt(data.scoreImpact)}</p>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-
-            // Animate metrics
-            document.getElementById('impactCapital').textContent = data.capital;
-            document.getElementById('impactEntities').textContent = data.entities;
-            document.getElementById('impactExposure').textContent = data.exposure;
-            document.getElementById('impactScore').textContent = data.scoreImpact;
-            document.getElementById('impactMigrations').textContent = data.migrations;
-
-            // Show recommended actions
-            const actionsPanel = document.getElementById('impactActions');
-            const actionsList = document.getElementById('actionsList');
-            actionsPanel.style.display = 'block';
-            actionsList.innerHTML = data.actions.map(action =>
-                `<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                    <span style="color: #F59E0B;">•</span> ${action}
-                </div>`
-            ).join('');
-        }
-
-        // Populate quick select list dynamically from companyData
         function populateQuickSelect() {
             const container = document.getElementById('quickSelectList');
-            if (!container) return;
-
             container.innerHTML = '';
-
-            // Sort companies by tier (best first) then by name
-            const sortedCompanies = Object.entries(companyData).sort((a, b) => {
-                if (a[1].riskTier !== b[1].riskTier) {
-                    return a[1].riskTier - b[1].riskTier;
-                }
-                return a[1].name.localeCompare(b[1].name);
-            });
-
-            for (const [key, company] of sortedCompanies) {
+            Object.keys(companyData).forEach(k => {
                 const btn = document.createElement('button');
                 btn.className = 'quick-select-btn';
-                btn.onclick = () => selectCompany(key);
-
-                const shortIndustry = company.industry.split(' / ')[0].split(' (')[0];
-                btn.innerHTML = `${company.name.split(',')[0].split(' Inc')[0].split(' Corporation')[0].split(' plc')[0]} <span>${shortIndustry}</span>`;
-
+                btn.onclick = () => selectCompany(k);
+                btn.innerHTML = `${companyData[k].name.split(',')[0]} <span>Tier ${companyData[k].riskTier}</span>`;
                 container.appendChild(btn);
-            }
+            });
         }
 
-        // Populate UW company dropdown
         function populateUWCompanySelect() {
             const select = document.getElementById('uwCompanySelect');
-            if (!select) return;
-
-            // Clear existing options except first
             select.innerHTML = '<option value="">-- Select Company --</option>';
-
-            // Sort companies by tier then name
-            const sortedCompanies = Object.entries(companyData).sort((a, b) => {
-                if (a[1].riskTier !== b[1].riskTier) {
-                    return a[1].riskTier - b[1].riskTier;
-                }
-                return a[1].name.localeCompare(b[1].name);
+            Object.keys(companyData).forEach(k => {
+                 select.innerHTML += `<option value="${k}">${companyData[k].name}</option>`;
             });
-
-            for (const [key, company] of sortedCompanies) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = `${company.name.split(',')[0]} (Tier ${company.riskTier})`;
-                select.appendChild(option);
-            }
         }
-
-        // Handle UW company selection
         function selectUWCompany() {
-            const select = document.getElementById('uwCompanySelect');
-            const key = select.value;
-            if (key && companyData[key]) {
-                const company = companyData[key];
-                document.getElementById('uwCompanyName').value = company.name;
-                document.getElementById('uwDomain').value = company.domain;
+            const k = document.getElementById('uwCompanySelect').value;
+            if(k) {
+                document.getElementById('uwCompanyName').value = companyData[k].name;
+                document.getElementById('uwDomain').value = companyData[k].domain;
             }
         }
 
-        // Track selected UW company for results
-        let selectedUWCompanyKey = null;
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            showSection('landing');
-            populateQuickSelect();
-            populateUWCompanySelect();
-        });
-
-        /* ====================================================================
-         * NODE VISUAL BACKGROUND - Animated Canvas
-         * ==================================================================== */
-
+        // Node Visual Background
         const NodeVisual = {
-            canvas: null,
-            ctx: null,
-            width: 0,
-            height: 0,
-            nodes: [],
-            animationFrame: null,
-
+            canvas: null, ctx: null, width: 0, height: 0, nodes: [],
             init() {
                 this.canvas = document.getElementById('node-canvas');
                 this.ctx = this.canvas.getContext('2d');
@@ -4883,342 +3488,26 @@
                 this.spawnNodes();
                 this.loop();
             },
-
-            resize() {
-                this.width = window.innerWidth;
-                this.height = window.innerHeight;
-                this.canvas.width = this.width;
-                this.canvas.height = this.height;
-            },
-
+            resize() { this.width = window.innerWidth; this.height = window.innerHeight; this.canvas.width = this.width; this.canvas.height = this.height; },
             spawnNodes() {
-                this.nodes = [];
-                // Agentic mode: 300 nodes with connections
-                const count = 300;
-                const speed = 1.2;
-
-                for (let i = 0; i < count; i++) {
-                    this.nodes.push({
-                        x: Math.random() * this.width,
-                        y: Math.random() * this.height,
-                        vx: (Math.random() - 0.5) * speed,
-                        vy: (Math.random() - 0.5) * speed,
-                        radius: Math.random() * 2 + 1
-                    });
-                }
+                this.nodes = Array.from({length: 100}, () => ({
+                    x: Math.random()*this.width, y: Math.random()*this.height,
+                    vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5
+                }));
             },
-
             loop() {
-                // Trail effect - semi-transparent fill
-                this.ctx.fillStyle = 'rgba(11, 57, 84, 0.15)';
-                this.ctx.fillRect(0, 0, this.width, this.height);
-
-                const safeColor = '#39D3BA'; // Teal accent
-
-                this.nodes.forEach(node => {
-                    // 1. Move
-                    node.x += node.vx;
-                    node.y += node.vy;
-
-                    // 2. Bounce off walls
-                    if (node.x < 0 || node.x > this.width) node.vx *= -1;
-                    if (node.y < 0 || node.y > this.height) node.vy *= -1;
-
-                    // 3. Draw node
-                    this.ctx.beginPath();
-                    this.ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-                    this.ctx.fillStyle = safeColor;
-                    this.ctx.fill();
-
-                    // 4. Draw connections to nearby nodes
-                    this.nodes.forEach(other => {
-                        const dx = node.x - other.x;
-                        const dy = node.y - other.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 60 && dist > 0) {
-                            this.ctx.beginPath();
-                            this.ctx.strokeStyle = `rgba(57, 211, 186, ${0.15 - dist / 400})`;
-                            this.ctx.lineWidth = 0.5;
-                            this.ctx.moveTo(node.x, node.y);
-                            this.ctx.lineTo(other.x, other.y);
-                            this.ctx.stroke();
-                        }
-                    });
+                this.ctx.fillStyle = 'rgba(11, 57, 84, 0.1)';
+                this.ctx.fillRect(0,0,this.width,this.height);
+                this.ctx.fillStyle = '#39D3BA';
+                this.nodes.forEach(n => {
+                    n.x += n.vx; n.y += n.vy;
+                    if(n.x<0 || n.x>this.width) n.vx*=-1;
+                    if(n.y<0 || n.y>this.height) n.vy*=-1;
+                    this.ctx.beginPath(); this.ctx.arc(n.x, n.y, 1.5, 0, Math.PI*2); this.ctx.fill();
                 });
-
-                this.animationFrame = requestAnimationFrame(() => this.loop());
+                requestAnimationFrame(() => this.loop());
             }
         };
-
-        // Initialize node visual on load
-        document.addEventListener('DOMContentLoaded', () => NodeVisual.init());
-
-        /* ====================================================================
-         * WORLD MODEL FUNCTIONS (Phase 19.2.1)
-         * ==================================================================== */
-
-        // World Model state
-        let wmCurrentCompany = null;
-        let wmTimelinePosition = 24; // Current (months from Jan 2024)
-
-        // Populate World Model company select
-        function populateWMCompanySelect() {
-            const select = document.getElementById('wmCompanySelect');
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Select Company --</option>';
-            const sorted = Object.entries(companyData).sort((a, b) => a[1].riskTier - b[1].riskTier);
-            for (const [key, company] of sorted) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = `${company.name.split(',')[0]} (Tier ${company.riskTier})`;
-                select.appendChild(option);
-            }
-        }
-
-        // Show World Model tab
-        function showWorldModelTab(tabName) {
-            document.querySelectorAll('.wm-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.wm-tab').forEach(el => el.classList.remove('active'));
-            document.getElementById('wm-' + tabName).style.display = 'block';
-            document.getElementById('tab-' + tabName).classList.add('active');
-        }
-
-        // Update World Model company selection
-        function updateWorldModelCompany() {
-            const key = document.getElementById('wmCompanySelect').value;
-            if (key && companyData[key]) {
-                wmCurrentCompany = companyData[key];
-                document.getElementById('wmCompanyStatus').textContent = `Tier ${wmCurrentCompany.riskTier} | Score: ${wmCurrentCompany.compositeScore}`;
-                updateTimeline(wmTimelinePosition);
-                populateTemporalEvents();
-            } else {
-                wmCurrentCompany = null;
-                document.getElementById('wmCompanyStatus').textContent = '';
-            }
-        }
-
-        // Timeline functions
-        function updateTimeline(value) {
-            wmTimelinePosition = parseInt(value);
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const baseYear = 2024;
-            const monthIndex = wmTimelinePosition % 12;
-            const year = baseYear + Math.floor(wmTimelinePosition / 12);
-            const dateStr = value == 24 ? 'Today (Jan 2026)' : `${months[monthIndex]} ${year}`;
-            document.getElementById('timelineDate').textContent = dateStr;
-
-            if (!wmCurrentCompany) return;
-
-            // Simulate historical values (earlier = slightly worse for growing companies)
-            const decay = (24 - wmTimelinePosition) * 0.5;
-            const volatility = () => Math.random() * 10 - 5;
-
-            const techAvg = average(wmCurrentCompany.signals.technical.filter(s => s.value).map(s => s.value));
-            const networkAvg = average(wmCurrentCompany.signals.network.filter(s => s.value).map(s => s.value));
-            const historicalScore = Math.max(400, Math.round(wmCurrentCompany.compositeScore - decay * 3 + volatility()));
-            const historicalTech = Math.max(50, Math.round(techAvg - decay + volatility()));
-            const historicalNetwork = Math.max(50, Math.round(networkAvg - decay * 0.5 + volatility()));
-            const historicalLoss = Math.min(80, Math.round(100 - historicalScore / 10));
-
-            document.getElementById('temporalScore').textContent = historicalScore;
-            document.getElementById('temporalTech').textContent = historicalTech;
-            document.getElementById('temporalNetwork').textContent = historicalNetwork;
-            document.getElementById('temporalLoss').textContent = historicalLoss;
-
-            // Show deltas from current
-            const scoreDelta = wmCurrentCompany.compositeScore - historicalScore;
-            const techDelta = Math.round(techAvg) - historicalTech;
-            document.getElementById('temporalScoreDelta').textContent = scoreDelta > 0 ? `↑ ${scoreDelta} to today` : (scoreDelta < 0 ? `↓ ${-scoreDelta} to today` : '');
-            document.getElementById('temporalScoreDelta').style.color = scoreDelta >= 0 ? '#10B981' : '#EF4444';
-        }
-
-        function populateTemporalEvents() {
-            if (!wmCurrentCompany) return;
-            const log = document.getElementById('temporalEventsLog');
-            const events = [
-                { date: 'Jan 2026', event: 'Current assessment complete', type: 'positive' },
-                { date: 'Nov 2025', event: 'Security certification renewed (SOC 2 Type II)', type: 'positive' },
-                { date: 'Aug 2025', event: 'New CISO appointed', type: 'positive' },
-                { date: 'Jun 2025', event: 'Critical CVE patched within 72hrs', type: 'positive' },
-                { date: 'Mar 2025', event: 'Previous CISO departure announced', type: 'warning' },
-                { date: 'Dec 2024', event: 'Series D funding round closed', type: 'positive' },
-                { date: 'Sep 2024', event: 'Vendor breach notification received', type: 'warning' },
-                { date: 'May 2024', event: 'Initial DSI assessment baseline', type: 'neutral' }
-            ];
-
-            log.innerHTML = events.map(e => `
-                <div style="display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #E5E5E5;">
-                    <span style="font-size: 11px; color: #7A766F; min-width: 70px;">${e.date}</span>
-                    <span style="font-size: 12px; color: ${e.type === 'positive' ? '#10B981' : (e.type === 'warning' ? '#F59E0B' : '#666')};">${e.event}</span>
-                </div>
-            `).join('');
-        }
-
-        // Time Travel Audit
-        function activateTimeTravel() {
-            document.getElementById('timeTravelContent').style.display = 'block';
-        }
-
-        function restoreWorldState() {
-            const inceptionDate = document.getElementById('inceptionDate').value;
-            if (!wmCurrentCompany) {
-                alert('Please select a company first');
-                return;
-            }
-
-            document.getElementById('deltaOverlay').style.display = 'grid';
-
-            // Simulate "what we knew then" vs "what we know now"
-            const knewThen = document.getElementById('deltaKnewThen');
-            const knowNow = document.getElementById('deltaKnowNow');
-
-            knewThen.innerHTML = `
-                <div style="font-size: 13px; margin-bottom: 8px;"><strong>Score:</strong> ${wmCurrentCompany.compositeScore - 45}</div>
-                <div style="font-size: 13px; margin-bottom: 8px;"><strong>Tier:</strong> ${Math.min(5, wmCurrentCompany.riskTier + 1)}</div>
-                <div style="font-size: 13px; margin-bottom: 8px;"><strong>Confidence:</strong> ${Math.round((wmCurrentCompany.confidence - 0.08) * 100)}%</div>
-                <div style="font-size: 12px; color: #6B7280; margin-top: 12px; padding: 8px; background: #F3F4F6; border-radius: 4px;">
-                    ⚠️ Log4j vulnerability was <strong>unknown</strong> at this time
-                </div>
-            `;
-
-            knowNow.innerHTML = `
-                <div style="font-size: 13px; margin-bottom: 8px;"><strong>Score:</strong> ${wmCurrentCompany.compositeScore}</div>
-                <div style="font-size: 13px; margin-bottom: 8px;"><strong>Tier:</strong> ${wmCurrentCompany.riskTier}</div>
-                <div style="font-size: 13px; margin-bottom: 8px;"><strong>Confidence:</strong> ${Math.round(wmCurrentCompany.confidence * 100)}%</div>
-                <div style="font-size: 12px; color: #059669; margin-top: 12px; padding: 8px; background: #D1FAE5; border-radius: 4px;">
-                    ✓ Log4j patched, SOC 2 renewed, new CISO appointed
-                </div>
-            `;
-        }
-
-        // Counterfactual Simulation
-        function updateCounterfactual() {
-            document.querySelectorAll('.counterfactual-toggle').forEach(toggle => {
-                const checkbox = toggle.querySelector('input[type="checkbox"]');
-                toggle.classList.toggle('active', checkbox.checked);
-            });
-        }
-
-        async function runCounterfactualSimulation() {
-            const checkboxes = document.querySelectorAll('.counterfactual-toggle input[type="checkbox"]:checked');
-            const chart = document.getElementById('counterfactualChart');
-
-            if (checkboxes.length === 0) {
-                alert('Please select at least one counterfactual toggle');
-                return;
-            }
-
-            // Show simulation animation
-            chart.innerHTML = `
-                <div style="text-align: center;">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
-                        <circle cx="12" cy="12" r="10">
-                            <animate attributeName="stroke-dasharray" from="0 63" to="63 0" dur="1s" repeatCount="indefinite"/>
-                        </circle>
-                    </svg>
-                    <p style="margin-top: 12px; font-size: 13px; color: #7C3AED;">Simulating alternate timeline...</p>
-                </div>
-            `;
-
-            await delay(2000);
-
-            // Calculate impact based on selections
-            const impact = checkboxes.length * 35;
-            const avoidedLoss = checkboxes.length * 850000;
-            const tierChange = checkboxes.length >= 3 ? '3 → 2' : (checkboxes.length >= 2 ? '3 → 2' : '--');
-
-            // Show divergent paths visualization
-            chart.innerHTML = `
-                <div style="width: 100%; height: 100%; padding: 20px;">
-                    <svg width="100%" height="250" viewBox="0 0 400 200">
-                        <!-- Grid -->
-                        <line x1="50" y1="180" x2="380" y2="180" stroke="#E5E5E5" stroke-width="1"/>
-                        <line x1="50" y1="20" x2="50" y2="180" stroke="#E5E5E5" stroke-width="1"/>
-
-                        <!-- Labels -->
-                        <text x="215" y="198" font-size="10" fill="#7A766F" text-anchor="middle">Time</text>
-                        <text x="30" y="100" font-size="10" fill="#7A766F" text-anchor="middle" transform="rotate(-90, 30, 100)">Score</text>
-
-                        <!-- Actual Path (Crisis) -->
-                        <path d="M 60 80 Q 120 85 180 120 Q 240 150 300 160 Q 340 165 370 170" fill="none" stroke="#EF4444" stroke-width="3"/>
-                        <circle cx="370" cy="170" r="5" fill="#EF4444"/>
-
-                        <!-- Counterfactual Path (Stability) -->
-                        <path d="M 60 80 Q 120 75 180 70 Q 240 60 300 55 Q 340 50 370 45" fill="none" stroke="#10B981" stroke-width="3" stroke-dasharray="8 4"/>
-                        <circle cx="370" cy="45" r="5" fill="#10B981"/>
-
-                        <!-- Divergence point -->
-                        <circle cx="120" cy="80" r="8" fill="white" stroke="#8B5CF6" stroke-width="3"/>
-                        <text x="120" y="65" font-size="9" fill="#8B5CF6" text-anchor="middle">Intervention</text>
-
-                        <!-- End labels -->
-                        <text x="380" y="175" font-size="10" fill="#EF4444" font-weight="600">Actual</text>
-                        <text x="380" y="50" font-size="10" fill="#10B981" font-weight="600">Counterfactual</text>
-                    </svg>
-                </div>
-            `;
-
-            // Show impact metrics
-            document.getElementById('counterfactualImpact').style.display = 'block';
-            document.getElementById('cfAvoidedLoss').textContent = '$' + avoidedLoss.toLocaleString();
-            document.getElementById('cfScoreImprove').textContent = '+' + impact;
-            document.getElementById('cfTierChange').textContent = tierChange;
-        }
-
-        // Agency & Feedback
-        function updatePriceElasticity(value) {
-            const margin = parseInt(value);
-            const baseWin = 68;
-            // Higher margin = lower win probability
-            const winProb = Math.max(15, Math.min(95, baseWin - margin * 1.5));
-
-            document.getElementById('marginValue').textContent = margin === 0 ? 'Base Rate' : (margin > 0 ? `+${margin}%` : `${margin}%`);
-            document.getElementById('winProbability').textContent = Math.round(winProb) + '%';
-
-            // Update color based on win probability
-            const winEl = document.querySelector('.win-probability');
-            if (winProb >= 60) {
-                winEl.style.background = 'linear-gradient(135deg, #D1FAE5, #A7F3D0)';
-            } else if (winProb >= 40) {
-                winEl.style.background = 'linear-gradient(135deg, #FEF3C7, #FDE68A)';
-            } else {
-                winEl.style.background = 'linear-gradient(135deg, #FEE2E2, #FECACA)';
-            }
-
-            // Update market condition
-            document.getElementById('marketCondition').textContent = winProb >= 60 ? 'favorable' : (winProb >= 40 ? 'moderate' : 'intense');
-        }
-
-        function simulateDecline() {
-            document.getElementById('brokerSentiment').style.display = 'flex';
-            document.getElementById('declineImpact').style.display = 'block';
-        }
-
-        // Active Learning / Teacher Mode
-        function teachSignal(signalName, currentValue) {
-            // Show a simple correction dialog
-            const newValue = prompt(`Correct the value for "${signalName}":\n\nCurrent value: ${currentValue}\n\nEnter corrected value (0-100):`, currentValue);
-
-            if (newValue !== null && !isNaN(newValue)) {
-                const log = document.getElementById('learningLog');
-                const timestamp = new Date().toISOString().substr(11, 8);
-
-                // Add to learning log
-                log.innerHTML += `
-                    <div style="margin-bottom: 8px; color: #8B5CF6;">[${timestamp}] Correction: ${signalName} ${currentValue} → ${newValue}</div>
-                    <div style="margin-bottom: 8px; color: #6D28D9;">[${timestamp}] Source reliability downgraded</div>
-                    <div style="margin-bottom: 8px; color: #5B21B6;">[${timestamp}] Re-assessing 14 portfolio companies using this source...</div>
-                    <div style="margin-bottom: 8px; color: #10B981;">[${timestamp}] Model updated. Thank you for teaching.</div>
-                `;
-
-                log.scrollTop = log.scrollHeight;
-            }
-        }
-
-        // Initialize World Model on DOM ready
-        document.addEventListener('DOMContentLoaded', () => {
-            populateWMCompanySelect();
-        });
     </script>
 </body>
 </html>
