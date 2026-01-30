@@ -57,7 +57,7 @@ When starting any DSI work:
 | Phase | Name | Status | Development documentation |
 |-|-|-|-|
 | R1 | Master Configuration Layout | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R2 | Signal Architecture Alignment | 🔄 In Progress | `development/project/dsi_restructure_plan.md` |
+| R2 | Signal Architecture Alignment | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R3 | Coverage Configuration Rebuilds | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R4 | Infrastructure Builder Revision | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R5 | Infrastructure Verification | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
@@ -77,7 +77,10 @@ When starting any DSI work:
 - ✅ 32 API endpoints documented and functional
 - ✅ All 7 demo applications validated
 - ⚠️ Test coverage at ~12.6% (critical modules need unit tests)
-- ⚠️ 23 function name typos in configs (runtime warnings, not failures)
+- ✅ 21 inference function name typos fixed across 6 coverage configs
+- ✅ Metadata registry created (`signal_architecture/signals/inference/metadata_registry.py`)
+- ✅ Signal enhancements stubbed (Marine port state/classification, Aerospace certification/supply chain, Cross-Coverage regulatory)
+- ✅ Categoriser audit complete (4 core types + 8 variants implemented, 4 statistical types deferred to Phase 8)
 
 **Next Steps**: See [Outstanding Work](#outstanding-work) section for consolidated pending, planned, and optional items.
 
