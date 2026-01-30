@@ -58,7 +58,7 @@ When starting any DSI work:
 |-|-|-|-|
 | R1 | Master Configuration Layout | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R2 | Signal Architecture Alignment | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R3 | Coverage Configuration Rebuilds | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R3 | Coverage Configuration Rebuilds | 🔄 In Progress | `development/project/dsi_restructure_plan.md` |
 | R4 | Infrastructure Builder Revision | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R5 | Infrastructure Verification | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R6 | Layer Implementations | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |

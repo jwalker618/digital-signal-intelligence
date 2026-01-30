@@ -7,7 +7,8 @@
 # 2. source: score (default) uses 0-100 inference return
 # 3. source: metadata.field uses inference metadata with bands/categories
 # 4. Categorical groups apply modifiers (applied:), not scores
-# 5. score_condition applies actions/overrides at signal or group level
+# 5. score_conditions (plural, banded) apply actions based on score thresholds
+#    Actions: FLAG | MODIFIER | REFER (DECLINE is tier-level only)
 # 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
 # 7. Normalisation handled by inference functions, not config
 #
@@ -144,8 +145,8 @@ cyber:
           risk:
             correlation_direction: positive
             weight: 0.25
-            score_condition:
-              - {max: 25, action: "FLAG", note: "No tier-1 security vendors detected"}
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "FLAG", note: "No tier-1 security vendors detected"}
           loss:
             severity:
               correlation_direction: negative
@@ -307,9 +308,9 @@ cyber:
           risk:
             correlation_direction: positive
             weight: 0.18
-            score_condition:
-              - {max: 30, action: "DECLINE", override: 5, note: "Dangerous network exposure"}
-              - {max: 45, action: "REFER", override: 4, note: "Elevated network exposure"}
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Dangerous network exposure"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Elevated network exposure"}
           exposure:
             size:
               correlation_direction: positive
@@ -339,9 +340,9 @@ cyber:
           risk:
             correlation_direction: positive
             weight: 0.18
-            score_condition:
-              - {max: 25, action: "DECLINE", override: 5, note: "Critical unpatched vulnerabilities"}
-              - {max: 40, action: "REFER", override: 4, note: "Significant vulnerability exposure"}
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Critical unpatched vulnerabilities"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Significant vulnerability exposure"}
           loss:
             frequency:
               correlation_direction: positive
@@ -408,9 +409,9 @@ cyber:
           risk:
             correlation_direction: positive
             weight: 0.35
-            score_condition:
-              - {max: 35, action: "DECLINE", override: 5, note: "Severe or recent breach history"}
-              - {max: 50, action: "REFER", override: 4, note: "Material breach history"}
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 5, note: "Severe or recent breach history"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Material breach history"}
           loss:
             frequency:
               source: metadata.breach_count
@@ -788,6 +789,8 @@ cyber:
             weight: 0.15
           loss:
             weight: 0.15
+            score_conditions:
+              - {threshold: 80, comparison: ">=", action: "MODIFIER", applied: 0.90, note: "Strong network authority - loss credit"}
           exposure:
             weight: 0.15
 
@@ -796,11 +799,13 @@ cyber:
           description: "Observable technical security implementation"
           risk:
             weight: 0.35
-            score_condition:
-              - {max: 30, action: "DECLINE", override: 5, note: "Critical technical deficiencies"}
-              - {max: 45, action: "REFER", override: 4, note: "Significant technical concerns"}
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Critical technical deficiencies"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant technical concerns"}
           loss:
             weight: 0.35
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "MODIFIER", applied: 1.20, note: "Poor technical infrastructure - loss loading"}
           exposure:
             weight: 0.35
 
@@ -819,11 +824,13 @@ cyber:
           description: "Breach history, regulatory actions, and public disclosures"
           risk:
             weight: 0.25
-            score_condition:
-              - {max: 30, action: "DECLINE", override: 5, note: "Severe breach/regulatory history"}
-              - {max: 45, action: "REFER", override: 4, note: "Material breach history"}
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Severe breach/regulatory history"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Material breach history"}
           loss:
             weight: 0.15
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "MODIFIER", applied: 1.25, note: "Severe breach history - loss loading"}
           exposure:
             weight: 0.15
 
@@ -896,35 +903,48 @@ cyber:
           description: "Very low risk of loss"
           interpretation:
             bands: {min: 80, max: 100}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 0.55, cap: 0.75}
+            application:
+              frequency_modifier: 0.70
+              severity_modifier: 0.80
 
         - id: 2
           label: "LOW"
           description: "Low risk of loss"
           interpretation:
             bands: {min: 60, max: 79}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 0.75, cap: 0.95}
+            application:
+              frequency_modifier: 0.85
+              severity_modifier: 0.90
 
         - id: 3
           label: "MODERATE"
           description: "Moderate risk of loss"
           interpretation:
             bands: {min: 40, max: 59}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 0.95, cap: 1.05}
+            application:
+              frequency_modifier: 1.00
+              severity_modifier: 1.00
 
         - id: 4
           label: "ELEVATED"
           description: "Elevated risk of loss"
           interpretation:
             bands: {min: 20, max: 39}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 1.05, cap: 1.30}
+            application:
+              frequency_modifier: 1.15
+              severity_modifier: 1.15
 
         - id: 5
           label: "HIGH"
           description: "High risk of loss"
           interpretation:
             bands: {min: 0, max: 19}
-            application: {frequency_weight: 0.6, severity_weight: 0.4, floor: 1.30, cap: 1.60}
+            application:
+              frequency_modifier: 1.35
+              severity_modifier: 1.40
+      constraints:
+        floor: 0.55
+        cap: 1.60
 
     # =========================================================================
     # EXPOSURE TIER BANDS
@@ -940,35 +960,35 @@ cyber:
             description: "Micro exposure value ($0 - $1M)"
             interpretation:
               bands: {min: 0, max: 20}
-              application: {applied: 0.50, implied_thresholds: [0, 1000000]}
+              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
 
           - id: 2
             label: "SMALL"
             description: "Small exposure value ($1M - $10M)"
             interpretation:
               bands: {min: 21, max: 40}
-              application: {applied: 0.75, implied_thresholds: [1000000, 10000000]}
+              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
 
           - id: 3
             label: "MEDIUM"
             description: "Medium exposure value ($10M - $50M)"
             interpretation:
               bands: {min: 41, max: 60}
-              application: {applied: 1.00, implied_thresholds: [10000000, 50000000]}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
 
           - id: 4
             label: "LARGE"
             description: "Large exposure value ($50M - $250M)"
             interpretation:
               bands: {min: 61, max: 80}
-              application: {applied: 1.50, implied_thresholds: [50000000, 250000000]}
+              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
 
           - id: 5
             label: "VERY_LARGE"
             description: "Very large exposure value ($250M+)"
             interpretation:
               bands: {min: 81, max: 100}
-              application: {applied: 2.50, implied_thresholds: [250000000, 1000000000]}
+              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
 
       complexity:
         weight: 0.40
@@ -978,35 +998,35 @@ cyber:
             description: "Simple operational complexity"
             interpretation:
               bands: {min: 0, max: 20}
-              application: {applied: 0.85}
+              application: {method: "MODIFIER", applied: 0.85}
 
           - id: 2
             label: "MODERATE"
             description: "Moderate operational complexity"
             interpretation:
               bands: {min: 21, max: 40}
-              application: {applied: 0.95}
+              application: {method: "MODIFIER", applied: 0.95}
 
           - id: 3
             label: "COMPLEX"
             description: "Complex operations"
             interpretation:
               bands: {min: 41, max: 60}
-              application: {applied: 1.10}
+              application: {method: "MODIFIER", applied: 1.10}
 
           - id: 4
             label: "HIGHLY_COMPLEX"
             description: "Highly complex operations"
             interpretation:
               bands: {min: 61, max: 80}
-              application: {applied: 1.30}
+              application: {method: "MODIFIER", applied: 1.30}
 
           - id: 5
             label: "EXTREMELY_COMPLEX"
             description: "Extremely complex operations"
             interpretation:
               bands: {min: 81, max: 100}
-              application: {applied: 1.60}
+              application: {method: "MODIFIER", applied: 1.60}
 
     # =========================================================================
     # LIMIT BANDINGS
