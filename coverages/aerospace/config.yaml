@@ -1,13 +1,13 @@
 # =============================================================================
 # DSI Model Configuration
-# 
+#
 # This file holds all the relvant configuration types for a single coverage.
 # For example,
 # coverage:         the actual coverage cohort, eg aerospace
 #   configuration:  the specific configuration file under that coverage, eg aerospace_general
-# 
+#
 # There can be multiple configurations saved under a coverage.
-# 
+#
 # A configuration is the single source of truth for:
 #   - 1) direct (optional) queries
 #   - 2) categorical features
@@ -16,11 +16,11 @@
 #   - tier definitions
 #   - other pricing parameters
 #   - test profiles for validation
-# 
+#
 # When a technical model is generated:
 # - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
 # - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-# 
+#
 # All DSI principles must be adhered to, specifically:
 # 1. All signals must be externally observable (no application questions required)
 # 2. Direct queries are OPTIONAL - model must work without them
@@ -112,7 +112,7 @@ aerospace:
     # b) be the basis of premium (impact: premium)
     # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
-    
+
     categorical_groups:
       - id: "operator_type"
         name: "Operator Type"
@@ -131,24 +131,24 @@ aerospace:
         inference_utility_function: fleetsize_basefunction
       - id: "regulatory_framework"
         name: "Regulatory Framework"
-        description: "Primary regulatory authority governing operations" 
+        description: "Primary regulatory authority governing operations"
         impact: "modifier"
         inference_utility_function: regulatoryframework_basefunction
       - id: "iosa_status"
         name: "IOSA Status"
-        description: "IATA Operational Safety Audit registration status" 
+        description: "IATA Operational Safety Audit registration status"
         impact: "modifier"
         inference_utility_function: iosa_status_basefunction
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
     # -------------------------------------------------------------------------
-    categorical_features:     
+    categorical_features:
       operator_type:
         - cat: "MAJOR_AIRLINE"
           label: "Major Airline"
           modifier: 0.85
-          description: "Scheduled carrier with >100 aircraft, alliance member"         
+          description: "Scheduled carrier with >100 aircraft, alliance member"
         - cat: "REGIONAL_AIRLINE"
           label: "Regional Airline"
           modifier: 1.00
@@ -216,83 +216,83 @@ aerospace:
         - cat: "SINGLE"
           label: "Single Aircraft"
           modifier: 1.30
-          description: ""         
+          description: ""
         - cat: "MICRO"
           label: "Micro Fleet (2-5)"
           modifier: 1.20
-          description: ""         
+          description: ""
         - cat: "SMALL"
           label: "Small Fleet (6-20)"
           modifier: 1.10
-          description: ""         
+          description: ""
         - cat: "MEDIUM"
           label: "Medium Fleet (21-50)"
           modifier: 1.00
-          description: ""         
+          description: ""
         - cat: "LARGE"
           label: "Large Fleet (51-150)"
           modifier: 0.95
-          description: ""         
+          description: ""
         - cat: "MAJOR"
           label: "Major Fleet (150+)"
           modifier: 0.90
-          description: ""         
+          description: ""
 
       regulatory_framework:
         - cat: "FAA"
           label: "FAA (United States)"
           modifier: 1.00
-          description: ""       
+          description: ""
         - cat: "EASA"
           label: "EASA (European Union)"
           modifier: 1.00
-          description: ""       
+          description: ""
         - cat: "CAA_UK"
           label: "CAA (United Kingdom)"
           modifier: 1.00
-          description: ""       
+          description: ""
         - cat: "TCCA"
           label: "TCCA (Canada)"
           modifier: 1.00
-          description: ""       
+          description: ""
         - cat: "CASA"
           label: "CASA (Australia)"
           modifier: 1.05
-          description: ""       
+          description: ""
         - cat: "CAAC"
           label: "CAAC (China)"
           modifier: 1.15
-          description: ""       
+          description: ""
         - cat: "DGCA_INDIA"
           label: "DGCA (India)"
           modifier: 1.15
-          description: ""       
+          description: ""
         - cat: "OTHER_ICAO"
           label: "Other ICAO Compliant"
           modifier: 1.20
-          description: ""       
+          description: ""
         - cat: "NON_ICAO"
           label: "Non-ICAO Compliant"
           modifier: 1.50
-          description: ""       
+          description: ""
 
       iosa_status:
         - cat: "REGISTERED"
           label: "IOSA Registered"
           modifier: 0.90
-          description: ""  
+          description: ""
         - cat: "EXPIRED"
           label: "IOSA Expired"
           modifier: 1.15
-          description: ""  
+          description: ""
         - cat: "NEVER_REGISTERED"
           label: "Never Registered"
           modifier: 1.25
-          description: ""  
+          description: ""
         - cat: "NOT_APPLICABLE"
           label: "Not Applicable"
           modifier: 1.00
-          description: ""  
+          description: ""
 
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
@@ -306,82 +306,121 @@ aerospace:
         description: "Industry relationships and counterparty quality"
         weight: 0.10
         test_scores: {excellent: 90, average: 65, poor: 35}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent network authority - modifier applied"
+
       - id: "safety_record"
         name: "Safety Record"
         description: "Historical safety performance from public databases"
         weight: 0.30
         test_scores: {excellent: 98, average: 75, poor: 35}
-        score_condition: true
-        bands:
-          - max: 30
+        score_conditions:
+          - threshold: 30
+            comparison: "<="
             override: 5
-            action: "DECLINE"
+            action: "REFER"
             note: "Unacceptable safety record"
-          - max: 45
+          - threshold: 45
+            comparison: "<="
             override: 4
             action: "REFER"
             note: "Significant safety concerns"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent safety record - modifier applied"
+
       - id: "regulatory_compliance"
         name: "Regulatory Compliance"
         description: "Certificate status, enforcement actions, audit results"
         weight: 0.20
         test_scores: {excellent: 95, average: 72, poor: 38}
-        score_condition: true
-        bands:
-          - max: 35
+        score_conditions:
+          - threshold: 35
+            comparison: "<="
             override: 5
-            action: "DECLINE"
+            action: "REFER"
             note: "Severe regulatory deficiencies"
-          - max: 50
+          - threshold: 50
+            comparison: "<="
             override: 4
             action: "REFER"
             note: "Material regulatory concerns"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent regulatory compliance - modifier applied"
+
       - id: "operational_quality"
         name: "Operational Quality"
         description: "Observable operational metrics"
         weight: 0.15
         test_scores: {excellent: 88, average: 68, poor: 42}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent operational quality - modifier applied"
+
       - id: "fleet_quality"
         name: "Fleet Quality"
         description: "Aircraft age, composition, maintenance indicators"
         weight: 0.10
         test_scores: {excellent: 88, average: 65, poor: 32}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent fleet quality - modifier applied"
+
       - id: "financial_stability"
         name: "Financial Stability"
         description: "Public financial indicators"
         weight: 0.05
         test_scores: {excellent: 85, average: 65, poor: 35}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent financial stability - modifier applied"
+
       - id: "route_risk"
         name: "Route Risk"
         description: "Geographic and operational risk exposure"
         weight: 0.05
         test_scores: {excellent: 92, average: 72, poor: 40}
-        score_condition: true
-        bands:
-          - max: 30
+        score_conditions:
+          - threshold: 30
+            comparison: "<="
             override: 4
             action: "REFER"
             note: "Elevated route risk"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent route risk - modifier applied"
+
       - id: "corporate_governance"
         name: "Corporate Governance"
         description: "Management quality and safety culture indicators"
         weight: 0.05
         test_scores: {excellent: 88, average: 65, poor: 30}
-        score_condition: false
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent corporate governance - modifier applied"
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -396,354 +435,331 @@ aerospace:
           description: "Membership in Star Alliance, oneworld, SkyTeam"
           weight: 0.25
           inference_utility_function: alliance_membership_basefunction
-          score_condition: false
-          
+
         - id: "codeshare_quality"
           name: "Codeshare Partner Quality"
           description: "Average safety rating of codeshare partners"
           weight: 0.20
           inference_utility_function: codeshare_partner_basefunction
-          score_condition: false
-          
+
         - id: "lessor_quality"
           name: "Aircraft Lessor Quality"
           description: "Quality tier of aircraft lessors"
           weight: 0.20
           inference_utility_function: aircraft_lessor_basefunction
-          score_condition: false
-          
+
         - id: "oem_relationship"
           name: "OEM Relationship"
           description: "Direct relationships with Boeing, Airbus, Embraer"
           weight: 0.15
           inference_utility_function: oem_relationship_basefunction
-          score_condition: false
-          
+
         - id: "mro_quality"
           name: "MRO Provider Quality"
           description: "Quality of maintenance providers"
           weight: 0.20
           inference_utility_function: mro_quality_basefunction
-          score_condition: false
-  
+
       safety_record:
         - id: "accident_history"
           name: "Accident History"
           description: "Hull loss and major accidents (10-year lookback)"
           weight: 0.30
           inference_utility_function: accident_history_basefunction
-          score_condition: true
-          bands:
-            - max: 25
+          score_conditions:
+            - threshold: 25
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Severe accident history"
-            - max: 40
-              override: 4 
+            - threshold: 40
+              comparison: "<="
+              override: 4
               action: "REFER"
               note: "Material accident history"
-          inclusive_max: false
-          
+
         - id: "incident_history"
           name: "Incident History"
           description: "Serious incidents, runway excursions, near-misses"
           weight: 0.20
           inference_utility_function: incident_history_basefunction
-          score_condition: false
-          
+
         - id: "accident_rate"
           name: "Accident Rate vs Industry"
           description: "Accidents per million departures vs industry average"
           weight: 0.20
           inference_utility_function: accident_rate_basefunction
-          score_condition: false
-          
+
         - id: "fatality_history"
           name: "Fatality History"
           description: "Fatal accident history (10-year lookback)"
           weight: 0.20
           inference_utility_function: fatality_history_basefunction
-          score_condition: true
-          bands:
-          - max: 30
-            override: 5
-            action: "DECLINE"
-            note: "Recent fatal accidents"
-          - max: 50
-            override: 4
-            action: "REFER"
-            note: "Fatal accident history"
-          inclusive_max: false
-          
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
+              override: 5
+              action: "REFER"
+              note: "Recent fatal accidents"
+            - threshold: 50
+              comparison: "<="
+              override: 4
+              action: "REFER"
+              note: "Fatal accident history"
+
         - id: "investigation_findings"
           name: "Investigation Findings"
           description: "Operator cited as causal factor in investigations"
           weight: 0.10
           inference_utility_function: investigation_finding_basefunction
-          score_condition: false
-  
+
       regulatory_compliance:
         - id: "certificate_status"
           name: "Operating Certificate Status"
           description: "AOC/Part 121/135 certificate status"
           weight: 0.25
           inference_utility_function: certificate_status_basefunction
-          score_condition: true
-          bands:
-            - max: 30
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Certificate at risk"
-            - max: 50
+            - threshold: 50
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Certificate concerns"
-          inclusive_max: false
-          
+
         - id: "enforcement_actions"
           name: "Enforcement Actions"
           description: "Regulatory fines, penalties (5-year lookback)"
           weight: 0.20
           inference_utility_function: enforcement_action_basefunction
-          score_condition: true
-          bands:
-            - max: 25
+          score_conditions:
+            - threshold: 25
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Severe enforcement history"
-            - max: 45
+            - threshold: 45
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Material enforcement actions"
-          inclusive_max: false
-          
+
         - id: "iosa_audit_status"
           name: "IOSA Audit Status"
           description: "IOSA registration and audit findings"
           weight: 0.15
           inference_utility_function: iosa_audit_basefunction
-          score_condition: false
-          
+
         - id: "ramp_inspection"
           name: "Ramp Inspection Results"
           description: "SAFA/SACA ramp inspection findings rate"
           weight: 0.15
           inference_utility_function: ramp_inspection_basefunction
-          score_condition: false
-          
+
         - id: "eu_safety_list"
           name: "EU Air Safety List Status"
           description: "Presence on EU banned carrier list"
           weight: 0.15
           inference_utility_function: eu_safety_list_basefunction
-          score_condition: true
-          bands:
-            - max: 30
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "On EU Air Safety List"
-            - max: 70
+            - threshold: 70
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "EU safety restrictions"
-          inclusive_max: false
-          
+
         - id: "state_safety_rating"
           name: "State of Registry Safety Rating"
           description: "ICAO USOAP audit results for state"
-          weight: 0.10
+          weight: 0.05
           inference_utility_function: state_safety_basefunction
-          score_condition: false
-  
+
+        - id: "certification_transparency"
+          name: "Certification Transparency"
+          description: "FAA/EASA certification status transparency"
+          weight: 0.05
+          inference_utility_function: certification_transparency_basefunction
+
       operational_quality:
         - id: "otp_score"
           name: "On-Time Performance"
           description: "Departure/arrival punctuality vs benchmarks"
           weight: 0.20
           inference_utility_function: otp_score_basefunction
-          score_condition: false
-          
+
         - id: "dispatch_reliability"
           name: "Dispatch Reliability"
           description: "Completion rate and technical dispatch"
           weight: 0.20
           inference_utility_function: dispatch_reliability_basefunction
-          score_condition: false
-          
+
         - id: "crew_experience"
           name: "Crew Experience Indicators"
           description: "Average experience from public hiring data"
           weight: 0.15
           inference_utility_function: crew_experience_basefunction
-          score_condition: false
-          
+
         - id: "training_indicators"
           name: "Training Program Indicators"
           description: "Training investment signals"
           weight: 0.15
           inference_utility_function: training_indicators_basefunction
-          score_condition: false
-          
+
         - id: "operational_complexity"
           name: "Operational Complexity"
           description: "Fleet diversity and route network complexity"
           weight: 0.15
           inference_utility_function: operational_complexity_basefunction
-          score_condition: false
-          
+
         - id: "growth_rate"
           name: "Fleet/Capacity Growth Rate"
           description: "Year-over-year growth (rapid growth = higher risk)"
           weight: 0.15
           inference_utility_function: growth_rate_basefunction
-          score_condition: false
-  
+
       fleet_quality:
         - id: "fleet_age"
           name: "Fleet Average Age"
           description: "Average aircraft age vs benchmarks"
           weight: 0.30
           inference_utility_function: fleet_age_basefunction
-          score_condition: false
-          
+
         - id: "fleet_homogeneity"
           name: "Fleet Homogeneity"
           description: "Fleet type standardization"
           weight: 0.20
           inference_utility_function: fleet_homogeneity_basefunction
-          score_condition: false
-          
+
         - id: "aircraft_generation"
           name: "Aircraft Generation"
           description: "Percentage of current-generation aircraft"
           weight: 0.25
           inference_utility_function: aircraft_generation_basefunction
-          score_condition: false
-          
+
         - id: "order_backlog"
           name: "Fleet Renewal Pipeline"
           description: "Order backlog indicating investment"
           weight: 0.15
           inference_utility_function: order_backlog_basefunction
-          score_condition: false
-          
+
         - id: "maintenance_indicators"
           name: "Maintenance Quality Indicators"
           description: "Inferred maintenance quality"
-          weight: 0.10
+          weight: 0.05
           inference_utility_function: maintenance_indicators_basefunction
-          score_condition: false
-  
+
+        - id: "supply_chain_quality"
+          name: "Supply Chain Quality"
+          description: "Supplier audit and quality assessment"
+          weight: 0.05
+          inference_utility_function: supply_chain_quality_basefunction
+
       financial_stability:
         - id: "credit_rating"
           name: "Credit Rating"
           description: "Credit rating from major agencies"
           weight: 0.35
           inference_utility_function: credit_rating_basefunction
-          score_condition: false
-          
+
         - id: "public_financials"
           name: "Public Financial Health"
           description: "Financial metrics from public filings"
           weight: 0.30
           inference_utility_function: public_financials_basefunction
-          score_condition: false
-          
+
         - id: "market_position"
           name: "Market Position"
           description: "Market share and competitive position"
           weight: 0.20
           inference_utility_function: market_position_basefunction
-          score_condition: false
-          
+
         - id: "government_support"
           name: "Government Support/Ownership"
           description: "State ownership or support indicators"
           weight: 0.15
           inference_utility_function: government_support_basefunction
-          score_condition: false
-  
+
       route_risk:
         - id: "conflict_zone_exposure"
           name: "Conflict Zone Exposure"
           description: "Operations through/near conflict zones"
           weight: 0.30
           inference_utility_function: conflict_zone_basefunction
-          score_condition: true
-          bands:
-            - max: 20
+          score_conditions:
+            - threshold: 20
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Direct conflict zone ops"
-            - max: 40
+            - threshold: 40
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Significant conflict exposure"
-          inclusive_max: false
-          
+
         - id: "challenging_airports"
           name: "Challenging Airport Operations"
           description: "Operations to special requirement airports"
           weight: 0.20
           inference_utility_function: challenging_airports_basefunction
-          score_condition: false
-          
+
         - id: "high_risk_destinations"
           name: "High-Risk Country Exposure"
           description: "Operations to elevated risk countries"
           weight: 0.25
           inference_utility_function: highrisk_exposure_basefunction
-          score_condition: false
-          
+
         - id: "weather_exposure"
           name: "Severe Weather Exposure"
           description: "Route exposure to severe weather"
           weight: 0.15
           inference_utility_function: weather_exposure_basefunction
-          score_condition: false
-          
+
         - id: "terrain_exposure"
           name: "Challenging Terrain Exposure"
           description: "Operations in mountainous terrain"
           weight: 0.10
           inference_utility_function: terrain_exposure_basefunction
-          score_condition: false
-  
+
       corporate_governance:
         - id: "management_stability"
           name: "Management Stability"
           description: "CEO/COO tenure and turnover"
           weight: 0.25
           inference_utility_function: management_stability_basefunction
-          score_condition: false
-          
+
         - id: "safety_leadership"
           name: "Safety Leadership Visibility"
           description: "Dedicated safety leadership presence"
           weight: 0.25
           inference_utility_function: safety_leadership_basefunction
-          score_condition: false
-          
+
         - id: "safety_reporting"
           name: "Safety Transparency"
           description: "Public safety reporting and disclosure"
           weight: 0.20
           inference_utility_function: safety_reporting_basefunction
-          score_condition: false
-          
+
         - id: "corporate_structure"
           name: "Corporate Structure Clarity"
           description: "Transparency of structure and ownership"
           weight: 0.15
           inference_utility_function: corporate_structure_basefunction
-          score_condition: false
-          
+
         - id: "industry_engagement"
           name: "Industry Safety Engagement"
           description: "Participation in FSF, IATA Safety Group"
           weight: 0.15
           inference_utility_function: industry_engagement_basefunction
-          score_condition: false
 
     # -------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -757,8 +773,9 @@ aerospace:
           description: "Excellent safety profile - automatic approval"
           auto_approve: true
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 1200  # Per $1M hull value
+          application:
+            method: "PREMIUM_BASE"
+            applied: 1200
         - id: 2
           label: "STANDARD_PLUS"
           min_score: 650
@@ -766,35 +783,117 @@ aerospace:
           description: "Good safety profile - automatic approval"
           auto_approve: true
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 1800
-        - id: 3        
+          application:
+            method: "PREMIUM_BASE"
+            applied: 1800
+        - id: 3
           label: "STANDARD"
           min_score: 500
           max_score: 649
           description: "Average profile - may require referral"
           auto_approve: false
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 2800
-        - id: 4           
+          application:
+            method: "PREMIUM_BASE"
+            applied: 2800
+        - id: 4
           label: "SUBSTANDARD"
           min_score: 350
           max_score: 499
           description: "Elevated risk - requires senior review"
           auto_approve: false
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 4500
-        - id: 5        
+          application:
+            method: "PREMIUM_BASE"
+            applied: 4500
+        - id: 5
           label: "DECLINE"
           min_score: 0
           max_score: 349
           description: "Unacceptable risk - decline"
           auto_approve: false
           auto_decline: true
-          premium_generation_method: "base"
-          premium: 8000
+          application:
+            method: "PREMIUM_BASE"
+            applied: 8000
+
+    # -------------------------------------------------------------------------
+    # LOSS TIER BANDS
+    # -------------------------------------------------------------------------
+    loss_tier_bands:
+      bands:
+        - id: 1
+          label: "VERY_LOW"
+          interpretation:
+            bands: {min: 80, max: 100}
+            application:
+              frequency_modifier: 0.70
+              severity_modifier: 0.80
+        - id: 2
+          label: "LOW"
+          interpretation:
+            bands: {min: 60, max: 79}
+            application:
+              frequency_modifier: 0.85
+              severity_modifier: 0.90
+        - id: 3
+          label: "MODERATE"
+          interpretation:
+            bands: {min: 40, max: 59}
+            application:
+              frequency_modifier: 1.00
+              severity_modifier: 1.00
+        - id: 4
+          label: "HIGH"
+          interpretation:
+            bands: {min: 20, max: 39}
+            application:
+              frequency_modifier: 1.25
+              severity_modifier: 1.20
+        - id: 5
+          label: "VERY_HIGH"
+          interpretation:
+            bands: {min: 0, max: 19}
+            application:
+              frequency_modifier: 1.60
+              severity_modifier: 1.50
+      constraints:
+        floor: 0.55
+        cap: 1.60
+
+    # -------------------------------------------------------------------------
+    # EXPOSURE TIER BANDS
+    # -------------------------------------------------------------------------
+    exposure_tier_bands:
+      bands:
+        - id: 1
+          label: "SMALL"
+          interpretation:
+            bands: {min: 0, max: 25000000}
+            application:
+              method: "MODIFIER"
+              applied: 0.85
+        - id: 2
+          label: "MEDIUM"
+          interpretation:
+            bands: {min: 25000001, max: 100000000}
+            application:
+              method: "MODIFIER"
+              applied: 1.00
+        - id: 3
+          label: "LARGE"
+          interpretation:
+            bands: {min: 100000001, max: 500000000}
+            application:
+              method: "MODIFIER"
+              applied: 1.15
+        - id: 4
+          label: "VERY_LARGE"
+          interpretation:
+            bands: {min: 500000001, max: null}
+            application:
+              method: "MODIFIER"
+              applied: 1.35
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
@@ -829,7 +928,7 @@ aerospace:
           - {value: 100000000, factor: 1.50}
           - {value: 250000000, factor: 1.80}
           - {value: 500000000, factor: 2.20}
-      
+
       liability_ilf:
         base_limit: 100000000
         factors:
@@ -838,13 +937,13 @@ aerospace:
           - {limit: 500000000, factor: 1.55}
           - {limit: 1000000000, factor: 2.00}
           - {limit: 2000000000, factor: 2.60}
-      
+
       deductible_credits:
         - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
         - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
         - {min_pct: 0.020, max_pct: 0.050, credit: 0.15}
         - {min_pct: 0.050, max_pct: null, credit: 0.20}
-      
+
       experience_modifiers:
         clean_10yr: 0.85
         clean_5yr: 0.92

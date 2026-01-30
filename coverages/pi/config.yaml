@@ -1,13 +1,13 @@
 # =============================================================================
 # DSI Model Configuration
-# 
+#
 # This file holds all the relvant configuration types for a single coverage.
 # For example,
 # coverage:         the actual coverage cohort, eg aerospace
 #   configuration:  the specific configuration file under that coverage, eg aerospace_general
-# 
+#
 # There can be multiple configurations saved under a coverage.
-# 
+#
 # A configuration is the single source of truth for:
 #   - 1) direct (optional) queries
 #   - 2) categorical features
@@ -16,11 +16,11 @@
 #   - tier definitions
 #   - other pricing parameters
 #   - test profiles for validation
-# 
+#
 # When a technical model is generated:
 # - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
 # - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-# 
+#
 # All DSI principles must be adhered to, specifically:
 # 1. All signals must be externally observable (no application questions required)
 # 2. Direct queries are OPTIONAL - model must work without them
@@ -88,14 +88,14 @@ professional_indemnity:
           - return: true
             override: null
             action: "FLAG"
-            note: "Significant practice area change"    
+            note: "Significant practice area change"
       - id: "merger_activity"
         question: "Any merger, acquisition, or spin-off in past 2 years?"
         bands:
           - return: true
             override: null
             action: "FLAG"
-            note: "Recent merger/acquisition activity"    
+            note: "Recent merger/acquisition activity"
       - id: "major_client_loss"
         question: "Loss of client representing >25% of revenue in past year?"
         bands:
@@ -111,7 +111,7 @@ professional_indemnity:
     # b) be the basis of premium (impact: premium)
     # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
-    
+
     categorical_groups:
       - id: "profession_type"
         name: "Profession Type"
@@ -122,7 +122,7 @@ professional_indemnity:
         name: "Sub Profession Type"
         description: "Underlying specialism of primary professional classification"
         impact: "modifier"
-        inference_utility_function: 
+        inference_utility_function:
       - id: "firm_size"
         name: "Firm Size"
         description: "Firm size by professional headcount"
@@ -136,75 +136,75 @@ professional_indemnity:
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
-    # -------------------------------------------------------------------------     
-    
+    # -------------------------------------------------------------------------
+
     categorical_features:
       profession_type:
         - cat: "LAW_FIRM"
           label: "Law Firm"
           premium: 8500
           description: "Law firms of all sizes and practice areas"
-          
+
         - cat: "ACCOUNTING_FIRM"
           label: "Accounting Firm"
           premium: 9000
           description: "CPA firms - audit, tax, advisory"
-          
+
         - cat: "ARCHITECTURE"
           label: "Architecture"
           premium: 7500
           description: "Licensed architects"
-          
+
         - cat: "ENGINEERING"
           label: "Engineering"
           premium: 8000
           description: "Licensed professional engineers"
-          
+
         - cat: "MANAGEMENT_CONSULTING"
           label: "Management Consulting"
           premium: 6000
           description: "Strategy, operations, organizational consulting"
-          
+
         - cat: "IT_CONSULTING"
           label: "IT Consulting"
           premium: 7000
           description: "Technology consulting and implementation"
-          
+
         - cat: "HR_CONSULTING"
           label: "HR Consulting"
           premium: 5500
           description: "Human resources and benefits consulting"
-          
+
         - cat: "REAL_ESTATE"
           label: "Real Estate"
           premium: 5500
           description: "Real estate agents, brokers, property managers"
-          
+
         - cat: "INSURANCE_BROKER"
           label: "Insurance Broker"
           premium: 6500
           description: "Insurance agents and brokers"
-          
+
         - cat: "FINANCIAL_PLANNING"
           label: "Financial Planning"
           premium: 7500
           description: "Financial planners and advisers (non-SEC)"
-          
+
         - cat: "HEALTHCARE_ADMIN"
           label: "Healthcare Administration"
           premium: 6000
           description: "Healthcare management and administration"
-          
+
         - cat: "APPRAISAL_VALUATION"
           label: "Appraisal/Valuation"
           premium: 6500
           description: "Real estate appraisers, business valuators"
-          
+
         - cat: "ENVIRONMENTAL_CONSULTING"
           label: "Environmental Consulting"
           premium: 7000
           description: "Environmental assessment and remediation"
-          
+
         - cat: "OTHER"
           label: "Other Professional"
           premium: 6000
@@ -243,7 +243,7 @@ professional_indemnity:
           label: "Intellectual Property"
           modifier: 1.15
           description: ""
-        - cat: "LITIGATION_PLAINTIFF" 
+        - cat: "LITIGATION_PLAINTIFF"
           label: "Plaintiff Litigation"
           modifier: 1.15
           description: ""
@@ -303,7 +303,7 @@ professional_indemnity:
           label: "Private Company Audit"
           modifier: 1.25
           description: ""
-        - cat: "TAX_ESTATE" 
+        - cat: "TAX_ESTATE"
           label: "Estate Tax"
           modifier: 1.20
           description: ""
@@ -319,7 +319,7 @@ professional_indemnity:
           label: "Individual Tax"
           modifier: 0.90
           description: ""
-        - cat: "BOOKKEEPING" 
+        - cat: "BOOKKEEPING"
           label: "Bookkeeping"
           modifier: 0.80
           description: ""
@@ -328,11 +328,11 @@ professional_indemnity:
           modifier: 1.35
           description: ""
         - cat: "HEALTHCARE_FACILITIES"
-          label: "Healthcare Facilities" 
+          label: "Healthcare Facilities"
           modifier: 1.25
           description: ""
         - cat: "HIGH_RISE"
-          label: "High-Rise Construction" 
+          label: "High-Rise Construction"
           modifier: 1.20
           description: ""
         - cat: "COMMERCIAL"
@@ -360,7 +360,7 @@ professional_indemnity:
           modifier: 1.40
           description: ""
         - cat: "GEOTECHNICAL"
-          label: "Geotechnical Engineering" 
+          label: "Geotechnical Engineering"
           modifier: 1.35
           description: ""
         - cat: "ENVIRONMENTAL"
@@ -387,33 +387,33 @@ professional_indemnity:
           label: "Consulting Only"
           modifier: 0.90
           description: ""
-            
+
       firm_size:
         - cat: "SOLO"
           label: "Solo Practitioner"
           modifier: 1.20
           description: "Single professional practice"
-          
+
         - cat: "MICRO"
           label: "Micro Firm"
           modifier: 1.10
           description: "2-5 professionals"
-          
+
         - cat: "SMALL"
           label: "Small Firm"
           modifier: 1.00
           description: "6-20 professionals"
-          
+
         - cat: "MEDIUM"
           label: "Medium Firm"
           modifier: 0.95
           description: "21-100 professionals"
-          
+
         - cat: "LARGE"
           label: "Large Firm"
           modifier: 0.90
           description: "101-500 professionals"
-          
+
         - cat: "MAJOR"
           label: "Major Firm"
           modifier: 0.85
@@ -423,37 +423,37 @@ professional_indemnity:
         - cat: "UNDER_500K"
           label: "Under $500K"
           modifier: 0.85
-          description: ""      
-          
+          description: ""
+
         - cat: "R_500K_1M"
           label: "$500K - $1M"
           modifier: 0.90
-          description: ""      
-          
+          description: ""
+
         - cat: "R_1M_5M"
           label: "$1M - $5M"
           modifier: 1.00
-          description: ""      
-          
+          description: ""
+
         - cat: "R_5M_25M"
           label: "$5M - $25M"
           modifier: 1.10
-          description: ""      
-          
+          description: ""
+
         - cat: "R_25M_100M"
           label: "$25M - $100M"
           modifier: 1.25
-          description: ""      
-          
+          description: ""
+
         - cat: "R_100M_500M"
           label: "$100M - $500M"
           modifier: 1.40
-          description: ""      
-          
+          description: ""
+
         - cat: "OVER_500M"
           label: "Over $500M"
           modifier: 1.60
-          description: ""      
+          description: ""
 
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
@@ -461,82 +461,116 @@ professional_indemnity:
     # Each group contributes to the composite score
     # Weights must add to 1
     # -------------------------------------------------------------------------
-    
+
     signal_groups:
       - id: "network_authority"
         name: "Network Authority"
         description: "Peer recognition, client quality, professional relationships"
         weight: 0.15  # Default, overridden by profession_weights
         test_scores: {excellent: 85, average: 65, poor: 35}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent network authority - modifier applied"
+
       - id: "regulatory_standing"
         name: "Regulatory Standing"
         description: "License status, disciplinary history, certifications"
         weight: 0.25
         test_scores: {excellent: 95, average: 75, poor: 35}
-        score_condition: true
-        bands:
-          - max: 30
+        score_conditions:
+          - threshold: 30
+            comparison: "<="
             override: 5
-            action: "DECLINE"
+            action: "REFER"
             note: "Critical regulatory issues"
-          - max: 45
+          - threshold: 45
+            comparison: "<="
             override: 4
-            action: "REFER" 
+            action: "REFER"
             note: "Significant regulatory concerns"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent regulatory standing - modifier applied"
+
       - id: "firm_stability"
         name: "Firm Stability"
         description: "Tenure, partner retention, financial health"
         weight: 0.15
         test_scores: {excellent: 88, average: 68, poor: 38}
-        score_condition: true
-        bands:
-          - max: 35
+        score_conditions:
+          - threshold: 35
+            comparison: "<="
             override: 4
             action: "REFER"
             note: "Firm stability concerns"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent firm stability - modifier applied"
+
       - id: "practice_quality"
         name: "Practice Quality"
         description: "Client reviews, outcomes, complaint history"
         weight: 0.15
         test_scores: {excellent: 90, average: 70, poor: 35}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent practice quality - modifier applied"
+
       - id: "technical_infrastructure"
         name: "Technical Infrastructure"
         description: "Digital security posture for client confidentiality"
         weight: 0.10
         test_scores: {excellent: 88, average: 65, poor: 40}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent technical infrastructure - modifier applied"
+
       - id: "corporate_footprint"
         name: "Corporate Footprint"
         description: "Website quality, thought leadership, transparency"
         weight: 0.10
         test_scores: {excellent: 82, average: 60, poor: 35}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent corporate footprint - modifier applied"
+
       - id: "litigation_history"
         name: "Litigation History"
         description: "Malpractice suits, fee disputes, regulatory enforcement"
         weight: 0.10
         test_scores: {excellent: 95, average: 78, poor: 35}
-        score_condition: true
-        bands:
-          - max: 25
+        score_conditions:
+          - threshold: 25
+            comparison: "<="
             override: 5
-            action: "DECLINE"
+            action: "REFER"
             note: "Severe litigation history"
-          - max: 40
+          - threshold: 40
+            comparison: "<="
             override: 4
             action: "REFER"
             note: "Significant litigation concerns"
-        inclusive_max: false
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent litigation history - modifier applied"
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -544,7 +578,7 @@ professional_indemnity:
     # Each group contributes to the group score
     # Weights must add to 1
     # -------------------------------------------------------------------------
-      
+
     signal_features:
       network_authority:
         - id: "peer_ranking"
@@ -552,42 +586,36 @@ professional_indemnity:
           description: "Recognition in Chambers, Legal 500, Best Lawyers, etc."
           weight: 0.25
           inference_utility_function: peer_ranking_basefunction
-          score_condition: false
-          
+
         - id: "client_quality"
           name: "Client Quality"
           description: "Quality of client base (public companies, Fortune 500)"
           weight: 0.20
           inference_utility_function: client_quality_basefunction
-          score_condition: false
-          
+
         - id: "referral_network"
           name: "Referral Network Quality"
           description: "Quality of referring relationships"
           weight: 0.15
           inference_utility_function: referral_quality_basefunction
-          score_condition: false
-          
+
         - id: "association_leadership"
           name: "Association Leadership"
           description: "Leadership roles in professional associations"
           weight: 0.15
           inference_utility_function: association_leadership_basefunction
-          score_condition: false
-          
+
         - id: "thought_leadership"
           name: "Thought Leadership"
           description: "Publications, speaking, CLE presentations"
           weight: 0.15
           inference_utility_function: thought_leadership_basefunction
-          score_condition: false
-          
+
         - id: "panel_membership"
           name: "Panel Membership"
           description: "Insurance defense panels, bank approved lists"
           weight: 0.10
           inference_utility_function: panel_membership_basefunction
-          score_condition: false
 
       regulatory_standing:
         - id: "license_status"
@@ -595,85 +623,81 @@ professional_indemnity:
           description: "Current status of all professional licenses"
           weight: 0.25
           inference_utility_function: license_status_basefunction
-          score_condition: true
-          bands:
-            - max: 35
+          score_conditions:
+            - threshold: 35
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "License status critical"
-            - max: 50
+            - threshold: 50
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "License status concerns"
-          inclusive_max: false
-          
+
         - id: "disciplinary_history"
           name: "Disciplinary History"
           description: "Sanctions, censures, suspensions, reprimands"
           weight: 0.30
           inference_utility_function: disciplinary_history_basefunction
-          score_condition: true
-          bands:
-            - max: 25
+          score_conditions:
+            - threshold: 25
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Severe disciplinary history"
-            - max: 45
+            - threshold: 45
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Significant disciplinary history"
-          inclusive_max: false
-          
+
         - id: "malpractice_record"
           name: "Public Malpractice Record"
           description: "Public judgments and disclosed settlements"
           weight: 0.15
           inference_utility_function: malpractice_record_basefunction
-          score_condition: true
-          bands:
-            - max: 35
+          score_conditions:
+            - threshold: 35
+              comparison: "<="
               override: 4
-              action: "REFER" 
+              action: "REFER"
               note: "Malpractice record concerns"
-          inclusive_max: false
-      
+
         - id: "ce_compliance"
           name: "Continuing Education Compliance"
           description: "CLE/CPE/CE requirements current"
           weight: 0.05
           inference_utility_function: ce_compliance_basefunction
-          score_condition: false
-          
+
         - id: "specialty_certification"
           name: "Specialty Certifications"
           description: "Board certifications, specialty designations"
           weight: 0.10
           inference_utility_function: speciality_certifications_basefunction
-          score_condition: false
-          
+
         - id: "peer_review"
           name: "Peer Review Rating"
           description: "AICPA peer review rating (accounting firms)"
           weight: 0.10
           inference_utility_function: peer_review_basefunction
-          score_condition: true
-          bands:
-            - max: 25
+          score_conditions:
+            - threshold: 25
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Failed peer review"
-            - max: 45
+            - threshold: 45
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Peer review deficiencies"
-          inclusive_max: false
-          
+
         - id: "pcaob_standing"
           name: "PCAOB/SEC Standing"
           description: "PCAOB registration and inspection results"
           weight: 0.05
           inference_utility_function: pcaob_standing_basefunction
-          score_condition: false
 
       firm_stability:
         - id: "tenure"
@@ -681,54 +705,48 @@ professional_indemnity:
           description: "Firm establishment and longevity"
           weight: 0.20
           inference_utility_function: years_inpractice_basefunction
-          score_condition: false
-          
+
         - id: "partner_stability"
           name: "Partner/Principal Stability"
           description: "Partner retention and turnover patterns"
           weight: 0.25
           inference_utility_function: partner_stability_basefunction
-          score_condition: true
-          bands:
-            - max: 30
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Partner stability concerns"
-          inclusive_max: false
-          
+
         - id: "staff_retention"
           name: "Staff Retention"
           description: "Associate/staff retention signals"
           weight: 0.15
           inference_utility_function: staff_retention_basefunction
-          score_condition: false
-          
+
         - id: "office_stability"
           name: "Office Stability"
           description: "Office locations and changes"
           weight: 0.10
           inference_utility_function: office_stability_basefunction
-          score_condition: false
-          
+
         - id: "financial_stability"
           name: "Financial Stability"
           description: "Financial health indicators"
           weight: 0.20
           inference_utility_function: financial_stability_basefunction
-          score_condition: true
-          bands:
-            - max: 30
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Financial stability concerns"
-          inclusive_max: false
-          
+
         - id: "succession_planning"
           name: "Succession Planning"
           description: "Observable succession planning indicators"
           weight: 0.10
           inference_utility_function: succession_planning_basefunction
-          score_condition: false
 
       practice_quality:
         - id: "outcome_patterns"
@@ -736,35 +754,30 @@ professional_indemnity:
           description: "Case outcomes, transaction completion rates"
           weight: 0.20
           inference_utility_function: outcome_patterns_basefunction
-          score_condition: false
-          
+
         - id: "client_reviews"
           name: "Client Reviews"
           description: "Client ratings on professional platforms"
           weight: 0.25
           inference_utility_function: client_reviews_basefunction
-          score_condition: false
-          
+
         - id: "work_quality"
           name: "Work Product Quality"
           description: "Observable work quality indicators"
           weight: 0.15
           inference_utility_function: work_quality_basefunction
-          score_condition: false
-          
+
         - id: "fee_dispute"
           name: "Fee Dispute History"
           description: "Fee arbitrations and disputes"
           weight: 0.15
           inference_utility_function: fee_dispute_basefunction
-          score_condition: false
-          
+
         - id: "complaint_history"
           name: "Professional Complaints"
           description: "Complaints to professional bodies"
           weight: 0.25
           inference_utility_function: complaint_history_basefunction
-          score_condition: false
 
       technical_infrastructure:
         - id: "tls_score"
@@ -772,41 +785,36 @@ professional_indemnity:
           description: "Website encryption quality"
           weight: 0.25
           inference_utility_function: tls_score_basefunction
-          score_condition: false
-          
+
         - id: "email_auth"
           name: "Email Authentication"
           description: "SPF, DMARC, DKIM configuration"
           weight: 0.25
           inference_utility_function: email_authentication_basefunction
-          score_condition: false
-          
+
         - id: "security_headers"
           name: "Security Headers"
           description: "HTTP security headers"
           weight: 0.15
           inference_utility_function: security_headers_basefunction
-          score_condition: false
-          
+
         - id: "portal_security"
           name: "Client Portal Security"
           description: "Client portal security if applicable"
           weight: 0.15
           inference_utility_function: portal_security_basefunction
-          score_condition: false
-          
+
         - id: "breach_history"
           name: "Data Breach History"
           description: "Historical data breaches"
           weight: 0.20
           inference_utility_function: breach_history_basefunction
-          score_condition: true
-          bands:
-            - max: 35
+          score_conditions:
+            - threshold: 35
+              comparison: "<="
               override: 4
-              action: "REFER" 
+              action: "REFER"
               note: "Data breach history concerns"
-          inclusive_max: false
 
       corporate_footprint:
         - id: "website_quality"
@@ -814,42 +822,36 @@ professional_indemnity:
           description: "Website quality and completeness"
           weight: 0.25
           inference_utility_function: website_quality_basefunction
-          score_condition: false
-          
+
         - id: "bio_completeness"
           name: "Professional Bio Quality"
           description: "Attorney/professional bio completeness"
           weight: 0.20
           inference_utility_function: bio_completeness_basefunction
-          score_condition: false
-          
+
         - id: "practice_clarity"
           name: "Practice Area Clarity"
           description: "Clear description of services"
           weight: 0.15
           inference_utility_function: practice_clarity_basefunction
-          score_condition: false
-          
+
         - id: "publications"
           name: "Publications/Insights"
           description: "Thought leadership content"
           weight: 0.15
           inference_utility_function: publications_basefunction
-          score_condition: false
-          
+
         - id: "community_involvement"
           name: "Community Involvement"
           description: "Pro bono, community service"
           weight: 0.15
           inference_utility_function: community_involvement_basefunction
-          score_condition: false
-          
+
         - id: "diversity"
           name: "Diversity & Inclusion"
           description: "Diversity signals and commitment"
           weight: 0.10
           inference_utility_function: diversity_basefunction
-          score_condition: false
 
       litigation_history:
         - id: "malpractice_suits"
@@ -857,61 +859,58 @@ professional_indemnity:
           description: "Professional negligence suits filed"
           weight: 0.35
           inference_utility_function: malpractice_suits_basefunction
-          score_condition: true
-          bands:
-            - max: 25
+          score_conditions:
+            - threshold: 25
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Multiple active malpractice suits"
-            - max: 40
+            - threshold: 40
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Active malpractice litigation"
-          inclusive_max: false
-          
+
         - id: "fee_disputes_litigation"
           name: "Fee Disputes/Arbitration"
           description: "Fee-related litigation and arbitration"
           weight: 0.15
           inference_utility_function: fee_disputes_basefunction
-          score_condition: false
-          
+
         - id: "regulatory_enforcement"
           name: "Regulatory Enforcement"
           description: "Regulatory enforcement actions"
           weight: 0.25
           inference_utility_function: regulatory_enforcement_basefunction
-          score_condition: true
-          bands:
-            - max: 25
+          score_conditions:
+            - threshold: 25
+              comparison: "<="
               override: 5
-              action: "DECLINE"
+              action: "REFER"
               note: "Active regulatory enforcement"
-            - max: 45
+            - threshold: 45
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Regulatory enforcement history"
-          inclusive_max: false
-          
+
         - id: "civil_litigation"
           name: "Civil Litigation as Defendant"
           description: "Other civil suits as defendant"
           weight: 0.15
           inference_utility_function: civil_litigation_basefunction
-          score_condition: false
-          
+
         - id: "bankruptcy"
           name: "Bankruptcy History"
           description: "Firm or principal bankruptcy"
           weight: 0.10
           inference_utility_function: bankruptcy_basefunction
-          score_condition: true
-          bands:
-            - max: 40
+          score_conditions:
+            - threshold: 40
+              comparison: "<="
               override: 4
               action: "REFER"
               note: "Bankruptcy history concerns"
-          inclusive_max: false
 
     # -------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -925,44 +924,127 @@ professional_indemnity:
           description: "Excellent firm - auto-approve at preferred pricing"
           auto_approve: true
           auto_decline: false
-          premium_generation_method: "categorical"
-          modifier: 0.75
-        - id: 2     
+          application:
+            method: "CATEGORICAL"
+            applied: 0.75
+        - id: 2
           label: "STANDARD"
           min_score: 650
           max_score: 799
           description: "Good firm - auto-approve at standard pricing"
           auto_approve: true
           auto_decline: false
-          premium_generation_method: "categorical"
-          modifier: 1.00
-        - id: 3     
+          application:
+            method: "CATEGORICAL"
+            applied: 1.00
+        - id: 3
           label: "ELEVATED"
           min_score: 500
           max_score: 649
           description: "Moderate risk - manual review recommended"
           auto_approve: false
           auto_decline: false
-          premium_generation_method: "categorical"
-          modifier: 1.30
-        - id: 4      
+          application:
+            method: "CATEGORICAL"
+            applied: 1.30
+        - id: 4
           label: "HIGH_RISK"
           min_score: 350
           max_score: 499
           description: "High risk - senior underwriter review with loading"
           auto_approve: false
           auto_decline: false
-          premium_generation_method: "categorical"
-          modifier: 1.75
-        - id: 5        
+          application:
+            method: "CATEGORICAL"
+            applied: 1.75
+        - id: 5
           label: "CRITICAL"
           min_score: 0
           max_score: 349
           description: "Critical risk - decline recommended"
           auto_approve: false
           auto_decline: true
-          premium_generation_method: "categorical"
-          modifier: 2.50
+          application:
+            method: "CATEGORICAL"
+            applied: 2.50
+
+    # -------------------------------------------------------------------------
+    # LOSS TIER BANDS
+    # -------------------------------------------------------------------------
+    loss_tier_bands:
+      bands:
+        - id: 1
+          label: "VERY_LOW"
+          interpretation:
+            bands: {min: 80, max: 100}
+            application:
+              frequency_modifier: 0.70
+              severity_modifier: 0.80
+        - id: 2
+          label: "LOW"
+          interpretation:
+            bands: {min: 60, max: 79}
+            application:
+              frequency_modifier: 0.85
+              severity_modifier: 0.90
+        - id: 3
+          label: "MODERATE"
+          interpretation:
+            bands: {min: 40, max: 59}
+            application:
+              frequency_modifier: 1.00
+              severity_modifier: 1.00
+        - id: 4
+          label: "HIGH"
+          interpretation:
+            bands: {min: 20, max: 39}
+            application:
+              frequency_modifier: 1.25
+              severity_modifier: 1.20
+        - id: 5
+          label: "VERY_HIGH"
+          interpretation:
+            bands: {min: 0, max: 19}
+            application:
+              frequency_modifier: 1.60
+              severity_modifier: 1.50
+      constraints:
+        floor: 0.55
+        cap: 1.60
+
+    # -------------------------------------------------------------------------
+    # EXPOSURE TIER BANDS
+    # -------------------------------------------------------------------------
+    exposure_tier_bands:
+      bands:
+        - id: 1
+          label: "SMALL"
+          interpretation:
+            bands: {min: 0, max: 1000000}
+            application:
+              method: "MODIFIER"
+              applied: 0.85
+        - id: 2
+          label: "MEDIUM"
+          interpretation:
+            bands: {min: 1000001, max: 5000000}
+            application:
+              method: "MODIFIER"
+              applied: 1.00
+        - id: 3
+          label: "LARGE"
+          interpretation:
+            bands: {min: 5000001, max: 25000000}
+            application:
+              method: "MODIFIER"
+              applied: 1.15
+        - id: 4
+          label: "VERY_LARGE"
+          interpretation:
+            bands: {min: 25000001, max: null}
+            application:
+              method: "MODIFIER"
+              applied: 1.35
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
@@ -998,14 +1080,14 @@ professional_indemnity:
           - {limit: 3000000, factor: 2.10}
           - {limit: 5000000, factor: 2.80}
           - {limit: 10000000, factor: 4.20}
-      
+
       retention_credits:
         - {min_retention: 5000, max_retention: 10000, credit: 0.00}
         - {min_retention: 10000, max_retention: 25000, credit: 0.05}
         - {min_retention: 25000, max_retention: 50000, credit: 0.10}
         - {min_retention: 50000, max_retention: 100000, credit: 0.15}
         - {min_retention: 100000, max_retention: null, credit: 0.20}
-      
+
       experience_modifiers:
         clean_10yr: 0.85
         clean_5yr: 0.90
@@ -1013,7 +1095,7 @@ professional_indemnity:
         minor_losses: 1.00
         moderate_losses: 1.20
         significant_losses: 1.40
-        
+
       taxes_fees_rate: 0.05
 
     # -------------------------------------------------------------------------
