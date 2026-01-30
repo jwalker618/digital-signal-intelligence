@@ -72,8 +72,15 @@
         /* --- PAGE 1: LANDING --- */
         #landing-page {
             justify-content: center;
-            align-items: center; /* Left Align */ /*was flex_start */
+            align-items: flex-start; /* Left Align */ /*was flex-start */
             text-align: left; /* was left */
+        }
+
+        .landing-content { 
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; /* center title, subtitle, abstract, button, IP */ 
+          width: 100%; 
         }
 
         .landing-logo svg {
@@ -227,6 +234,7 @@
     <div class="stage">
         
         <div id="landing-page" class="page active">
+  
             <div class="landing-logo">
                 <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
                     <g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)">
@@ -239,18 +247,14 @@
                 </svg>
             </div>
 
-            <h1 class="main-title">Digital Signal Intelligence</h1>
-            <h2 class="main-subtitle">A New Information Substrate for Insurance</h2>
+            <div class="landing-content">
+              <h1 class="main-title">Digital Signal Intelligence</h1>
+              <h2 class="main-subtitle">A New Information Substrate for Insurance</h2>
 
-            <div class="abstract-box">
-                <div class="abstract-label">Abstract:</div>
-                <p class="abstract-text">Digital Signal Intelligence (DSI) defines a new, externally observable information substrate for insurance, enabling deterministic, autonomous risk assessment, exposure estimation, loss propensity inference, and pricing at scale.</p>
-            </div>
-
-            <button class="begin-btn" onclick="navigateToTemplate()">BEGIN</button>
-
-            <div class="ip-statement">
-                © John Walker. All rights reserved. Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner. Unauthorised use is strictly prohibited.
+              <div class="abstract-box">
+                  <div class="abstract-label">Abstract:</div>
+                  <p class="abstract-text">Digital Signal Intelligence (DSI) defines a new, externally observable information substrate for insurance, enabling deterministic, autonomous risk assessment, exposure estimation, loss propensity inference, and pricing at scale.</p>
+              </div>
             </div>
         </div>
 
