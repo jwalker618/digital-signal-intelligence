@@ -58,7 +58,7 @@ When starting any DSI work:
 |-|-|-|-|
 | R1 | Master Configuration Layout | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R2 | Signal Architecture Alignment | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R3 | Coverage Configuration Rebuilds | 🔄 In Progress | `development/project/dsi_restructure_plan.md` |
+| R3 | Coverage Configuration Rebuilds | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R4 | Infrastructure Builder Revision | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R5 | Infrastructure Verification | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R6 | Layer Implementations | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
@@ -78,6 +78,8 @@ When starting any DSI work:
 - ✅ All 7 demo applications validated
 - ⚠️ Test coverage at ~12.6% (critical modules need unit tests)
 - ✅ 21 inference function name typos fixed across 6 coverage configs
+- ✅ All 7 coverage configs rebuilt to v2.0 structure (banded score_conditions, loss/exposure tier bands, application format)
+- ✅ Cross-coverage structural validation passed (all 7 configs consistent)
 - ✅ Metadata registry created (`signal_architecture/signals/inference/metadata_registry.py`)
 - ✅ Signal enhancements stubbed (Marine port state/classification, Aerospace certification/supply chain, Cross-Coverage regulatory)
 - ✅ Categoriser audit complete (4 core types + 8 variants implemented, 4 statistical types deferred to Phase 8)
