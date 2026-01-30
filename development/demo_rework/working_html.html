@@ -17,8 +17,9 @@
             --title-color: #0599AD;
             --subtitle-color: #FFFFFF;
             --text-black: #000000;
-            --cream-nodes: #E8E3DA; 
-            --gray-text: #7A766F;
+            --bg-dark: #0A1A2F;
+            --cream: #E8E3DA;
+            --gray: #7A766F;
 
             /* FONTS */
             --font-title: 'Inter', sans-serif;
@@ -33,7 +34,6 @@
             font-family: var(--font-body);
             color: var(--subtitle-color);
             height: 100vh;
-            width: 100vw;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -61,6 +61,7 @@
             width: 100%;
             height: 100%;
             flex-direction: column;
+            padding: 60px 80px;
             animation: fadeIn 0.5s ease;
         }
 
@@ -68,55 +69,28 @@
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* =========================================
-           PAGE 1: LANDING
-           ========================================= */
+        /* --- PAGE 1: LANDING --- */
         #landing-page {
-            padding: 60px 80px;
-        }
-
-        /* 1. Logo: Top Left, Large */
-        .landing-logo {
-            flex: 0 0 auto; /* Do not stretch */
-            width: 100%;
-            display: flex;
-            justify-content: flex-start; /* Align Left */
-            margin-bottom: 20px;
+            justify-content: center;
+            align-items: flex-start; /* Left Align */
+            text-align: left;
         }
 
         .landing-logo svg {
-            height: 140px; /* Large */
+            height: 180px; /* Increased size */
             width: auto;
-            margin-left: -12px; /* Optical alignment */
-        }
-
-        /* 2. Content Container: Centered on Screen */
-        .landing-content-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Vertical Center */
-            align-items: center; /* Horizontal Center */
-            width: 100%;
-        }
-
-        /* 3. Text Block: Left Aligned inside the center container */
-        .landing-text-block {
-            width: 100%;
-            max-width: 900px;
-            text-align: left; /* Explicit Left Align */
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; /* Items start from left */
+            margin-bottom: 40px;
+            margin-left: -15px; /* Visual optical alignment */
         }
 
         .main-title {
             font-family: var(--font-title);
-            font-weight: 800;
+            font-weight: 800; /* Extra Bold */
             font-size: 64px;
             color: var(--title-color);
             line-height: 1.1;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            max-width: 900px;
         }
 
         .main-subtitle {
@@ -124,12 +98,12 @@
             font-weight: 400;
             font-size: 32px;
             color: var(--subtitle-color);
-            margin-bottom: 50px;
+            margin-bottom: 60px;
         }
 
         .abstract-box {
-            max-width: 750px;
-            margin-bottom: 50px;
+            max-width: 700px;
+            margin-bottom: 60px;
         }
 
         .abstract-label {
@@ -137,7 +111,7 @@
             font-weight: 600;
             font-size: 14px;
             color: var(--subtitle-color);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -147,15 +121,7 @@
             font-weight: 300;
             font-size: 16px;
             line-height: 1.6;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .ip-statement {
-            font-size: 11px;
-            color: rgba(232, 227, 218, 0.4);
-            max-width: 800px;
-            line-height: 1.4;
-            margin-bottom: 40px;
+            color: var(--cream);
         }
 
         .begin-btn {
@@ -170,37 +136,40 @@
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin-bottom: auto; /* Pushes IP to bottom */
             transition: transform 0.2s;
         }
 
         .begin-btn:hover { transform: scale(1.02); }
 
+        .ip-statement {
+            font-size: 11px;
+            color: rgba(232, 227, 218, 0.4); /* Cream with opacity */
+            max-width: 800px;
+            line-height: 1.4;
+            margin-top: 40px;
+        }
 
-        /* =========================================
-           PAGE 2: TEMPLATE (BLANK SLATE)
-           ========================================= */
+        /* --- PAGE 2: TEMPLATE --- */
         #template-page {
-            /* Standard Layout */
+            padding: 0; /* Reset padding for full header */
         }
 
         .app-header {
             height: 80px;
             display: flex;
             align-items: center;
-            justify-content: space-between; /* Space between Home and Logo */
+            justify-content: space-between;
             padding: 0 40px;
-            background: rgba(11, 57, 84, 0.95); /* Slight opacity */
+            background: rgba(11, 57, 84, 0.9);
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            position: relative;
-            z-index: 20;
         }
 
-        /* Home Button (Far Left) */
         .home-btn {
             background: transparent;
             border: 1px solid var(--btn-color);
             color: var(--btn-color);
-            padding: 10px 24px;
+            padding: 10px 20px;
             border-radius: 4px;
             font-family: var(--font-title);
             font-weight: 600;
@@ -213,19 +182,17 @@
             color: var(--bg-page);
         }
 
-        /* Header Logo (Far Right) */
         .header-logo svg {
             height: 40px;
             width: auto;
         }
 
-        /* Content Area */
         .content-area {
             flex: 1;
             padding: 60px 80px;
             display: flex;
             flex-direction: column;
-            align-items: flex-start; /* Far Left Alignment */
+            align-items: flex-start; /* Far Left */
         }
 
         .page-title {
@@ -247,7 +214,7 @@
             padding: 20px;
             text-align: center;
             font-size: 12px;
-            color: var(--gray-text);
+            color: var(--gray);
             border-top: 1px solid rgba(255,255,255,0.05);
         }
 
@@ -260,7 +227,6 @@
     <div class="stage">
         
         <div id="landing-page" class="page active">
-            
             <div class="landing-logo">
                 <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
                     <g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)">
@@ -272,29 +238,23 @@
                     </g>
                 </svg>
             </div>
-            
-            <div class="landing-center">
-                <div class="landing-text-wrapper">
-                    <h1 class="landing-title">Digital Signal Intelligence</h1>
-                    <h2 class="landing-sub">A New Information Substrate for Insurance</h2>
-                    
-                    <div class="landing-abstract">
-                        <strong>Abstract:</strong><br><br>
-                        Digital Signal Intelligence (DSI) defines a new, externally observable information substrate for insurance, enabling deterministic, autonomous risk assessment, exposure estimation, loss propensity inference, and pricing at scale.
-                    </div>
-                    
-                    <div class="ip-statement" style="margin-top: 20px;">
-                        © John Walker. All rights reserved. Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner. Unauthorised use is strictly prohibited.
-                    </div>
-                </div>
+
+            <h1 class="main-title">Digital Signal Intelligence</h1>
+            <h2 class="main-subtitle">A New Information Substrate for Insurance</h2>
+
+            <div class="abstract-box">
+                <div class="abstract-label">Abstract:</div>
+                <p class="abstract-text">Digital Signal Intelligence (DSI) defines a new, externally observable information substrate for insurance, enabling deterministic, autonomous risk assessment, exposure estimation, loss propensity inference, and pricing at scale.</p>
             </div>
 
-            <div class="landing-bottom">
-                <button class="btn-main" onclick="navigateToTemplate()">BEGIN</button>
+            <button class="begin-btn" onclick="navigateToTemplate()">BEGIN</button>
+
+            <div class="ip-statement">
+                © John Walker. All rights reserved. Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner. Unauthorised use is strictly prohibited.
             </div>
         </div>
 
-        <div id="template-page" class="view">
+        <div id="template-page" class="page">
             <header class="app-header">
                 <button class="home-btn" onclick="navigateToHome()">Home</button>
                 <div class="header-logo">
@@ -308,7 +268,7 @@
                         </g>
                     </svg>
                 </div>
-                <div class="app-header-spacer"></div> </header>
+            </header>
 
             <div class="content-area">
                 <h1 class="page-title">Page Title</h1>
