@@ -37,12 +37,17 @@ class ConditionAction(Enum):
     REFERRAL = "referral"
     NOTE = "note"
     MODIFIER = "modifier"
+    FLAG = "flag"
+    REFER = "refer"
 
 
 class PremiumMethod(Enum):
     """Methods for base premium calculation."""
-    PURE = "pure"           # Direct premium amount from tier
-    RATE_BASED = "rate"     # Rate applied to metric (TIV, revenue, etc.)
+    PURE = "pure"               # Direct premium amount from tier
+    RATE_BASED = "rate"         # Rate applied to metric (TIV, revenue, etc.)
+    PREMIUM_BASE = "PREMIUM_BASE"  # v2.0: Direct premium from tier application.applied
+    MULTIPLIER = "MULTIPLIER"      # v2.0: Rate × basis value (tiv, limit, revenue)
+    CATEGORICAL = "CATEGORICAL"    # v2.0: Category-derived premium
 
 
 class DiscoveryConfidence(Enum):
@@ -60,37 +65,69 @@ class DiscoveryConfidence(Enum):
 @dataclass
 class SignalCondition:
     """
-    Condition that can trigger tier override, referral, or note.
+    Condition that can trigger tier override, referral, flag, or modifier.
 
-    Defined at signal_feature or signal_group level in YAML config.
-    These are evaluated in Step 6 of the workflow.
+    v2.0: Defined via score_conditions (plural) list on signal_registry
+    items and groups. Each condition has threshold, comparison, action.
+    Actions: FLAG | MODIFIER | REFER (DECLINE is tier-level only).
     """
     condition_type: str       # 'threshold', 'max', 'equals', 'contains'
-    condition_value: Any      # The value to compare against (e.g., max score)
+    condition_value: Any      # The value to compare against
+    comparison: str           # v2.0: "<=", ">=", "==", ">", "<"
     action: ConditionAction   # What happens when triggered
-    action_value: Any         # tier number, referral reason, note text
-    inclusive: bool = False   # Whether the threshold is inclusive
+    action_value: Any         # tier number, modifier applied, note text
+    applied: Optional[float] = None  # v2.0: MODIFIER applied value
+    note: str = ""            # v2.0: descriptive note
+    inclusive: bool = False   # v1.0 compat: whether threshold is inclusive
 
     @classmethod
     def from_yaml_band(cls, band: Dict[str, Any]) -> 'SignalCondition':
-        """Create from YAML band definition."""
+        """Create from YAML band definition (v1.0 or v2.0 format)."""
         # Map YAML action strings to ConditionAction
         action_map = {
             "DECLINE": ConditionAction.TIER_OVERRIDE,
-            "REFER": ConditionAction.REFERRAL,
+            "REFER": ConditionAction.REFER,
             "MODIFIER": ConditionAction.MODIFIER,
+            "FLAG": ConditionAction.FLAG,
             "NOTE": ConditionAction.NOTE,
         }
 
         action_str = band.get("action", "NOTE")
         action = action_map.get(action_str, ConditionAction.NOTE)
 
-        # Determine action_value based on action type
+        # v2.0 format: threshold + comparison
+        if "threshold" in band:
+            comparison = band.get("comparison", "<=")
+            threshold_value = band["threshold"]
+
+            # Determine action_value based on action type
+            if action == ConditionAction.TIER_OVERRIDE:
+                action_value = band.get("override", 5)
+            elif action == ConditionAction.REFER:
+                action_value = band.get("override", band.get("note", "Referral triggered"))
+            elif action == ConditionAction.MODIFIER:
+                action_value = band.get("applied", band.get("modifier", 1.0))
+            elif action == ConditionAction.FLAG:
+                action_value = band.get("note", "Flag triggered")
+            else:
+                action_value = band.get("note", "")
+
+            return cls(
+                condition_type="threshold",
+                condition_value=threshold_value,
+                comparison=comparison,
+                action=action,
+                action_value=action_value,
+                applied=band.get("applied"),
+                note=band.get("note", ""),
+            )
+
+        # v1.0 fallback: max field
         if action == ConditionAction.TIER_OVERRIDE:
             action_value = band.get("override", 5)
         elif action == ConditionAction.MODIFIER:
             action_value = band.get("modifier", 1.0)
-        elif action == ConditionAction.REFERRAL:
+        elif action in (ConditionAction.REFERRAL, ConditionAction.REFER):
             action_value = band.get("note", "Referral triggered")
         else:
             action_value = band.get("note", "")
@@ -98,8 +135,11 @@ class SignalCondition:
         return cls(
             condition_type="max",
             condition_value=band.get("max", 0),
+            comparison="<=",
             action=action,
             action_value=action_value,
+            applied=band.get("applied", band.get("modifier")),
+            note=band.get("note", ""),
             inclusive=band.get("inclusive_max", False),
         )
 
@@ -121,13 +161,25 @@ class SignalFeatureConfig:
 
     @classmethod
     def from_yaml(cls, data: Dict[str, Any]) -> 'SignalFeatureConfig':
-        """Create from YAML feature definition."""
+        """Create from YAML feature definition (v1.0 or v2.0 format)."""
         conditions = []
-        if data.get("score_condition") and "bands" in data:
+
+        # v2.0: score_conditions (plural) as list of condition objects
+        if "score_conditions" in data and isinstance(data["score_conditions"], list):
+            conditions = [
+                SignalCondition.from_yaml_band(cond)
+                for cond in data["score_conditions"]
+            ]
+            has_conditions = True
+        # v1.0 fallback: score_condition (singular) boolean + bands
+        elif data.get("score_condition") and "bands" in data:
             conditions = [
                 SignalCondition.from_yaml_band(band)
                 for band in data["bands"]
             ]
+            has_conditions = True
+        else:
+            has_conditions = bool(data.get("score_condition", False))
 
         return cls(
             id=data["id"],
@@ -135,7 +187,7 @@ class SignalFeatureConfig:
             description=data.get("description", ""),
             weight=data.get("weight", 0.0),
             inference_function=data.get("inference_utility_function", ""),
-            score_condition=data.get("score_condition", False),
+            score_condition=has_conditions,
             conditions=conditions,
         )
 
@@ -162,13 +214,25 @@ class SignalGroupConfig:
         group_data: Dict[str, Any],
         features_data: List[Dict[str, Any]]
     ) -> 'SignalGroupConfig':
-        """Create from YAML group and features definitions."""
+        """Create from YAML group and features definitions (v1.0 or v2.0)."""
         conditions = []
-        if group_data.get("score_condition") and "bands" in group_data:
+
+        # v2.0: score_conditions (plural) as list of condition objects
+        if "score_conditions" in group_data and isinstance(group_data["score_conditions"], list):
+            conditions = [
+                SignalCondition.from_yaml_band(cond)
+                for cond in group_data["score_conditions"]
+            ]
+            has_conditions = True
+        # v1.0 fallback: score_condition (singular) boolean + bands
+        elif group_data.get("score_condition") and "bands" in group_data:
             conditions = [
                 SignalCondition.from_yaml_band(band)
                 for band in group_data["bands"]
             ]
+            has_conditions = True
+        else:
+            has_conditions = bool(group_data.get("score_condition", False))
 
         features = [
             SignalFeatureConfig.from_yaml(f)
@@ -180,7 +244,7 @@ class SignalGroupConfig:
             name=group_data.get("name", group_data["id"]),
             description=group_data.get("description", ""),
             weight=group_data.get("weight", 0.0),
-            score_condition=group_data.get("score_condition", False),
+            score_condition=has_conditions,
             conditions=conditions,
             features=features,
             test_scores=group_data.get("test_scores", {}),
@@ -314,9 +378,29 @@ class TierConfig:
 
     @classmethod
     def from_yaml(cls, data: Dict[str, Any]) -> 'TierConfig':
-        """Create from YAML tier definition."""
-        method_str = data.get("premium_generation_method", "base")
-        method = PremiumMethod.RATE_BASED if method_str == "rate" else PremiumMethod.PURE
+        """Create from YAML tier definition (v1.0 or v2.0 format)."""
+        # v2.0: application block with method/applied/basis
+        application = data.get("application", {})
+        if application:
+            method_str = application.get("method", "PREMIUM_BASE")
+            method_map = {
+                "PREMIUM_BASE": PremiumMethod.PREMIUM_BASE,
+                "MULTIPLIER": PremiumMethod.MULTIPLIER,
+                "CATEGORICAL": PremiumMethod.CATEGORICAL,
+                "base": PremiumMethod.PURE,
+                "rate": PremiumMethod.RATE_BASED,
+            }
+            method = method_map.get(method_str, PremiumMethod.PREMIUM_BASE)
+            base_premium = application.get("applied", application.get("value"))
+            rate = application.get("applied") if method == PremiumMethod.MULTIPLIER else None
+            rate_basis = application.get("basis")
+        else:
+            # v1.0 fallback
+            method_str = data.get("premium_generation_method", "base")
+            method = PremiumMethod.RATE_BASED if method_str == "rate" else PremiumMethod.PURE
+            base_premium = data.get("premium")
+            rate = data.get("rate")
+            rate_basis = data.get("rate_basis")
 
         return cls(
             tier=data.get("id", 1),
@@ -327,9 +411,9 @@ class TierConfig:
             auto_approve=data.get("auto_approve", False),
             auto_decline=data.get("auto_decline", False),
             premium_method=method,
-            base_premium=data.get("premium"),
-            rate=data.get("rate"),
-            rate_basis=data.get("rate_basis"),
+            base_premium=base_premium,
+            rate=rate,
+            rate_basis=rate_basis,
         )
 
     @property
@@ -386,6 +470,106 @@ class PricingConfig:
 
 
 @dataclass
+class LossTierBand:
+    """v2.0: Loss tier band with frequency/severity modifiers."""
+    id: int
+    label: str
+    min_score: float
+    max_score: float
+    frequency_modifier: float = 1.0
+    severity_modifier: float = 1.0
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'LossTierBand':
+        """Create from v2.0 YAML loss tier band."""
+        interp = data.get("interpretation", {})
+        bands = interp.get("bands", {})
+        app = interp.get("application", {})
+        return cls(
+            id=data.get("id", 1),
+            label=data.get("label", ""),
+            min_score=bands.get("min", 0),
+            max_score=bands.get("max", 100),
+            frequency_modifier=app.get("frequency_modifier", 1.0),
+            severity_modifier=app.get("severity_modifier", 1.0),
+        )
+
+
+@dataclass
+class LossTierConfig:
+    """v2.0: Loss tier bands configuration with constraints."""
+    bands: List[LossTierBand] = field(default_factory=list)
+    floor: float = 0.55
+    cap: float = 1.60
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'LossTierConfig':
+        """Create from v2.0 YAML loss_tier_bands section."""
+        bands = [LossTierBand.from_yaml(b) for b in data.get("bands", [])]
+        constraints = data.get("constraints", {})
+        return cls(
+            bands=bands,
+            floor=constraints.get("floor", 0.55),
+            cap=constraints.get("cap", 1.60),
+        )
+
+    def get_band_for_score(self, score: float) -> Optional['LossTierBand']:
+        """Get loss tier band for a given loss score."""
+        for band in self.bands:
+            if band.min_score <= score <= band.max_score:
+                return band
+        return None
+
+
+@dataclass
+class ExposureTierBand:
+    """v2.0: Exposure tier band with method and applied modifier."""
+    id: int
+    label: str
+    min_value: float
+    max_value: Optional[float]  # None = unbounded
+    method: str = "MODIFIER"
+    applied: float = 1.0
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'ExposureTierBand':
+        """Create from v2.0 YAML exposure tier band."""
+        interp = data.get("interpretation", {})
+        bands = interp.get("bands", {})
+        app = interp.get("application", {})
+        return cls(
+            id=data.get("id", 1),
+            label=data.get("label", ""),
+            min_value=bands.get("min", 0),
+            max_value=bands.get("max"),
+            method=app.get("method", "MODIFIER"),
+            applied=app.get("applied", 1.0),
+        )
+
+
+@dataclass
+class ExposureTierConfig:
+    """v2.0: Exposure tier bands configuration."""
+    bands: List[ExposureTierBand] = field(default_factory=list)
+
+    @classmethod
+    def from_yaml(cls, data: Dict[str, Any]) -> 'ExposureTierConfig':
+        """Create from v2.0 YAML exposure_tier_bands section."""
+        bands = [ExposureTierBand.from_yaml(b) for b in data.get("bands", [])]
+        return cls(bands=bands)
+
+    def get_band_for_value(self, value: float) -> Optional['ExposureTierBand']:
+        """Get exposure tier band for a given exposure value."""
+        for band in self.bands:
+            if band.max_value is None:
+                if value >= band.min_value:
+                    return band
+            elif band.min_value <= value <= band.max_value:
+                return band
+        return None
+
+
+@dataclass
 class ConfigMetadata:
     """Metadata for a configuration."""
     name: str
@@ -438,6 +622,10 @@ class CoverageConfig:
 
     # Tier definitions (Steps 8-9)
     tiers: List[TierConfig] = field(default_factory=list)
+
+    # v2.0: Loss and Exposure tier bands
+    loss_tier_config: Optional[LossTierConfig] = None
+    exposure_tier_config: Optional[ExposureTierConfig] = None
 
     # Limit bands (Step 12)
     limit_bands: List[LimitBandConfig] = field(default_factory=list)

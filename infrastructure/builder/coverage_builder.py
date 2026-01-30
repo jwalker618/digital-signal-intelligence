@@ -262,34 +262,34 @@ class CoverageBuilder:
         """
         logger.info(f"Generating config for {spec.name}")
 
-        # Build configuration structure
-        config = {
-            "coverage": {
-                "id": spec.name.lower().replace(" ", "_"),
-                "name": spec.name,
+        # Build v2.0 configuration structure
+        coverage_id = spec.name.lower().replace(" ", "_")
+        config_name = f"{coverage_id}_general"
+
+        inner_config = {
+            "metadata": {
+                "name": f"DSI {spec.name} Model",
                 "description": spec.description,
-                "locale": spec.locale,
-                "industry": spec.industry,
-                "version": "1.0.0",
-            },
-            "signal_groups": self._build_signal_groups(selections),
-            "scoring": {
-                "composite_method": "weighted_average",
-                "scale": {"min": 300, "max": 850},
-            },
-            "tiers": self._build_tier_config(spec.tier_strategy),
-            "premium": {
-                "base_rate": 0.005,
-                "tier_factors": {
-                    "1": 0.7,
-                    "2": 1.0,
-                    "3": 1.3,
-                    "4": 1.7,
-                    "5": 2.5,
-                },
+                "version": "2.0.0",
+                "applicable_markets": [spec.locale] if spec.locale else ["us"],
+                "minimum_viable_input": ["client name (domain optional)", "Limit in USD"],
+                "min_premium": 5000,
+                "default_currency": "USD",
             },
             "direct_queries": self._build_direct_queries(spec),
+            "signal_groups": self._build_signal_groups_v2(selections),
+            "signal_features": self._build_signal_features_v2(selections),
+            "tier_thresholds": {"tiers": self._build_tier_config(spec.tier_strategy)},
+            "loss_tier_bands": self._build_loss_tier_bands(),
+            "exposure_tier_bands": self._build_exposure_tier_bands(),
+            "limit_bandings": [
+                {"id": 1, "limit": 1000000, "deductible": 25000},
+                {"id": 2, "limit": 5000000, "deductible": 50000},
+                {"id": 3, "limit": 10000000, "deductible": 100000},
+            ],
         }
+
+        config = {coverage_id: {config_name: inner_config}}
 
         return yaml.dump(config, default_flow_style=False, sort_keys=False)
 
@@ -349,7 +349,7 @@ class CoverageBuilder:
         self,
         selections: List[SignalSelection],
     ) -> Dict[str, Any]:
-        """Build signal groups from selections."""
+        """Build signal groups from selections (v1.0 compat)."""
         groups: Dict[str, Dict[str, Any]] = {}
 
         for selection in selections:
@@ -369,47 +369,153 @@ class CoverageBuilder:
 
         return groups
 
-    def _build_tier_config(self, strategy: str) -> Dict[str, Any]:
-        """Build tier configuration."""
-        if strategy == "conservative":
-            return {
-                "1": {"min_score": 800, "label": "PREFERRED", "decision": "approve"},
-                "2": {"min_score": 720, "label": "STANDARD", "decision": "approve"},
-                "3": {"min_score": 650, "label": "STANDARD_PLUS", "decision": "approve"},
-                "4": {"min_score": 550, "label": "ELEVATED", "decision": "refer"},
-                "5": {"min_score": 0, "label": "HIGH_RISK", "decision": "refer"},
-            }
-        elif strategy == "aggressive":
-            return {
-                "1": {"min_score": 750, "label": "PREFERRED", "decision": "approve"},
-                "2": {"min_score": 650, "label": "STANDARD", "decision": "approve"},
-                "3": {"min_score": 550, "label": "STANDARD_PLUS", "decision": "approve"},
-                "4": {"min_score": 400, "label": "ELEVATED", "decision": "approve"},
-                "5": {"min_score": 0, "label": "HIGH_RISK", "decision": "refer"},
-            }
-        else:  # standard
-            return {
-                "1": {"min_score": 780, "label": "PREFERRED", "decision": "approve"},
-                "2": {"min_score": 680, "label": "STANDARD", "decision": "approve"},
-                "3": {"min_score": 580, "label": "STANDARD_PLUS", "decision": "approve"},
-                "4": {"min_score": 480, "label": "ELEVATED", "decision": "refer"},
-                "5": {"min_score": 0, "label": "HIGH_RISK", "decision": "refer"},
-            }
+    def _build_signal_groups_v2(
+        self,
+        selections: List[SignalSelection],
+    ) -> List[Dict[str, Any]]:
+        """Build v2.0 signal groups with score_conditions."""
+        groups_map: Dict[str, Dict[str, Any]] = {}
+
+        for selection in selections:
+            if selection.group_id not in groups_map:
+                groups_map[selection.group_id] = {
+                    "id": selection.group_id,
+                    "name": selection.group_id.replace("_", " ").title(),
+                    "description": f"Signal group: {selection.group_id}",
+                    "weight": 0.0,
+                    "test_scores": {"excellent": 85, "average": 65, "poor": 35},
+                    "score_conditions": [
+                        {
+                            "threshold": 20,
+                            "comparison": "<=",
+                            "action": "MODIFIER",
+                            "applied": 0.90,
+                            "note": f"Excellent {selection.group_id} - modifier applied",
+                        }
+                    ],
+                }
+            groups_map[selection.group_id]["weight"] += selection.weight
+
+        return list(groups_map.values())
+
+    def _build_signal_features_v2(
+        self,
+        selections: List[SignalSelection],
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Build v2.0 signal features grouped by group_id."""
+        features: Dict[str, List[Dict[str, Any]]] = {}
+
+        for selection in selections:
+            if selection.group_id not in features:
+                features[selection.group_id] = []
+
+            features[selection.group_id].append({
+                "id": selection.signal_id,
+                "name": selection.signal_name,
+                "description": f"Signal: {selection.signal_name}",
+                "weight": selection.weight,
+                "inference_utility_function": f"{selection.signal_id}_basefunction",
+            })
+
+        return features
+
+    def _build_tier_config(self, strategy: str) -> List[Dict[str, Any]]:
+        """Build v2.0 tier configuration with application blocks."""
+        base_premiums = {
+            "conservative": [5000, 8000, 12000, 20000, 35000],
+            "aggressive": [4000, 6000, 9000, 15000, 28000],
+            "standard": [5000, 7500, 11000, 18000, 30000],
+        }
+        thresholds = {
+            "conservative": [(800, 1000), (720, 799), (650, 719), (550, 649), (0, 549)],
+            "aggressive": [(750, 1000), (650, 749), (550, 649), (400, 549), (0, 399)],
+            "standard": [(780, 1000), (680, 779), (580, 679), (480, 579), (0, 479)],
+        }
+        labels = ["PREFERRED", "STANDARD_PLUS", "STANDARD", "SUBSTANDARD", "DECLINE"]
+        approvals = [True, True, False, False, False]
+        declines = [False, False, False, False, True]
+
+        strat = strategy if strategy in base_premiums else "standard"
+        premiums = base_premiums[strat]
+        scores = thresholds[strat]
+
+        tiers = []
+        for i in range(5):
+            tiers.append({
+                "id": i + 1,
+                "label": labels[i],
+                "min_score": scores[i][0],
+                "max_score": scores[i][1],
+                "description": f"Tier {i + 1} - {labels[i]}",
+                "auto_approve": approvals[i],
+                "auto_decline": declines[i],
+                "application": {
+                    "method": "PREMIUM_BASE",
+                    "applied": premiums[i],
+                },
+            })
+        return tiers
+
+    def _build_loss_tier_bands(self) -> Dict[str, Any]:
+        """Build v2.0 loss tier bands with frequency/severity modifiers."""
+        return {
+            "bands": [
+                {"id": 1, "label": "VERY_LOW", "interpretation": {
+                    "bands": {"min": 80, "max": 100},
+                    "application": {"frequency_modifier": 0.70, "severity_modifier": 0.80}}},
+                {"id": 2, "label": "LOW", "interpretation": {
+                    "bands": {"min": 60, "max": 79},
+                    "application": {"frequency_modifier": 0.85, "severity_modifier": 0.90}}},
+                {"id": 3, "label": "MODERATE", "interpretation": {
+                    "bands": {"min": 40, "max": 59},
+                    "application": {"frequency_modifier": 1.00, "severity_modifier": 1.00}}},
+                {"id": 4, "label": "HIGH", "interpretation": {
+                    "bands": {"min": 20, "max": 39},
+                    "application": {"frequency_modifier": 1.25, "severity_modifier": 1.20}}},
+                {"id": 5, "label": "VERY_HIGH", "interpretation": {
+                    "bands": {"min": 0, "max": 19},
+                    "application": {"frequency_modifier": 1.60, "severity_modifier": 1.50}}},
+            ],
+            "constraints": {"floor": 0.55, "cap": 1.60},
+        }
+
+    def _build_exposure_tier_bands(self) -> Dict[str, Any]:
+        """Build v2.0 exposure tier bands."""
+        return {
+            "bands": [
+                {"id": 1, "label": "SMALL", "interpretation": {
+                    "bands": {"min": 0, "max": 10000000},
+                    "application": {"method": "MODIFIER", "applied": 0.85}}},
+                {"id": 2, "label": "MEDIUM", "interpretation": {
+                    "bands": {"min": 10000001, "max": 50000000},
+                    "application": {"method": "MODIFIER", "applied": 1.00}}},
+                {"id": 3, "label": "LARGE", "interpretation": {
+                    "bands": {"min": 50000001, "max": 250000000},
+                    "application": {"method": "MODIFIER", "applied": 1.15}}},
+                {"id": 4, "label": "VERY_LARGE", "interpretation": {
+                    "bands": {"min": 250000001, "max": None},
+                    "application": {"method": "MODIFIER", "applied": 1.35}}},
+            ],
+        }
 
     def _build_direct_queries(self, spec: CoverageSpec) -> List[Dict[str, Any]]:
-        """Build direct queries based on spec."""
+        """Build v2.0 direct queries based on spec."""
         queries = [
             {
                 "id": "claims_history",
                 "question": "Has the insured had any claims in the past 5 years?",
-                "type": "boolean",
-                "impact": "tier_adjustment",
+                "bands": [
+                    {"return": True, "action": "REFER", "override": None, "modifier": None,
+                     "note": "Prior claims - review required"},
+                ],
             },
             {
                 "id": "prior_coverage",
                 "question": "Does the insured have prior coverage?",
-                "type": "boolean",
-                "impact": "underwriting",
+                "bands": [
+                    {"return": False, "action": "FLAG", "override": None, "modifier": None,
+                     "note": "No prior coverage"},
+                ],
             },
         ]
 
@@ -418,16 +524,20 @@ class CoverageBuilder:
             queries.append({
                 "id": "regulatory_actions",
                 "question": "Any regulatory actions in the past 3 years?",
-                "type": "boolean",
-                "impact": "tier_adjustment",
+                "bands": [
+                    {"return": True, "action": "REFER", "override": 4, "modifier": None,
+                     "note": "Regulatory actions - elevated risk"},
+                ],
             })
 
         if "technology" in spec.industry.lower() or "cyber" in spec.name.lower():
             queries.append({
                 "id": "data_breach",
                 "question": "Has the insured experienced a data breach?",
-                "type": "boolean",
-                "impact": "tier_adjustment",
+                "bands": [
+                    {"return": True, "action": "REFER", "override": 4, "modifier": None,
+                     "note": "Prior data breach - review required"},
+                ],
             })
 
         return queries

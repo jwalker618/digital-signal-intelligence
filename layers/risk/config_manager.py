@@ -27,6 +27,8 @@ from .types import (
     TierConfig,
     LimitBandConfig,
     PricingConfig,
+    LossTierConfig,
+    ExposureTierConfig,
     utcnow,
 )
 
@@ -344,12 +346,34 @@ class ConfigManager:
                     SignalGroupConfig.from_yaml(group_config, features_data)
                 )
 
-            # Parse tiers
+            # v2.0: If signal_registry exists (cyber-style), extract groups from it
+            if not signal_groups and "signal_registry" in config:
+                signal_groups = self._parse_signal_registry(config)
+
+            # Parse tiers - support both tier_thresholds and risk_tier_bands
             tiers_config = config.get("tier_thresholds", {})
             tiers = [
                 TierConfig.from_yaml(tier_data)
                 for tier_data in tiers_config.get("tiers", [])
             ]
+
+            # v2.0: If risk_tier_bands exists (cyber-style), use that
+            if not tiers and "risk_tier_bands" in config:
+                risk_bands = config["risk_tier_bands"]
+                for band_data in risk_bands.get("bands", []):
+                    interp = band_data.get("interpretation", {})
+                    bands = interp.get("bands", {})
+                    tier_dict = {
+                        "id": band_data.get("id", 1),
+                        "label": band_data.get("label", ""),
+                        "min_score": bands.get("min", 0),
+                        "max_score": bands.get("max", 1000),
+                        "description": band_data.get("description", ""),
+                        "auto_approve": interp.get("action") == "APPROVE",
+                        "auto_decline": interp.get("action") == "DECLINE",
+                        "application": interp.get("application", {}),
+                    }
+                    tiers.append(TierConfig.from_yaml(tier_dict))
 
             # Parse limit bands
             limit_bands = [
@@ -359,6 +383,18 @@ class ConfigManager:
 
             # Parse pricing
             pricing = PricingConfig.from_yaml(config.get("pricing", {}))
+
+            # v2.0: Parse loss tier bands
+            loss_tier_config = None
+            loss_tier_data = config.get("loss_tier_bands")
+            if loss_tier_data:
+                loss_tier_config = LossTierConfig.from_yaml(loss_tier_data)
+
+            # v2.0: Parse exposure tier bands
+            exposure_tier_config = None
+            exposure_tier_data = config.get("exposure_tier_bands")
+            if exposure_tier_data:
+                exposure_tier_config = ExposureTierConfig.from_yaml(exposure_tier_data)
 
             # Get test profiles
             test_profiles = config.get("test_profiles", {})
@@ -372,6 +408,8 @@ class ConfigManager:
                 categorical_groups=categorical_groups,
                 signal_groups=signal_groups,
                 tiers=tiers,
+                loss_tier_config=loss_tier_config,
+                exposure_tier_config=exposure_tier_config,
                 limit_bands=limit_bands,
                 pricing=pricing,
                 test_profiles=test_profiles,
@@ -381,6 +419,64 @@ class ConfigManager:
             raise ConfigParseError(f"Missing required config key: {e}")
         except Exception as e:
             raise ConfigParseError(f"Failed to parse config: {e}")
+
+    def _parse_signal_registry(self, config: Dict[str, Any]) -> List[SignalGroupConfig]:
+        """
+        Parse v2.0 signal_registry format into SignalGroupConfig objects.
+
+        v2.0 cyber-style configs define signals in signal_registry with group_id
+        references, and group definitions under groups.three_layer_assessment.
+        """
+        from collections import defaultdict
+
+        registry = config.get("signal_registry", [])
+        groups_def = config.get("groups", {}).get("three_layer_assessment", [])
+
+        # Build group definitions map
+        group_defs = {}
+        for gd in groups_def:
+            gid = gd.get("id", "")
+            group_defs[gid] = gd
+
+        # Collect signals by group
+        signals_by_group: Dict[str, list] = defaultdict(list)
+        for signal in registry:
+            tla = signal.get("three_layer_assessment", {})
+            group_id = tla.get("group_id", "")
+            if group_id:
+                # Build feature-like data from registry signal
+                feature_data = {
+                    "id": signal.get("id", ""),
+                    "name": signal.get("id", "").replace("_", " ").title(),
+                    "description": "",
+                    "weight": tla.get("risk", {}).get("weight", 0.0),
+                    "inference_utility_function": signal.get("inference_utility_function", ""),
+                }
+                # Collect score_conditions from risk layer
+                risk_conds = tla.get("risk", {}).get("score_conditions", [])
+                if risk_conds:
+                    feature_data["score_conditions"] = risk_conds
+                signals_by_group[group_id].append(feature_data)
+
+        # Build signal groups
+        result = []
+        for group_id, features_data in signals_by_group.items():
+            gd = group_defs.get(group_id, {})
+            group_data = {
+                "id": group_id,
+                "name": gd.get("label", group_id),
+                "description": gd.get("description", ""),
+                "weight": gd.get("risk", {}).get("weight", 0.0),
+                "test_scores": {},
+            }
+            # Get group-level score_conditions
+            risk_conds = gd.get("risk", {}).get("score_conditions", [])
+            if risk_conds:
+                group_data["score_conditions"] = risk_conds
+
+            result.append(SignalGroupConfig.from_yaml(group_data, features_data))
+
+        return result
 
     def validate_config(self, config: CoverageConfig) -> List[str]:
         """

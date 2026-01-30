@@ -30,8 +30,12 @@ class ConfigValidator:
     - Logical consistency
     """
 
-    # Required top-level keys
-    REQUIRED_KEYS = ["coverage", "signal_groups", "scoring", "tiers"]
+    # Required top-level keys (v1.0 or v2.0 - at least one signal structure required)
+    REQUIRED_KEYS = ["coverage"]
+    # v1.0 signal keys
+    V1_SIGNAL_KEYS = ["signal_groups", "scoring", "tiers"]
+    # v2.0 signal keys (coverage configs use signal_groups + tier_thresholds)
+    V2_SIGNAL_KEYS = ["signal_groups", "tier_thresholds"]
 
     # Required coverage fields
     REQUIRED_COVERAGE_FIELDS = ["id", "name", "description"]
@@ -141,7 +145,7 @@ class ConfigValidator:
             )
 
     def _validate_structure(self, config: Dict[str, Any]) -> List[ValidationIssue]:
-        """Validate top-level structure."""
+        """Validate top-level structure (v1.0 and v2.0 compatible)."""
         issues = []
 
         for key in self.REQUIRED_KEYS:
@@ -152,6 +156,26 @@ class ConfigValidator:
                     message=f"Missing required key: {key}",
                     path=key,
                 ))
+
+        # Check for v2.0 coverage config format (nested under coverage name)
+        # v2.0 configs are structured as: coverage_name: config_name: { ... }
+        # The builder generates flat configs, so we check both formats
+        is_v2_coverage = any(
+            isinstance(v, dict) and any(isinstance(vv, dict) for vv in v.values())
+            for v in config.values()
+            if isinstance(v, dict)
+        )
+
+        if not is_v2_coverage:
+            # v1.0 flat format - check v1 keys
+            for key in self.V1_SIGNAL_KEYS:
+                if key not in config:
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.WARNING,
+                        category="structure",
+                        message=f"Missing key (v1.0 format expected): {key}",
+                        path=key,
+                    ))
 
         return issues
 
@@ -337,6 +361,124 @@ class ConfigValidator:
                 message=f"Group weights sum to {total_weight:.3f}, expected ~1.0",
                 suggestion="Adjust group weights to sum to 1.0",
             ))
+
+        return issues
+
+
+    def _validate_score_conditions(self, conditions: list, path: str) -> List[ValidationIssue]:
+        """Validate v2.0 score_conditions structure."""
+        issues = []
+        valid_actions = {"FLAG", "MODIFIER", "REFER"}
+
+        if not isinstance(conditions, list):
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="score_conditions",
+                message=f"score_conditions must be a list at {path}",
+                path=path,
+            ))
+            return issues
+
+        for i, cond in enumerate(conditions):
+            cond_path = f"{path}.score_conditions[{i}]"
+
+            if not isinstance(cond, dict):
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="score_conditions",
+                    message=f"Condition must be a dict at {cond_path}",
+                    path=cond_path,
+                ))
+                continue
+
+            # Check required fields
+            if "threshold" not in cond:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="score_conditions",
+                    message=f"Missing 'threshold' at {cond_path}",
+                    path=cond_path,
+                ))
+
+            if "action" not in cond:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="score_conditions",
+                    message=f"Missing 'action' at {cond_path}",
+                    path=cond_path,
+                ))
+            elif cond["action"] not in valid_actions:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="score_conditions",
+                    message=f"Invalid action '{cond['action']}' at {cond_path}. "
+                            f"Valid: {valid_actions}. DECLINE is tier-level only.",
+                    path=cond_path,
+                ))
+
+            # MODIFIER requires applied
+            if cond.get("action") == "MODIFIER" and "applied" not in cond:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="score_conditions",
+                    message=f"MODIFIER action missing 'applied' value at {cond_path}",
+                    path=cond_path,
+                ))
+
+        return issues
+
+    def _validate_loss_tier_bands(self, loss_data: Dict[str, Any]) -> List[ValidationIssue]:
+        """Validate v2.0 loss_tier_bands structure."""
+        issues = []
+
+        if "bands" not in loss_data:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="loss_tier_bands",
+                message="loss_tier_bands missing 'bands' array",
+            ))
+            return issues
+
+        for band in loss_data["bands"]:
+            interp = band.get("interpretation", {})
+            app = interp.get("application", {})
+            if "frequency_modifier" not in app or "severity_modifier" not in app:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="loss_tier_bands",
+                    message=f"Loss band '{band.get('label', '?')}' missing frequency/severity modifiers",
+                ))
+
+        if "constraints" not in loss_data:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.WARNING,
+                category="loss_tier_bands",
+                message="loss_tier_bands missing 'constraints' (floor/cap)",
+            ))
+
+        return issues
+
+    def _validate_exposure_tier_bands(self, exposure_data: Dict[str, Any]) -> List[ValidationIssue]:
+        """Validate v2.0 exposure_tier_bands structure."""
+        issues = []
+
+        if "bands" not in exposure_data:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="exposure_tier_bands",
+                message="exposure_tier_bands missing 'bands' array",
+            ))
+            return issues
+
+        for band in exposure_data["bands"]:
+            interp = band.get("interpretation", {})
+            app = interp.get("application", {})
+            if "method" not in app:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="exposure_tier_bands",
+                    message=f"Exposure band '{band.get('label', '?')}' missing 'method'",
+                ))
 
         return issues
 
