@@ -3,873 +3,382 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generate | DSI Operating System</title>
-    
+    <title>Generate | Digital Signal Intelligence</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* --- CORE DESIGN SYSTEM --- */
+        /* --- BRAND PALETTE --- */
         :root {
-            --bg-deep: #020617;
-            --bg-panel: #0f172a;
-            --bg-card: #1e293b;
-            
-            --teal-primary: #06b6d4;
-            --teal-glow: #22d3ee;
-            --blue-accent: #3b82f6;
-            
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-dim: #475569;
-            
-            --risk-critical: #ef4444;
-            --risk-high: #f97316;
-            --risk-med: #eab308;
-            --risk-low: #10b981;
-            
-            --font-ui: 'Inter', sans-serif;
-            --font-code: 'JetBrains Mono', monospace;
+            --bg-page: #0B3954;
+            --btn-color: #39D3BA;
+            --title-color: #0599AD;
+            --subtitle-color: #FFFFFF;
+            --text-black: #000000;
+            --cream-nodes: #E8E3DA; 
+            --gray-text: #7A766F;
+
+            /* FONTS */
+            --font-title: 'Inter', sans-serif;
+            --font-body: 'IBM Plex Sans', sans-serif;
         }
 
+        /* --- RESET & STRUCTURE --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            font-family: var(--font-ui);
+        body { 
+            background-color: var(--bg-page);
+            font-family: var(--font-body);
+            color: var(--subtitle-color);
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- GLOBAL ANIMATION --- */
-        #bg-canvas {
+        /* --- BACKGROUND ANIMATION --- */
+        #node-canvas {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 0;
             pointer-events: none;
-            opacity: 0.3;
         }
-
-        /* --- HEADER --- */
-        header {
-            height: 60px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 30px;
-            z-index: 50;
-        }
-
-        .nav-group { display: flex; gap: 15px; }
-        
-        .nav-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-muted);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-        .nav-btn:hover { border-color: var(--teal-primary); color: var(--text-main); }
-        .nav-btn svg { width: 14px; height: 14px; fill: currentColor; }
-
-        .logo-container svg { height: 32px; width: auto; }
 
         /* --- VIEW MANAGEMENT --- */
-        .stage { flex: 1; position: relative; z-index: 10; display: flex; overflow: hidden; }
-        .view { display: none; width: 100%; height: 100%; flex-direction: column; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        .view.active { display: flex; }
-
-        /* --- LANDING PAGE (UPDATED) --- */
-        #view-landing {
-            padding: 60px 80px;
-            display: flex;
-            flex-direction: column;
+        .stage {
+            position: relative;
+            z-index: 10;
+            width: 100%;
             height: 100%;
         }
-        
-        /* 1. Logo Left/Top */
+
+        .page {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* =========================================
+           PAGE 1: LANDING
+           ========================================= */
+        #landing-page {
+            padding: 60px 80px;
+        }
+
+        /* 1. Logo: Top Left, Large */
         .landing-logo {
-            flex: 0 0 auto;
+            flex: 0 0 auto; /* Do not stretch */
             width: 100%;
             display: flex;
-            justify-content: flex-start; /* Explicit Left Align */
+            justify-content: flex-start; /* Align Left */
+            margin-bottom: 20px;
         }
-        .landing-logo svg { height: 120px; width: auto; }
-        
-        /* 2. Main Content Centered Container */
-        .landing-body {
+
+        .landing-logo svg {
+            height: 140px; /* Large */
+            width: auto;
+            margin-left: -12px; /* Optical alignment */
+        }
+
+        /* 2. Content Container: Centered on Screen */
+        .landing-content-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Vertically Center */
-            align-items: center; /* Horizontally Center */
+            justify-content: center; /* Vertical Center */
+            align-items: center; /* Horizontal Center */
             width: 100%;
         }
 
-        /* 3. Text Left Aligned within Center Box */
-        .landing-content-wrapper {
+        /* 3. Text Block: Left Aligned inside the center container */
+        .landing-text-block {
             width: 100%;
-            max-width: 800px;
-            text-align: left; /* Left Align Text */
+            max-width: 900px;
+            text-align: left; /* Explicit Left Align */
             display: flex;
             flex-direction: column;
-            gap: 30px;
-        }
-        
-        .landing-title {
-            font-size: 64px;
-            font-weight: 800;
-            letter-spacing: -2px;
-            line-height: 1.1;
-            background: linear-gradient(135deg, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .landing-abstract {
-            font-size: 18px;
-            color: var(--text-muted);
-            line-height: 1.6;
-            border-left: 3px solid var(--teal-primary);
-            padding-left: 20px;
+            align-items: flex-start; /* Items start from left */
         }
 
-        .btn-begin {
-            background: transparent;
-            color: var(--teal-primary);
-            font-family: var(--font-code);
-            font-weight: 700;
+        .main-title {
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 64px;
+            color: var(--title-color);
+            line-height: 1.1;
+            margin-bottom: 15px;
+        }
+
+        .main-subtitle {
+            font-family: var(--font-title);
+            font-weight: 400;
+            font-size: 32px;
+            color: var(--subtitle-color);
+            margin-bottom: 50px;
+        }
+
+        .abstract-box {
+            max-width: 750px;
+            margin-bottom: 50px;
+        }
+
+        .abstract-label {
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--subtitle-color);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .abstract-text {
+            font-family: var(--font-body);
+            font-weight: 300;
             font-size: 16px;
-            padding: 15px 60px;
-            border: 1px solid var(--teal-primary);
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .ip-statement {
+            font-size: 11px;
+            color: rgba(232, 227, 218, 0.4);
+            max-width: 800px;
+            line-height: 1.4;
+            margin-bottom: 40px;
+        }
+
+        .begin-btn {
+            background-color: var(--btn-color);
+            color: var(--bg-page);
+            font-family: var(--font-title);
+            font-weight: 700;
+            font-size: 20px;
+            padding: 16px 60px;
+            border: none;
             border-radius: 4px;
             cursor: pointer;
-            letter-spacing: 2px;
             text-transform: uppercase;
-            transition: all 0.3s;
-            width: fit-content; /* Don't stretch */
-        }
-        .btn-begin:hover { background: rgba(6, 182, 212, 0.1); box-shadow: 0 0 30px rgba(6, 182, 212, 0.2); }
-
-        .ip-text { 
-            font-size: 10px; 
-            color: rgba(255,255,255,0.2); 
-            line-height: 1.4;
-            max-width: 800px;
+            letter-spacing: 1px;
+            transition: transform 0.2s;
         }
 
-        /* --- ORIENTATION --- */
-        #view-orientation { align-items: center; justify-content: center; }
-        .flow-diagram { display: flex; gap: 40px; align-items: center; position: relative; }
-        .flow-diagram::before { content:''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255,255,255,0.1); z-index: -1; }
+        .begin-btn:hover { transform: scale(1.02); }
 
-        .flow-node {
-            width: 220px; height: 280px;
-            background: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 25px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s;
-            position: relative;
+
+        /* =========================================
+           PAGE 2: TEMPLATE (BLANK SLATE)
+           ========================================= */
+        #template-page {
+            /* Standard Layout */
         }
-        .flow-node:hover { transform: translateY(-10px); border-color: var(--teal-primary); box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5); }
-        
-        .node-icon { font-size: 40px; margin-bottom: 20px; }
-        .node-header { font-weight: 700; font-size: 16px; margin-bottom: 8px; color: var(--text-main); }
-        .node-desc { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; }
-        
-        .node-future { border: 1px dashed var(--teal-primary); background: rgba(6, 182, 212, 0.05); }
-        .future-badge { position: absolute; top: -10px; background: var(--teal-primary); color: var(--bg-deep); font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; }
 
-        /* --- ANALYST WORKBENCH --- */
-        .workbench-layout { display: grid; grid-template-columns: 350px 1fr; height: 100%; }
-        
-        .intake-panel { background: var(--bg-panel); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
-        .intake-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .intake-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 5px; }
-        
-        .intake-list { flex: 1; overflow-y: auto; }
-        .intake-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            cursor: pointer; transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
-        .intake-item:hover { background: rgba(255,255,255,0.03); }
-        .intake-item.active { background: rgba(34, 211, 238, 0.05); border-left-color: var(--teal-primary); }
-        
-        .item-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .item-name { font-weight: 600; font-size: 14px; color: var(--text-main); }
-        .item-score { font-family: var(--font-code); font-weight: 700; font-size: 13px; }
-        
-        .item-btm { display: flex; justify-content: space-between; align-items: center; }
-        .item-meta { font-size: 11px; color: var(--text-muted); }
-        .status-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
-        
-        .st-auto { color: var(--text-dim); border: 1px solid var(--text-dim); }
-        .st-refer { color: var(--bg-deep); background: var(--risk-med); }
-        .st-decline { color: var(--bg-deep); background: var(--risk-critical); }
-
-        .dossier-panel { background: var(--bg-deep); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        
-        .dossier-header {
-            padding: 20px 40px;
-            background: var(--bg-card);
+        .app-header {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Space between Home and Logo */
+            padding: 0 40px;
+            background: rgba(11, 57, 84, 0.95); /* Slight opacity */
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .dh-title { font-size: 24px; font-weight: 700; }
-        .dh-meta { font-family: var(--font-code); color: var(--teal-primary); }
-
-        .dossier-scroll { padding: 40px; overflow-y: auto; flex: 1; }
-        
-        .dossier-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; }
-        
-        .section-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-
-        .signal-row { display: flex; align-items: center; margin-bottom: 12px; font-size: 13px; }
-        .sig-label { width: 140px; color: var(--text-muted); }
-        .sig-track { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin: 0 15px; overflow: hidden; }
-        .sig-fill { height: 100%; border-radius: 3px; }
-        .sig-val { width: 40px; text-align: right; font-family: var(--font-code); font-weight: 700; }
-        .sig-peer { width: 40px; text-align: right; font-family: var(--font-code); color: var(--text-dim); font-size: 11px; }
-
-        .layer-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
             position: relative;
-        }
-        .lc-head { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .lc-title { font-weight: 700; font-size: 14px; }
-        .lc-score { font-size: 24px; font-weight: 800; font-family: var(--font-code); }
-        
-        .lc-trend { font-size: 11px; display: flex; align-items: center; gap: 6px; }
-        .trend-bad { color: var(--risk-critical); }
-        .trend-good { color: var(--risk-low); }
-        .trend-stable { color: var(--text-muted); }
-
-        .action-bar {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            padding: 20px 40px;
-            background: rgba(15, 23, 42, 0.9);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex; justify-content: flex-end; gap: 15px;
-            backdrop-filter: blur(5px);
+            z-index: 20;
         }
 
-        /* --- STEERING --- */
-        #view-steering { display: flex; flex-direction: column; height: 100%; }
-        .ticker-wrap { background: var(--bg-card); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 8px 0; overflow: hidden; white-space: nowrap; }
-        .ticker-item { display: inline-block; font-family: var(--font-code); font-size: 11px; margin-right: 30px; color: var(--text-muted); }
-        .ticker-item span { font-weight: 700; color: var(--text-main); }
-
-        .steering-main { flex: 1; display: grid; grid-template-columns: 320px 1fr; overflow: hidden; }
-        .controls-panel { background: var(--bg-panel); padding: 25px; border-right: 1px solid rgba(255,255,255,0.1); }
-        
-        .policy-card { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .pc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .pc-title { font-size: 12px; font-weight: 700; }
-        .switch { width: 36px; height: 20px; background: #334155; border-radius: 10px; position: relative; cursor: pointer; transition: 0.2s; }
-        .switch.on { background: var(--teal-primary); }
-        .switch::after { content:''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.2s; }
-        .switch.on::after { transform: translateX(16px); }
-
-        .viz-panel { padding: 30px; display: flex; flex-direction: column; position: relative; }
-        .chart-container { flex: 1; background: var(--bg-deep); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; position: relative; overflow: hidden; }
-        .overlay-stats { position: absolute; top: 20px; left: 20px; }
-        .stat-big { font-size: 32px; font-weight: 800; color: var(--text-main); }
-        .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
-
-        /* --- WORLD MODEL --- */
-        #view-world { position: relative; background: radial-gradient(circle at center, #1e293b 0%, #020617 80%); }
-        .world-graph { width: 100%; height: 100%; }
-        
-        .world-hud { position: absolute; top: 30px; left: 30px; pointer-events: none; }
-        .hud-title { font-size: 12px; color: var(--teal-primary); letter-spacing: 2px; margin-bottom: 5px; }
-        .hud-val { font-family: var(--font-code); font-size: 14px; color: var(--text-main); }
-
-        .world-controls {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.2);
-            padding: 15px 25px; border-radius: 50px;
-            display: flex; gap: 20px; align-items: center;
-            backdrop-filter: blur(10px);
+        /* Home Button (Far Left) */
+        .home-btn {
+            background: transparent;
+            border: 1px solid var(--btn-color);
+            color: var(--btn-color);
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-family: var(--font-title);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        /* --- UTILS --- */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .hidden { display: none !important; }
-        .btn-primary { background: var(--teal-primary); color: var(--bg-deep); border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; }
-        .btn-primary:hover { background: var(--teal-glow); }
-        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-main); padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-        .btn-outline:hover { border-color: var(--teal-primary); color: var(--teal-primary); }
+        .home-btn:hover {
+            background: var(--btn-color);
+            color: var(--bg-page);
+        }
+
+        /* Header Logo (Far Right) */
+        .header-logo svg {
+            height: 40px;
+            width: auto;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Far Left Alignment */
+        }
+
+        .page-title {
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 48px;
+            color: var(--title-color);
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            font-family: var(--font-title);
+            font-weight: 400;
+            font-size: 24px;
+            color: var(--subtitle-color);
+        }
+
+        .app-footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--gray-text);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
 
     </style>
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
+    <canvas id="node-canvas"></canvas>
 
-    <header id="main-header" class="hidden">
-        <div class="nav-group">
-            <button class="nav-btn" onclick="goHome()">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                Home
-            </button>
-            <button class="nav-btn" onclick="location.reload()">
-                <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-                Reset
-            </button>
-        </div>
-        <div class="logo-container">
-            <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
-                <g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)">
-                    <path d="m 272.55,154.21 q -15.09,0 -26.40,-6.63 q -11.31,-6.63 -17.60,-18.72 q -6.28,-12.08 -6.28,-28.29 q 0,-16.97 6.56,-28.99 q 6.56,-12.08 17.88,-18.44 q 11.31,-6.35 25.43,-6.35 q 9.22,0 17.32,2.65 q 8.10,2.65 14.39,7.61 q 6.28,4.89 10.2,11.66 q 3.98,6.77 4.82,15.09 H 293.30 q -0.69,-3.49 -2.37,-6.28 q -1.67,-2.79 -4.26,-4.75 q -2.58,-1.95 -6.00,-3.00 q -3.42,-1.04 -7.61,-1.04 q -8.10,0 -13.83,3.84 q -5.65,3.77 -8.66,10.89 q -3.00,7.05 -3.00,17.11 q 0,9.99 3.00,17.11 q 3.07,7.05 8.80,10.82 q 5.79,3.77 13.97,3.77 q 6.70,0 11.59,-2.30 q 4.89,-2.30 7.47,-6.42 q 2.65,-4.19 2.65,-9.71 l 5.58,0.48 H 274.23 V 95.87 h 45.41 v 14.11 q 0,13.20 -6.00,23.19 q -5.93,9.92 -16.55,15.50 q -10.54,5.51 -24.52,5.51 z m 91.77,0 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 69.42,-41.77 v 40.10 H 409.72 V 78.76 h 23.75 v 19.77 h -3.56 q 3.42,-9.78 9.92,-15.57 q 6.49,-5.79 17.11,-5.79 q 8.03,0 13.69,3.49 q 5.65,3.42 8.66,9.92 q 3.00,6.49 3.00,15.57 v 46.38 h -24.03 v -41.35 q 0,-6.56 -3.14,-9.99 q -3.14,-3.49 -8.87,-3.49 q -3.77,0 -6.63,1.60 q -2.79,1.60 -4.33,4.89 q -1.53,3.21 -1.53,8.24 z m 95.40,41.77 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 45.38,-1.67 V 78.76 h 23.26 v 12.99 h 0.20 q 2.02,-7.05 6.28,-10.13 q 4.33,-3.14 11.73,-3.14 q 1.95,0 3.49,0.06 q 1.60,0 3.07,0.06 v 19.84 q -1.32,-0.06 -4.12,-0.13 q -2.72,-0.06 -5.37,-0.06 q -4.26,0 -7.54,1.95 q -3.28,1.88 -5.16,5.58 q -1.81,3.70 -1.81,8.94 v 37.79 z m 76.84,1.25 q -7.40,0 -13.13,-2.37 q -5.65,-2.44 -8.94,-7.26 q -3.21,-4.89 -3.21,-12.22 q 0,-6.21 2.23,-10.40 q 2.23,-4.26 6.14,-6.91 q 3.98,-2.65 9.15,-3.98 q 5.23,-1.39 11.10,-1.88 q 6.56,-0.55 10.54,-1.18 q 3.98,-0.69 5.72,-1.88 q 1.74,-1.25 1.74,-3.49 v -0.34 q 0,-2.23 -1.25,-3.84 q -1.25,-1.67 -3.56,-2.58 q -2.30,-0.97 -5.44,-0.97 q -3.35,0 -5.79,1.04 q -2.44,0.97 -3.84,2.86 q -1.39,1.81 -1.67,4.33 h -22.35 q 0.55,-8.03 4.68,-13.69 q 4.12,-5.72 11.59,-8.73 q 7.54,-3.07 18.23,-3.07 q 8.03,0 14.18,1.74 q 6.21,1.67 10.47,5.03 q 4.26,3.28 6.42,8.10 q 2.16,4.75 2.16,10.82 v 49.67 h -23.47 v -10.33 h -0.27 q -2.23,3.98 -5.23,6.56 q -3.00,2.51 -6.98,3.77 q -3.98,1.25 -9.22,1.25 z m 7.33,-15.71 q 3.98,0 7.19,-1.53 q 3.28,-1.53 5.16,-4.19 q 1.88,-2.72 1.88,-6.35 v -6.70 q -0.97,0.41 -2.30,0.83 q -1.32,0.41 -3.00,0.76 q -1.60,0.34 -3.56,0.69 q -1.95,0.34 -4.19,0.76 q -3.21,0.48 -5.72,1.53 q -2.44,1.04 -3.91,2.79 q -1.39,1.67 -1.39,4.12 0,2.30 1.25,3.91 q 1.25,1.60 3.42,2.51 q 2.23,0.83 5.16,0.83 z M 754.98,78.76 V 97.34 H 703.14 V 78.76 Z M 715.71,58.64 h 24.10 v 69.09 q 0,3.56 1.39,4.89 q 1.39,1.32 5.44,1.32 q 1.81,0 4.47,0 q 2.65,0 3.84,0 v 18.58 q -1.88,0 -5.72,0 q -3.84,0 -7.89,0 q -13.27,0 -19.49,-4.96 q -6.14,-5.03 -6.14,-15.78 z m 81.47,95.57 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z" fill="#FFFFFF"/>
+    <div class="stage">
+        
+        <div id="landing-page" class="page active">
+            
+            <div class="landing-logo">
+                <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)">
+                        <path d="m 272.55,154.21 q -15.09,0 -26.40,-6.63 q -11.31,-6.63 -17.60,-18.72 q -6.28,-12.08 -6.28,-28.29 q 0,-16.97 6.56,-28.99 q 6.56,-12.08 17.88,-18.44 q 11.31,-6.35 25.43,-6.35 q 9.22,0 17.32,2.65 q 8.10,2.65 14.39,7.61 q 6.28,4.89 10.2,11.66 q 3.98,6.77 4.82,15.09 H 293.30 q -0.69,-3.49 -2.37,-6.28 q -1.67,-2.79 -4.26,-4.75 q -2.58,-1.95 -6.00,-3.00 q -3.42,-1.04 -7.61,-1.04 q -8.10,0 -13.83,3.84 q -5.65,3.77 -8.66,10.89 q -3.00,7.05 -3.00,17.11 q 0,9.99 3.00,17.11 q 3.07,7.05 8.80,10.82 q 5.79,3.77 13.97,3.77 q 6.70,0 11.59,-2.30 q 4.89,-2.30 7.47,-6.42 q 2.65,-4.19 2.65,-9.71 l 5.58,0.48 H 274.23 V 95.87 h 45.41 v 14.11 q 0,13.20 -6.00,23.19 q -5.93,9.92 -16.55,15.50 q -10.54,5.51 -24.52,5.51 z m 91.77,0 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 69.42,-41.77 v 40.10 H 409.72 V 78.76 h 23.75 v 19.77 h -3.56 q 3.42,-9.78 9.92,-15.57 q 6.49,-5.79 17.11,-5.79 q 8.03,0 13.69,3.49 q 5.65,3.42 8.66,9.92 q 3.00,6.49 3.00,15.57 v 46.38 h -24.03 v -41.35 q 0,-6.56 -3.14,-9.99 q -3.14,-3.49 -8.87,-3.49 q -3.77,0 -6.63,1.60 q -2.79,1.60 -4.33,4.89 q -1.53,3.21 -1.53,8.24 z m 95.40,41.77 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 45.38,-1.67 V 78.76 h 23.26 v 12.99 h 0.20 q 2.02,-7.05 6.28,-10.13 q 4.33,-3.14 11.73,-3.14 q 1.95,0 3.49,0.06 q 1.60,0 3.07,0.06 v 19.84 q -1.32,-0.06 -4.12,-0.13 q -2.72,-0.06 -5.37,-0.06 q -4.26,0 -7.54,1.95 q -3.28,1.88 -5.16,5.58 q -1.81,3.70 -1.81,8.94 v 37.79 z m 76.84,1.25 q -7.40,0 -13.13,-2.37 q -5.65,-2.44 -8.94,-7.26 q -3.21,-4.89 -3.21,-12.22 q 0,-6.21 2.23,-10.40 q 2.23,-4.26 6.14,-6.91 q 3.98,-2.65 9.15,-3.98 q 5.23,-1.39 11.10,-1.88 q 6.56,-0.55 10.54,-1.18 q 3.98,-0.69 5.72,-1.88 q 1.74,-1.25 1.74,-3.49 v -0.34 q 0,-2.23 -1.25,-3.84 q -1.25,-1.67 -3.56,-2.58 q -2.30,-0.97 -5.44,-0.97 q -3.35,0 -5.79,1.04 q -2.44,0.97 -3.84,2.86 q -1.39,1.81 -1.67,4.33 h -22.35 q 0.55,-8.03 4.68,-13.69 q 4.12,-5.72 11.59,-8.73 q 7.54,-3.07 18.23,-3.07 q 8.03,0 14.18,1.74 q 6.21,1.67 10.47,5.03 q 4.26,3.28 6.42,8.10 q 2.16,4.75 2.16,10.82 v 49.67 h -23.47 v -10.33 h -0.27 q -2.23,3.98 -5.23,6.56 q -3.00,2.51 -6.98,3.77 q -3.98,1.25 -9.22,1.25 z m 7.33,-15.71 q 3.98,0 7.19,-1.53 q 3.28,-1.53 5.16,-4.19 q 1.88,-2.72 1.88,-6.35 v -6.70 q -0.97,0.41 -2.30,0.83 q -1.32,0.41 -3.00,0.76 q -1.60,0.34 -3.56,0.69 q -1.95,0.34 -4.19,0.76 q -3.21,0.48 -5.72,1.53 q -2.44,1.04 -3.91,2.79 q -1.39,1.67 -1.39,4.12 0,2.30 1.25,3.91 q 1.25,1.60 3.42,2.51 q 2.23,0.83 5.16,0.83 z M 754.98,78.76 V 97.34 H 703.14 V 78.76 Z M 715.71,58.64 h 24.10 v 69.09 q 0,3.56 1.39,4.89 q 1.39,1.32 5.44,1.32 q 1.81,0 4.47,0 q 2.65,0 3.84,0 v 18.58 q -1.88,0 -5.72,0 q -3.84,0 -7.89,0 q -13.27,0 -19.49,-4.96 q -6.14,-5.03 -6.14,-15.78 z m 81.47,95.57 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z" fill="#0599AD"/>
                         <g transform="rotate(45,650.06,-166.77)">
-                            <path fill="#FFFFFF" d="m 346.34,337 c -1.15,0 -2.09,0.37 -2.09,0.83 v 178.32 c 0,0.46 0.93,0.83 2.09,0.83 h 175.81 c 1.15,0 2.09,-0.37 2.09,-0.83 v -22.37 -20.07 l -17.93,20.34 -0.10,-0.09 c -0.11,0.38 -0.42,0.65 -0.80,0.65 L 397.68,494.49 h -29.35 c -0.86,0 -1.57,-0.27 -1.57,-0.62 V 360.12 c 0,-0.34 0.70,-0.62 1.57,-0.62 h 36.69 L 424.85,337 Z"/>
-                            <path fill="#22d3ee" d="m 458.18,337 -33.34,37.83 v 32.40 L 486.74,337 Z m 61.88,0 -95.23,108.03 v 24.19 l 7.72,0.01 1.20,-1.36 90.48,-102.91 v -27.23 c 0,-0.40 -0.51,-0.73 -1.15,-0.73 z m 4.18,66.03 -58.39,66.24 28.94,0.03 29.45,-33.41 z m 0,70.67 -0.39,0.44 h 0.39 z m -18.23,20.68 -0.11,0.12 h 0.11 z"/>
+                            <path fill="#0599AD" d="m 346.34,337 c -1.15,0 -2.09,0.37 -2.09,0.83 v 178.32 c 0,0.46 0.93,0.83 2.09,0.83 h 175.81 c 1.15,0 2.09,-0.37 2.09,-0.83 v -22.37 -20.07 l -17.93,20.34 -0.10,-0.09 c -0.11,0.38 -0.42,0.65 -0.80,0.65 L 397.68,494.49 h -29.35 c -0.86,0 -1.57,-0.27 -1.57,-0.62 V 360.12 c 0,-0.34 0.70,-0.62 1.57,-0.62 h 36.69 L 424.85,337 Z"/>
+                            <path fill="#39D3BA" d="m 458.18,337 -33.34,37.83 v 32.40 L 486.74,337 Z m 61.88,0 -95.23,108.03 v 24.19 l 7.72,0.01 1.20,-1.36 90.48,-102.91 v -27.23 c 0,-0.40 -0.51,-0.73 -1.15,-0.73 z m 4.18,66.03 -58.39,66.24 28.94,0.03 29.45,-33.41 z m 0,70.67 -0.39,0.44 h 0.39 z m -18.23,20.68 -0.11,0.12 h 0.11 z"/>
                         </g>
                     </g>
                 </svg>
             </div>
             
-            <div class="landing-body">
-                <div class="landing-content-wrapper">
+            <div class="landing-center">
+                <div class="landing-text-wrapper">
                     <h1 class="landing-title">Digital Signal Intelligence</h1>
+                    <h2 class="landing-sub">A New Information Substrate for Insurance</h2>
+                    
                     <div class="landing-abstract">
                         <strong>Abstract:</strong><br><br>
                         Digital Signal Intelligence (DSI) defines a new, externally observable information substrate for insurance, enabling deterministic, autonomous risk assessment, exposure estimation, loss propensity inference, and pricing at scale.
                     </div>
-                    <button class="btn-begin" onclick="navTo('orientation')">BEGIN DEMO</button>
-                    <div class="ip-text">
+                    
+                    <div class="ip-statement" style="margin-top: 20px;">
                         © John Walker. All rights reserved. Digital Signal Intelligence (DSI) and all associated concepts, frameworks, methodologies, diagrams, calibration logic, operating models, and written materials are the intellectual property of John Walker. No licence, permission, or right to use, reproduce, distribute, or implement any part of the DSI methodology is granted or implied without explicit written agreement from the owner. Unauthorised use is strictly prohibited.
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="view-orientation" class="view">
-            <div class="flow-diagram">
-                <div class="flow-node" onclick="navTo('workbench')">
-                    <div class="node-icon">📡</div>
-                    <div class="node-header">Analyst Workbench</div>
-                    <div class="node-desc">Integrated Live Intake, Signal Extraction & 3-Layer Assessment.</div>
-                </div>
-                
-                <div class="flow-node" onclick="navTo('steering')">
-                    <div class="node-icon">⚡</div>
-                    <div class="node-header">Portfolio Steering</div>
-                    <div class="node-desc">Dynamic Risk Triage & Scenario Injection Control.</div>
-                </div>
-                
-                <div class="flow-node" onclick="navTo('underwriting')">
-                    <div class="node-icon">⚖️</div>
-                    <div class="node-header">Underwriting</div>
-                    <div class="node-desc">Automated Pricing Waterfall & Decision Logic.</div>
-                </div>
-                
-                <div class="flow-node node-future" onclick="navTo('world')">
-                    <div class="future-badge">THE FUTURE</div>
-                    <div class="node-icon" style="color:var(--teal-primary)">🌐</div>
-                    <div class="node-header">World Model</div>
-                    <div class="node-desc">Deep Causal Simulation & Temporal Evolution.</div>
-                </div>
+            <div class="landing-bottom">
+                <button class="btn-main" onclick="navigateToTemplate()">BEGIN</button>
             </div>
         </div>
 
-        <div id="view-workbench" class="view">
-            <div class="workbench-layout">
-                <div class="intake-panel">
-                    <div class="intake-header">
-                        <div style="font-size:12px; font-weight:700; color:var(--teal-primary); letter-spacing:1px;">LIVE INTAKE STREAM</div>
-                        <div class="intake-stats">
-                            <span>Processing: 142/min</span>
-                            <span style="color:var(--risk-med)">Requires Action: 3</span>
-                        </div>
-                    </div>
-                    <div class="intake-list" id="intake-container"></div>
+        <div id="template-page" class="view">
+            <header class="app-header">
+                <button class="home-btn" onclick="navigateToHome()">Home</button>
+                <div class="header-logo">
+                    <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="matrix(0.7448,0,0,0.7448,154.55,24.80)">
+                            <path d="m 272.55,154.21 q -15.09,0 -26.40,-6.63 q -11.31,-6.63 -17.60,-18.72 q -6.28,-12.08 -6.28,-28.29 q 0,-16.97 6.56,-28.99 q 6.56,-12.08 17.88,-18.44 q 11.31,-6.35 25.43,-6.35 q 9.22,0 17.32,2.65 q 8.10,2.65 14.39,7.61 q 6.28,4.89 10.2,11.66 q 3.98,6.77 4.82,15.09 H 293.30 q -0.69,-3.49 -2.37,-6.28 q -1.67,-2.79 -4.26,-4.75 q -2.58,-1.95 -6.00,-3.00 q -3.42,-1.04 -7.61,-1.04 q -8.10,0 -13.83,3.84 q -5.65,3.77 -8.66,10.89 q -3.00,7.05 -3.00,17.11 q 0,9.99 3.00,17.11 q 3.07,7.05 8.80,10.82 q 5.79,3.77 13.97,3.77 q 6.70,0 11.59,-2.30 q 4.89,-2.30 7.47,-6.42 q 2.65,-4.19 2.65,-9.71 l 5.58,0.48 H 274.23 V 95.87 h 45.41 v 14.11 q 0,13.20 -6.00,23.19 q -5.93,9.92 -16.55,15.50 q -10.54,5.51 -24.52,5.51 z m 91.77,0 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 69.42,-41.77 v 40.10 H 409.72 V 78.76 h 23.75 v 19.77 h -3.56 q 3.42,-9.78 9.92,-15.57 q 6.49,-5.79 17.11,-5.79 q 8.03,0 13.69,3.49 q 5.65,3.42 8.66,9.92 q 3.00,6.49 3.00,15.57 v 46.38 h -24.03 v -41.35 q 0,-6.56 -3.14,-9.99 q -3.14,-3.49 -8.87,-3.49 q -3.77,0 -6.63,1.60 q -2.79,1.60 -4.33,4.89 q -1.53,3.21 -1.53,8.24 z m 95.40,41.77 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z m 45.38,-1.67 V 78.76 h 23.26 v 12.99 h 0.20 q 2.02,-7.05 6.28,-10.13 q 4.33,-3.14 11.73,-3.14 q 1.95,0 3.49,0.06 q 1.60,0 3.07,0.06 v 19.84 q -1.32,-0.06 -4.12,-0.13 q -2.72,-0.06 -5.37,-0.06 q -4.26,0 -7.54,1.95 q -3.28,1.88 -5.16,5.58 q -1.81,3.70 -1.81,8.94 v 37.79 z m 76.84,1.25 q -7.40,0 -13.13,-2.37 q -5.65,-2.44 -8.94,-7.26 q -3.21,-4.89 -3.21,-12.22 q 0,-6.21 2.23,-10.40 q 2.23,-4.26 6.14,-6.91 q 3.98,-2.65 9.15,-3.98 q 5.23,-1.39 11.10,-1.88 q 6.56,-0.55 10.54,-1.18 q 3.98,-0.69 5.72,-1.88 q 1.74,-1.25 1.74,-3.49 v -0.34 q 0,-2.23 -1.25,-3.84 q -1.25,-1.67 -3.56,-2.58 q -2.30,-0.97 -5.44,-0.97 q -3.35,0 -5.79,1.04 q -2.44,0.97 -3.84,2.86 q -1.39,1.81 -1.67,4.33 h -22.35 q 0.55,-8.03 4.68,-13.69 q 4.12,-5.72 11.59,-8.73 q 7.54,-3.07 18.23,-3.07 q 8.03,0 14.18,1.74 q 6.21,1.67 10.47,5.03 q 4.26,3.28 6.42,8.10 q 2.16,4.75 2.16,10.82 v 49.67 h -23.47 v -10.33 h -0.27 q -2.23,3.98 -5.23,6.56 q -3.00,2.51 -6.98,3.77 q -3.98,1.25 -9.22,1.25 z m 7.33,-15.71 q 3.98,0 7.19,-1.53 q 3.28,-1.53 5.16,-4.19 q 1.88,-2.72 1.88,-6.35 v -6.70 q -0.97,0.41 -2.30,0.83 q -1.32,0.41 -3.00,0.76 q -1.60,0.34 -3.56,0.69 q -1.95,0.34 -4.19,0.76 q -3.21,0.48 -5.72,1.53 q -2.44,1.04 -3.91,2.79 q -1.39,1.67 -1.39,4.12 0,2.30 1.25,3.91 q 1.25,1.60 3.42,2.51 q 2.23,0.83 5.16,0.83 z M 754.98,78.76 V 97.34 H 703.14 V 78.76 Z M 715.71,58.64 h 24.10 v 69.09 q 0,3.56 1.39,4.89 q 1.39,1.32 5.44,1.32 q 1.81,0 4.47,0 q 2.65,0 3.84,0 v 18.58 q -1.88,0 -5.72,0 q -3.84,0 -7.89,0 q -13.27,0 -19.49,-4.96 q -6.14,-5.03 -6.14,-15.78 z m 81.47,95.57 q -11.31,0 -19.91,-4.89 q -8.52,-4.96 -13.34,-13.69 q -4.75,-8.73 -4.75,-19.98 q 0,-11.24 4.75,-19.98 q 4.82,-8.73 13.27,-13.62 q 8.45,-4.96 19.35,-4.96 q 8.31,0 15.16,2.79 q 6.84,2.72 11.80,7.82 q 5.03,5.10 7.75,12.08 q 2.72,6.91 2.72,15.30 v 6.49 h -66.99 v -14.39 h 55.75 l -11.03,2.93 q 0,-4.75 -1.74,-8.17 q -1.74,-3.42 -5.03,-5.23 q -3.21,-1.88 -7.75,-1.88 q -4.54,0 -7.82,1.88 q -3.21,1.81 -5.03,5.23 q -1.74,3.42 -1.74,8.17 v 10.61 q 0,4.89 1.81,8.59 q 1.88,3.63 5.30,5.58 q 3.49,1.95 8.31,1.95 q 3.56,0 6.35,-0.97 q 2.79,-0.97 4.68,-2.79 q 1.88,-1.81 2.79,-4.19 h 21.58 q -1.32,7.40 -6.42,13.13 q -5.10,5.65 -12.85,8.94 q -7.68,3.21 -16.97,3.21 z" fill="#0599AD"/>
+                            <g transform="rotate(45,650.06,-166.77)">
+                                <path fill="#0599AD" d="m 346.34,337 c -1.15,0 -2.09,0.37 -2.09,0.83 v 178.32 c 0,0.46 0.93,0.83 2.09,0.83 h 175.81 c 1.15,0 2.09,-0.37 2.09,-0.83 v -22.37 -20.07 l -17.93,20.34 -0.10,-0.09 c -0.11,0.38 -0.42,0.65 -0.80,0.65 L 397.68,494.49 h -29.35 c -0.86,0 -1.57,-0.27 -1.57,-0.62 V 360.12 c 0,-0.34 0.70,-0.62 1.57,-0.62 h 36.69 L 424.85,337 Z"/>
+                                <path fill="#39D3BA" d="m 458.18,337 -33.34,37.83 v 32.40 L 486.74,337 Z m 61.88,0 -95.23,108.03 v 24.19 l 7.72,0.01 1.20,-1.36 90.48,-102.91 v -27.23 c 0,-0.40 -0.51,-0.73 -1.15,-0.73 z m 4.18,66.03 -58.39,66.24 28.94,0.03 29.45,-33.41 z m 0,70.67 -0.39,0.44 h 0.39 z m -18.23,20.68 -0.11,0.12 h 0.11 z"/>
+                            </g>
+                        </g>
+                    </svg>
                 </div>
+                <div class="app-header-spacer"></div> </header>
 
-                <div class="dossier-panel">
-                    <div id="dossier-empty" style="flex:1; display:flex; align-items:center; justify-content:center; opacity:0.3; flex-direction: column;">
-                        <div style="font-size:48px; margin-bottom:20px;">🛡️</div>
-                        <div style="font-size:14px; letter-spacing:1px;">SELECT ENTITY TO INSPECT</div>
-                    </div>
-
-                    <div id="dossier-active" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-                        <div class="dossier-header">
-                            <div>
-                                <div class="dh-title" id="d-name">--</div>
-                                <div class="dh-meta" id="d-meta">--</div>
-                            </div>
-                            <div class="dh-title" style="color:var(--teal-primary)" id="d-score">--</div>
-                        </div>
-
-                        <div class="dossier-scroll">
-                            <div class="dossier-grid">
-                                <div>
-                                    <div class="section-label">Signal Extraction</div>
-                                    <div id="signals-list"></div>
-                                </div>
-
-                                <div>
-                                    <div class="section-label">Three Layer Assessment</div>
-                                    
-                                    <div class="layer-card">
-                                        <div class="lc-head">
-                                            <span class="lc-title" style="color:var(--teal-primary)">RISK LAYER</span>
-                                            <span class="lc-score" style="color:var(--teal-primary)" id="l-risk">--</span>
-                                        </div>
-                                        <div class="lc-trend">
-                                            <span id="t-risk">--</span>
-                                            <span>Management Quality</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="layer-card">
-                                        <div class="lc-head">
-                                            <span class="lc-title" style="color:var(--risk-med)">EXPOSURE LAYER</span>
-                                            <span class="lc-score" style="color:var(--risk-med)" id="l-exp">--</span>
-                                        </div>
-                                        <div class="lc-trend">
-                                            <span id="t-exp">--</span>
-                                            <span>Attack Surface</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="layer-card">
-                                        <div class="lc-head">
-                                            <span class="lc-title" style="color:var(--risk-critical)">LOSS LAYER</span>
-                                            <span class="lc-score" style="color:var(--risk-critical)" id="l-loss">--</span>
-                                        </div>
-                                        <div class="lc-trend">
-                                            <span id="t-loss">--</span>
-                                            <span>Failure Propensity</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="action-bar hidden" id="referral-actions">
-                            <button class="btn-outline" style="border-color:var(--risk-critical); color:var(--risk-critical)">DECLINE RISK</button>
-                            <button class="btn-primary" onclick="navTo('underwriting')">APPROVE & PRICE</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="content-area">
+                <h1 class="page-title">Page Title</h1>
+                <h2 class="page-subtitle">Page Subtitle</h2>
             </div>
+
+            <footer class="app-footer">
+                © John Walker. All rights reserved.
+            </footer>
         </div>
 
-        <div id="view-steering" class="view">
-            <div class="ticker-wrap">
-                <div id="ticker-content" style="animation: ticker 20s linear infinite;"></div>
-            </div>
-
-            <div class="steering-main">
-                <div class="controls-panel">
-                    <div class="section-label">Active Policy Rules</div>
-                    
-                    <div class="policy-card">
-                        <div class="pc-head">
-                            <span class="pc-title">CVE-Based Auto-Decline</span>
-                            <div class="switch on" onclick="toggleSwitch(this)"></div>
-                        </div>
-                        <div style="font-size:10px; color:var(--text-muted)">Block score < 600 if CVE > 9.0</div>
-                    </div>
-
-                    <div class="policy-card">
-                        <div class="pc-head">
-                            <span class="pc-title">Sector Limit: Energy</span>
-                            <div class="switch" onclick="toggleSwitch(this)"></div>
-                        </div>
-                        <div style="font-size:10px; color:var(--text-muted)">Refer all submissions > $10M</div>
-                    </div>
-
-                    <div class="section-label" style="margin-top:30px;">Scenario Injection</div>
-                    <button class="btn-outline" style="width:100%; margin-bottom:10px;" onclick="injectShock('log4j')">⚡ Simulate Log4j 2.0</button>
-                    <button class="btn-outline" style="width:100%;" onclick="injectShock('cloud')">☁️ Cloud Provider Outage</button>
-                </div>
-
-                <div class="viz-panel">
-                    <div class="chart-container">
-                        <div class="overlay-stats">
-                            <div class="stat-label">Projected Loss Ratio</div>
-                            <div class="stat-big" id="plr-val">42.5%</div>
-                            <div style="font-size:12px; color:var(--risk-low);">▼ Optimal Range</div>
-                        </div>
-                        <canvas id="steering-canvas" style="width:100%; height:100%;"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="view-underwriting" class="view" style="align-items:center; justify-content:center;">
-            <div style="width:100%; max-width:600px; background:var(--bg-panel); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:40px;">
-                <div class="section-label" style="text-align:center; margin-bottom:30px;">Algorithmic Pricing Engine</div>
-                
-                <div id="uw-idle" style="text-align:center;">
-                    <button class="btn-primary" onclick="runPricing()">EXECUTE PRICING WORKFLOW</button>
-                </div>
-
-                <div id="uw-running" class="hidden">
-                    <div style="font-family:var(--font-code); font-size:12px; color:var(--teal-primary); margin-bottom:20px;">
-                        > INGESTING 3-LAYER DATA...<br>
-                        > APPLYING TIER 1 BASE RATE...<br>
-                        > CALCULATING TECHNICAL LOADS...<br>
-                        > CHECKING SANCTIONS...
-                    </div>
-                    <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
-                        <div style="height:100%; width:0%; background:var(--teal-primary); animation: loadBar 2s forwards;"></div>
-                    </div>
-                </div>
-
-                <div id="uw-done" class="hidden">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:20px; border-bottom:1px dashed rgba(255,255,255,0.1);">
-                        <div>
-                            <div style="font-size:12px; color:var(--text-muted);">Composite Score</div>
-                            <div style="font-size:24px; font-weight:700;">847</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:12px; color:var(--text-muted);">Risk Tier</div>
-                            <div style="font-size:24px; font-weight:700; color:var(--risk-low);">TIER 1</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:6px; font-family:var(--font-code); font-size:13px; display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span>Base Premium</span>
-                        <span>$125,000</span>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:6px; font-family:var(--font-code); font-size:13px; display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span>Exposure Load</span>
-                        <span>+$12,500</span>
-                    </div>
-                    <div style="background:var(--teal-primary); color:var(--bg-deep); padding:20px; border-radius:6px; font-family:var(--font-code); font-size:16px; font-weight:800; display:flex; justify-content:space-between; margin-top:15px;">
-                        <span>FINAL QUOTE</span>
-                        <span>$137,500</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="view-world" class="view">
-            <div id="world-graph" class="world-graph"></div>
-            
-            <div class="world-hud">
-                <div class="hud-title">SYSTEM STATUS</div>
-                <div class="hud-val">NODES: 14,203</div>
-                <div class="hud-val">LINKS: 82,194</div>
-                <div class="hud-val" style="color:var(--teal-primary)">ENTROPY: STABLE</div>
-            </div>
-
-            <div class="world-controls">
-                <div style="font-size:14px; font-weight:600;">CAUSAL SIMULATION ENGINE</div>
-                <div style="width:1px; height:20px; background:rgba(255,255,255,0.2);"></div>
-                <div style="font-size:12px; color:var(--text-muted);">Click nodes to trigger butterfly effects</div>
-            </div>
-        </div>
-
-    </main>
+    </div>
 
     <script>
-        // --- CORE DATA (13 Companies) ---
-        const companies = [
-            { name: "Cloudflare", ticker: "NET", score: 847, risk: 92, exp: 88, loss: 12, status: "auto", peerScore: 710 },
-            { name: "CrowdStrike", ticker: "CRWD", score: 812, risk: 88, exp: 65, loss: 15, status: "auto", peerScore: 780 },
-            { name: "Boeing", ticker: "BA", score: 584, risk: 45, exp: 95, loss: 72, status: "refer", peerScore: 650 },
-            { name: "Petrobras", ticker: "PBR", score: 512, risk: 38, exp: 92, loss: 68, status: "refer", peerScore: 540 },
-            { name: "Klarna", ticker: "KLAR", score: 756, risk: 72, exp: 55, loss: 22, status: "auto", peerScore: 700 },
-            { name: "Shopify", ticker: "SHOP", score: 789, risk: 78, exp: 62, loss: 18, status: "auto", peerScore: 760 },
-            { name: "Pemex", ticker: "PMX", score: 420, risk: 30, exp: 90, loss: 85, status: "decline", peerScore: 450 },
-            { name: "Beazley", ticker: "BEZ", score: 795, risk: 85, exp: 40, loss: 10, status: "auto", peerScore: 750 },
-            { name: "Markel", ticker: "MKL", score: 760, risk: 80, exp: 45, loss: 12, status: "auto", peerScore: 740 },
-            { name: "Palo Alto", ticker: "PANW", score: 825, risk: 89, exp: 70, loss: 11, status: "auto", peerScore: 800 },
-            { name: "Rolls-Royce", ticker: "RR", score: 645, risk: 60, exp: 80, loss: 40, status: "refer", peerScore: 660 },
-            { name: "Caterpillar", ticker: "CAT", score: 710, risk: 68, exp: 75, loss: 25, status: "auto", peerScore: 690 },
-            { name: "Atlassian", ticker: "TEAM", score: 805, risk: 82, exp: 60, loss: 14, status: "auto", peerScore: 780 }
-        ];
+        // --- BACKGROUND NODES ---
+        const canvas = document.getElementById('node-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let nodes = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Init Nodes
+        for(let i=0; i<60; i++) {
+            nodes.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#E8E3DA';
+            
+            nodes.forEach(node => {
+                node.x += node.vx;
+                node.y += node.vy;
+
+                if(node.x < 0 || node.x > width) node.vx *= -1;
+                if(node.y < 0 || node.y > height) node.vy *= -1;
+
+                ctx.globalAlpha = 0.3;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
 
         // --- NAVIGATION ---
-        function navTo(viewId) {
-            document.getElementById('main-header').classList.remove('hidden');
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
-            
-            if(viewId === 'workbench') initWorkbench();
-            if(viewId === 'steering') initSteering();
-            if(viewId === 'world') initWorld();
+        function navigateToTemplate() {
+            document.getElementById('landing-page').classList.remove('active');
+            document.getElementById('template-page').classList.add('active');
         }
 
-        function goHome() { navTo('orientation'); }
-
-        // --- WORKBENCH LOGIC ---
-        function initWorkbench() {
-            const container = document.getElementById('intake-container');
-            container.innerHTML = '';
-            
-            // Sort: Decliens/Refers first, then Auto
-            const sorted = [...companies].sort((a,b) => {
-                const order = { 'decline': 0, 'refer': 1, 'auto': 2 };
-                return order[a.status] - order[b.status];
-            });
-
-            sorted.forEach(co => {
-                const div = document.createElement('div');
-                div.className = 'intake-item';
-                
-                let badge = '';
-                if(co.status === 'auto') {
-                    div.style.opacity = '0.6';
-                    badge = '<span class="status-badge st-auto">AUTO-APPROVED</span>';
-                } else if(co.status === 'refer') {
-                    badge = '<span class="status-badge st-refer">NEEDS REVIEW</span>';
-                } else {
-                    badge = '<span class="status-badge st-decline">DECLINED</span>';
-                }
-
-                div.innerHTML = `
-                    <div class="item-top">
-                        <span class="item-name">${co.name}</span>
-                        <span class="item-score">${co.score}</span>
-                    </div>
-                    <div class="item-btm">
-                        <span class="item-meta">${co.ticker}</span>
-                        ${badge}
-                    </div>
-                `;
-                div.onclick = () => openDossier(co, div);
-                container.appendChild(div);
-            });
+        function navigateToHome() {
+            document.getElementById('template-page').classList.remove('active');
+            document.getElementById('landing-page').classList.add('active');
         }
-
-        function openDossier(co, el) {
-            document.querySelectorAll('.intake-item').forEach(i => i.classList.remove('active'));
-            el.classList.add('active');
-            
-            document.getElementById('dossier-empty').classList.add('hidden');
-            document.getElementById('dossier-active').classList.remove('hidden');
-            
-            // Header
-            document.getElementById('d-name').innerText = co.name;
-            document.getElementById('d-meta').innerText = `${co.ticker} • Sector Peer Analysis`;
-            document.getElementById('d-score').innerText = co.score;
-            
-            // Signals Generation
-            const sigContainer = document.getElementById('signals-list');
-            sigContainer.innerHTML = '';
-            const signals = [
-                {n: "Network Authority", v: co.risk + 5},
-                {n: "Tech Hygiene", v: co.risk - 2},
-                {n: "Governance Stability", v: co.score > 700 ? 85 : 40},
-                {n: "Market Sentiment", v: co.score > 700 ? 90 : 35}
-            ];
-            
-            signals.forEach(s => {
-                // Peer logic: slight variation
-                const peerV = Math.floor(s.v * (co.score > co.peerScore ? 0.9 : 1.1));
-                const color = s.v > 80 ? 'var(--risk-low)' : (s.v > 50 ? 'var(--risk-med)' : 'var(--risk-critical)');
-                
-                sigContainer.innerHTML += `
-                    <div class="signal-row">
-                        <div class="sig-label">${s.n}</div>
-                        <div class="sig-track"><div class="sig-fill" style="width:${s.v}%; background:${color}"></div></div>
-                        <div class="sig-val" style="color:${color}">${s.v}</div>
-                        <div class="sig-peer">vs ${peerV}</div>
-                    </div>
-                `;
-            });
-
-            // 3-Layer
-            document.getElementById('l-risk').innerText = co.risk;
-            document.getElementById('t-risk').innerHTML = getTrendHtml(co.risk, 80); // 80 is benchmark
-            
-            document.getElementById('l-exp').innerText = co.exp;
-            document.getElementById('t-exp').innerHTML = `<span class="trend-stable">→ Stable</span> vs Peer`;
-            
-            document.getElementById('l-loss').innerText = co.loss + "%";
-            document.getElementById('t-loss').innerHTML = getTrendHtml(30, co.loss); // Lower loss is better
-
-            // Buttons
-            if(co.status === 'refer') {
-                document.getElementById('referral-actions').classList.remove('hidden');
-            } else {
-                document.getElementById('referral-actions').classList.add('hidden');
-            }
-        }
-
-        function getTrendHtml(val, benchmark) {
-            if(val > benchmark) return `<span class="trend-good">▲ Superior</span>`;
-            if(val < benchmark) return `<span class="trend-bad">▼ Degrading</span>`;
-            return `<span class="trend-stable">→ Parity</span>`;
-        }
-
-        // --- STEERING LOGIC ---
-        function initSteering() {
-            // Ticker
-            const ticker = document.getElementById('ticker-content');
-            let html = '';
-            for(let i=0; i<30; i++) {
-                const c = companies[i % companies.length];
-                const act = c.score > 700 ? "APPROVED" : "DECLINED";
-                const col = c.score > 700 ? "var(--risk-low)" : "var(--risk-critical)";
-                html += `<div class="ticker-item">${c.ticker} <span style="color:${col}">${act}</span> // </div>`;
-            }
-            ticker.innerHTML = html;
-            
-            // Graph (Canvas)
-            drawSteeringGraph();
-        }
-
-        function toggleSwitch(el) {
-            el.classList.toggle('on');
-            document.getElementById('plr-val').innerText = el.classList.contains('on') ? "42.5%" : "48.2%";
-            document.getElementById('plr-val').style.color = el.classList.contains('on') ? "var(--text-main)" : "var(--risk-high)";
-        }
-
-        function injectShock(type) {
-            const canvas = document.getElementById('steering-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = "rgba(239, 68, 68, 0.1)"; // Red flash
-            ctx.fillRect(0,0,canvas.width, canvas.height);
-            setTimeout(() => drawSteeringGraph(), 200);
-            
-            document.getElementById('plr-val').innerText = "68.4%";
-            document.getElementById('plr-val').style.color = "var(--risk-critical)";
-        }
-
-        function drawSteeringGraph() {
-            const canvas = document.getElementById('steering-canvas');
-            if(!canvas) return;
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-            const ctx = canvas.getContext('2d');
-            
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height/2);
-            
-            // Draw a volatile line
-            for(let i=0; i<canvas.width; i+=10) {
-                ctx.lineTo(i, canvas.height/2 + Math.sin(i*0.05)*20 + (Math.random()*10));
-            }
-            ctx.strokeStyle = '#22d3ee';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-
-        // --- UNDERWRITING LOGIC ---
-        function runPricing() {
-            document.getElementById('uw-idle').classList.add('hidden');
-            document.getElementById('uw-running').classList.remove('hidden');
-            
-            setTimeout(() => {
-                document.getElementById('uw-running').classList.add('hidden');
-                document.getElementById('uw-done').classList.remove('hidden');
-            }, 2000);
-        }
-
-        // --- WORLD MODEL LOGIC (Nodes) ---
-        function initWorld() {
-            const container = document.getElementById('world-graph');
-            container.innerHTML = '<canvas id="world-canvas" style="width:100%; height:100%;"></canvas>';
-            const canvas = document.getElementById('world-canvas');
-            canvas.width = container.offsetWidth;
-            canvas.height = container.offsetHeight;
-            const ctx = canvas.getContext('2d');
-            
-            const nodes = [];
-            for(let i=0; i<60; i++) {
-                nodes.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random()-0.5),
-                    vy: (Math.random()-0.5)
-                });
-            }
-            
-            function animate() {
-                ctx.clearRect(0,0,canvas.width, canvas.height);
-                ctx.fillStyle = '#22d3ee';
-                ctx.strokeStyle = 'rgba(34, 211, 238, 0.1)';
-                
-                nodes.forEach((n, i) => {
-                    n.x += n.vx; n.y += n.vy;
-                    if(n.x<0||n.x>canvas.width) n.vx*=-1;
-                    if(n.y<0||n.y>canvas.height) n.vy*=-1;
-                    
-                    ctx.beginPath();
-                    ctx.arc(n.x, n.y, 2, 0, Math.PI*2);
-                    ctx.fill();
-                    
-                    // Links
-                    nodes.forEach((n2, j) => {
-                        if(i!==j) {
-                            const d = Math.hypot(n.x-n2.x, n.y-n2.y);
-                            if(d < 100) {
-                                ctx.beginPath();
-                                ctx.moveTo(n.x, n.y);
-                                ctx.lineTo(n2.x, n2.y);
-                                ctx.stroke();
-                            }
-                        }
-                    });
-                });
-                requestAnimationFrame(animate);
-            }
-            animate();
-            
-            canvas.addEventListener('click', (e) => {
-                // Butterfly effect ripple
-                const x = e.clientX;
-                const y = e.clientY;
-                nodes.forEach(n => {
-                    n.vx += (n.x - x) * 0.01;
-                    n.vy += (n.y - y) * 0.01;
-                });
-            });
-        }
-
-        // --- BG ANIMATION ---
-        (function() {
-            const c = document.getElementById('bg-canvas');
-            const x = c.getContext('2d');
-            let w, h;
-            const resize = () => { w=c.width=window.innerWidth; h=c.height=window.innerHeight; };
-            window.onresize = resize;
-            resize();
-            
-            const stars = Array(100).fill().map(() => ({x:Math.random()*w, y:Math.random()*h, s:Math.random()}));
-            
-            function loop() {
-                x.clearRect(0,0,w,h);
-                x.fillStyle = 'rgba(255,255,255,0.1)';
-                stars.forEach(s => {
-                    s.y -= s.s * 0.5;
-                    if(s.y < 0) s.y = h;
-                    x.beginPath(); x.arc(s.x, s.y, s.s, 0, 6.28); x.fill();
-                });
-                requestAnimationFrame(loop);
-            }
-            loop();
-        })();
 
     </script>
 </body>
