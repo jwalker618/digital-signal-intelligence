@@ -611,7 +611,7 @@ professional_indemnity:
           name: "Disciplinary History"
           description: "Sanctions, censures, suspensions, reprimands"
           weight: 0.30
-          inference_utility_function: disciplianry_history_basefunction
+          inference_utility_function: disciplinary_history_basefunction
           score_condition: true
           bands:
             - max: 25
@@ -820,7 +820,7 @@ professional_indemnity:
           name: "Professional Bio Quality"
           description: "Attorney/professional bio completeness"
           weight: 0.20
-          inference_utility_function: bio_completness_basefunction
+          inference_utility_function: bio_completeness_basefunction
           score_condition: false
           
         - id: "practice_clarity"

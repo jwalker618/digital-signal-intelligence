@@ -138,7 +138,7 @@ aerospace:
         name: "IOSA Status"
         description: "IATA Operational Safety Audit registration status" 
         impact: "modifier"
-        inference_utility_function: iosastatus_basefunction
+        inference_utility_function: iosa_status_basefunction
 
     # -------------------------------------------------------------------------
     # CATEGORICAL FEATURES
@@ -487,7 +487,7 @@ aerospace:
           name: "Operating Certificate Status"
           description: "AOC/Part 121/135 certificate status"
           weight: 0.25
-          inference_utility_function: certifcate_status_basefunction
+          inference_utility_function: certificate_status_basefunction
           score_condition: true
           bands:
             - max: 30
@@ -535,7 +535,7 @@ aerospace:
           name: "EU Air Safety List Status"
           description: "Presence on EU banned carrier list"
           weight: 0.15
-          inference_utility_function: eu_safetylist_basefunction
+          inference_utility_function: eu_safety_list_basefunction
           score_condition: true
           bands:
             - max: 30
@@ -610,7 +610,7 @@ aerospace:
           name: "Fleet Homogeneity"
           description: "Fleet type standardization"
           weight: 0.20
-          inference_utility_function: fleet_homgenity_basefunction
+          inference_utility_function: fleet_homogeneity_basefunction
           score_condition: false
           
         - id: "aircraft_generation"
@@ -631,7 +631,7 @@ aerospace:
           name: "Maintenance Quality Indicators"
           description: "Inferred maintenance quality"
           weight: 0.10
-          inference_utility_function: maintenece_indicators_basefunction
+          inference_utility_function: maintenance_indicators_basefunction
           score_condition: false
   
       financial_stability:
@@ -660,7 +660,7 @@ aerospace:
           name: "Government Support/Ownership"
           description: "State ownership or support indicators"
           weight: 0.15
-          inference_utility_function: goverment_support_basefunction
+          inference_utility_function: government_support_basefunction
           score_condition: false
   
       route_risk:
@@ -685,7 +685,7 @@ aerospace:
           name: "Challenging Airport Operations"
           description: "Operations to special requirement airports"
           weight: 0.20
-          inference_utility_function: challenging_aiports_basefunction
+          inference_utility_function: challenging_airports_basefunction
           score_condition: false
           
         - id: "high_risk_destinations"
@@ -728,7 +728,7 @@ aerospace:
           name: "Safety Transparency"
           description: "Public safety reporting and disclosure"
           weight: 0.20
-          inference_utility_function: saefty_reporting_basefunction
+          inference_utility_function: safety_reporting_basefunction
           score_condition: false
           
         - id: "corporate_structure"
@@ -742,7 +742,7 @@ aerospace:
           name: "Industry Safety Engagement"
           description: "Participation in FSF, IATA Safety Group"
           weight: 0.15
-          inference_utility_function: industry_enngagement_basefunction
+          inference_utility_function: industry_engagement_basefunction
           score_condition: false
 
     # -------------------------------------------------------------------------

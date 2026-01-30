@@ -572,7 +572,7 @@ financial_institutions:
           name: "Board Independence"
           description: "Independent director ratio and quality"
           weight: 0.20
-          inference_utility_function: board_independance_basefunction
+          inference_utility_function: board_independence_basefunction
           score_condition: false
           
         - id: "board_expertise"

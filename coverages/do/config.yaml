@@ -345,7 +345,7 @@ directors_officers:
           name: "Investment Banking Relationships"
           description: "Quality of investment banking relationships"
           weight: 0.15
-          inference_utility_function: bankinbg_relationship_basefunction
+          inference_utility_function: banking_relationship_basefunction
           score_condition: false
           
         - id: "investor_quality"
@@ -388,7 +388,7 @@ directors_officers:
           name: "Board Independence"
           description: "Percentage of independent directors"
           weight: 0.20
-          inference_utility_function: board_independance_basefunction
+          inference_utility_function: board_independence_basefunction
           score_condition: true
           bands:
             - max: 35
@@ -408,7 +408,7 @@ directors_officers:
           name: "CEO/Chair Separation"
           description: "Separation of CEO and Board Chair roles"
           weight: 0.15
-          inference_utility_function: ceo_chairseperation_basefunction
+          inference_utility_function: ceo_chair_separation_basefunction
           score_condition: false
           
         - id: "committee_structure"
@@ -508,14 +508,14 @@ directors_officers:
           name: "Debt Covenant Compliance"
           description: "Proximity to debt covenant thresholds"
           weight: 0.05
-          inference_utility_function: devt_covernent_basefunction
+          inference_utility_function: debt_covenant_basefunction
           score_condition: false
           
         - id: "stock_volatility"
           name: "Stock Price Volatility"
           description: "Historical stock price volatility vs peers"
           weight: 0.10
-          inference_utility_function: stock_volaitlity_basefunction
+          inference_utility_function: stock_volatility_basefunction
           score_condition: false
           
         - id: "short_interest"

@@ -398,7 +398,7 @@ marine:
           name: "Charterer Relationships"
           description: "Quality of major charterers (oil majors, commodity traders)"
           weight: 0.15
-          inference_utility_function: chartere_quality_basefunction
+          inference_utility_function: charterer_quality_basefunction
           score_condition: false
           
         - id: "banking_relationship"
@@ -677,7 +677,7 @@ marine:
           name: "Historical Sanctions Connections"
           description: "Historical connections to sanctioned entities"
           weight: 0.15
-          inference_utility_function: historiccal_sanctions_basefunction
+          inference_utility_function: historical_sanctions_basefunction
           score_condition: false
 
       environmental:
@@ -706,7 +706,7 @@ marine:
           name: "Environmental Incidents"
           description: "Pollution incidents and environmental fines"
           weight: 0.20
-          inference_utility_function: enviromental_incident_basefunction
+          inference_utility_function: environmental_incident_basefunction
           score_condition: false
 
       corporate_footprint:

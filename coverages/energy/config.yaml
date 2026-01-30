@@ -626,7 +626,7 @@ energy:
           name: "Maintenance Patterns"
           description: "Observable turnarounds and maintenance activity"
           weight: 0.20
-          inference_utility_function: maintenance_patterm_basefunction
+          inference_utility_function: maintenance_pattern_basefunction
           score_condition: false
           
         - id: "operational_efficiency"
