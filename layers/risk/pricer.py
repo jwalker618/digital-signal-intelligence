@@ -235,30 +235,45 @@ class ModelPricer:
             logger.warning(f"No config for tier {tier}, using default")
             return config.metadata.min_premium or 25000, "default"
 
-        if tier_config.premium_method == PremiumMethod.RATE_BASED:
-            # Rate-based premium
-            if tier_config.rate is None:
-                logger.warning("Rate-based tier missing rate, falling back to pure")
-                return tier_config.base_premium or config.metadata.min_premium, "pure"
-
-            # Get the rate basis value from submission
+        # v2.0: MULTIPLIER method - rate × basis value
+        if tier_config.premium_method == PremiumMethod.MULTIPLIER:
             rate_basis = tier_config.rate_basis or "tiv"
             basis_value = submission_data.get(rate_basis, 0)
 
             if basis_value <= 0:
-                # No basis value, fall back to pure premium
+                logger.debug(f"No {rate_basis} value for MULTIPLIER, using PREMIUM_BASE fallback")
+                return tier_config.base_premium or config.metadata.min_premium or 25000, "default"
+
+            rate = tier_config.rate or tier_config.base_premium or 0
+            base_premium = basis_value * rate
+            return base_premium, "multiplier"
+
+        # v2.0: PREMIUM_BASE - direct premium from tier
+        if tier_config.premium_method == PremiumMethod.PREMIUM_BASE:
+            if tier_config.base_premium is not None:
+                return tier_config.base_premium, "premium_base"
+            return config.metadata.min_premium or 25000, "default"
+
+        # v1.0: RATE_BASED - rate applied to metric
+        if tier_config.premium_method == PremiumMethod.RATE_BASED:
+            if tier_config.rate is None:
+                logger.warning("Rate-based tier missing rate, falling back to pure")
+                return tier_config.base_premium or config.metadata.min_premium, "pure"
+
+            rate_basis = tier_config.rate_basis or "tiv"
+            basis_value = submission_data.get(rate_basis, 0)
+
+            if basis_value <= 0:
                 logger.debug(f"No {rate_basis} value, using pure premium")
                 return tier_config.base_premium or config.metadata.min_premium, "pure"
 
             base_premium = basis_value * tier_config.rate
             return base_premium, "rate"
 
-        else:
-            # Pure premium (default)
-            if tier_config.base_premium is not None:
-                return tier_config.base_premium, "pure"
-            else:
-                return config.metadata.min_premium or 25000, "default"
+        # v1.0: PURE / default
+        if tier_config.base_premium is not None:
+            return tier_config.base_premium, "pure"
+        return config.metadata.min_premium or 25000, "default"
 
     def apply_modifiers(
         self,
