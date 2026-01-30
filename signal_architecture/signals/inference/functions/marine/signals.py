@@ -283,3 +283,70 @@ def f47(e, c): return _run_pipeline("esg_rating", MarineESGRatingExtractor(), Ma
 
 @register_inference_function("marine_credit_rating_basefunction")
 def f48(e, c): return _run_pipeline("credit_rating", MarineCreditRatingExtractor(), MarineCreditRatingAggregator(), e, c, "credit_rating_score", 50)
+
+
+# =============================================================================
+# SIGNAL ENHANCEMENTS - Priority 1 & 2 Stubs
+# TODO: These stubs need production data sources (extractors/aggregators)
+# =============================================================================
+
+import random
+
+@register_inference_function("port_state_control_basefunction")
+def f49(entity_id, context):
+    """Infers port state control deficiency history.
+
+    Returns a score 0-100 where higher = better compliance record.
+    Uses metadata: deficiency_count, detention_count, last_inspection_date.
+
+    TODO: Connect to production PSC data sources (Paris MOU, Tokyo MOU, USCG).
+    """
+    start = time.time()
+    deficiency_count = random.randint(0, 12)
+    detention_count = random.randint(0, 3)
+    # Score inversely proportional to deficiencies and detentions
+    score = max(0, min(100, 100 - (deficiency_count * 4) - (detention_count * 15)))
+    return SignalResult(
+        signal_id="port_state_control",
+        score=round(score, 1),
+        confidence=0.6,
+        execution_time_ms=(time.time() - start) * 1000,
+        raw_data={
+            "deficiency_count": deficiency_count,
+            "detention_count": detention_count,
+            "last_inspection_date": "2025-08-15",
+        },
+        aggregated_data={"port_state_control_score": score},
+        metadata={"stub": True, "enhancement": "priority_1"},
+    )
+
+
+@register_inference_function("classification_society_quality_basefunction")
+def f50(entity_id, context):
+    """Infers classification society quality and reputation.
+
+    Returns a score 0-100 where higher = better society reputation.
+    Uses metadata: society_name, iacs_member, recognition_tier.
+
+    TODO: Connect to production IACS registry and flag-state recognition data.
+    """
+    start = time.time()
+    iacs_member = random.choice([True, False])
+    recognition_tier = random.choice(["tier_1", "tier_2", "tier_3"])
+    society_name = random.choice(["Lloyd's Register", "DNV", "Bureau Veritas", "ClassNK", "Unknown Society"])
+    tier_scores = {"tier_1": 90, "tier_2": 65, "tier_3": 40}
+    base = tier_scores.get(recognition_tier, 40)
+    score = min(100, base + (10 if iacs_member else 0) + random.randint(-5, 5))
+    return SignalResult(
+        signal_id="classification_society_quality",
+        score=round(score, 1),
+        confidence=0.65,
+        execution_time_ms=(time.time() - start) * 1000,
+        raw_data={
+            "society_name": society_name,
+            "iacs_member": iacs_member,
+            "recognition_tier": recognition_tier,
+        },
+        aggregated_data={"classification_society_quality_score": score},
+        metadata={"stub": True, "enhancement": "priority_1"},
+    )
