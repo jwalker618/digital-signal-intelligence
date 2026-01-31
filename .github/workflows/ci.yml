@@ -43,15 +43,15 @@ jobs:
           pip install flake8 black isort mypy
 
       - name: Run Black (code formatting check)
-        run: black --check technical_pricing/
+        run: black --check signal_architecture/ infrastructure/ layers/ coverages/
 
       - name: Run isort (import sorting check)
-        run: isort --check-only technical_pricing/
+        run: isort --check-only signal_architecture/ infrastructure/ layers/ coverages/
 
       - name: Run Flake8 (linting)
         run: |
           set -o pipefail
-          flake8 technical_pricing/ \
+          flake8 signal_architecture/ infrastructure/ layers/ coverages/ \
             --max-line-length=100 \
             --extend-ignore=E203,W503,E501,F541,F841 \
             --format=default \
@@ -66,7 +66,7 @@ jobs:
       - name: Run MyPy (type checking)
         run: |
           set -o pipefail
-          mypy technical_pricing/ \
+          mypy signal_architecture/ infrastructure/ layers/ \
           --ignore-missing-imports \
           > mypy-report.txt
         continue-on-error: true
@@ -103,8 +103,11 @@ jobs:
       - name: Run tests with pytest
         if: matrix.python-version == needs.setup.outputs.run-version
         run: |
-          pytest technical_pricing/tests/ \
-          --cov=technical_pricing/ \
+          pytest tests/ \
+          --cov=signal_architecture \
+          --cov=infrastructure \
+          --cov=layers \
+          --cov=coverages \
           --cov-report=xml \
           --cov-report=html \
           --cov-report=term-missing \
