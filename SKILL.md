@@ -50,7 +50,7 @@ When starting any DSI work:
 | 20 | Config Architecture & Org Graph | ✅ Complete | `development/project/phase_20.md` |
 | 21 | Loss Correlation Implementation | 🔲 Not Started | TBD |
 | 22 | Exposure Shadow Implementation | 🔲 Not Started | TBD |
-| 23 | Organisational Graph Runtime | 🔲 Not Started | TBD |
+| 23 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` (R8) |
 
 ### DSI Comprehensive Restructure (Active)
 
@@ -60,10 +60,10 @@ When starting any DSI work:
 | R2 | Signal Architecture Alignment | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R3 | Coverage Configuration Rebuilds | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R4 | Infrastructure Builder Revision | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R5 | Infrastructure Verification | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
-| R6 | Layer Implementations | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
-| R7 | Model Configuration Validation | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
-| R8 | Organisational Graph Runtime | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R5 | Infrastructure Verification | ✅ Complete | `development/project/dsi_restructure_plan.md` |
+| R6 | Layer Implementations | ✅ Complete | `development/project/dsi_restructure_plan.md` |
+| R7 | Model Configuration Validation | ✅ Complete | `development/project/dsi_restructure_plan.md` |
+| R8 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R9 | Performance Enhancement (Rust) | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R10 | Documentation & Cleanup | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R11 | Testing | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
@@ -425,10 +425,21 @@ digital-signal-intelligence/
 │   ├── discovery/                   ✅ PHASE 6 - Entity identification (Step 0)
 │   │   └── website_discovery.py     ✅ Discovery engine
 │   │
-│   └── orchestration/               ✅ PHASE 10 - Multi-coverage coordination
-│       ├── types.py                 ✅ Orchestration types
-│       ├── multi_coverage.py        ✅ Multi-coverage workflow
-│       └── locale_detection.py      ✅ Locale detection
+│   ├── orchestration/               ✅ PHASE 10 - Multi-coverage coordination
+│   │   ├── types.py                 ✅ Orchestration types
+│   │   ├── multi_coverage.py        ✅ Multi-coverage workflow
+│   │   └── locale_detection.py      ✅ Locale detection
+│   │
+│   └── graph/                       ✅ PHASE 23/R8 - Organisational Graph Runtime
+│       ├── types.py                 ✅ Node, Edge, Graph types (6 node, 6 edge types)
+│       ├── node_factory.py          ✅ Create nodes from signals/submission
+│       ├── edge_inferencer.py       ✅ Infer edges from relationships
+│       ├── graph_builder.py         ✅ Full graph construction pipeline
+│       ├── storage.py               ✅ Graph serialization and persistence
+│       ├── derivatives/             ✅ Behavioural derivative calculations
+│       │   └── calculator.py        ✅ Entropy, velocity, drift, concentration, fragility
+│       └── propagation/             ✅ Graph propagation algorithms
+│           └── algorithms.py        ✅ PageRank, risk propagation, exposure aggregation
 │
 ├── infrastructure/                  # Support systems and integrations
 │   ├── __init__.py
@@ -472,8 +483,8 @@ digital-signal-intelligence/
 │   │   ├── workflow.py              ✅ Full orchestration + Step 0
 │   │   └── modifiers/               ✅ PHASE 7 - Traditional modifiers
 │   │
-│   ├── exposure/                    🔲 Exposure Shadow Layer (PHASE 17)
-│   └── loss/                        🔲 Loss Correlation Layer (PHASE 16)
+│   ├── exposure/                    ✅ Exposure scorer + types (v2.0 tier bands)
+│   └── loss/                        ✅ Loss config adapter + types (v2.0 tier bands)
 │
 ├── coverages/                       # YAML coverage configurations
 │   ├── aerospace/config.yaml        ✅ 21 signals
