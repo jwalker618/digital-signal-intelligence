@@ -588,12 +588,17 @@ def load_coverage_config(
     if config_path and config_path.exists():
         return manager.load_from_file(config_path)
 
-    # Try default location
+    # Try default location relative to layers/ parent
     default_path = Path(__file__).parent.parent / "coverages" / coverage / "config.yaml"
     if default_path.exists():
         return manager.load_from_file(default_path)
 
+    # Try project-root coverages/ directory
+    project_root_path = Path(__file__).parent.parent.parent / "coverages" / coverage / "config.yaml"
+    if project_root_path.exists():
+        return manager.load_from_file(project_root_path)
+
     raise ConfigNotFoundError(
         f"Could not find config for {coverage}"
-        f" (tried active configs and {default_path})"
+        f" (tried active configs, {default_path}, and {project_root_path})"
     )

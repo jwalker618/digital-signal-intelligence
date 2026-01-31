@@ -28,9 +28,9 @@ from ..types import (
     ListFilters,
 )
 
-# Import workflow engine
-from ...model.workflow import run_assessment
-from ...model.types import WorkflowResult, DecisionType
+# Import workflow engine (actual location: layers.risk)
+from layers.risk.workflow import run_assessment
+from layers.risk.types import WorkflowResult, DecisionType
 
 logger = logging.getLogger("dsi.api.submissions")
 
