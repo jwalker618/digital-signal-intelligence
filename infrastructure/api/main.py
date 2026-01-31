@@ -89,7 +89,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize database (if available)
     try:
-        from ..db.config import init_db, async_engine
+        from ..db.config import init_db
         await init_db()
         app_state.db_connected = True
         logger.info("Database connected")
