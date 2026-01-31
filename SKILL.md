@@ -65,8 +65,8 @@ When starting any DSI work:
 | R7 | Model Configuration Validation | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R8 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R9 | Performance Enhancement (Rust) | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R10 | Documentation & Cleanup | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
-| R11 | Testing | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R10 | Documentation & Cleanup | ✅ Complete | `development/project/dsi_restructure_plan.md` |
+| R11 | Testing | 🔄 In Progress | `development/project/dsi_restructure_plan.md` |
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -83,6 +83,11 @@ When starting any DSI work:
 - ✅ Metadata registry created (`signal_architecture/signals/inference/metadata_registry.py`)
 - ✅ Signal enhancements stubbed (Marine port state/classification, Aerospace certification/supply chain, Cross-Coverage regulatory)
 - ✅ Categoriser audit complete (4 core types + 8 variants implemented, 4 statistical types deferred to Phase 8)
+- ✅ Infrastructure verification: scorer (FLAG/REFER/MODIFIER), pricer (MULTIPLIER/PREMIUM_BASE) updated for v2.0
+- ✅ Exposure scorer and loss config adapter implemented (v2.0 tier band consumers)
+- ✅ Model configuration validator: all 7 configs pass validation (0 errors, 0 warnings)
+- ✅ Organisational Graph Runtime: 6 node types, 6 edge types, 5 derivatives, PageRank propagation
+- ✅ Rust dsi-core crate: PageRank, derivatives, validation via PyO3 (release build with LTO)
 
 **Next Steps**: See [Outstanding Work](#outstanding-work) section for consolidated pending, planned, and optional items.
 
@@ -461,10 +466,14 @@ digital-signal-intelligence/
 │   │   ├── portfolio.py             ✅ Portfolio analytics
 │   │   └── signal_analytics.py      ✅ Signal performance
 │   │
-│   ├── builder/                     ✅ PHASE 13 - LLM coverage builder
-│   │   ├── coverage_builder.py      ✅ Builder logic
-│   │   ├── validator.py             ✅ Config validation
+│   ├── builder/                     ✅ PHASE 13 - LLM coverage builder (v2.0 updated)
+│   │   ├── coverage_builder.py      ✅ Builder logic (v2.0 output format)
+│   │   ├── validator.py             ✅ Config validation (v2.0 structure)
 │   │   └── signal_library.py        ✅ Signal library
+│   │
+│   ├── validation/                  ✅ R7 - Model configuration validation
+│   │   ├── __init__.py              ✅ Module exports
+│   │   └── config_validator.py      ✅ Comprehensive v2.0 config validation
 │   │
 │   └── integrations/                ✅ PHASE 12 - External integrations
 │       ├── email/                   ✅ Email notifications
@@ -502,6 +511,17 @@ digital-signal-intelligence/
 │   ├── server.py                    ✅ FastAPI demo server
 │   ├── examples/                    ✅ Coverage examples + hybrid routing
 │   └── html/                        ✅ Interactive HTML demos
+│
+├── rust/                            ✅ R9 - Rust performance components
+│   └── dsi-core/                   ✅ PyO3 crate (PageRank, derivatives, validation)
+│       ├── Cargo.toml              ✅ Crate config (pyo3, serde, rayon)
+│       ├── pyproject.toml          ✅ Maturin build config
+│       ├── src/
+│       │   ├── lib.rs              ✅ Module entry point
+│       │   ├── graph.rs            ✅ PageRank, risk propagation, exposure aggregation
+│       │   ├── derivatives.rs      ✅ Entropy, velocity, drift, concentration, fragility
+│       │   └── validation.rs       ✅ YAML config validation
+│       └── benches/                ✅ Criterion benchmarks
 │
 └── deploy/                          ✅ Deployment configs
     ├── docker/
@@ -785,9 +805,9 @@ This section consolidates all pending, optional, and planned work items. Complet
 | ~~Restructure: Extract signals to root level~~ | 18 | ~~Critical~~ ✅ | **COMPLETE** - See `development/project/phase_18.md` |
 | ~~Config architecture unification~~ | 20 | ~~Critical~~ ✅ | **COMPLETE** - Unified signal definitions for risk/loss/exposure |
 | Complete DSI Demo Production Build | 19 | High | In Progress - partitioned development approach |
-| Implement Loss Correlation Runtime | 21 | High | Config ready (Phase 20). Implement scorer, monitoring, integration |
-| Implement Exposure Shadow Runtime | 22 | High | Config ready (Phase 20). Implement magnitude, complexity calculators |
-| Implement Organisational Graph Runtime | 23 | Medium | Schema ready (Phase 20). Implement node/edge creation, derivatives |
+| ~~Implement Loss Correlation Runtime~~ | 21 | ~~High~~ ✅ | **COMPLETE** (R6) - Loss config adapter, tier band mapping |
+| ~~Implement Exposure Shadow Runtime~~ | 22 | ~~High~~ ✅ | **COMPLETE** (R6) - Exposure scorer, magnitude/band assessment |
+| ~~Implement Organisational Graph Runtime~~ | 23 | ~~Medium~~ ✅ | **COMPLETE** (R8) - Full graph runtime with PageRank + derivatives |
 | Tag v1.0.0 release | 14 | Medium | Awaiting Phase 19 demo completion |
 | Add unit tests for critical modules | - | Medium | Test coverage at ~12.6% |
 | Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Low | See `development/extractor_implementation_plan.md` |
