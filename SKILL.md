@@ -52,7 +52,7 @@ When starting any DSI work:
 | 22 | Exposure Shadow Implementation | 🔲 Not Started | TBD |
 | 23 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` (R8) |
 
-### DSI Comprehensive Restructure (Active)
+### DSI Comprehensive Restructure (Complete)
 
 | Phase | Name | Status | Development documentation |
 |-|-|-|-|
@@ -67,6 +67,30 @@ When starting any DSI work:
 | R9 | Performance Enhancement (Rust) | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R10 | Documentation & Cleanup | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R11 | Testing | ✅ Complete | `development/project/dsi_restructure_plan.md` |
+
+### Production Readiness Plan (Complete)
+
+| Phase | Name | Status | Development documentation |
+|-|-|-|-|
+| P1 | Fix Broken Fundamentals | ✅ Complete | `development/project/production_readiness_plan.md` |
+| P2 | Database Persistence | ✅ Complete | `development/project/production_readiness_plan.md` |
+| P3 | Production Extractor Wiring | ✅ Complete | `development/project/production_readiness_plan.md` |
+| P4 | End-to-End Integration Testing | ✅ Complete | `development/project/production_readiness_plan.md` |
+| P5 | Observability | ✅ Complete | `development/project/production_readiness_plan.md` |
+| P6 | Deployment Pipeline | ✅ Complete | `development/project/production_readiness_plan.md` |
+| P7 | Performance Validation | ✅ Complete | `development/project/production_readiness_plan.md` |
+
+**P1-P7 Deliverables:**
+- ✅ Lazy imports in `infrastructure/__init__.py` (no hard FastAPI dependency)
+- ✅ All paths fixed (pyproject.toml, CI, Dockerfile) from `technical_pricing/` to actual packages
+- ✅ Alembic migrations with 8-table initial schema, lazy DB engine singletons
+- ✅ Dual storage: DB persistence with in-memory fallback
+- ✅ Unified extractor resolver: stub/production/hybrid modes via `FEATURE_USE_STUBS`
+- ✅ 21 E2E integration tests (full pipeline: submission → scoring → tier → decision)
+- ✅ Structured JSON logging with correlation IDs, Prometheus metrics instrumentation
+- ✅ Rate limiting middleware (in-memory + Redis backends, per-API-key tiers)
+- ✅ CI/CD: Rust build, integration tests, Docker build+push, staging/prod deploy
+- ✅ Performance benchmarks: workflow ~80ms, scoring ~12ms, graph build <1ms
 
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
@@ -448,12 +472,13 @@ digital-signal-intelligence/
 │
 ├── infrastructure/                  # Support systems and integrations
 │   ├── __init__.py
-│   ├── api/                         ✅ PHASE 11 - FastAPI REST API
-│   │   ├── main.py                  ✅ Application entry
+│   ├── api/                         ✅ PHASE 11 + P5 - FastAPI REST API
+│   │   ├── main.py                  ✅ Application entry (structured logging, metrics, rate limiting)
 │   │   ├── types.py                 ✅ API types
 │   │   ├── routes/                  ✅ Endpoint handlers
 │   │   ├── auth/                    ✅ JWT & API key auth
-│   │   └── middleware/              ✅ Rate limiting, logging
+│   │   ├── middleware/              ✅ Middleware components
+│   │   └── observability/           ✅ P5 - Structured logging, Prometheus, rate limiting
 │   │
 │   ├── db/                          ✅ Database layer
 │   │   ├── models.py                ✅ SQLAlchemy models
@@ -504,7 +529,8 @@ digital-signal-intelligence/
 │
 ├── tests/                           ✅ Test suite
 │   ├── unit/
-│   ├── integration/
+│   ├── integration/                 ✅ P4 - E2E pipeline tests (21 tests)
+│   ├── performance/                 ✅ P7 - Benchmarks (Python baselines + Rust)
 │   └── api/
 │
 ├── demo/                            ✅ Live demos and examples
@@ -523,10 +549,14 @@ digital-signal-intelligence/
 │       │   └── validation.rs       ✅ YAML config validation
 │       └── benches/                ✅ Criterion benchmarks
 │
+├── alembic/                         ✅ P2 - Database migrations
+│   ├── env.py                       ✅ Migration environment
+│   └── versions/                    ✅ Migration scripts (001_initial_schema)
+│
 └── deploy/                          ✅ Deployment configs
-    ├── docker/
-    ├── kubernetes/
-    └── monitoring/
+    ├── docker/                      ✅ docker-compose.prod.yml
+    ├── kubernetes/                  ✅ P6 - Deployment, service, HPA, secrets template
+    └── monitoring/                  ✅ Prometheus config + alert rules
 ```
 
 Legend: ✅ Complete | 🔲 Not Started
@@ -804,14 +834,14 @@ This section consolidates all pending, optional, and planned work items. Complet
 |-|-|-|-|
 | ~~Restructure: Extract signals to root level~~ | 18 | ~~Critical~~ ✅ | **COMPLETE** - See `development/project/phase_18.md` |
 | ~~Config architecture unification~~ | 20 | ~~Critical~~ ✅ | **COMPLETE** - Unified signal definitions for risk/loss/exposure |
-| Complete DSI Demo Production Build | 19 | High | In Progress - partitioned development approach |
+| ~~Complete DSI Demo Production Build~~ | 19 | ~~High~~ ✅ | **COMPLETE** (P1-P7) - Production readiness plan executed |
 | ~~Implement Loss Correlation Runtime~~ | 21 | ~~High~~ ✅ | **COMPLETE** (R6) - Loss config adapter, tier band mapping |
 | ~~Implement Exposure Shadow Runtime~~ | 22 | ~~High~~ ✅ | **COMPLETE** (R6) - Exposure scorer, magnitude/band assessment |
 | ~~Implement Organisational Graph Runtime~~ | 23 | ~~Medium~~ ✅ | **COMPLETE** (R8) - Full graph runtime with PageRank + derivatives |
-| Tag v1.0.0 release | 14 | Medium | Awaiting Phase 19 demo completion |
-| Add unit tests for critical modules | - | Medium | Test coverage at ~12.6% |
+| Tag v1.0.0 release | 14 | Medium | P1-P7 complete, ready for release tagging |
+| Increase unit test coverage | - | Medium | Target 80%, currently ~12.6% |
+| Compile Rust dsi_core wheel | P7 | Medium | Run `maturin develop` to activate Rust speedups |
 | Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Low | See `development/extractor_implementation_plan.md` |
-| Fix remaining config typos (inference_utility_function) | - | Low | 23 function name typos |
 
 ### Architecture & Configuration Status
 
