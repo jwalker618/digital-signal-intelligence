@@ -1,0 +1,29 @@
+[package]
+name = "dsi-core"
+version = "0.1.0"
+edition = "2021"
+description = "DSI performance-critical components in Rust with PyO3 bindings"
+license = "Proprietary"
+
+[lib]
+name = "dsi_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+rayon = "1.10"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "graph_bench"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

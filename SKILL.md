@@ -64,7 +64,7 @@ When starting any DSI work:
 | R6 | Layer Implementations | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R7 | Model Configuration Validation | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R8 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R9 | Performance Enhancement (Rust) | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
+| R9 | Performance Enhancement (Rust) | ✅ Complete | `development/project/dsi_restructure_plan.md` |
 | R10 | Documentation & Cleanup | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 | R11 | Testing | 🔲 Not Started | `development/project/dsi_restructure_plan.md` |
 
