@@ -17,7 +17,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .types import HealthResponse
+from .observability.logging_config import configure_logging
+from .observability.metrics import metrics, get_metrics_response
+from .observability.rate_limiter import RateLimitMiddleware, set_redis_limiter
 
+# Configure structured logging before anything else
+configure_logging()
 logger = logging.getLogger("dsi.api")
 
 
@@ -86,16 +91,19 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting DSI API (env={settings.env}, debug={settings.debug})...")
     app_state.start_time = datetime.utcnow()
+    metrics.set_info(version=app_state.version, environment=settings.env)
 
     # Initialize database (if available)
     try:
         from ..db.config import init_db
         await init_db()
         app_state.db_connected = True
+        metrics.db_connected.set(1)
         logger.info("Database connected")
     except Exception as e:
         logger.warning(f"Database not available: {e}")
         app_state.db_connected = False
+        metrics.db_connected.set(0)
 
     # Initialize Redis cache (if available)
     try:
@@ -105,10 +113,14 @@ async def lifespan(app: FastAPI):
         await redis_client.ping()
         app.state.redis = redis_client
         app_state.cache_connected = True
-        logger.info("Redis cache connected")
+        metrics.cache_connected.set(1)
+        # Upgrade rate limiter to Redis backend
+        set_redis_limiter(redis_client)
+        logger.info("Redis cache connected (rate limiter upgraded to Redis)")
     except Exception as e:
         logger.warning(f"Redis not available: {e}")
         app_state.cache_connected = False
+        metrics.cache_connected.set(0)
 
     # Initialize extractor factory mode from feature flag
     try:
@@ -191,23 +203,31 @@ elif not settings.is_production:
 
 @app.middleware("http")
 async def request_logging(request: Request, call_next):
-    """Log all requests with timing."""
+    """Log all requests with timing and Prometheus instrumentation."""
     request_id = str(uuid.uuid4())[:8]
     start_time = time.time()
 
     # Add request ID to request state
     request.state.request_id = request_id
+    app_state.request_count += 1
 
     # Log request (skip health checks in production)
-    if not (settings.is_production and "/health" in request.url.path):
+    is_health = "/health" in request.url.path
+    if not (settings.is_production and is_health):
         logger.info(f"[{request_id}] {request.method} {request.url.path}")
 
     try:
         response = await call_next(request)
 
-        # Log response
+        # Record metrics
         duration = time.time() - start_time
-        if not (settings.is_production and "/health" in request.url.path):
+        if not is_health:
+            metrics.observe_request(
+                request.method, request.url.path,
+                response.status_code, duration,
+            )
+
+        if not (settings.is_production and is_health):
             logger.info(
                 f"[{request_id}] {request.method} {request.url.path} "
                 f"-> {response.status_code} ({duration:.3f}s)"
@@ -220,6 +240,10 @@ async def request_logging(request: Request, call_next):
 
     except Exception as e:
         duration = time.time() - start_time
+        metrics.observe_request(
+            request.method, request.url.path, 500, duration,
+        )
+        metrics.record_error(type(e).__name__)
         logger.error(
             f"[{request_id}] {request.method} {request.url.path} "
             f"-> ERROR ({duration:.3f}s): {e}"
@@ -227,11 +251,8 @@ async def request_logging(request: Request, call_next):
         raise
 
 
-@app.middleware("http")
-async def count_requests(request: Request, call_next):
-    """Count all requests for metrics."""
-    app_state.request_count += 1
-    return await call_next(request)
+# Rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
 
 # =============================================================================
@@ -364,9 +385,15 @@ app.include_router(analytics.router, prefix="/api/v1", tags=["Analytics"])
 # METRICS ENDPOINT
 # =============================================================================
 
+@app.get("/metrics", tags=["Monitoring"], include_in_schema=False)
+async def prometheus_metrics():
+    """Prometheus scrape endpoint (text format)."""
+    return get_metrics_response()
+
+
 @app.get("/api/v1/metrics", tags=["Monitoring"])
-async def get_metrics():
-    """Get API metrics (Prometheus-compatible format available at /metrics)."""
+async def get_metrics_json():
+    """Get API metrics (JSON summary for dashboards)."""
     uptime = (datetime.utcnow() - app_state.start_time).total_seconds()
 
     return {
