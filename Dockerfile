@@ -64,8 +64,8 @@ COPY --chown=dsi:dsi signal_architecture/ ./signal_architecture/
 COPY --chown=dsi:dsi infrastructure/ ./infrastructure/
 COPY --chown=dsi:dsi layers/ ./layers/
 COPY --chown=dsi:dsi coverages/ ./coverages/
-COPY --chown=dsi:dsi extractors/ ./extractors/
-COPY --chown=dsi:dsi setup.py pyproject.toml README.md ./
+COPY --chown=dsi:dsi alembic/ ./alembic/
+COPY --chown=dsi:dsi alembic.ini pyproject.toml README.md ./
 
 # Switch to non-root user
 USER dsi
