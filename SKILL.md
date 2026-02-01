@@ -92,6 +92,16 @@ When starting any DSI work:
 - ✅ CI/CD: Rust build, integration tests, Docker build+push, staging/prod deploy
 - ✅ Performance benchmarks: workflow ~80ms, scoring ~12ms, graph build <1ms
 
+**Coverage Builder v2.0 Overhaul** (February 2026):
+- ✅ Builder generates v2.0 compliant configs (signal_registry, three_layer_assessment, groups, risk/loss/exposure tiers)
+- ✅ Validator aligned with v2.0 schema (rejects v1.x flat structure, enforces score_condition action rules)
+- ✅ Signal library integrated with metadata registry (`signal_architecture/signals/inference/metadata_registry.py`)
+- ✅ CLI tool: `python -m infrastructure.builder.cli build|validate|list-industries|list-signals`
+- ✅ 24 builder tests passing (structure, constraints, multi-industry, validator, signal library)
+- ✅ Builder output passes its own validator AND validates existing cyber config
+- ✅ score_conditions enforce FLAG|MODIFIER|REFER only (DECLINE tier-level only)
+- ✅ Generated configs match canonical structure: `coverage_id → config_name → {metadata, signal_registry, groups, risk_tier_bands, ...}`
+
 **Validation Status** (January 2026):
 - ✅ All core Python imports validated and working
 - ✅ Signal analytics module fixed (import order corrected)
@@ -491,10 +501,12 @@ digital-signal-intelligence/
 │   │   ├── portfolio.py             ✅ Portfolio analytics
 │   │   └── signal_analytics.py      ✅ Signal performance
 │   │
-│   ├── builder/                     ✅ PHASE 13 - LLM coverage builder (v2.0 updated)
-│   │   ├── coverage_builder.py      ✅ Builder logic (v2.0 output format)
-│   │   ├── validator.py             ✅ Config validation (v2.0 structure)
-│   │   └── signal_library.py        ✅ Signal library
+│   ├── builder/                     ✅ PHASE 13 - Coverage builder (v2.0 compliant)
+│   │   ├── coverage_builder.py      ✅ Builder logic (v2.0 schema: signal_registry, groups, tiers)
+│   │   ├── validator.py             ✅ v2.0 schema validator (nested structure, score_condition rules)
+│   │   ├── signal_library.py        ✅ Signal library (integrated with metadata registry)
+│   │   ├── cli.py                   ✅ CLI tool (build, validate, list commands)
+│   │   └── types.py                 ✅ Builder types (ProxyTier, CoverageSpec, etc.)
 │   │
 │   ├── validation/                  ✅ R7 - Model configuration validation
 │   │   ├── __init__.py              ✅ Module exports
@@ -893,10 +905,10 @@ Phase 20 (Config) ──► Phase 21 (Loss Runtime) ──► Phase 23 (Graph Ru
 | Performance dashboards | 8 | Visualization of model performance |
 | Natural language search | 9 | Query portfolio with natural language |
 | Visualization components | 9 | Interactive charts and dashboards |
-| SignalLibrary | 13 | Reusable signal component library |
-| CodeGenerator | 13 | Automated code generation for new signals |
-| LLM prompts | 13 | Prompt templates for coverage building |
-| Builder CLI | 13 | Command-line interface for builder |
+| ~~SignalLibrary~~ | 13 | ~~Reusable signal component library~~ ✅ Integrated with metadata registry |
+| ~~CodeGenerator~~ | 13 | ~~Automated code generation for new signals~~ ✅ Stub generator in builder |
+| LLM prompts | 13 | Prompt templates for LLM-assisted coverage building |
+| ~~Builder CLI~~ | 13 | ~~Command-line interface for builder~~ ✅ `cli.py` (build/validate/list) |
 
 ### Signal Enhancement Recommendations
 

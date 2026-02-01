@@ -1,7 +1,7 @@
 """
-DSI Coverage Builder Types (Phase 13)
+DSI Coverage Builder Types (Phase 13 → v2.0 Overhaul)
 
-Data structures for LLM-assisted coverage building.
+Data structures for coverage building aligned with v2.0 config schema.
 """
 
 from dataclasses import dataclass, field
@@ -27,6 +27,13 @@ class ValidationSeverity(str, Enum):
     INFO = "info"
 
 
+class ProxyTier(str, Enum):
+    """Signal proxy tier classification."""
+    DIRECT_OBSERVABLE = "DIRECT_OBSERVABLE"
+    INFERRED_PROXY = "INFERRED_PROXY"
+    COHORT_INFERENCE = "COHORT_INFERENCE"
+
+
 @dataclass
 class CoverageSpec:
     """Input specification for new coverage."""
@@ -38,6 +45,12 @@ class CoverageSpec:
     example_companies: List[str] = field(default_factory=list)
     base_coverage: Optional[str] = None  # Extend from existing
     notes: Optional[str] = None
+
+    # Product configuration
+    product_types: List[str] = field(default_factory=list)
+    applicable_markets: List[str] = field(default_factory=lambda: ["us"])
+    min_premium: int = 5000
+    default_currency: str = "USD"
 
     # Advanced options
     locale: str = "US"
@@ -66,18 +79,23 @@ class SignalRecommendation:
     group_id: str
     relevance_score: float  # 0-1
     suggested_weight: float
+    proxy_tier: str = "INFERRED_PROXY"
     customization_notes: Optional[str] = None
     requires_new_implementation: bool = False
 
 
 @dataclass
 class SignalSelection:
-    """Selected signal with configuration."""
+    """Selected signal with configuration for v2.0 signal_registry."""
     signal_id: str
     signal_name: str
     group_id: str
     weight: float
-    direction: str = "positive"  # positive, negative, neutral
+    direction: str = "positive"  # positive, negative
+    proxy_tier: str = "INFERRED_PROXY"
+    inference_function: Optional[str] = None
+    is_categorical: bool = False
+    categories: Optional[List[Dict[str, Any]]] = None
     enabled: bool = True
     parameters: Dict[str, Any] = field(default_factory=dict)
 
