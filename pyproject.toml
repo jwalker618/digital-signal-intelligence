@@ -115,18 +115,21 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--showlocals",
-    "--cov=technical_pricing",
+    "--cov=signal_architecture",
+    "--cov=infrastructure",
+    "--cov=layers",
+    "--cov=coverages",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
 ]
 testpaths = [
-    "technical_pricing/tests",
+    "tests",
 ]
 pythonpath = ["."]
 
 [tool.coverage.run]
-source = ["technical_pricing"]
+source = ["signal_architecture", "infrastructure", "layers", "coverages"]
 omit = [
     "*/tests/*",
     "*/__init__.py",

@@ -60,9 +60,12 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --chown=dsi:dsi technical_pricing/ ./technical_pricing/
-COPY --chown=dsi:dsi examples/ ./examples/
-COPY --chown=dsi:dsi setup.py pyproject.toml README.md ./
+COPY --chown=dsi:dsi signal_architecture/ ./signal_architecture/
+COPY --chown=dsi:dsi infrastructure/ ./infrastructure/
+COPY --chown=dsi:dsi layers/ ./layers/
+COPY --chown=dsi:dsi coverages/ ./coverages/
+COPY --chown=dsi:dsi alembic/ ./alembic/
+COPY --chown=dsi:dsi alembic.ini pyproject.toml README.md ./
 
 # Switch to non-root user
 USER dsi
@@ -75,4 +78,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health/live || exit 1
 
 # Run the API
-CMD ["uvicorn", "technical_pricing.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "infrastructure.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,11 +1,11 @@
 """
-DSI Signal Library (Phase 13)
+DSI Signal Library (Phase 13 → v2.0 Overhaul)
 
 Reusable signal components for coverage building.
+Integrates with the signal metadata registry for validated recommendations.
 """
 
 import logging
-from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from .types import (
@@ -19,29 +19,36 @@ from .types import (
 logger = logging.getLogger("dsi.builder.library")
 
 
+def _load_metadata_registry():
+    """Lazy-load the metadata registry to avoid circular imports."""
+    try:
+        from signal_architecture.signals.inference.metadata_registry import (
+            SIGNAL_METADATA_REGISTRY,
+        )
+        return SIGNAL_METADATA_REGISTRY
+    except ImportError:
+        logger.debug("Metadata registry not available - using built-in signal library only")
+        return None
+
+
 class SignalLibrary:
     """
     Library of reusable signal components.
 
     Provides:
-    - Standard signal groups
+    - Standard signal groups with proxy_tier classification
     - Industry-specific recommendations
-    - Signal templates for implementation
+    - Integration with signal metadata registry for validation
     """
 
-    # Standard signal groups
     SIGNAL_GROUPS: Dict[str, SignalGroupDefinition] = {
         "technical_infrastructure": SignalGroupDefinition(
             group_id="technical_infrastructure",
             name="Technical Infrastructure",
             description="Security posture and technical capabilities",
             signals=[
-                "security_headers",
-                "tls_configuration",
-                "email_authentication",
-                "dns_security",
-                "web_security",
-                "ssl_certificate",
+                "security_headers", "tls_configuration", "email_authentication",
+                "dns_security", "web_security", "ssl_certificate",
                 "content_security_policy",
             ],
             applicable_industries=["technology", "financial", "healthcare", "retail"],
@@ -52,12 +59,8 @@ class SignalLibrary:
             name="Corporate Footprint",
             description="Company presence and visibility",
             signals=[
-                "website_quality",
-                "security_disclosure",
-                "leadership_visibility",
-                "social_presence",
-                "brand_reputation",
-                "media_coverage",
+                "website_quality", "security_disclosure", "leadership_visibility",
+                "social_presence", "brand_reputation", "media_coverage",
                 "investor_relations",
             ],
             applicable_industries=["all"],
@@ -68,11 +71,8 @@ class SignalLibrary:
             name="Network Authority",
             description="Business relationships and ecosystem",
             signals=[
-                "customer_quality",
-                "partner_ecosystem",
-                "certification_status",
-                "vendor_relationships",
-                "industry_associations",
+                "customer_quality", "partner_ecosystem", "certification_status",
+                "vendor_relationships", "industry_associations",
                 "supply_chain_visibility",
             ],
             applicable_industries=["all"],
@@ -83,12 +83,8 @@ class SignalLibrary:
             name="Financial Health",
             description="Financial stability indicators",
             signals=[
-                "revenue_growth",
-                "profitability",
-                "liquidity_ratio",
-                "debt_ratio",
-                "credit_rating",
-                "stock_performance",
+                "revenue_growth", "profitability", "liquidity_ratio",
+                "debt_ratio", "credit_rating", "stock_performance",
                 "funding_status",
             ],
             applicable_industries=["all"],
@@ -99,12 +95,9 @@ class SignalLibrary:
             name="Governance",
             description="Corporate governance and leadership",
             signals=[
-                "board_composition",
-                "leadership_stability",
-                "executive_experience",
-                "governance_disclosure",
-                "audit_committee",
-                "compensation_practices",
+                "board_composition", "leadership_stability",
+                "executive_experience", "governance_disclosure",
+                "audit_committee", "compensation_practices",
             ],
             applicable_industries=["public_company", "financial", "healthcare"],
             default_weight=0.15,
@@ -114,12 +107,9 @@ class SignalLibrary:
             name="Regulatory Compliance",
             description="Compliance and regulatory standing",
             signals=[
-                "regulatory_filings",
-                "enforcement_actions",
-                "license_status",
-                "compliance_certifications",
-                "privacy_compliance",
-                "industry_regulations",
+                "regulatory_filings", "enforcement_actions",
+                "license_status", "compliance_certifications",
+                "privacy_compliance", "industry_regulations",
             ],
             applicable_industries=["financial", "healthcare", "energy"],
             default_weight=0.15,
@@ -129,12 +119,9 @@ class SignalLibrary:
             name="Cyber Security",
             description="Cybersecurity posture and practices",
             signals=[
-                "vulnerability_management",
-                "incident_response",
-                "security_certifications",
-                "breach_history",
-                "security_budget",
-                "security_team",
+                "vulnerability_management", "incident_response",
+                "security_certifications", "breach_history",
+                "security_budget", "security_team",
                 "penetration_testing",
             ],
             applicable_industries=["technology", "financial", "healthcare", "retail"],
@@ -145,16 +132,51 @@ class SignalLibrary:
             name="Operational",
             description="Operational capabilities",
             signals=[
-                "business_continuity",
-                "disaster_recovery",
-                "operational_resilience",
-                "technology_stack",
-                "process_maturity",
-                "quality_management",
+                "business_continuity", "disaster_recovery",
+                "operational_resilience", "technology_stack",
+                "process_maturity", "quality_management",
             ],
             applicable_industries=["all"],
             default_weight=0.10,
         ),
+    }
+
+    # Proxy tier classification for built-in signals
+    SIGNAL_PROXY_TIERS: Dict[str, str] = {
+        # DIRECT_OBSERVABLE - can be externally verified
+        "security_headers": "DIRECT_OBSERVABLE",
+        "tls_configuration": "DIRECT_OBSERVABLE",
+        "email_authentication": "DIRECT_OBSERVABLE",
+        "dns_security": "DIRECT_OBSERVABLE",
+        "web_security": "DIRECT_OBSERVABLE",
+        "ssl_certificate": "DIRECT_OBSERVABLE",
+        "content_security_policy": "DIRECT_OBSERVABLE",
+        "breach_history": "DIRECT_OBSERVABLE",
+        "regulatory_filings": "DIRECT_OBSERVABLE",
+        "enforcement_actions": "DIRECT_OBSERVABLE",
+        "credit_rating": "DIRECT_OBSERVABLE",
+        "stock_performance": "DIRECT_OBSERVABLE",
+        # INFERRED_PROXY - derived from observable data
+        "website_quality": "INFERRED_PROXY",
+        "security_disclosure": "INFERRED_PROXY",
+        "leadership_visibility": "INFERRED_PROXY",
+        "social_presence": "INFERRED_PROXY",
+        "brand_reputation": "INFERRED_PROXY",
+        "media_coverage": "INFERRED_PROXY",
+        "customer_quality": "INFERRED_PROXY",
+        "partner_ecosystem": "INFERRED_PROXY",
+        "certification_status": "INFERRED_PROXY",
+        "vendor_relationships": "INFERRED_PROXY",
+        "revenue_growth": "INFERRED_PROXY",
+        "profitability": "INFERRED_PROXY",
+        "vulnerability_management": "INFERRED_PROXY",
+        "incident_response": "INFERRED_PROXY",
+        "security_certifications": "INFERRED_PROXY",
+        "security_budget": "INFERRED_PROXY",
+        "security_team": "INFERRED_PROXY",
+        "penetration_testing": "INFERRED_PROXY",
+        "business_continuity": "INFERRED_PROXY",
+        "disaster_recovery": "INFERRED_PROXY",
     }
 
     # Industry profiles
@@ -213,29 +235,26 @@ class SignalLibrary:
     }
 
     def __init__(self):
-        """Initialize SignalLibrary."""
         self._custom_signals: Dict[str, Dict] = {}
+        self._metadata_registry = None
+
+    @property
+    def metadata_registry(self):
+        """Lazy-load and cache the metadata registry."""
+        if self._metadata_registry is None:
+            self._metadata_registry = _load_metadata_registry()
+        return self._metadata_registry
 
     def get_signals_for_industry(
         self,
         industry: str,
     ) -> List[SignalRecommendation]:
-        """
-        Get recommended signals for an industry.
-
-        Args:
-            industry: Industry name
-
-        Returns:
-            List of signal recommendations ranked by relevance
-        """
+        """Get recommended signals for an industry, with proxy_tier from registry."""
         recommendations: List[SignalRecommendation] = []
 
-        # Get industry profile
         profile = self.get_industry_profile(industry)
 
         if profile:
-            # Add signals from primary groups with high relevance
             for group_id in profile.primary_groups:
                 group = self.SIGNAL_GROUPS.get(group_id)
                 if group:
@@ -247,9 +266,9 @@ class SignalLibrary:
                             group_id=group_id,
                             relevance_score=0.9,
                             suggested_weight=weight / len(group.signals),
+                            proxy_tier=self._get_proxy_tier(signal),
                         ))
 
-            # Add signals from secondary groups with lower relevance
             for group_id in profile.secondary_groups:
                 group = self.SIGNAL_GROUPS.get(group_id)
                 if group:
@@ -261,9 +280,9 @@ class SignalLibrary:
                             group_id=group_id,
                             relevance_score=0.7,
                             suggested_weight=weight / len(group.signals),
+                            proxy_tier=self._get_proxy_tier(signal),
                         ))
         else:
-            # Default: use all general groups
             for group_id, group in self.SIGNAL_GROUPS.items():
                 if "all" in group.applicable_industries:
                     for signal in group.signals:
@@ -273,45 +292,79 @@ class SignalLibrary:
                             group_id=group_id,
                             relevance_score=0.6,
                             suggested_weight=group.default_weight / len(group.signals),
+                            proxy_tier=self._get_proxy_tier(signal),
                         ))
 
-        # Sort by relevance
         recommendations.sort(key=lambda r: r.relevance_score, reverse=True)
+        return recommendations
+
+    def _get_proxy_tier(self, signal_id: str) -> str:
+        """Get proxy tier: prefer metadata registry, fall back to built-in mapping."""
+        # Try metadata registry first
+        registry = self.metadata_registry
+        if registry:
+            meta = registry.get(signal_id)
+            if meta:
+                return meta.proxy_tier
+
+        # Fall back to built-in mapping
+        return self.SIGNAL_PROXY_TIERS.get(signal_id, "INFERRED_PROXY")
+
+    def get_registry_signals_for_coverage(self, coverage: str) -> List[SignalRecommendation]:
+        """
+        Get signals from the metadata registry for a specific coverage domain.
+
+        This provides registry-validated signals with accurate proxy tiers
+        and coverage applicability.
+        """
+        registry = self.metadata_registry
+        if not registry:
+            logger.warning("Metadata registry not available")
+            return []
+
+        signals = registry.get_by_coverage(coverage)
+        recommendations = []
+        for meta in signals:
+            recommendations.append(SignalRecommendation(
+                signal_id=meta.signal_id,
+                signal_name=meta.signal_name,
+                group_id=meta.category,
+                relevance_score=0.9,
+                suggested_weight=0.05,
+                proxy_tier=meta.proxy_tier,
+            ))
 
         return recommendations
 
-    def get_industry_profile(self, industry: str) -> Optional[IndustryProfile]:
-        """Get profile for industry."""
-        industry_lower = industry.lower().replace(" ", "_")
+    def validate_signal_exists_in_registry(self, signal_id: str) -> bool:
+        """Check if a signal exists in the metadata registry."""
+        registry = self.metadata_registry
+        if registry:
+            return registry.get(signal_id) is not None
+        return False
 
-        # Direct match
+    def get_industry_profile(self, industry: str) -> Optional[IndustryProfile]:
+        industry_lower = industry.lower().replace(" ", "_")
         if industry_lower in self.INDUSTRY_PROFILES:
             return self.INDUSTRY_PROFILES[industry_lower]
-
-        # Partial match
         for key, profile in self.INDUSTRY_PROFILES.items():
             if key in industry_lower or industry_lower in key:
                 return profile
-
         return None
 
     def get_signal_groups(self) -> List[SignalGroupDefinition]:
-        """Get all available signal groups."""
         return list(self.SIGNAL_GROUPS.values())
 
     def get_signal_group(self, group_id: str) -> Optional[SignalGroupDefinition]:
-        """Get a specific signal group."""
         return self.SIGNAL_GROUPS.get(group_id)
 
     def has_signal(self, signal_id: str) -> bool:
-        """Check if signal exists in library."""
         for group in self.SIGNAL_GROUPS.values():
             if signal_id in group.signals:
                 return True
         return signal_id in self._custom_signals
 
     def get_signal_template(self, signal_id: str) -> Optional[SignalTemplate]:
-        """Get implementation template for a signal."""
         return SignalTemplate(
             signal_id=signal_id,
             signal_name=self._format_signal_name(signal_id),
@@ -329,7 +382,6 @@ class SignalLibrary:
         group_id: str,
         description: str = "",
     ) -> None:
-        """Add a custom signal to the library."""
         self._custom_signals[signal_id] = {
             "name": name,
             "group_id": group_id,
@@ -337,11 +389,9 @@ class SignalLibrary:
         }
 
     def _format_signal_name(self, signal_id: str) -> str:
-        """Format signal ID as readable name."""
         return signal_id.replace("_", " ").title()
 
     def _get_extractor_template(self, signal_id: str) -> str:
-        """Get extractor template."""
         return f'''async def extract_{signal_id}(entity_id: str) -> Dict[str, Any]:
     """Extract {signal_id} data for entity."""
     # TODO: Implement extraction logic
@@ -349,7 +399,6 @@ class SignalLibrary:
 '''
 
     def _get_aggregator_template(self, signal_id: str) -> str:
-        """Get aggregator template."""
         return f'''def aggregate_{signal_id}(raw_data: Dict[str, Any]) -> float:
     """Aggregate {signal_id} to score (0-100)."""
     # TODO: Implement aggregation logic
@@ -357,7 +406,6 @@ class SignalLibrary:
 '''
 
     def _get_inference_template(self, signal_id: str) -> str:
-        """Get inference template."""
         return f'''def infer_{signal_id}(score: float, context: Dict[str, Any]) -> Dict[str, Any]:
     """Generate inference from {signal_id} score."""
     # TODO: Implement inference logic
@@ -365,7 +413,6 @@ class SignalLibrary:
 '''
 
     def _get_test_template(self, signal_id: str) -> str:
-        """Get test template."""
         return f'''def test_{signal_id}_extraction():
     """Test {signal_id} extraction."""
     # TODO: Implement test

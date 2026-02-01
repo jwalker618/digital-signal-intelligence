@@ -1,13 +1,32 @@
 """
-DSI Coverage Builder (Phase 13)
+DSI Coverage Builder (Phase 13 → v2.0 Overhaul)
 
-LLM-assisted coverage creation with validation.
+Generates v2.0 compliant coverage configurations matching the canonical
+schema used by existing coverages (cyber, D&O, etc.).
+
+Output structure:
+  coverage_id:
+    coverage_id_general:
+      metadata: {...}
+      direct_queries: [...]
+      signal_registry: [...]
+      groups: {categories: [...], three_layer_assessment: [...]}
+      risk_tier_bands: {bands: [...]}
+      loss_tier_bands: {bands: [...], constraints: {...}}
+      exposure: {size: {...}, complexity: {...}}
+      limit_bandings: [...]
+      pricing: {...}
+
+Constraints:
+- score_conditions actions: FLAG | MODIFIER | REFER (DECLINE is tier-level only)
+- score_conditions are banded (plural, list of multiple conditions)
+- score_conditions do NOT apply to tier bands
+- Signals defined once in signal_registry with group_id reference
 """
 
 import logging
 import time
 import yaml
-from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
 from .types import (
@@ -29,10 +48,10 @@ logger = logging.getLogger("dsi.builder")
 
 class CoverageBuilder:
     """
-    LLM-assisted coverage building.
+    Coverage configuration builder producing v2.0 compliant YAML.
 
-    Creates complete coverage configurations from
-    high-level specifications using AI assistance.
+    Generates complete coverage configs from high-level specifications.
+    Configs match the canonical schema used by existing DSI coverages.
     """
 
     def __init__(
@@ -42,20 +61,10 @@ class CoverageBuilder:
         validator: Optional[ConfigValidator] = None,
         output_dir: str = "coverages",
     ):
-        """
-        Initialize CoverageBuilder.
-
-        Args:
-            llm_client: LLM client for AI assistance
-            signal_library: Signal library for recommendations
-            validator: Configuration validator
-            output_dir: Directory for generated coverages
-        """
         self.llm_client = llm_client
         self.signal_library = signal_library or SignalLibrary()
         self.validator = validator or ConfigValidator()
         self.output_dir = output_dir
-
         self._progress_callbacks: List[Callable] = []
 
     def on_progress(self, callback: Callable[[BuildProgress], None]) -> None:
@@ -63,7 +72,6 @@ class CoverageBuilder:
         self._progress_callbacks.append(callback)
 
     def _update_progress(self, stage: BuildStage, progress: float, message: str) -> None:
-        """Update progress and notify callbacks."""
         bp = BuildProgress(stage=stage, progress=progress, message=message)
         for callback in self._progress_callbacks:
             try:
@@ -71,25 +79,16 @@ class CoverageBuilder:
             except Exception as e:
                 logger.warning(f"Progress callback error: {e}")
 
-    async def create_coverage(
-        self,
-        spec: CoverageSpec,
-    ) -> CoverageBuildResult:
+    async def create_coverage(self, spec: CoverageSpec) -> CoverageBuildResult:
         """
-        Create a complete coverage from specification.
+        Create a complete v2.0 coverage from specification.
 
         Steps:
         1. Analyze industry requirements
         2. Select and configure signals
-        3. Generate configuration
-        4. Validate and test
+        3. Generate v2.0 configuration
+        4. Validate against v2.0 schema
         5. Generate code stubs
-
-        Args:
-            spec: Coverage specification
-
-        Returns:
-            CoverageBuildResult with generated files
         """
         start_time = time.time()
         warnings: List[str] = []
@@ -110,8 +109,8 @@ class CoverageBuilder:
                 )
                 human_review.append("Review signal selection - below minimum count")
 
-            # Step 3: Generate configuration
-            self._update_progress(BuildStage.CONFIG_GENERATION, 0.5, "Generating configuration...")
+            # Step 3: Generate v2.0 configuration
+            self._update_progress(BuildStage.CONFIG_GENERATION, 0.5, "Generating v2.0 configuration...")
             config_yaml = await self.generate_config(spec, selections)
 
             # Step 4: Validate
@@ -125,18 +124,13 @@ class CoverageBuilder:
                     if i.severity.value == "error"
                 ])
 
-            # Step 5: Generate code stubs for new signals
+            # Step 5: Generate code stubs
             self._update_progress(BuildStage.CODE_GENERATION, 0.9, "Generating code stubs...")
             new_signals = [s.signal_id for s in selections if self._is_new_signal(s)]
             generated = await self.generate_stubs(spec, new_signals)
 
-            # Calculate output path
             config_path = f"{self.output_dir}/{spec.name.lower().replace(' ', '_')}/config.yaml"
-
-            # Complete
             self._update_progress(BuildStage.COMPLETE, 1.0, "Build complete")
-
-            duration = time.time() - start_time
 
             return CoverageBuildResult(
                 success=validation.valid or validation.error_count == 0,
@@ -147,7 +141,7 @@ class CoverageBuilder:
                 validation_results=validation,
                 warnings=warnings + validation.warnings,
                 human_review_required=human_review,
-                build_duration_seconds=duration,
+                build_duration_seconds=time.time() - start_time,
             )
 
         except Exception as e:
@@ -166,19 +160,9 @@ class CoverageBuilder:
         description: str,
         examples: Optional[List[str]] = None,
     ) -> IndustryAnalysis:
-        """
-        Analyze industry to identify risk factors and signals.
-
-        Args:
-            description: Industry description
-            examples: Example companies
-
-        Returns:
-            IndustryAnalysis with recommendations
-        """
+        """Analyze industry to identify risk factors and signals."""
         logger.info(f"Analyzing industry: {description}")
 
-        # Use signal library for industry-specific recommendations
         profile = self.signal_library.get_industry_profile(description)
 
         if profile:
@@ -190,7 +174,6 @@ class CoverageBuilder:
                 confidence=0.9,
             )
 
-        # Fallback to generic analysis
         risk_factors = self._identify_risk_factors(description)
         categories = self._identify_categories(description)
 
@@ -207,26 +190,12 @@ class CoverageBuilder:
         analysis: IndustryAnalysis,
         spec: CoverageSpec,
     ) -> List[SignalSelection]:
-        """
-        Select signals based on industry analysis.
-
-        Args:
-            analysis: Industry analysis
-            spec: Coverage specification
-
-        Returns:
-            List of selected signals with configurations
-        """
+        """Select signals based on industry analysis."""
         logger.info(f"Selecting signals for {analysis.industry}")
 
         selections: List[SignalSelection] = []
+        recommendations = self.signal_library.get_signals_for_industry(analysis.industry)
 
-        # Get recommendations from library
-        recommendations = self.signal_library.get_signals_for_industry(
-            analysis.industry
-        )
-
-        # Select top signals
         for rec in recommendations[:spec.max_signals]:
             selections.append(SignalSelection(
                 signal_id=rec.signal_id,
@@ -234,14 +203,21 @@ class CoverageBuilder:
                 group_id=rec.group_id,
                 weight=rec.suggested_weight,
                 direction="positive",
+                proxy_tier=rec.proxy_tier,
+                inference_function=f"{rec.signal_id}_basefunction",
                 enabled=True,
             ))
 
-        # Normalize weights
-        total_weight = sum(s.weight for s in selections)
-        if total_weight > 0:
-            for s in selections:
-                s.weight = round(s.weight / total_weight, 4)
+        # Normalize weights within each group
+        groups: Dict[str, List[SignalSelection]] = {}
+        for s in selections:
+            groups.setdefault(s.group_id, []).append(s)
+
+        for group_signals in groups.values():
+            total = sum(s.weight for s in group_signals)
+            if total > 0:
+                for s in group_signals:
+                    s.weight = round(s.weight / total, 4)
 
         return selections
 
@@ -250,64 +226,30 @@ class CoverageBuilder:
         spec: CoverageSpec,
         selections: List[SignalSelection],
     ) -> str:
-        """
-        Generate complete YAML configuration.
+        """Generate complete v2.0 compliant YAML configuration."""
+        logger.info(f"Generating v2.0 config for {spec.name}")
 
-        Args:
-            spec: Coverage specification
-            selections: Selected signals
+        coverage_id = spec.name.lower().replace(" ", "_")
+        config_name = f"{coverage_id}_general"
 
-        Returns:
-            YAML configuration string
-        """
-        logger.info(f"Generating config for {spec.name}")
-
-        # Build configuration structure
-        config = {
-            "coverage": {
-                "id": spec.name.lower().replace(" ", "_"),
-                "name": spec.name,
-                "description": spec.description,
-                "locale": spec.locale,
-                "industry": spec.industry,
-                "version": "1.0.0",
-            },
-            "signal_groups": self._build_signal_groups(selections),
-            "scoring": {
-                "composite_method": "weighted_average",
-                "scale": {"min": 300, "max": 850},
-            },
-            "tiers": self._build_tier_config(spec.tier_strategy),
-            "premium": {
-                "base_rate": 0.005,
-                "tier_factors": {
-                    "1": 0.7,
-                    "2": 1.0,
-                    "3": 1.3,
-                    "4": 1.7,
-                    "5": 2.5,
-                },
-            },
+        inner_config = {
+            "metadata": self._build_metadata(spec),
             "direct_queries": self._build_direct_queries(spec),
+            "signal_registry": self._build_signal_registry(selections),
+            "groups": self._build_groups(selections),
+            "risk_tier_bands": self._build_risk_tier_bands(spec.tier_strategy),
+            "loss_tier_bands": self._build_loss_tier_bands(),
+            "exposure": self._build_exposure(),
+            "limit_bandings": self._build_limit_bandings(),
+            "pricing": self._build_pricing(),
         }
 
-        return yaml.dump(config, default_flow_style=False, sort_keys=False)
+        config = {coverage_id: {config_name: inner_config}}
 
-    async def validate_config(
-        self,
-        config_yaml: str,
-    ) -> ValidationResult:
-        """
-        Validate generated configuration.
+        return yaml.dump(config, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-        Args:
-            config_yaml: YAML configuration
-
-        Returns:
-            ValidationResult with any issues
-        """
-        logger.info("Validating configuration...")
-
+    async def validate_config(self, config_yaml: str) -> ValidationResult:
+        """Validate generated configuration against v2.0 schema."""
         return self.validator.validate_yaml(config_yaml)
 
     async def generate_stubs(
@@ -315,129 +257,568 @@ class CoverageBuilder:
         spec: CoverageSpec,
         new_signals: List[str],
     ) -> GeneratedCode:
-        """
-        Generate code stubs for new signals.
-
-        Args:
-            spec: Coverage specification
-            new_signals: Signals requiring new implementation
-
-        Returns:
-            GeneratedCode with file contents
-        """
+        """Generate code stubs for new signals."""
         logger.info(f"Generating stubs for {len(new_signals)} new signals")
 
         files: Dict[str, str] = {}
         coverage_id = spec.name.lower().replace(" ", "_")
 
-        # Generate extractor stub
         if new_signals:
-            extractor_content = self._generate_extractor_stub(coverage_id, new_signals)
-            files[f"signals/{coverage_id}/extractors.py"] = extractor_content
+            files[f"signals/{coverage_id}/extractors.py"] = self._generate_extractor_stub(
+                coverage_id, new_signals
+            )
+            files[f"signals/{coverage_id}/aggregators.py"] = self._generate_aggregator_stub(
+                coverage_id, new_signals
+            )
 
-            # Generate aggregator stub
-            aggregator_content = self._generate_aggregator_stub(coverage_id, new_signals)
-            files[f"signals/{coverage_id}/aggregators.py"] = aggregator_content
-
-        # Generate test stub
-        test_content = self._generate_test_stub(coverage_id, new_signals)
-        files[f"tests/unit/test_{coverage_id}.py"] = test_content
+        files[f"tests/unit/test_{coverage_id}.py"] = self._generate_test_stub(
+            coverage_id, new_signals
+        )
 
         return GeneratedCode(files=files)
 
-    def _build_signal_groups(
-        self,
-        selections: List[SignalSelection],
-    ) -> Dict[str, Any]:
-        """Build signal groups from selections."""
-        groups: Dict[str, Dict[str, Any]] = {}
+    # =========================================================================
+    # V2.0 CONFIG BUILDERS
+    # =========================================================================
 
-        for selection in selections:
-            if selection.group_id not in groups:
-                groups[selection.group_id] = {
-                    "weight": 0.0,
-                    "signals": [],
-                }
-
-            groups[selection.group_id]["weight"] += selection.weight
-            groups[selection.group_id]["signals"].append({
-                "id": selection.signal_id,
-                "name": selection.signal_name,
-                "weight": selection.weight,
-                "direction": selection.direction,
-            })
-
-        return groups
-
-    def _build_tier_config(self, strategy: str) -> Dict[str, Any]:
-        """Build tier configuration."""
-        if strategy == "conservative":
-            return {
-                "1": {"min_score": 800, "label": "PREFERRED", "decision": "approve"},
-                "2": {"min_score": 720, "label": "STANDARD", "decision": "approve"},
-                "3": {"min_score": 650, "label": "STANDARD_PLUS", "decision": "approve"},
-                "4": {"min_score": 550, "label": "ELEVATED", "decision": "refer"},
-                "5": {"min_score": 0, "label": "HIGH_RISK", "decision": "refer"},
-            }
-        elif strategy == "aggressive":
-            return {
-                "1": {"min_score": 750, "label": "PREFERRED", "decision": "approve"},
-                "2": {"min_score": 650, "label": "STANDARD", "decision": "approve"},
-                "3": {"min_score": 550, "label": "STANDARD_PLUS", "decision": "approve"},
-                "4": {"min_score": 400, "label": "ELEVATED", "decision": "approve"},
-                "5": {"min_score": 0, "label": "HIGH_RISK", "decision": "refer"},
-            }
-        else:  # standard
-            return {
-                "1": {"min_score": 780, "label": "PREFERRED", "decision": "approve"},
-                "2": {"min_score": 680, "label": "STANDARD", "decision": "approve"},
-                "3": {"min_score": 580, "label": "STANDARD_PLUS", "decision": "approve"},
-                "4": {"min_score": 480, "label": "ELEVATED", "decision": "refer"},
-                "5": {"min_score": 0, "label": "HIGH_RISK", "decision": "refer"},
-            }
+    def _build_metadata(self, spec: CoverageSpec) -> Dict[str, Any]:
+        """Build metadata section."""
+        return {
+            "name": f"DSI {spec.name} Technical Pricing Model",
+            "description": spec.description,
+            "version": "2.0.0",
+            "product_types": spec.product_types or [spec.name.lower().replace(" ", "_")],
+            "applicable_markets": spec.applicable_markets,
+            "minimum_viable_input": ["client name (domain optional)", "Limit in USD"],
+            "min_premium": spec.min_premium,
+            "default_currency": spec.default_currency,
+        }
 
     def _build_direct_queries(self, spec: CoverageSpec) -> List[Dict[str, Any]]:
-        """Build direct queries based on spec."""
+        """Build v2.0 direct queries with query_condition (not bands)."""
         queries = [
             {
                 "id": "claims_history",
                 "question": "Has the insured had any claims in the past 5 years?",
-                "type": "boolean",
-                "impact": "tier_adjustment",
+                "query_condition": [
+                    {"return": True, "action": "REFER", "override": None,
+                     "applied": None, "note": "Prior claims - review required"},
+                ],
             },
             {
                 "id": "prior_coverage",
                 "question": "Does the insured have prior coverage?",
-                "type": "boolean",
-                "impact": "underwriting",
+                "query_condition": [
+                    {"return": False, "action": "FLAG", "override": None,
+                     "applied": None, "note": "No prior coverage"},
+                ],
             },
         ]
 
-        # Add industry-specific queries
-        if "financial" in spec.industry.lower():
+        industry_lower = spec.industry.lower()
+
+        if "financial" in industry_lower:
             queries.append({
                 "id": "regulatory_actions",
                 "question": "Any regulatory actions in the past 3 years?",
-                "type": "boolean",
-                "impact": "tier_adjustment",
+                "query_condition": [
+                    {"return": True, "action": "REFER", "override": 4,
+                     "applied": None, "note": "Regulatory actions - elevated risk"},
+                ],
             })
 
-        if "technology" in spec.industry.lower() or "cyber" in spec.name.lower():
+        if "technology" in industry_lower or "cyber" in spec.name.lower():
+            queries.extend([
+                {
+                    "id": "mfa_enabled",
+                    "question": "Is multi-factor authentication enabled for all remote access?",
+                    "query_condition": [
+                        {"return": False, "action": "FLAG", "override": None,
+                         "applied": None, "note": "MFA not enabled - increased ransomware risk"},
+                    ],
+                },
+                {
+                    "id": "data_breach",
+                    "question": "Has the insured experienced a data breach in the past 3 years?",
+                    "query_condition": [
+                        {"return": True, "action": "REFER", "override": 4,
+                         "applied": None, "note": "Recent data breach - requires manual review"},
+                    ],
+                },
+                {
+                    "id": "edr_deployed",
+                    "question": "Is endpoint detection and response (EDR) deployed on all endpoints?",
+                    "query_condition": [
+                        {"return": False, "action": "FLAG", "override": None,
+                         "applied": None, "note": "No EDR - reduced threat detection"},
+                    ],
+                },
+            ])
+
+        if "healthcare" in industry_lower:
             queries.append({
-                "id": "data_breach",
-                "question": "Has the insured experienced a data breach?",
-                "type": "boolean",
-                "impact": "tier_adjustment",
+                "id": "phi_handler",
+                "question": "Do you process Protected Health Information (PHI)?",
+                "query_condition": [
+                    {"return": True, "action": "MODIFIER", "override": None,
+                     "applied": 1.25, "note": "PHI handler - HIPAA exposure"},
+                ],
+            })
+
+        if "casualty" in spec.name.lower() or "liability" in industry_lower:
+            queries.append({
+                "id": "prior_litigation",
+                "question": "Any material litigation in the past 5 years?",
+                "query_condition": [
+                    {"return": True, "action": "REFER", "override": 4,
+                     "applied": None, "note": "Prior litigation - underwriter review required"},
+                ],
             })
 
         return queries
 
+    def _build_signal_registry(self, selections: List[SignalSelection]) -> List[Dict[str, Any]]:
+        """
+        Build v2.0 signal_registry.
+
+        Each signal is defined once with group_id reference.
+        Categorical signals use 'categories' block.
+        Three-layer assessment signals use 'three_layer_assessment' block.
+        """
+        registry: List[Dict[str, Any]] = []
+
+        for sel in selections:
+            if not sel.enabled:
+                continue
+
+            inference_fn = sel.inference_function or f"{sel.signal_id}_basefunction"
+
+            if sel.is_categorical and sel.categories:
+                # Categorical signal
+                entry = {
+                    "id": sel.signal_id,
+                    "inference_utility_function": inference_fn,
+                    "proxy_tier": sel.proxy_tier,
+                    "categories": {
+                        "group_id": sel.group_id,
+                        "features": sel.categories,
+                    },
+                }
+            else:
+                # Three-layer assessment signal
+                tla: Dict[str, Any] = {"group_id": sel.group_id}
+
+                # Risk dimension
+                risk_block: Dict[str, Any] = {
+                    "correlation_direction": sel.direction,
+                    "weight": round(sel.weight, 4),
+                }
+                # Add score_conditions for high-weight signals
+                if sel.weight >= 0.15:
+                    risk_block["score_conditions"] = [
+                        {
+                            "threshold": 30,
+                            "comparison": "<=",
+                            "action": "FLAG",
+                            "note": f"Low {sel.signal_name.lower()} score",
+                        },
+                    ]
+                tla["risk"] = risk_block
+
+                # Loss dimension (for signals with weight >= 0.10)
+                if sel.weight >= 0.10:
+                    tla["loss"] = {
+                        "frequency": {
+                            "correlation_direction": "negative" if sel.direction == "positive" else "positive",
+                            "weight": round(sel.weight * 0.7, 4),
+                        },
+                        "severity": {
+                            "correlation_direction": "negative" if sel.direction == "positive" else "positive",
+                            "weight": round(sel.weight * 0.3, 4),
+                        },
+                    }
+
+                # Exposure dimension (for infrastructure/footprint signals)
+                if sel.group_id in ("technical_infrastructure", "corporate_footprint", "network_authority"):
+                    tla["exposure"] = {
+                        "size": {
+                            "correlation_direction": sel.direction,
+                            "weight": round(sel.weight * 0.5, 4),
+                        },
+                    }
+
+                entry = {
+                    "id": sel.signal_id,
+                    "inference_utility_function": inference_fn,
+                    "proxy_tier": sel.proxy_tier,
+                    "three_layer_assessment": tla,
+                }
+
+            registry.append(entry)
+
+        return registry
+
+    def _build_groups(self, selections: List[SignalSelection]) -> Dict[str, Any]:
+        """
+        Build v2.0 groups section with:
+        - categories: categorical modifier groups
+        - three_layer_assessment: scoring dimension groups
+        """
+        # Collect unique groups
+        tla_groups: Dict[str, Dict[str, Any]] = {}
+        categorical_groups: List[Dict[str, Any]] = []
+
+        for sel in selections:
+            if not sel.enabled:
+                continue
+
+            if sel.is_categorical:
+                if not any(c["id"] == sel.group_id for c in categorical_groups):
+                    categorical_groups.append({
+                        "id": sel.group_id,
+                        "label": sel.group_id.replace("_", " ").title(),
+                        "description": f"{sel.group_id.replace('_', ' ').title()} classification",
+                        "impact": "MODIFIER",
+                        "default_cat": "OTHER",
+                    })
+            else:
+                if sel.group_id not in tla_groups:
+                    tla_groups[sel.group_id] = {
+                        "id": sel.group_id,
+                        "label": sel.group_id.replace("_", " ").title(),
+                        "description": f"Signal group: {sel.group_id.replace('_', ' ')}",
+                        "risk": {"weight": 0.0},
+                        "loss": {"weight": 0.0},
+                        "exposure": {"weight": 0.0},
+                    }
+
+        # Assign group-level weights based on number of groups
+        group_count = len(tla_groups)
+        if group_count > 0:
+            # Distribute weights with technical_infrastructure and public_record weighted higher
+            high_weight_groups = {"technical_infrastructure", "public_record", "cyber_security"}
+            high_count = sum(1 for g in tla_groups if g in high_weight_groups)
+            normal_count = group_count - high_count
+
+            # Allocate: high-weight groups get ~0.30, others get remainder split evenly
+            remaining = 1.0
+            for gid in tla_groups:
+                if gid in high_weight_groups:
+                    w = min(0.30, remaining / max(1, high_count))
+                    high_count -= 1
+                else:
+                    w = remaining / max(1, normal_count + high_count)
+                tla_groups[gid]["risk"]["weight"] = round(w, 2)
+                tla_groups[gid]["loss"]["weight"] = round(w, 2)
+                tla_groups[gid]["exposure"]["weight"] = round(w, 2)
+                remaining -= w
+
+            # Add score_conditions at group level for key groups
+            for gid, group in tla_groups.items():
+                if gid in high_weight_groups:
+                    group["risk"]["score_conditions"] = [
+                        {
+                            "threshold": 30,
+                            "comparison": "<=",
+                            "action": "REFER",
+                            "override": 5,
+                            "note": f"Critical deficiencies in {gid.replace('_', ' ')}",
+                        },
+                        {
+                            "threshold": 45,
+                            "comparison": "<=",
+                            "action": "REFER",
+                            "override": 4,
+                            "note": f"Significant concerns in {gid.replace('_', ' ')}",
+                        },
+                    ]
+                    group["loss"]["score_conditions"] = [
+                        {
+                            "threshold": 30,
+                            "comparison": "<=",
+                            "action": "MODIFIER",
+                            "applied": 1.20,
+                            "note": f"Poor {gid.replace('_', ' ')} - loss loading",
+                        },
+                    ]
+
+        # If no categorical signals were selected, add defaults
+        if not categorical_groups:
+            categorical_groups = [
+                {
+                    "id": "industry_classification",
+                    "label": "Industry Classification",
+                    "description": "Industry classification derived from public records",
+                    "impact": "MODIFIER",
+                    "default_cat": "OTHER",
+                },
+                {
+                    "id": "size_band",
+                    "label": "Size Band",
+                    "description": "Company size classification",
+                    "impact": "MODIFIER",
+                    "default_cat": "OTHER",
+                },
+                {
+                    "id": "geography",
+                    "label": "Geography",
+                    "description": "Primary operational geography",
+                    "impact": "MODIFIER",
+                    "default_cat": "OTHER",
+                },
+            ]
+
+        return {
+            "categories": categorical_groups,
+            "three_layer_assessment": list(tla_groups.values()),
+        }
+
+    def _build_risk_tier_bands(self, strategy: str) -> Dict[str, Any]:
+        """
+        Build v2.0 risk_tier_bands with interpretation blocks.
+
+        Scale: 0-1000 composite risk score.
+        DECLINE is tier-level action only.
+        """
+        strategies = {
+            "conservative": {
+                "bands": [(800, 1000), (650, 799), (500, 649), (350, 499), (0, 349)],
+                "premiums": [8000, 12000, 18000, 30000, 50000],
+            },
+            "aggressive": {
+                "bands": [(750, 1000), (600, 749), (450, 599), (300, 449), (0, 299)],
+                "premiums": [6000, 10000, 15000, 25000, 45000],
+            },
+            "standard": {
+                "bands": [(800, 1000), (650, 799), (500, 649), (350, 499), (0, 349)],
+                "premiums": [8000, 12000, 18000, 30000, 50000],
+            },
+        }
+        labels = ["PREFERRED", "STANDARD_PLUS", "STANDARD", "SUBSTANDARD", "DECLINE"]
+        descriptions = [
+            "Excellent risk - automatic approval, preferred pricing",
+            "Good risk - automatic approval, standard pricing",
+            "Average risk - may require referral",
+            "Elevated risk - requires senior review",
+            "Unacceptable risk - decline",
+        ]
+        actions = ["APPROVE", "APPROVE", "REFER", "REFER", "DECLINE"]
+
+        strat = strategies.get(strategy, strategies["standard"])
+        bands = []
+        for i in range(5):
+            bands.append({
+                "id": i + 1,
+                "label": labels[i],
+                "description": descriptions[i],
+                "interpretation": {
+                    "bands": {"min": strat["bands"][i][0], "max": strat["bands"][i][1]},
+                    "action": actions[i],
+                    "application": {"method": "PREMIUM_BASE", "applied": strat["premiums"][i]},
+                },
+            })
+
+        return {"bands": bands}
+
+    def _build_loss_tier_bands(self) -> Dict[str, Any]:
+        """Build v2.0 loss_tier_bands with frequency/severity modifiers. Scale: 0-100."""
+        return {
+            "bands": [
+                {
+                    "id": 1, "label": "VERY_LOW",
+                    "description": "Very low risk of loss",
+                    "interpretation": {
+                        "bands": {"min": 80, "max": 100},
+                        "application": {"frequency_modifier": 0.70, "severity_modifier": 0.80},
+                    },
+                },
+                {
+                    "id": 2, "label": "LOW",
+                    "description": "Low risk of loss",
+                    "interpretation": {
+                        "bands": {"min": 60, "max": 79},
+                        "application": {"frequency_modifier": 0.85, "severity_modifier": 0.90},
+                    },
+                },
+                {
+                    "id": 3, "label": "MODERATE",
+                    "description": "Moderate risk of loss",
+                    "interpretation": {
+                        "bands": {"min": 40, "max": 59},
+                        "application": {"frequency_modifier": 1.00, "severity_modifier": 1.00},
+                    },
+                },
+                {
+                    "id": 4, "label": "ELEVATED",
+                    "description": "Elevated risk of loss",
+                    "interpretation": {
+                        "bands": {"min": 20, "max": 39},
+                        "application": {"frequency_modifier": 1.15, "severity_modifier": 1.15},
+                    },
+                },
+                {
+                    "id": 5, "label": "HIGH",
+                    "description": "High risk of loss",
+                    "interpretation": {
+                        "bands": {"min": 0, "max": 19},
+                        "application": {"frequency_modifier": 1.35, "severity_modifier": 1.40},
+                    },
+                },
+            ],
+            "constraints": {"floor": 0.55, "cap": 1.60},
+        }
+
+    def _build_exposure(self) -> Dict[str, Any]:
+        """Build v2.0 nested exposure with size and complexity dimensions. Scale: 0-100."""
+        return {
+            "size": {
+                "weight": 0.60,
+                "bands": [
+                    {
+                        "id": 1, "label": "MICRO",
+                        "description": "Micro exposure value ($0 - $1M)",
+                        "interpretation": {
+                            "bands": {"min": 0, "max": 20},
+                            "application": {
+                                "method": "MODIFIER", "applied": 0.50,
+                                "implied_thresholds": {"min": 0, "max": 1000000},
+                            },
+                        },
+                    },
+                    {
+                        "id": 2, "label": "SMALL",
+                        "description": "Small exposure value ($1M - $10M)",
+                        "interpretation": {
+                            "bands": {"min": 21, "max": 40},
+                            "application": {
+                                "method": "MODIFIER", "applied": 0.75,
+                                "implied_thresholds": {"min": 1000000, "max": 10000000},
+                            },
+                        },
+                    },
+                    {
+                        "id": 3, "label": "MEDIUM",
+                        "description": "Medium exposure value ($10M - $50M)",
+                        "interpretation": {
+                            "bands": {"min": 41, "max": 60},
+                            "application": {
+                                "method": "MODIFIER", "applied": 1.00,
+                                "implied_thresholds": {"min": 10000000, "max": 50000000},
+                            },
+                        },
+                    },
+                    {
+                        "id": 4, "label": "LARGE",
+                        "description": "Large exposure value ($50M - $250M)",
+                        "interpretation": {
+                            "bands": {"min": 61, "max": 80},
+                            "application": {
+                                "method": "MODIFIER", "applied": 1.50,
+                                "implied_thresholds": {"min": 50000000, "max": 250000000},
+                            },
+                        },
+                    },
+                    {
+                        "id": 5, "label": "VERY_LARGE",
+                        "description": "Very large exposure value ($250M+)",
+                        "interpretation": {
+                            "bands": {"min": 81, "max": 100},
+                            "application": {
+                                "method": "MODIFIER", "applied": 2.50,
+                                "implied_thresholds": {"min": 250000000, "max": 1000000000},
+                            },
+                        },
+                    },
+                ],
+            },
+            "complexity": {
+                "weight": 0.40,
+                "bands": [
+                    {
+                        "id": 1, "label": "SIMPLE",
+                        "description": "Simple operational complexity",
+                        "interpretation": {
+                            "bands": {"min": 0, "max": 20},
+                            "application": {"method": "MODIFIER", "applied": 0.85},
+                        },
+                    },
+                    {
+                        "id": 2, "label": "MODERATE",
+                        "description": "Moderate operational complexity",
+                        "interpretation": {
+                            "bands": {"min": 21, "max": 40},
+                            "application": {"method": "MODIFIER", "applied": 0.95},
+                        },
+                    },
+                    {
+                        "id": 3, "label": "COMPLEX",
+                        "description": "Complex operations",
+                        "interpretation": {
+                            "bands": {"min": 41, "max": 60},
+                            "application": {"method": "MODIFIER", "applied": 1.10},
+                        },
+                    },
+                    {
+                        "id": 4, "label": "HIGHLY_COMPLEX",
+                        "description": "Highly complex operations",
+                        "interpretation": {
+                            "bands": {"min": 61, "max": 80},
+                            "application": {"method": "MODIFIER", "applied": 1.30},
+                        },
+                    },
+                    {
+                        "id": 5, "label": "EXTREMELY_COMPLEX",
+                        "description": "Extremely complex operations",
+                        "interpretation": {
+                            "bands": {"min": 81, "max": 100},
+                            "application": {"method": "MODIFIER", "applied": 1.60},
+                        },
+                    },
+                ],
+            },
+        }
+
+    def _build_limit_bandings(self) -> List[Dict[str, Any]]:
+        """Build standard limit/deductible combinations."""
+        return [
+            {"id": 1, "limit": 1000000, "deductible": 25000},
+            {"id": 2, "limit": 5000000, "deductible": 50000},
+            {"id": 3, "limit": 10000000, "deductible": 100000},
+            {"id": 4, "limit": 25000000, "deductible": 250000},
+            {"id": 5, "limit": 50000000, "deductible": 500000},
+        ]
+
+    def _build_pricing(self) -> Dict[str, Any]:
+        """Build pricing section with ILF curve and deductible credits."""
+        return {
+            "ilf_curve": {
+                "base_limit": 1000000,
+                "factors": [
+                    {"limit": 1000000, "factor": 1.00},
+                    {"limit": 2000000, "factor": 1.70},
+                    {"limit": 5000000, "factor": 3.20},
+                    {"limit": 10000000, "factor": 5.00},
+                    {"limit": 25000000, "factor": 9.00},
+                    {"limit": 50000000, "factor": 14.00},
+                    {"limit": 100000000, "factor": 22.00},
+                ],
+            },
+            "deductible_credits": [
+                {"min_pct": 0.001, "max_pct": 0.005, "credit": 0.05},
+                {"min_pct": 0.005, "max_pct": 0.010, "credit": 0.10},
+                {"min_pct": 0.010, "max_pct": 0.020, "credit": 0.15},
+                {"min_pct": 0.020, "max_pct": None, "credit": 0.20},
+            ],
+            "taxes_fees_rate": 0.05,
+        }
+
+    # =========================================================================
+    # HELPERS
+    # =========================================================================
+
     def _identify_risk_factors(self, industry: str) -> List[str]:
-        """Identify risk factors for industry."""
         industry_lower = industry.lower()
-
         factors = ["operational_risk", "market_risk", "compliance_risk"]
-
         if "financial" in industry_lower:
             factors.extend(["credit_risk", "liquidity_risk", "regulatory_risk"])
         elif "technology" in industry_lower:
@@ -446,37 +827,21 @@ class CoverageBuilder:
             factors.extend(["patient_safety", "regulatory_compliance", "data_privacy"])
         elif "manufacturing" in industry_lower:
             factors.extend(["supply_chain_risk", "product_liability", "environmental_risk"])
-
         return factors
 
     def _identify_categories(self, industry: str) -> List[str]:
-        """Identify signal categories for industry."""
-        categories = [
-            "technical_infrastructure",
-            "corporate_footprint",
-            "financial_health",
-        ]
-
+        categories = ["technical_infrastructure", "corporate_footprint", "financial_health"]
         industry_lower = industry.lower()
-
         if "financial" in industry_lower:
-            categories.extend(["regulatory_compliance", "fraud_prevention"])
+            categories.extend(["regulatory_compliance", "governance"])
         elif "technology" in industry_lower:
-            categories.extend(["security_posture", "innovation_capacity"])
-
+            categories.extend(["cyber_security", "network_authority"])
         return categories
 
     def _is_new_signal(self, selection: SignalSelection) -> bool:
-        """Check if signal requires new implementation."""
-        # Check if signal exists in library
         return not self.signal_library.has_signal(selection.signal_id)
 
-    def _generate_extractor_stub(
-        self,
-        coverage_id: str,
-        signals: List[str],
-    ) -> str:
-        """Generate extractor stub code."""
+    def _generate_extractor_stub(self, coverage_id: str, signals: List[str]) -> str:
         signal_methods = "\n\n".join([
             f'''    async def extract_{sig}(self, entity_id: str) -> Dict[str, Any]:
         """Extract {sig} signal data."""
@@ -500,12 +865,7 @@ class {coverage_id.title().replace("_", "")}Extractor:
 {signal_methods}
 '''
 
-    def _generate_aggregator_stub(
-        self,
-        coverage_id: str,
-        signals: List[str],
-    ) -> str:
-        """Generate aggregator stub code."""
+    def _generate_aggregator_stub(self, coverage_id: str, signals: List[str]) -> str:
         return f'''"""
 {coverage_id.title()} Signal Aggregators
 
@@ -524,12 +884,7 @@ class {coverage_id.title().replace("_", "")}Aggregator:
         return {{"composite_score": 750}}
 '''
 
-    def _generate_test_stub(
-        self,
-        coverage_id: str,
-        signals: List[str],
-    ) -> str:
-        """Generate test stub code."""
+    def _generate_test_stub(self, coverage_id: str, signals: List[str]) -> str:
         return f'''"""
 Tests for {coverage_id.title()} Coverage
 

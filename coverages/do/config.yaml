@@ -1,13 +1,13 @@
 # =============================================================================
 # DSI Model Configuration
-# 
+#
 # This file holds all the relvant configuration types for a single coverage.
 # For example,
 # coverage:         the actual coverage cohort, eg aerospace
 #   configuration:  the specific configuration file under that coverage, eg aerospace_general
-# 
+#
 # There can be multiple configurations saved under a coverage.
-# 
+#
 # A configuration is the single source of truth for:
 #   - 1) direct (optional) queries
 #   - 2) categorical features
@@ -16,11 +16,11 @@
 #   - tier definitions
 #   - other pricing parameters
 #   - test profiles for validation
-# 
+#
 # When a technical model is generated:
 # - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
 # - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-# 
+#
 # All DSI principles must be adhered to, specifically:
 # 1. All signals must be externally observable (no application questions required)
 # 2. Direct queries are OPTIONAL - model must work without them
@@ -63,7 +63,7 @@ directors_officers:
         bands:
           - return: true
             override: 3
-            action: "REFER" 
+            action: "REFER"
             note: "Regulatory investigation disclosed"
       - id: "planned_transaction"
         question: "Is there a planned M&A, IPO, SPAC merger, or material transaction?"
@@ -75,7 +75,7 @@ directors_officers:
       - id: "covenant_compliance"
         question: "Is the company in compliance with all debt covenants?"
         bands:
-          - return: false 
+          - return: false
             override: null
             action: "FLAG"
             note: "Covenant non-compliance disclosed"
@@ -95,13 +95,13 @@ directors_officers:
     # b) be the basis of premium (impact: premium)
     # note: only one group be the basis of premium
     # -------------------------------------------------------------------------
-    
+
     categorical_groups:
       - id: "company_type"
         name: "Company Type"
         description: "Company classification based on public/private status and market cap"
         impact: "modifier"
-        inference_utility_function: company_type_basefunction    
+        inference_utility_function: company_type_basefunction
       - id: "industry"
         name: "Industry"
         description: "Industry classification from SIC/NAICS codes"
@@ -155,81 +155,81 @@ directors_officers:
           label: "Nonprofit"
           modifier: 0.40
           description: "501(c)(3) or equivalent nonprofit"
-            
+
       industry:
         - cat: "CRYPTO_DIGITAL"
           label: "Crypto/Digital Assets"
           modifier: 2.50
           description: "Cryptocurrency, blockchain, digital assets"
-          
+
         - cat: "CANNABIS"
           label: "Cannabis"
           modifier: 2.00
           description: "Cannabis cultivation, processing, retail"
-          
+
         - cat: "HEALTHCARE_PHARMA"
           label: "Healthcare/Pharma"
           modifier: 1.60
-          
+
         - cat: "FINANCIAL_SERVICES"
           label: "Financial Services"
           modifier: 1.40
           description: "Banks, insurance, investment management, fintech"
-          
+
         - cat: "TECHNOLOGY"
           label: "Technology"
           modifier: 1.25
           description: "Software, hardware, internet, semiconductors"
-          
+
         - cat: "ENERGY"
           label: "Energy"
           modifier: 1.15
           description: "Oil & gas, utilities, renewable energy"
-          
+
         - cat: "REAL_ESTATE"
           label: "Real Estate"
           modifier: 1.10
           description: "REITs, real estate development, property management"
-          
+
         - cat: "RETAIL_CONSUMER"
           label: "Retail/Consumer"
           modifier: 1.00
           description: "Retail, consumer products, restaurants"
-          
+
         - cat: "MANUFACTURING"
           label: "Manufacturing"
           modifier: 0.90
           description: "Industrial manufacturing, aerospace, automotive"
-          
+
         - cat: "OTHER"
           label: "Other"
           modifier: 1.00
           description: "Other industries"
-            
+
       stock_exchange:
         - cat: "NYSE"
           label: "NYSE"
           modifier: 1.00
-          description: ""  
+          description: ""
         - cat: "NASDAQ"
           label: "NASDAQ"
           modifier: 1.00
-          description: ""  
+          description: ""
         - cat: "NYSE_AMERICAN"
           label: "NYSE American"
           modifier: 1.10
-          description: ""  
+          description: ""
         - cat: "OTC"
           label: "OTC Markets"
           modifier: 1.30
-          description: ""  
+          description: ""
         - cat: "FOREIGN"
           label: "Foreign Exchange"
           modifier: 1.15
         - cat: "NONE"
           label: "Not Listed"
           modifier: 0.80
-          description: ""  
+          description: ""
 
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
@@ -237,93 +237,128 @@ directors_officers:
     # Each group contributes to the composite score
     # Weights must add to 1
     # -------------------------------------------------------------------------
-    
+
     signal_groups:
       - id: "network_authority"
         name: "Network Authority"
         description: "Quality of professional relationships and institutional credibility"
         weight: 0.10
         test_scores: {excellent: 90, average: 68, poor: 38}
-        score_condition: null
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent network authority - modifier applied"
+
       - id: "governance"
         name: "Corporate Governance"
         description: "Board composition, structure, and shareholder rights"
         weight: 0.25
         test_scores: {excellent: 92, average: 70, poor: 35}
-        score_condition: true
-        bands:
-          - max: 30
-            override: 5
-            action: "DECLINE"
-            note: "Critical governance deficiencies"
-          - max: 45
-            override: 4
+        score_conditions:
+          - threshold: 30
+            comparison: "<="
             action: "REFER"
+            override: 5
+            note: "Critical governance deficiencies"
+          - threshold: 45
+            comparison: "<="
+            action: "REFER"
+            override: 4
             note: "Significant governance concerns"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent governance - modifier applied"
+
       - id: "financial"
         name: "Financial Integrity"
         description: "Audit quality, internal controls, financial reporting"
         weight: 0.20
         test_scores: {excellent: 95, average: 72, poor: 38}
-        score_condition: true
-        bands:
-          - max: 35
-            override: 5
-            action: "DECLINE"
-            note: "Critical financial integrity issues"
-          - max: 50
-            override: 4
+        score_conditions:
+          - threshold: 35
+            comparison: "<="
             action: "REFER"
+            override: 5
+            note: "Critical financial integrity issues"
+          - threshold: 50
+            comparison: "<="
+            action: "REFER"
+            override: 4
             note: "Material financial concerns"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent financial integrity - modifier applied"
+
       - id: "litigation"
         name: "Litigation Profile"
         description: "Securities litigation, regulatory actions, enforcement history"
         weight: 0.25
         test_scores: {excellent: 98, average: 75, poor: 30}
-        score_condition: true
-        bands:
-          - max: 25
-            override: 5
-            action: "DECLINE"
-            note: "Severe litigation profile"
-          - max: 40
-            override: 4
+        score_conditions:
+          - threshold: 25
+            comparison: "<="
             action: "REFER"
+            override: 5
+            note: "Severe litigation profile"
+          - threshold: 40
+            comparison: "<="
+            action: "REFER"
+            override: 4
             note: "Elevated litigation risk"
-        inclusive_max: false
-        
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.85
+            note: "Excellent litigation profile - modifier applied"
+
       - id: "executive"
         name: "Executive Profile"
         description: "Executive stability, quality, and conduct"
         weight: 0.10
         test_scores: {excellent: 88, average: 68, poor: 40}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent executive profile - modifier applied"
+
       - id: "corporate_footprint"
         name: "Corporate Footprint"
         description: "Investor relations, transparency, ESG commitment"
         weight: 0.05
         test_scores: {excellent: 85, average: 62, poor: 35}
-        score_condition: false
-        
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent corporate footprint - modifier applied"
+
       - id: "structured_data"
         name: "Structured Data"
         description: "Third-party governance and credit ratings"
         weight: 0.05
         test_scores: {excellent: 88, average: 65, poor: 40}
-        score_condition: false
+        score_conditions:
+          - threshold: 20
+            comparison: "<="
+            action: "MODIFIER"
+            applied: 0.90
+            note: "Excellent structured data - modifier applied"
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
     # Each is a underlying feature for the previously defined groups
     # Each group contributes to the group score
     # Weights must add to 1
-    # -------------------------------------------------------------------------      
+    # -------------------------------------------------------------------------
 
     signal_features:
       network_authority:
@@ -332,119 +367,103 @@ directors_officers:
           description: "Quality tier of external auditor (Big 4, national, regional)"
           weight: 0.20
           inference_utility_function: auditor_quality_basefunction
-          score_condition: false
-          
+
         - id: "legal_counsel"
           name: "Legal Counsel Quality"
           description: "Quality of securities/corporate counsel"
           weight: 0.15
           inference_utility_function: legal_counsel_basefunction
-          score_condition: false
-          
+
         - id: "banking_relationship"
           name: "Investment Banking Relationships"
           description: "Quality of investment banking relationships"
           weight: 0.15
-          inference_utility_function: bankinbg_relationship_basefunction
-          score_condition: false
-          
+          inference_utility_function: banking_relationship_basefunction
+
         - id: "investor_quality"
           name: "Institutional Investor Quality"
           description: "Quality of institutional investor base"
           weight: 0.15
           inference_utility_function: investor_quality_basefunction
-          score_condition: false
-          
+
         - id: "board_network"
           name: "Board Network Quality"
           description: "Quality of director interlocks and board experience"
           weight: 0.15
           inference_utility_function: board_network_basefunction
-          score_condition: false
-          
+
         - id: "index_inclusion"
           name: "Index Inclusion"
           description: "Membership in major stock indices"
           weight: 0.05
           inference_utility_function: index_inclusion_basefunction
-          score_condition: false
-          
+
         - id: "analyst_coverage"
           name: "Analyst Coverage"
           description: "Number and quality of sell-side analyst coverage"
           weight: 0.10
           inference_utility_function: analyst_coverage_basefunction
-          score_condition: false
-          
+
         - id: "industry_association"
           name: "Industry Association Leadership"
           description: "Leadership roles in industry associations"
           weight: 0.05
           inference_utility_function: industry_association_basefunction
-          score_condition: false
 
       governance:
         - id: "board_independence"
           name: "Board Independence"
           description: "Percentage of independent directors"
           weight: 0.20
-          inference_utility_function: board_independance_basefunction
-          score_condition: true
-          bands:
-            - max: 35
-              override: 4
+          inference_utility_function: board_independence_basefunction
+          score_conditions:
+            - threshold: 35
+              comparison: "<="
               action: "REFER"
+              override: 4
               note: "Board independence concerns"
-          inclusive_max: false
-          
+
         - id: "board_diversity"
           name: "Board Diversity"
           description: "Gender, ethnic, and experiential diversity"
           weight: 0.10
           inference_utility_function: board_diversity_basefunction
-          score_condition: false
-          
+
         - id: "ceo_chair_separation"
           name: "CEO/Chair Separation"
           description: "Separation of CEO and Board Chair roles"
           weight: 0.15
-          inference_utility_function: ceo_chairseperation_basefunction
-          score_condition: false
-          
+          inference_utility_function: ceo_chair_separation_basefunction
+
         - id: "committee_structure"
           name: "Committee Structure"
           description: "Quality of audit, compensation, and nominating committees"
           weight: 0.15
           inference_utility_function: committee_structure_basefunction
-          score_condition: false
-          
+
         - id: "board_refreshment"
           name: "Board Refreshment"
           description: "Average tenure and refreshment practices"
           weight: 0.10
           inference_utility_function: board_refreshment_basefunction
-          score_condition: false
-          
+
         - id: "related_party"
           name: "Related Party Transactions"
           description: "Quality of related party transaction oversight"
           weight: 0.10
           inference_utility_function: related_party_basefunction
-          score_condition: false
-          
+
         - id: "compensation_structure"
           name: "Executive Compensation Structure"
           description: "Pay-for-performance alignment"
           weight: 0.10
           inference_utility_function: compensation_structure_basefunction
-          score_condition: false
-          
+
         - id: "shareholder_rights"
           name: "Shareholder Rights"
           description: "Shareholder-friendly provisions vs takeover defenses"
           weight: 0.10
           inference_utility_function: shareholder_rights_basefunction
-          score_condition: false
 
       financial:
         - id: "audit_opinion"
@@ -452,78 +471,71 @@ directors_officers:
           description: "Type of audit opinion received"
           weight: 0.20
           inference_utility_function: audit_opinion_basefunction
-          score_condition: true
-          bands:
-            - max: 30
-              override: 5
-              action: "DECLINE"
-              note: "Qualified/adverse audit opinion"
-            - max: 50
-              override: 4
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
               action: "REFER"
+              override: 5
+              note: "Qualified/adverse audit opinion"
+            - threshold: 50
+              comparison: "<="
+              action: "REFER"
+              override: 4
               note: "Audit concerns"
-          inclusive_max: false
-          
+
         - id: "internal_controls"
           name: "Internal Controls Assessment"
           description: "SOX 404 internal controls assessment"
           weight: 0.20
           inference_utility_function: internal_controls_basefunction
-          score_condition: true
-          bands:
-            - max: 30
-              override: 4
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
               action: "REFER"
+              override: 4
               note: "Material weakness in internal controls"
-          inclusive_max: false
-          
+
         - id: "restatement"
           name: "Financial Restatement History"
           description: "History of financial restatements (5-year lookback)"
           weight: 0.20
           inference_utility_function: restatement_basefunction
-          score_condition: true
-          bands:
-            - max: 35
-              override: 4
+          score_conditions:
+            - threshold: 35
+              comparison: "<="
               action: "REFER"
+              override: 4
               note: "Financial restatement history"
-          inclusive_max: false
-          
+
         - id: "filing_timeliness"
           name: "Filing Timeliness"
           description: "History of timely SEC filings"
           weight: 0.10
           inference_utility_function: filing_timelienness_basefunction
-          score_condition: false
-          
+
         - id: "revenue_recognition"
           name: "Revenue Recognition Risk"
           description: "Revenue recognition complexity and risk"
           weight: 0.10
           inference_utility_function: revenue_recognition_basefunction
-          score_condition: false
-          
+
         - id: "debt_covenant"
           name: "Debt Covenant Compliance"
           description: "Proximity to debt covenant thresholds"
           weight: 0.05
-          inference_utility_function: devt_covernent_basefunction
-          score_condition: false
-          
+          inference_utility_function: debt_covenant_basefunction
+
         - id: "stock_volatility"
           name: "Stock Price Volatility"
           description: "Historical stock price volatility vs peers"
           weight: 0.10
-          inference_utility_function: stock_volaitlity_basefunction
-          score_condition: false
-          
+          inference_utility_function: stock_volatility_basefunction
+
         - id: "short_interest"
           name: "Short Interest"
           description: "Short interest as percentage of float"
           weight: 0.05
           inference_utility_function: short_interest_basefunction
-          score_condition: false
 
       litigation:
         - id: "securities_litigation"
@@ -531,62 +543,58 @@ directors_officers:
           description: "History of securities class action lawsuits"
           weight: 0.35
           inference_utility_function: securities_litigation_basefunction
-          score_condition: true
-          bands:
-            - max: 30
-              override: 5
-              action: "DECLINE"
-              note: "Active securities litigation"
-            - max: 50
-              override: 4
+          score_conditions:
+            - threshold: 30
+              comparison: "<="
               action: "REFER"
+              override: 5
+              note: "Active securities litigation"
+            - threshold: 50
+              comparison: "<="
+              action: "REFER"
+              override: 4
               note: "Securities litigation history"
-          inclusive_max: false
-          
+
         - id: "derivative_litigation"
           name: "Derivative Litigation History"
           description: "Shareholder derivative suit history"
           weight: 0.15
           inference_utility_function: derivitaive_litigation_basefunction
-          score_condition: false
-          
+
         - id: "sec_enforcement"
           name: "SEC Enforcement History"
           description: "SEC enforcement actions and investigations"
           weight: 0.20
           inference_utility_function: sec_enforcement_basefunction
-          score_condition: true
-          bands:
-            - max: 25
-              override: 5
-              action: "DECLINE"
-              note: "Active SEC enforcement"
-            - max: 45
-              override: 4
+          score_conditions:
+            - threshold: 25
+              comparison: "<="
               action: "REFER"
+              override: 5
+              note: "Active SEC enforcement"
+            - threshold: 45
+              comparison: "<="
+              action: "REFER"
+              override: 4
               note: "SEC enforcement history"
-          inclusive_max: false
-          
+
         - id: "regulatory_action"
           name: "Other Regulatory Actions"
           description: "Non-SEC regulatory enforcement (DOJ, state AG, CFPB)"
           weight: 0.15
           inference_utility_function: regulatory_action_basefunction
-          score_condition: false
-          
+
         - id: "pending_litigation"
           name: "Material Pending Litigation"
           description: "Disclosed material pending litigation"
           weight: 0.10
           inference_utility_function: pending_litigation_basefunction
-          score_condition: false
-          
+
         - id: "whistleblower"
           name: "Whistleblower Activity"
           description: "Whistleblower complaints and SEC tips"
           weight: 0.05
           inference_utility_function: whistleblower_basefunction
-          score_condition: false
 
       executive:
         - id: "executive_stability"
@@ -594,41 +602,36 @@ directors_officers:
           description: "CEO/CFO tenure and turnover patterns"
           weight: 0.25
           inference_utility_function: executive_stability_basefunction
-          score_condition: false
-          
+
         - id: "cfo_quality"
           name: "CFO Quality Indicators"
           description: "CFO experience and credentials"
           weight: 0.20
           inference_utility_function: cfo_quality_basefunction
-          score_condition: false
-          
+
         - id: "insider_trading"
           name: "Insider Trading Patterns"
           description: "Form 4 insider trading analysis"
           weight: 0.25
           inference_utility_function: insider_trading_basefunction
-          score_condition: false
-          
+
         - id: "executive_background"
           name: "Executive Background Check"
           description: "Background issues with executives"
           weight: 0.15
           inference_utility_function: executive_background_basefunction
-          score_condition: true
-          bands:
-            - max: 35
-              override: 4
+          score_conditions:
+            - threshold: 35
+              comparison: "<="
               action: "REFER"
+              override: 4
               note: "Executive background concerns"
-          inclusive_max: false
-          
+
         - id: "trading_plan"
           name: "10b5-1 Plan Usage"
           description: "Usage of 10b5-1 trading plans"
           weight: 0.15
           inference_utility_function: trading_plan_basefunction
-          score_condition: false
 
       corporate_footprint:
         - id: "investor_relations"
@@ -636,42 +639,36 @@ directors_officers:
           description: "Quality of investor communications"
           weight: 0.25
           inference_utility_function: investor_relations_basefunction
-          score_condition: false
-          
+
         - id: "governance_page"
           name: "Governance Page Quality"
           description: "Dedicated governance/board information"
           weight: 0.20
           inference_utility_function: governance_page_basefunction
-          score_condition: false
-          
+
         - id: "esg_reporting"
           name: "ESG Reporting"
           description: "Environmental, social, governance reporting"
           weight: 0.15
           inference_utility_function: esg_reporting_basefunction
-          score_condition: false
-          
+
         - id: "press_release"
           name: "Press Release Quality"
           description: "Quality and consistency of corporate communications"
           weight: 0.15
           inference_utility_function: press_release_basefunction
-          score_condition: false
-          
+
         - id: "leadership_visibility"
           name: "Leadership Visibility"
           description: "Executive visibility and accessibility"
           weight: 0.15
           inference_utility_function: leadership_visability_basefunction
-          score_condition: false
-          
+
         - id: "hiring_signals"
           name: "Risk/Compliance Hiring"
           description: "Legal, compliance, and governance hiring"
           weight: 0.10
           inference_utility_function: hiring_signals_basefunction
-          score_condition: false
 
       structured_data:
         - id: "credit_rating"
@@ -679,28 +676,24 @@ directors_officers:
           description: "Corporate credit rating"
           weight: 0.30
           inference_utility_function: credit_rating_basefunction
-          score_condition: false
-          
+
         - id: "esg_rating"
           name: "ESG Rating"
           description: "Third-party ESG rating"
           weight: 0.20
           inference_utility_function: esg_rating_basefunction
-          score_condition: false
-          
+
         - id: "governance_rating"
           name: "Governance Rating"
           description: "Third-party governance quality rating"
           weight: 0.30
           inference_utility_function: governance_rating_basefunction
-          score_condition: false
-          
+
         - id: "iss_governance"
           name: "ISS Governance QualityScore"
           description: "ISS Governance QualityScore"
           weight: 0.20
           inference_utility_function: iss_governance_basefunction
-          score_condition: false
 
     # -------------------------------------------------------------------------
     # TIER THRESHOLDS
@@ -714,44 +707,127 @@ directors_officers:
           description: "Excellent governance - auto-approve at preferred pricing"
           auto_approve: true
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 4000  # Per $1M limit
-        - id: 2      
+          application:
+            method: "PREMIUM_BASE"
+            applied: 4000
+        - id: 2
           label: "STANDARD"
           min_score: 650
           max_score: 799
           description: "Good governance - auto-approve at standard pricing"
           auto_approve: true
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 6000
-        - id: 3        
+          application:
+            method: "PREMIUM_BASE"
+            applied: 6000
+        - id: 3
           label: "ELEVATED"
           min_score: 500
           max_score: 649
           description: "Moderate risk - auto-approve with conditions"
           auto_approve: false
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 9000
-        - id: 4       
+          application:
+            method: "PREMIUM_BASE"
+            applied: 9000
+        - id: 4
           label: "HIGH_RISK"
           min_score: 350
           max_score: 499
           description: "High risk - manual review required"
           auto_approve: false
           auto_decline: false
-          premium_generation_method: "base"
-          premium: 15000
-        - id: 5        
+          application:
+            method: "PREMIUM_BASE"
+            applied: 15000
+        - id: 5
           label: "CRITICAL"
           min_score: 0
           max_score: 349
           description: "Critical risk - decline or senior review"
           auto_approve: false
           auto_decline: true
-          premium_generation_method: "base"
-          premium: 25000
+          application:
+            method: "PREMIUM_BASE"
+            applied: 25000
+
+    # -------------------------------------------------------------------------
+    # LOSS TIER BANDS
+    # -------------------------------------------------------------------------
+    loss_tier_bands:
+      bands:
+        - id: 1
+          label: "VERY_LOW"
+          interpretation:
+            bands: {min: 80, max: 100}
+            application:
+              frequency_modifier: 0.70
+              severity_modifier: 0.80
+        - id: 2
+          label: "LOW"
+          interpretation:
+            bands: {min: 60, max: 79}
+            application:
+              frequency_modifier: 0.85
+              severity_modifier: 0.90
+        - id: 3
+          label: "MODERATE"
+          interpretation:
+            bands: {min: 40, max: 59}
+            application:
+              frequency_modifier: 1.00
+              severity_modifier: 1.00
+        - id: 4
+          label: "HIGH"
+          interpretation:
+            bands: {min: 20, max: 39}
+            application:
+              frequency_modifier: 1.25
+              severity_modifier: 1.20
+        - id: 5
+          label: "VERY_HIGH"
+          interpretation:
+            bands: {min: 0, max: 19}
+            application:
+              frequency_modifier: 1.60
+              severity_modifier: 1.50
+      constraints:
+        floor: 0.55
+        cap: 1.60
+
+    # -------------------------------------------------------------------------
+    # EXPOSURE TIER BANDS
+    # -------------------------------------------------------------------------
+    exposure_tier_bands:
+      bands:
+        - id: 1
+          label: "SMALL"
+          interpretation:
+            bands: {min: 0, max: 5000000}
+            application:
+              method: "MODIFIER"
+              applied: 0.85
+        - id: 2
+          label: "MEDIUM"
+          interpretation:
+            bands: {min: 5000001, max: 25000000}
+            application:
+              method: "MODIFIER"
+              applied: 1.00
+        - id: 3
+          label: "LARGE"
+          interpretation:
+            bands: {min: 25000001, max: 100000000}
+            application:
+              method: "MODIFIER"
+              applied: 1.15
+        - id: 4
+          label: "VERY_LARGE"
+          interpretation:
+            bands: {min: 100000001, max: null}
+            application:
+              method: "MODIFIER"
+              applied: 1.35
 
     # -------------------------------------------------------------------------
     # LIMIT BANDINGS
@@ -787,7 +863,7 @@ directors_officers:
           - {limit: 25000000, factor: 7.50}
           - {limit: 50000000, factor: 11.00}
           - {limit: 100000000, factor: 16.00}
-      
+
       retention_guidelines:
         tier_1_pct: 0.01
         tier_2_pct: 0.015
@@ -796,14 +872,14 @@ directors_officers:
         tier_5_pct: 0.05
         minimum: 100000
         maximum: 2500000
-      
+
       experience_modifiers:
         clean_5yr: 0.90
         clean_3yr: 0.95
         minor_losses: 1.00
         moderate_losses: 1.20
         major_losses: 1.50
-        
+
       taxes_fees_rate: 0.05
 
     # -------------------------------------------------------------------------

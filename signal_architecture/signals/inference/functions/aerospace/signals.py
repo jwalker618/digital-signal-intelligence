@@ -224,3 +224,73 @@ def f40(e, c): return _run_pipeline("management_stability", SafetyLeadershipExtr
 
 @register_inference_function("government_support_basefunction")
 def f41(e, c): return _run_pipeline("government_support", GovernmentSupportExtractor(), GovernmentSupportAggregator(), e, c, "support_score", 50)
+
+
+# =============================================================================
+# SIGNAL ENHANCEMENTS - Priority 1 & 2 Stubs
+# TODO: These stubs need production data sources (extractors/aggregators)
+# =============================================================================
+
+import random
+
+@register_inference_function("certification_transparency_basefunction")
+def f42(entity_id, context):
+    """Infers FAA/EASA certification status transparency.
+
+    Returns a score 0-100 where higher = more transparent certification status.
+    Uses metadata: certificate_type, status, airworthiness_directives_count.
+
+    TODO: Connect to production FAA/EASA certification databases.
+    """
+    start = time.time()
+    certificate_type = random.choice(["Part_121", "Part_135", "EASA_AOC", "Part_145"])
+    status = random.choice(["current", "conditional", "suspended", "revoked"])
+    ad_count = random.randint(0, 25)
+    status_scores = {"current": 90, "conditional": 60, "suspended": 25, "revoked": 5}
+    base = status_scores.get(status, 50)
+    score = max(0, min(100, base - (ad_count * 1.5) + random.randint(-5, 5)))
+    return SignalResult(
+        signal_id="certification_transparency",
+        score=round(score, 1),
+        confidence=0.6,
+        execution_time_ms=(time.time() - start) * 1000,
+        raw_data={
+            "certificate_type": certificate_type,
+            "status": status,
+            "airworthiness_directives_count": ad_count,
+        },
+        aggregated_data={"certification_transparency_score": score},
+        metadata={"stub": True, "enhancement": "priority_1"},
+    )
+
+
+@register_inference_function("supply_chain_quality_basefunction")
+def f43(entity_id, context):
+    """Infers supplier audit and quality signal for aerospace supply chain.
+
+    Returns a score 0-100 where higher = better supply chain quality.
+    Uses metadata: supplier_count, audit_pass_rate, critical_supplier_concentration.
+
+    TODO: Connect to production supplier audit and quality management systems.
+    """
+    start = time.time()
+    supplier_count = random.randint(5, 200)
+    audit_pass_rate = round(random.uniform(0.6, 1.0), 2)
+    critical_supplier_concentration = round(random.uniform(0.1, 0.8), 2)
+    # Higher pass rate and lower concentration = better score
+    score = max(0, min(100,
+        (audit_pass_rate * 60) + ((1 - critical_supplier_concentration) * 30) + random.randint(-5, 5)
+    ))
+    return SignalResult(
+        signal_id="supply_chain_quality",
+        score=round(score, 1),
+        confidence=0.55,
+        execution_time_ms=(time.time() - start) * 1000,
+        raw_data={
+            "supplier_count": supplier_count,
+            "audit_pass_rate": audit_pass_rate,
+            "critical_supplier_concentration": critical_supplier_concentration,
+        },
+        aggregated_data={"supply_chain_quality_score": score},
+        metadata={"stub": True, "enhancement": "priority_2"},
+    )

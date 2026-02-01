@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate | Digital Signal Intelligence</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- BRAND PALETTE --- */
+        :root {
+            --bg-page: #0B3954;
+            --btn-color: #39D3BA;
+            --title-color: #0599AD;
+            --subtitle-color: #FFFFFF;
+            --text-black: #000000;
+            --bg-dark: #0A1A2F;
+            --cream: #E8E3DA;
+            --gray: #7A766F;
+
+            /* FONTS */
+            --font-title: 'Inter', sans-serif;
+            --font-body: 'IBM Plex Sans', sans-serif;
+        }
+
+        /* --- RESET & STRUCTURE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background-color: var(--bg-page);
+            font-family: var(--font-body);
+            color: var(--subtitle-color);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- BACKGROUND ANIMATION --- */
+        #node-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- VIEW MANAGEMENT --- */
+        .stage {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            padding: 60px 80px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- PAGE 1: LANDING --- */
+        #landing-page { 
+          display: flex; 
+          flex-direction: column; 
+        }
+      
+        .ld-logo { 
+          display: flex; 
+          align-items: flex-start; 
+          padding-top: 60px; 
+          padding-left: 80px; 
+        }
+        .ld-title { 
+          display: flex; 
+          align-items: left; 
+          text-align: center; 
+        }
+        .ld-sub{
+          display: flex;
+          align-items: left;
+          text-align: center;
+        }
+
+      
+        .ldsvg-logo svg {
+            height: 200px; 
+            width: auto;
+            margin-bottom: 40px;
+            margin-left: -15px; 
+        }      
+        
+        .ldtxt-title {
+          font-family: var(--font-title);
+          font-weight: 800
+          font-size: 64px;
+          color: var(--title-color);
+        }  
+      
+        .ldtxt-sub {
+          font-family: var(--font-title);
+          font-weight: 400
+          font-size: 32px;
+          color: var(--subtitle-color);
+        }      
+
+    </style>
+</head>
+<body>
+
+    <canvas id="node-canvas"></canvas>
+
+    <div class="stage">
+        <div id="landing-top" class="page active">
+          
+            <div class="ld-title">
+              <h1 class="ldtxt-title">Digital Signal Intelligence</h1>
+            </div>
+
+            <div class="ld-sub">
+              <h1 class="ldtxt-sub">A New Information Substrate for Insurance</h1>
+            </div>
+          
+        </div>
+    </div>
+
+    <script>
+        // --- BACKGROUND NODES ---
+        const canvas = document.getElementById('node-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let nodes = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Init Nodes
+        for(let i=0; i<60; i++) {
+            nodes.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#E8E3DA';
+            
+            nodes.forEach(node => {
+                node.x += node.vx;
+                node.y += node.vy;
+
+                if(node.x < 0 || node.x > width) node.vx *= -1;
+                if(node.y < 0 || node.y > height) node.vy *= -1;
+
+                ctx.globalAlpha = 0.3;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- NAVIGATION ---
+        function navigateToTemplate() {
+            document.getElementById('landing-page').classList.remove('active');
+            document.getElementById('template-page').classList.add('active');
+        }
+
+        function navigateToHome() {
+            document.getElementById('template-page').classList.remove('active');
+            document.getElementById('landing-page').classList.add('active');
+        }
+
+    </script>
+</body>
+</html>

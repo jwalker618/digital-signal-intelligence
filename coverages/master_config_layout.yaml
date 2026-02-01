@@ -5,6 +5,8 @@
 # This file defines the complete structure for a coverage configuration.
 # All field names, types, and relationships are annotated.
 #
+# VERSION: 2.0 - Updated with banded score_conditions and MULTIPLIER method
+#
 # STRUCTURAL PRINCIPLES:
 # 1. Signals are defined once in signal_registry
 # 2. Each signal specifies which group it contributes to via group_id
@@ -12,7 +14,10 @@
 # 4. source: score (default) uses the 0-100 inference return
 # 5. source: metadata.field uses inference metadata with bands/categories mapping
 # 6. Categorical groups apply modifiers (applied:), not scores
-# 7. score_condition applies actions/overrides based on score thresholds
+# 7. score_conditions (plural, banded) apply actions based on score thresholds
+#    - Applies to: signal_registry signals and groups ONLY
+#    - Does NOT apply to: tier bands (risk, loss, exposure)
+# 8. MULTIPLIER method allows rate × basis calculation as alternative to PREMIUM_BASE
 #
 # AUGMENTED BY:
 # - analysis_outputs/{coverage}_v{date}.yaml - empirically-derived parameters
@@ -36,7 +41,7 @@
       applicable_markets:                  # Geographic markets
         - "{market_code}"                  # e.g., us, uk, eu, apac
       minimum_viable_input:                # Required inputs for pricing
-        - "{input_description}"
+        - "{input_description}"            # IMPORTANT: Must include basis field if MULTIPLIER method used
       min_premium: {integer}               # Minimum premium floor
       default_currency: "{currency}"       # ISO 4217 currency code
 
@@ -51,9 +56,9 @@
         query_condition:
           - return: {boolean}              # Trigger condition (true or false)
             action: "{action}"             # FLAG | MODIFIER | REFER
-            override: {tier|null}          # Force tier (1-#, typically 5) or null
-            applied: {float|null}          # Modifier multiplier or null
-            note: "{explanation}"          # Explanation text
+            override: {tier|null}          # Force tier (1-#, typically 5) or null (REFER only)
+            applied: {float|null}          # Modifier multiplier (MODIFIER only) or null
+            note: "{explanation}"          # Explanation text (required for FLAG)
 
     # =========================================================================
     # SIGNAL REGISTRY
@@ -94,10 +99,36 @@
             # source: score                # DEFAULT - uses 0-100 inference score (omit if using default)
             correlation_direction: "{direction}"  # positive = high score = good | negative = high score = bad
             weight: {float}                # Weight within group (group weights sum to 1.0)
-            score_condition:               # OPTIONAL - threshold-based actions
-              - max: {integer}             # Triggers if score <= max
-                action: "{action}"         # FLAG | REFER | DECLINE
-                override: {tier|null}      # Force tier assignment
+
+            # -----------------------------------------------------------------
+            # BANDED SCORE CONDITIONS (OPTIONAL)
+            # Multiple threshold-based conditions evaluated in order
+            # Applies to signals and groups ONLY - NOT tier bands
+            # -----------------------------------------------------------------
+            score_conditions:              # Note: plural - list of conditions
+              # LOW SCORE CONDITIONS (excellent performance)
+              - threshold: {integer}       # e.g., 20
+                comparison: "<="           # Triggers if score <= threshold
+                action: "MODIFIER"
+                applied: {float}           # e.g., 0.85 = 15% credit
+                note: "{explanation}"
+
+              - threshold: {integer}       # e.g., 40
+                comparison: "<="
+                action: "MODIFIER"
+                applied: {float}           # e.g., 0.92 = 8% credit
+                note: "{explanation}"
+
+              # HIGH SCORE CONDITIONS (poor performance)
+              - threshold: {integer}       # e.g., 75
+                comparison: ">="           # Triggers if score >= threshold
+                action: "FLAG"
+                note: "{explanation}"      # Required for FLAG action
+
+              - threshold: {integer}       # e.g., 90
+                comparison: ">="
+                action: "REFER"
+                override: {tier|null}      # Optional tier override
                 note: "{explanation}"
 
           # LOSS DIMENSION
@@ -107,10 +138,25 @@
               # source: score              # DEFAULT
               correlation_direction: "{direction}"
               weight: {float}
+              score_conditions:            # OPTIONAL - banded conditions for loss
+                - threshold: {integer}
+                  comparison: "{op}"       # >=, <=, ==, >, <
+                  action: "{action}"       # FLAG | MODIFIER | REFER
+                  applied: {float|null}    # For MODIFIER
+                  override: {tier|null}    # For REFER
+                  note: "{explanation}"
+
             frequency:
               # source: score              # DEFAULT
               correlation_direction: "{direction}"
               weight: {float}
+              score_conditions:            # OPTIONAL - banded conditions for loss
+                - threshold: {integer}
+                  comparison: "{op}"
+                  action: "{action}"
+                  applied: {float|null}
+                  override: {tier|null}
+                  note: "{explanation}"
 
           # EXPOSURE DIMENSION
           # Contributes to exposure modifier via size and complexity
@@ -119,10 +165,25 @@
               # source: score              # DEFAULT
               correlation_direction: "{direction}"
               weight: {float}
+              score_conditions:            # OPTIONAL - banded conditions for exposure
+                - threshold: {integer}
+                  comparison: "{op}"
+                  action: "{action}"
+                  applied: {float|null}
+                  override: {tier|null}
+                  note: "{explanation}"
+
             complexity:
               # source: score              # DEFAULT
               correlation_direction: "{direction}"
               weight: {float}
+              score_conditions:            # OPTIONAL - banded conditions for exposure
+                - threshold: {integer}
+                  comparison: "{op}"
+                  action: "{action}"
+                  applied: {float|null}
+                  override: {tier|null}
+                  note: "{explanation}"
 
       # -----------------------------------------------------------------------
       # SCORED SIGNAL PATTERN - USING METADATA
@@ -139,6 +200,13 @@
           risk:
             correlation_direction: positive
             weight: {float}
+            score_conditions:              # OPTIONAL - banded conditions
+              - threshold: {integer}
+                comparison: "{op}"
+                action: "{action}"
+                applied: {float|null}
+                override: {tier|null}
+                note: "{explanation}"
 
           # Exposure uses metadata fields
           exposure:
@@ -160,6 +228,12 @@
                   score: 80
               correlation_direction: positive
               weight: {float}
+              score_conditions:              # OPTIONAL - can still have conditions
+                - threshold: {integer}
+                  comparison: "{op}"
+                  action: "{action}"
+                  applied: {float|null}
+                  note: "{explanation}"
 
             # COMPLEXITY - using text metadata with categories
             complexity:
@@ -175,6 +249,12 @@
                   score: 50
               correlation_direction: positive
               weight: {float}
+              score_conditions:              # OPTIONAL
+                - threshold: {integer}
+                  comparison: "{op}"
+                  action: "{action}"
+                  applied: {float|null}
+                  note: "{explanation}"
 
           # Loss can also use metadata
           loss:
@@ -192,10 +272,22 @@
                   score: 25                     # Many incidents = low score
               correlation_direction: positive
               weight: {float}
+              score_conditions:              # OPTIONAL
+                - threshold: {integer}
+                  comparison: "{op}"
+                  action: "{action}"
+                  applied: {float|null}
+                  note: "{explanation}"
             severity:
               # Uses default score
               correlation_direction: negative
               weight: {float}
+              score_conditions:              # OPTIONAL
+                - threshold: {integer}
+                  comparison: "{op}"
+                  action: "{action}"
+                  applied: {float|null}
+                  note: "{explanation}"
 
     # =========================================================================
     # GROUPS
@@ -229,23 +321,44 @@
           # RISK - weights across all groups must sum to 1.0
           risk:
             weight: {float}
-            score_condition:               # OPTIONAL - group-level thresholds
-              - max: {integer}
-                action: "{action}"
-                override: {tier|null}
+            # -----------------------------------------------------------------
+            # BANDED SCORE CONDITIONS (OPTIONAL) - GROUP LEVEL
+            # Evaluated after signal-level conditions are processed
+            # -----------------------------------------------------------------
+            score_conditions:
+              - threshold: {integer}       # Group composite threshold
+                comparison: "{op}"         # >=, <=, ==, >, <
+                action: "{action}"         # FLAG | MODIFIER | REFER
+                applied: {float|null}      # For MODIFIER
+                override: {tier|null}      # For REFER
                 note: "{explanation}"
 
           # LOSS - weights across all groups must sum to 1.0
           loss:
             weight: {float}
+            score_conditions:              # OPTIONAL - banded conditions
+              - threshold: {integer}
+                comparison: "{op}"
+                action: "{action}"
+                applied: {float|null}
+                override: {tier|null}
+                note: "{explanation}"
 
           # EXPOSURE - weights across all groups must sum to 1.0
           exposure:
             weight: {float}
+            score_conditions:              # OPTIONAL - banded conditions
+              - threshold: {integer}
+                comparison: "{op}"
+                action: "{action}"
+                applied: {float|null}
+                override: {tier|null}
+                note: "{explanation}"
 
     # =========================================================================
     # RISK TIER BANDS
     # Maps composite risk score (0-1000) to pricing tiers
+    # NOTE: score_conditions do NOT apply here - only at signal/group level
     # =========================================================================
     risk_tier_bands:
       bands:
@@ -258,14 +371,27 @@
               max: {integer}               # Maximum score (inclusive)
             action: "{action}"             # APPROVE | REFER | DECLINE
             application:
-              method: "{method}"           # PREMIUM_BASE
-              value: {integer}             # Base premium for tier
+              # ---------------------------------------------------------------
+              # PREMIUM CALCULATION METHOD
+              # Choose ONE of the following methods:
+              # ---------------------------------------------------------------
+
+              # METHOD 1: PREMIUM_BASE - Fixed base premium per tier
+              method: "PREMIUM_BASE"
+              value: {integer}             # Base premium for tier (e.g., 15000)
+
+              # METHOD 2: MULTIPLIER - Rate applied to basis value
+              # method: "MULTIPLIER"
+              # applied: {float}           # Rate multiplier (e.g., 0.0035 = 0.35%)
+              # basis: "{field}"           # Field from minimum_viable_input (e.g., "tiv", "revenue", "limit")
+              # VALIDATION: basis must be listed in metadata.minimum_viable_input
 
     # =========================================================================
     # LOSS TIER BANDS
-    # Maps composite loss score (0-100) to pricing modifiers
+    # Maps composite loss score (0-1000) to pricing modifiers
     # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
     # Result maps to band, constrained by floor/cap
+    # NOTE: score_conditions do NOT apply here - only at signal/group level
     # =========================================================================
     loss_tier_bands:
       bands:
@@ -277,15 +403,20 @@
               min: {integer}               # Score range minimum
               max: {integer}               # Score range maximum
             application:
-              frequency_weight: {float}    # Weight for frequency component
-              severity_weight: {float}     # Weight for severity component
-              floor: {float}               # Minimum modifier (e.g., 0.75)
-              cap: {float}                 # Maximum modifier (e.g., 1.30)
+              frequency_modifier: {float}  # Frequency component modifier
+              severity_modifier: {float}   # Severity component modifier
+              # Combined modifier = frequency_modifier × severity_modifier
+              # Constrained by floor and cap below
+
+      # Global constraints for loss modifiers
+      constraints:
+        floor: {float}                     # Minimum combined modifier (e.g., 0.75)
+        cap: {float}                       # Maximum combined modifier (e.g., 1.50)
 
     # =========================================================================
     # EXPOSURE TIER BANDS
     # Maps exposure scores to size and complexity modifiers
-    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # NOTE: score_conditions do NOT apply here - only at signal/group level
     # =========================================================================
     exposure:
       size:
@@ -299,23 +430,37 @@
                 min: {integer}             # Score range minimum
                 max: {integer}             # Score range maximum
               application:
-                applied: {float}           # Size modifier
-                implied_thresholds:        # OPTIONAL - TIV reference for interpretation
-                  - {min_value}
-                  - {max_value}
+                # ---------------------------------------------------------------
+                # SIZE CALCULATION METHOD
+                # Choose ONE of the following methods:
+                # ---------------------------------------------------------------
+
+                # METHOD 1: MODIFIER - Fixed multiplicative factor
+                method: "MODIFIER"
+                applied: {float}           # Size modifier (e.g., 0.90)
+
+                # METHOD 2: MULTIPLIER - Rate applied to basis value
+                # method: "MULTIPLIER"
+                # applied: {float}         # Rate (e.g., 0.002)
+                # basis: "{field}"         # Field from minimum_viable_input
+
+              implied_thresholds:          # OPTIONAL - TIV reference for interpretation
+                min: {integer|null}
+                max: {integer|null}
 
       complexity:
         weight: {float}                    # e.g., 0.40
         bands:
           - id: {integer}
-            label: "{COMPLEXITY_LABEL}"    # e.g., SIMPLE, COMPLEX
+            label: "{COMPLEXITY_LABEL}"    # e.g., SIMPLE, MODERATE, COMPLEX
             description: "{complexity_meaning}"
             interpretation:
               bands:
                 min: {integer}
                 max: {integer}
               application:
-                applied: {float}           # Complexity modifier
+                method: "MODIFIER"         # Complexity typically uses MODIFIER
+                applied: {float}           # Complexity modifier (e.g., 1.10)
 
     # =========================================================================
     # LIMIT BANDINGS
@@ -347,3 +492,69 @@
 
       # Tax and fee loading
       taxes_fees_rate: {float}             # e.g., 0.05 = 5%
+
+
+# =============================================================================
+# SCORE_CONDITIONS EVALUATION LOGIC
+# =============================================================================
+#
+# score_conditions are evaluated as follows:
+#
+# 1. CONDITIONS ARE A LIST - Multiple thresholds can be defined
+#
+# 2. EVALUATION ORDER:
+#    - Conditions are evaluated in list order
+#    - Multiple conditions can match (not first-match-only)
+#
+# 3. ACTION BEHAVIOR:
+#    - MODIFIER: ALL matching MODIFIER conditions apply multiplicatively
+#      Example: If score=15 matches both <=20 (0.85) and <=40 (0.92),
+#               both modifiers apply: final = base × 0.85 × 0.92
+#
+#    - FLAG: ALL matching FLAG conditions are captured and reported
+#      Example: If score=85 matches both >=75 and >=80, both flags appear
+#
+#    - REFER: FIRST matching REFER triggers referral
+#      Any associated tier override is applied
+#
+# 4. REQUIRED FIELDS BY ACTION:
+#    - MODIFIER: requires 'applied' (float), 'note' optional
+#    - FLAG: requires 'note' (string)
+#    - REFER: 'override' optional (tier), 'note' optional
+#
+# 5. APPLIES TO:
+#    - signal_registry signals (risk, loss, exposure dimensions)
+#    - groups (three_layer_assessment groups)
+#    - Does NOT apply to tier bands (risk_tier_bands, loss_tier_bands, exposure)
+#
+# =============================================================================
+
+
+# =============================================================================
+# MULTIPLIER METHOD VALIDATION
+# =============================================================================
+#
+# When using method: "MULTIPLIER" in risk_tier_bands or exposure bands:
+#
+# 1. REQUIRED FIELDS:
+#    - applied: float (the rate multiplier)
+#    - basis: string (field name from minimum_viable_input)
+#
+# 2. VALIDATION RULE:
+#    The 'basis' field MUST be listed in metadata.minimum_viable_input
+#    This ensures the required data is collected during submission
+#
+# 3. CALCULATION:
+#    premium_component = applied × submission[basis]
+#    Example: applied=0.0035, basis="tiv", tiv=10000000
+#             premium_component = 0.0035 × 10000000 = 35000
+#
+# 4. COMMON BASIS VALUES:
+#    - "tiv" - Total Insured Value
+#    - "limit" - Policy Limit
+#    - "revenue" - Annual Revenue
+#    - "payroll" - Annual Payroll
+#    - "hull_value" - Hull Value (marine/aerospace)
+#    - "aum" - Assets Under Management (FI)
+#
+# =============================================================================

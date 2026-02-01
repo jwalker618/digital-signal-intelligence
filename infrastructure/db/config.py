@@ -2,24 +2,31 @@
 DSI Database Configuration
 
 Provides database engine, session management, and connection pooling.
+Engines are lazily created to avoid import-time failures when PostgreSQL
+is not available (e.g. during testing or local development without DB).
 """
 
 import os
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator, Generator, Optional
 from contextlib import contextmanager, asynccontextmanager
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy import create_engine, Engine
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+    AsyncEngine,
+    async_sessionmaker,
+)
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 
 # Environment variables with defaults
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://dsi_user:dsi_password@localhost:5432/dsi_db"
+    "postgresql+asyncpg://dsi_user:dsi_password@localhost:5432/dsi_db",
 )
 DATABASE_URL_SYNC = os.getenv(
     "DATABASE_URL_SYNC",
-    "postgresql://dsi_user:dsi_password@localhost:5432/dsi_db"
+    "postgresql://dsi_user:dsi_password@localhost:5432/dsi_db",
 )
 
 # Pool settings
@@ -27,42 +34,69 @@ POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
 MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "10"))
 POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
 
-# Create async engine
-async_engine = create_async_engine(
-    DATABASE_URL,
-    pool_size=POOL_SIZE,
-    max_overflow=MAX_OVERFLOW,
-    pool_timeout=POOL_TIMEOUT,
-    pool_pre_ping=True,
-    echo=os.getenv("DSI_DEBUG", "false").lower() == "true",
-)
-
-# Create sync engine (for migrations)
-engine = create_engine(
-    DATABASE_URL_SYNC,
-    pool_size=POOL_SIZE,
-    max_overflow=MAX_OVERFLOW,
-    pool_timeout=POOL_TIMEOUT,
-    pool_pre_ping=True,
-    echo=os.getenv("DSI_DEBUG", "false").lower() == "true",
-)
-
-# Session factories
-AsyncSessionLocal = async_sessionmaker(
-    bind=async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autoflush=False,
-)
-
-SessionLocal = sessionmaker(
-    bind=engine,
-    autocommit=False,
-    autoflush=False,
-)
-
 # Base class for models
 Base = declarative_base()
+
+# Lazy singletons - engines created on first use, not at import time
+_async_engine: Optional[AsyncEngine] = None
+_sync_engine: Optional[Engine] = None
+_async_session_factory: Optional[async_sessionmaker] = None
+_sync_session_factory: Optional[sessionmaker] = None
+
+
+def get_async_engine() -> AsyncEngine:
+    """Get or create the async engine."""
+    global _async_engine
+    if _async_engine is None:
+        _async_engine = create_async_engine(
+            DATABASE_URL,
+            pool_size=POOL_SIZE,
+            max_overflow=MAX_OVERFLOW,
+            pool_timeout=POOL_TIMEOUT,
+            pool_pre_ping=True,
+            echo=os.getenv("DSI_DEBUG", "false").lower() == "true",
+        )
+    return _async_engine
+
+
+def get_sync_engine() -> Engine:
+    """Get or create the sync engine."""
+    global _sync_engine
+    if _sync_engine is None:
+        _sync_engine = create_engine(
+            DATABASE_URL_SYNC,
+            pool_size=POOL_SIZE,
+            max_overflow=MAX_OVERFLOW,
+            pool_timeout=POOL_TIMEOUT,
+            pool_pre_ping=True,
+            echo=os.getenv("DSI_DEBUG", "false").lower() == "true",
+        )
+    return _sync_engine
+
+
+def _get_async_session_factory() -> async_sessionmaker:
+    """Get or create the async session factory."""
+    global _async_session_factory
+    if _async_session_factory is None:
+        _async_session_factory = async_sessionmaker(
+            bind=get_async_engine(),
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autoflush=False,
+        )
+    return _async_session_factory
+
+
+def _get_sync_session_factory() -> sessionmaker:
+    """Get or create the sync session factory."""
+    global _sync_session_factory
+    if _sync_session_factory is None:
+        _sync_session_factory = sessionmaker(
+            bind=get_sync_engine(),
+            autocommit=False,
+            autoflush=False,
+        )
+    return _sync_session_factory
 
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
@@ -74,7 +108,8 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
         async def get_items(db: AsyncSession = Depends(get_async_db)):
             ...
     """
-    async with AsyncSessionLocal() as session:
+    factory = _get_async_session_factory()
+    async with factory() as session:
         try:
             yield session
             await session.commit()
@@ -93,7 +128,8 @@ def get_db() -> Generator[Session, None, None]:
         with get_db() as db:
             ...
     """
-    db = SessionLocal()
+    factory = _get_sync_session_factory()
+    db = factory()
     try:
         yield db
         db.commit()
@@ -107,7 +143,8 @@ def get_db() -> Generator[Session, None, None]:
 @asynccontextmanager
 async def async_session_scope() -> AsyncGenerator[AsyncSession, None]:
     """Async context manager for manual session management."""
-    async with AsyncSessionLocal() as session:
+    factory = _get_async_session_factory()
+    async with factory() as session:
         try:
             yield session
             await session.commit()
@@ -119,7 +156,8 @@ async def async_session_scope() -> AsyncGenerator[AsyncSession, None]:
 @contextmanager
 def session_scope() -> Generator[Session, None, None]:
     """Sync context manager for manual session management."""
-    session = SessionLocal()
+    factory = _get_sync_session_factory()
+    session = factory()
     try:
         yield session
         session.commit()
@@ -132,10 +170,19 @@ def session_scope() -> Generator[Session, None, None]:
 
 async def init_db() -> None:
     """Initialize database tables."""
-    async with async_engine.begin() as conn:
+    eng = get_async_engine()
+    async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def close_db() -> None:
     """Close database connections."""
-    await async_engine.dispose()
+    global _async_engine, _sync_engine, _async_session_factory, _sync_session_factory
+    if _async_engine is not None:
+        await _async_engine.dispose()
+        _async_engine = None
+        _async_session_factory = None
+    if _sync_engine is not None:
+        _sync_engine.dispose()
+        _sync_engine = None
+        _sync_session_factory = None

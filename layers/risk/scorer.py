@@ -521,8 +521,16 @@ class ModelScorer:
                         # Collect impacts
                         if condition.action == ConditionAction.TIER_OVERRIDE:
                             tier_overrides.append(int(condition.action_value))
-                        elif condition.action == ConditionAction.REFERRAL:
-                            referrals.append(str(condition.action_value))
+                        elif condition.action in (ConditionAction.REFERRAL, ConditionAction.REFER):
+                            if isinstance(condition.action_value, int):
+                                tier_overrides.append(condition.action_value)
+                            referrals.append(condition.note or str(condition.action_value))
+                        elif condition.action == ConditionAction.FLAG:
+                            notes.append(condition.note or str(condition.action_value))
+                        elif condition.action == ConditionAction.MODIFIER:
+                            # MODIFIER conditions are collected as notes;
+                            # actual multiplicative application happens in pricer
+                            notes.append(f"MODIFIER:{condition.applied or condition.action_value}")
                         elif condition.action == ConditionAction.NOTE:
                             notes.append(str(condition.action_value))
 
@@ -545,15 +553,21 @@ class ModelScorer:
                                 response=None,
                                 action=condition.action,
                                 action_value=condition.action_value,
-                                note=f"{feature.name}: {condition.action_value}" if condition.action == ConditionAction.NOTE else str(condition.action_value),
+                                note=condition.note or (f"{feature.name}: {condition.action_value}" if condition.action == ConditionAction.NOTE else str(condition.action_value)),
                             )
                             conditions.append(tc)
 
                             # Collect impacts
                             if condition.action == ConditionAction.TIER_OVERRIDE:
                                 tier_overrides.append(int(condition.action_value))
-                            elif condition.action == ConditionAction.REFERRAL:
-                                referrals.append(str(condition.action_value))
+                            elif condition.action in (ConditionAction.REFERRAL, ConditionAction.REFER):
+                                if isinstance(condition.action_value, int):
+                                    tier_overrides.append(condition.action_value)
+                                referrals.append(condition.note or str(condition.action_value))
+                            elif condition.action == ConditionAction.FLAG:
+                                notes.append(condition.note or str(condition.action_value))
+                            elif condition.action == ConditionAction.MODIFIER:
+                                notes.append(f"MODIFIER:{condition.applied or condition.action_value}")
                             elif condition.action == ConditionAction.NOTE:
                                 notes.append(str(condition.action_value))
 
@@ -574,6 +588,8 @@ class ModelScorer:
         """
         Check if a score triggers a condition.
 
+        Supports v1.0 (max/min/equals) and v2.0 (threshold + comparison) formats.
+
         Args:
             score: The score to check
             condition: SignalCondition to evaluate
@@ -581,27 +597,39 @@ class ModelScorer:
         Returns:
             True if condition is triggered
         """
+        threshold = float(condition.condition_value)
+
+        # v2.0: Use comparison operator
+        if condition.condition_type == "threshold" and hasattr(condition, 'comparison'):
+            comp = condition.comparison
+            if comp == "<=":
+                return score <= threshold
+            elif comp == ">=":
+                return score >= threshold
+            elif comp == "<":
+                return score < threshold
+            elif comp == ">":
+                return score > threshold
+            elif comp == "==":
+                return score == threshold
+            # Default for threshold type without comparison
+            return score <= threshold
+
+        # v1.0: Legacy condition types
         if condition.condition_type == "max":
-            threshold = float(condition.condition_value)
             if condition.inclusive:
                 return score <= threshold
             else:
                 return score < threshold
 
         elif condition.condition_type == "min":
-            threshold = float(condition.condition_value)
             if condition.inclusive:
                 return score >= threshold
             else:
                 return score > threshold
 
         elif condition.condition_type == "equals":
-            return score == float(condition.condition_value)
-
-        elif condition.condition_type == "threshold":
-            # Legacy support - treat as max
-            threshold = float(condition.condition_value)
-            return score < threshold
+            return score == threshold
 
         return False
 
