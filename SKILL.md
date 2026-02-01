@@ -420,6 +420,8 @@ digital-signal-intelligence/
 ├── setup.py                         # Package setup
 ├── Dockerfile                       # Container definition
 ├── docker-compose.yml               # Multi-container orchestration
+├── alembic.init                     #
+├── LICENSE                          # License for use of DSI
 │
 ├── docs/                            # Documentation
 │   ├── overview/
@@ -575,9 +577,7 @@ Legend: ✅ Complete | 🔲 Not Started
 
 -----
 
-## Architecture (Phase 18.1) - COMPLETE
-
-**STATUS: ✅ COMPLETE** - Architecture refined with logical groupings.
+## Architecture 
 
 The codebase is now organised into four main areas:
 
@@ -606,11 +606,6 @@ from layers.risk import workflow, scorer, pricer
 # Coverages
 from coverages import aerospace, cyber
 ```
-
-**Next Steps:**
-- Phases 16 and 17 can now be implemented in `layers/exposure/` and `layers/loss/`
-- All three layers share the common `signal_architecture/signals/` infrastructure
-
 -----
 
 ## Coverage Crosswalk
