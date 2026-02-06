@@ -43,12 +43,12 @@ cyber:
       - id: "mfa_enabled"
         question: "Is multi-factor authentication enabled for all remote access?"
         query_condition:
-          - {return: false, action: "FLAG", override: null, applied: null, note: "MFA not enabled - increased ransomware risk"}
+          - {return: false, action: "REFER", override: 4, applied: null, note: "MFA not enabled - increased ransomware risk"}
 
       - id: "security_training"
         question: "Do all employees complete annual cyber security training?"
         query_condition:
-          - {return: false, action: "FLAG", override: null, applied: null, note: "No security training - increased phishing risk"}
+          - {return: false, action: "REFER", override: 4, applied: null, note: "No security training - increased phishing risk"}
 
       - id: "phi_handler"
         question: "Do you process Protected Health Information (PHI)?"
