@@ -69,357 +69,116 @@ professional_indemnity:
         query_condition:
           - {return: true, action: "FLAG", override: null, applied: null, note: "Major client loss (>25% revenue)"}
 
-    # -------------------------------------------------------------------------
-    # CATEGORICAL GROUPS
-    # categorical groups can either
-    # a) impact base premium after generation (impact: modifier)
-    # b) be the basis of premium (impact: premium)
-    # note: only one group be the basis of premium
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # SIGNAL REGISTRY
+    # All signals defined once with group_id reference
+    # proxy_tier at signal level; normalisation in inference functions
+    # =========================================================================
+    signal_registry:
 
-    categorical_groups:
-      - id: "profession_type"
-        name: "Profession Type"
-        description: "Primary professional classification"
-        impact: "premium"
+      # -----------------------------------------------------------------------
+      # CATEGORICAL SIGNALS
+      # Return discrete categories that apply as pricing modifiers
+      # -----------------------------------------------------------------------
+      - id: profession_type
         inference_utility_function: primaryprofessional_classification_basefunction
-      - id: "sub_profession_type"
-        name: "Sub Profession Type"
-        description: "Underlying specialism of primary professional classification"
-        impact: "modifier"
-        inference_utility_function:
-      - id: "firm_size"
-        name: "Firm Size"
-        description: "Firm size by professional headcount"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: profession_type
+          features:
+            - {cat: "LAW_FIRM", label: "Law Firm", value: 8500}
+            - {cat: "ACCOUNTING_FIRM", label: "Accounting Firm", value: 9000}
+            - {cat: "ARCHITECTURE", label: "Architecture", value: 7500}
+            - {cat: "ENGINEERING", label: "Engineering", value: 8000}
+            - {cat: "MANAGEMENT_CONSULTING", label: "Management Consulting", value: 6000}
+            - {cat: "IT_CONSULTING", label: "IT Consulting", value: 7000}
+            - {cat: "HR_CONSULTING", label: "HR Consulting", value: 5500}
+            - {cat: "REAL_ESTATE", label: "Real Estate", value: 5500}
+            - {cat: "INSURANCE_BROKER", label: "Insurance Broker", value: 6500}
+            - {cat: "FINANCIAL_PLANNING", label: "Financial Planning", value: 7500}
+            - {cat: "HEALTHCARE_ADMIN", label: "Healthcare Administration", value: 6000}
+            - {cat: "APPRAISAL_VALUATION", label: "Appraisal/Valuation", value: 6500}
+            - {cat: "ENVIRONMENTAL_CONSULTING", label: "Environmental Consulting", value: 7000}
+            - {cat: "OTHER", label: "Other Professional", value: 6000}
+
+      - id: sub_profession_type
+        inference_utility_function: notdefined
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: sub_profession_type
+          features:
+            - {cat: "SECURITIES", label: "Securities Law", applied: 1.40}
+            - {cat: "CORPORATE_MA", label: "Corporate M&A", applied: 1.25}
+            - {cat: "TRUSTS_ESTATES", label: "Trusts & Estates", applied: 1.20}
+            - {cat: "ENVIRONMENTAL", label: "Environmental Law",  applied: 1.20}
+            - {cat: "TAX", label: "Tax Law", applied: 1.15}
+            - {cat: "BANKRUPTCY", label: "Bankruptcy", applied: 1.15}
+            - {cat: "HEALTHCARE", label: "Healthcare Law", applied: 1.15}
+            - {cat: "INTELLECTUAL_PROPERTY", label: "Intellectual Property", applied: 1.15}
+            - {cat: "LITIGATION_PLAINTIFF", label: "Plaintiff Litigation", applied: 1.15}
+            - {cat: "PERSONAL_INJURY_PLAINTIFF", label: "PI Plaintiff", applied: 1.30}
+            - {cat: "REAL_ESTATE", label: "Real Estate Law", applied: 1.10}
+            - {cat: "EMPLOYMENT", label: "Employment Law", applied: 1.10}
+            - {cat: "INSURANCE_COVERAGE", label: "Insurance Coverage", applied: 1.05}
+            - {cat: "GENERAL_PRACTICE", label: "General Practice", applied: 1.05}
+            - {cat: "LITIGATION_GENERAL", label: "General Litigation", applied: 1.00}
+            - {cat: "PERSONAL_INJURY_DEFENSE", label: "PI Defense", applied: 0.95}
+            - {cat: "FAMILY", label: "Family Law", applied: 0.90}
+            - {cat: "CRIMINAL", label: "Criminal Defense", applied: 0.85}
+            - {cat: "AUDIT_PUBLIC", label: "Public Company Audit", applied: 1.50}
+            - {cat: "ADVISORY_VALUATION", label: "Valuation Advisory", applied: 1.35}
+            - {cat: "ADVISORY_MA", label: "M&A Advisory", applied: 1.30}
+            - {cat: "FORENSIC", label: "Forensic Accounting", applied: 1.2}
+            - {cat: "AUDIT_PRIVATE", label: "Private Company Audit", applied: 1.25}
+            - {cat: "TAX_ESTATE", label: "Estate Tax", applied: 1.20}
+            - {cat: "TAX_CORPORATE", label: "Corporate Tax", applied: 1.10}
+            - {cat: "GENERAL_PRACTICE", label: "General Practice",  applied: 1.00}
+            - {cat: "TAX_INDIVIDUAL", label: "Individual Tax", applied: 0.90}
+            - {cat: "BOOKKEEPING", label: "Bookkeeping", applied: 0.80}
+            - {cat: "STRUCTURAL", label: "Structural Design", applied: 1.35}
+            - {cat: "HEALTHCARE_FACILITIES", label: "Healthcare Facilities", applied: 1.25}
+            - {cat: "HIGH_RISE", label: "High-Rise Construction", applied: 1.20}
+            - {cat: "COMMERCIAL", label: "Commercial", applied: 1.10}
+            - {cat: "INSTITUTIONAL", label: "Institutional", applied: 1.05}
+            - {cat: "RESIDENTIAL_MULTI", label: "Multi-Family Residential", applied: 1.00}
+            - {cat: "RESIDENTIAL_SINGLE", label: "Single-Family Residential", applied: 0.90}
+            - {cat: "INTERIOR_DESIGN", label: "Interior Design", applied: 0.85}
+            - {cat: "STRUCTURAL", label: "Structural Engineering", applied: 1.40}
+            - {cat: "GEOTECHNICAL", label: "Geotechnical Engineering", applied: 1.35}
+            - {cat: "ENVIRONMENTAL", label: "Environmental Engineering", applied: 1.25}
+            - {cat: "CIVIL", label: "Civil Engineering", applied: 1.15}
+            - {cat: "MECHANICAL", label: "Mechanical Engineering", applied: 1.10}
+            - {cat: "ELECTRICAL", label: "Electrical Engineering", applied: 1.05}
+            - {cat: "SURVEYING", label: "Surveying", applied: 1.00}
+            - {cat: "CONSULTING", label: "Consulting Only", applied: 0.90}
+
+      - id: firm_size
         inference_utility_function: firm_size_basefunction
-      - id: "revenue_size"
-        name: "Revenue Size"
-        description: "Annual revenue classification"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: firm_size
+          features:
+            - {cat: "SOLO", label: "Solo Practitioner", applied: 1.20}
+            - {cat: "MICRO", label: "Micro Firm (2 - 5)", applied: 1.10}
+            - {cat: "SMALL", label: "Small Firm (6 - 20)", applied: 1.00}
+            - {cat: "MEDIUM", label: "Medium Firm (21 - 100)", applied: 0.95}
+            - {cat: "LARGE", label: "Large Firm (101 - 500)", applied: 0.90}
+            - {cat: "MAJOR", label: "Major Firm (500+)", applied: 0.85}
+
+      - id: revenue_size
         inference_utility_function: annualrevenue_classification_basefunction
-
-    # -------------------------------------------------------------------------
-    # CATEGORICAL FEATURES
-    # -------------------------------------------------------------------------
-
-    categorical_features:
-      profession_type:
-        - cat: "LAW_FIRM"
-          label: "Law Firm"
-          premium: 8500
-          description: "Law firms of all sizes and practice areas"
-
-        - cat: "ACCOUNTING_FIRM"
-          label: "Accounting Firm"
-          premium: 9000
-          description: "CPA firms - audit, tax, advisory"
-
-        - cat: "ARCHITECTURE"
-          label: "Architecture"
-          premium: 7500
-          description: "Licensed architects"
-
-        - cat: "ENGINEERING"
-          label: "Engineering"
-          premium: 8000
-          description: "Licensed professional engineers"
-
-        - cat: "MANAGEMENT_CONSULTING"
-          label: "Management Consulting"
-          premium: 6000
-          description: "Strategy, operations, organizational consulting"
-
-        - cat: "IT_CONSULTING"
-          label: "IT Consulting"
-          premium: 7000
-          description: "Technology consulting and implementation"
-
-        - cat: "HR_CONSULTING"
-          label: "HR Consulting"
-          premium: 5500
-          description: "Human resources and benefits consulting"
-
-        - cat: "REAL_ESTATE"
-          label: "Real Estate"
-          premium: 5500
-          description: "Real estate agents, brokers, property managers"
-
-        - cat: "INSURANCE_BROKER"
-          label: "Insurance Broker"
-          premium: 6500
-          description: "Insurance agents and brokers"
-
-        - cat: "FINANCIAL_PLANNING"
-          label: "Financial Planning"
-          premium: 7500
-          description: "Financial planners and advisers (non-SEC)"
-
-        - cat: "HEALTHCARE_ADMIN"
-          label: "Healthcare Administration"
-          premium: 6000
-          description: "Healthcare management and administration"
-
-        - cat: "APPRAISAL_VALUATION"
-          label: "Appraisal/Valuation"
-          premium: 6500
-          description: "Real estate appraisers, business valuators"
-
-        - cat: "ENVIRONMENTAL_CONSULTING"
-          label: "Environmental Consulting"
-          premium: 7000
-          description: "Environmental assessment and remediation"
-
-        - cat: "OTHER"
-          label: "Other Professional"
-          premium: 6000
-          description: "Other professional services"
-
-      sub_profession_type:
-        - cat: "SECURITIES"
-          label: "Securities Law"
-          modifier: 1.40
-          description: ""
-        - cat: "CORPORATE_MA"
-          label: "Corporate M&A"
-          modifier: 1.25
-          description: ""
-        - cat: "TRUSTS_ESTATES"
-          label: "Trusts & Estates"
-          modifier: 1.20
-          description: ""
-        - cat: "ENVIRONMENTAL"
-          label: "Environmental Law"
-          modifier: 1.20
-          description: ""
-        - cat: "TAX"
-          label: "Tax Law"
-          modifier: 1.15
-          description: ""
-        - cat: "BANKRUPTCY"
-          label: "Bankruptcy"
-          modifier: 1.15
-          description: ""
-        - cat: "HEALTHCARE"
-          label: "Healthcare Law"
-          modifier: 1.15
-          description: ""
-        - cat: "INTELLECTUAL_PROPERTY"
-          label: "Intellectual Property"
-          modifier: 1.15
-          description: ""
-        - cat: "LITIGATION_PLAINTIFF"
-          label: "Plaintiff Litigation"
-          modifier: 1.15
-          description: ""
-        - cat: "PERSONAL_INJURY_PLAINTIFF"
-          label: "PI Plaintiff"
-          modifier: 1.30
-          description: ""
-        - cat: "REAL_ESTATE"
-          label: "Real Estate Law"
-          modifier: 1.10
-          description: ""
-        - cat: "EMPLOYMENT"
-          label: "Employment Law"
-          modifier: 1.10
-          description: ""
-        - cat: "INSURANCE_COVERAGE"
-          label: "Insurance Coverage"
-          modifier: 1.05
-          description: ""
-        - cat: "GENERAL_PRACTICE"
-          label: "General Practice"
-          modifier: 1.05
-          description: ""
-        - cat: "LITIGATION_GENERAL"
-          label: "General Litigation"
-          modifier: 1.00
-          description: ""
-        - cat: "PERSONAL_INJURY_DEFENSE"
-          label: "PI Defense"
-          modifier: 0.95
-          description: ""
-        - cat: "FAMILY"
-          label: "Family Law"
-          modifier: 0.90
-          description: ""
-        - cat: "CRIMINAL"
-          label: "Criminal Defense"
-          modifier: 0.85
-          description: ""
-        - cat: "AUDIT_PUBLIC"
-          label: "Public Company Audit"
-          modifier: 1.50
-          description: ""
-        - cat: "ADVISORY_VALUATION"
-          label: "Valuation Advisory"
-          modifier: 1.35
-          description: ""
-        - cat: "ADVISORY_MA"
-          label: "M&A Advisory"
-          modifier: 1.30
-          description: ""
-        - cat: "FORENSIC"
-          label: "Forensic Accounting"
-          modifier: 1.2
-          description: ""
-        - cat: "AUDIT_PRIVATE"
-          label: "Private Company Audit"
-          modifier: 1.25
-          description: ""
-        - cat: "TAX_ESTATE"
-          label: "Estate Tax"
-          modifier: 1.20
-          description: ""
-        - cat: "TAX_CORPORATE"
-          label: "Corporate Tax"
-          modifier: 1.10
-          description: ""
-        - cat: "GENERAL_PRACTICE"
-          label: "General Practice"
-          modifier: 1.00
-          description: ""
-        - cat: "TAX_INDIVIDUAL"
-          label: "Individual Tax"
-          modifier: 0.90
-          description: ""
-        - cat: "BOOKKEEPING"
-          label: "Bookkeeping"
-          modifier: 0.80
-          description: ""
-        - cat: "STRUCTURAL"
-          label: "Structural Design"
-          modifier: 1.35
-          description: ""
-        - cat: "HEALTHCARE_FACILITIES"
-          label: "Healthcare Facilities"
-          modifier: 1.25
-          description: ""
-        - cat: "HIGH_RISE"
-          label: "High-Rise Construction"
-          modifier: 1.20
-          description: ""
-        - cat: "COMMERCIAL"
-          label: "Commercial"
-          modifier: 1.10
-          description: ""
-        - cat: "INSTITUTIONAL"
-          label: "Institutional"
-          modifier: 1.05
-          description: ""
-        - cat: "RESIDENTIAL_MULTI"
-          label: "Multi-Family Residential"
-          modifier: 1.00
-          description: ""
-        - cat: "RESIDENTIAL_SINGLE"
-          label: "Single-Family Residential"
-          modifier: 0.90
-          description: ""
-        - cat: "INTERIOR_DESIGN"
-          label: "Interior Design"
-          modifier: 0.85
-          description: ""
-        - cat: "STRUCTURAL"
-          label: "Structural Engineering"
-          modifier: 1.40
-          description: ""
-        - cat: "GEOTECHNICAL"
-          label: "Geotechnical Engineering"
-          modifier: 1.35
-          description: ""
-        - cat: "ENVIRONMENTAL"
-          label: "Environmental Engineering"
-          modifier: 1.25
-          description: ""
-        - cat: "CIVIL"
-          label: "Civil Engineering"
-          modifier: 1.15
-          description: ""
-        - cat: "MECHANICAL"
-          label: "Mechanical Engineering"
-          modifier: 1.10
-          description: ""
-        - cat: "ELECTRICAL"
-          label: "Electrical Engineering"
-          modifier: 1.05
-          description: ""
-        - cat: "SURVEYING"
-          label: "Surveying"
-          modifier: 1.00
-          description: ""
-        - cat: "CONSULTING"
-          label: "Consulting Only"
-          modifier: 0.90
-          description: ""
-
-      firm_size:
-        - cat: "SOLO"
-          label: "Solo Practitioner"
-          modifier: 1.20
-          description: "Single professional practice"
-
-        - cat: "MICRO"
-          label: "Micro Firm"
-          modifier: 1.10
-          description: "2-5 professionals"
-
-        - cat: "SMALL"
-          label: "Small Firm"
-          modifier: 1.00
-          description: "6-20 professionals"
-
-        - cat: "MEDIUM"
-          label: "Medium Firm"
-          modifier: 0.95
-          description: "21-100 professionals"
-
-        - cat: "LARGE"
-          label: "Large Firm"
-          modifier: 0.90
-          description: "101-500 professionals"
-
-        - cat: "MAJOR"
-          label: "Major Firm"
-          modifier: 0.85
-          description: "500+ professionals"
-
-      revenue_size:
-        - cat: "UNDER_500K"
-          label: "Under $500K"
-          modifier: 0.85
-          description: ""
-
-        - cat: "R_500K_1M"
-          label: "$500K - $1M"
-          modifier: 0.90
-          description: ""
-
-        - cat: "R_1M_5M"
-          label: "$1M - $5M"
-          modifier: 1.00
-          description: ""
-
-        - cat: "R_5M_25M"
-          label: "$5M - $25M"
-          modifier: 1.10
-          description: ""
-
-        - cat: "R_25M_100M"
-          label: "$25M - $100M"
-          modifier: 1.25
-          description: ""
-
-        - cat: "R_100M_500M"
-          label: "$100M - $500M"
-          modifier: 1.40
-          description: ""
-
-        - cat: "OVER_500M"
-          label: "Over $500M"
-          modifier: 1.60
-          description: ""
-
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: revenue_size
+          features:
+            - {cat: "UNDER_500K", label: "Under $500K", applied: 0.85}
+            - {cat: "R_500K_1M", label: "$500K - $1M", applied: 0.90}
+            - {cat: "R_1M_5M", label: "$1M - $5M", applied: 1.00}
+            - {cat: "R_5M_25M", label: "$5M - $25M", applied: 1.10}
+            - {cat: "R_25M_100M", label: "$25M - $100M", applied: 1.25}
+            - {cat: "R_100M_500M", label: "$100M - $500M", applied: 1.40}
+            - {cat: "OVER_500M", label: "Over $500M", applied: 1.60}
+            
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
     # Each group is the product of its underlying features
