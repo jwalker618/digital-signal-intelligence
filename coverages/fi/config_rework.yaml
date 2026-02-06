@@ -1,36 +1,21 @@
 # =============================================================================
-# DSI Model Configuration - v2.0 (master_config_layout.yaml aligned)
+# DSI Model Configuration
+# =============================================================================
 #
-# This file holds all the relevant configuration types for a single coverage.
-# For example,
-# coverage:         the actual coverage cohort, eg aerospace
-#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
+# 1. Signals defined once in signal_registry with group_id reference
+# 2. source: score (default) uses 0-100 inference return
+# 3. source: metadata.field uses inference metadata with bands/categories
+# 4. Categorical groups apply modifiers (applied:), not scores
+# 5. score_conditions (plural, banded) apply actions based on score thresholds
+#    Actions: FLAG | MODIFIER | REFER
+# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
+# 7. Normalisation handled by inference functions, not config
 #
-# There can be multiple configurations saved under a coverage.
+# AUGMENTED BY:
+# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
-# A configuration is the single source of truth for:
-#   - 1) direct (optional) queries
-#   - 2) categorical features
-#   - 3) signal groups and underlying features (with score_conditions)
-#   - the source and impact of 1- 3
-#   - tier definitions and loss_tier_bands
-#   - other pricing parameters
-#   - test profiles for validation
-#
-# When a technical model is generated:
-# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
-# - every item with an id is captured in a separate file with the associated return and persisted after a complete interaction  - this is a model version
-#
-# score_conditions (plural) define threshold-based actions at signal group and
-# feature level. Note: DECLINE is a tier-level action only. Signal-level
-# score_conditions use REFER or MODIFIER actions exclusively.
-#
-# All DSI principles must be adhered to, specifically:
-# 1. All signals must be externally observable (no application questions required)
-# 2. Direct queries are OPTIONAL - model must work without them
-# 3. Categorical features are inferred from observable data
-# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
-# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 financial_institutions:
@@ -38,8 +23,8 @@ financial_institutions:
     metadata:
       name: "DSI Financial Institutions Technical Pricing Model"
       description: "FI bond, professional liability, D&O, cyber coverage based on observable regulatory and financial signals"
-      version: "2.0.0"
-      coverage_types:
+      version: "2.1.0"
+      product_types:
         - "financial_institution_bond"
         - "professional_liability"
         - "directors_officers"
@@ -51,54 +36,41 @@ financial_institutions:
       min_premium: 25000
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed (max 10)
+    # Actions: FLAG | MODIFIER | REFER
+    # =========================================================================
     direct_queries:
       - id: "regulatory_action"
         question: "Any pending or recent (3 years) regulatory enforcement actions?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            note: "Regulatory enforcement disclosed"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Regulatory enforcement disclosed"}
+      
       - id: "examination_issues"
         question: "Any MRAs/MRIAs outstanding from most recent examination?"
-        bands:
-          - return: true
-            override: 3
-            action: "REFER"
-            note: "Outstanding MRAs/MRIAs"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Outstanding MRAs/MRIAs"}
+       
       - id: "litigation_pending"
         question: "Any material litigation pending (class action, regulatory)?"
-        bands:
-          - return: true
-            override: null
-            action: "REFER"
-            note: "Material litigation pending"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Material litigation pending"}
+      
       - id: "cyber_incident"
         question: "Any reportable cyber incidents in past 24 months?"
-        bands:
-          - return: true
-            override: null
-            action: "REFER"
-            note: "Recent cyber incident"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Recent cyber incident"}
+      
       - id: "significant_growth"
         question: "Asset growth >20% in past 12 months?"
-        bands:
-          - return: true 
-            override: null
-            action: "FLAG"
-            note: "Rapid growth >20%"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Rapid growth >20%"}
+      
       - id: "new_product_line"
         question: "Any significant new product lines launched in past 12 months?"
-        bands:
-          - return: true
-            override: null
-            action: "FLAG"
-            note: "New product line risk"
-
-        
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "New product line risk"}    
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
@@ -819,99 +791,99 @@ financial_institutions:
           weight: 0.30
           inference_utility_function: peer_benchmark_basefunction
 
-
-    # -------------------------------------------------------------------------
-    # TIER THRESHOLDS
-    # -------------------------------------------------------------------------
-    tier_thresholds:
-      tiers:
+    # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
+    risk_tier_bands:
+      bands:
         - id: 1
           label: "PREFERRED"
-          min_score: 800
-          max_score: 1000
-          description: "Excellent institution - auto-approve at preferred pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 1500
-        - id: 2
-          label: "STANDARD"
-          min_score: 650
-          max_score: 799
-          description: "Good institution - auto-approve at standard pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 2200
-        - id: 3
-          label: "ELEVATED"
-          min_score: 500
-          max_score: 649
-          description: "Moderate risk - auto-approve with conditions"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 3200
-        - id: 4
-          label: "HIGH_RISK"
-          min_score: 350
-          max_score: 499
-          description: "High risk - manual review required"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 5000
-        - id: 5
-          label: "CRITICAL"
-          min_score: 0
-          max_score: 349
-          description: "Critical risk - decline or senior review"
-          auto_approve: false
-          auto_decline: true
-          application:
-            method: "PREMIUM_BASE"
-            applied: 8000
+          description: "Excellent risk - automatic approval, preferred pricing"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 1500}
 
-    # -------------------------------------------------------------------------
+        - id: 2
+          label: "STANDARD_PLUS"
+          description: "Good risk - automatic approval, standard pricing"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 2200}
+
+        - id: 3
+          label: "STANDARD"
+          description: "Average risk - may require referral"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 3200}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          description: "Elevated risk - requires senior review"
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 5000}
+
+        - id: 5
+          label: "DECLINE"
+          description: "Unacceptable risk - decline"
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "PREMIUM_BASE", value: 8000}
+
+    # =========================================================================
     # LOSS TIER BANDS
-    # Graduated frequency/severity modifiers per tier
-    # -------------------------------------------------------------------------
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
         - id: 1
           label: "VERY_LOW"
+          description: "Very low risk of loss"
           interpretation:
             bands: {min: 80, max: 100}
             application:
               frequency_modifier: 0.70
               severity_modifier: 0.80
+
         - id: 2
           label: "LOW"
+          description: "Low risk of loss"
           interpretation:
             bands: {min: 60, max: 79}
             application:
               frequency_modifier: 0.85
               severity_modifier: 0.90
+
         - id: 3
           label: "MODERATE"
+          description: "Moderate risk of loss"
           interpretation:
             bands: {min: 40, max: 59}
             application:
               frequency_modifier: 1.00
               severity_modifier: 1.00
+
         - id: 4
-          label: "HIGH"
+          label: "ELEVATED"
+          description: "Elevated risk of loss"
           interpretation:
             bands: {min: 20, max: 39}
             application:
               frequency_modifier: 1.15
               severity_modifier: 1.15
+
         - id: 5
-          label: "VERY_HIGH"
+          label: "HIGH"
+          description: "High risk of loss"
           interpretation:
             bands: {min: 0, max: 19}
             application:
@@ -921,70 +893,120 @@ financial_institutions:
         floor: 0.55
         cap: 1.60
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # EXPOSURE TIER BANDS
-    # -------------------------------------------------------------------------
-    exposure_tier_bands:
-      bands:
-        - id: 1
-          label: "SMALL"
-          interpretation:
-            bands: {min: 0, max: 1000000000}
-            application:
-              method: "MODIFIER"
-              applied: 0.85
-        - id: 2
-          label: "MEDIUM"
-          interpretation:
-            bands: {min: 1000000001, max: 10000000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.00
-        - id: 3
-          label: "LARGE"
-          interpretation:
-            bands: {min: 10000000001, max: 100000000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.15
-        - id: 4
-          label: "VERY_LARGE"
-          interpretation:
-            bands: {min: 100000000001, max: null}
-            application:
-              method: "MODIFIER"
-              applied: 1.35
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
+    exposure:
+      size:
+        weight: 0.60
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "Micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
 
-    # -------------------------------------------------------------------------
+          - id: 2
+            label: "SMALL"
+            description: "Small exposure value ($1M - $10M)"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium exposure value ($10M - $50M)"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
+
+          - id: 4
+            label: "LARGE"
+            description: "Large exposure value ($50M - $250M)"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
+
+          - id: 5
+            label: "VERY_LARGE"
+            description: "Very large exposure value ($250M+)"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
+
+      complexity:
+        weight: 0.40
+        bands:
+          - id: 1
+            label: "SIMPLE"
+            description: "Simple operational complexity"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.85}
+
+          - id: 2
+            label: "MODERATE"
+            description: "Moderate operational complexity"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.95}
+
+          - id: 3
+            label: "COMPLEX"
+            description: "Complex operations"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.10}
+
+          - id: 4
+            label: "HIGHLY_COMPLEX"
+            description: "Highly complex operations"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.30}
+
+          - id: 5
+            label: "EXTREMELY_COMPLEX"
+            description: "Extremely complex operations"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 1.60}
+
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations
+    # =========================================================================
     limit_bandings:
       - id: 1
         limit: 5000000
         deductible: 100000
-        method: "MODIFIER"
+
       - id: 2
         limit: 10000000
         deductible: 250000
-        method: "MODIFIER"
+
       - id: 3
         limit: 25000000
         deductible: 500000
-        method: "MODIFIER"
+
       - id: 4
         limit: 50000000
         deductible: 1000000
-        method: "MODIFIER"
+
       - id: 5
         limit: 100000000
         deductible: 2000000
-        method: "MODIFIER"
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # -------------------------------------------------------------------------
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
-      limit_ilf:
+
+      ilf_curve:
         base_limit: 1000000
         factors:
           - {limit: 1000000, factor: 1.00}
@@ -994,390 +1016,11 @@ financial_institutions:
           - {limit: 25000000, factor: 8.00}
           - {limit: 50000000, factor: 12.00}
           - {limit: 100000000, factor: 18.00}
-      
+
       deductible_credits:
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
-        - {min_pct: 0.010, max_pct: 0.015, credit: 0.10}
-        - {min_pct: 0.015, max_pct: 0.020, credit: 0.15}
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
         - {min_pct: 0.020, max_pct: null, credit: 0.20}
-      
-      experience_modifiers:
-        clean_5yr: 0.90
-        clean_3yr: 0.95
-        minor_losses: 1.00
-        moderate_losses: 1.15
-        major_losses: 1.35
-        
+
       taxes_fees_rate: 0.05
-
-    # -------------------------------------------------------------------------
-    # TEST PROFILES
-    # -------------------------------------------------------------------------
-    test_profiles:
-      excellent_regional:
-        description: "Well-managed regional bank with strong metrics"
-        expected_tier: [1, 2]
-        expected_score_range: [780, 1000]
-        institution_type: "REGIONAL_BANK"
-        regulatory_framework: "OCC"
-        asset_size_band: "MID"
-        publicly_traded: "PUBLIC"
-        signals:
-          network_authority:
-            correspondent_quality: 88
-            fhlb_membership: 100
-            clearing_relationship: 85
-            auditor_quality: 92
-            legal_counsel: 85
-            industry_association: 80
-            credit_rating: 82
-          regulatory_compliance:
-            examination_rating: 85
-            enforcement_action: 100
-            informal_action: 95
-            cra_rating: 90
-            bsa_aml: 88
-            fair_lending: 90
-            consumer_compliance: 85
-          financial_condition:
-            capital_ratio: 90
-            asset_quality: 85
-            liquidity: 88
-            earnings: 82
-            concentration: 78
-            interest_rate_risk: 80
-            growth_rate: 85
-          governance:
-            board_independence: 88
-            board_expertise: 85
-            executive_stability: 90
-            risk_committee: 85
-            audit_committee: 90
-            related_party: 95
-          operational_risk:
-            cfpb_complaint: 82
-            bbb_complaint: 85
-            litigation: 90
-            breach_history: 95
-            operational_incident: 88
-          cyber_security:
-            tls_score: 92
-            email_auth: 88
-            security_headers: 85
-            network_exposure: 90
-            vulnerability: 85
-            security_rating: 82
-          corporate_footprint:
-            investor_relations: 88
-            disclosure_quality: 85
-            security_page: 80
-            hiring_signals: 82
-            esg_reporting: 78
-            community_presence: 90
-          structured_data:
-            credit_rating_structured: 82
-            esg_rating: 78
-            peer_benchmark: 85
-
-      average_community:
-        description: "Typical community bank"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        institution_type: "COMMUNITY_BANK"
-        regulatory_framework: "FDIC"
-        asset_size_band: "COMMUNITY"
-        publicly_traded: "PRIVATE"
-        signals:
-          network_authority:
-            correspondent_quality: 70
-            fhlb_membership: 85
-            clearing_relationship: 60
-            auditor_quality: 65
-            legal_counsel: 60
-            industry_association: 70
-            credit_rating: 55
-          regulatory_compliance:
-            examination_rating: 72
-            enforcement_action: 90
-            informal_action: 85
-            cra_rating: 80
-            bsa_aml: 75
-            fair_lending: 80
-            consumer_compliance: 75
-          financial_condition:
-            capital_ratio: 78
-            asset_quality: 70
-            liquidity: 72
-            earnings: 68
-            concentration: 60
-            interest_rate_risk: 70
-            growth_rate: 75
-          governance:
-            board_independence: 60
-            board_expertise: 58
-            executive_stability: 75
-            risk_committee: 55
-            audit_committee: 65
-            related_party: 70
-          operational_risk:
-            cfpb_complaint: 72
-            bbb_complaint: 75
-            litigation: 85
-            breach_history: 90
-            operational_incident: 82
-          cyber_security:
-            tls_score: 75
-            email_auth: 68
-            security_headers: 62
-            network_exposure: 70
-            vulnerability: 72
-            security_rating: 65
-          corporate_footprint:
-            investor_relations: 50
-            disclosure_quality: 55
-            security_page: 45
-            hiring_signals: 55
-            esg_reporting: 40
-            community_presence: 80
-          structured_data:
-            credit_rating_structured: 55
-            esg_rating: 50
-            peer_benchmark: 65
-
-      distressed_bank:
-        description: "Bank with regulatory and financial concerns"
-        expected_tier: [4, 5]
-        expected_score_range: [200, 450]
-        institution_type: "COMMUNITY_BANK"
-        regulatory_framework: "FDIC"
-        asset_size_band: "SMALL"
-        publicly_traded: "PRIVATE"
-        signals:
-          network_authority:
-            correspondent_quality: 45
-            fhlb_membership: 50
-            clearing_relationship: 40
-            auditor_quality: 55
-            legal_counsel: 45
-            industry_association: 35
-            credit_rating: 30
-          regulatory_compliance:
-            examination_rating: 35
-            enforcement_action: 40
-            informal_action: 45
-            cra_rating: 50
-            bsa_aml: 42
-            fair_lending: 55
-            consumer_compliance: 48
-          financial_condition:
-            capital_ratio: 45
-            asset_quality: 35
-            liquidity: 42
-            earnings: 30
-            concentration: 35
-            interest_rate_risk: 40
-            growth_rate: 50
-          governance:
-            board_independence: 45
-            board_expertise: 40
-            executive_stability: 35
-            risk_committee: 30
-            audit_committee: 45
-            related_party: 50
-          operational_risk:
-            cfpb_complaint: 40
-            bbb_complaint: 45
-            litigation: 35
-            breach_history: 50
-            operational_incident: 55
-          cyber_security:
-            tls_score: 50
-            email_auth: 45
-            security_headers: 40
-            network_exposure: 45
-            vulnerability: 42
-            security_rating: 40
-          corporate_footprint:
-            investor_relations: 35
-            disclosure_quality: 40
-            security_page: 30
-            hiring_signals: 35
-            esg_reporting: 25
-            community_presence: 50
-          structured_data:
-            credit_rating_structured: 30
-            esg_rating: 35
-            peer_benchmark: 35
-
-      credit_union_strong:
-        description: "Well-run credit union with member focus"
-        expected_tier: [1, 2]
-        expected_score_range: [720, 900]
-        institution_type: "CREDIT_UNION"
-        regulatory_framework: "NCUA"
-        asset_size_band: "SMALL"
-        publicly_traded: "PRIVATE"
-        signals:
-          network_authority:
-            correspondent_quality: 75
-            fhlb_membership: 90
-            clearing_relationship: 70
-            auditor_quality: 72
-            legal_counsel: 65
-            industry_association: 88
-            credit_rating: 60
-          regulatory_compliance:
-            examination_rating: 88
-            enforcement_action: 100
-            informal_action: 98
-            cra_rating: 0  # N/A for CUs
-            bsa_aml: 85
-            fair_lending: 92
-            consumer_compliance: 90
-          financial_condition:
-            capital_ratio: 92
-            asset_quality: 88
-            liquidity: 85
-            earnings: 80
-            concentration: 82
-            interest_rate_risk: 78
-            growth_rate: 85
-          governance:
-            board_independence: 85
-            board_expertise: 70
-            executive_stability: 88
-            risk_committee: 75
-            audit_committee: 80
-            related_party: 95
-          operational_risk:
-            cfpb_complaint: 90
-            bbb_complaint: 92
-            litigation: 95
-            breach_history: 88
-            operational_incident: 90
-          cyber_security:
-            tls_score: 82
-            email_auth: 78
-            security_headers: 72
-            network_exposure: 85
-            vulnerability: 80
-            security_rating: 75
-          corporate_footprint:
-            investor_relations: 40
-            disclosure_quality: 60
-            security_page: 65
-            hiring_signals: 70
-            esg_reporting: 55
-            community_presence: 95
-          structured_data:
-            credit_rating_structured: 60
-            esg_rating: 70
-            peer_benchmark: 85
-
-      broker_dealer:
-        description: "Mid-size broker-dealer with typical profile"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        institution_type: "BROKER_DEALER"
-        regulatory_framework: "FINRA"
-        asset_size_band: "SMALL"
-        publicly_traded: "PUBLIC"
-        signals:
-          network_authority:
-            correspondent_quality: 75
-            fhlb_membership: 0
-            clearing_relationship: 85
-            auditor_quality: 82
-            legal_counsel: 78
-            industry_association: 72
-            credit_rating: 70
-          regulatory_compliance:
-            examination_rating: 75
-            enforcement_action: 82
-            informal_action: 80
-            cra_rating: 0
-            bsa_aml: 78
-            fair_lending: 0
-            consumer_compliance: 75
-          financial_condition:
-            capital_ratio: 80
-            asset_quality: 75
-            liquidity: 82
-            earnings: 72
-            concentration: 70
-            interest_rate_risk: 78
-            growth_rate: 70
-          governance:
-            board_independence: 75
-            board_expertise: 78
-            executive_stability: 72
-            risk_committee: 80
-            audit_committee: 82
-            related_party: 78
-          operational_risk:
-            cfpb_complaint: 70
-            bbb_complaint: 72
-            litigation: 65
-            breach_history: 78
-            operational_incident: 75
-          cyber_security:
-            tls_score: 85
-            email_auth: 80
-            security_headers: 75
-            network_exposure: 78
-            vulnerability: 75
-            security_rating: 72
-          corporate_footprint:
-            investor_relations: 78
-            disclosure_quality: 75
-            security_page: 72
-            hiring_signals: 70
-            esg_reporting: 60
-            community_presence: 50
-          structured_data:
-            credit_rating_structured: 70
-            esg_rating: 62
-            peer_benchmark: 70
-
-      fintech_startup:
-        description: "Growth-stage fintech with limited history"
-        expected_tier: [3, 4]
-        expected_score_range: [420, 600]
-        institution_type: "FINTECH"
-        regulatory_framework: "STATE"
-        asset_size_band: "COMMUNITY"
-        publicly_traded: "PRIVATE"
-        signal_coverage: 0.55
-        signals:
-          network_authority:
-            correspondent_quality: 60
-            auditor_quality: 70
-            legal_counsel: 75
-            industry_association: 55
-          regulatory_compliance:
-            enforcement_action: 100
-            bsa_aml: 72
-            consumer_compliance: 68
-          financial_condition:
-            capital_ratio: 85
-            liquidity: 70
-            earnings: 45
-            growth_rate: 35
-          governance:
-            board_expertise: 75
-            executive_stability: 55
-          operational_risk:
-            cfpb_complaint: 65
-            breach_history: 85
-          cyber_security:
-            tls_score: 92
-            email_auth: 88
-            security_headers: 85
-            network_exposure: 78
-            vulnerability: 82
-            security_rating: 80
-          corporate_footprint:
-            security_page: 85
-            hiring_signals: 90
-          structured_data:
-            peer_benchmark: 55
