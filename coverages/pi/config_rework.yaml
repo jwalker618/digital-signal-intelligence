@@ -1,32 +1,21 @@
 # =============================================================================
 # DSI Model Configuration
+# =============================================================================
 #
-# This file holds all the relvant configuration types for a single coverage.
-# For example,
-# coverage:         the actual coverage cohort, eg aerospace
-#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
+# 1. Signals defined once in signal_registry with group_id reference
+# 2. source: score (default) uses 0-100 inference return
+# 3. source: metadata.field uses inference metadata with bands/categories
+# 4. Categorical groups apply modifiers (applied:), not scores
+# 5. score_conditions (plural, banded) apply actions based on score thresholds
+#    Actions: FLAG | MODIFIER | REFER
+# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
+# 7. Normalisation handled by inference functions, not config
 #
-# There can be multiple configurations saved under a coverage.
+# AUGMENTED BY:
+# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
-# A configuration is the single source of truth for:
-#   - 1) direct (optional) queries
-#   - 2) categorical features
-#   - 3) signal groups and underlying features
-#   - the source and impact of 1- 3
-#   - tier definitions
-#   - other pricing parameters
-#   - test profiles for validation
-#
-# When a technical model is generated:
-# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
-# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-#
-# All DSI principles must be adhered to, specifically:
-# 1. All signals must be externally observable (no application questions required)
-# 2. Direct queries are OPTIONAL - model must work without them
-# 3. Categorical features are inferred from observable data
-# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
-# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 professional_indemnity:
@@ -34,75 +23,51 @@ professional_indemnity:
     metadata:
       name: "DSI Professional Indemnity Technical Pricing Model"
       description: "PI/E&O coverage based on observable regulatory, practice quality, and stability signals"
-      version: "2.0.0"
-      coverage_types:
+      version: "2.1.0"
+      product_types:
         - "professional_liability"
         - "errors_omissions"
         - "malpractice"
-      applicable_professions:
-        - "law_firm"
-        - "accounting_firm"
-        - "architecture"
-        - "engineering"
-        - "management_consulting"
-        - "it_consulting"
-        - "real_estate"
-        - "insurance_broker"
-        - "financial_planning"
-        - "healthcare_admin"
-        - "appraisal_valuation"
-        - "environmental_consulting"
       applicable_markets: ["us", "uk", "eu", "apac"]
       minimum_viable_input: ["client name (domain optional)","Limit in USD"]
       min_premium: 2500
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed (max 10)
+    # Actions: FLAG | MODIFIER | REFER
+    # =========================================================================
     direct_queries:
       - id: "pending_claims"
         question: "Any pending or threatened malpractice claims?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            note: "Pending malpractice claims disclosed"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Pending malpractice claims disclosed"}
+      
       - id: "disciplinary_pending"
         question: "Any pending disciplinary proceedings against any professional?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            note: "Pending disciplinary proceedings"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Pending disciplinary proceedings"}
+      
       - id: "coverage_declined"
         question: "Has any PI coverage been declined or non-renewed in past 3 years?"
-        bands:
-          - return: true
-            override: 5
-            action: "DECLINE"
-            note: "Prior PI coverage declined/non-renewed"
+        query_condition:
+          - {return: true, action: "REFER", override: 5, applied: null, note: "Prior PI coverage declined/non-renewed"}
+      
       - id: "practice_area_change"
         question: "Any significant change in practice areas in past 2 years?"
-        bands:
-          - return: true
-            override: null
-            action: "FLAG"
-            note: "Significant practice area change"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Significant practice area change"}
+      
       - id: "merger_activity"
         question: "Any merger, acquisition, or spin-off in past 2 years?"
-        bands:
-          - return: true
-            override: null
-            action: "FLAG"
-            note: "Recent merger/acquisition activity"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Recent merger/acquisition activity"}
+
       - id: "major_client_loss"
         question: "Loss of client representing >25% of revenue in past year?"
-        bands:
-          - return: true
-            override: null
-            action: "FLAG"
-            note: "Major client loss (>25% revenue)"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Major client loss (>25% revenue)"}
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
@@ -912,165 +877,222 @@ professional_indemnity:
               action: "REFER"
               note: "Bankruptcy history concerns"
 
-    # -------------------------------------------------------------------------
-    # TIER THRESHOLDS
-    # -------------------------------------------------------------------------
-    tier_thresholds:
-      tiers:
+    # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
+    risk_tier_bands:
+      bands:
         - id: 1
           label: "PREFERRED"
-          min_score: 800
-          max_score: 1000
-          description: "Excellent firm - auto-approve at preferred pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "CATEGORICAL"
-            applied: 0.75
-        - id: 2
-          label: "STANDARD"
-          min_score: 650
-          max_score: 799
-          description: "Good firm - auto-approve at standard pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "CATEGORICAL"
-            applied: 1.00
-        - id: 3
-          label: "ELEVATED"
-          min_score: 500
-          max_score: 649
-          description: "Moderate risk - manual review recommended"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "CATEGORICAL"
-            applied: 1.30
-        - id: 4
-          label: "HIGH_RISK"
-          min_score: 350
-          max_score: 499
-          description: "High risk - senior underwriter review with loading"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "CATEGORICAL"
-            applied: 1.75
-        - id: 5
-          label: "CRITICAL"
-          min_score: 0
-          max_score: 349
-          description: "Critical risk - decline recommended"
-          auto_approve: false
-          auto_decline: true
-          application:
-            method: "CATEGORICAL"
-            applied: 2.50
+          description: "Excellent risk - automatic approval, preferred pricing"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "MODIFIER", applied: 0.75, basis: "categorical"}
 
-    # -------------------------------------------------------------------------
+        - id: 2
+          label: "STANDARD_PLUS"
+          description: "Good risk - automatic approval, standard pricing"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "MODIFIER", applied: 1.00, basis: "categorical"}
+
+        - id: 3
+          label: "STANDARD"
+          description: "Average risk - may require referral"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "REFER"
+            application: {method: "MODIFIER", applied: 1.30, basis: "categorical"}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          description: "Elevated risk - requires senior review"
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "MODIFIER", applied: 1.75, basis: "categorical"}
+
+        - id: 5
+          label: "DECLINE"
+          description: "Unacceptable risk - decline"
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "MODIFIER", applied: 2.50, basis: "categorical"}
+
+    # =========================================================================
     # LOSS TIER BANDS
-    # -------------------------------------------------------------------------
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
         - id: 1
           label: "VERY_LOW"
+          description: "Very low risk of loss"
           interpretation:
             bands: {min: 80, max: 100}
             application:
               frequency_modifier: 0.70
               severity_modifier: 0.80
+
         - id: 2
           label: "LOW"
+          description: "Low risk of loss"
           interpretation:
             bands: {min: 60, max: 79}
             application:
               frequency_modifier: 0.85
               severity_modifier: 0.90
+
         - id: 3
           label: "MODERATE"
+          description: "Moderate risk of loss"
           interpretation:
             bands: {min: 40, max: 59}
             application:
               frequency_modifier: 1.00
               severity_modifier: 1.00
+
         - id: 4
-          label: "HIGH"
+          label: "ELEVATED"
+          description: "Elevated risk of loss"
           interpretation:
             bands: {min: 20, max: 39}
             application:
-              frequency_modifier: 1.25
-              severity_modifier: 1.20
+              frequency_modifier: 1.15
+              severity_modifier: 1.15
+
         - id: 5
-          label: "VERY_HIGH"
+          label: "HIGH"
+          description: "High risk of loss"
           interpretation:
             bands: {min: 0, max: 19}
             application:
-              frequency_modifier: 1.60
-              severity_modifier: 1.50
+              frequency_modifier: 1.35
+              severity_modifier: 1.40
       constraints:
         floor: 0.55
         cap: 1.60
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # EXPOSURE TIER BANDS
-    # -------------------------------------------------------------------------
-    exposure_tier_bands:
-      bands:
-        - id: 1
-          label: "SMALL"
-          interpretation:
-            bands: {min: 0, max: 1000000}
-            application:
-              method: "MODIFIER"
-              applied: 0.85
-        - id: 2
-          label: "MEDIUM"
-          interpretation:
-            bands: {min: 1000001, max: 5000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.00
-        - id: 3
-          label: "LARGE"
-          interpretation:
-            bands: {min: 5000001, max: 25000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.15
-        - id: 4
-          label: "VERY_LARGE"
-          interpretation:
-            bands: {min: 25000001, max: null}
-            application:
-              method: "MODIFIER"
-              applied: 1.35
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
+    exposure:
+      size:
+        weight: 0.60
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "Micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
 
-    # -------------------------------------------------------------------------
+          - id: 2
+            label: "SMALL"
+            description: "Small exposure value ($1M - $10M)"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium exposure value ($10M - $50M)"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
+
+          - id: 4
+            label: "LARGE"
+            description: "Large exposure value ($50M - $250M)"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
+
+          - id: 5
+            label: "VERY_LARGE"
+            description: "Very large exposure value ($250M+)"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
+
+      complexity:
+        weight: 0.40
+        bands:
+          - id: 1
+            label: "SIMPLE"
+            description: "Simple operational complexity"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.85}
+
+          - id: 2
+            label: "MODERATE"
+            description: "Moderate operational complexity"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.95}
+
+          - id: 3
+            label: "COMPLEX"
+            description: "Complex operations"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.10}
+
+          - id: 4
+            label: "HIGHLY_COMPLEX"
+            description: "Highly complex operations"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.30}
+
+          - id: 5
+            label: "EXTREMELY_COMPLEX"
+            description: "Extremely complex operations"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 1.60}
+
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations
+    # =========================================================================
     limit_bandings:
       - id: 1
         limit: 1000000
         deductible: 10000
+
       - id: 2
         limit: 2500000
         deductible: 25000
+
       - id: 3
         limit: 5000000
         deductible: 50000
+
       - id: 4
         limit: 10000000
         deductible: 100000
+
       - id: 5
         limit: 25000000
         deductible: 250000
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # -------------------------------------------------------------------------
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
-      limit_ilf:
+
+      ilf_curve:
         base_limit: 1000000
         factors:
           - {limit: 250000, factor: 0.50}
@@ -1081,332 +1103,10 @@ professional_indemnity:
           - {limit: 5000000, factor: 2.80}
           - {limit: 10000000, factor: 4.20}
 
-      retention_credits:
-        - {min_retention: 5000, max_retention: 10000, credit: 0.00}
-        - {min_retention: 10000, max_retention: 25000, credit: 0.05}
-        - {min_retention: 25000, max_retention: 50000, credit: 0.10}
-        - {min_retention: 50000, max_retention: 100000, credit: 0.15}
-        - {min_retention: 100000, max_retention: null, credit: 0.20}
-
-      experience_modifiers:
-        clean_10yr: 0.85
-        clean_5yr: 0.90
-        clean_3yr: 0.95
-        minor_losses: 1.00
-        moderate_losses: 1.20
-        significant_losses: 1.40
+      deductible_credits:
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+        - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
       taxes_fees_rate: 0.05
-
-    # -------------------------------------------------------------------------
-    # TEST PROFILES
-    # -------------------------------------------------------------------------
-    test_profiles:
-      excellent_law_firm:
-        description: "Well-established mid-size law firm with excellent standing"
-        expected_tier: [1, 2]
-        expected_score_range: [780, 950]
-        profession_type: "LAW_FIRM"
-        firm_size: "MEDIUM"
-        revenue_size: "R_5M_25M"
-        practice_area: "CORPORATE_MA"
-        signals:
-          network_authority:
-            peer_ranking: 80
-            client_quality: 85
-            referral_network: 75
-            association_leadership: 70
-            thought_leadership: 75
-            panel_membership: 65
-          regulatory_standing:
-            license_status: 100
-            disciplinary_history: 95
-            malpractice_record: 90
-            ce_compliance: 100
-            specialty_certification: 75
-          firm_stability:
-            tenure: 90
-            partner_stability: 85
-            staff_retention: 78
-            office_stability: 95
-            financial_stability: 85
-            succession_planning: 70
-          practice_quality:
-            outcome_patterns: 80
-            client_reviews: 85
-            work_quality: 80
-            fee_dispute: 95
-            complaint_history: 98
-          technical_infrastructure:
-            tls_score: 90
-            email_auth: 85
-            security_headers: 75
-            portal_security: 80
-            breach_history: 100
-          corporate_footprint:
-            website_quality: 85
-            bio_completeness: 90
-            practice_clarity: 85
-            publications: 75
-            community_involvement: 70
-            diversity: 65
-          litigation_history:
-            malpractice_suits: 90
-            fee_disputes_litigation: 95
-            regulatory_enforcement: 100
-            civil_litigation: 95
-            bankruptcy: 100
-
-      average_accounting_firm:
-        description: "Typical small CPA firm with standard profile"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        profession_type: "ACCOUNTING_FIRM"
-        firm_size: "SMALL"
-        revenue_size: "R_1M_5M"
-        practice_area: "GENERAL_PRACTICE"
-        signals:
-          network_authority:
-            peer_ranking: 55
-            client_quality: 65
-            referral_network: 60
-            association_leadership: 50
-            thought_leadership: 45
-          regulatory_standing:
-            license_status: 100
-            disciplinary_history: 95
-            malpractice_record: 90
-            ce_compliance: 95
-            specialty_certification: 50
-            peer_review: 85
-            pcaob_standing: 60
-          firm_stability:
-            tenure: 75
-            partner_stability: 70
-            staff_retention: 65
-            office_stability: 80
-            financial_stability: 72
-            succession_planning: 55
-          practice_quality:
-            outcome_patterns: 70
-            client_reviews: 72
-            work_quality: 70
-            fee_dispute: 90
-            complaint_history: 95
-          technical_infrastructure:
-            tls_score: 75
-            email_auth: 70
-            security_headers: 60
-            breach_history: 100
-          corporate_footprint:
-            website_quality: 65
-            bio_completeness: 70
-            practice_clarity: 70
-            publications: 40
-            community_involvement: 55
-          litigation_history:
-            malpractice_suits: 95
-            fee_disputes_litigation: 90
-            regulatory_enforcement: 100
-            civil_litigation: 95
-            bankruptcy: 100
-
-      high_risk_solo:
-        description: "Solo practitioner with disciplinary history"
-        expected_tier: [4, 5]
-        expected_score_range: [250, 450]
-        profession_type: "LAW_FIRM"
-        firm_size: "SOLO"
-        revenue_size: "UNDER_500K"
-        practice_area: "PERSONAL_INJURY_PLAINTIFF"
-        signals:
-          network_authority:
-            peer_ranking: 30
-            client_quality: 40
-            referral_network: 35
-            association_leadership: 25
-            thought_leadership: 20
-          regulatory_standing:
-            license_status: 80
-            disciplinary_history: 45
-            malpractice_record: 50
-            ce_compliance: 70
-            specialty_certification: 30
-          firm_stability:
-            tenure: 60
-            partner_stability: 50
-            staff_retention: 45
-            office_stability: 55
-            financial_stability: 45
-            succession_planning: 20
-          practice_quality:
-            outcome_patterns: 50
-            client_reviews: 55
-            work_quality: 50
-            fee_dispute: 60
-            complaint_history: 55
-          technical_infrastructure:
-            tls_score: 50
-            email_auth: 40
-            security_headers: 35
-            breach_history: 85
-          corporate_footprint:
-            website_quality: 45
-            bio_completeness: 50
-            practice_clarity: 45
-            publications: 20
-            community_involvement: 30
-          litigation_history:
-            malpractice_suits: 50
-            fee_disputes_litigation: 60
-            regulatory_enforcement: 55
-            civil_litigation: 70
-            bankruptcy: 90
-
-      engineering_firm:
-        description: "Mid-size structural engineering firm"
-        expected_tier: [2, 3]
-        expected_score_range: [580, 750]
-        profession_type: "ENGINEERING"
-        firm_size: "MEDIUM"
-        revenue_size: "R_5M_25M"
-        practice_area: "STRUCTURAL"
-        signals:
-          network_authority:
-            peer_ranking: 70
-            client_quality: 75
-            referral_network: 70
-            association_leadership: 60
-            thought_leadership: 55
-          regulatory_standing:
-            license_status: 100
-            disciplinary_history: 95
-            malpractice_record: 80
-            ce_compliance: 100
-            specialty_certification: 70
-          firm_stability:
-            tenure: 80
-            partner_stability: 75
-            staff_retention: 70
-            office_stability: 85
-            financial_stability: 78
-            succession_planning: 65
-          practice_quality:
-            outcome_patterns: 75
-            client_reviews: 78
-            work_quality: 80
-            fee_dispute: 88
-            complaint_history: 92
-          technical_infrastructure:
-            tls_score: 80
-            email_auth: 75
-            security_headers: 65
-            breach_history: 100
-          corporate_footprint:
-            website_quality: 75
-            bio_completeness: 80
-            practice_clarity: 80
-            publications: 50
-            community_involvement: 55
-          litigation_history:
-            malpractice_suits: 75
-            fee_disputes_litigation: 90
-            regulatory_enforcement: 100
-            civil_litigation: 85
-            bankruptcy: 100
-
-      it_consulting:
-        description: "Growing IT consulting firm"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        profession_type: "IT_CONSULTING"
-        firm_size: "SMALL"
-        revenue_size: "R_1M_5M"
-        signals:
-          network_authority:
-            peer_ranking: 50
-            client_quality: 70
-            referral_network: 65
-            association_leadership: 45
-            thought_leadership: 60
-          regulatory_standing:
-            license_status: 100
-            disciplinary_history: 100
-            malpractice_record: 95
-            ce_compliance: 90
-          firm_stability:
-            tenure: 55
-            partner_stability: 70
-            staff_retention: 68
-            office_stability: 75
-            financial_stability: 72
-            succession_planning: 50
-          practice_quality:
-            client_reviews: 80
-            work_quality: 75
-            fee_dispute: 92
-            complaint_history: 95
-          technical_infrastructure:
-            tls_score: 95
-            email_auth: 92
-            security_headers: 88
-            portal_security: 85
-            breach_history: 100
-          corporate_footprint:
-            website_quality: 80
-            bio_completeness: 75
-            practice_clarity: 82
-            publications: 65
-            community_involvement: 45
-          litigation_history:
-            malpractice_suits: 100
-            fee_disputes_litigation: 95
-            regulatory_enforcement: 100
-            civil_litigation: 95
-            bankruptcy: 100
-
-      real_estate_brokerage:
-        description: "Real estate brokerage with recent claims"
-        expected_tier: [3, 4]
-        expected_score_range: [420, 600]
-        profession_type: "REAL_ESTATE"
-        firm_size: "MICRO"
-        revenue_size: "R_500K_1M"
-        direct_queries:
-          pending_claims: true
-        signals:
-          network_authority:
-            peer_ranking: 45
-            client_quality: 55
-            referral_network: 60
-            association_leadership: 40
-          regulatory_standing:
-            license_status: 95
-            disciplinary_history: 80
-            malpractice_record: 65
-            ce_compliance: 90
-          firm_stability:
-            tenure: 70
-            partner_stability: 65
-            staff_retention: 60
-            office_stability: 75
-            financial_stability: 65
-          practice_quality:
-            client_reviews: 68
-            fee_dispute: 75
-            complaint_history: 70
-          technical_infrastructure:
-            tls_score: 70
-            email_auth: 60
-            security_headers: 50
-            breach_history: 95
-          corporate_footprint:
-            website_quality: 65
-            bio_completeness: 60
-            practice_clarity: 70
-          litigation_history:
-            malpractice_suits: 55
-            fee_disputes_litigation: 80
-            regulatory_enforcement: 90
-            civil_litigation: 85
-            bankruptcy: 100
