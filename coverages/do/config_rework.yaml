@@ -1,32 +1,21 @@
 # =============================================================================
 # DSI Model Configuration
+# =============================================================================
 #
-# This file holds all the relvant configuration types for a single coverage.
-# For example,
-# coverage:         the actual coverage cohort, eg aerospace
-#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
+# 1. Signals defined once in signal_registry with group_id reference
+# 2. source: score (default) uses 0-100 inference return
+# 3. source: metadata.field uses inference metadata with bands/categories
+# 4. Categorical groups apply modifiers (applied:), not scores
+# 5. score_conditions (plural, banded) apply actions based on score thresholds
+#    Actions: FLAG | MODIFIER | REFER
+# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
+# 7. Normalisation handled by inference functions, not config
 #
-# There can be multiple configurations saved under a coverage.
+# AUGMENTED BY:
+# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
-# A configuration is the single source of truth for:
-#   - 1) direct (optional) queries
-#   - 2) categorical features
-#   - 3) signal groups and underlying features
-#   - the source and impact of 1- 3
-#   - tier definitions
-#   - other pricing parameters
-#   - test profiles for validation
-#
-# When a technical model is generated:
-# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
-# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-#
-# All DSI principles must be adhered to, specifically:
-# 1. All signals must be externally observable (no application questions required)
-# 2. Direct queries are OPTIONAL - model must work without them
-# 3. Categorical features are inferred from observable data
-# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
-# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 directors_officers:
@@ -34,8 +23,8 @@ directors_officers:
     metadata:
       name: "DSI Directors & Officers Technical Pricing Model"
       description: "D&O liability coverage based on observable governance, financial, and litigation signals"
-      version: "2.0.0"
-      coverage_types:
+      version: "2.1.0"
+      product_types:
         - "side_a"
         - "side_b"
         - "side_c"
@@ -47,47 +36,37 @@ directors_officers:
       min_premium: 10000
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed (max 10)
+    # Actions: FLAG | MODIFIER | REFER
+    # =========================================================================
     direct_queries:
       - id: "pending_claims"
         question: "Are there any pending securities class actions or derivative suits?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            note: "Pending securities claims"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Pending securities claims"}
+        
       - id: "regulatory_investigation"
         question: "Is the company or any director/officer under regulatory investigation?"
-        bands:
-          - return: true
-            override: 3
-            action: "REFER"
-            note: "Regulatory investigation disclosed"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Regulatory investigation disclosed"}
+      
       - id: "planned_transaction"
         question: "Is there a planned M&A, IPO, SPAC merger, or material transaction?"
-        bands:
-          - return: true
-            override: null
-            action: "FLAG"
-            note: "Planned transaction - tail coverage needed"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Planned transaction - tail coverage needed"}
+       
       - id: "covenant_compliance"
         question: "Is the company in compliance with all debt covenants?"
-        bands:
-          - return: false
-            override: null
-            action: "FLAG"
-            note: "Covenant non-compliance disclosed"
+        query_condition:
+          - {return: false, action: "FLAG", override: null, applied: null, note: "Covenant non-compliance disclosed"}
+       
       - id: "executive_dispute"
         question: "Are there any disputes with current or former executives?"
-        bands:
-          - return: true
-            override: null
-            action: "REFER"
-            note: "Executive dispute disclosed"
-
-
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Executive dispute disclosed"}
+ 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
     # categorical groups can either
@@ -695,165 +674,222 @@ directors_officers:
           weight: 0.20
           inference_utility_function: iss_governance_basefunction
 
-    # -------------------------------------------------------------------------
-    # TIER THRESHOLDS
-    # -------------------------------------------------------------------------
-    tier_thresholds:
-      tiers:
+     # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
+    risk_tier_bands:
+      bands:
         - id: 1
           label: "PREFERRED"
-          min_score: 800
-          max_score: 1000
-          description: "Excellent governance - auto-approve at preferred pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 4000
-        - id: 2
-          label: "STANDARD"
-          min_score: 650
-          max_score: 799
-          description: "Good governance - auto-approve at standard pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 6000
-        - id: 3
-          label: "ELEVATED"
-          min_score: 500
-          max_score: 649
-          description: "Moderate risk - auto-approve with conditions"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 9000
-        - id: 4
-          label: "HIGH_RISK"
-          min_score: 350
-          max_score: 499
-          description: "High risk - manual review required"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 15000
-        - id: 5
-          label: "CRITICAL"
-          min_score: 0
-          max_score: 349
-          description: "Critical risk - decline or senior review"
-          auto_approve: false
-          auto_decline: true
-          application:
-            method: "PREMIUM_BASE"
-            applied: 25000
+          description: "Excellent risk - automatic approval, preferred pricing"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 4000}
 
-    # -------------------------------------------------------------------------
+        - id: 2
+          label: "STANDARD_PLUS"
+          description: "Good risk - automatic approval, standard pricing"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 6000}
+
+        - id: 3
+          label: "STANDARD"
+          description: "Average risk - may require referral"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 9000}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          description: "Elevated risk - requires senior review"
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 15000}
+
+        - id: 5
+          label: "DECLINE"
+          description: "Unacceptable risk - decline"
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "PREMIUM_BASE", value: 25000}
+
+    # =========================================================================
     # LOSS TIER BANDS
-    # -------------------------------------------------------------------------
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
         - id: 1
           label: "VERY_LOW"
+          description: "Very low risk of loss"
           interpretation:
             bands: {min: 80, max: 100}
             application:
               frequency_modifier: 0.70
               severity_modifier: 0.80
+
         - id: 2
           label: "LOW"
+          description: "Low risk of loss"
           interpretation:
             bands: {min: 60, max: 79}
             application:
               frequency_modifier: 0.85
               severity_modifier: 0.90
+
         - id: 3
           label: "MODERATE"
+          description: "Moderate risk of loss"
           interpretation:
             bands: {min: 40, max: 59}
             application:
               frequency_modifier: 1.00
               severity_modifier: 1.00
+
         - id: 4
-          label: "HIGH"
+          label: "ELEVATED"
+          description: "Elevated risk of loss"
           interpretation:
             bands: {min: 20, max: 39}
             application:
-              frequency_modifier: 1.25
-              severity_modifier: 1.20
+              frequency_modifier: 1.15
+              severity_modifier: 1.15
+
         - id: 5
-          label: "VERY_HIGH"
+          label: "HIGH"
+          description: "High risk of loss"
           interpretation:
             bands: {min: 0, max: 19}
             application:
-              frequency_modifier: 1.60
-              severity_modifier: 1.50
+              frequency_modifier: 1.35
+              severity_modifier: 1.40
       constraints:
         floor: 0.55
         cap: 1.60
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # EXPOSURE TIER BANDS
-    # -------------------------------------------------------------------------
-    exposure_tier_bands:
-      bands:
-        - id: 1
-          label: "SMALL"
-          interpretation:
-            bands: {min: 0, max: 5000000}
-            application:
-              method: "MODIFIER"
-              applied: 0.85
-        - id: 2
-          label: "MEDIUM"
-          interpretation:
-            bands: {min: 5000001, max: 25000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.00
-        - id: 3
-          label: "LARGE"
-          interpretation:
-            bands: {min: 25000001, max: 100000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.15
-        - id: 4
-          label: "VERY_LARGE"
-          interpretation:
-            bands: {min: 100000001, max: null}
-            application:
-              method: "MODIFIER"
-              applied: 1.35
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
+    exposure:
+      size:
+        weight: 0.60
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "Micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
 
-    # -------------------------------------------------------------------------
+          - id: 2
+            label: "SMALL"
+            description: "Small exposure value ($1M - $10M)"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium exposure value ($10M - $50M)"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
+
+          - id: 4
+            label: "LARGE"
+            description: "Large exposure value ($50M - $250M)"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
+
+          - id: 5
+            label: "VERY_LARGE"
+            description: "Very large exposure value ($250M+)"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
+
+      complexity:
+        weight: 0.40
+        bands:
+          - id: 1
+            label: "SIMPLE"
+            description: "Simple operational complexity"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.85}
+
+          - id: 2
+            label: "MODERATE"
+            description: "Moderate operational complexity"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.95}
+
+          - id: 3
+            label: "COMPLEX"
+            description: "Complex operations"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.10}
+
+          - id: 4
+            label: "HIGHLY_COMPLEX"
+            description: "Highly complex operations"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.30}
+
+          - id: 5
+            label: "EXTREMELY_COMPLEX"
+            description: "Extremely complex operations"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 1.60}
+
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations
+    # =========================================================================
     limit_bandings:
       - id: 1
         limit: 5000000
         deductible: 100000
+
       - id: 2
         limit: 10000000
         deductible: 250000
+
       - id: 3
         limit: 25000000
         deductible: 500000
+
       - id: 4
         limit: 50000000
         deductible: 1000000
+
       - id: 5
         limit: 100000000
         deductible: 2000000
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # -------------------------------------------------------------------------
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
-      limit_ilf:
+
+      ilf_curve:
         base_limit: 1000000
         factors:
           - {limit: 1000000, factor: 1.00}
@@ -864,355 +900,10 @@ directors_officers:
           - {limit: 50000000, factor: 11.00}
           - {limit: 100000000, factor: 16.00}
 
-      retention_guidelines:
-        tier_1_pct: 0.01
-        tier_2_pct: 0.015
-        tier_3_pct: 0.02
-        tier_4_pct: 0.03
-        tier_5_pct: 0.05
-        minimum: 100000
-        maximum: 2500000
-
-      experience_modifiers:
-        clean_5yr: 0.90
-        clean_3yr: 0.95
-        minor_losses: 1.00
-        moderate_losses: 1.20
-        major_losses: 1.50
+      deductible_credits:
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+        - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
       taxes_fees_rate: 0.05
-
-    # -------------------------------------------------------------------------
-    # TEST PROFILES
-    # -------------------------------------------------------------------------
-    test_profiles:
-      excellent_large_cap:
-        description: "Well-governed large cap technology company"
-        expected_tier: [1, 2]
-        expected_score_range: [780, 1000]
-        company_type: "PUBLIC_LARGE_CAP"
-        industry: "TECHNOLOGY"
-        stock_exchange: "NASDAQ"
-        signals:
-          network_authority:
-            auditor_quality: 95
-            legal_counsel: 90
-            banking_relationship: 92
-            investor_quality: 88
-            board_network: 85
-            index_inclusion: 100
-            analyst_coverage: 90
-            industry_association: 80
-          governance:
-            board_independence: 92
-            board_diversity: 85
-            ceo_chair_separation: 100
-            committee_structure: 95
-            board_refreshment: 80
-            related_party: 90
-            compensation_structure: 85
-            shareholder_rights: 82
-          financial:
-            audit_opinion: 100
-            internal_controls: 95
-            restatement: 100
-            filing_timeliness: 100
-            revenue_recognition: 85
-            debt_covenant: 95
-            stock_volatility: 75
-            short_interest: 90
-          litigation:
-            securities_litigation: 95
-            derivative_litigation: 100
-            sec_enforcement: 100
-            regulatory_action: 90
-            pending_litigation: 85
-            whistleblower: 95
-          executive:
-            executive_stability: 88
-            cfo_quality: 90
-            insider_trading: 85
-            executive_background: 95
-            trading_plan: 90
-          corporate_footprint:
-            investor_relations: 95
-            governance_page: 90
-            esg_reporting: 85
-            press_release: 80
-            leadership_visibility: 88
-            hiring_signals: 85
-          structured_data:
-            credit_rating: 90
-            esg_rating: 82
-            governance_rating: 88
-            iss_governance: 85
-
-      average_mid_cap:
-        description: "Average mid-cap manufacturing company"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        company_type: "PUBLIC_MID_CAP"
-        industry: "MANUFACTURING"
-        stock_exchange: "NYSE"
-        signals:
-          network_authority:
-            auditor_quality: 85
-            legal_counsel: 70
-            banking_relationship: 72
-            investor_quality: 68
-            board_network: 65
-            index_inclusion: 70
-            analyst_coverage: 65
-            industry_association: 60
-          governance:
-            board_independence: 75
-            board_diversity: 60
-            ceo_chair_separation: 60
-            committee_structure: 75
-            board_refreshment: 65
-            related_party: 70
-            compensation_structure: 65
-            shareholder_rights: 60
-          financial:
-            audit_opinion: 100
-            internal_controls: 85
-            restatement: 100
-            filing_timeliness: 90
-            revenue_recognition: 75
-            debt_covenant: 78
-            stock_volatility: 65
-            short_interest: 80
-          litigation:
-            securities_litigation: 85
-            derivative_litigation: 90
-            sec_enforcement: 95
-            regulatory_action: 80
-            pending_litigation: 75
-            whistleblower: 90
-          executive:
-            executive_stability: 72
-            cfo_quality: 75
-            insider_trading: 70
-            executive_background: 85
-            trading_plan: 60
-          corporate_footprint:
-            investor_relations: 70
-            governance_page: 60
-            esg_reporting: 55
-            press_release: 65
-            leadership_visibility: 60
-            hiring_signals: 58
-          structured_data:
-            credit_rating: 70
-            esg_rating: 58
-            governance_rating: 62
-            iss_governance: 60
-
-      high_risk_biotech:
-        description: "Small cap biotech with governance concerns"
-        expected_tier: [4, 5]
-        expected_score_range: [250, 450]
-        company_type: "PUBLIC_SMALL_CAP"
-        industry: "HEALTHCARE_PHARMA"
-        stock_exchange: "NASDAQ"
-        signals:
-          network_authority:
-            auditor_quality: 55
-            legal_counsel: 50
-            banking_relationship: 45
-            investor_quality: 40
-            board_network: 35
-            index_inclusion: 0
-            analyst_coverage: 35
-            industry_association: 30
-          governance:
-            board_independence: 55
-            board_diversity: 35
-            ceo_chair_separation: 35
-            committee_structure: 50
-            board_refreshment: 40
-            related_party: 45
-            compensation_structure: 40
-            shareholder_rights: 35
-          financial:
-            audit_opinion: 80
-            internal_controls: 45
-            restatement: 60
-            filing_timeliness: 70
-            revenue_recognition: 55
-            debt_covenant: 50
-            stock_volatility: 30
-            short_interest: 40
-          litigation:
-            securities_litigation: 45
-            derivative_litigation: 60
-            sec_enforcement: 55
-            regulatory_action: 50
-            pending_litigation: 45
-            whistleblower: 70
-          executive:
-            executive_stability: 40
-            cfo_quality: 45
-            insider_trading: 35
-            executive_background: 60
-            trading_plan: 30
-          corporate_footprint:
-            investor_relations: 45
-            governance_page: 35
-            esg_reporting: 25
-            press_release: 40
-            leadership_visibility: 35
-            hiring_signals: 30
-          structured_data:
-            credit_rating: 35
-            esg_rating: 30
-            governance_rating: 35
-            iss_governance: 40
-
-      spac_target:
-        description: "SPAC with pending de-SPAC transaction"
-        expected_tier: [3, 4]
-        expected_score_range: [400, 580]
-        company_type: "SPAC"
-        industry: "OTHER"
-        stock_exchange: "NYSE"
-        direct_queries:
-          planned_transaction: true
-        signals:
-          network_authority:
-            auditor_quality: 85
-            legal_counsel: 80
-            banking_relationship: 85
-            investor_quality: 70
-            board_network: 75
-            index_inclusion: 0
-            analyst_coverage: 45
-            industry_association: 40
-          governance:
-            board_independence: 70
-            board_diversity: 55
-            ceo_chair_separation: 80
-            committee_structure: 70
-            board_refreshment: 50
-            related_party: 55
-            compensation_structure: 60
-            shareholder_rights: 50
-          financial:
-            audit_opinion: 100
-            internal_controls: 70
-            restatement: 100
-            filing_timeliness: 95
-            revenue_recognition: 70
-            debt_covenant: 90
-            stock_volatility: 40
-            short_interest: 55
-          litigation:
-            securities_litigation: 80
-            derivative_litigation: 90
-            sec_enforcement: 90
-            regulatory_action: 85
-            pending_litigation: 75
-            whistleblower: 85
-          executive:
-            executive_stability: 60
-            cfo_quality: 70
-            insider_trading: 65
-            executive_background: 80
-            trading_plan: 55
-          corporate_footprint:
-            investor_relations: 60
-            governance_page: 50
-            esg_reporting: 30
-            press_release: 55
-            leadership_visibility: 65
-            hiring_signals: 45
-          structured_data:
-            credit_rating: 50
-            esg_rating: 35
-            governance_rating: 50
-            iss_governance: 55
-
-      private_pe_backed:
-        description: "PE-backed private company"
-        expected_tier: [2, 3]
-        expected_score_range: [580, 750]
-        company_type: "PRIVATE_BACKED"
-        industry: "TECHNOLOGY"
-        stock_exchange: "NONE"
-        signal_coverage: 0.55
-        signals:
-          network_authority:
-            auditor_quality: 85
-            legal_counsel: 82
-            banking_relationship: 80
-            investor_quality: 88
-            board_network: 75
-          governance:
-            board_independence: 65
-            committee_structure: 60
-            executive_stability: 78
-          financial:
-            audit_opinion: 100
-            internal_controls: 75
-          litigation:
-            securities_litigation: 100
-            regulatory_action: 95
-          executive:
-            executive_stability: 75
-            cfo_quality: 78
-            executive_background: 90
-          corporate_footprint:
-            security_page: 70
-            hiring_signals: 80
-
-      pre_ipo:
-        description: "Pre-IPO company with S-1 filed"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        company_type: "PRE_IPO"
-        industry: "TECHNOLOGY"
-        stock_exchange: "NONE"
-        direct_queries:
-          planned_transaction: true
-        signals:
-          network_authority:
-            auditor_quality: 100
-            legal_counsel: 95
-            banking_relationship: 95
-            investor_quality: 90
-            board_network: 80
-            industry_association: 70
-          governance:
-            board_independence: 75
-            board_diversity: 70
-            ceo_chair_separation: 60
-            committee_structure: 75
-            board_refreshment: 65
-            related_party: 70
-            compensation_structure: 65
-            shareholder_rights: 60
-          financial:
-            audit_opinion: 100
-            internal_controls: 80
-            restatement: 100
-            filing_timeliness: 100
-            revenue_recognition: 70
-            debt_covenant: 85
-          litigation:
-            securities_litigation: 100
-            derivative_litigation: 100
-            sec_enforcement: 100
-            regulatory_action: 95
-          executive:
-            executive_stability: 70
-            cfo_quality: 85
-            insider_trading: 80
-            executive_background: 90
-            trading_plan: 75
-          corporate_footprint:
-            investor_relations: 75
-            governance_page: 65
-            esg_reporting: 60
-            press_release: 70
-            leadership_visibility: 75
-            hiring_signals: 85
