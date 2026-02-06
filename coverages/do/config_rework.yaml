@@ -66,149 +66,64 @@ directors_officers:
         question: "Are there any disputes with current or former executives?"
         query_condition:
           - {return: true, action: "REFER", override: 3, applied: null, note: "Executive dispute disclosed"}
- 
-    # -------------------------------------------------------------------------
-    # CATEGORICAL GROUPS
-    # categorical groups can either
-    # a) impact base premium after generation (impact: modifier)
-    # b) be the basis of premium (impact: premium)
-    # note: only one group be the basis of premium
-    # -------------------------------------------------------------------------
 
-    categorical_groups:
-      - id: "company_type"
-        name: "Company Type"
-        description: "Company classification based on public/private status and market cap"
-        impact: "modifier"
+    # =========================================================================
+    # SIGNAL REGISTRY
+    # All signals defined once with group_id reference
+    # proxy_tier at signal level; normalisation in inference functions
+    # =========================================================================
+    signal_registry:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL SIGNALS
+      # Return discrete categories that apply as pricing modifiers
+      # -----------------------------------------------------------------------
+      - id: company_type
         inference_utility_function: company_type_basefunction
-      - id: "industry"
-        name: "Industry"
-        description: "Industry classification from SIC/NAICS codes"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: company_type
+          features:
+            - {cat: "PUBLIC_LARGE_CAP", label: "Public Large Cap",  applied: 2.50}
+            - {cat: "PUBLIC_MID_CAP", label: "Public Mid Cap", applied: 1.50}
+            - {cat: "PUBLIC_SMALL_CAP", label: "Public Small Cap", applied: 1.00}
+            - {cat: "PUBLIC_MICRO_CAP", label: "Public Micro Cap", applied: 1.25}
+            - {cat: "PRE_IPO", label: "Pre-IPO", applied: 2.00}
+            - {cat: "SPAC", label: "SPAC", applied: 3.50}
+            - {cat: "PRIVATE_BACKED", label: "Private VC/PE Backed", applied: 0.60}
+            - {cat: "PRIVATE_OTHER", label: "Private Other", applied: 0.50}
+            - {cat: "NONPROFIT", label: "Nonprofit", applied: 0.40}
+
+      - id: industry
         inference_utility_function: industry_classification_basefunction
-      - id: "stock_exchange"
-        name: "Stock Exchange"
-        description: "Primary stock exchange listing"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: industry
+          features:
+            - {cat: "CRYPTO_DIGITAL", label: "Crypto/Digital Assets", applied: 2.50}
+            - {cat: "CANNABIS", label: "Cannabis", applied: 2.00}
+            - {cat: "HEALTHCARE_PHARMA", label: "Healthcare/Pharma", applied: 1.60}
+            - {cat: "FINANCIAL_SERVICES", label: "Financial Services", applied: 1.40}
+            - {cat: "TECHNOLOGY", label: "Technology", mapplied: 1.25}
+            - {cat: "ENERGY", label: "Energy",  applied: 1.15}
+            - {cat: "REAL_ESTATE", label: "Real Estate", applied: 1.10}
+            - {cat: "RETAIL_CONSUMER", label: "Retail/Consumer", applied: 1.00}
+            - {cat: "MANUFACTURING", label: "Manufacturing",  applied: 0.90}
+            - {cat: "OTHER", label: "Other", applied: 1.00}
+
+      - id: stock_exchange
         inference_utility_function: stock_exchange_basefunction
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: stock_exchange
+          features:
+            - {cat: "NYSE",  label: "NYSE", applied: 1.00}
+            - {cat: "NASDAQ", label: "NASDAQ", applied: 1.00}
+            - {cat: "NYSE_AMERICAN", label: "NYSE American", applied: 1.10}
+            - {cat: "OTC", label: "OTC Markets", applied: 1.30}
+            - {cat: "FOREIGN", label: "Foreign Exchange", applied: 1.15}
+            - {cat: "NONE", label: "Not Listed", applied: 0.80}
 
-    # -------------------------------------------------------------------------
-    # CATEGORICAL FEATURES
-    # -------------------------------------------------------------------------
-
-    categorical_features:
-      company_type:
-        - cat: "PUBLIC_LARGE_CAP"
-          label: "Public Large Cap"
-          modifier: 2.50
-          description: "Market cap >$10B, SEC reporting"
-        - cat: "PUBLIC_MID_CAP"
-          label: "Public Mid Cap"
-          modifier: 1.50
-          description: "Market cap $2B-$10B"
-        - cat: "PUBLIC_SMALL_CAP"
-          label: "Public Small Cap"
-          modifier: 1.00
-          description: "Market cap $300M-$2B"
-        - cat: "PUBLIC_MICRO_CAP"
-          label: "Public Micro Cap"
-          modifier: 1.25
-          description: "Market cap <$300M (elevated litigation risk)"
-        - cat: "PRE_IPO"
-          label: "Pre-IPO"
-          modifier: 2.00
-          description: "Filed S-1 or planning IPO within 12 months"
-        - cat: "SPAC"
-          label: "SPAC"
-          modifier: 3.50
-          description: "Special Purpose Acquisition Company"
-        - cat: "PRIVATE_BACKED"
-          label: "Private VC/PE Backed"
-          modifier: 0.60
-          description: "Private company with institutional backing"
-        - cat: "PRIVATE_OTHER"
-          label: "Private Other"
-          modifier: 0.50
-          description: "Private company without institutional backing"
-        - cat: "NONPROFIT"
-          label: "Nonprofit"
-          modifier: 0.40
-          description: "501(c)(3) or equivalent nonprofit"
-
-      industry:
-        - cat: "CRYPTO_DIGITAL"
-          label: "Crypto/Digital Assets"
-          modifier: 2.50
-          description: "Cryptocurrency, blockchain, digital assets"
-
-        - cat: "CANNABIS"
-          label: "Cannabis"
-          modifier: 2.00
-          description: "Cannabis cultivation, processing, retail"
-
-        - cat: "HEALTHCARE_PHARMA"
-          label: "Healthcare/Pharma"
-          modifier: 1.60
-
-        - cat: "FINANCIAL_SERVICES"
-          label: "Financial Services"
-          modifier: 1.40
-          description: "Banks, insurance, investment management, fintech"
-
-        - cat: "TECHNOLOGY"
-          label: "Technology"
-          modifier: 1.25
-          description: "Software, hardware, internet, semiconductors"
-
-        - cat: "ENERGY"
-          label: "Energy"
-          modifier: 1.15
-          description: "Oil & gas, utilities, renewable energy"
-
-        - cat: "REAL_ESTATE"
-          label: "Real Estate"
-          modifier: 1.10
-          description: "REITs, real estate development, property management"
-
-        - cat: "RETAIL_CONSUMER"
-          label: "Retail/Consumer"
-          modifier: 1.00
-          description: "Retail, consumer products, restaurants"
-
-        - cat: "MANUFACTURING"
-          label: "Manufacturing"
-          modifier: 0.90
-          description: "Industrial manufacturing, aerospace, automotive"
-
-        - cat: "OTHER"
-          label: "Other"
-          modifier: 1.00
-          description: "Other industries"
-
-      stock_exchange:
-        - cat: "NYSE"
-          label: "NYSE"
-          modifier: 1.00
-          description: ""
-        - cat: "NASDAQ"
-          label: "NASDAQ"
-          modifier: 1.00
-          description: ""
-        - cat: "NYSE_AMERICAN"
-          label: "NYSE American"
-          modifier: 1.10
-          description: ""
-        - cat: "OTC"
-          label: "OTC Markets"
-          modifier: 1.30
-          description: ""
-        - cat: "FOREIGN"
-          label: "Foreign Exchange"
-          modifier: 1.15
-        - cat: "NONE"
-          label: "Not Listed"
-          modifier: 0.80
-          description: ""
 
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
