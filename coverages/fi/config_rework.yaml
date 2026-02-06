@@ -72,186 +72,73 @@ financial_institutions:
         query_condition:
           - {return: true, action: "FLAG", override: null, applied: null, note: "New product line risk"}    
 
-    # -------------------------------------------------------------------------
-    # CATEGORICAL GROUPS
-    # categorical groups can either
-    # a) impact base premium after generation (impact: modifier)
-    # b) be the basis of premium (impact: premium)
-    # note: only one group be the basis of premium
-    # -------------------------------------------------------------------------
-    
-    categorical_groups:
-      - id: "institution_type"
-        name: "Institution Type"
-        description: "Type of financial institution from charter/registration"
-        impact: "modifier"
+    # =========================================================================
+    # SIGNAL REGISTRY
+    # All signals defined once with group_id reference
+    # proxy_tier at signal level; normalisation in inference functions
+    # =========================================================================
+    signal_registry:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL SIGNALS
+      # Return discrete categories that apply as pricing modifiers
+      # -----------------------------------------------------------------------
+      - id: institution_type
         inference_utility_function: institution_type_basefunction
-      - id: "regulatory_framework"
-        name: "Regulatory Framework"
-        description: "Primary regulatory authority"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: institution_type
+          features:
+            - {cat: "MONEY_CENTER_BANK", label: "Money Center Bank", applied: 1.50}
+            - {cat: "REGIONAL_BANK", label: "Regional Bank", applied: 1.20}
+            - {cat: "COMMUNITY_BANK", label: "Community Bank", applied: 1.00}
+            - {cat: "CREDIT_UNION", label: "Credit Union", applied: 0.85}
+            - {cat: "SAVINGS_INSTITUTION", label: "Savings Institution", applied: 0.90}     
+            - {cat: "BROKER_DEALER", label: "Broker-Dealer", applied: 1.40}
+            - {cat: "INVESTMENT_ADVISER", label: "Investment Adviser", applied: 1.25}
+            - {cat: "INSURANCE_COMPANY", label: "Insurance Company", applied: 1.10}
+            - {cat: "ASSET_MANAGER", label: "Asset Manager", applied: 1.30}
+            - {cat: "FINTECH", label: "Fintech", applied: 1.50}
+            - {cat: "MORTGAGE_COMPANY", label: "Mortgage Company", applied: 1.35}
+            - {cat: "PAYMENT_PROCESSOR", label: "Payment Processor", applied: 1.40}
+            - {cat: "OTHER", label: "Other Financial Institution", applied: 1.20}
+
+      - id: regulatory_framework
         inference_utility_function: regulatory_authority_basefunction
-      - id: "asset_size_band"
-        name: "Asset Size Band"
-        description: "Total asset size classification"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: regulatory_framework
+          features:
+            - {cat: "OCC", label: "OCC (National Banks)", applied: 1.00}
+            - {cat: "FDIC", label: "FDIC (State Non-Member)", applied: 1.00}
+            - {cat: "FED", label: "Federal Reserve", applied: 1.00}
+            - {cat: "NCUA", label: "NCUA (Credit Unions)", applied: 0.95}
+            - {cat: "SEC", label: "SEC", applied: 1.10}
+            - {cat: "FINRA", label: "FINRA", applied: 1.10}
+            - {cat: "STATE", label: "State Regulated", applied: 1.15}
+            - {cat: "MULTI", label: "Multiple Regulators", applied: 1.05}
+
+      - id: asset_size_band
         inference_utility_function: asset_size_basefunction
-      - id: "publicly_traded"
-        name: "Publicly Traded"
-        description: "Whether institution is publicly traded"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: asset_size_band
+          features:
+            - {cat: "MEGA", label: "Mega (>$250B)", applied: 2.50}
+            - {cat: "LARGE", label: "Large ($50B-$250B)", applied: 1.80}
+            - {cat: "MID", label: "Mid-Size ($10B-$50B)", applied: 1.30}
+            - {cat: "SMALL", label: "Small ($1B-$10B)", applied: 1.00}
+            - {cat: "COMMUNITY", label: "Community (<$1B)", applied: 0.80}
+
+      - id: publicly_traded
         inference_utility_function: publically_traded_basefunction
-        
-    # -------------------------------------------------------------------------
-    # CATEGORICAL FEATURES
-    # -------------------------------------------------------------------------
-    
-    categorical_features:
-      institution_type:
-        - cat: "MONEY_CENTER_BANK"
-          label: "Money Center Bank"
-          modifier: 1.50
-          description: "G-SIB or major national bank (>$250B assets)"
-          
-        - cat: "REGIONAL_BANK"
-          label: "Regional Bank"
-          modifier: 1.20
-          description: "Regional bank ($10B-$250B assets)"
-          
-        - cat: "COMMUNITY_BANK"
-          label: "Community Bank"
-          modifier: 1.00
-          description: "Community bank (<$10B assets)"
-          
-        - cat: "CREDIT_UNION"
-          label: "Credit Union"
-          modifier: 0.85
-          description: "Federally or state-chartered credit union"
-          
-        - cat: "SAVINGS_INSTITUTION"
-          label: "Savings Institution"
-          modifier: 0.90
-          description: "Thrift or savings bank"
-          
-        - cat: "BROKER_DEALER"
-          label: "Broker-Dealer"
-          modifier: 1.40
-          description: "SEC/FINRA registered broker-dealer"
-          
-        - cat: "INVESTMENT_ADVISER"
-          label: "Investment Adviser"
-          modifier: 1.25
-          description: "SEC or state registered investment adviser"
-         
-        - cat: "INSURANCE_COMPANY"
-          label: "Insurance Company"
-          modifier: 1.10
-          description: "State-licensed insurance company"
-          
-        - cat: "ASSET_MANAGER"
-          label: "Asset Manager"
-          modifier: 1.30
-          description: "Investment company or fund manager"
-          
-        - cat: "FINTECH"
-          label: "Fintech"
-          modifier: 1.50
-          description: "Technology-focused financial services"
-         
-        - cat: "MORTGAGE_COMPANY"
-          label: "Mortgage Company"
-          modifier: 1.35
-          description: "Mortgage lender or servicer"
-          
-        - cat: "PAYMENT_PROCESSOR"
-          label: "Payment Processor"
-          modifier: 1.40
-          description: "Payment processing or money transmission"
-          
-        - cat: "OTHER"
-          label: "Other Financial Institution"
-          modifier: 1.20
-          description: "Other regulated financial entity"
-
-      regulatory_framework:
-        - cat: "OCC"
-          label: "OCC (National Banks)"
-          modifier: 1.00
-          description: "Office of the Comptroller of the Currency"
-        - cat: "FDIC"
-          label: "FDIC (State Non-Member)"
-          modifier: 1.00
-          description: "State banks not Fed members"
-        - cat: "FED"
-          label: "Federal Reserve"
-          modifier: 1.00
-          description: "State member banks, BHCs, FHCs"
-        - cat: "NCUA"
-          label: "NCUA (Credit Unions)"
-          modifier: 0.95
-          description: "National Credit Union Administration"
-        - cat: "SEC"
-          label: "SEC"
-          modifier: 1.10
-          description: "Securities and Exchange Commission"
-        - cat: "FINRA"
-          label: "FINRA"
-          modifier: 1.10
-          description: "Financial Industry Regulatory Authority"
-        - cat: "STATE"
-          label: "State Regulated"
-          modifier: 1.15
-          description: "State banking/insurance department"
-        - cat: "MULTI"
-          label: "Multiple Regulators"
-          modifier: 1.05
-          description: "Subject to multiple regulatory bodies"
-
-      asset_size_band:
-        - cat: "MEGA"
-          label: "Mega (>$250B)"
-          modifier: 2.50
-          method: "MODIFIER"
-          description: ""
-          implied_thresholds: {min: 250000000000, max: null}
-
-        - cat: "LARGE"
-          label: "Large ($50B-$250B)"
-          modifier: 1.80
-          method: "MODIFIER"
-          description: ""
-          implied_thresholds: {min: 50000000000, max: 250000000000}
-
-        - cat: "MID"
-          label: "Mid-Size ($10B-$50B)"
-          modifier: 1.30
-          method: "MODIFIER"
-          description: ""
-          implied_thresholds: {min: 10000000000, max: 50000000000}
-
-        - cat: "SMALL"
-          label: "Small ($1B-$10B)"
-          modifier: 1.00
-          method: "MODIFIER"
-          description: ""
-          implied_thresholds: {min: 1000000000, max: 10000000000}
-
-        - cat: "COMMUNITY"
-          label: "Community (<$1B)"
-          modifier: 0.80
-          method: "MODIFIER"
-          description: ""
-          implied_thresholds: {min: 0, max: 1000000000}
-
-      publicly_traded:
-        - cat: "PUBLIC"
-          label: "Publicly Traded"
-          modifier: 1.10
-          description: "SEC reporting company"
-        - cat: "PRIVATE"
-          label: "Private"
-          modifier: 1.00
-          description: "Non-SEC reporting"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: publicly_traded
+          features:
+            - {cat: "PUBLIC", label: "Publicly Traded", applied: 1.10} 
+            - {cat: "PRIVATE", label: "Private", applied: 1.00}
+       
 
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
