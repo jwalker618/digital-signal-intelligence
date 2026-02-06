@@ -73,189 +73,70 @@ energy:
         query_condition:
           - {return: true, action: "FLAG", override: null, applied: null, note: "Third-party contractor usage"}
 
-    # -------------------------------------------------------------------------
-    # CATEGORICAL GROUPS
-    # categorical groups can either
-    # a) impact base premium after generation (impact: modifier)
-    # b) be the basis of premium (impact: premium)
-    # note: only one group be the basis of premium
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # SIGNAL REGISTRY
+    # All signals defined once with group_id reference
+    # proxy_tier at signal level; normalisation in inference functions
+    # =========================================================================
+    signal_registry:
 
-    categorical_groups:
-      - id: "operator_type"
-        name: "Operator Type"
-        description: "Operator classification based on size, integration, and ownership"
-        impact: "modifier"
+      # -----------------------------------------------------------------------
+      # CATEGORICAL SIGNALS
+      # Return discrete categories that apply as pricing modifiers
+      # -----------------------------------------------------------------------
+      - id: operator_type
         inference_utility_function: operator_type_basefunction
-      - id: "operation_segment"
-        name: "Operation Segment"
-        description: "Primary operational segment"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: operator_type
+          features:
+            - {cat: "SUPERMAJOR", label: "Supermajor", applied: 0.75}
+            - {cat: "MAJOR_INTEGRATED", label: "Major Integrated", applied: 0.85}
+            - {cat: "LARGE_INDEPENDENT", label: "Large Independent", applied: 0.95}
+            - {cat: "MID_INDEPENDENT", label: "Mid-Size Independent", applied: 1.00}
+            - {cat: "SMALL_INDEPENDENT", label: "Small Independent", applied: 1.20}
+            - {cat: "NATIONAL_OIL", label: "National Oil Company", applied: 0.90}
+            - {cat: "MIDSTREAM_MAJOR", label: "Major Midstream", applied: 0.85}
+            - {cat: "DOWNSTREAM_MAJOR", label: "Major Downstream", applied: 0.90}
+            - {cat: "PRIVATE_EQUITY", label: "Private Equity Backed", applied: 1.15}
+            - {cat: "UNKNOWN", label: "Unknown/New Operator", applied: 1.40}
+
+      - id: operation_segment
         inference_utility_function: operation_segment_basefunction
-      - id: "geographic_focus"
-        name: "Geographic Focus"
-        description: "Primary geographic focus of operations"
-        impact: "modifier"
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: operation_segment
+          features:
+            - {cat: "UPSTREAM_CONVENTIONAL", label: "Upstream Conventional", applied: 1.00}
+            - {cat: "UPSTREAM_UNCONVENTIONAL", label: "Upstream Unconventional", applied: 0.95}
+            - {cat: "UPSTREAM_OFFSHORE", label: "Upstream Offshore (Shelf)", applied: 1.20}
+            - {cat: "UPSTREAM_DEEPWATER", label: "Upstream Deepwater", applied: 1.50} 
+            - {cat: "MIDSTREAM_PIPELINE", label: "Midstream Pipeline", applied: 0.80}
+            - {cat: "MIDSTREAM_PROCESSING", label: "Midstream Processing", applied: 1.00}
+            - {cat: "MIDSTREAM_STORAGE",  label: "Midstream Storage", applied: 0.85}
+            - {cat: "DOWNSTREAM_REFINING", label: "Downstream Refining", applied: 1.30}
+            - {cat: "DOWNSTREAM_PETROCHEMICAL", label: "Downstream Petrochemical",  applied: 1.25}
+            - {cat: "POWER_GENERATION", label: "Power Generation", applied: 0.90}
+            - {cat: "RENEWABLE", label: "Renewable Energy", applied: 0.70}
+            - {cat: "MIXED", label: "Mixed Operations", applied: 1.05}
+
+      - id: geographic_focus
         inference_utility_function: geographic_focus_basefunction
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: geographic_focus
+          features:
+            - {cat: "US_ONSHORE", label: "US Onshore", applied: 1.00}
+            - {cat: "US_GULF_SHELF", label: "US Gulf Shelf", applied: 1.10}
+            - {cat: "US_GULF_DEEPWATER", label: "US Gulf Deepwater", applied: 1.40}
+            - {cat: "NORTH_SEA", label: "North Sea", applied: 1.15}
+            - {cat: "WEST_AFRICA", label: "West Africa", applied: 1.25}
+            - {cat: "MIDDLE_EAST", label: "Middle East",  applied: 1.20}
+            - {cat: "ASIA_PACIFIC", label: "Asia Pacific", applied: 1.10}
+            - {cat: "LATIN_AMERICA", label: "Latin America", applied: 1.20}
+            - {cat: "GLOBAL_DIVERSIFIED", label: "Global Diversified", applied: 1.05}
+            - {cat: "OTHER", label: "Other", applied: 1.15}
 
-    # -------------------------------------------------------------------------
-    # CATEGORICAL FEATURES
-    # -------------------------------------------------------------------------
-
-    categorical_features:
-      operator_type:
-        - cat: "SUPERMAJOR"
-          label: "Supermajor"
-          modifier: 0.75
-          description: "ExxonMobil, Shell, BP, Chevron, TotalEnergies, etc."
-
-        - cat: "MAJOR_INTEGRATED"
-          label: "Major Integrated"
-          modifier: 0.85
-          description: "Large integrated oil companies"
-
-        - cat: "LARGE_INDEPENDENT"
-          label: "Large Independent"
-          modifier: 0.95
-          description: "Large E&P independents (ConocoPhillips, EOG, etc.)"
-
-        - cat: "MID_INDEPENDENT"
-          label: "Mid-Size Independent"
-          modifier: 1.00
-          description: "Mid-size E&P companies"
-
-        - cat: "SMALL_INDEPENDENT"
-          label: "Small Independent"
-          modifier: 1.20
-          description: "Small E&P operators"
-
-        - cat: "NATIONAL_OIL"
-          label: "National Oil Company"
-          modifier: 0.90
-          description: "State-owned national oil companies"
-
-        - cat: "MIDSTREAM_MAJOR"
-          label: "Major Midstream"
-          modifier: 0.85
-          description: "Major pipeline/processing operators"
-
-        - cat: "DOWNSTREAM_MAJOR"
-          label: "Major Downstream"
-          modifier: 0.90
-          description: "Major refining operators"
-
-        - cat: "PRIVATE_EQUITY"
-          label: "Private Equity Backed"
-          modifier: 1.15
-          description: "PE-backed operators"
-
-        - cat: "UNKNOWN"
-          label: "Unknown/New Operator"
-          modifier: 1.40
-          description: "New or unclassified operator"
-
-      operation_segment:
-        - cat: "UPSTREAM_CONVENTIONAL"
-          label: "Upstream Conventional"
-          modifier: 1.00
-          description: "Conventional onshore oil & gas production"
-
-        - cat: "UPSTREAM_UNCONVENTIONAL"
-          label: "Upstream Unconventional"
-          modifier: 0.95
-          description: "Shale, tight oil, CBM operations"
-
-        - cat: "UPSTREAM_OFFSHORE"
-          label: "Upstream Offshore (Shelf)"
-          modifier: 1.20
-          description: "Shallow water offshore operations"
-
-        - cat: "UPSTREAM_DEEPWATER"
-          label: "Upstream Deepwater"
-          modifier: 1.50
-          description: "Deepwater offshore operations (>500m)"
-
-        - cat: "MIDSTREAM_PIPELINE"
-          label: "Midstream Pipeline"
-          modifier: 0.80
-          description: "Oil & gas pipeline operations"
-
-        - cat: "MIDSTREAM_PROCESSING"
-          label: "Midstream Processing"
-          modifier: 1.00
-          description: "Gas processing, NGL fractionation"
-
-        - cat: "MIDSTREAM_STORAGE"
-          label: "Midstream Storage"
-          modifier: 0.85
-          description: "Crude/product storage terminals"
-
-        - cat: "DOWNSTREAM_REFINING"
-          label: "Downstream Refining"
-          modifier: 1.30
-          description: "Petroleum refining operations"
-
-        - cat: "DOWNSTREAM_PETROCHEMICAL"
-          label: "Downstream Petrochemical"
-          modifier: 1.25
-          description: "Petrochemical manufacturing"
-
-        - cat: "POWER_GENERATION"
-          label: "Power Generation"
-          modifier: 0.90
-          description: "Gas-fired power generation"
-
-        - cat: "RENEWABLE"
-          label: "Renewable Energy"
-          modifier: 0.70
-          description: "Wind, solar, other renewables"
-
-        - cat: "MIXED"
-          label: "Mixed Operations"
-          modifier: 1.05
-          description: "Diversified operations across segments"
-
-      geographic_focus:
-        - cat: "US_ONSHORE"
-          label: "US Onshore"
-          modifier: 1.00
-          description: ""
-        - cat: "US_GULF_SHELF"
-          label: "US Gulf Shelf"
-          modifier: 1.10
-          description: ""
-        - cat: "US_GULF_DEEPWATER"
-          label: "US Gulf Deepwater"
-          modifier: 1.40
-          description: ""
-        - cat: "NORTH_SEA"
-          label: "North Sea"
-          modifier: 1.15
-          description: ""
-        - cat: "WEST_AFRICA"
-          label: "West Africa"
-          modifier: 1.25
-          description: ""
-        - cat: "MIDDLE_EAST"
-          label: "Middle East"
-          modifier: 1.20
-          description: ""
-        - cat: "ASIA_PACIFIC"
-          label: "Asia Pacific"
-          modifier: 1.10
-          description: ""
-        - cat: "LATIN_AMERICA"
-          label: "Latin America"
-          modifier: 1.20
-          description: ""
-        - cat: "GLOBAL_DIVERSIFIED"
-          label: "Global Diversified"
-          modifier: 1.05
-          description: ""
-        - cat: "OTHER"
-          label: "Other"
-          modifier: 1.15
-          description: ""
 
     # -------------------------------------------------------------------------
     # SIGNAL GROUPS
