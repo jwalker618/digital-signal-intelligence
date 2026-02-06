@@ -1,32 +1,21 @@
 # =============================================================================
 # DSI Model Configuration
+# =============================================================================
 #
-# This file holds all the relvant configuration types for a single coverage.
-# For example,
-# coverage:         the actual coverage cohort, eg aerospace
-#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
+# 1. Signals defined once in signal_registry with group_id reference
+# 2. source: score (default) uses 0-100 inference return
+# 3. source: metadata.field uses inference metadata with bands/categories
+# 4. Categorical groups apply modifiers (applied:), not scores
+# 5. score_conditions (plural, banded) apply actions based on score thresholds
+#    Actions: FLAG | MODIFIER | REFER
+# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
+# 7. Normalisation handled by inference functions, not config
 #
-# There can be multiple configurations saved under a coverage.
+# AUGMENTED BY:
+# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
-# A configuration is the single source of truth for:
-#   - 1) direct (optional) queries
-#   - 2) categorical features
-#   - 3) signal groups and underlying features
-#   - the source and impact of 1- 3
-#   - tier definitions
-#   - other pricing parameters
-#   - test profiles for validation
-#
-# When a technical model is generated:
-# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
-# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-#
-# All DSI principles must be adhered to, specifically:
-# 1. All signals must be externally observable (no application questions required)
-# 2. Direct queries are OPTIONAL - model must work without them
-# 3. Categorical features are inferred from observable data
-# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
-# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 marine:
@@ -34,8 +23,8 @@ marine:
     metadata:
       name: "DSI Marine Technical Pricing Model"
       description: "Marine hull and liability coverage based on observable operator behavior, safety records, and fleet patterns"
-      version: "2.0.0"
-      coverage_types:
+      version: "2.1.0"
+      product_types:
         - "hull_machinery"
         - "total_loss"
         - "increased_value"
@@ -43,59 +32,37 @@ marine:
         - "war_risks"
         - "pi_liability"
         - "cargo"
-      applicable_vessel_categories:
-        - "container"
-        - "tanker"
-        - "dry_bulk"
-        - "lng_lpg"
-        - "offshore"
-        - "passenger"
-        - "general_cargo"
       applicable_markets: ["global"]
       minimum_viable_input: ["client name (domain optional)","Limit in USD","TIV"]
       min_premium: 50000
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed (max 10)
+    # Actions: FLAG | MODIFIER | REFER
+    # =========================================================================
     direct_queries:
-      - id: "fleet_size"
-        question: "Total number of vessels in owned/operated fleet?"
-        bands:
-          - return: true
-            override: null
-            action: "INFO"
-            note: "Fleet size recorded"
+      
       - id: "psc_detentions"
         question: "Any vessels detained by port state control in past 36 months?"
-        bands:
-          - return: true
-            override: null
-            action: "REFER"
-            note: "PSC detentions in past 36 months"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "PSC detentions in past 36 months"}
+      
       - id: "total_losses"
         question: "Any total losses or major casualties in past 5 years?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            note: "Total losses in past 5 years"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Total losses in past 5 years"}
+      
       - id: "third_party_manager"
         question: "Is the fleet managed by a third-party technical manager?"
-        bands:
-          - return: true
-            override: null
-            action: "INFO"
-            note: "Third-party technical management"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Third-party technical management"}
+      
       - id: "sanctioned_trade"
         question: "Any vessels currently trading to sanctioned regions?"
-        bands:
-          - return: true
-            override: 5
-            action: "DECLINE"
-            note: "Trading to sanctioned regions - coverage not available"
-
+        query_condition:
+          - {return: true, action: "REFER", override: 5, applied: null, note: "Trading to sanctioned regions - coverage not available"}
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
@@ -788,537 +755,236 @@ marine:
           weight: 0.20
           inference_utility_function: credit_rating_basefunction
 
-    # -------------------------------------------------------------------------
-    # TIER THRESHOLDS
-    # -------------------------------------------------------------------------
-    tier_thresholds:
-      tiers:
+     # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
+    risk_tier_bands:
+      bands:
         - id: 1
           label: "PREFERRED"
-          min_score: 800
-          max_score: 1000
-          description: "Excellent operator - auto-approve at preferred pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0015
-            basis: "tiv"
-        - id: 2
-          label: "STANDARD"
-          min_score: 650
-          max_score: 799
-          description: "Good operator - auto-approve at standard pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0022
-            basis: "tiv"
-        - id: 3
-          label: "ELEVATED"
-          min_score: 500
-          max_score: 649
-          description: "Moderate risk - auto-approve with conditions"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0032
-            basis: "tiv"
-        - id: 4
-          label: "HIGH_RISK"
-          min_score: 350
-          max_score: 499
-          description: "High risk - manual review required"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0050
-            basis: "tiv"
-        - id: 5
-          label: "CRITICAL"
-          min_score: 0
-          max_score: 349
-          description: "Critical risk - decline or senior review"
-          auto_approve: false
-          auto_decline: true
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0080
-            basis: "tiv"
+          description: "Excellent risk - automatic approval, preferred pricing"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "MULTIPLIER", applied: 0.0015, basis: "tiv"}
 
-    # -------------------------------------------------------------------------
+        - id: 2
+          label: "STANDARD_PLUS"
+          description: "Good risk - automatic approval, standard pricing"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "MULTIPLIER", applied: 0.0022, basis: "tiv"}
+
+        - id: 3
+          label: "STANDARD"
+          description: "Average risk - may require referral"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "REFER"
+            application: {method: "MULTIPLIER", applied: 0.0032, basis: "tiv"}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          description: "Elevated risk - requires senior review"
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "MULTIPLIER", applied: 0.0050, basis: "tiv"}
+
+        - id: 5
+          label: "DECLINE"
+          description: "Unacceptable risk - decline"
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "MULTIPLIER", applied: 0.0080, basis: "tiv"}
+
+    # =========================================================================
     # LOSS TIER BANDS
-    # -------------------------------------------------------------------------
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
         - id: 1
           label: "VERY_LOW"
+          description: "Very low risk of loss"
           interpretation:
             bands: {min: 80, max: 100}
             application:
               frequency_modifier: 0.70
               severity_modifier: 0.80
+
         - id: 2
           label: "LOW"
+          description: "Low risk of loss"
           interpretation:
             bands: {min: 60, max: 79}
             application:
               frequency_modifier: 0.85
               severity_modifier: 0.90
+
         - id: 3
           label: "MODERATE"
+          description: "Moderate risk of loss"
           interpretation:
             bands: {min: 40, max: 59}
             application:
               frequency_modifier: 1.00
               severity_modifier: 1.00
+
         - id: 4
-          label: "HIGH"
+          label: "ELEVATED"
+          description: "Elevated risk of loss"
           interpretation:
             bands: {min: 20, max: 39}
             application:
-              frequency_modifier: 1.25
-              severity_modifier: 1.20
+              frequency_modifier: 1.15
+              severity_modifier: 1.15
+
         - id: 5
-          label: "VERY_HIGH"
+          label: "HIGH"
+          description: "High risk of loss"
           interpretation:
             bands: {min: 0, max: 19}
             application:
-              frequency_modifier: 1.60
-              severity_modifier: 1.50
+              frequency_modifier: 1.35
+              severity_modifier: 1.40
       constraints:
         floor: 0.55
         cap: 1.60
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # EXPOSURE TIER BANDS
-    # -------------------------------------------------------------------------
-    exposure_tier_bands:
-      bands:
-        - id: 1
-          label: "SMALL"
-          interpretation:
-            bands: {min: 0, max: 10000000}
-            application:
-              method: "MODIFIER"
-              applied: 0.85
-        - id: 2
-          label: "MEDIUM"
-          interpretation:
-            bands: {min: 10000001, max: 50000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.00
-        - id: 3
-          label: "LARGE"
-          interpretation:
-            bands: {min: 50000001, max: 250000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.15
-        - id: 4
-          label: "VERY_LARGE"
-          interpretation:
-            bands: {min: 250000001, max: null}
-            application:
-              method: "MODIFIER"
-              applied: 1.35
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
+    exposure:
+      size:
+        weight: 0.60
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "Micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
 
-    # -------------------------------------------------------------------------
+          - id: 2
+            label: "SMALL"
+            description: "Small exposure value ($1M - $10M)"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium exposure value ($10M - $50M)"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
+
+          - id: 4
+            label: "LARGE"
+            description: "Large exposure value ($50M - $250M)"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
+
+          - id: 5
+            label: "VERY_LARGE"
+            description: "Very large exposure value ($250M+)"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
+
+      complexity:
+        weight: 0.40
+        bands:
+          - id: 1
+            label: "SIMPLE"
+            description: "Simple operational complexity"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.85}
+
+          - id: 2
+            label: "MODERATE"
+            description: "Moderate operational complexity"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.95}
+
+          - id: 3
+            label: "COMPLEX"
+            description: "Complex operations"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.10}
+
+          - id: 4
+            label: "HIGHLY_COMPLEX"
+            description: "Highly complex operations"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.30}
+
+          - id: 5
+            label: "EXTREMELY_COMPLEX"
+            description: "Extremely complex operations"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 1.60}
+
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations
+    # =========================================================================
     limit_bandings:
       - id: 1
         limit: 5000000
         deductible: 250000
+
       - id: 2
         limit: 10000000
         deductible: 500000
+
       - id: 3
         limit: 25000000
         deductible: 1000000
+
       - id: 4
         limit: 50000000
         deductible: 2000000
+
       - id: 5
         limit: 100000000
         deductible: 5000000
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # -------------------------------------------------------------------------
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
-      deductible_guidelines:
-        tier_1_pct: 0.005
-        tier_2_pct: 0.0075
-        tier_3_pct: 0.01
-        tier_4_pct: 0.015
-        tier_5_pct: 0.02
-        standard_amounts: [50000, 100000, 150000, 250000, 500000, 1000000]
 
-      experience_modifiers:
-        excellent_5yr: 0.85
-        good_5yr: 0.90
-        clean_3yr: 0.95
-        minor_claims: 1.00
-        moderate_claims: 1.20
-        significant_claims: 1.40
-        total_loss: 1.75
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.00}
+          - {limit: 2000000, factor: 1.70}
+          - {limit: 5000000, factor: 3.20}
+          - {limit: 10000000, factor: 5.00}
+          - {limit: 25000000, factor: 9.00}
+          - {limit: 50000000, factor: 14.00}
+          - {limit: 100000000, factor: 22.00}
 
-      war_risk_additional:
-        standard_areas: 0.00
-        listed_areas: 0.0025
-        high_risk_areas: 0.0075
-        breach_areas: "quoted_separately"
+      deductible_credits:
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+        - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
       taxes_fees_rate: 0.03
-
-    # -------------------------------------------------------------------------
-    # TEST PROFILES
-    # -------------------------------------------------------------------------
-    test_profiles:
-      excellent_liner:
-        description: "Major container liner with excellent record"
-        expected_tier: [1, 2]
-        expected_score_range: [800, 950]
-        operator_type: "MAJOR_LINER"
-        vessel_category: "CONTAINER"
-        trading_pattern: "LINER_REGULAR"
-        flag_state_quality: "WHITE_LIST"
-        fleet_age_band: "AGE_5_10"
-        signals:
-          network_authority:
-            classification_society: 95
-            pi_club: 92
-            charterer_quality: 88
-            banking_relationship: 90
-            flag_state: 95
-            industry_association: 85
-            technical_manager: 90
-            port_relationship: 85
-          operational_telemetry:
-            ais_compliance: 98
-            dark_activity: 95
-            route_risk: 85
-            psc_region_exposure: 80
-            operational_efficiency: 88
-            weather_routing: 85
-          safety_compliance:
-            psc_detention: 95
-            psc_deficiency: 88
-            class_status: 98
-            ism_compliance: 95
-            casualty_history: 90
-            total_loss: 100
-          fleet_profile:
-            fleet_age: 85
-            fleet_stability: 90
-            vessel_quality: 92
-            crew_certification: 88
-            management_consistency: 95
-          sanctions_compliance:
-            sanctions_status: 100
-            ownership_transparency: 95
-            jurisdiction_risk: 90
-            sts_pattern: 100
-            historical_sanctions: 100
-          environmental:
-            imo2020_compliance: 95
-            bwm_compliance: 92
-            cii_rating: 85
-            environmental_incident: 95
-          corporate_footprint:
-            website_quality: 90
-            fleet_disclosure: 95
-            sustainability_reporting: 88
-            safety_communication: 85
-            crew_welfare: 82
-            industry_presence: 90
-          structured_data:
-            vetting: 92
-            esg_rating: 85
-            credit_rating: 88
-
-      average_tanker:
-        description: "Mid-size tanker operator with typical profile"
-        expected_tier: [2, 3]
-        expected_score_range: [580, 720]
-        operator_type: "REGIONAL_OPERATOR"
-        vessel_category: "TANKER"
-        trading_pattern: "SPOT_TRAMP"
-        flag_state_quality: "WHITE_LIST"
-        fleet_age_band: "AGE_10_15"
-        signals:
-          network_authority:
-            classification_society: 85
-            pi_club: 78
-            charterer_quality: 72
-            banking_relationship: 70
-            flag_state: 80
-            industry_association: 65
-            technical_manager: 75
-            port_relationship: 70
-          operational_telemetry:
-            ais_compliance: 88
-            dark_activity: 82
-            route_risk: 70
-            psc_region_exposure: 72
-            operational_efficiency: 75
-            weather_routing: 70
-          safety_compliance:
-            psc_detention: 78
-            psc_deficiency: 72
-            class_status: 85
-            ism_compliance: 85
-            casualty_history: 80
-            total_loss: 95
-          fleet_profile:
-            fleet_age: 65
-            fleet_stability: 75
-            vessel_quality: 72
-            crew_certification: 75
-            management_consistency: 80
-          sanctions_compliance:
-            sanctions_status: 100
-            ownership_transparency: 80
-            jurisdiction_risk: 78
-            sts_pattern: 85
-            historical_sanctions: 95
-          environmental:
-            imo2020_compliance: 85
-            bwm_compliance: 78
-            cii_rating: 70
-            environmental_incident: 88
-          corporate_footprint:
-            website_quality: 65
-            fleet_disclosure: 70
-            sustainability_reporting: 55
-            safety_communication: 60
-            crew_welfare: 60
-            industry_presence: 55
-          structured_data:
-            vetting: 75
-            esg_rating: 60
-            credit_rating: 65
-
-      high_risk_independent:
-        description: "Small independent with safety concerns"
-        expected_tier: [4, 5]
-        expected_score_range: [280, 450]
-        operator_type: "INDEPENDENT"
-        vessel_category: "GENERAL_CARGO"
-        trading_pattern: "SPOT_TRAMP"
-        flag_state_quality: "GREY_LIST"
-        fleet_age_band: "AGE_20_25"
-        signals:
-          network_authority:
-            classification_society: 55
-            pi_club: 45
-            charterer_quality: 40
-            banking_relationship: 35
-            flag_state: 50
-            industry_association: 30
-            technical_manager: 45
-            port_relationship: 40
-          operational_telemetry:
-            ais_compliance: 65
-            dark_activity: 50
-            route_risk: 45
-            psc_region_exposure: 50
-            operational_efficiency: 50
-            weather_routing: 45
-          safety_compliance:
-            psc_detention: 45
-            psc_deficiency: 48
-            class_status: 55
-            ism_compliance: 60
-            casualty_history: 55
-            total_loss: 75
-          fleet_profile:
-            fleet_age: 35
-            fleet_stability: 50
-            vessel_quality: 45
-            crew_certification: 52
-            management_consistency: 55
-          sanctions_compliance:
-            sanctions_status: 90
-            ownership_transparency: 50
-            jurisdiction_risk: 55
-            sts_pattern: 70
-            historical_sanctions: 85
-          environmental:
-            imo2020_compliance: 60
-            bwm_compliance: 55
-            cii_rating: 45
-            environmental_incident: 70
-          corporate_footprint:
-            website_quality: 35
-            fleet_disclosure: 30
-            sustainability_reporting: 20
-            safety_communication: 30
-            crew_welfare: 35
-            industry_presence: 25
-          structured_data:
-            vetting: 50
-            esg_rating: 35
-            credit_rating: 40
-
-      lng_carrier:
-        description: "LNG carrier operator with high standards"
-        expected_tier: [1, 2]
-        expected_score_range: [750, 920]
-        operator_type: "MAJOR_TANKER"
-        vessel_category: "LNG_LPG"
-        trading_pattern: "INDUSTRIAL"
-        flag_state_quality: "WHITE_LIST"
-        fleet_age_band: "AGE_5_10"
-        signals:
-          network_authority:
-            classification_society: 100
-            pi_club: 95
-            charterer_quality: 95
-            banking_relationship: 92
-            flag_state: 95
-            industry_association: 88
-            technical_manager: 95
-            port_relationship: 90
-          operational_telemetry:
-            ais_compliance: 99
-            dark_activity: 98
-            route_risk: 85
-            psc_region_exposure: 88
-            operational_efficiency: 92
-            weather_routing: 90
-          safety_compliance:
-            psc_detention: 98
-            psc_deficiency: 95
-            class_status: 100
-            ism_compliance: 98
-            casualty_history: 95
-            total_loss: 100
-          fleet_profile:
-            fleet_age: 88
-            fleet_stability: 92
-            vessel_quality: 95
-            crew_certification: 95
-            management_consistency: 95
-          sanctions_compliance:
-            sanctions_status: 100
-            ownership_transparency: 98
-            jurisdiction_risk: 92
-            sts_pattern: 100
-            historical_sanctions: 100
-          environmental:
-            imo2020_compliance: 98
-            bwm_compliance: 95
-            cii_rating: 88
-            environmental_incident: 98
-          corporate_footprint:
-            website_quality: 92
-            fleet_disclosure: 95
-            sustainability_reporting: 90
-            safety_communication: 92
-            crew_welfare: 88
-            industry_presence: 85
-          structured_data:
-            vetting: 95
-            esg_rating: 88
-            credit_rating: 90
-
-      sanctions_concern:
-        description: "Operator with sanctions exposure concerns"
-        expected_tier: [5]
-        expected_score_range: [0, 350]
-        operator_type: "UNKNOWN"
-        vessel_category: "TANKER"
-        trading_pattern: "SPOT_TRAMP"
-        flag_state_quality: "BLACK_LIST"
-        fleet_age_band: "AGE_15_20"
-        direct_queries:
-          sanctioned_trade: true
-        signals:
-          network_authority:
-            classification_society: 50
-            pi_club: 35
-            flag_state: 25
-            industry_association: 20
-          operational_telemetry:
-            ais_compliance: 40
-            dark_activity: 25
-            route_risk: 30
-          safety_compliance:
-            psc_detention: 45
-            psc_deficiency: 50
-            class_status: 55
-            ism_compliance: 55
-          sanctions_compliance:
-            sanctions_status: 15
-            ownership_transparency: 25
-            jurisdiction_risk: 20
-            sts_pattern: 20
-            historical_sanctions: 30
-
-      offshore_operator:
-        description: "Offshore supply vessel operator"
-        expected_tier: [2, 3]
-        expected_score_range: [580, 720]
-        operator_type: "REGIONAL_OPERATOR"
-        vessel_category: "OFFSHORE"
-        trading_pattern: "INDUSTRIAL"
-        flag_state_quality: "WHITE_LIST"
-        fleet_age_band: "AGE_10_15"
-        signals:
-          network_authority:
-            classification_society: 90
-            pi_club: 82
-            charterer_quality: 85
-            banking_relationship: 75
-            flag_state: 85
-            industry_association: 75
-            technical_manager: 80
-            port_relationship: 78
-          operational_telemetry:
-            ais_compliance: 92
-            dark_activity: 88
-            route_risk: 70
-            psc_region_exposure: 75
-            operational_efficiency: 80
-            weather_routing: 78
-          safety_compliance:
-            psc_detention: 85
-            psc_deficiency: 80
-            class_status: 90
-            ism_compliance: 88
-            casualty_history: 82
-            total_loss: 95
-          fleet_profile:
-            fleet_age: 70
-            fleet_stability: 78
-            vessel_quality: 82
-            crew_certification: 85
-            management_consistency: 80
-          sanctions_compliance:
-            sanctions_status: 100
-            ownership_transparency: 88
-            jurisdiction_risk: 82
-            sts_pattern: 100
-            historical_sanctions: 100
-          environmental:
-            imo2020_compliance: 88
-            bwm_compliance: 82
-            cii_rating: 72
-            environmental_incident: 90
-          corporate_footprint:
-            website_quality: 75
-            fleet_disclosure: 80
-            sustainability_reporting: 65
-            safety_communication: 78
-            crew_welfare: 75
-            industry_presence: 68
-          structured_data:
-            vetting: 82
-            esg_rating: 68
-            credit_rating: 70
