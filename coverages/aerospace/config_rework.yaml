@@ -1,32 +1,21 @@
 # =============================================================================
 # DSI Model Configuration
+# =============================================================================
 #
-# This file holds all the relvant configuration types for a single coverage.
-# For example,
-# coverage:         the actual coverage cohort, eg aerospace
-#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
+# 1. Signals defined once in signal_registry with group_id reference
+# 2. source: score (default) uses 0-100 inference return
+# 3. source: metadata.field uses inference metadata with bands/categories
+# 4. Categorical groups apply modifiers (applied:), not scores
+# 5. score_conditions (plural, banded) apply actions based on score thresholds
+#    Actions: FLAG | MODIFIER | REFER
+# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
+# 7. Normalisation handled by inference functions, not config
 #
-# There can be multiple configurations saved under a coverage.
+# AUGMENTED BY:
+# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
-# A configuration is the single source of truth for:
-#   - 1) direct (optional) queries
-#   - 2) categorical features
-#   - 3) signal groups and underlying features
-#   - the source and impact of 1- 3
-#   - tier definitions
-#   - other pricing parameters
-#   - test profiles for validation
-#
-# When a technical model is generated:
-# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
-# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-#
-# All DSI principles must be adhered to, specifically:
-# 1. All signals must be externally observable (no application questions required)
-# 2. Direct queries are OPTIONAL - model must work without them
-# 3. Categorical features are inferred from observable data
-# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
-# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 aerospace:
@@ -34,8 +23,8 @@ aerospace:
     metadata:
       name: "DSI Aerospace Insurance Model"
       description: "Aviation hull and liability coverage based on observable safety and operational signals"
-      version: "2.0.0"
-      coverage_types:
+      version: "2.1.0"
+      product_types:
         - "aviation_hull"
         - "aviation_liability"
         - "aviation_hull_liability_combined"
@@ -44,66 +33,46 @@ aerospace:
       min_premium: 25000
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed (max 10)
+    # Actions: FLAG | MODIFIER | REFER
+    # =========================================================================
     direct_queries:
       - id: "pending_claims"
         question: "Are there any pending aviation liability claims exceeding $1M?"
-        bands:
-          - return: true
-            override: null #tier override
-            action: "REFER"
-            modifier: null
-            note: "Pending claims >$1M"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Pending claims >$1M"}
+          
       - id: "regulatory_action"
         question: "Is there any pending regulatory enforcement action against the operator?"
-        bands:
-          - return: true
-            override: 5
-            action: "DECLINE"
-            modifier: null
-            note: "Pending regulatory enforcement"
+        query_condition:
+          - {return: true, action: "REFER", override: 5, applied: null, note: "Pending regulatory enforcement"}
+            
       - id: "coverage_declined"
         question: "Has aviation coverage been declined or non-renewed in the past 3 years?"
-        bands:
-          - return: true
-            override: 5
-            action: "DECLINE"
-            modifier: null
-            note: "Prior declination"
+        query_condition:
+          - {return: true, action: "REFER", override: 5, applied: null, note: "Prior declination"}
+      
       - id: "fleet_change"
         question: "Are there planned fleet changes exceeding 20% in the next 12 months?"
-        bands:
-          - return: true
-            override: null
-            action: "REFER"
-            modifier: null
-            note: "Major fleet change planned"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Major fleet change planned"}
+       
       - id: "route_expansion"
         question: "Is there planned expansion into conflict zones or sanctioned regions?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            modifier: null
-            note: "Conflict zone expansion"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Conflict zone expansion"}
+      
       - id: "ownership_change"
         question: "Has there been a change in majority ownership in the past 12 months?"
-        bands:
-          - return: true
-            override: null
-            action: "REFER"
-            modifier: null
-            note: "Recent ownership change"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Recent ownership change"}
+      
       - id: "wet_lease_operations"
         question: "Do you operate aircraft under wet lease arrangements?"
-        bands:
-          - return: true
-            tier_override: null
-            action: "MODIFIER"
-            modifier: 1.15
-            note: "Wet lease operations"
+        query_condition:
+          - {return: true, action: "MODIFIER", override: null, applied: 1.15, note: "Wet lease operations"}
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
@@ -761,166 +730,223 @@ aerospace:
           weight: 0.15
           inference_utility_function: industry_engagement_basefunction
 
-    # -------------------------------------------------------------------------
-    # TIER THRESHOLDS
-    # -------------------------------------------------------------------------
-    tier_thresholds:
-      tiers:
+ 
+    # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
+    risk_tier_bands:
+      bands:
         - id: 1
           label: "PREFERRED"
-          min_score: 800
-          max_score: 1000
-          description: "Excellent safety profile - automatic approval"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 1200
+          description: "Excellent risk - automatic approval, preferred pricing"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 1200}
+
         - id: 2
           label: "STANDARD_PLUS"
-          min_score: 650
-          max_score: 799
-          description: "Good safety profile - automatic approval"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 1800
+          description: "Good risk - automatic approval, standard pricing"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 1800}
+
         - id: 3
           label: "STANDARD"
-          min_score: 500
-          max_score: 649
-          description: "Average profile - may require referral"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 2800
+          description: "Average risk - may require referral"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 2800}
+
         - id: 4
           label: "SUBSTANDARD"
-          min_score: 350
-          max_score: 499
           description: "Elevated risk - requires senior review"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "PREMIUM_BASE"
-            applied: 4500
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 4500}
+
         - id: 5
           label: "DECLINE"
-          min_score: 0
-          max_score: 349
           description: "Unacceptable risk - decline"
-          auto_approve: false
-          auto_decline: true
-          application:
-            method: "PREMIUM_BASE"
-            applied: 8000
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "PREMIUM_BASE", value: 8000}
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # LOSS TIER BANDS
-    # -------------------------------------------------------------------------
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
         - id: 1
           label: "VERY_LOW"
+          description: "Very low risk of loss"
           interpretation:
             bands: {min: 80, max: 100}
             application:
               frequency_modifier: 0.70
               severity_modifier: 0.80
+
         - id: 2
           label: "LOW"
+          description: "Low risk of loss"
           interpretation:
             bands: {min: 60, max: 79}
             application:
               frequency_modifier: 0.85
               severity_modifier: 0.90
+
         - id: 3
           label: "MODERATE"
+          description: "Moderate risk of loss"
           interpretation:
             bands: {min: 40, max: 59}
             application:
               frequency_modifier: 1.00
               severity_modifier: 1.00
+
         - id: 4
-          label: "HIGH"
+          label: "ELEVATED"
+          description: "Elevated risk of loss"
           interpretation:
             bands: {min: 20, max: 39}
             application:
-              frequency_modifier: 1.25
-              severity_modifier: 1.20
+              frequency_modifier: 1.15
+              severity_modifier: 1.15
+
         - id: 5
-          label: "VERY_HIGH"
+          label: "HIGH"
+          description: "High risk of loss"
           interpretation:
             bands: {min: 0, max: 19}
             application:
-              frequency_modifier: 1.60
-              severity_modifier: 1.50
+              frequency_modifier: 1.35
+              severity_modifier: 1.40
       constraints:
         floor: 0.55
         cap: 1.60
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # EXPOSURE TIER BANDS
-    # -------------------------------------------------------------------------
-    exposure_tier_bands:
-      bands:
-        - id: 1
-          label: "SMALL"
-          interpretation:
-            bands: {min: 0, max: 25000000}
-            application:
-              method: "MODIFIER"
-              applied: 0.85
-        - id: 2
-          label: "MEDIUM"
-          interpretation:
-            bands: {min: 25000001, max: 100000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.00
-        - id: 3
-          label: "LARGE"
-          interpretation:
-            bands: {min: 100000001, max: 500000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.15
-        - id: 4
-          label: "VERY_LARGE"
-          interpretation:
-            bands: {min: 500000001, max: null}
-            application:
-              method: "MODIFIER"
-              applied: 1.35
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
+    exposure:
+      size:
+        weight: 0.60
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "Micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
 
-    # -------------------------------------------------------------------------
+          - id: 2
+            label: "SMALL"
+            description: "Small exposure value ($1M - $10M)"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium exposure value ($10M - $50M)"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
+
+          - id: 4
+            label: "LARGE"
+            description: "Large exposure value ($50M - $250M)"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
+
+          - id: 5
+            label: "VERY_LARGE"
+            description: "Very large exposure value ($250M+)"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
+
+      complexity:
+        weight: 0.40
+        bands:
+          - id: 1
+            label: "SIMPLE"
+            description: "Simple operational complexity"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.85}
+
+          - id: 2
+            label: "MODERATE"
+            description: "Moderate operational complexity"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.95}
+
+          - id: 3
+            label: "COMPLEX"
+            description: "Complex operations"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.10}
+
+          - id: 4
+            label: "HIGHLY_COMPLEX"
+            description: "Highly complex operations"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.30}
+
+          - id: 5
+            label: "EXTREMELY_COMPLEX"
+            description: "Extremely complex operations"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 1.60}
+
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations
+    # =========================================================================
     limit_bandings:
       - id: 1
         limit: 10000000
         deductible: 500000
+
       - id: 2
         limit: 25000000
         deductible: 1000000
+
       - id: 3
         limit: 50000000
         deductible: 2000000
+
       - id: 4
         limit: 100000000
         deductible: 5000000
+
       - id: 5
         limit: 250000000
         deductible: 10000000
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # -------------------------------------------------------------------------
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
-      hull_ilf:
-        base_value: 10000000
+      ilf_curve:
+        base_limit: 10000000
         factors:
           - {value: 10000000, factor: 1.00}
           - {value: 25000000, factor: 1.15}
@@ -929,352 +955,10 @@ aerospace:
           - {value: 250000000, factor: 1.80}
           - {value: 500000000, factor: 2.20}
 
-      liability_ilf:
-        base_limit: 100000000
-        factors:
-          - {limit: 100000000, factor: 1.00}
-          - {limit: 250000000, factor: 1.25}
-          - {limit: 500000000, factor: 1.55}
-          - {limit: 1000000000, factor: 2.00}
-          - {limit: 2000000000, factor: 2.60}
-
       deductible_credits:
         - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
         - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
         - {min_pct: 0.020, max_pct: 0.050, credit: 0.15}
         - {min_pct: 0.050, max_pct: null, credit: 0.20}
 
-      experience_modifiers:
-        clean_10yr: 0.85
-        clean_5yr: 0.92
-        clean_3yr: 0.97
-        minor_attritional: 1.00
-        moderate_loss: 1.20
-        major_loss: 1.50
-
-    # -------------------------------------------------------------------------
-    # TEST PROFILES
-    # -------------------------------------------------------------------------
-    test_profiles:
-      excellent_safety:
-        description: "Major airline with exemplary safety record"
-        expected_tier: [1, 2]
-        expected_score_range: [780, 1000]
-        operator_type: "MAJOR_AIRLINE"
-        fleet_category: "NARROWBODY"
-        fleet_size: "LARGE"
-        regulatory_framework: "FAA"
-        iosa_status: "REGISTERED"
-        signals:
-          network_authority:
-            alliance_membership: 95
-            codeshare_quality: 88
-            lessor_quality: 85
-            oem_relationship: 90
-            mro_quality: 88
-          safety_record:
-            accident_history: 100
-            incident_history: 92
-            accident_rate: 95
-            fatality_history: 100
-            investigation_findings: 95
-          regulatory_compliance:
-            certificate_status: 100
-            enforcement_actions: 98
-            iosa_audit_status: 95
-            ramp_inspection: 90
-            eu_safety_list: 100
-            state_safety_rating: 92
-          operational_quality:
-            otp_score: 85
-            dispatch_reliability: 92
-            crew_experience: 88
-            training_indicators: 90
-            operational_complexity: 75
-            growth_rate: 88
-          fleet_quality:
-            fleet_age: 82
-            fleet_homogeneity: 90
-            aircraft_generation: 85
-            order_backlog: 88
-            maintenance_indicators: 90
-          financial_stability:
-            credit_rating: 85
-            public_financials: 82
-            market_position: 88
-            government_support: 70
-          route_risk:
-            conflict_zone_exposure: 98
-            challenging_airports: 85
-            high_risk_destinations: 92
-            weather_exposure: 88
-            terrain_exposure: 90
-          corporate_governance:
-            management_stability: 90
-            safety_leadership: 95
-            safety_reporting: 88
-            corporate_structure: 92
-            industry_engagement: 90
-
-      average_safety:
-        description: "Regional airline with typical profile"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        operator_type: "REGIONAL_AIRLINE"
-        fleet_category: "REGIONAL_JET"
-        fleet_size: "MEDIUM"
-        regulatory_framework: "FAA"
-        iosa_status: "REGISTERED"
-        signals:
-          network_authority:
-            alliance_membership: 50
-            codeshare_quality: 72
-            lessor_quality: 68
-            oem_relationship: 55
-            mro_quality: 70
-          safety_record:
-            accident_history: 85
-            incident_history: 72
-            accident_rate: 75
-            fatality_history: 100
-            investigation_findings: 78
-          regulatory_compliance:
-            certificate_status: 90
-            enforcement_actions: 78
-            iosa_audit_status: 75
-            ramp_inspection: 72
-            eu_safety_list: 100
-            state_safety_rating: 85
-          operational_quality:
-            otp_score: 72
-            dispatch_reliability: 78
-            crew_experience: 65
-            training_indicators: 70
-            operational_complexity: 80
-            growth_rate: 75
-          fleet_quality:
-            fleet_age: 62
-            fleet_homogeneity: 85
-            aircraft_generation: 55
-            order_backlog: 50
-            maintenance_indicators: 72
-          financial_stability:
-            credit_rating: 60
-            public_financials: 58
-            market_position: 55
-            government_support: 50
-          route_risk:
-            conflict_zone_exposure: 95
-            challenging_airports: 75
-            high_risk_destinations: 88
-            weather_exposure: 78
-            terrain_exposure: 82
-          corporate_governance:
-            management_stability: 70
-            safety_leadership: 65
-            safety_reporting: 55
-            corporate_structure: 78
-            industry_engagement: 50
-
-      poor_safety:
-        description: "Operator with significant safety concerns"
-        expected_tier: [4, 5]
-        expected_score_range: [200, 450]
-        operator_type: "CHARTER_OPERATOR"
-        fleet_category: "TURBOPROP"
-        fleet_size: "SMALL"
-        regulatory_framework: "OTHER_ICAO"
-        iosa_status: "NEVER_REGISTERED"
-        signals:
-          network_authority:
-            alliance_membership: 0
-            codeshare_quality: 30
-            lessor_quality: 35
-            oem_relationship: 25
-            mro_quality: 38
-          safety_record:
-            accident_history: 35
-            incident_history: 42
-            accident_rate: 38
-            fatality_history: 50
-            investigation_findings: 45
-          regulatory_compliance:
-            certificate_status: 55
-            enforcement_actions: 40
-            iosa_audit_status: 30
-            ramp_inspection: 45
-            eu_safety_list: 70
-            state_safety_rating: 48
-          operational_quality:
-            otp_score: 55
-            dispatch_reliability: 58
-            crew_experience: 45
-            training_indicators: 40
-            operational_complexity: 65
-            growth_rate: 50
-          fleet_quality:
-            fleet_age: 28
-            fleet_homogeneity: 60
-            aircraft_generation: 20
-            order_backlog: 15
-            maintenance_indicators: 42
-          financial_stability:
-            credit_rating: 35
-            public_financials: 32
-            market_position: 28
-            government_support: 40
-          route_risk:
-            conflict_zone_exposure: 55
-            challenging_airports: 50
-            high_risk_destinations: 48
-            weather_exposure: 55
-            terrain_exposure: 52
-          corporate_governance:
-            management_stability: 40
-            safety_leadership: 35
-            safety_reporting: 25
-            corporate_structure: 45
-            industry_engagement: 20
-
-      minimal_signals:
-        description: "New operator with limited history"
-        expected_tier: [3, 4]
-        expected_score_range: [400, 580]
-        operator_type: "CORPORATE_FLIGHT"
-        fleet_category: "BUSINESS_JET"
-        fleet_size: "MICRO"
-        regulatory_framework: "FAA"
-        iosa_status: "NOT_APPLICABLE"
-        signal_coverage: 0.45
-        signals:
-          safety_record:
-            accident_history: 80
-            fatality_history: 100
-          regulatory_compliance:
-            certificate_status: 85
-            enforcement_actions: 80
-          fleet_quality:
-            fleet_age: 90
-            aircraft_generation: 85
-          corporate_governance:
-            management_stability: 70
-
-      helicopter_offshore:
-        description: "Offshore helicopter operator"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        operator_type: "HELICOPTER_OPERATOR"
-        fleet_category: "HELICOPTER"
-        fleet_size: "SMALL"
-        regulatory_framework: "EASA"
-        iosa_status: "NOT_APPLICABLE"
-        signals:
-          network_authority:
-            alliance_membership: 30
-            codeshare_quality: 45
-            lessor_quality: 78
-            oem_relationship: 72
-            mro_quality: 82
-          safety_record:
-            accident_history: 78
-            incident_history: 72
-            accident_rate: 75
-            fatality_history: 85
-            investigation_findings: 78
-          regulatory_compliance:
-            certificate_status: 92
-            enforcement_actions: 88
-            iosa_audit_status: 50
-            ramp_inspection: 82
-            eu_safety_list: 100
-            state_safety_rating: 90
-          operational_quality:
-            otp_score: 75
-            dispatch_reliability: 82
-            crew_experience: 85
-            training_indicators: 88
-            operational_complexity: 72
-            growth_rate: 80
-          fleet_quality:
-            fleet_age: 72
-            fleet_homogeneity: 88
-            aircraft_generation: 75
-            order_backlog: 65
-            maintenance_indicators: 85
-          financial_stability:
-            credit_rating: 70
-            public_financials: 68
-            market_position: 72
-            government_support: 55
-          route_risk:
-            conflict_zone_exposure: 75
-            challenging_airports: 60
-            high_risk_destinations: 70
-            weather_exposure: 62
-            terrain_exposure: 55
-          corporate_governance:
-            management_stability: 78
-            safety_leadership: 82
-            safety_reporting: 70
-            corporate_structure: 75
-            industry_engagement: 65
-
-      emerging_market:
-        description: "Airline in emerging market"
-        expected_tier: [3, 4]
-        expected_score_range: [420, 600]
-        operator_type: "REGIONAL_AIRLINE"
-        fleet_category: "NARROWBODY"
-        fleet_size: "MEDIUM"
-        regulatory_framework: "OTHER_ICAO"
-        iosa_status: "REGISTERED"
-        signals:
-          network_authority:
-            alliance_membership: 40
-            codeshare_quality: 55
-            lessor_quality: 72
-            oem_relationship: 60
-            mro_quality: 58
-          safety_record:
-            accident_history: 72
-            incident_history: 65
-            accident_rate: 62
-            fatality_history: 80
-            investigation_findings: 68
-          regulatory_compliance:
-            certificate_status: 78
-            enforcement_actions: 65
-            iosa_audit_status: 72
-            ramp_inspection: 55
-            eu_safety_list: 100
-            state_safety_rating: 52
-          operational_quality:
-            otp_score: 62
-            dispatch_reliability: 68
-            crew_experience: 58
-            training_indicators: 62
-            operational_complexity: 72
-            growth_rate: 55
-          fleet_quality:
-            fleet_age: 52
-            fleet_homogeneity: 65
-            aircraft_generation: 45
-            order_backlog: 70
-            maintenance_indicators: 60
-          financial_stability:
-            credit_rating: 50
-            public_financials: 48
-            market_position: 62
-            government_support: 75
-          route_risk:
-            conflict_zone_exposure: 72
-            challenging_airports: 58
-            high_risk_destinations: 55
-            weather_exposure: 65
-            terrain_exposure: 62
-          corporate_governance:
-            management_stability: 58
-            safety_leadership: 55
-            safety_reporting: 45
-            corporate_structure: 60
-            industry_engagement: 42
+      taxes_fees_rate: 0.05
