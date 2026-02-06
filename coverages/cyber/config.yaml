@@ -1,5 +1,5 @@
 # =============================================================================
-# DSI Model Configuration - Cyber Coverage
+# DSI Model Configuration
 # =============================================================================
 #
 # STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
@@ -8,7 +8,7 @@
 # 3. source: metadata.field uses inference metadata with bands/categories
 # 4. Categorical groups apply modifiers (applied:), not scores
 # 5. score_conditions (plural, banded) apply actions based on score thresholds
-#    Actions: FLAG | MODIFIER | REFER (DECLINE is tier-level only)
+#    Actions: FLAG | MODIFIER | REFER
 # 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
 # 7. Normalisation handled by inference functions, not config
 #
