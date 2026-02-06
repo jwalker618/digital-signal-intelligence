@@ -556,5 +556,6 @@
 #    - "payroll" - Annual Payroll
 #    - "hull_value" - Hull Value (marine/aerospace)
 #    - "aum" - Assets Under Management (FI)
+     - "categorical" - value has been set within signal registry, categories.
 #
 # =============================================================================
