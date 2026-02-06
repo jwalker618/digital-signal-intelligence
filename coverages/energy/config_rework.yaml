@@ -1,32 +1,21 @@
 # =============================================================================
 # DSI Model Configuration
+# =============================================================================
 #
-# This file holds all the relvant configuration types for a single coverage.
-# For example,
-# coverage:         the actual coverage cohort, eg aerospace
-#   configuration:  the specific configuration file under that coverage, eg aerospace_general
+# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
+# 1. Signals defined once in signal_registry with group_id reference
+# 2. source: score (default) uses 0-100 inference return
+# 3. source: metadata.field uses inference metadata with bands/categories
+# 4. Categorical groups apply modifiers (applied:), not scores
+# 5. score_conditions (plural, banded) apply actions based on score thresholds
+#    Actions: FLAG | MODIFIER | REFER
+# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
+# 7. Normalisation handled by inference functions, not config
 #
-# There can be multiple configurations saved under a coverage.
+# AUGMENTED BY:
+# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
-# A configuration is the single source of truth for:
-#   - 1) direct (optional) queries
-#   - 2) categorical features
-#   - 3) signal groups and underlying features
-#   - the source and impact of 1- 3
-#   - tier definitions
-#   - other pricing parameters
-#   - test profiles for validation
-#
-# When a technical model is generated:
-# - the completed selected configuration is persisted. This allows the model to be generated at any moment based on its original specification (although test profiles are removed as these are extraneous).
-# - every item with an id is captured in a seperate file with the associated return and persisted after a complete interaction  - this is a model version
-#
-# All DSI principles must be adhered to, specifically:
-# 1. All signals must be externally observable (no application questions required)
-# 2. Direct queries are OPTIONAL - model must work without them
-# 3. Categorical features are inferred from observable data
-# 4. Tier determines base premium, either directly or through the application of a percentage to a single value (for example, TIV * %); modifiers adjust for categorical features
-# 5. All sources must be publicly accessible or through standard data providers
 # =============================================================================
 
 energy:
@@ -34,8 +23,8 @@ energy:
     metadata:
       name: "DSI Energy Technical Pricing Model"
       description: "Energy property and liability coverage based on observable safety, environmental, and operational signals"
-      version: "2.0.0"
-      coverage_types:
+      version: "2.1.0"
+      product_types:
         - "property_damage"
         - "business_interruption"
         - "control_of_well"
@@ -43,69 +32,46 @@ energy:
         - "third_party_liability"
         - "pollution_liability"
         - "removal_of_wreck"
-      applicable_segments:
-        - "upstream_conventional"
-        - "upstream_unconventional"
-        - "upstream_offshore"
-        - "upstream_deepwater"
-        - "midstream_pipeline"
-        - "midstream_processing"
-        - "midstream_storage"
-        - "downstream_refining"
-        - "downstream_petrochemical"
-        - "power_generation"
-        - "renewable"
       applicable_markets: ["us", "uk", "eu", "apac", "latam", "mena"]
       minimum_viable_input: ["client name (domain optional)","Limit in USD","TIV"]
       min_premium: 100000
       default_currency: "USD"
 
-    # -------------------------------------------------------------------------
-    # DIRECT OPTIONAL QUERIES
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # DIRECT QUERIES
+    # Binary questions that cannot be externally observed (max 10)
+    # Actions: FLAG | MODIFIER | REFER
+    # =========================================================================
     direct_queries:
       - id: "major_incidents"
         question: "Any major incidents (explosion, blowout, major spill) in past 5 years?"
-        bands:
-          - return: true
-            override: 4
-            action: "REFER"
-            note: "Major incidents disclosed"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Major incidents disclosed"}
+      
       - id: "fatalities"
         question: "Any work-related fatalities in past 3 years?"
-        bands:
-          - return: true
-            override: 3
-            action: "REFER"
-            note: "Fatalities disclosed"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Fatalities disclosed"}
+      
       - id: "regulatory_enforcement"
         question: "Any significant regulatory enforcement actions pending?"
-        bands:
-          - return: true
-            override: null
-            action: "REFER"
-            note: "Pending regulatory enforcement"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Pending regulatory enforcement"}
+      
       - id: "decommissioning_obligations"
         question: "Any significant unfunded decommissioning obligations?"
-        bands:
-          - return: true
-            override: null
-            action: "FLAG"
-            note: "Unfunded decommissioning obligations"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Unfunded decommissioning obligations"}
+      
       - id: "joint_venture_operator"
         question: "Are you the designated operator for JV assets?"
-        bands:
-          - return: true
-            override: null
-            action: "INFO"
-            note: "JV operator status"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "JV operator status"}
+
       - id: "third_party_contractor"
         question: "Do you use third-party contractors for drilling/completions?"
-        bands:
-          - return: true
-            override: null
-            action: "INFO"
-            note: "Third-party contractor usage"
+        query_condition:
+          - {return: true, action: "FLAG", override: null, applied: null, note: "Third-party contractor usage"}
 
     # -------------------------------------------------------------------------
     # CATEGORICAL GROUPS
@@ -790,540 +756,236 @@ energy:
           weight: 0.25
           inference_utility_function: credit_rating_basefunction
 
-    # -------------------------------------------------------------------------
-    # TIER THRESHOLDS
-    # -------------------------------------------------------------------------
-    tier_thresholds:
-      tiers:
+     # =========================================================================
+    # RISK TIER BANDS
+    # Maps composite risk score (0-1000) to pricing tiers
+    # =========================================================================
+    risk_tier_bands:
+      bands:
         - id: 1
           label: "PREFERRED"
-          min_score: 800
-          max_score: 1000
-          description: "Excellent operator - auto-approve at preferred pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0008
-            basis: "tiv"
-        - id: 2
-          label: "STANDARD"
-          min_score: 650
-          max_score: 799
-          description: "Good operator - auto-approve at standard pricing"
-          auto_approve: true
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0012
-            basis: "tiv"
-        - id: 3
-          label: "ELEVATED"
-          min_score: 500
-          max_score: 649
-          description: "Moderate risk - auto-approve with conditions"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0018
-            basis: "tiv"
-        - id: 4
-          label: "HIGH_RISK"
-          min_score: 350
-          max_score: 499
-          description: "High risk - manual review with loading"
-          auto_approve: false
-          auto_decline: false
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0028
-            basis: "tiv"
-        - id: 5
-          label: "CRITICAL"
-          min_score: 0
-          max_score: 349
-          description: "Critical risk - decline or senior review"
-          auto_approve: false
-          auto_decline: true
-          application:
-            method: "MULTIPLIER"
-            applied: 0.0045
-            basis: "tiv"
+          description: "Excellent risk - automatic approval, preferred pricing"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "MULTIPLIER", applied: 0.0008, basis: "tiv"}
 
-    # -------------------------------------------------------------------------
+        - id: 2
+          label: "STANDARD_PLUS"
+          description: "Good risk - automatic approval, standard pricing"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "MULTIPLIER", applied: 0.0012, basis: "tiv"}
+
+        - id: 3
+          label: "STANDARD"
+          description: "Average risk - may require referral"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "REFER"
+            application: {method: "MULTIPLIER", applied: 0.0018, basis: "tiv"}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          description: "Elevated risk - requires senior review"
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "MULTIPLIER", applied: 0.0028, basis: "tiv"}
+
+        - id: 5
+          label: "DECLINE"
+          description: "Unacceptable risk - decline"
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "MULTIPLIER", applied: 0.0045, basis: "tiv"}
+
+    # =========================================================================
     # LOSS TIER BANDS
-    # -------------------------------------------------------------------------
+    # Maps composite loss score (0-100) to pricing modifiers
+    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
+    # Result maps to band, constrained by floor/cap
+    # =========================================================================
     loss_tier_bands:
       bands:
         - id: 1
           label: "VERY_LOW"
+          description: "Very low risk of loss"
           interpretation:
             bands: {min: 80, max: 100}
             application:
               frequency_modifier: 0.70
               severity_modifier: 0.80
+
         - id: 2
           label: "LOW"
+          description: "Low risk of loss"
           interpretation:
             bands: {min: 60, max: 79}
             application:
               frequency_modifier: 0.85
               severity_modifier: 0.90
+
         - id: 3
           label: "MODERATE"
+          description: "Moderate risk of loss"
           interpretation:
             bands: {min: 40, max: 59}
             application:
               frequency_modifier: 1.00
               severity_modifier: 1.00
+
         - id: 4
-          label: "HIGH"
+          label: "ELEVATED"
+          description: "Elevated risk of loss"
           interpretation:
             bands: {min: 20, max: 39}
             application:
-              frequency_modifier: 1.25
-              severity_modifier: 1.20
+              frequency_modifier: 1.15
+              severity_modifier: 1.15
+
         - id: 5
-          label: "VERY_HIGH"
+          label: "HIGH"
+          description: "High risk of loss"
           interpretation:
             bands: {min: 0, max: 19}
             application:
-              frequency_modifier: 1.60
-              severity_modifier: 1.50
+              frequency_modifier: 1.35
+              severity_modifier: 1.40
       constraints:
         floor: 0.55
         cap: 1.60
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # EXPOSURE TIER BANDS
-    # -------------------------------------------------------------------------
-    exposure_tier_bands:
-      bands:
-        - id: 1
-          label: "SMALL"
-          interpretation:
-            bands: {min: 0, max: 50000000}
-            application:
-              method: "MODIFIER"
-              applied: 0.85
-        - id: 2
-          label: "MEDIUM"
-          interpretation:
-            bands: {min: 50000001, max: 250000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.00
-        - id: 3
-          label: "LARGE"
-          interpretation:
-            bands: {min: 250000001, max: 1000000000}
-            application:
-              method: "MODIFIER"
-              applied: 1.15
-        - id: 4
-          label: "VERY_LARGE"
-          interpretation:
-            bands: {min: 1000000001, max: null}
-            application:
-              method: "MODIFIER"
-              applied: 1.35
+    # Maps exposure scores to size and complexity modifiers
+    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+    # =========================================================================
+    exposure:
+      size:
+        weight: 0.60
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "Micro exposure value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
 
-    # -------------------------------------------------------------------------
+          - id: 2
+            label: "SMALL"
+            description: "Small exposure value ($1M - $10M)"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium exposure value ($10M - $50M)"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
+
+          - id: 4
+            label: "LARGE"
+            description: "Large exposure value ($50M - $250M)"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
+
+          - id: 5
+            label: "VERY_LARGE"
+            description: "Very large exposure value ($250M+)"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
+
+      complexity:
+        weight: 0.40
+        bands:
+          - id: 1
+            label: "SIMPLE"
+            description: "Simple operational complexity"
+            interpretation:
+              bands: {min: 0, max: 20}
+              application: {method: "MODIFIER", applied: 0.85}
+
+          - id: 2
+            label: "MODERATE"
+            description: "Moderate operational complexity"
+            interpretation:
+              bands: {min: 21, max: 40}
+              application: {method: "MODIFIER", applied: 0.95}
+
+          - id: 3
+            label: "COMPLEX"
+            description: "Complex operations"
+            interpretation:
+              bands: {min: 41, max: 60}
+              application: {method: "MODIFIER", applied: 1.10}
+
+          - id: 4
+            label: "HIGHLY_COMPLEX"
+            description: "Highly complex operations"
+            interpretation:
+              bands: {min: 61, max: 80}
+              application: {method: "MODIFIER", applied: 1.30}
+
+          - id: 5
+            label: "EXTREMELY_COMPLEX"
+            description: "Extremely complex operations"
+            interpretation:
+              bands: {min: 81, max: 100}
+              application: {method: "MODIFIER", applied: 1.60}
+
+    # =========================================================================
     # LIMIT BANDINGS
-    # -------------------------------------------------------------------------
+    # Standard limit/deductible combinations
+    # =========================================================================
     limit_bandings:
       - id: 1
         limit: 10000000
         deductible: 500000
+
       - id: 2
         limit: 25000000
         deductible: 1000000
+
       - id: 3
         limit: 50000000
         deductible: 2000000
+
       - id: 4
         limit: 100000000
         deductible: 5000000
+
       - id: 5
         limit: 250000000
         deductible: 10000000
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # PRICING PARAMETERS
-    # -------------------------------------------------------------------------
+    # ILF curves, deductible credits, taxes/fees
+    # =========================================================================
     pricing:
-      deductible_guidelines:
-        tier_1_pct: 0.005
-        tier_2_pct: 0.0075
-        tier_3_pct: 0.01
-        tier_4_pct: 0.015
-        tier_5_pct: 0.02
-        minimum: 250000
-        maximum: 10000000
 
-      experience_modifiers:
-        excellent_5yr: 0.85
-        good_5yr: 0.90
-        clean_3yr: 0.95
-        minor_losses: 1.00
-        moderate_losses: 1.20
-        significant_losses: 1.40
-        major_losses: 1.75
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.00}
+          - {limit: 2000000, factor: 1.70}
+          - {limit: 5000000, factor: 3.20}
+          - {limit: 10000000, factor: 5.00}
+          - {limit: 25000000, factor: 9.00}
+          - {limit: 50000000, factor: 14.00}
+          - {limit: 100000000, factor: 22.00}
 
-      nat_cat_loadings:
-        gulf_hurricane: 1.15
-        earthquake_zone: 1.10
-        flood_zone: 1.05
+      deductible_credits:
+        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+        - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
       taxes_fees_rate: 0.05
-
-    # -------------------------------------------------------------------------
-    # TEST PROFILES
-    # -------------------------------------------------------------------------
-    test_profiles:
-      excellent_major:
-        description: "Major integrated operator with excellent safety record"
-        expected_tier: [1, 2]
-        expected_score_range: [780, 950]
-        operator_type: "MAJOR_INTEGRATED"
-        operation_segment: "MIXED"
-        geographic_focus: "GLOBAL_DIVERSIFIED"
-        signals:
-          network_authority:
-            partner_quality: 90
-            contractor_quality: 88
-            banking_relationship: 92
-            insurance_history: 85
-            industry_association: 90
-            regulator_relationship: 85
-            customer_quality: 88
-          safety_performance:
-            osha_trir: 88
-            osha_violations: 92
-            bsee_incident: 85
-            process_safety: 90
-            fatality: 95
-            major_incident: 92
-            near_miss: 80
-          environmental_compliance:
-            epa_violation: 88
-            spill_history: 85
-            emissions_compliance: 82
-            flaring: 78
-            methane: 80
-            remediation: 85
-          operational_telemetry:
-            production_consistency: 88
-            facility_activity: 85
-            well_integrity: 90
-            maintenance_pattern: 85
-            operational_efficiency: 82
-          financial_stability:
-            credit_rating: 88
-            leverage: 82
-            aro_coverage: 90
-            capex_trend: 85
-            restructuring: 100
-          asset_portfolio:
-            asset_age: 80
-            concentration: 85
-            complexity: 75
-            decommissioning: 82
-            permit_status: 95
-          corporate_footprint:
-            safety_communication: 88
-            esg_reporting: 85
-            technical_hiring: 82
-            industry_presence: 90
-            disclosure_quality: 85
-            hse_leadership: 88
-          structured_data:
-            esg_rating: 82
-            benchmark: 85
-            credit: 88
-
-      average_independent:
-        description: "Mid-size independent with typical profile"
-        expected_tier: [2, 3]
-        expected_score_range: [550, 720]
-        operator_type: "MID_INDEPENDENT"
-        operation_segment: "UPSTREAM_UNCONVENTIONAL"
-        geographic_focus: "US_ONSHORE"
-        signals:
-          network_authority:
-            partner_quality: 70
-            contractor_quality: 72
-            banking_relationship: 68
-            insurance_history: 70
-            industry_association: 65
-            regulator_relationship: 72
-            customer_quality: 70
-          safety_performance:
-            osha_trir: 70
-            osha_violations: 78
-            process_safety: 72
-            fatality: 90
-            major_incident: 88
-            near_miss: 60
-          environmental_compliance:
-            epa_violation: 75
-            spill_history: 72
-            emissions_compliance: 68
-            flaring: 65
-            methane: 62
-            remediation: 70
-          operational_telemetry:
-            production_consistency: 75
-            facility_activity: 70
-            well_integrity: 72
-            maintenance_pattern: 68
-            operational_efficiency: 70
-          financial_stability:
-            credit_rating: 65
-            leverage: 60
-            aro_coverage: 70
-            capex_trend: 68
-            restructuring: 100
-          asset_portfolio:
-            asset_age: 65
-            concentration: 55
-            complexity: 80
-            decommissioning: 70
-            permit_status: 85
-          corporate_footprint:
-            safety_communication: 65
-            esg_reporting: 55
-            technical_hiring: 60
-            industry_presence: 55
-            disclosure_quality: 60
-            hse_leadership: 58
-          structured_data:
-            esg_rating: 55
-            benchmark: 65
-            credit: 65
-
-      high_risk_small:
-        description: "Small independent with safety concerns"
-        expected_tier: [4, 5]
-        expected_score_range: [250, 450]
-        operator_type: "SMALL_INDEPENDENT"
-        operation_segment: "UPSTREAM_CONVENTIONAL"
-        geographic_focus: "US_ONSHORE"
-        signals:
-          network_authority:
-            partner_quality: 40
-            contractor_quality: 45
-            banking_relationship: 35
-            insurance_history: 40
-            industry_association: 30
-            regulator_relationship: 38
-            customer_quality: 45
-          safety_performance:
-            osha_trir: 35
-            osha_violations: 40
-            process_safety: 42
-            fatality: 55
-            major_incident: 50
-            near_miss: 35
-          environmental_compliance:
-            epa_violation: 45
-            spill_history: 40
-            emissions_compliance: 42
-            flaring: 35
-            methane: 38
-            remediation: 45
-          operational_telemetry:
-            production_consistency: 50
-            facility_activity: 45
-            well_integrity: 42
-            maintenance_pattern: 40
-            operational_efficiency: 45
-          financial_stability:
-            credit_rating: 35
-            leverage: 30
-            aro_coverage: 40
-            capex_trend: 35
-            restructuring: 60
-          asset_portfolio:
-            asset_age: 40
-            concentration: 35
-            complexity: 70
-            decommissioning: 35
-            permit_status: 55
-          corporate_footprint:
-            safety_communication: 35
-            esg_reporting: 25
-            technical_hiring: 30
-            industry_presence: 25
-            disclosure_quality: 35
-            hse_leadership: 30
-          structured_data:
-            esg_rating: 30
-            benchmark: 35
-            credit: 35
-
-      offshore_operator:
-        description: "Offshore operator in Gulf of Mexico"
-        expected_tier: [2, 3]
-        expected_score_range: [580, 750]
-        operator_type: "LARGE_INDEPENDENT"
-        operation_segment: "UPSTREAM_OFFSHORE"
-        geographic_focus: "US_GULF_SHELF"
-        signals:
-          network_authority:
-            partner_quality: 80
-            contractor_quality: 82
-            banking_relationship: 78
-            insurance_history: 75
-            industry_association: 78
-            regulator_relationship: 80
-            customer_quality: 78
-          safety_performance:
-            osha_trir: 78
-            osha_violations: 85
-            bsee_incident: 75
-            process_safety: 80
-            fatality: 92
-            major_incident: 85
-            near_miss: 70
-          environmental_compliance:
-            epa_violation: 82
-            spill_history: 75
-            emissions_compliance: 78
-            flaring: 72
-            methane: 70
-            remediation: 78
-          operational_telemetry:
-            production_consistency: 80
-            facility_activity: 75
-            well_integrity: 82
-            maintenance_pattern: 78
-            operational_efficiency: 75
-          financial_stability:
-            credit_rating: 75
-            leverage: 70
-            aro_coverage: 78
-            capex_trend: 75
-            restructuring: 100
-          asset_portfolio:
-            asset_age: 65
-            concentration: 60
-            complexity: 55
-            decommissioning: 70
-            permit_status: 90
-          corporate_footprint:
-            safety_communication: 78
-            esg_reporting: 72
-            technical_hiring: 75
-            industry_presence: 72
-            disclosure_quality: 75
-            hse_leadership: 78
-          structured_data:
-            esg_rating: 70
-            benchmark: 75
-            credit: 75
-
-      pe_backed:
-        description: "Private equity backed operator"
-        expected_tier: [3, 4]
-        expected_score_range: [450, 620]
-        operator_type: "PRIVATE_EQUITY"
-        operation_segment: "UPSTREAM_UNCONVENTIONAL"
-        geographic_focus: "US_ONSHORE"
-        signal_coverage: 0.65
-        signals:
-          network_authority:
-            partner_quality: 60
-            contractor_quality: 65
-            banking_relationship: 55
-            insurance_history: 58
-            industry_association: 45
-          safety_performance:
-            osha_trir: 62
-            osha_violations: 70
-            process_safety: 65
-            fatality: 85
-            major_incident: 80
-          environmental_compliance:
-            epa_violation: 65
-            spill_history: 60
-            emissions_compliance: 58
-            flaring: 52
-            methane: 50
-          financial_stability:
-            credit_rating: 50
-            leverage: 40
-            aro_coverage: 55
-            capex_trend: 60
-            restructuring: 75
-          asset_portfolio:
-            asset_age: 55
-            concentration: 50
-            complexity: 75
-            decommissioning: 50
-            permit_status: 80
-          corporate_footprint:
-            safety_communication: 50
-            esg_reporting: 40
-            technical_hiring: 55
-            hse_leadership: 45
-
-      refinery_operator:
-        description: "Major refinery operator"
-        expected_tier: [2, 3]
-        expected_score_range: [580, 750]
-        operator_type: "DOWNSTREAM_MAJOR"
-        operation_segment: "DOWNSTREAM_REFINING"
-        geographic_focus: "US_ONSHORE"
-        signals:
-          network_authority:
-            partner_quality: 75
-            contractor_quality: 80
-            banking_relationship: 82
-            insurance_history: 78
-            industry_association: 82
-            regulator_relationship: 75
-            customer_quality: 85
-          safety_performance:
-            osha_trir: 75
-            osha_violations: 82
-            process_safety: 78
-            fatality: 90
-            major_incident: 82
-            near_miss: 75
-          environmental_compliance:
-            epa_violation: 72
-            spill_history: 78
-            emissions_compliance: 70
-            flaring: 80
-            methane: 75
-            remediation: 72
-          operational_telemetry:
-            production_consistency: 82
-            facility_activity: 80
-            maintenance_pattern: 78
-            operational_efficiency: 75
-          financial_stability:
-            credit_rating: 80
-            leverage: 75
-            aro_coverage: 85
-            capex_trend: 78
-            restructuring: 100
-          asset_portfolio:
-            asset_age: 55
-            concentration: 65
-            complexity: 50
-            decommissioning: 75
-            permit_status: 88
-          corporate_footprint:
-            safety_communication: 75
-            esg_reporting: 70
-            technical_hiring: 72
-            industry_presence: 78
-            disclosure_quality: 75
-            hse_leadership: 75
-          structured_data:
-            esg_rating: 68
-            benchmark: 72
-            credit: 80
