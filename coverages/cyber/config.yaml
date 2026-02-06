@@ -860,7 +860,7 @@ cyber:
           interpretation:
             bands: {min: 800, max: 1000}
             action: "APPROVE"
-            application: {method: "PREMIUM_BASE", applied: 8000}
+            application: {method: "PREMIUM_BASE", value: 8000}
 
         - id: 2
           label: "STANDARD_PLUS"
@@ -868,7 +868,7 @@ cyber:
           interpretation:
             bands: {min: 650, max: 799}
             action: "APPROVE"
-            application: {method: "PREMIUM_BASE", applied: 12000}
+            application: {method: "PREMIUM_BASE", value: 12000}
 
         - id: 3
           label: "STANDARD"
@@ -876,7 +876,7 @@ cyber:
           interpretation:
             bands: {min: 500, max: 649}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", applied: 18000}
+            application: {method: "PREMIUM_BASE", value: 18000}
 
         - id: 4
           label: "SUBSTANDARD"
@@ -884,7 +884,7 @@ cyber:
           interpretation:
             bands: {min: 350, max: 499}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", applied: 30000}
+            application: {method: "PREMIUM_BASE", value: 30000}
 
         - id: 5
           label: "DECLINE"
@@ -892,7 +892,7 @@ cyber:
           interpretation:
             bands: {min: 0, max: 349}
             action: "DECLINE"
-            application: {method: "PREMIUM_BASE", applied: 50000}
+            application: {method: "PREMIUM_BASE", value: 50000}
 
     # =========================================================================
     # LOSS TIER BANDS
