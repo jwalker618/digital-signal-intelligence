@@ -142,383 +142,438 @@ marine:
             - {cat: "AGE_25_PLUS", label: "25+ Years", applied: 1.60}
             - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # Each is a underlying feature for the previously defined groups
-    # Each group contributes to the group score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
+      - id: "classification_society"
+        inference_utility_function: classification_society_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "pi_club"
+        inference_utility_function: pi_club_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "charterer_quality"
+        inference_utility_function: charterer_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "banking_relationship"
+        inference_utility_function: banking_relationship_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "flag_state"
+        inference_utility_function: flag_state_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "industry_association"
+        inference_utility_function: industry_association_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "technical_manager"
+        inference_utility_function: technical_manager_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "port_relationship"
+        inference_utility_function: port_relationship_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.00
+        
+      - id: "port_state_control"
+        inference_utility_function: port_state_control_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "classification_society_quality"
+        inference_utility_function: classification_society_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.05     
 
-    signal_features:
-      network_authority:
-        - id: "classification_society"
-          name: "Classification Society Quality"
-          description: "IACS member vs non-IACS classification"
-          weight: 0.15
-          inference_utility_function: classification_society_basefunction
+      - id: "ais_compliance"
+        inference_utility_function: ais_compliance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.25  
+            score_conditions:
+              - {threshold: 40,  comparison: "<=", action: "REFER", override: 4, note: "AIS compliance concerns"}
 
-        - id: "pi_club"
-          name: "P&I Club Membership"
-          description: "International Group club vs fixed premium"
-          weight: 0.15
-          inference_utility_function: pi_club_basefunction
+      - id: "dark_activity"
+        inference_utility_function: dark_activity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.25    
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "High-risk dark activity"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Concerning dark activity patterns"}
 
-        - id: "charterer_quality"
-          name: "Charterer Relationships"
-          description: "Quality of major charterers (oil majors, commodity traders)"
-          weight: 0.15
-          inference_utility_function: charterer_quality_basefunction
+      - id: "route_risk"
+        inference_utility_function: route_risk_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.20         
 
-        - id: "banking_relationship"
-          name: "Ship Finance Relationships"
-          description: "Quality of ship finance banks"
-          weight: 0.10
-          inference_utility_function: banking_relationship_basefunction
+      - id: "psc_region_exposure"
+        inference_utility_function: psc_regions_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+      
+      - id: "operational_efficiency"
+        inference_utility_function: operational_efficiency_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "weather_routing"
+        inference_utility_function: weather_routing_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.10    
 
-        - id: "flag_state"
-          name: "Flag State Quality"
-          description: "Paris MoU white/grey/black list status"
-          weight: 0.15
-          inference_utility_function: flag_state_basefunction
+      - id: "psc_detention"
+        inference_utility_function: psc_detention_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  safety_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+            score_conditions:
+              - {threshold: 30,  comparison: "<=", action: "REFER", override: 4, note: "Elevated PSC detention rate"}
 
-        - id: "industry_association"
-          name: "Industry Association Membership"
-          description: "BIMCO, Intertanko, Intercargo membership"
-          weight: 0.10
-          inference_utility_function: industry_association_basefunction
+      - id: "psc_deficiency"
+        inference_utility_function: psc_deficiency_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  safety_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "class_status"
+        inference_utility_function: class_status_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  safety_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20       
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Class suspended/withdrawn"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Class status concerns"}
 
-        - id: "technical_manager"
-          name: "Technical Manager Quality"
-          description: "Quality of third-party technical manager if applicable"
-          weight: 0.10
-          inference_utility_function: technical_manager_basefunction
+      - id: "ism_compliance"
+        inference_utility_function: ism_compliance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  safety_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER",  override: 5, note: "ISM compliance failure"}
+              - {threshold: 50, comparison: "<=", action: "REFER",  override: 4, note: "ISM concerns"}
 
-        - id: "port_relationship"
-          name: "Port Relationships"
-          description: "Relationships with major ports and terminals"
-          weight: 0.00
-          inference_utility_function: port_relationship_basefunction
+      - id: "casualty_history"
+        inference_utility_function: casualty_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  safety_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.10      
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Serious casualty history"}
 
-        - id: "port_state_control"
-          name: "Port State Control Analysis"
-          description: "Port state control deficiency tracking and analysis"
-          weight: 0.05
-          inference_utility_function: port_state_control_basefunction
+      - id: "total_loss"
+        inference_utility_function: totalloss_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  safety_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.10  
+            score_conditions:
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Total loss history"}
 
-        - id: "classification_society_quality"
-          name: "Classification Society Quality Assessment"
-          description: "Classification society quality and standards assessment"
-          weight: 0.05
-          inference_utility_function: classification_society_quality_basefunction
+      - id: "fleet_age"
+        inference_utility_function: fleet_age_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  fleet_profile
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+        
+      - id: "fleet_stability"
+        inference_utility_function: fleet_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  fleet_profile
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "vessel_quality"
+        inference_utility_function: vessel_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  fleet_profile
+          risk:
+            correlation_direction: positive
+            weight: 0.20        
 
-      operational_telemetry:
-        - id: "ais_compliance"
-          name: "AIS Transmission Compliance"
-          description: "Consistency of AIS transmission across fleet"
-          weight: 0.25
-          inference_utility_function: ais_compliance_basefunction
-          score_conditions:
-            - threshold: 40
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "AIS compliance concerns"
+      - id: "crew_certification"
+        inference_utility_function: crew_certification_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  fleet_profile
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "management_consistency"
+        inference_utility_function: management_consistency_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  fleet_profile
+          risk:
+            correlation_direction: positive
+            weight: 0.15      
 
-        - id: "dark_activity"
-          name: "Dark Activity Patterns"
-          description: "AIS gaps in suspicious locations or patterns"
-          weight: 0.25
-          inference_utility_function: dark_activity_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "High-risk dark activity"
-            - threshold: 45
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Concerning dark activity patterns"
+      - id: "sanctions_status"
+        inference_utility_function: sanctions_status_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  sanctions_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.30   
+            score_conditions:
+              - {threshold: 20,  comparison: "<=", action: "REFER", override: 5, note: "Sanctions listed - coverage not available"}
 
-        - id: "route_risk"
-          name: "Trading Route Risk Profile"
-          description: "Exposure to high-risk areas (piracy, war zones)"
-          weight: 0.20
-          inference_utility_function: route_risk_basefunction
+      - id: "ownership_transparency"
+        inference_utility_function: ownership_transparency_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  sanctions_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20          
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Ownership transparency concerns"}
 
-        - id: "psc_region_exposure"
-          name: "PSC Region Exposure"
-          description: "Trading pattern by PSC regime quality"
-          weight: 0.10
-          inference_utility_function: psc_regions_basefunction
+      - id: "jurisdiction_risk"
+        inference_utility_function: jurisdiction_risk_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  sanctions_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Sanctioned jurisdiction exposure"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "High-risk jurisdiction exposure"}
 
-        - id: "operational_efficiency"
-          name: "Operational Efficiency"
-          description: "Speed/fuel efficiency patterns indicating discipline"
-          weight: 0.10
-          inference_utility_function: operational_efficiency_basefunction
+      - id: "sts_pattern"
+        inference_utility_function: sts_pattern_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  sanctions_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15 
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "High-risk STS activity"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Suspicious STS patterns"}
 
-        - id: "weather_routing"
-          name: "Weather Routing Behavior"
-          description: "Evidence of weather routing and risk management"
-          weight: 0.10
-          inference_utility_function: weather_routing_basefunction
+      - id: "historical_sanctions"
+        inference_utility_function: historical_sanctions_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  sanctions_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "imo2020_compliance"
+        inference_utility_function: imo_compliance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  environmental
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+        
+      - id: "bwm_compliance"
+        inference_utility_function: bwm_compliance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  environmental
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "cii_rating"
+        inference_utility_function: cii_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  environmental
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "environmental_incident"
+        inference_utility_function: environmental_incident_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  environmental
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "website_quality"
+        inference_utility_function: website_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "fleet_disclosure"
+        inference_utility_function: fleet_list_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "sustainability_reporting"
+        inference_utility_function: sustainability_reporting_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "safety_communication"
+        inference_utility_function: safety_culture_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20        
 
-      safety_compliance:
-        - id: "psc_detention"
-          name: "PSC Detention Rate"
-          description: "Port state control detention history"
-          weight: 0.25
-          inference_utility_function: psc_detention_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Elevated PSC detention rate"
+      - id: "crew_welfare"
+        inference_utility_function: crew_welfare_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "industry_presence"
+        inference_utility_function: industry_presence_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "vetting"
+        inference_utility_function: vetting_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.50
+        
+      - id: "esg_rating"
+        inference_utility_function: esg_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.30       
 
-        - id: "psc_deficiency"
-          name: "PSC Deficiency Rate"
-          description: "Average deficiencies per inspection vs benchmark"
-          weight: 0.20
-          inference_utility_function: psc_deficiency_basefunction
-
-        - id: "class_status"
-          name: "Classification Status"
-          description: "Class status, conditions, recommendations outstanding"
-          weight: 0.20
-          inference_utility_function: class_status_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Class suspended/withdrawn"
-            - threshold: 50
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Class status concerns"
-
-        - id: "ism_compliance"
-          name: "ISM/ISPS Compliance"
-          description: "Document of Compliance and safety management status"
-          weight: 0.15
-          inference_utility_function: ism_compliance_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "ISM compliance failure"
-            - threshold: 50
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "ISM concerns"
-
-        - id: "casualty_history"
-          name: "Casualty/Incident History"
-          description: "Fleet casualty and incident history"
-          weight: 0.10
-          inference_utility_function: casualty_history_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Serious casualty history"
-
-        - id: "total_loss"
-          name: "Total Loss History"
-          description: "Total loss history (CTL or ATL)"
-          weight: 0.10
-          inference_utility_function: totalloss_history_basefunction
-          score_conditions:
-            - threshold: 40
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Total loss history"
-
-      fleet_profile:
-        - id: "fleet_age"
-          name: "Fleet Age Profile"
-          description: "Weighted average fleet age"
-          weight: 0.30
-          inference_utility_function: fleet_age_basefunction
-
-        - id: "fleet_stability"
-          name: "Fleet Size and Stability"
-          description: "Fleet size changes and stability indicators"
-          weight: 0.20
-          inference_utility_function: fleet_stability_basefunction
-
-        - id: "vessel_quality"
-          name: "Vessel Quality Indicators"
-          description: "Class notations, equipment quality"
-          weight: 0.20
-          inference_utility_function: vessel_quality_basefunction
-
-        - id: "crew_certification"
-          name: "Crew Certification Quality"
-          description: "Crew nationality and certification patterns"
-          weight: 0.15
-          inference_utility_function: crew_certification_basefunction
-
-        - id: "management_consistency"
-          name: "Management Consistency"
-          description: "Stability of technical management"
-          weight: 0.15
-          inference_utility_function: management_consistency_basefunction
-
-      sanctions_compliance:
-        - id: "sanctions_status"
-          name: "Direct Sanctions Status"
-          description: "OFAC, EU, UN sanctions list status"
-          weight: 0.30
-          inference_utility_function: sanctions_status_basefunction
-          score_conditions:
-            - threshold: 20
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Sanctions listed - coverage not available"
-
-        - id: "ownership_transparency"
-          name: "Beneficial Ownership Transparency"
-          description: "Clarity of beneficial ownership structure"
-          weight: 0.20
-          inference_utility_function: ownership_transparency_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Ownership transparency concerns"
-
-        - id: "jurisdiction_risk"
-          name: "High-Risk Jurisdiction Exposure"
-          description: "Exposure to sanctioned or high-risk jurisdictions"
-          weight: 0.20
-          inference_utility_function: jurisdiction_risk_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Sanctioned jurisdiction exposure"
-            - threshold: 45
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "High-risk jurisdiction exposure"
-
-        - id: "sts_pattern"
-          name: "STS Transfer Patterns"
-          description: "Ship-to-ship transfer activity analysis"
-          weight: 0.15
-          inference_utility_function: sts_pattern_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "High-risk STS activity"
-            - threshold: 45
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Suspicious STS patterns"
-
-        - id: "historical_sanctions"
-          name: "Historical Sanctions Connections"
-          description: "Historical connections to sanctioned entities"
-          weight: 0.15
-          inference_utility_function: historical_sanctions_basefunction
-
-      environmental:
-        - id: "imo2020_compliance"
-          name: "IMO 2020 Sulphur Compliance"
-          description: "Compliance with 0.5% sulphur cap"
-          weight: 0.30
-          inference_utility_function: imo_compliance_basefunction
-
-        - id: "bwm_compliance"
-          name: "Ballast Water Management Compliance"
-          description: "BWM convention compliance status"
-          weight: 0.25
-          inference_utility_function: bwm_compliance_basefunction
-
-        - id: "cii_rating"
-          name: "CII Rating"
-          description: "Carbon Intensity Indicator rating"
-          weight: 0.25
-          inference_utility_function: cii_rating_basefunction
-
-        - id: "environmental_incident"
-          name: "Environmental Incidents"
-          description: "Pollution incidents and environmental fines"
-          weight: 0.20
-          inference_utility_function: environmental_incident_basefunction
-
-      corporate_footprint:
-        - id: "website_quality"
-          name: "Website Quality and Transparency"
-          description: "Quality of corporate website and disclosures"
-          weight: 0.15
-          inference_utility_function: website_quality_basefunction
-
-        - id: "fleet_disclosure"
-          name: "Fleet List Disclosure"
-          description: "Public fleet list availability"
-          weight: 0.20
-          inference_utility_function: fleet_list_basefunction
-
-        - id: "sustainability_reporting"
-          name: "Sustainability/ESG Reporting"
-          description: "Quality of sustainability reporting"
-          weight: 0.20
-          inference_utility_function: sustainability_reporting_basefunction
-
-        - id: "safety_communication"
-          name: "Safety Culture Communication"
-          description: "Evidence of safety culture in communications"
-          weight: 0.20
-          inference_utility_function: safety_culture_basefunction
-
-        - id: "crew_welfare"
-          name: "Crew Welfare Visibility"
-          description: "Visible commitment to crew welfare"
-          weight: 0.10
-          inference_utility_function: crew_welfare_basefunction
-
-        - id: "industry_presence"
-          name: "Industry Presence"
-          description: "Conference attendance, publications, industry engagement"
-          weight: 0.15
-          inference_utility_function: industry_presence_basefunction
-
-      structured_data:
-        - id: "vetting"
-          name: "RightShip/Vetting Score"
-          description: "Third-party vetting scores"
-          weight: 0.50
-          inference_utility_function: vetting_basefunction
-
-        - id: "esg_rating"
-          name: "ESG Maritime Rating"
-          description: "Maritime-specific ESG ratings"
-          weight: 0.30
-          inference_utility_function: esg_rating_basefunction
-
-        - id: "credit_rating"
-          name: "Credit Rating"
-          description: "Corporate credit rating if available"
-          weight: 0.20
-          inference_utility_function: credit_rating_basefunction
-
+      - id: "credit_rating"
+        inference_utility_function: credit_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+          
     # =========================================================================
     # GROUPS
     # Categorical modifiers and three-layer assessment groupings
