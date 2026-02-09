@@ -175,13 +175,20 @@ aerospace:
 
       - id: "alliance_membership"
         inference_utility_function: alliance_membership_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "codeshare_quality"
         inference_utility_function: codeshare_partner_basefunction
         proxy_tier: INFERRED_PROXY
@@ -190,7 +197,11 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "lessor_quality"
         inference_utility_function: aircraft_lessor_basefunction
         proxy_tier: INFERRED_PROXY
@@ -199,7 +210,11 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "oem_relationship"
         inference_utility_function: oem_relationship_basefunction
         proxy_tier: INFERRED_PROXY
@@ -208,7 +223,11 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "mro_quality"
         inference_utility_function: mro_quality_basefunction
         proxy_tier: INFERRED_PROXY
@@ -217,61 +236,101 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.20
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
         
       - id: "accident_history"
         inference_utility_function: accident_history_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: safety_record
           risk:
             correlation_direction: positive
-            weight: 0.30   
+            weight: 0.30
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe accident history"}
               - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Material accident history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+            severity:
+              correlation_direction: positive
+              weight: 0.35
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "incident_history"
         inference_utility_function: incident_history_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: safety_record
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "accident_rate"
         inference_utility_function: accident_rate_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: COHORT_INFERENCE
         three_layer_assessment:
           group_id: safety_record
           risk:
             correlation_direction: positive
             weight: 0.20
- 
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "fatality_history"
         inference_utility_function: fatality_history_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: safety_record
           risk:
             correlation_direction: positive
-            weight: 0.20    
+            weight: 0.20
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Recent fatal accidents"}
               - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Fatal accident history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.40
 
       - id: "investigation_findings"
         inference_utility_function: investigation_finding_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: safety_record
           risk:
             correlation_direction: positive
             weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
         
       - id: "certificate_status"
         inference_utility_function: certificate_status_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
@@ -280,10 +339,17 @@ aerospace:
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Certificate at risk"}
               - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Certificate concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "enforcement_actions"
         inference_utility_function: enforcement_action_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
@@ -292,46 +358,68 @@ aerospace:
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe enforcement history"}
               - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Material enforcement actions"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.20
 
       - id: "iosa_audit_status"
         inference_utility_function: iosa_audit_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "ramp_inspection"
         inference_utility_function: ramp_inspection_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "eu_safety_list"
         inference_utility_function: eu_safety_list_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
-            weight: 0.15        
+            weight: 0.15
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "On EU Air Safety List"}
               - {threshold: 70, comparison: "<=", action: "REFER", override: 4, note: "EU safety restrictions"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.25
 
       - id: "state_safety_rating"
         inference_utility_function: state_safety_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
             weight: 0.05
-        
+
       - id: "certification_transparency"
         inference_utility_function: certification_transparency_basefunction
         proxy_tier: INFERRED_PROXY
@@ -343,22 +431,30 @@ aerospace:
         
       - id: "otp_score"
         inference_utility_function: otp_score_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: operational_quality
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "dispatch_reliability"
         inference_utility_function: dispatch_reliability_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: operational_quality
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "crew_experience"
         inference_utility_function: crew_experience_basefunction
         proxy_tier: INFERRED_PROXY
@@ -367,7 +463,14 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "training_indicators"
         inference_utility_function: training_indicators_basefunction
         proxy_tier: INFERRED_PROXY
@@ -376,6 +479,10 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.15
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "operational_complexity"
         inference_utility_function: operational_complexity_basefunction
@@ -383,17 +490,33 @@ aerospace:
         three_layer_assessment:
           group_id: operational_quality
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.15
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.20
+
       - id: "growth_rate"
         inference_utility_function: growth_rate_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: operational_quality
           risk:
-            correlation_direction: positive
-            weight: 0.15         
+            correlation_direction: negative
+            weight: 0.15
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.10
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15         
 
       - id: "fleet_age"
         inference_utility_function: fleet_age_basefunction
@@ -401,9 +524,20 @@ aerospace:
         three_layer_assessment:
           group_id: fleet_quality
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.30
-        
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.20
+            severity:
+              correlation_direction: negative
+              weight: 0.15
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.10
+
       - id: "fleet_homogeneity"
         inference_utility_function: fleet_homogeneity_basefunction
         proxy_tier: INFERRED_PROXY
@@ -412,7 +546,15 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+          exposure:
+            complexity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "aircraft_generation"
         inference_utility_function: aircraft_generation_basefunction
         proxy_tier: INFERRED_PROXY
@@ -421,15 +563,26 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "order_backlog"
         inference_utility_function: order_backlog_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: fleet_quality
           risk:
             correlation_direction: positive
-            weight: 0.15      
+            weight: 0.15
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "maintenance_indicators"
         inference_utility_function: maintenance_indicators_basefunction
@@ -439,7 +592,11 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.05
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "supply_chain_quality"
         inference_utility_function: supply_chain_quality_basefunction
         proxy_tier: INFERRED_PROXY
@@ -451,21 +608,29 @@ aerospace:
         
       - id: "credit_rating"
         inference_utility_function: credit_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_stability
           risk:
             correlation_direction: positive
             weight: 0.35
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "public_financials"
         inference_utility_function: public_financials_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_stability
           risk:
             correlation_direction: positive
             weight: 0.30
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "market_position"
         inference_utility_function: market_position_basefunction
@@ -475,63 +640,101 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "government_support"
         inference_utility_function: government_support_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_stability
           risk:
             correlation_direction: positive
             weight: 0.15
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.10
         
       - id: "conflict_zone_exposure"
         inference_utility_function: conflict_zone_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: route_risk
           risk:
-            correlation_direction: positive
-            weight: 0.30        
+            correlation_direction: negative
+            weight: 0.30
             score_conditions:
               - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Direct conflict zone ops"}
               - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Significant conflict exposure"}
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.20
+            severity:
+              correlation_direction: negative
+              weight: 0.30
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.15
 
       - id: "challenging_airports"
         inference_utility_function: challenging_airports_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: route_risk
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.15
+
       - id: "high_risk_destinations"
         inference_utility_function: highrisk_exposure_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: route_risk
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.15
+            severity:
+              correlation_direction: negative
+              weight: 0.20
+
       - id: "weather_exposure"
         inference_utility_function: weather_exposure_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
           group_id: route_risk
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.10
+
       - id: "terrain_exposure"
         inference_utility_function: terrain_exposure_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
           group_id: route_risk
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.10
         
       - id: "management_stability"
         inference_utility_function: management_stability_basefunction
@@ -541,7 +744,11 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "safety_leadership"
         inference_utility_function: safety_leadership_basefunction
         proxy_tier: INFERRED_PROXY
@@ -550,16 +757,27 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "safety_reporting"
         inference_utility_function: safety_reporting_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: corporate_governance
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "corporate_structure"
         inference_utility_function: corporate_structure_basefunction
         proxy_tier: INFERRED_PROXY
@@ -568,10 +786,14 @@ aerospace:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.10
+
       - id: "industry_engagement"
         inference_utility_function: industry_engagement_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: corporate_governance
           risk:
