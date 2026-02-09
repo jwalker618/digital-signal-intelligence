@@ -93,6 +93,7 @@ directors_officers:
             - {cat: "PRIVATE_BACKED", label: "Private VC/PE Backed", applied: 0.60}
             - {cat: "PRIVATE_OTHER", label: "Private Other", applied: 0.50}
             - {cat: "NONPROFIT", label: "Nonprofit", applied: 0.40}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: industry
         inference_utility_function: industry_classification_basefunction
@@ -123,129 +124,7 @@ directors_officers:
             - {cat: "OTC", label: "OTC Markets", applied: 1.30}
             - {cat: "FOREIGN", label: "Foreign Exchange", applied: 1.15}
             - {cat: "NONE", label: "Not Listed", applied: 0.80}
-
-
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # Each group is the product of its underlying features
-    # Each group contributes to the composite score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-
-    signal_groups:
-      - id: "network_authority"
-        name: "Network Authority"
-        description: "Quality of professional relationships and institutional credibility"
-        weight: 0.10
-        test_scores: {excellent: 90, average: 68, poor: 38}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent network authority - modifier applied"
-
-      - id: "governance"
-        name: "Corporate Governance"
-        description: "Board composition, structure, and shareholder rights"
-        weight: 0.25
-        test_scores: {excellent: 92, average: 70, poor: 35}
-        score_conditions:
-          - threshold: 30
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Critical governance deficiencies"
-          - threshold: 45
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Significant governance concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent governance - modifier applied"
-
-      - id: "financial"
-        name: "Financial Integrity"
-        description: "Audit quality, internal controls, financial reporting"
-        weight: 0.20
-        test_scores: {excellent: 95, average: 72, poor: 38}
-        score_conditions:
-          - threshold: 35
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Critical financial integrity issues"
-          - threshold: 50
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Material financial concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent financial integrity - modifier applied"
-
-      - id: "litigation"
-        name: "Litigation Profile"
-        description: "Securities litigation, regulatory actions, enforcement history"
-        weight: 0.25
-        test_scores: {excellent: 98, average: 75, poor: 30}
-        score_conditions:
-          - threshold: 25
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Severe litigation profile"
-          - threshold: 40
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Elevated litigation risk"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent litigation profile - modifier applied"
-
-      - id: "executive"
-        name: "Executive Profile"
-        description: "Executive stability, quality, and conduct"
-        weight: 0.10
-        test_scores: {excellent: 88, average: 68, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent executive profile - modifier applied"
-
-      - id: "corporate_footprint"
-        name: "Corporate Footprint"
-        description: "Investor relations, transparency, ESG commitment"
-        weight: 0.05
-        test_scores: {excellent: 85, average: 62, poor: 35}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent corporate footprint - modifier applied"
-
-      - id: "structured_data"
-        name: "Structured Data"
-        description: "Third-party governance and credit ratings"
-        weight: 0.05
-        test_scores: {excellent: 88, average: 65, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent structured data - modifier applied"
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -589,6 +468,102 @@ directors_officers:
           weight: 0.20
           inference_utility_function: iss_governance_basefunction
 
+    # =========================================================================
+    # GROUPS
+    # Categorical modifiers and three-layer assessment groupings
+    # =========================================================================
+    groups:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL GROUPS
+      # Apply pricing modifiers (applied:), not scores
+      # -----------------------------------------------------------------------
+      categories:
+        - id: "company_type"
+          label: "Company Type"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "industry"
+          label: "Industry"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "stock_exchange"
+          label: "Stock Exchange"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+      # -----------------------------------------------------------------------
+      # THREE-LAYER ASSESSMENT GROUPS
+      # Aggregate signals into scoring dimensions
+      # Weights within each dimension must sum to 1.0
+      # -----------------------------------------------------------------------
+      three_layer_assessment:
+        - id: "network_authority"
+          label: "Network Authority"
+          description: "Quality of professional relationships and institutional credibility"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent network authority - modifier applied"}
+  
+        - id: "governance"
+          label: "Corporate Governance"
+          description: "Board composition, structure, and shareholder rights"
+          risk:
+            weight: 0.25
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Critical governance deficiencies"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant governance concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent governance - modifier applied"}
+  
+        - id: "financial"
+          label: "Financial Integrity"
+          description: "Audit quality, internal controls, financial reporting"
+          risk:
+            weight: 0.20
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 5, note: "Critical financial integrity issues"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Material financial concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent financial integrity - modifier applied"}
+  
+        - id: "litigation"
+          label: "Litigation Profile"
+          description: "Securities litigation, regulatory actions, enforcement history"
+          risk:
+            weight: 0.25
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe litigation profile"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Elevated litigation risk"}
+              - {threshold: 20,  comparison: "<=", action: "MODIFIER",  applied: 0.85, note: "Excellent litigation profile - modifier applied"}
+  
+        - id: "executive"
+          label: "Executive Profile"
+          description: "Executive stability, quality, and conduct"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent executive profile - modifier applied"}
+  
+        - id: "corporate_footprint"
+          label: "Corporate Footprint"
+          description: "Investor relations, transparency, ESG commitment"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent corporate footprint - modifier applied"}
+  
+        - id: "structured_data"
+          label: "Structured Data"
+          description: "Third-party governance and credit ratings"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20,  comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent structured data - modifier applied"}
      # =========================================================================
     # RISK TIER BANDS
     # Maps composite risk score (0-1000) to pricing tiers
