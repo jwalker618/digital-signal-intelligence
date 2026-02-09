@@ -139,376 +139,428 @@ energy:
             - {cat: "GLOBAL_DIVERSIFIED", label: "Global Diversified", applied: 1.05}
             - {cat: "OTHER", label: "Other", applied: 1.15}
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # Each is a underlying feature for the previously defined groups
-    # Each group contributes to the group score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
+      - id: "partner_quality"
+        inference_utility_function: partner_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "contractor_quality"
+        inference_utility_function: contractor_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "banking_relationship"
+        inference_utility_function: banking_relationship_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "insurance_history"
+        inference_utility_function: insurance_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "industry_association"
+        inference_utility_function: industry_association_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "regulator_relationship"
+        inference_utility_function: regulator_relationship_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15          
 
-    signal_features:
-      network_authority:
-        - id: "partner_quality"
-          name: "JV Partner Quality"
-          description: "Quality of joint venture partners"
-          weight: 0.20
-          inference_utility_function: partner_quality_basefunction
+      - id: "customer_quality"
+        inference_utility_function: offtake_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "osha_trir"
+        inference_utility_function: osha_trir_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_performance
+          risk:
+            correlation_direction: positive
+            weight: 0.20    
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "TRIR significantly above benchmark"}
 
-        - id: "contractor_quality"
-          name: "Contractor Relationships"
-          description: "Quality of drilling/service contractors"
-          weight: 0.15
-          inference_utility_function: contractor_quality_basefunction
+      - id: "osha_violations"
+        inference_utility_function: osha_violations_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_performance
+          risk:
+            correlation_direction: positive
+            weight: 0.15  
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Willful/repeat OSHA violations"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Serious OSHA violation history"}
 
-        - id: "banking_relationship"
-          name: "Banking/Financing Relationships"
-          description: "Quality of banking relationships"
-          weight: 0.15
-          inference_utility_function: banking_relationship_basefunction
+      - id: "bsee_incident"
+        inference_utility_function: bsee_incident_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_performance
+          risk:
+            correlation_direction: positive
+            weight: 0.10 
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Significant BSEE incident history"}
 
-        - id: "insurance_history"
-          name: "Insurance Market Reputation"
-          description: "Historical insurance placement and claims record"
-          weight: 0.15
-          inference_utility_function: insurance_history_basefunction
+      - id: "process_safety"
+        inference_utility_function: process_safety_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_performance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Major process safety events"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Process safety concerns"}
 
-        - id: "industry_association"
-          name: "Industry Association Membership"
-          description: "API, IOGP, and other association involvement"
-          weight: 0.10
-          inference_utility_function: industry_association_basefunction
+      - id: "fatality"
+        inference_utility_function: fatality_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_performance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Fatality history concerns"}
 
-        - id: "regulator_relationship"
-          name: "Regulator Relationship Quality"
-          description: "Quality of regulatory relationships"
-          weight: 0.15
-          inference_utility_function: regulator_relationship_basefunction
+      - id: "major_incident"
+        inference_utility_function: major_incident_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_performance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Major incident history"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Incident history concerns"}
 
-        - id: "customer_quality"
-          name: "Offtake/Customer Quality"
-          description: "Quality of product offtake relationships"
-          weight: 0.10
-          inference_utility_function: offtake_quality_basefunction
+      - id: "near_miss"
+        inference_utility_function: nearmiss_reporting_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_performance
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "epa_violation"
+        inference_utility_function: epa_violation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: environmental_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20  
+            score_conditions:
+              - {threshold: 25,  comparison: "<=", action: "REFER", override: 5, note: "Ongoing EPA enforcement"}
+              - {threshold: 45,  comparison: "<=", action: "REFER", override: 4,  note: "Significant EPA violations"}
 
-      safety_performance:
-        - id: "osha_trir"
-          name: "OSHA Total Recordable Incident Rate"
-          description: "TRIR vs industry benchmark"
-          weight: 0.20
-          inference_utility_function: osha_trir_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "TRIR significantly above benchmark"
+      - id: "spill_history"
+        inference_utility_function: spill_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: environmental_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+            score_conditions:
+              - {threshold: 20,  comparison: "<=", action: "REFER",  override: 5, note: "Major spill history"}
+              - {threshold: 40,  comparison: "<=", action: "REFER",  override: 4, note: "Spill history concerns"}
 
-        - id: "osha_violations"
-          name: "OSHA Serious Violations"
-          description: "History of serious/willful OSHA violations"
-          weight: 0.15
-          inference_utility_function: osha_violations_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Willful/repeat OSHA violations"
-            - threshold: 45
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Serious OSHA violation history"
+      - id: "emissions_compliance"
+        inference_utility_function: emissions_compliance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: environmental_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "flaring"
+        inference_utility_function: flaring_intensity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: environmental_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+       
+      - id: "methane"
+        inference_utility_function: methane_emissions_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: environmental_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15        
 
-        - id: "bsee_incident"
-          name: "BSEE Incidents"
-          description: "Offshore incidents reported to BSEE"
-          weight: 0.10
-          inference_utility_function: bsee_incident_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              tier_override: 4
-              note: "Significant BSEE incident history"
+      - id: "remediation"
+        inference_utility_function: remediation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: environmental_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "production_consistency"
+        inference_utility_function: production_consistency_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.20     
 
-        - id: "process_safety"
-          name: "Process Safety Events"
-          description: "Tier 1 and Tier 2 process safety events"
-          weight: 0.20
-          inference_utility_function: process_safety_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Major process safety events"
-            - threshold: 40
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Process safety concerns"
+      - id: "facility_activity"
+        inference_utility_function: facility_activity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "well_integrity"
+        inference_utility_function: well_integrity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "maintenance_pattern"
+        inference_utility_function: maintenance_pattern_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "operational_efficiency"
+        inference_utility_function: operational_efficiency_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_telemetry
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "credit_rating"
+        inference_utility_function: credit_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "leverage"
+        inference_utility_function: leverage_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "aro_coverage"
+        inference_utility_function: aro_coverage_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            score_conditions:
+              - {threshold: 30,  comparison: "<=",  action: "REFER",  override: 4,  note: "ARO underfunding concerns"}
 
-        - id: "fatality"
-          name: "Fatality History"
-          description: "Work-related fatality history"
-          weight: 0.15
-          inference_utility_function: fatality_history_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Fatality history concerns"
+      - id: "capex_trend"
+        inference_utility_function: capex_trend_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.20 
 
-        - id: "major_incident"
-          name: "Major Incident History"
-          description: "Explosions, blowouts, major spills"
-          weight: 0.15
-          inference_utility_function: major_incident_basefunction
-          score_conditions:
-            - threshold: 20
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Major incident history"
-            - threshold: 40
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Incident history concerns"
+      - id: "restructuring"
+        inference_utility_function: restructuring_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.15        
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Recent bankruptcy"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Restructuring history"}
 
-        - id: "near_miss"
-          name: "Near-Miss Reporting"
-          description: "Near-miss reporting culture (if disclosed)"
-          weight: 0.05
-          inference_utility_function: nearmiss_reporting_basefunction
+      - id: "asset_age"
+        inference_utility_function: asset_age_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: asset_portfolio
+          risk:
+            correlation_direction: positive
+            weight: 0.25      
 
-      environmental_compliance:
-        - id: "epa_violation"
-          name: "EPA Violations"
-          description: "CAA, CWA, RCRA violations"
-          weight: 0.20
-          inference_utility_function: epa_violation_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Ongoing EPA enforcement"
-            - threshold: 45
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Significant EPA violations"
+      - id: "concentration"
+        inference_utility_function: concentration_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: asset_portfolio
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "complexity"
+        inference_utility_function: technology_profile_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: asset_portfolio
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "decommissioning"
+        inference_utility_function: decomissioning_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: asset_portfolio
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "permit_status"
+        inference_utility_function: permit_status_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: asset_portfolio
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "safety_communication"
+        inference_utility_function: safety_comms_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "esg_reporting"
+        inference_utility_function: esg_reporting_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "technical_hiring"
+        inference_utility_function: technical_hiring_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "industry_presence"
+        inference_utility_function: industry_presence_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "disclosure_quality"
+        inference_utility_function: disclosure_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "hse_leadership"
+        inference_utility_function: hse_leadership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15        
 
-        - id: "spill_history"
-          name: "Spill History"
-          description: "Oil/chemical spill history from NRC and state records"
-          weight: 0.25
-          inference_utility_function: spill_history_basefunction
-          score_conditions:
-            - threshold: 20
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Major spill history"
-            - threshold: 40
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Spill history concerns"
-
-        - id: "emissions_compliance"
-          name: "Air Emissions Compliance"
-          description: "Air permit compliance and emissions"
-          weight: 0.15
-          inference_utility_function: emissions_compliance_basefunction
-
-        - id: "flaring"
-          name: "Flaring Intensity"
-          description: "Flaring intensity from satellite data"
-          weight: 0.15
-          inference_utility_function: flaring_intensity_basefunction
-
-        - id: "methane"
-          name: "Methane Emissions"
-          description: "Methane emissions from satellite and ground monitoring"
-          weight: 0.15
-          inference_utility_function: methane_emissions_basefunction
-
-        - id: "remediation"
-          name: "Remediation Obligations"
-          description: "Environmental remediation obligations"
-          weight: 0.10
-          inference_utility_function: remediation_basefunction
-
-      operational_telemetry:
-        - id: "production_consistency"
-          name: "Production Consistency"
-          description: "Volatility in reported production"
-          weight: 0.20
-          inference_utility_function: production_consistency_basefunction
-
-        - id: "facility_activity"
-          name: "Facility Activity Patterns"
-          description: "Satellite-derived facility activity indicators"
-          weight: 0.20
-          inference_utility_function: facility_activity_basefunction
-
-        - id: "well_integrity"
-          name: "Well Integrity Indicators"
-          description: "Shut-in patterns, workovers, P&A activity"
-          weight: 0.20
-          inference_utility_function: well_integrity_basefunction
-
-        - id: "maintenance_pattern"
-          name: "Maintenance Patterns"
-          description: "Observable turnarounds and maintenance activity"
-          weight: 0.20
-          inference_utility_function: maintenance_pattern_basefunction
-
-        - id: "operational_efficiency"
-          name: "Operational Efficiency"
-          description: "Production per well, utilization metrics"
-          weight: 0.20
-          inference_utility_function: operational_efficiency_basefunction
-
-      financial_stability:
-        - id: "credit_rating"
-          name: "Credit Rating"
-          description: "Corporate credit rating"
-          weight: 0.25
-          inference_utility_function: credit_rating_basefunction
-
-        - id: "leverage"
-          name: "Debt/Equity Leverage"
-          description: "Leverage ratio vs peer benchmark"
-          weight: 0.20
-          inference_utility_function: leverage_basefunction
-
-        - id: "aro_coverage"
-          name: "ARO Coverage"
-          description: "Asset retirement obligation funding status"
-          weight: 0.20
-          inference_utility_function: aro_coverage_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "ARO underfunding concerns"
-
-        - id: "capex_trend"
-          name: "Capex Trends"
-          description: "Maintenance vs growth capital trends"
-          weight: 0.20
-          inference_utility_function: capex_trend_basefunction
-
-        - id: "restructuring"
-          name: "Bankruptcy/Restructuring History"
-          description: "Bankruptcy or debt restructuring history"
-          weight: 0.15
-          inference_utility_function: restructuring_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Recent bankruptcy"
-            - threshold: 45
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Restructuring history"
-
-      asset_portfolio:
-        - id: "asset_age"
-          name: "Asset Age Profile"
-          description: "Weighted average asset age vs peers"
-          weight: 0.25
-          inference_utility_function: asset_age_basefunction
-
-        - id: "concentration"
-          name: "Geographic Concentration"
-          description: "Geographic and asset concentration risk"
-          weight: 0.20
-          inference_utility_function: concentration_basefunction
-
-        - id: "complexity"
-          name: "Technology/Complexity Profile"
-          description: "Operational complexity and technology risk"
-          weight: 0.20
-          inference_utility_function: technology_profile_basefunction
-
-        - id: "decommissioning"
-          name: "Decommissioning Obligations"
-          description: "Decommissioning liability status"
-          weight: 0.20
-          inference_utility_function: decomissioning_basefunction
-
-        - id: "permit_status"
-          name: "Permit Status"
-          description: "Operating permit status and compliance"
-          weight: 0.15
-          inference_utility_function: permit_status_basefunction
-
-      corporate_footprint:
-        - id: "safety_communication"
-          name: "Safety Culture Communication"
-          description: "Observable safety culture and communication"
-          weight: 0.20
-          inference_utility_function: safety_comms_basefunction
-
-        - id: "esg_reporting"
-          name: "ESG/Sustainability Reporting"
-          description: "Quality of ESG and sustainability reporting"
-          weight: 0.20
-          inference_utility_function: esg_reporting_basefunction
-
-        - id: "technical_hiring"
-          name: "Technical/HSE Hiring"
-          description: "HSE and engineering hiring signals"
-          weight: 0.15
-          inference_utility_function: technical_hiring_basefunction
-
-        - id: "industry_presence"
-          name: "Industry Conference Presence"
-          description: "Presence at industry conferences"
-          weight: 0.15
-          inference_utility_function: industry_presence_basefunction
-
-        - id: "disclosure_quality"
-          name: "Transparency/Disclosure Quality"
-          description: "Overall transparency and disclosure quality"
-          weight: 0.15
-          inference_utility_function: disclosure_quality_basefunction
-
-        - id: "hse_leadership"
-          name: "HSE Leadership Visibility"
-          description: "HSE leadership profiles and visibility"
-          weight: 0.15
-          inference_utility_function: hse_leadership_basefunction
-
-      structured_data:
-        - id: "esg_rating"
-          name: "ESG Rating"
-          description: "Third-party ESG ratings"
-          weight: 0.40
-          inference_utility_function: esg_rating_basefunction
-
-        - id: "benchmark"
-          name: "Industry Benchmark Data"
-          description: "Performance vs industry benchmarks"
-          weight: 0.35
-          inference_utility_function: benchmark_basefunction
-
-        - id: "credit"
-          name: "Credit Rating (Structured)"
-          description: "Credit rating from structured feed"
-          weight: 0.25
-          inference_utility_function: credit_rating_basefunction
-
+      - id: "esg_rating"
+        inference_utility_function: esg_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.40
+        
+      - id: "benchmark"
+        inference_utility_function: benchmark_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+        
+      - id: "credit"
+        inference_utility_function: credit_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
     # =========================================================================
     # GROUPS
     # Categorical modifiers and three-layer assessment groupings
