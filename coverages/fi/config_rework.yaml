@@ -141,411 +141,450 @@ financial_institutions:
             - {cat: "PUBLIC", label: "Publicly Traded", applied: 1.10} 
             - {cat: "PRIVATE", label: "Private", applied: 1.00}
             - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
-  
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # Each is a underlying feature for the previously defined groups
-    # Each group contributes to the group score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------     
 
-    signal_features:
-      network_authority:
-        - id: "correspondent_quality"
-          name: "Correspondent Banking Quality"
-          description: "Quality of correspondent banking relationships"
-          weight: 0.20
-          inference_utility_function: correspondent_quality_basefunction
-
+      - id: "correspondent_quality"
+        inference_utility_function: correspondent_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "fhlb_membership"
+        inference_utility_function: fhlb_membership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+              
+      - id: "clearing_relationship"
+        inference_utility_function: clearing_relationship_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+                 
+      - id: "auditor_quality"
+        inference_utility_function: auditor_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+               
+      - id: "legal_counsel"
+        inference_utility_function: legal_counsel_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+                 
+      - id: "industry_association"
+        inference_utility_function: industry_association_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "credit_rating"
+        inference_utility_function: credit_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "examination_rating"
+        inference_utility_function: examination_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20     
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Critically weak examination indicators"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Weak examination indicators"}
+        
+      - id: "enforcement_action"
+        inference_utility_function: enforcement_action_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Active enforcement actions"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Recent enforcement history"}
+        
+      - id: "informal_action"
+        inference_utility_function: informal_action_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "cra_rating"
+        inference_utility_function: cra_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
           
-        - id: "fhlb_membership"
-          name: "FHLB Membership"
-          description: "Federal Home Loan Bank membership and standing"
-          weight: 0.10
-          inference_utility_function: fhlb_membership_basefunction
+      - id: "bsa_aml"
+        inference_utility_function: bsa_aml_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Critical BSA/AML issues"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "BSA/AML compliance concerns"}
+        
+      - id: "fair_lending"
+        inference_utility_function: fair_lending_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "consumer_compliance"
+        inference_utility_function: consumer_compliance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
 
+      - id: "capital_ratio"
+        inference_utility_function: capital_ratio_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_condition
+          risk:
+            correlation_direction: positive
+            weight: 0.20  
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Capital adequacy crisis"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Capital adequacy concerns"}
+        
+      - id: "asset_quality"
+        inference_utility_function: asset_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_condition
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Asset quality concerns"}
+        
+      - id: "liquidity"
+        inference_utility_function: liquidity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_condition
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "earnings"
+        inference_utility_function: earnings_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_condition
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+              
+      - id: "concentration"
+        inference_utility_function: concentration_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_condition
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+       
+      - id: "interest_rate_risk"
+        inference_utility_function: interest_rate_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_condition
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+             
+      - id: "growth_rate"
+        inference_utility_function: growth_rate_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_condition
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+      
+      - id: "board_independence"
+        inference_utility_function: board_independence_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+               
+      - id: "board_expertise"
+        inference_utility_function: board_expertise_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            
+      - id: "executive_stability"
+        inference_utility_function: executive_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+             
+      - id: "risk_committee"
+        inference_utility_function: risk_committee_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            
+      - id: "audit_committee"
+        inference_utility_function: audit_committee_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+              
+      - id: "related_party"
+        inference_utility_function: related_party_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+
+      - id: "cfpb_complaint"
+        inference_utility_function: cfpb_compliant_basefunction  
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+               
+      - id: "bbb_complaint"
+        inference_utility_function: bbb_compliant_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "litigation"
+        inference_utility_function: litigation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 4, note: "Significant litigation exposure"}
+        
+      - id: "breach_history"
+        inference_utility_function: breach_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.25 
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Data breach history concerns"}
+        
+      - id: "operational_incident"
+        inference_utility_function: operational_incidents_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "tls_score"
+        inference_utility_function: tls_configuration_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: cyber_security
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+           
+      - id: "email_auth"
+        inference_utility_function: email_authentication_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: cyber_security
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            
+      - id: "security_headers"
+        inference_utility_function: security_headers_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: cyber_security
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+            
+      - id: "network_exposure"
+        inference_utility_function: network_exposure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: cyber_security
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+       
+      - id: "vulnerability"
+        inference_utility_function: cve_exposure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: cyber_security
+          risk:
+            correlation_direction: positive
+            weight: 0.15  
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 4, note: "Critical vulnerabilities detected"}
+        
+      - id: "security_rating"
+        inference_utility_function: security_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: cyber_security
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+
+      - id: "investor_relations"
+        inference_utility_function: investor_relations_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "disclosure_quality"
+        inference_utility_function: disclosure_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
           
-        - id: "clearing_relationship"
-          name: "Clearing Relationships"
-          description: "Quality of clearing and settlement relationships"
-          weight: 0.15
-          inference_utility_function: clearing_relationship_basefunction
-
+      - id: "security_page"
+        inference_utility_function: security_page_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+             
+      - id: "hiring_signals"
+        inference_utility_function: hiring_signals_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "esg_reporting"
+        inference_utility_function: esg_reporting_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
           
-        - id: "auditor_quality"
-          name: "External Auditor Quality"
-          description: "Quality tier of external auditor"
-          weight: 0.20
-          inference_utility_function: auditor_quality_basefunction
-
+      - id: "community_presence"
+        inference_utility_function: community_presence_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "credit_rating_structured"
+        inference_utility_function: credit_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.40
+        
+      - id: "esg_rating"
+        inference_utility_function: esg_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.30
           
-        - id: "legal_counsel"
-          name: "Legal Counsel Quality"
-          description: "Quality of primary legal counsel"
-          weight: 0.10
-          inference_utility_function: legal_counsel_basefunction
-
-          
-        - id: "industry_association"
-          name: "Industry Association Membership"
-          description: "Active membership in industry associations"
-          weight: 0.10
-          inference_utility_function: industry_association_basefunction
-
-          
-        - id: "credit_rating"
-          name: "Credit Rating"
-          description: "Credit rating from major agencies"
-          weight: 0.15
-          inference_utility_function: credit_rating_basefunction
-
-
-      regulatory_compliance:
-        - id: "examination_rating"
-          name: "Examination Rating Proxy"
-          description: "Inferred examination quality from observable indicators"
-          weight: 0.20
-          inference_utility_function: examination_rating_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Critically weak examination indicators"
-            - threshold: 40
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Weak examination indicators"
-          
-        - id: "enforcement_action"
-          name: "Enforcement Actions"
-          description: "Formal enforcement actions (C&D, CMPs, consent orders)"
-          weight: 0.25
-          inference_utility_function: enforcement_action_basefunction
-          score_conditions:
-            - threshold: 20
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Active enforcement actions"
-            - threshold: 40
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Recent enforcement history"
-          
-        - id: "informal_action"
-          name: "Informal Actions"
-          description: "MOUs, board resolutions, informal agreements"
-          weight: 0.10
-          inference_utility_function: informal_action_basefunction
-
-          
-        - id: "cra_rating"
-          name: "CRA Rating"
-          description: "Community Reinvestment Act examination rating"
-          weight: 0.10
-          inference_utility_function: cra_rating_basefunction
-
-          
-        - id: "bsa_aml"
-          name: "BSA/AML Compliance"
-          description: "Bank Secrecy Act / Anti-Money Laundering compliance"
-          weight: 0.15
-          inference_utility_function: bsa_aml_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Critical BSA/AML issues"
-            - threshold: 45
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "BSA/AML compliance concerns"
-          
-        - id: "fair_lending"
-          name: "Fair Lending Compliance"
-          description: "Fair lending and ECOA compliance history"
-          weight: 0.10
-          inference_utility_function: fair_lending_basefunction
-
-          
-        - id: "consumer_compliance"
-          name: "Consumer Compliance"
-          description: "UDAP/UDAAP and consumer protection compliance"
-          weight: 0.10
-          inference_utility_function: consumer_compliance_basefunction
-
-
-      financial_condition:
-        - id: "capital_ratio"
-          name: "Capital Adequacy"
-          description: "CET1, Tier 1, Total capital ratios vs requirements"
-          weight: 0.20
-          inference_utility_function: capital_ratio_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Capital adequacy crisis"
-            - threshold: 50
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Capital adequacy concerns"
-          
-        - id: "asset_quality"
-          name: "Asset Quality"
-          description: "NPL ratio, charge-off rates, classified assets"
-          weight: 0.20
-          inference_utility_function: asset_quality_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Asset quality concerns"
-          
-        - id: "liquidity"
-          name: "Liquidity Position"
-          description: "Liquidity coverage, funding stability"
-          weight: 0.15
-          inference_utility_function: liquidity_basefunction
-
-          
-        - id: "earnings"
-          name: "Earnings Quality"
-          description: "ROA, ROE, net interest margin stability"
-          weight: 0.15
-          inference_utility_function: earnings_basefunction
-
-          
-        - id: "concentration"
-          name: "Loan Concentration"
-          description: "Portfolio concentration risk (CRE, single borrower)"
-          weight: 0.10
-          inference_utility_function: concentration_basefunction
-
-          
-        - id: "interest_rate_risk"
-          name: "Interest Rate Risk"
-          description: "Sensitivity to interest rate changes"
-          weight: 0.10
-          inference_utility_function: interest_rate_basefunction
-
-          
-        - id: "growth_rate"
-          name: "Growth Rate"
-          description: "Asset and loan growth rate (rapid growth = risk)"
-          weight: 0.10
-          inference_utility_function: growth_rate_basefunction
-
-
-      governance:
-        - id: "board_independence"
-          name: "Board Independence"
-          description: "Independent director ratio and quality"
-          weight: 0.20
-          inference_utility_function: board_independence_basefunction
-
-          
-        - id: "board_expertise"
-          name: "Board Expertise"
-          description: "Banking, risk, audit, and regulatory expertise on board"
-          weight: 0.20
-          inference_utility_function: board_expertise_basefunction
-
-          
-        - id: "executive_stability"
-          name: "Executive Stability"
-          description: "CEO and executive team tenure and turnover"
-          weight: 0.15
-          inference_utility_function: executive_stability_basefunction
-
-          
-        - id: "risk_committee"
-          name: "Risk Committee Quality"
-          description: "Board risk committee presence and composition"
-          weight: 0.20
-          inference_utility_function: risk_committee_basefunction
-
-          
-        - id: "audit_committee"
-          name: "Audit Committee Quality"
-          description: "Audit committee independence and expertise"
-          weight: 0.15
-          inference_utility_function: audit_committee_basefunction
-
-          
-        - id: "related_party"
-          name: "Related Party Transactions"
-          description: "Quality of related party transaction oversight"
-          weight: 0.10
-          inference_utility_function: related_party_basefunction
-
-
-      operational_risk:
-        - id: "cfpb_complaint"
-          name: "CFPB Complaint Volume"
-          description: "Consumer complaints vs peer benchmark"
-          weight: 0.25
-          inference_utility_function: cfpb_compliant_basefunction
-
-          
-        - id: "bbb_complaint"
-          name: "BBB Complaint Patterns"
-          description: "Better Business Bureau complaint history"
-          weight: 0.10
-          inference_utility_function: bbb_compliant_basefunction
-
-          
-        - id: "litigation"
-          name: "Litigation History"
-          description: "Class actions, regulatory suits, significant litigation"
-          weight: 0.25
-          inference_utility_function: litigation_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Significant litigation exposure"
-          
-        - id: "breach_history"
-          name: "Data Breach History"
-          description: "Historical data breaches and security incidents"
-          weight: 0.25
-          inference_utility_function: breach_history_basefunction
-          score_conditions:
-            - threshold: 35
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Data breach history concerns"
-          
-        - id: "operational_incident"
-          name: "Operational Incidents"
-          description: "Disclosed operational failures and outages"
-          weight: 0.15
-          inference_utility_function: operational_incidents_basefunction
-
-
-      cyber_security:
-        - id: "tls_score"
-          name: "TLS/SSL Configuration"
-          description: "TLS configuration quality (SSL Labs methodology)"
-          weight: 0.20
-          inference_utility_function: tls_configuration_basefunction
-
-          
-        - id: "email_auth"
-          name: "Email Authentication"
-          description: "SPF, DMARC, DKIM configuration"
-          weight: 0.20
-          inference_utility_function: email_authentication_basefunction
-
-          
-        - id: "security_headers"
-          name: "Security Headers"
-          description: "HTTP security headers implementation"
-          weight: 0.15
-          inference_utility_function: security_headers_basefunction
-
-          
-        - id: "network_exposure"
-          name: "Network Exposure"
-          description: "Exposed services and ports"
-          weight: 0.20
-          inference_utility_function: network_exposure_basefunction
-
-          
-        - id: "vulnerability"
-          name: "Known Vulnerabilities"
-          description: "CVE exposure in detected software"
-          weight: 0.15
-          inference_utility_function: cve_exposure_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Critical vulnerabilities detected"
-          
-        - id: "security_rating"
-          name: "Third-Party Security Rating"
-          description: "BitSight, SecurityScorecard, or similar"
-          weight: 0.10
-          inference_utility_function: security_rating_basefunction
-
-
-      corporate_footprint:
-        - id: "investor_relations"
-          name: "Investor Relations Quality"
-          description: "Quality of investor communications and transparency"
-          weight: 0.20
-          inference_utility_function: investor_relations_basefunction
-
-          
-        - id: "disclosure_quality"
-          name: "Disclosure Quality"
-          description: "Quality and timeliness of regulatory disclosures"
-          weight: 0.20
-          inference_utility_function: disclosure_quality_basefunction
-
-          
-        - id: "security_page"
-          name: "Security Page Presence"
-          description: "Dedicated security/trust page"
-          weight: 0.15
-          inference_utility_function: security_page_basefunction
-
-          
-        - id: "hiring_signals"
-          name: "Risk/Compliance Hiring"
-          description: "Risk, compliance, and security hiring activity"
-          weight: 0.15
-          inference_utility_function: hiring_signals_basefunction
-
-          
-        - id: "esg_reporting"
-          name: "ESG Reporting"
-          description: "Environmental, social, governance reporting"
-          weight: 0.15
-          inference_utility_function: esg_reporting_basefunction
-
-          
-        - id: "community_presence"
-          name: "Community Presence"
-          description: "Community involvement and local presence"
-          weight: 0.15
-          inference_utility_function: community_presence_basefunction
-
-
-      structured_data:
-        - id: "credit_rating_structured"
-          name: "Credit Rating (Structured)"
-          description: "Credit rating from rating agencies"
-          weight: 0.40
-          inference_utility_function: credit_rating_basefunction
-
-          
-        - id: "esg_rating"
-          name: "ESG Rating"
-          description: "ESG rating from major providers"
-          weight: 0.30
-          inference_utility_function: esg_rating_basefunction
-
-          
-        - id: "peer_benchmark"
-          name: "Peer Benchmarking"
-          description: "Performance vs peer group benchmarks"
-          weight: 0.30
-          inference_utility_function: peer_benchmark_basefunction
-
+      - id: "peer_benchmark"
+        inference_utility_function: peer_benchmark_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+        
     # =========================================================================
     # GROUPS
     # Categorical modifiers and three-layer assessment groupings
