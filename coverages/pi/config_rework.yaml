@@ -151,6 +151,7 @@ professional_indemnity:
             - {cat: "ELECTRICAL", label: "Electrical Engineering", applied: 1.05}
             - {cat: "SURVEYING", label: "Surveying", applied: 1.00}
             - {cat: "CONSULTING", label: "Consulting Only", applied: 0.90}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: firm_size
         inference_utility_function: firm_size_basefunction
@@ -164,6 +165,7 @@ professional_indemnity:
             - {cat: "MEDIUM", label: "Medium Firm (21 - 100)", applied: 0.95}
             - {cat: "LARGE", label: "Large Firm (101 - 500)", applied: 0.90}
             - {cat: "MAJOR", label: "Major Firm (500+)", applied: 0.85}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: revenue_size
         inference_utility_function: annualrevenue_classification_basefunction
@@ -178,123 +180,7 @@ professional_indemnity:
             - {cat: "R_25M_100M", label: "$25M - $100M", applied: 1.25}
             - {cat: "R_100M_500M", label: "$100M - $500M", applied: 1.40}
             - {cat: "OVER_500M", label: "Over $500M", applied: 1.60}
-            
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # Each group is the product of its underlying features
-    # Each group contributes to the composite score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-
-    signal_groups:
-      - id: "network_authority"
-        name: "Network Authority"
-        description: "Peer recognition, client quality, professional relationships"
-        weight: 0.15  # Default, overridden by profession_weights
-        test_scores: {excellent: 85, average: 65, poor: 35}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent network authority - modifier applied"
-
-      - id: "regulatory_standing"
-        name: "Regulatory Standing"
-        description: "License status, disciplinary history, certifications"
-        weight: 0.25
-        test_scores: {excellent: 95, average: 75, poor: 35}
-        score_conditions:
-          - threshold: 30
-            comparison: "<="
-            override: 5
-            action: "REFER"
-            note: "Critical regulatory issues"
-          - threshold: 45
-            comparison: "<="
-            override: 4
-            action: "REFER"
-            note: "Significant regulatory concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent regulatory standing - modifier applied"
-
-      - id: "firm_stability"
-        name: "Firm Stability"
-        description: "Tenure, partner retention, financial health"
-        weight: 0.15
-        test_scores: {excellent: 88, average: 68, poor: 38}
-        score_conditions:
-          - threshold: 35
-            comparison: "<="
-            override: 4
-            action: "REFER"
-            note: "Firm stability concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent firm stability - modifier applied"
-
-      - id: "practice_quality"
-        name: "Practice Quality"
-        description: "Client reviews, outcomes, complaint history"
-        weight: 0.15
-        test_scores: {excellent: 90, average: 70, poor: 35}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent practice quality - modifier applied"
-
-      - id: "technical_infrastructure"
-        name: "Technical Infrastructure"
-        description: "Digital security posture for client confidentiality"
-        weight: 0.10
-        test_scores: {excellent: 88, average: 65, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent technical infrastructure - modifier applied"
-
-      - id: "corporate_footprint"
-        name: "Corporate Footprint"
-        description: "Website quality, thought leadership, transparency"
-        weight: 0.10
-        test_scores: {excellent: 82, average: 60, poor: 35}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent corporate footprint - modifier applied"
-
-      - id: "litigation_history"
-        name: "Litigation History"
-        description: "Malpractice suits, fee disputes, regulatory enforcement"
-        weight: 0.10
-        test_scores: {excellent: 95, average: 78, poor: 35}
-        score_conditions:
-          - threshold: 25
-            comparison: "<="
-            override: 5
-            action: "REFER"
-            note: "Severe litigation history"
-          - threshold: 40
-            comparison: "<="
-            override: 4
-            action: "REFER"
-            note: "Significant litigation concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent litigation history - modifier applied"
+            - {cat: "OTHER", label: UNKNOWN", applied: 1.00}
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -635,6 +521,108 @@ professional_indemnity:
               override: 4
               action: "REFER"
               note: "Bankruptcy history concerns"
+
+    # =========================================================================
+    # GROUPS
+    # Categorical modifiers and three-layer assessment groupings
+    # =========================================================================
+    groups:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL GROUPS
+      # Apply pricing modifiers (applied:), not scores
+      # -----------------------------------------------------------------------
+      categories:
+        - id: "profession_type"
+          label: "Profession Type"
+          description: ""
+          impact: "PREMIUM_BASE"
+          default_cat: "OTHER"
+
+        - id: "sub_profession_type"
+          label: "Sub Profession Type"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "firm_size"
+          label: "Firm Size"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "revenue_size"
+          label: "Revenue Size"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+      # -----------------------------------------------------------------------
+      # THREE-LAYER ASSESSMENT GROUPS
+      # Aggregate signals into scoring dimensions
+      # Weights within each dimension must sum to 1.0
+      # -----------------------------------------------------------------------
+      three_layer_assessment:
+        - id: "network_authority"
+          label: "Network Authority"
+          description: "Peer recognition, client quality, professional relationships"
+          risk:
+            weight: 0.15  # Default, overridden by profession_weights
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent network authority - modifier applied"}
+  
+        - id: "regulatory_standing"
+          label: "Regulatory Standing"
+          description: "License status, disciplinary history, certifications"
+          risk:
+            weight: 0.25
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Critical regulatory issues"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant regulatory concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER",  applied: 0.85, note: "Excellent regulatory standing - modifier applied"}
+  
+        - id: "firm_stability"
+          label: "Firm Stability"
+          description: "Tenure, partner retention, financial health"
+          risk:
+            weight: 0.15
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Firm stability concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent firm stability - modifier applied"}
+  
+        - id: "practice_quality"
+          label: "Practice Quality"
+          description: "Client reviews, outcomes, complaint history"
+          risk:
+            weight: 0.15
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90,  note: "Excellent practice quality - modifier applied"}
+  
+        - id: "technical_infrastructure"
+          label: "Technical Infrastructure"
+          description: "Digital security posture for client confidentiality"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent technical infrastructure - modifier applied"}
+  
+        - id: "corporate_footprint"
+          label: "Corporate Footprint"
+          description: "Website quality, thought leadership, transparency"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent corporate footprint - modifier applied"}
+  
+        - id: "litigation_history"
+          label: "Litigation History"
+          description: "Malpractice suits, fee disputes, regulatory enforcement"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe litigation history"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Significant litigation concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent litigation history - modifier applied"}
 
     # =========================================================================
     # RISK TIER BANDS
