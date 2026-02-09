@@ -1,5 +1,5 @@
 # =============================================================================
-# DSI Model Configuration - Cyber Coverage
+# DSI Model Configuration
 # =============================================================================
 #
 # STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
@@ -8,7 +8,7 @@
 # 3. source: metadata.field uses inference metadata with bands/categories
 # 4. Categorical groups apply modifiers (applied:), not scores
 # 5. score_conditions (plural, banded) apply actions based on score thresholds
-#    Actions: FLAG | MODIFIER | REFER (DECLINE is tier-level only)
+#    Actions: FLAG | MODIFIER | REFER
 # 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
 # 7. Normalisation handled by inference functions, not config
 #
@@ -43,12 +43,12 @@ cyber:
       - id: "mfa_enabled"
         question: "Is multi-factor authentication enabled for all remote access?"
         query_condition:
-          - {return: false, action: "FLAG", override: null, applied: null, note: "MFA not enabled - increased ransomware risk"}
+          - {return: false, action: "REFER", override: 4, applied: null, note: "MFA not enabled - increased ransomware risk"}
 
       - id: "security_training"
         question: "Do all employees complete annual cyber security training?"
         query_condition:
-          - {return: false, action: "FLAG", override: null, applied: null, note: "No security training - increased phishing risk"}
+          - {return: false, action: "REFER", override: 4, applied: null, note: "No security training - increased phishing risk"}
 
       - id: "phi_handler"
         question: "Do you process Protected Health Information (PHI)?"
@@ -860,7 +860,7 @@ cyber:
           interpretation:
             bands: {min: 800, max: 1000}
             action: "APPROVE"
-            application: {method: "PREMIUM_BASE", applied: 8000}
+            application: {method: "PREMIUM_BASE", value: 8000}
 
         - id: 2
           label: "STANDARD_PLUS"
@@ -868,7 +868,7 @@ cyber:
           interpretation:
             bands: {min: 650, max: 799}
             action: "APPROVE"
-            application: {method: "PREMIUM_BASE", applied: 12000}
+            application: {method: "PREMIUM_BASE", value: 12000}
 
         - id: 3
           label: "STANDARD"
@@ -876,7 +876,7 @@ cyber:
           interpretation:
             bands: {min: 500, max: 649}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", applied: 18000}
+            application: {method: "PREMIUM_BASE", value: 18000}
 
         - id: 4
           label: "SUBSTANDARD"
@@ -884,7 +884,7 @@ cyber:
           interpretation:
             bands: {min: 350, max: 499}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", applied: 30000}
+            application: {method: "PREMIUM_BASE", value: 30000}
 
         - id: 5
           label: "DECLINE"
@@ -892,7 +892,7 @@ cyber:
           interpretation:
             bands: {min: 0, max: 349}
             action: "DECLINE"
-            application: {method: "PREMIUM_BASE", applied: 50000}
+            application: {method: "PREMIUM_BASE", value: 50000}
 
     # =========================================================================
     # LOSS TIER BANDS

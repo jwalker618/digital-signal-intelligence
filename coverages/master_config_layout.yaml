@@ -77,10 +77,14 @@
         proxy_tier: "{tier}"               # DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE
         categories:
           group_id: "{category_group}"     # Links to groups.categories
+          source: metadata.{field_name}    # Use metadata field instead of score
           features:                        # Expected return values
             - cat: "{CATEGORY_CODE}"       # Enum value returned by inference
               label: "{Display Label}"     # Human-readable label
+              
               applied: {float}             # Pricing modifier (1.0 = neutral)
+              #or
+              value: {float}               # Base premium value - can only be one categorical group.
 
       # -----------------------------------------------------------------------
       # SCORED SIGNAL PATTERN - USING SCORE (DEFAULT)
@@ -556,5 +560,6 @@
 #    - "payroll" - Annual Payroll
 #    - "hull_value" - Hull Value (marine/aerospace)
 #    - "aum" - Assets Under Management (FI)
+     - "categorical" - value has been set within signal registry, categories.
 #
 # =============================================================================
