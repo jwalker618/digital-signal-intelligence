@@ -103,6 +103,7 @@ marine:
             - {cat: "PASSENGER", label: "Passenger", applied: 1.25}
             - {cat: "GENERAL_CARGO", label: "General Cargo", applied: 1.10}
             - {cat: "MIXED", label: "Mixed Fleet", applied: 1.05}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: trading_pattern
         inference_utility_function: trading_pattern_basefunction
@@ -114,6 +115,7 @@ marine:
             - {cat: "SPOT_TRAMP", label: "Spot/Tramp Trading", applied: 1.15}
             - {cat: "INDUSTRIAL", label: "Industrial Shipping", applied: 0.90}
             - {cat: "MIXED", label: "Mixed Trading", applied: 1.00}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: flag_state_quality
         inference_utility_function: flagstate_quality_basefunction
@@ -124,6 +126,7 @@ marine:
             - {cat: "WHITE_LIST", label: "Paris MoU White List", applied: 0.95}
             - {cat: "GREY_LIST", label: "Paris MoU Grey List", applied: 1.10}
             - {cat: "BLACK_LIST", label: "Paris MoU Black List", applied: 1.40}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: fleet_age_band
         inference_utility_function: fleet_age_basefunction
@@ -137,140 +140,7 @@ marine:
             - {cat: "AGE_15_20", label: "15-20 Years", applied: 1.20}
             - {cat: "AGE_20_25", label: "20-25 Years", applied: 1.40}
             - {cat: "AGE_25_PLUS", label: "25+ Years", applied: 1.60}
-
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # Each group is the product of its underlying features
-    # Each group contributes to the composite score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-
-    signal_groups:
-      - id: "network_authority"
-        name: "Network Authority"
-        description: "Classification society, P&I Club, charterer relationships"
-        weight: 0.15
-        test_scores: {excellent: 92, average: 70, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent network authority - modifier applied"
-
-      - id: "operational_telemetry"
-        name: "Operational Telemetry"
-        description: "AIS behavior patterns, dark activity, route risk"
-        weight: 0.20
-        test_scores: {excellent: 95, average: 72, poor: 38}
-        score_conditions:
-          - threshold: 30
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Critical AIS/operational concerns"
-          - threshold: 45
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Significant operational concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent operational telemetry - modifier applied"
-
-      - id: "safety_compliance"
-        name: "Safety Compliance"
-        description: "PSC performance, class status, incident history"
-        weight: 0.25
-        test_scores: {excellent: 95, average: 75, poor: 35}
-        score_conditions:
-          - threshold: 30
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Critical safety compliance issues"
-          - threshold: 45
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Significant safety concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent safety compliance - modifier applied"
-
-      - id: "fleet_profile"
-        name: "Fleet Profile"
-        description: "Fleet age, stability, vessel quality, crew certification"
-        weight: 0.10
-        test_scores: {excellent: 88, average: 68, poor: 42}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent fleet profile - modifier applied"
-
-      - id: "sanctions_compliance"
-        name: "Sanctions Compliance"
-        description: "Sanctions status, ownership transparency, STS patterns"
-        weight: 0.15
-        test_scores: {excellent: 100, average: 85, poor: 30}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Sanctions exposure - coverage not available"
-          - threshold: 40
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Sanctions concerns require review"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent sanctions compliance - modifier applied"
-
-      - id: "environmental"
-        name: "Environmental Compliance"
-        description: "IMO 2020, ballast water, CII rating, incidents"
-        weight: 0.05
-        test_scores: {excellent: 92, average: 70, poor: 45}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent environmental compliance - modifier applied"
-
-      - id: "corporate_footprint"
-        name: "Corporate Footprint"
-        description: "Transparency, sustainability reporting, safety culture"
-        weight: 0.05
-        test_scores: {excellent: 88, average: 62, poor: 38}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent corporate footprint - modifier applied"
-
-      - id: "structured_data"
-        name: "Structured Data"
-        description: "RightShip vetting, ESG ratings, credit ratings"
-        weight: 0.05
-        test_scores: {excellent: 90, average: 68, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent structured data - modifier applied"
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -648,6 +518,123 @@ marine:
           description: "Corporate credit rating if available"
           weight: 0.20
           inference_utility_function: credit_rating_basefunction
+
+    # =========================================================================
+    # GROUPS
+    # Categorical modifiers and three-layer assessment groupings
+    # =========================================================================
+    groups:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL GROUPS
+      # Apply pricing modifiers (applied:), not scores
+      # -----------------------------------------------------------------------
+      categories:
+        - id: "operator_type"
+          label: "Operator Type"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "UNKNOWN"
+
+        - id: "vessel_category"
+          label: "Vessel Category"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: " trading_pattern"
+          label: "Trading Pattern"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "flag_state_quality"
+          label: "Flag State Quality"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "fleet_age_band"
+          label: "Fleet Age Band"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+      # -----------------------------------------------------------------------
+      # THREE-LAYER ASSESSMENT GROUPS
+      # Aggregate signals into scoring dimensions
+      # Weights within each dimension must sum to 1.0
+      # -----------------------------------------------------------------------
+      three_layer_assessment:
+        - id: "network_authority"
+          label: "Network Authority"
+          description: "Classification society, P&I Club, charterer relationships"
+          risk:
+            weight: 0.15
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent network authority - modifier applied"}
+  
+        - id: "operational_telemetry"
+          label: "Operational Telemetry"
+          description: "AIS behavior patterns, dark activity, route risk"
+          risk:
+            weight: 0.20
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Critical AIS/operational concerns"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant operational concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent operational telemetry - modifier applied"}
+  
+        - id: "safety_compliance"
+          label: "Safety Compliance"
+          description: "PSC performance, class status, incident history"
+          risk:
+            weight: 0.25
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Critical safety compliance issues"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant safety concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent safety compliance - modifier applied"}
+  
+        - id: "fleet_profile"
+          label: "Fleet Profile"
+          description: "Fleet age, stability, vessel quality, crew certification"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent fleet profile - modifier applied"}
+  
+        - id: "sanctions_compliance"
+          label: "Sanctions Compliance"
+          description: "Sanctions status, ownership transparency, STS patterns"
+          risk:
+            weight: 0.15
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Sanctions exposure - coverage not available"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Sanctions concerns require review"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent sanctions compliance - modifier applied"}
+  
+        - id: "environmental"
+          label: "Environmental Compliance"
+          description: "IMO 2020, ballast water, CII rating, incidents"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90,  note: "Excellent environmental compliance - modifier applied"}
+  
+        - id: "corporate_footprint"
+          label: "Corporate Footprint"
+          description: "Transparency, sustainability reporting, safety culture"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent corporate footprint - modifier applied"}
+  
+        - id: "structured_data"
+          label: "Structured Data"
+          description: "RightShip vetting, ESG ratings, credit ratings"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20,  comparison: "<=",  action: "MODIFIER", applied: 0.90,  note: "Excellent structured data - modifier applied"}
 
      # =========================================================================
     # RISK TIER BANDS
