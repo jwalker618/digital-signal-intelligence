@@ -100,6 +100,7 @@ energy:
             - {cat: "DOWNSTREAM_MAJOR", label: "Major Downstream", applied: 0.90}
             - {cat: "PRIVATE_EQUITY", label: "Private Equity Backed", applied: 1.15}
             - {cat: "UNKNOWN", label: "Unknown/New Operator", applied: 1.40}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: operation_segment
         inference_utility_function: operation_segment_basefunction
@@ -119,6 +120,7 @@ energy:
             - {cat: "POWER_GENERATION", label: "Power Generation", applied: 0.90}
             - {cat: "RENEWABLE", label: "Renewable Energy", applied: 0.70}
             - {cat: "MIXED", label: "Mixed Operations", applied: 1.05}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: geographic_focus
         inference_utility_function: geographic_focus_basefunction
@@ -136,136 +138,6 @@ energy:
             - {cat: "LATIN_AMERICA", label: "Latin America", applied: 1.20}
             - {cat: "GLOBAL_DIVERSIFIED", label: "Global Diversified", applied: 1.05}
             - {cat: "OTHER", label: "Other", applied: 1.15}
-
-
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # Each group is the product of its underlying features
-    # Each group contributes to the composite score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-
-    signal_groups:
-      - id: "network_authority"
-        name: "Network Authority"
-        description: "Quality of partnerships, contractors, and industry relationships"
-        weight: 0.10
-        test_scores: {excellent: 88, average: 68, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent network authority - modifier applied"
-
-      - id: "safety_performance"
-        name: "Safety Performance"
-        description: "OSHA metrics, incidents, process safety events"
-        weight: 0.30
-        test_scores: {excellent: 92, average: 72, poor: 35}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent safety performance band"
-          - threshold: 30
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Critical safety performance"
-          - threshold: 45
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Significant safety concerns"
-
-      - id: "environmental_compliance"
-        name: "Environmental Compliance"
-        description: "EPA violations, spills, emissions, flaring"
-        weight: 0.20
-        test_scores: {excellent: 90, average: 70, poor: 38}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent environmental compliance band"
-          - threshold: 30
-            comparison: "<="
-            action: "REFER"
-            override: 5
-            note: "Critical environmental violations"
-          - threshold: 45
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Significant environmental concerns"
-
-      - id: "operational_telemetry"
-        name: "Operational Telemetry"
-        description: "Production patterns, facility activity, maintenance signals"
-        weight: 0.10
-        test_scores: {excellent: 85, average: 68, poor: 45}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent operational telemetry - modifier applied"
-
-      - id: "financial_stability"
-        name: "Financial Stability"
-        description: "Credit rating, leverage, ARO coverage, capex trends"
-        weight: 0.10
-        test_scores: {excellent: 88, average: 70, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent financial stability band"
-          - threshold: 35
-            comparison: "<="
-            action: "REFER"
-            override: 4
-            note: "Financial stability concerns"
-
-      - id: "asset_portfolio"
-        name: "Asset Portfolio"
-        description: "Asset age, concentration, complexity, permit status"
-        weight: 0.10
-        test_scores: {excellent: 82, average: 65, poor: 42}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent asset portfolio - modifier applied"
-
-      - id: "corporate_footprint"
-        name: "Corporate Footprint"
-        description: "Safety culture communication, ESG reporting, HSE leadership"
-        weight: 0.05
-        test_scores: {excellent: 85, average: 62, poor: 38}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent corporate footprint - modifier applied"
-
-      - id: "structured_data"
-        name: "Structured Data"
-        description: "Third-party ESG ratings and industry benchmarks"
-        weight: 0.05
-        test_scores: {excellent: 85, average: 65, poor: 40}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent structured data - modifier applied"
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -636,6 +508,110 @@ energy:
           description: "Credit rating from structured feed"
           weight: 0.25
           inference_utility_function: credit_rating_basefunction
+
+    # =========================================================================
+    # GROUPS
+    # Categorical modifiers and three-layer assessment groupings
+    # =========================================================================
+    groups:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL GROUPS
+      # Apply pricing modifiers (applied:), not scores
+      # -----------------------------------------------------------------------
+      categories:
+        - id: "operator_type"
+          label: "Operator Type"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "operation_segment"
+          label: "Operation Segment"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "geographic_focus"
+          label: "Geographic Focus"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+      # -----------------------------------------------------------------------
+      # THREE-LAYER ASSESSMENT GROUPS
+      # Aggregate signals into scoring dimensions
+      # Weights within each dimension must sum to 1.0
+      # -----------------------------------------------------------------------
+      three_layer_assessment:
+        - id: "network_authority"
+          label: "Network Authority"
+          description: "Quality of partnerships, contractors, and industry relationships"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent network authority - modifier applied"}
+  
+        - id: "safety_performance"
+          label: "Safety Performance"
+          description: "OSHA metrics, incidents, process safety events"
+          risk:
+            weight: 0.30
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent safety performance band"}
+              - {threshold: 30, comparison: "<=", action: "REFER",  override: 5, note: "Critical safety performance"}
+              - {threshold: 45, comparison: "<=", action: "REFER",  override: 4,  note: "Significant safety concerns"}
+  
+        - id: "environmental_compliance"
+          label: "Environmental Compliance"
+          description: "EPA violations, spills, emissions, flaring"
+          risk:
+            weight: 0.20
+            score_conditions:
+              - {threshold: 20,  comparison: "<=", action: "MODIFIER",  applied: 0.85,  note: "Excellent environmental compliance band"}
+              - {threshold: 30,  comparison: "<=", action: "REFER",  override: 5, note: "Critical environmental violations"}
+              - {threshold: 45,  comparison: "<=", action: "REFER",  override: 4, note: "Significant environmental concerns"}
+  
+        - id: "operational_telemetry"
+          label: "Operational Telemetry"
+          description: "Production patterns, facility activity, maintenance signals"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20,  comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent operational telemetry - modifier applied"}
+  
+        - id: "financial_stability"
+          label: "Financial Stability"
+          description: "Credit rating, leverage, ARO coverage, capex trends"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=",  action: "MODIFIER", applied: 0.85, note: "Excellent financial stability band"}
+              - {threshold: 35, comparison: "<=",  action: "REFER",  override: 4,  note: "Financial stability concerns"}
+  
+        - id: "asset_portfolio"
+          label: "Asset Portfolio"
+          description: "Asset age, concentration, complexity, permit status"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent asset portfolio - modifier applied"}
+  
+        - id: "corporate_footprint"
+          label: "Corporate Footprint"
+          description: "Safety culture communication, ESG reporting, HSE leadership"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent corporate footprint - modifier applied"}
+  
+        - id: "structured_data"
+          label: "Structured Data"
+          description: "Third-party ESG ratings and industry benchmarks"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent structured data - modifier applied"}
 
      # =========================================================================
     # RISK TIER BANDS
