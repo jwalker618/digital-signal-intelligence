@@ -161,16 +161,27 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "fhlb_membership"
         inference_utility_function: fhlb_membership_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.10
-              
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.05
+
       - id: "clearing_relationship"
         inference_utility_function: clearing_relationship_basefunction
         proxy_tier: INFERRED_PROXY
@@ -179,16 +190,27 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.15
-                 
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "auditor_quality"
         inference_utility_function: auditor_quality_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.20
-               
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "legal_counsel"
         inference_utility_function: legal_counsel_basefunction
         proxy_tier: INFERRED_PROXY
@@ -197,40 +219,55 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.10
-                 
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "industry_association"
         inference_utility_function: industry_association_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+
       - id: "credit_rating"
         inference_utility_function: credit_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.20
         
       - id: "examination_rating"
         inference_utility_function: examination_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
-            weight: 0.20     
+            weight: 0.20
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Critically weak examination indicators"}
               - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Weak examination indicators"}
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "enforcement_action"
         inference_utility_function: enforcement_action_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
@@ -239,28 +276,47 @@ financial_institutions:
             score_conditions:
               - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Active enforcement actions"}
               - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Recent enforcement history"}
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.25
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.15
+
       - id: "informal_action"
         inference_utility_function: informal_action_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "cra_rating"
         inference_utility_function: cra_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
             weight: 0.10
-          
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "bsa_aml"
         inference_utility_function: bsa_aml_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
@@ -269,40 +325,66 @@ financial_institutions:
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Critical BSA/AML issues"}
               - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "BSA/AML compliance concerns"}
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "fair_lending"
         inference_utility_function: fair_lending_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "consumer_compliance"
         inference_utility_function: consumer_compliance_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: regulatory_compliance
           risk:
             correlation_direction: positive
             weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "capital_ratio"
         inference_utility_function: capital_ratio_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_condition
           risk:
             correlation_direction: positive
-            weight: 0.20  
+            weight: 0.20
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Capital adequacy crisis"}
               - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Capital adequacy concerns"}
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.25
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "asset_quality"
         inference_utility_function: asset_quality_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_condition
           risk:
@@ -310,61 +392,99 @@ financial_institutions:
             weight: 0.20
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Asset quality concerns"}
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "liquidity"
         inference_utility_function: liquidity_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_condition
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "earnings"
         inference_utility_function: earnings_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_condition
           risk:
             correlation_direction: positive
             weight: 0.15
-              
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "concentration"
         inference_utility_function: concentration_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_condition
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.10
-       
+          loss:
+            severity:
+              correlation_direction: negative
+              weight: 0.15
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.10
+
       - id: "interest_rate_risk"
         inference_utility_function: interest_rate_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_condition
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.10
-             
+          loss:
+            severity:
+              correlation_direction: negative
+              weight: 0.10
+
       - id: "growth_rate"
         inference_utility_function: growth_rate_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial_condition
           risk:
             correlation_direction: positive
             weight: 0.10
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.10
       
       - id: "board_independence"
         inference_utility_function: board_independence_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.20
-               
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "board_expertise"
         inference_utility_function: board_expertise_basefunction
         proxy_tier: INFERRED_PROXY
@@ -373,7 +493,11 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.20
-            
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "executive_stability"
         inference_utility_function: executive_stability_basefunction
         proxy_tier: INFERRED_PROXY
@@ -382,55 +506,92 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.15
-             
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "risk_committee"
         inference_utility_function: risk_committee_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.20
-            
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "audit_committee"
         inference_utility_function: audit_committee_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.15
-              
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "related_party"
         inference_utility_function: related_party_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.15
+            severity:
+              correlation_direction: negative
+              weight: 0.10
 
       - id: "cfpb_complaint"
-        inference_utility_function: cfpb_compliant_basefunction  
-        proxy_tier: INFERRED_PROXY
+        inference_utility_function: cfpb_complaint_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: operational_risk
           risk:
             correlation_direction: positive
             weight: 0.25
-               
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.10
+
       - id: "bbb_complaint"
-        inference_utility_function: bbb_compliant_basefunction
-        proxy_tier: INFERRED_PROXY
+        inference_utility_function: bbb_complaint_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: operational_risk
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "litigation"
         inference_utility_function: litigation_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: operational_risk
           risk:
@@ -438,18 +599,32 @@ financial_institutions:
             weight: 0.25
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 4, note: "Significant litigation exposure"}
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.35
+            severity:
+              correlation_direction: positive
+              weight: 0.30
+
       - id: "breach_history"
         inference_utility_function: breach_history_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: operational_risk
           risk:
             correlation_direction: positive
-            weight: 0.25 
+            weight: 0.25
             score_conditions:
               - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Data breach history concerns"}
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+            severity:
+              correlation_direction: positive
+              weight: 0.25
+
       - id: "operational_incident"
         inference_utility_function: operational_incidents_basefunction
         proxy_tier: INFERRED_PROXY
@@ -458,62 +633,109 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.15
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.15
         
       - id: "tls_score"
         inference_utility_function: tls_configuration_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: cyber_security
           risk:
             correlation_direction: positive
             weight: 0.20
-           
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "email_auth"
         inference_utility_function: email_authentication_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: cyber_security
           risk:
             correlation_direction: positive
             weight: 0.20
-            
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "security_headers"
         inference_utility_function: security_headers_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: cyber_security
           risk:
             correlation_direction: positive
             weight: 0.15
-            
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "network_exposure"
         inference_utility_function: network_exposure_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: cyber_security
           risk:
             correlation_direction: positive
             weight: 0.20
-       
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.15
+
       - id: "vulnerability"
         inference_utility_function: cve_exposure_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: cyber_security
           risk:
             correlation_direction: positive
-            weight: 0.15  
+            weight: 0.15
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 4, note: "Critical vulnerabilities detected"}
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "security_rating"
         inference_utility_function: security_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: cyber_security
           risk:
             correlation_direction: positive
             weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+            severity:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "investor_relations"
         inference_utility_function: investor_relations_basefunction
@@ -523,7 +745,11 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "disclosure_quality"
         inference_utility_function: disclosure_quality_basefunction
         proxy_tier: INFERRED_PROXY
@@ -532,16 +758,20 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.20
-          
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "security_page"
         inference_utility_function: security_page_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.15
-             
+
       - id: "hiring_signals"
         inference_utility_function: hiring_signals_basefunction
         proxy_tier: INFERRED_PROXY
@@ -550,7 +780,14 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
+            complexity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "esg_reporting"
         inference_utility_function: esg_reporting_basefunction
         proxy_tier: INFERRED_PROXY
@@ -559,7 +796,7 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.15
-          
+
       - id: "community_presence"
         inference_utility_function: community_presence_basefunction
         proxy_tier: INFERRED_PROXY
@@ -568,33 +805,52 @@ financial_institutions:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "credit_rating_structured"
         inference_utility_function: credit_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: structured_data
           risk:
             correlation_direction: positive
             weight: 0.40
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.30
+
       - id: "esg_rating"
         inference_utility_function: esg_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: structured_data
           risk:
             correlation_direction: positive
             weight: 0.30
-          
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "peer_benchmark"
         inference_utility_function: peer_benchmark_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: COHORT_INFERENCE
         three_layer_assessment:
           group_id: structured_data
           risk:
             correlation_direction: positive
             weight: 0.30
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.15
         
     # =========================================================================
     # GROUPS
