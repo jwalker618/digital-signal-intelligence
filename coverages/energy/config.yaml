@@ -33,7 +33,16 @@ energy:
         - "pollution_liability"
         - "removal_of_wreck"
       applicable_markets: ["us", "uk", "eu", "apac", "latam", "mena"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD","TIV"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: property_damage, business_interruption, control_of_well, operators_extra_expense, third_party_liability, pollution_liability, removal_of_wreck"
+          - field: "limit"
+            description: "Requested limit in USD"
+          - field: "tiv"
+            description: "Total Insured Value in USD"
       min_premium: 100000
       default_currency: "USD"
 
@@ -89,6 +98,7 @@ energy:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: operator_type
+          source: metadata.operator_type
           features:
             - {cat: "SUPERMAJOR", label: "Supermajor", applied: 0.75}
             - {cat: "MAJOR_INTEGRATED", label: "Major Integrated", applied: 0.85}
@@ -107,6 +117,7 @@ energy:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: operation_segment
+          source: metadata.operation_segment
           features:
             - {cat: "UPSTREAM_CONVENTIONAL", label: "Upstream Conventional", applied: 1.00}
             - {cat: "UPSTREAM_UNCONVENTIONAL", label: "Upstream Unconventional", applied: 0.95}
@@ -127,6 +138,7 @@ energy:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: geographic_focus
+          source: metadata.geographic_focus
           features:
             - {cat: "US_ONSHORE", label: "US Onshore", applied: 1.00}
             - {cat: "US_GULF_SHELF", label: "US Gulf Shelf", applied: 1.10}
@@ -876,25 +888,157 @@ energy:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.70}
-          - {limit: 5000000, factor: 3.20}
-          - {limit: 10000000, factor: 5.00}
-          - {limit: 25000000, factor: 9.00}
-          - {limit: 50000000, factor: 14.00}
-          - {limit: 100000000, factor: 22.00}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # PROPERTY DAMAGE - Physical damage to facilities/equipment
+        # Moderate curve; TIV-based, catastrophic potential
+        # -----------------------------------------------------------------------
+        property_damage:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.00}
+              - {limit: 50000000, factor: 3.50}
+              - {limit: 100000000, factor: 6.00}
+              - {limit: 250000000, factor: 12.00}
+              - {limit: 500000000, factor: 20.00}
+              - {limit: 1000000000, factor: 35.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # BUSINESS INTERRUPTION - Lost production/revenue
+        # Steeper curve; long-tail, severity-driven
+        # -----------------------------------------------------------------------
+        business_interruption:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.20}
+              - {limit: 50000000, factor: 4.00}
+              - {limit: 100000000, factor: 7.00}
+              - {limit: 250000000, factor: 14.50}
+              - {limit: 500000000, factor: 25.00}
+              - {limit: 1000000000, factor: 45.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
 
+        # -----------------------------------------------------------------------
+        # CONTROL OF WELL - Blowout, well control
+        # Steepest curve; catastrophic potential, technical complexity
+        # -----------------------------------------------------------------------
+        control_of_well:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.50}
+              - {limit: 50000000, factor: 4.80}
+              - {limit: 100000000, factor: 8.50}
+              - {limit: 250000000, factor: 18.00}
+              - {limit: 500000000, factor: 32.00}
+              - {limit: 1000000000, factor: 58.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
+            - {min_pct: 0.020, max_pct: null, credit: 0.15}
+
+        # -----------------------------------------------------------------------
+        # OPERATORS EXTRA EXPENSE - Additional costs to regain control
+        # Steep curve; correlates with control of well
+        # -----------------------------------------------------------------------
+        operators_extra_expense:
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.00}
+              - {limit: 10000000, factor: 1.80}
+              - {limit: 25000000, factor: 3.80}
+              - {limit: 50000000, factor: 6.50}
+              - {limit: 100000000, factor: 11.50}
+              - {limit: 250000000, factor: 24.00}
+              - {limit: 500000000, factor: 42.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
+
+        # -----------------------------------------------------------------------
+        # THIRD PARTY LIABILITY - Bodily injury, property damage to others
+        # Moderate curve; litigation-driven
+        # -----------------------------------------------------------------------
+        third_party_liability:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.00}
+              - {limit: 50000000, factor: 3.60}
+              - {limit: 100000000, factor: 6.20}
+              - {limit: 250000000, factor: 13.00}
+              - {limit: 500000000, factor: 22.00}
+              - {limit: 1000000000, factor: 38.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+        # -----------------------------------------------------------------------
+        # POLLUTION LIABILITY - Environmental damage, cleanup
+        # Steepest curve; regulatory exposure, long-tail
+        # -----------------------------------------------------------------------
+        pollution_liability:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.60}
+              - {limit: 50000000, factor: 5.00}
+              - {limit: 100000000, factor: 9.00}
+              - {limit: 250000000, factor: 19.00}
+              - {limit: 500000000, factor: 34.00}
+              - {limit: 1000000000, factor: 62.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.09}
+            - {min_pct: 0.020, max_pct: null, credit: 0.14}
+
+        # -----------------------------------------------------------------------
+        # REMOVAL OF WRECK - Debris removal, site remediation
+        # Moderate curve; more predictable than pollution
+        # -----------------------------------------------------------------------
+        removal_of_wreck:
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.00}
+              - {limit: 10000000, factor: 1.70}
+              - {limit: 25000000, factor: 3.40}
+              - {limit: 50000000, factor: 5.80}
+              - {limit: 100000000, factor: 10.00}
+              - {limit: 250000000, factor: 20.00}
+              - {limit: 500000000, factor: 35.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05

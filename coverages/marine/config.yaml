@@ -33,7 +33,16 @@ marine:
         - "pi_liability"
         - "cargo"
       applicable_markets: ["global"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD","TIV"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: hull_machinery, total_loss, increased_value, loss_of_hire, war_risks, pi_liability, cargo"
+          - field: "limit"
+            description: "Requested limit in USD"
+          - field: "hull_value"
+            description: "Total hull value in USD"
       min_premium: 50000
       default_currency: "USD"
 
@@ -80,6 +89,7 @@ marine:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: operator_type
+          source: metadata.operator_type
           features:
             - {cat: "MAJOR_LINER", label: "Major Liner Operator", applied: 0.80}
             - {cat: "MAJOR_TANKER", label: "Major Tanker Operator", applied: 0.90}
@@ -94,6 +104,7 @@ marine:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: vessel_category
+          source: metadata.vessel_category
           features:
             - {cat: "CONTAINER", label: "Container", applied: 0.90}
             - {cat: "TANKER", label: "Tanker", applied: 1.10}
@@ -110,6 +121,7 @@ marine:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: trading_pattern
+          source: metadata.trading_pattern
           features:
             - {cat: "LINER_REGULAR", label: "Liner/Regular Service", applied: 0.85}
             - {cat: "SPOT_TRAMP", label: "Spot/Tramp Trading", applied: 1.15}
@@ -902,25 +914,157 @@ marine:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.70}
-          - {limit: 5000000, factor: 3.20}
-          - {limit: 10000000, factor: 5.00}
-          - {limit: 25000000, factor: 9.00}
-          - {limit: 50000000, factor: 14.00}
-          - {limit: 100000000, factor: 22.00}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # HULL & MACHINERY - Physical damage to vessel
+        # Moderate curve; hull value based, attritional + catastrophic
+        # -----------------------------------------------------------------------
+        hull_machinery:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.10}
+              - {limit: 50000000, factor: 3.80}
+              - {limit: 100000000, factor: 6.50}
+              - {limit: 250000000, factor: 13.00}
+              - {limit: 500000000, factor: 22.00}
+              - {limit: 1000000000, factor: 38.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # TOTAL LOSS - Constructive/actual total loss only
+        # Flatter curve; binary outcome, hull value caps loss
+        # -----------------------------------------------------------------------
+        total_loss:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 1.90}
+              - {limit: 50000000, factor: 3.30}
+              - {limit: 100000000, factor: 5.50}
+              - {limit: 250000000, factor: 10.50}
+              - {limit: 500000000, factor: 17.50}
+              - {limit: 1000000000, factor: 30.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
 
+        # -----------------------------------------------------------------------
+        # INCREASED VALUE - Additional value above hull
+        # Similar to hull curve but typically smaller limits
+        # -----------------------------------------------------------------------
+        increased_value:
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.00}
+              - {limit: 10000000, factor: 1.80}
+              - {limit: 25000000, factor: 3.60}
+              - {limit: 50000000, factor: 6.00}
+              - {limit: 100000000, factor: 10.50}
+              - {limit: 250000000, factor: 21.00}
+              - {limit: 500000000, factor: 36.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+        # -----------------------------------------------------------------------
+        # LOSS OF HIRE - Business interruption for vessels
+        # Steeper curve; time-based exposure compounds
+        # -----------------------------------------------------------------------
+        loss_of_hire:
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.00}
+              - {limit: 10000000, factor: 1.95}
+              - {limit: 25000000, factor: 4.20}
+              - {limit: 50000000, factor: 7.20}
+              - {limit: 100000000, factor: 12.80}
+              - {limit: 250000000, factor: 26.00}
+              - {limit: 500000000, factor: 45.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
+
+        # -----------------------------------------------------------------------
+        # WAR RISKS - War, terrorism, piracy
+        # Volatile curve; geopolitical exposure, catastrophic potential
+        # -----------------------------------------------------------------------
+        war_risks:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.30}
+              - {limit: 50000000, factor: 4.40}
+              - {limit: 100000000, factor: 7.80}
+              - {limit: 250000000, factor: 16.00}
+              - {limit: 500000000, factor: 28.00}
+              - {limit: 1000000000, factor: 50.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
+            - {min_pct: 0.020, max_pct: null, credit: 0.15}
+
+        # -----------------------------------------------------------------------
+        # P&I LIABILITY - Protection & indemnity
+        # Steep curve; pollution, cargo, crew claims
+        # -----------------------------------------------------------------------
+        pi_liability:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.20}
+              - {limit: 50000000, factor: 4.10}
+              - {limit: 100000000, factor: 7.20}
+              - {limit: 250000000, factor: 15.00}
+              - {limit: 500000000, factor: 26.00}
+              - {limit: 1000000000, factor: 46.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
+
+        # -----------------------------------------------------------------------
+        # CARGO - Goods in transit
+        # Moderate curve; value-based, attritional losses
+        # -----------------------------------------------------------------------
+        cargo:
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.00}
+              - {limit: 10000000, factor: 1.75}
+              - {limit: 25000000, factor: 3.50}
+              - {limit: 50000000, factor: 5.80}
+              - {limit: 100000000, factor: 10.00}
+              - {limit: 250000000, factor: 20.00}
+              - {limit: 500000000, factor: 34.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+      # Shared across all product types
       taxes_fees_rate: 0.03

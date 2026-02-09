@@ -29,7 +29,16 @@ aerospace:
         - "aviation_liability"
         - "aviation_hull_liability_combined"
       applicable_markets: ["us", "uk", "eu", "apac", "latam", "mea"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: aviation_hull, aviation_liability, aviation_hull_liability_combined"
+          - field: "limit"
+            description: "Requested limit in USD"
+          - field: "hull_value"
+            description: "Total hull value in USD"
       min_premium: 25000
       default_currency: "USD"
 
@@ -90,6 +99,7 @@ aerospace:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: operator_type
+          source: metadata.operator_type
           features:
             - {cat: "MAJOR_AIRLINE", label: "Major Airline", applied: 0.85}
             - {cat: "REGIONAL_AIRLINE", label: "Regional Airline", applied: 1.00}
@@ -107,6 +117,7 @@ aerospace:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: fleet_category
+          source: metadata.fleet_category
           features:
             - {cat: "WIDEBODY", label: "Widebody", applied: 1.15} 
             - {cat: "NARROWBODY", label: "Narrowbody", applied: 1.00}
@@ -122,6 +133,7 @@ aerospace:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: fleet_size
+          source: metadata.fleet_size
           features:
             - {cat: "SINGLE", label: "Single Aircraft", applied: 1.30}
             - {cat: "MICRO", label: "Micro Fleet (2-5)", applied: 1.20}
@@ -136,6 +148,7 @@ aerospace:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: regulatory_framework
+          source: metadata.regulatory_framework
           features:
             - {cat: "FAA", label: "FAA (United States)", applied: 1.00}
             - {cat: "EASA", label: "EASA (European Union)", applied: 1.00}
@@ -153,6 +166,7 @@ aerospace:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: iosa_status
+          source: metadata.iosa_status
           features:
             - {cat: "REGISTERED", label: "IOSA Registered", applied: 0.90}
             - {cat: "EXPIRED", label: "IOSA Expired", applied: 1.15}
@@ -891,23 +905,73 @@ aerospace:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
-      ilf_curve:
-        base_limit: 10000000
-        factors:
-          - {value: 10000000, factor: 1.00}
-          - {value: 25000000, factor: 1.15}
-          - {value: 50000000, factor: 1.30}
-          - {value: 100000000, factor: 1.50}
-          - {value: 250000000, factor: 1.80}
-          - {value: 500000000, factor: 2.20}
 
-      deductible_credits:
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
-        - {min_pct: 0.020, max_pct: 0.050, credit: 0.15}
-        - {min_pct: 0.050, max_pct: null, credit: 0.20}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # AVIATION HULL - Physical damage to aircraft
+        # Moderate curve; hull value based, mix of attritional and total loss
+        # -----------------------------------------------------------------------
+        aviation_hull:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.00}
+              - {limit: 50000000, factor: 3.50}
+              - {limit: 100000000, factor: 6.00}
+              - {limit: 250000000, factor: 12.00}
+              - {limit: 500000000, factor: 20.00}
+              - {limit: 1000000000, factor: 35.00}
+          deductible_credits:
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
+            - {min_pct: 0.020, max_pct: 0.050, credit: 0.15}
+            - {min_pct: 0.050, max_pct: null, credit: 0.20}
 
+        # -----------------------------------------------------------------------
+        # AVIATION LIABILITY - Third party, passenger, cargo
+        # Steeper curve; catastrophic potential, regulatory exposure
+        # -----------------------------------------------------------------------
+        aviation_liability:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.30}
+              - {limit: 50000000, factor: 4.20}
+              - {limit: 100000000, factor: 7.50}
+              - {limit: 250000000, factor: 15.50}
+              - {limit: 500000000, factor: 27.00}
+              - {limit: 1000000000, factor: 48.00}
+          deductible_credits:
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.04}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.08}
+            - {min_pct: 0.020, max_pct: 0.050, credit: 0.12}
+            - {min_pct: 0.050, max_pct: null, credit: 0.18}
+
+        # -----------------------------------------------------------------------
+        # HULL & LIABILITY COMBINED - Full aviation coverage
+        # Weighted average of hull and liability curves
+        # -----------------------------------------------------------------------
+        aviation_hull_liability_combined:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.15}
+              - {limit: 50000000, factor: 3.85}
+              - {limit: 100000000, factor: 6.75}
+              - {limit: 250000000, factor: 13.75}
+              - {limit: 500000000, factor: 23.50}
+              - {limit: 1000000000, factor: 41.50}
+          deductible_credits:
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.09}
+            - {min_pct: 0.020, max_pct: 0.050, credit: 0.14}
+            - {min_pct: 0.050, max_pct: null, credit: 0.19}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05

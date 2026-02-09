@@ -29,7 +29,14 @@ professional_indemnity:
         - "errors_omissions"
         - "malpractice"
       applicable_markets: ["us", "uk", "eu", "apac"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: professional_liability, errors_omissions, malpractice"
+          - field: "limit"
+            description: "Requested limit in USD"
       min_premium: 2500
       default_currency: "USD"
 
@@ -85,6 +92,7 @@ professional_indemnity:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: profession_type
+          source: metadata.profession_type
           features:
             - {cat: "LAW_FIRM", label: "Law Firm", value: 8500}
             - {cat: "ACCOUNTING_FIRM", label: "Accounting Firm", value: 9000}
@@ -102,10 +110,11 @@ professional_indemnity:
             - {cat: "OTHER", label: "Other Professional", value: 6000}
 
       - id: sub_profession_type
-        inference_utility_function: notdefined
+        inference_utility_function: sub_profession_classification_basefunction
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: sub_profession_type
+          source: metadata.sub_profession_type
           features:
             - {cat: "SECURITIES", label: "Securities Law", applied: 1.40}
             - {cat: "CORPORATE_MA", label: "Corporate M&A", applied: 1.25}
@@ -158,6 +167,7 @@ professional_indemnity:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: firm_size
+          source: metadata.firm_size
           features:
             - {cat: "SOLO", label: "Solo Practitioner", applied: 1.20}
             - {cat: "MICRO", label: "Micro Firm (2 - 5)", applied: 1.10}
@@ -172,6 +182,7 @@ professional_indemnity:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: revenue_size
+          source: metadata.revenue_size
           features:
             - {cat: "UNDER_500K", label: "Under $500K", applied: 0.85}
             - {cat: "R_500K_1M", label: "$500K - $1M", applied: 0.90}
@@ -880,25 +891,73 @@ professional_indemnity:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 250000, factor: 0.50}
-          - {limit: 500000, factor: 0.75}
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.60}
-          - {limit: 3000000, factor: 2.10}
-          - {limit: 5000000, factor: 2.80}
-          - {limit: 10000000, factor: 4.20}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # PROFESSIONAL LIABILITY - General E&O for professional services
+        # Moderate curve; claims-made, settlement-driven
+        # -----------------------------------------------------------------------
+        professional_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.50}
+              - {limit: 500000, factor: 0.75}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 3000000, factor: 2.20}
+              - {limit: 5000000, factor: 3.00}
+              - {limit: 10000000, factor: 4.50}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # ERRORS & OMISSIONS - Technical/consulting professional services
+        # Flatter curve; losses more predictable, frequency-based
+        # -----------------------------------------------------------------------
+        errors_omissions:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.48}
+              - {limit: 500000, factor: 0.72}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.55}
+              - {limit: 3000000, factor: 2.00}
+              - {limit: 5000000, factor: 2.70}
+              - {limit: 10000000, factor: 4.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
+        # -----------------------------------------------------------------------
+        # MALPRACTICE - Medical, legal, accounting malpractice
+        # Steeper curve; higher severity, regulatory exposure
+        # -----------------------------------------------------------------------
+        malpractice:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.55}
+              - {limit: 500000, factor: 0.80}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.75}
+              - {limit: 3000000, factor: 2.40}
+              - {limit: 5000000, factor: 3.30}
+              - {limit: 10000000, factor: 5.20}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05

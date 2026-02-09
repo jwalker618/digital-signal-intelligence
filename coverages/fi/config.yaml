@@ -32,7 +32,14 @@ financial_institutions:
         - "employment_practices"
         - "fiduciary_liability"
       applicable_markets: ["us"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: financial_institution_bond, professional_liability, directors_officers, cyber_liability, employment_practices, fiduciary_liability"
+          - field: "limit"
+            description: "Requested limit in USD"
       min_premium: 25000
       default_currency: "USD"
 
@@ -88,6 +95,7 @@ financial_institutions:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: institution_type
+          source: metadata.institution_type
           features:
             - {cat: "MONEY_CENTER_BANK", label: "Money Center Bank", applied: 1.50}
             - {cat: "REGIONAL_BANK", label: "Regional Bank", applied: 1.20}
@@ -108,6 +116,7 @@ financial_institutions:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: regulatory_framework
+          source: metadata.regulatory_framework
           features:
             - {cat: "OCC", label: "OCC (National Banks)", applied: 1.00}
             - {cat: "FDIC", label: "FDIC (State Non-Member)", applied: 1.00}
@@ -124,6 +133,7 @@ financial_institutions:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: asset_size_band
+          source: metadata.asset_size_band
           features:
             - {cat: "MEGA", label: "Mega (>$250B)", applied: 2.50}
             - {cat: "LARGE", label: "Large ($50B-$250B)", applied: 1.80}
@@ -133,10 +143,11 @@ financial_institutions:
             - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: publicly_traded
-        inference_utility_function: publically_traded_basefunction
+        inference_utility_function: publicly_traded_basefunction
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: publicly_traded
+          source: metadata.publicly_traded
           features:
             - {cat: "PUBLIC", label: "Publicly Traded", applied: 1.10} 
             - {cat: "PRIVATE", label: "Private", applied: 1.00}
@@ -907,25 +918,136 @@ financial_institutions:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.70}
-          - {limit: 5000000, factor: 3.00}
-          - {limit: 10000000, factor: 4.50}
-          - {limit: 25000000, factor: 8.00}
-          - {limit: 50000000, factor: 12.00}
-          - {limit: 100000000, factor: 18.00}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # FINANCIAL INSTITUTION BOND - Fidelity, crime, computer fraud
+        # Moderate curve; losses tend to be mid-severity
+        # -----------------------------------------------------------------------
+        financial_institution_bond:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 5000000, factor: 2.90}
+              - {limit: 10000000, factor: 4.30}
+              - {limit: 25000000, factor: 7.50}
+              - {limit: 50000000, factor: 11.50}
+              - {limit: 100000000, factor: 17.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # PROFESSIONAL LIABILITY - E&O for financial services
+        # Steeper curve; regulatory and litigation exposure
+        # -----------------------------------------------------------------------
+        professional_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.75}
+              - {limit: 5000000, factor: 3.30}
+              - {limit: 10000000, factor: 5.20}
+              - {limit: 25000000, factor: 9.50}
+              - {limit: 50000000, factor: 15.00}
+              - {limit: 100000000, factor: 23.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
+        # -----------------------------------------------------------------------
+        # DIRECTORS & OFFICERS - Securities litigation, regulatory defence
+        # Steepest curve; catastrophic class action potential
+        # -----------------------------------------------------------------------
+        directors_officers:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.85}
+              - {limit: 5000000, factor: 3.60}
+              - {limit: 10000000, factor: 5.80}
+              - {limit: 25000000, factor: 11.00}
+              - {limit: 50000000, factor: 18.00}
+              - {limit: 100000000, factor: 28.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
+
+        # -----------------------------------------------------------------------
+        # CYBER LIABILITY - Data breach, network security
+        # Steep curve; ransomware and breach costs scale rapidly
+        # -----------------------------------------------------------------------
+        cyber_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.75}
+              - {limit: 5000000, factor: 3.40}
+              - {limit: 10000000, factor: 5.50}
+              - {limit: 25000000, factor: 10.00}
+              - {limit: 50000000, factor: 16.00}
+              - {limit: 100000000, factor: 25.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+        # -----------------------------------------------------------------------
+        # EMPLOYMENT PRACTICES - Discrimination, wrongful termination
+        # Moderate curve; frequency-driven, settlement-heavy
+        # -----------------------------------------------------------------------
+        employment_practices:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.60}
+              - {limit: 5000000, factor: 2.80}
+              - {limit: 10000000, factor: 4.20}
+              - {limit: 25000000, factor: 7.00}
+              - {limit: 50000000, factor: 10.50}
+              - {limit: 100000000, factor: 15.50}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+        # -----------------------------------------------------------------------
+        # FIDUCIARY LIABILITY - ERISA, pension plan management
+        # Moderate curve; class action potential but more predictable
+        # -----------------------------------------------------------------------
+        fiduciary_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.70}
+              - {limit: 5000000, factor: 3.10}
+              - {limit: 10000000, factor: 4.80}
+              - {limit: 25000000, factor: 8.50}
+              - {limit: 50000000, factor: 13.00}
+              - {limit: 100000000, factor: 20.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05

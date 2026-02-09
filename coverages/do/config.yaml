@@ -32,7 +32,14 @@ directors_officers:
         - "employment_practices"
         - "fiduciary"
       applicable_markets: ["us", "uk", "eu", "apac"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: side_a, side_b, side_c, side_a_dic, employment_practices, fiduciary"
+          - field: "limit"
+            description: "Requested limit in USD"
       min_premium: 10000
       default_currency: "USD"
 
@@ -83,6 +90,7 @@ directors_officers:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: company_type
+          source: metadata.company_type
           features:
             - {cat: "PUBLIC_LARGE_CAP", label: "Public Large Cap",  applied: 2.50}
             - {cat: "PUBLIC_MID_CAP", label: "Public Mid Cap", applied: 1.50}
@@ -100,6 +108,7 @@ directors_officers:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: industry
+          source: metadata.industry
           features:
             - {cat: "CRYPTO_DIGITAL", label: "Crypto/Digital Assets", applied: 2.50}
             - {cat: "CANNABIS", label: "Cannabis", applied: 2.00}
@@ -117,6 +126,7 @@ directors_officers:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: stock_exchange
+          source: metadata.stock_exchange
           features:
             - {cat: "NYSE",  label: "NYSE", applied: 1.00}
             - {cat: "NASDAQ", label: "NASDAQ", applied: 1.00}
@@ -855,25 +865,136 @@ directors_officers:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.65}
-          - {limit: 5000000, factor: 2.80}
-          - {limit: 10000000, factor: 4.20}
-          - {limit: 25000000, factor: 7.50}
-          - {limit: 50000000, factor: 11.00}
-          - {limit: 100000000, factor: 16.00}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # SIDE A - Personal asset protection for D&Os
+        # Steepest curve; personal liability, catastrophic potential
+        # -----------------------------------------------------------------------
+        side_a:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.90}
+              - {limit: 5000000, factor: 3.80}
+              - {limit: 10000000, factor: 6.20}
+              - {limit: 25000000, factor: 12.00}
+              - {limit: 50000000, factor: 19.00}
+              - {limit: 100000000, factor: 30.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # SIDE B - Corporate reimbursement
+        # Steep curve; indemnification costs scale with severity
+        # -----------------------------------------------------------------------
+        side_b:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.80}
+              - {limit: 5000000, factor: 3.50}
+              - {limit: 10000000, factor: 5.60}
+              - {limit: 25000000, factor: 10.50}
+              - {limit: 50000000, factor: 16.50}
+              - {limit: 100000000, factor: 26.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
+        # -----------------------------------------------------------------------
+        # SIDE C - Entity coverage (securities claims)
+        # Steepest curve; class action settlements can be massive
+        # -----------------------------------------------------------------------
+        side_c:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.95}
+              - {limit: 5000000, factor: 4.00}
+              - {limit: 10000000, factor: 6.80}
+              - {limit: 25000000, factor: 13.50}
+              - {limit: 50000000, factor: 22.00}
+              - {limit: 100000000, factor: 35.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
+            - {min_pct: 0.020, max_pct: null, credit: 0.15}
+
+        # -----------------------------------------------------------------------
+        # SIDE A DIC - Difference in conditions
+        # Very steep; fills gaps in other coverage, catastrophic scenarios
+        # -----------------------------------------------------------------------
+        side_a_dic:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 2.00}
+              - {limit: 5000000, factor: 4.20}
+              - {limit: 10000000, factor: 7.20}
+              - {limit: 25000000, factor: 14.50}
+              - {limit: 50000000, factor: 24.00}
+              - {limit: 100000000, factor: 38.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.09}
+            - {min_pct: 0.020, max_pct: null, credit: 0.12}
+
+        # -----------------------------------------------------------------------
+        # EMPLOYMENT PRACTICES - Discrimination, wrongful termination
+        # Moderate curve; frequency-driven, settlement-heavy
+        # -----------------------------------------------------------------------
+        employment_practices:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.60}
+              - {limit: 5000000, factor: 2.80}
+              - {limit: 10000000, factor: 4.20}
+              - {limit: 25000000, factor: 7.00}
+              - {limit: 50000000, factor: 10.50}
+              - {limit: 100000000, factor: 15.50}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+        # -----------------------------------------------------------------------
+        # FIDUCIARY - ERISA, pension plan management
+        # Moderate curve; class action potential but more predictable
+        # -----------------------------------------------------------------------
+        fiduciary:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.70}
+              - {limit: 5000000, factor: 3.10}
+              - {limit: 10000000, factor: 4.80}
+              - {limit: 25000000, factor: 8.50}
+              - {limit: 50000000, factor: 13.00}
+              - {limit: 100000000, factor: 20.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05
