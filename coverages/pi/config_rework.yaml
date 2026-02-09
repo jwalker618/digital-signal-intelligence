@@ -182,345 +182,390 @@ professional_indemnity:
             - {cat: "OVER_500M", label: "Over $500M", applied: 1.60}
             - {cat: "OTHER", label: UNKNOWN", applied: 1.00}
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # Each is a underlying feature for the previously defined groups
-    # Each group contributes to the group score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
+      - id: "peer_ranking"
+        inference_utility_function: peer_ranking_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "client_quality"
+        inference_utility_function: client_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "referral_network"
+        inference_utility_function: referral_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "association_leadership"
+        inference_utility_function: association_leadership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "thought_leadership"
+        inference_utility_function: thought_leadership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "panel_membership"
+        inference_utility_function: panel_membership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "license_status"
+        inference_utility_function: license_status_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  regulatory_standing
+          risk:
+            correlation_direction: positive
+            weight: 0.25   
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 5, note: "License status critical"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "License status concerns"}
 
-    signal_features:
-      network_authority:
-        - id: "peer_ranking"
-          name: "Peer Rankings"
-          description: "Recognition in Chambers, Legal 500, Best Lawyers, etc."
-          weight: 0.25
-          inference_utility_function: peer_ranking_basefunction
+      - id: "disciplinary_history"
+        inference_utility_function: disciplinary_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  regulatory_standing
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe disciplinary history"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant disciplinary history"}
 
-        - id: "client_quality"
-          name: "Client Quality"
-          description: "Quality of client base (public companies, Fortune 500)"
-          weight: 0.20
-          inference_utility_function: client_quality_basefunction
+      - id: "malpractice_record"
+        inference_utility_function: malpractice_record_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  regulatory_standing
+          risk:
+            correlation_direction: positive
+            weight: 0.15     
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Malpractice record concerns"}
 
-        - id: "referral_network"
-          name: "Referral Network Quality"
-          description: "Quality of referring relationships"
-          weight: 0.15
-          inference_utility_function: referral_quality_basefunction
+      - id: "ce_compliance"
+        inference_utility_function: ce_compliance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  regulatory_standing
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "specialty_certification"
+        inference_utility_function: speciality_certifications_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  regulatory_standing
+          risk:
+            correlation_direction: positive
+            weight: 0.10
 
-        - id: "association_leadership"
-          name: "Association Leadership"
-          description: "Leadership roles in professional associations"
-          weight: 0.15
-          inference_utility_function: association_leadership_basefunction
+      - id: "peer_review"
+        inference_utility_function: peer_review_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  regulatory_standing
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Failed peer review"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Peer review deficiencies"}
 
-        - id: "thought_leadership"
-          name: "Thought Leadership"
-          description: "Publications, speaking, CLE presentations"
-          weight: 0.15
-          inference_utility_function: thought_leadership_basefunction
+      - id: "pcaob_standing"
+        inference_utility_function: pcaob_standing_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  regulatory_standing
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "tenure"
+        inference_utility_function: years_inpractice_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  firm_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "partner_stability"
+        inference_utility_function: partner_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  firm_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.25 
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Partner stability concerns"}
 
-        - id: "panel_membership"
-          name: "Panel Membership"
-          description: "Insurance defense panels, bank approved lists"
-          weight: 0.10
-          inference_utility_function: panel_membership_basefunction
+      - id: "staff_retention"
+        inference_utility_function: staff_retention_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  firm_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "office_stability"
+        inference_utility_function: office_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  firm_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.10       
 
-      regulatory_standing:
-        - id: "license_status"
-          name: "License Status"
-          description: "Current status of all professional licenses"
-          weight: 0.25
-          inference_utility_function: license_status_basefunction
-          score_conditions:
-            - threshold: 35
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "License status critical"
-            - threshold: 50
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "License status concerns"
+      - id: "financial_stability"
+        inference_utility_function: financial_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  firm_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.20   
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Financial stability concerns"}
 
-        - id: "disciplinary_history"
-          name: "Disciplinary History"
-          description: "Sanctions, censures, suspensions, reprimands"
-          weight: 0.30
-          inference_utility_function: disciplinary_history_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Severe disciplinary history"
-            - threshold: 45
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Significant disciplinary history"
+      - id: "succession_planning"
+        inference_utility_function: succession_planning_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  firm_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "outcome_patterns"
+        inference_utility_function: outcome_patterns_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  practice_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.20  
 
-        - id: "malpractice_record"
-          name: "Public Malpractice Record"
-          description: "Public judgments and disclosed settlements"
-          weight: 0.15
-          inference_utility_function: malpractice_record_basefunction
-          score_conditions:
-            - threshold: 35
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Malpractice record concerns"
+      - id: "client_reviews"
+        inference_utility_function: client_reviews_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  practice_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "work_quality"
+        inference_utility_function: work_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  practice_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "fee_dispute"
+        inference_utility_function: fee_dispute_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  practice_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "complaint_history"
+        inference_utility_function: complaint_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  practice_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "tls_score"
+        inference_utility_function: tls_score_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  technical_infrastructure
+          risk:
+            correlation_direction: positive
+            weight: 0.25      
 
-        - id: "ce_compliance"
-          name: "Continuing Education Compliance"
-          description: "CLE/CPE/CE requirements current"
-          weight: 0.05
-          inference_utility_function: ce_compliance_basefunction
+      - id: "email_auth"
+        inference_utility_function: email_authentication_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  technical_infrastructure
+          risk:
+            correlation_direction: positive
+            weight: 0.25      
 
-        - id: "specialty_certification"
-          name: "Specialty Certifications"
-          description: "Board certifications, specialty designations"
-          weight: 0.10
-          inference_utility_function: speciality_certifications_basefunction
+      - id: "security_headers"
+        inference_utility_function: security_headers_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  technical_infrastructure
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "portal_security"
+        inference_utility_function: portal_security_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  technical_infrastructure
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "breach_history"
+        inference_utility_function: breach_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  technical_infrastructure
+          risk:
+            correlation_direction: positive
+            weight: 0.20      
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Data breach history concerns"}
 
-        - id: "peer_review"
-          name: "Peer Review Rating"
-          description: "AICPA peer review rating (accounting firms)"
-          weight: 0.10
-          inference_utility_function: peer_review_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Failed peer review"
-            - threshold: 45
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Peer review deficiencies"
+      - id: "website_quality"
+        inference_utility_function: website_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.25      
 
-        - id: "pcaob_standing"
-          name: "PCAOB/SEC Standing"
-          description: "PCAOB registration and inspection results"
-          weight: 0.05
-          inference_utility_function: pcaob_standing_basefunction
+      - id: "bio_completeness"
+        inference_utility_function: bio_completeness_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "practice_clarity"
+        inference_utility_function: practice_clarity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "publications"
+        inference_utility_function: publications_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "community_involvement"
+        inference_utility_function: community_involvement_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15      
 
-      firm_stability:
-        - id: "tenure"
-          name: "Years in Practice"
-          description: "Firm establishment and longevity"
-          weight: 0.20
-          inference_utility_function: years_inpractice_basefunction
+      - id: "diversity"
+        inference_utility_function: diversity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.10    
 
-        - id: "partner_stability"
-          name: "Partner/Principal Stability"
-          description: "Partner retention and turnover patterns"
-          weight: 0.25
-          inference_utility_function: partner_stability_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Partner stability concerns"
+      - id: "malpractice_suits"
+        inference_utility_function: malpractice_suits_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  litigation_history
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+            score_conditions:
+              - {threshold: 25,  comparison: "<=", action: "REFER", override: 5, note: "Multiple active malpractice suits"}
+              - {threshold: 40,  comparison: "<=", action: "REFER", override: 4, note: "Active malpractice litigation"}
 
-        - id: "staff_retention"
-          name: "Staff Retention"
-          description: "Associate/staff retention signals"
-          weight: 0.15
-          inference_utility_function: staff_retention_basefunction
+      - id: "fee_disputes_litigation"
+        inference_utility_function: fee_disputes_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  litigation_history
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "regulatory_enforcement"
+        inference_utility_function: regulatory_enforcement_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  litigation_history
+          risk:
+            correlation_direction: positive
+            weight: 0.25      
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Active regulatory enforcement"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Regulatory enforcement history"}
 
-        - id: "office_stability"
-          name: "Office Stability"
-          description: "Office locations and changes"
-          weight: 0.10
-          inference_utility_function: office_stability_basefunction
-
-        - id: "financial_stability"
-          name: "Financial Stability"
-          description: "Financial health indicators"
-          weight: 0.20
-          inference_utility_function: financial_stability_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Financial stability concerns"
-
-        - id: "succession_planning"
-          name: "Succession Planning"
-          description: "Observable succession planning indicators"
-          weight: 0.10
-          inference_utility_function: succession_planning_basefunction
-
-      practice_quality:
-        - id: "outcome_patterns"
-          name: "Matter Outcome Patterns"
-          description: "Case outcomes, transaction completion rates"
-          weight: 0.20
-          inference_utility_function: outcome_patterns_basefunction
-
-        - id: "client_reviews"
-          name: "Client Reviews"
-          description: "Client ratings on professional platforms"
-          weight: 0.25
-          inference_utility_function: client_reviews_basefunction
-
-        - id: "work_quality"
-          name: "Work Product Quality"
-          description: "Observable work quality indicators"
-          weight: 0.15
-          inference_utility_function: work_quality_basefunction
-
-        - id: "fee_dispute"
-          name: "Fee Dispute History"
-          description: "Fee arbitrations and disputes"
-          weight: 0.15
-          inference_utility_function: fee_dispute_basefunction
-
-        - id: "complaint_history"
-          name: "Professional Complaints"
-          description: "Complaints to professional bodies"
-          weight: 0.25
-          inference_utility_function: complaint_history_basefunction
-
-      technical_infrastructure:
-        - id: "tls_score"
-          name: "TLS/SSL Configuration"
-          description: "Website encryption quality"
-          weight: 0.25
-          inference_utility_function: tls_score_basefunction
-
-        - id: "email_auth"
-          name: "Email Authentication"
-          description: "SPF, DMARC, DKIM configuration"
-          weight: 0.25
-          inference_utility_function: email_authentication_basefunction
-
-        - id: "security_headers"
-          name: "Security Headers"
-          description: "HTTP security headers"
-          weight: 0.15
-          inference_utility_function: security_headers_basefunction
-
-        - id: "portal_security"
-          name: "Client Portal Security"
-          description: "Client portal security if applicable"
-          weight: 0.15
-          inference_utility_function: portal_security_basefunction
-
-        - id: "breach_history"
-          name: "Data Breach History"
-          description: "Historical data breaches"
-          weight: 0.20
-          inference_utility_function: breach_history_basefunction
-          score_conditions:
-            - threshold: 35
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Data breach history concerns"
-
-      corporate_footprint:
-        - id: "website_quality"
-          name: "Website Professionalism"
-          description: "Website quality and completeness"
-          weight: 0.25
-          inference_utility_function: website_quality_basefunction
-
-        - id: "bio_completeness"
-          name: "Professional Bio Quality"
-          description: "Attorney/professional bio completeness"
-          weight: 0.20
-          inference_utility_function: bio_completeness_basefunction
-
-        - id: "practice_clarity"
-          name: "Practice Area Clarity"
-          description: "Clear description of services"
-          weight: 0.15
-          inference_utility_function: practice_clarity_basefunction
-
-        - id: "publications"
-          name: "Publications/Insights"
-          description: "Thought leadership content"
-          weight: 0.15
-          inference_utility_function: publications_basefunction
-
-        - id: "community_involvement"
-          name: "Community Involvement"
-          description: "Pro bono, community service"
-          weight: 0.15
-          inference_utility_function: community_involvement_basefunction
-
-        - id: "diversity"
-          name: "Diversity & Inclusion"
-          description: "Diversity signals and commitment"
-          weight: 0.10
-          inference_utility_function: diversity_basefunction
-
-      litigation_history:
-        - id: "malpractice_suits"
-          name: "Malpractice Suits"
-          description: "Professional negligence suits filed"
-          weight: 0.35
-          inference_utility_function: malpractice_suits_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Multiple active malpractice suits"
-            - threshold: 40
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Active malpractice litigation"
-
-        - id: "fee_disputes_litigation"
-          name: "Fee Disputes/Arbitration"
-          description: "Fee-related litigation and arbitration"
-          weight: 0.15
-          inference_utility_function: fee_disputes_basefunction
-
-        - id: "regulatory_enforcement"
-          name: "Regulatory Enforcement"
-          description: "Regulatory enforcement actions"
-          weight: 0.25
-          inference_utility_function: regulatory_enforcement_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Active regulatory enforcement"
-            - threshold: 45
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Regulatory enforcement history"
-
-        - id: "civil_litigation"
-          name: "Civil Litigation as Defendant"
-          description: "Other civil suits as defendant"
-          weight: 0.15
-          inference_utility_function: civil_litigation_basefunction
-
-        - id: "bankruptcy"
-          name: "Bankruptcy History"
-          description: "Firm or principal bankruptcy"
-          weight: 0.10
-          inference_utility_function: bankruptcy_basefunction
-          score_conditions:
-            - threshold: 40
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Bankruptcy history concerns"
+      - id: "civil_litigation"
+        inference_utility_function: civil_litigation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  litigation_history
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "bankruptcy"
+        inference_utility_function: bankruptcy_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id:  litigation_history
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+            score_conditions:
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Bankruptcy history concerns"}
 
     # =========================================================================
     # GROUPS
