@@ -100,7 +100,7 @@ aerospace:
             - {cat: "HELICOPTER_OPERATOR", label: "Helicopter Operator", applied: 1.40}
             - {cat: "FLIGHT_SCHOOL", label: "Flight Training Organization", applied: 1.50}
             - {cat: "PRIVATE_OWNER", label: "Private Owner/Operator", applied: 1.35}
-
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: fleet_category
         inference_utility_function: fleetcategory_basefunction
@@ -115,6 +115,7 @@ aerospace:
             - {cat: "BUSINESS_JET", label: "Business Jet", applied: 1.20}
             - {cat: "HELICOPTER", label: "Helicopter", applied: 1.35}
             - {cat: "PISTON", label: "Piston Aircraft", applied: 1.25}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: fleet_size
         inference_utility_function: fleetsize_basefunction
@@ -128,6 +129,7 @@ aerospace:
             - {cat: "MEDIUM", label: "Medium Fleet (21-50)", applied: 1.00}
             - {cat: "LARGE", label: "Large Fleet (51-150)",  applied: 0.95}
             - {cat: "MAJOR", label: "Major Fleet (150+)", applied: 0.90}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: regulatory_framework
         inference_utility_function: regulatoryframework_basefunction
@@ -144,6 +146,7 @@ aerospace:
             - {cat: "DGCA_INDIA", label: "DGCA (India)", applied: 1.15}
             - {cat: "OTHER_ICAO", label: "Other ICAO Compliant", applied: 1.20}
             - {cat: "NON_ICAO", label: "Non-ICAO Compliant", applied: 1.50}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
       - id: iosa_status
         inference_utility_function: iosa_status_basefunction
@@ -155,136 +158,6 @@ aerospace:
             - {cat: "EXPIRED", label: "IOSA Expired", applied: 1.15}
             - {cat: "NEVER_REGISTERED", label: "Never Registered",  applied: 1.25}
             - {cat: "NOT_APPLICABLE", label: "Not Applicable", applied: 1.00}
-
-
-
-    # -------------------------------------------------------------------------
-    # SIGNAL GROUPS
-    # Each group is the product of its underlying features
-    # Each group contributes to the composite score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-    signal_groups:
-      - id: "network_authority"
-        name: "Network Authority"
-        description: "Industry relationships and counterparty quality"
-        weight: 0.10
-        test_scores: {excellent: 90, average: 65, poor: 35}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent network authority - modifier applied"
-
-      - id: "safety_record"
-        name: "Safety Record"
-        description: "Historical safety performance from public databases"
-        weight: 0.30
-        test_scores: {excellent: 98, average: 75, poor: 35}
-        score_conditions:
-          - threshold: 30
-            comparison: "<="
-            override: 5
-            action: "REFER"
-            note: "Unacceptable safety record"
-          - threshold: 45
-            comparison: "<="
-            override: 4
-            action: "REFER"
-            note: "Significant safety concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent safety record - modifier applied"
-
-      - id: "regulatory_compliance"
-        name: "Regulatory Compliance"
-        description: "Certificate status, enforcement actions, audit results"
-        weight: 0.20
-        test_scores: {excellent: 95, average: 72, poor: 38}
-        score_conditions:
-          - threshold: 35
-            comparison: "<="
-            override: 5
-            action: "REFER"
-            note: "Severe regulatory deficiencies"
-          - threshold: 50
-            comparison: "<="
-            override: 4
-            action: "REFER"
-            note: "Material regulatory concerns"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent regulatory compliance - modifier applied"
-
-      - id: "operational_quality"
-        name: "Operational Quality"
-        description: "Observable operational metrics"
-        weight: 0.15
-        test_scores: {excellent: 88, average: 68, poor: 42}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent operational quality - modifier applied"
-
-      - id: "fleet_quality"
-        name: "Fleet Quality"
-        description: "Aircraft age, composition, maintenance indicators"
-        weight: 0.10
-        test_scores: {excellent: 88, average: 65, poor: 32}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent fleet quality - modifier applied"
-
-      - id: "financial_stability"
-        name: "Financial Stability"
-        description: "Public financial indicators"
-        weight: 0.05
-        test_scores: {excellent: 85, average: 65, poor: 35}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent financial stability - modifier applied"
-
-      - id: "route_risk"
-        name: "Route Risk"
-        description: "Geographic and operational risk exposure"
-        weight: 0.05
-        test_scores: {excellent: 92, average: 72, poor: 40}
-        score_conditions:
-          - threshold: 30
-            comparison: "<="
-            override: 4
-            action: "REFER"
-            note: "Elevated route risk"
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.85
-            note: "Excellent route risk - modifier applied"
-
-      - id: "corporate_governance"
-        name: "Corporate Governance"
-        description: "Management quality and safety culture indicators"
-        weight: 0.05
-        test_scores: {excellent: 88, average: 65, poor: 30}
-        score_conditions:
-          - threshold: 20
-            comparison: "<="
-            action: "MODIFIER"
-            applied: 0.90
-            note: "Excellent corporate governance - modifier applied"
 
     # -------------------------------------------------------------------------
     # SIGNAL FEATURES
@@ -625,7 +498,123 @@ aerospace:
           weight: 0.15
           inference_utility_function: industry_engagement_basefunction
 
- 
+
+    # =========================================================================
+    # GROUPS
+    # Categorical modifiers and three-layer assessment groupings
+    # =========================================================================
+    groups:
+
+      # -----------------------------------------------------------------------
+      # CATEGORICAL GROUPS
+      # Apply pricing modifiers (applied:), not scores
+      # -----------------------------------------------------------------------
+      categories:
+        - id: "operator_type"
+          label: "Operator Type"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "fleet_category"
+          label: "Fleet category"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "fleet_size"
+          label: "Fleet Size"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "regulatory_framework"
+          label: "Regulatory Framework"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "iosa_status"
+          label: "IOSA Status"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "NOT_APPLICABLE"
+          
+      # -----------------------------------------------------------------------
+      # THREE-LAYER ASSESSMENT GROUPS
+      # Aggregate signals into scoring dimensions
+      # Weights within each dimension must sum to 1.0
+      # -----------------------------------------------------------------------
+      three_layer_assessment:
+        - id: "network_authority"
+          label: "Network Authority"
+          description: "Industry relationships and counterparty quality"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90,  note: "Excellent network authority - modifier applied"}
+  
+        - id: "safety_record"
+          label: "Safety Record"
+          description: "Historical safety performance from public databases"
+          risk:
+            weight: 0.30
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5,  note: "Unacceptable safety record"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4,  note: "Significant safety concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent safety record - modifier applied"}
+  
+        - id: "regulatory_compliance"
+          label: "Regulatory Compliance"
+          description: "Certificate status, enforcement actions, audit results"
+          risk:
+            weight: 0.20
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 5, note: "Severe regulatory deficiencies"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Material regulatory concerns"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent regulatory compliance - modifier applied"}
+  
+        - id: "operational_quality"
+          label: "Operational Quality"
+          description: "Observable operational metrics"
+          risk:
+            weight: 0.15
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent operational quality - modifier applied"}
+  
+        - id: "fleet_quality"
+          label: "Fleet Quality"
+          description: "Aircraft age, composition, maintenance indicators"
+          risk:
+            weight: 0.10
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent fleet quality - modifier applied"}
+  
+        - id: "financial_stability"
+          label: "Financial Stability"
+          description: "Public financial indicators"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent financial stability - modifier applied"}
+  
+        - id: "route_risk"
+          label: "Route Risk"
+          description: "Geographic and operational risk exposure"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Elevated route risk"}
+              - {threshold: 20, comparison: "<=", action: "MODIFIER",  applied: 0.85, note: "Excellent route risk - modifier applied"}
+  
+        - id: "corporate_governance"
+          label: "Corporate Governance"
+          description: "Management quality and safety culture indicators"
+          risk:
+            weight: 0.05
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent corporate governance - modifier applied"}
+         
     # =========================================================================
     # RISK TIER BANDS
     # Maps composite risk score (0-1000) to pricing tiers
