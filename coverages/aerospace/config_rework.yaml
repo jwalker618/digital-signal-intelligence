@@ -159,345 +159,410 @@ aerospace:
             - {cat: "NEVER_REGISTERED", label: "Never Registered",  applied: 1.25}
             - {cat: "NOT_APPLICABLE", label: "Not Applicable", applied: 1.00}
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # Each is a underlying feature for the previously defined groups
-    # Each group contributes to the group score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
-    signal_features:
-      network_authority:
-        - id: "alliance_membership"
-          name: "Airline Alliance Membership"
-          description: "Membership in Star Alliance, oneworld, SkyTeam"
-          weight: 0.25
-          inference_utility_function: alliance_membership_basefunction
+      - id: "alliance_membership"
+        inference_utility_function: alliance_membership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "codeshare_quality"
+        inference_utility_function: codeshare_partner_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "lessor_quality"
+        inference_utility_function: aircraft_lessor_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "oem_relationship"
+        inference_utility_function: oem_relationship_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "mro_quality"
+        inference_utility_function: mro_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "accident_history"
+        inference_utility_function: accident_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.30   
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe accident history"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Material accident history"}
 
-        - id: "codeshare_quality"
-          name: "Codeshare Partner Quality"
-          description: "Average safety rating of codeshare partners"
-          weight: 0.20
-          inference_utility_function: codeshare_partner_basefunction
+      - id: "incident_history"
+        inference_utility_function: incident_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "accident_rate"
+        inference_utility_function: accident_rate_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+ 
+      - id: "fatality_history"
+        inference_utility_function: fatality_history_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.20    
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Recent fatal accidents"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Fatal accident history"}
 
-        - id: "lessor_quality"
-          name: "Aircraft Lessor Quality"
-          description: "Quality tier of aircraft lessors"
-          weight: 0.20
-          inference_utility_function: aircraft_lessor_basefunction
+      - id: "investigation_findings"
+        inference_utility_function: investigation_finding_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "certificate_status"
+        inference_utility_function: certificate_status_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Certificate at risk"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Certificate concerns"}
 
-        - id: "oem_relationship"
-          name: "OEM Relationship"
-          description: "Direct relationships with Boeing, Airbus, Embraer"
-          weight: 0.15
-          inference_utility_function: oem_relationship_basefunction
+      - id: "enforcement_actions"
+        inference_utility_function: enforcement_action_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe enforcement history"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Material enforcement actions"}
 
-        - id: "mro_quality"
-          name: "MRO Provider Quality"
-          description: "Quality of maintenance providers"
-          weight: 0.20
-          inference_utility_function: mro_quality_basefunction
+      - id: "iosa_audit_status"
+        inference_utility_function: iosa_audit_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "ramp_inspection"
+        inference_utility_function: ramp_inspection_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "eu_safety_list"
+        inference_utility_function: eu_safety_list_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15        
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "On EU Air Safety List"}
+              - {threshold: 70, comparison: "<=", action: "REFER", override: 4, note: "EU safety restrictions"}
 
-      safety_record:
-        - id: "accident_history"
-          name: "Accident History"
-          description: "Hull loss and major accidents (10-year lookback)"
-          weight: 0.30
-          inference_utility_function: accident_history_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Severe accident history"
-            - threshold: 40
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Material accident history"
+      - id: "state_safety_rating"
+        inference_utility_function: state_safety_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "certification_transparency"
+        inference_utility_function: certification_transparency_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "otp_score"
+        inference_utility_function: otp_score_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "dispatch_reliability"
+        inference_utility_function: dispatch_reliability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "crew_experience"
+        inference_utility_function: crew_experience_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "training_indicators"
+        inference_utility_function: training_indicators_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.15
 
-        - id: "incident_history"
-          name: "Incident History"
-          description: "Serious incidents, runway excursions, near-misses"
-          weight: 0.20
-          inference_utility_function: incident_history_basefunction
+      - id: "operational_complexity"
+        inference_utility_function: operational_complexity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "growth_rate"
+        inference_utility_function: growth_rate_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.15         
 
-        - id: "accident_rate"
-          name: "Accident Rate vs Industry"
-          description: "Accidents per million departures vs industry average"
-          weight: 0.20
-          inference_utility_function: accident_rate_basefunction
+      - id: "fleet_age"
+        inference_utility_function: fleet_age_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+        
+      - id: "fleet_homogeneity"
+        inference_utility_function: fleet_homogeneity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "aircraft_generation"
+        inference_utility_function: aircraft_generation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "order_backlog"
+        inference_utility_function: order_backlog_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.15      
 
-        - id: "fatality_history"
-          name: "Fatality History"
-          description: "Fatal accident history (10-year lookback)"
-          weight: 0.20
-          inference_utility_function: fatality_history_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Recent fatal accidents"
-            - threshold: 50
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Fatal accident history"
+      - id: "maintenance_indicators"
+        inference_utility_function: maintenance_indicators_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "supply_chain_quality"
+        inference_utility_function: supply_chain_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "credit_rating"
+        inference_utility_function: credit_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+        
+      - id: "public_financials"
+        inference_utility_function: public_financials_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.30
 
-        - id: "investigation_findings"
-          name: "Investigation Findings"
-          description: "Operator cited as causal factor in investigations"
-          weight: 0.10
-          inference_utility_function: investigation_finding_basefunction
+      - id: "market_position"
+        inference_utility_function: market_position_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "government_support"
+        inference_utility_function: government_support_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial_stability
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "conflict_zone_exposure"
+        inference_utility_function: conflict_zone_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: route_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.30        
+            score_conditions:
+              - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Direct conflict zone ops"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Significant conflict exposure"}
 
-      regulatory_compliance:
-        - id: "certificate_status"
-          name: "Operating Certificate Status"
-          description: "AOC/Part 121/135 certificate status"
-          weight: 0.25
-          inference_utility_function: certificate_status_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Certificate at risk"
-            - threshold: 50
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Certificate concerns"
-
-        - id: "enforcement_actions"
-          name: "Enforcement Actions"
-          description: "Regulatory fines, penalties (5-year lookback)"
-          weight: 0.20
-          inference_utility_function: enforcement_action_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Severe enforcement history"
-            - threshold: 45
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Material enforcement actions"
-
-        - id: "iosa_audit_status"
-          name: "IOSA Audit Status"
-          description: "IOSA registration and audit findings"
-          weight: 0.15
-          inference_utility_function: iosa_audit_basefunction
-
-        - id: "ramp_inspection"
-          name: "Ramp Inspection Results"
-          description: "SAFA/SACA ramp inspection findings rate"
-          weight: 0.15
-          inference_utility_function: ramp_inspection_basefunction
-
-        - id: "eu_safety_list"
-          name: "EU Air Safety List Status"
-          description: "Presence on EU banned carrier list"
-          weight: 0.15
-          inference_utility_function: eu_safety_list_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "On EU Air Safety List"
-            - threshold: 70
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "EU safety restrictions"
-
-        - id: "state_safety_rating"
-          name: "State of Registry Safety Rating"
-          description: "ICAO USOAP audit results for state"
-          weight: 0.05
-          inference_utility_function: state_safety_basefunction
-
-        - id: "certification_transparency"
-          name: "Certification Transparency"
-          description: "FAA/EASA certification status transparency"
-          weight: 0.05
-          inference_utility_function: certification_transparency_basefunction
-
-      operational_quality:
-        - id: "otp_score"
-          name: "On-Time Performance"
-          description: "Departure/arrival punctuality vs benchmarks"
-          weight: 0.20
-          inference_utility_function: otp_score_basefunction
-
-        - id: "dispatch_reliability"
-          name: "Dispatch Reliability"
-          description: "Completion rate and technical dispatch"
-          weight: 0.20
-          inference_utility_function: dispatch_reliability_basefunction
-
-        - id: "crew_experience"
-          name: "Crew Experience Indicators"
-          description: "Average experience from public hiring data"
-          weight: 0.15
-          inference_utility_function: crew_experience_basefunction
-
-        - id: "training_indicators"
-          name: "Training Program Indicators"
-          description: "Training investment signals"
-          weight: 0.15
-          inference_utility_function: training_indicators_basefunction
-
-        - id: "operational_complexity"
-          name: "Operational Complexity"
-          description: "Fleet diversity and route network complexity"
-          weight: 0.15
-          inference_utility_function: operational_complexity_basefunction
-
-        - id: "growth_rate"
-          name: "Fleet/Capacity Growth Rate"
-          description: "Year-over-year growth (rapid growth = higher risk)"
-          weight: 0.15
-          inference_utility_function: growth_rate_basefunction
-
-      fleet_quality:
-        - id: "fleet_age"
-          name: "Fleet Average Age"
-          description: "Average aircraft age vs benchmarks"
-          weight: 0.30
-          inference_utility_function: fleet_age_basefunction
-
-        - id: "fleet_homogeneity"
-          name: "Fleet Homogeneity"
-          description: "Fleet type standardization"
-          weight: 0.20
-          inference_utility_function: fleet_homogeneity_basefunction
-
-        - id: "aircraft_generation"
-          name: "Aircraft Generation"
-          description: "Percentage of current-generation aircraft"
-          weight: 0.25
-          inference_utility_function: aircraft_generation_basefunction
-
-        - id: "order_backlog"
-          name: "Fleet Renewal Pipeline"
-          description: "Order backlog indicating investment"
-          weight: 0.15
-          inference_utility_function: order_backlog_basefunction
-
-        - id: "maintenance_indicators"
-          name: "Maintenance Quality Indicators"
-          description: "Inferred maintenance quality"
-          weight: 0.05
-          inference_utility_function: maintenance_indicators_basefunction
-
-        - id: "supply_chain_quality"
-          name: "Supply Chain Quality"
-          description: "Supplier audit and quality assessment"
-          weight: 0.05
-          inference_utility_function: supply_chain_quality_basefunction
-
-      financial_stability:
-        - id: "credit_rating"
-          name: "Credit Rating"
-          description: "Credit rating from major agencies"
-          weight: 0.35
-          inference_utility_function: credit_rating_basefunction
-
-        - id: "public_financials"
-          name: "Public Financial Health"
-          description: "Financial metrics from public filings"
-          weight: 0.30
-          inference_utility_function: public_financials_basefunction
-
-        - id: "market_position"
-          name: "Market Position"
-          description: "Market share and competitive position"
-          weight: 0.20
-          inference_utility_function: market_position_basefunction
-
-        - id: "government_support"
-          name: "Government Support/Ownership"
-          description: "State ownership or support indicators"
-          weight: 0.15
-          inference_utility_function: government_support_basefunction
-
-      route_risk:
-        - id: "conflict_zone_exposure"
-          name: "Conflict Zone Exposure"
-          description: "Operations through/near conflict zones"
-          weight: 0.30
-          inference_utility_function: conflict_zone_basefunction
-          score_conditions:
-            - threshold: 20
-              comparison: "<="
-              override: 5
-              action: "REFER"
-              note: "Direct conflict zone ops"
-            - threshold: 40
-              comparison: "<="
-              override: 4
-              action: "REFER"
-              note: "Significant conflict exposure"
-
-        - id: "challenging_airports"
-          name: "Challenging Airport Operations"
-          description: "Operations to special requirement airports"
-          weight: 0.20
-          inference_utility_function: challenging_airports_basefunction
-
-        - id: "high_risk_destinations"
-          name: "High-Risk Country Exposure"
-          description: "Operations to elevated risk countries"
-          weight: 0.25
-          inference_utility_function: highrisk_exposure_basefunction
-
-        - id: "weather_exposure"
-          name: "Severe Weather Exposure"
-          description: "Route exposure to severe weather"
-          weight: 0.15
-          inference_utility_function: weather_exposure_basefunction
-
-        - id: "terrain_exposure"
-          name: "Challenging Terrain Exposure"
-          description: "Operations in mountainous terrain"
-          weight: 0.10
-          inference_utility_function: terrain_exposure_basefunction
-
-      corporate_governance:
-        - id: "management_stability"
-          name: "Management Stability"
-          description: "CEO/COO tenure and turnover"
-          weight: 0.25
-          inference_utility_function: management_stability_basefunction
-
-        - id: "safety_leadership"
-          name: "Safety Leadership Visibility"
-          description: "Dedicated safety leadership presence"
-          weight: 0.25
-          inference_utility_function: safety_leadership_basefunction
-
-        - id: "safety_reporting"
-          name: "Safety Transparency"
-          description: "Public safety reporting and disclosure"
-          weight: 0.20
-          inference_utility_function: safety_reporting_basefunction
-
-        - id: "corporate_structure"
-          name: "Corporate Structure Clarity"
-          description: "Transparency of structure and ownership"
-          weight: 0.15
-          inference_utility_function: corporate_structure_basefunction
-
-        - id: "industry_engagement"
-          name: "Industry Safety Engagement"
-          description: "Participation in FSF, IATA Safety Group"
-          weight: 0.15
-          inference_utility_function: industry_engagement_basefunction
-
+      - id: "challenging_airports"
+        inference_utility_function: challenging_airports_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: route_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "high_risk_destinations"
+        inference_utility_function: highrisk_exposure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: route_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "weather_exposure"
+        inference_utility_function: weather_exposure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: route_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "terrain_exposure"
+        inference_utility_function: terrain_exposure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: route_risk
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "management_stability"
+        inference_utility_function: management_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "safety_leadership"
+        inference_utility_function: safety_leadership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "safety_reporting"
+        inference_utility_function: safety_reporting_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "corporate_structure"
+        inference_utility_function: corporate_structure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "industry_engagement"
+        inference_utility_function: industry_engagement_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
 
     # =========================================================================
     # GROUPS
