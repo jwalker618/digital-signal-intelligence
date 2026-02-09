@@ -126,347 +126,427 @@ directors_officers:
             - {cat: "NONE", label: "Not Listed", applied: 0.80}
             - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
 
-    # -------------------------------------------------------------------------
-    # SIGNAL FEATURES
-    # Each is a underlying feature for the previously defined groups
-    # Each group contributes to the group score
-    # Weights must add to 1
-    # -------------------------------------------------------------------------
+      - id: "auditor_quality"
+        inference_utility_function: auditor_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "legal_counsel"
+        inference_utility_function: legal_counsel_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "banking_relationship"
+        inference_utility_function: banking_relationship_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "investor_quality"
+        inference_utility_function: investor_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "board_network"
+        inference_utility_function: board_network_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "index_inclusion"
+        inference_utility_function: index_inclusion_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "analyst_coverage"
+        inference_utility_function: analyst_coverage_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "industry_association"
+        inference_utility_function: industry_association_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: network_authority
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "board_independence"
+        inference_utility_function: board_independence_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.20    
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Board independence concerns"}
 
-    signal_features:
-      network_authority:
-        - id: "auditor_quality"
-          name: "External Auditor Quality"
-          description: "Quality tier of external auditor (Big 4, national, regional)"
-          weight: 0.20
-          inference_utility_function: auditor_quality_basefunction
+      - id: "board_diversity"
+        inference_utility_function: board_diversity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "ceo_chair_separation"
+        inference_utility_function: ceo_chair_separation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "committee_structure"
+        inference_utility_function: committee_structure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "board_refreshment"
+        inference_utility_function: board_refreshment_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "related_party"
+        inference_utility_function: related_party_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.10       
 
-        - id: "legal_counsel"
-          name: "Legal Counsel Quality"
-          description: "Quality of securities/corporate counsel"
-          weight: 0.15
-          inference_utility_function: legal_counsel_basefunction
+      - id: "compensation_structure"
+        inference_utility_function: compensation_structure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "shareholder_rights"
+        inference_utility_function: shareholder_rights_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: governance
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "audit_opinion"
+        inference_utility_function: audit_opinion_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.20 
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER",  override: 5, note: "Qualified/adverse audit opinion"}
+              - {threshold: 50, comparison: "<=", action: "REFER",  override: 4, note: "Audit concerns"}
 
-        - id: "banking_relationship"
-          name: "Investment Banking Relationships"
-          description: "Quality of investment banking relationships"
-          weight: 0.15
-          inference_utility_function: banking_relationship_basefunction
+      - id: "internal_controls"
+        inference_utility_function: internal_controls_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Material weakness in internal controls"}
 
-        - id: "investor_quality"
-          name: "Institutional Investor Quality"
-          description: "Quality of institutional investor base"
-          weight: 0.15
-          inference_utility_function: investor_quality_basefunction
+      - id: "restatement"
+        inference_utility_function: restatement_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.20    
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Financial restatement history"}
 
-        - id: "board_network"
-          name: "Board Network Quality"
-          description: "Quality of director interlocks and board experience"
-          weight: 0.15
-          inference_utility_function: board_network_basefunction
+      - id: "filing_timeliness"
+        inference_utility_function: filing_timelienness_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "revenue_recognition"
+        inference_utility_function: revenue_recognition_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "debt_covenant"
+        inference_utility_function: debt_covenant_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.05       
 
-        - id: "index_inclusion"
-          name: "Index Inclusion"
-          description: "Membership in major stock indices"
-          weight: 0.05
-          inference_utility_function: index_inclusion_basefunction
+      - id: "stock_volatility"
+        inference_utility_function: stock_volatility_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+      - id: "short_interest"
+        inference_utility_function: short_interest_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: financial
+          risk:
+            correlation_direction: positive
+            weight: 0.05
+        
+      - id: "securities_litigation"
+        inference_utility_function: securities_litigation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: litigation
+          risk:
+            correlation_direction: positive
+            weight: 0.35      
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Active securities litigation"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Securities litigation history"}
 
-        - id: "analyst_coverage"
-          name: "Analyst Coverage"
-          description: "Number and quality of sell-side analyst coverage"
-          weight: 0.10
-          inference_utility_function: analyst_coverage_basefunction
+      - id: "derivative_litigation"
+        inference_utility_function: derivitaive_litigation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: litigation
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "sec_enforcement"
+        inference_utility_function: sec_enforcement_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: litigation
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+            score_conditions:
+              - {threshold: 25,  comparison: "<=", action: "REFER", override: 5, note: "Active SEC enforcement"}
+              - {threshold: 45,  comparison: "<=", action: "REFER", override: 4, note: "SEC enforcement history"}
 
-        - id: "industry_association"
-          name: "Industry Association Leadership"
-          description: "Leadership roles in industry associations"
-          weight: 0.05
-          inference_utility_function: industry_association_basefunction
+      - id: "regulatory_action"
+        inference_utility_function: regulatory_action_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: litigation
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+      
+      - id: "pending_litigation"
+        inference_utility_function: pending_litigation_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: litigation
+          risk:
+            correlation_direction: positive
+            weight: 0.10      
 
-      governance:
-        - id: "board_independence"
-          name: "Board Independence"
-          description: "Percentage of independent directors"
-          weight: 0.20
-          inference_utility_function: board_independence_basefunction
-          score_conditions:
-            - threshold: 35
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Board independence concerns"
+      - id: "whistleblower"
+        inference_utility_function: whistleblower_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: litigation
+          risk:
+            correlation_direction: positive
+            weight: 0.05
 
-        - id: "board_diversity"
-          name: "Board Diversity"
-          description: "Gender, ethnic, and experiential diversity"
-          weight: 0.10
-          inference_utility_function: board_diversity_basefunction
+      - id: "executive_stability"
+        inference_utility_function: executive_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: executive
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "cfo_quality"
+        inference_utility_function: cfo_quality_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: executive
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "insider_trading"
+        inference_utility_function: insider_trading_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: executive
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "executive_background"
+        inference_utility_function: executive_background_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: executive
+          risk:
+            correlation_direction: positive
+            weight: 0.15   
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER",  override: 4, note: "Executive background concerns"}
 
-        - id: "ceo_chair_separation"
-          name: "CEO/Chair Separation"
-          description: "Separation of CEO and Board Chair roles"
-          weight: 0.15
-          inference_utility_function: ceo_chair_separation_basefunction
+      - id: "trading_plan"
+        inference_utility_function: trading_plan_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: executive
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "investor_relations"
+        inference_utility_function: investor_relations_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+        
+      - id: "governance_page"
+        inference_utility_function: governance_page_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "esg_reporting"
+        inference_utility_function: esg_reporting_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15  
 
-        - id: "committee_structure"
-          name: "Committee Structure"
-          description: "Quality of audit, compensation, and nominating committees"
-          weight: 0.15
-          inference_utility_function: committee_structure_basefunction
-
-        - id: "board_refreshment"
-          name: "Board Refreshment"
-          description: "Average tenure and refreshment practices"
-          weight: 0.10
-          inference_utility_function: board_refreshment_basefunction
-
-        - id: "related_party"
-          name: "Related Party Transactions"
-          description: "Quality of related party transaction oversight"
-          weight: 0.10
-          inference_utility_function: related_party_basefunction
-
-        - id: "compensation_structure"
-          name: "Executive Compensation Structure"
-          description: "Pay-for-performance alignment"
-          weight: 0.10
-          inference_utility_function: compensation_structure_basefunction
-
-        - id: "shareholder_rights"
-          name: "Shareholder Rights"
-          description: "Shareholder-friendly provisions vs takeover defenses"
-          weight: 0.10
-          inference_utility_function: shareholder_rights_basefunction
-
-      financial:
-        - id: "audit_opinion"
-          name: "Audit Opinion"
-          description: "Type of audit opinion received"
-          weight: 0.20
-          inference_utility_function: audit_opinion_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Qualified/adverse audit opinion"
-            - threshold: 50
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Audit concerns"
-
-        - id: "internal_controls"
-          name: "Internal Controls Assessment"
-          description: "SOX 404 internal controls assessment"
-          weight: 0.20
-          inference_utility_function: internal_controls_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Material weakness in internal controls"
-
-        - id: "restatement"
-          name: "Financial Restatement History"
-          description: "History of financial restatements (5-year lookback)"
-          weight: 0.20
-          inference_utility_function: restatement_basefunction
-          score_conditions:
-            - threshold: 35
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Financial restatement history"
-
-        - id: "filing_timeliness"
-          name: "Filing Timeliness"
-          description: "History of timely SEC filings"
-          weight: 0.10
-          inference_utility_function: filing_timelienness_basefunction
-
-        - id: "revenue_recognition"
-          name: "Revenue Recognition Risk"
-          description: "Revenue recognition complexity and risk"
-          weight: 0.10
-          inference_utility_function: revenue_recognition_basefunction
-
-        - id: "debt_covenant"
-          name: "Debt Covenant Compliance"
-          description: "Proximity to debt covenant thresholds"
-          weight: 0.05
-          inference_utility_function: debt_covenant_basefunction
-
-        - id: "stock_volatility"
-          name: "Stock Price Volatility"
-          description: "Historical stock price volatility vs peers"
-          weight: 0.10
-          inference_utility_function: stock_volatility_basefunction
-
-        - id: "short_interest"
-          name: "Short Interest"
-          description: "Short interest as percentage of float"
-          weight: 0.05
-          inference_utility_function: short_interest_basefunction
-
-      litigation:
-        - id: "securities_litigation"
-          name: "Securities Class Action History"
-          description: "History of securities class action lawsuits"
-          weight: 0.35
-          inference_utility_function: securities_litigation_basefunction
-          score_conditions:
-            - threshold: 30
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Active securities litigation"
-            - threshold: 50
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Securities litigation history"
-
-        - id: "derivative_litigation"
-          name: "Derivative Litigation History"
-          description: "Shareholder derivative suit history"
-          weight: 0.15
-          inference_utility_function: derivitaive_litigation_basefunction
-
-        - id: "sec_enforcement"
-          name: "SEC Enforcement History"
-          description: "SEC enforcement actions and investigations"
-          weight: 0.20
-          inference_utility_function: sec_enforcement_basefunction
-          score_conditions:
-            - threshold: 25
-              comparison: "<="
-              action: "REFER"
-              override: 5
-              note: "Active SEC enforcement"
-            - threshold: 45
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "SEC enforcement history"
-
-        - id: "regulatory_action"
-          name: "Other Regulatory Actions"
-          description: "Non-SEC regulatory enforcement (DOJ, state AG, CFPB)"
-          weight: 0.15
-          inference_utility_function: regulatory_action_basefunction
-
-        - id: "pending_litigation"
-          name: "Material Pending Litigation"
-          description: "Disclosed material pending litigation"
-          weight: 0.10
-          inference_utility_function: pending_litigation_basefunction
-
-        - id: "whistleblower"
-          name: "Whistleblower Activity"
-          description: "Whistleblower complaints and SEC tips"
-          weight: 0.05
-          inference_utility_function: whistleblower_basefunction
-
-      executive:
-        - id: "executive_stability"
-          name: "Executive Team Stability"
-          description: "CEO/CFO tenure and turnover patterns"
-          weight: 0.25
-          inference_utility_function: executive_stability_basefunction
-
-        - id: "cfo_quality"
-          name: "CFO Quality Indicators"
-          description: "CFO experience and credentials"
-          weight: 0.20
-          inference_utility_function: cfo_quality_basefunction
-
-        - id: "insider_trading"
-          name: "Insider Trading Patterns"
-          description: "Form 4 insider trading analysis"
-          weight: 0.25
-          inference_utility_function: insider_trading_basefunction
-
-        - id: "executive_background"
-          name: "Executive Background Check"
-          description: "Background issues with executives"
-          weight: 0.15
-          inference_utility_function: executive_background_basefunction
-          score_conditions:
-            - threshold: 35
-              comparison: "<="
-              action: "REFER"
-              override: 4
-              note: "Executive background concerns"
-
-        - id: "trading_plan"
-          name: "10b5-1 Plan Usage"
-          description: "Usage of 10b5-1 trading plans"
-          weight: 0.15
-          inference_utility_function: trading_plan_basefunction
-
-      corporate_footprint:
-        - id: "investor_relations"
-          name: "Investor Relations Quality"
-          description: "Quality of investor communications"
-          weight: 0.25
-          inference_utility_function: investor_relations_basefunction
-
-        - id: "governance_page"
-          name: "Governance Page Quality"
-          description: "Dedicated governance/board information"
-          weight: 0.20
-          inference_utility_function: governance_page_basefunction
-
-        - id: "esg_reporting"
-          name: "ESG Reporting"
-          description: "Environmental, social, governance reporting"
-          weight: 0.15
-          inference_utility_function: esg_reporting_basefunction
-
-        - id: "press_release"
-          name: "Press Release Quality"
-          description: "Quality and consistency of corporate communications"
-          weight: 0.15
-          inference_utility_function: press_release_basefunction
-
-        - id: "leadership_visibility"
-          name: "Leadership Visibility"
-          description: "Executive visibility and accessibility"
-          weight: 0.15
-          inference_utility_function: leadership_visability_basefunction
-
-        - id: "hiring_signals"
-          name: "Risk/Compliance Hiring"
-          description: "Legal, compliance, and governance hiring"
-          weight: 0.10
-          inference_utility_function: hiring_signals_basefunction
-
-      structured_data:
-        - id: "credit_rating"
-          name: "Credit Rating"
-          description: "Corporate credit rating"
-          weight: 0.30
-          inference_utility_function: credit_rating_basefunction
-
-        - id: "esg_rating"
-          name: "ESG Rating"
-          description: "Third-party ESG rating"
-          weight: 0.20
-          inference_utility_function: esg_rating_basefunction
-
-        - id: "governance_rating"
-          name: "Governance Rating"
-          description: "Third-party governance quality rating"
-          weight: 0.30
-          inference_utility_function: governance_rating_basefunction
-
-        - id: "iss_governance"
-          name: "ISS Governance QualityScore"
-          description: "ISS Governance QualityScore"
-          weight: 0.20
-          inference_utility_function: iss_governance_basefunction
+      - id: "press_release"
+        inference_utility_function: press_release_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "leadership_visibility"
+        inference_utility_function: leadership_visability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+        
+      - id: "hiring_signals"
+        inference_utility_function: hiring_signals_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.10
+        
+       - id: "credit_rating"
+        inference_utility_function: credit_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+        
+      - id: "esg_rating"
+        inference_utility_function: esg_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+        
+      - id: "governance_rating"
+        inference_utility_function: governance_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+        
+      - id: "iss_governance"
+        inference_utility_function: iss_governance_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: structured_data
+          risk:
+            correlation_direction: positive
+            weight: 0.20         
 
     # =========================================================================
     # GROUPS
