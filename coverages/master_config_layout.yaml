@@ -77,6 +77,7 @@
         proxy_tier: "{tier}"               # DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE
         categories:
           group_id: "{category_group}"     # Links to groups.categories
+          source: metadata.{field_name}    # Use metadata field instead of score
           features:                        # Expected return values
             - cat: "{CATEGORY_CODE}"       # Enum value returned by inference
               label: "{Display Label}"     # Human-readable label
