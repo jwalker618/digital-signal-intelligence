@@ -32,7 +32,14 @@ directors_officers:
         - "employment_practices"
         - "fiduciary"
       applicable_markets: ["us", "uk", "eu", "apac"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: side_a, side_b, side_c, side_a_dic, employment_practices, fiduciary"
+          - field: "limit"
+            description: "Requested limit in USD"
       min_premium: 10000
       default_currency: "USD"
 
@@ -83,6 +90,7 @@ directors_officers:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: company_type
+          source: metadata.company_type
           features:
             - {cat: "PUBLIC_LARGE_CAP", label: "Public Large Cap",  applied: 2.50}
             - {cat: "PUBLIC_MID_CAP", label: "Public Mid Cap", applied: 1.50}
@@ -100,6 +108,7 @@ directors_officers:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: industry
+          source: metadata.industry
           features:
             - {cat: "CRYPTO_DIGITAL", label: "Crypto/Digital Assets", applied: 2.50}
             - {cat: "CANNABIS", label: "Cannabis", applied: 2.00}
@@ -117,6 +126,7 @@ directors_officers:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: stock_exchange
+          source: metadata.stock_exchange
           features:
             - {cat: "NYSE",  label: "NYSE", applied: 1.00}
             - {cat: "NASDAQ", label: "NASDAQ", applied: 1.00}
@@ -128,13 +138,20 @@ directors_officers:
 
       - id: "auditor_quality"
         inference_utility_function: auditor_quality_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "legal_counsel"
         inference_utility_function: legal_counsel_basefunction
         proxy_tier: INFERRED_PROXY
@@ -143,7 +160,11 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "banking_relationship"
         inference_utility_function: banking_relationship_basefunction
         proxy_tier: INFERRED_PROXY
@@ -152,16 +173,28 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "investor_quality"
         inference_utility_function: investor_quality_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "board_network"
         inference_utility_function: board_network_basefunction
         proxy_tier: INFERRED_PROXY
@@ -170,28 +203,40 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "index_inclusion"
         inference_utility_function: index_inclusion_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.05
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "analyst_coverage"
         inference_utility_function: analyst_coverage_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "industry_association"
         inference_utility_function: industry_association_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: network_authority
           risk:
@@ -200,93 +245,126 @@ directors_officers:
         
       - id: "board_independence"
         inference_utility_function: board_independence_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
-            weight: 0.20    
+            weight: 0.20
             score_conditions:
               - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Board independence concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "board_diversity"
         inference_utility_function: board_diversity_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "ceo_chair_separation"
         inference_utility_function: ceo_chair_separation_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+
       - id: "committee_structure"
         inference_utility_function: committee_structure_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "board_refreshment"
         inference_utility_function: board_refreshment_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+
       - id: "related_party"
         inference_utility_function: related_party_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
-            correlation_direction: positive
-            weight: 0.10       
+            correlation_direction: negative
+            weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.15
+            severity:
+              correlation_direction: negative
+              weight: 0.10
 
       - id: "compensation_structure"
         inference_utility_function: compensation_structure_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+
       - id: "shareholder_rights"
         inference_utility_function: shareholder_rights_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: governance
           risk:
             correlation_direction: positive
             weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
         
       - id: "audit_opinion"
         inference_utility_function: audit_opinion_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial
           risk:
             correlation_direction: positive
-            weight: 0.20 
+            weight: 0.20
             score_conditions:
-              - {threshold: 30, comparison: "<=", action: "REFER",  override: 5, note: "Qualified/adverse audit opinion"}
-              - {threshold: 50, comparison: "<=", action: "REFER",  override: 4, note: "Audit concerns"}
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Qualified/adverse audit opinion"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Audit concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.25
 
       - id: "internal_controls"
         inference_utility_function: internal_controls_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial
           risk:
@@ -294,27 +372,45 @@ directors_officers:
             weight: 0.20
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Material weakness in internal controls"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "restatement"
         inference_utility_function: restatement_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial
           risk:
             correlation_direction: positive
-            weight: 0.20    
+            weight: 0.20
             score_conditions:
               - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Financial restatement history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.30
 
       - id: "filing_timeliness"
         inference_utility_function: filing_timelienness_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "revenue_recognition"
         inference_utility_function: revenue_recognition_basefunction
         proxy_tier: INFERRED_PROXY
@@ -323,7 +419,14 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.10
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "debt_covenant"
         inference_utility_function: debt_covenant_basefunction
         proxy_tier: INFERRED_PROXY
@@ -331,68 +434,118 @@ directors_officers:
           group_id: financial
           risk:
             correlation_direction: positive
-            weight: 0.05       
+            weight: 0.05
 
       - id: "stock_volatility"
         inference_utility_function: stock_volatility_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.10
-        
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.15
+            severity:
+              correlation_direction: negative
+              weight: 0.10
+
       - id: "short_interest"
         inference_utility_function: short_interest_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: financial
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.05
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.10
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.10
         
       - id: "securities_litigation"
         inference_utility_function: securities_litigation_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: litigation
           risk:
             correlation_direction: positive
-            weight: 0.35      
+            weight: 0.35
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Active securities litigation"}
               - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Securities litigation history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.35
+            severity:
+              correlation_direction: positive
+              weight: 0.40
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.20
+            complexity:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "derivative_litigation"
         inference_utility_function: derivitaive_litigation_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: litigation
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "sec_enforcement"
         inference_utility_function: sec_enforcement_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: litigation
           risk:
             correlation_direction: positive
             weight: 0.20
             score_conditions:
-              - {threshold: 25,  comparison: "<=", action: "REFER", override: 5, note: "Active SEC enforcement"}
-              - {threshold: 45,  comparison: "<=", action: "REFER", override: 4, note: "SEC enforcement history"}
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Active SEC enforcement"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "SEC enforcement history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.30
 
       - id: "regulatory_action"
         inference_utility_function: regulatory_action_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: litigation
           risk:
             correlation_direction: positive
             weight: 0.15
-      
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "pending_litigation"
         inference_utility_function: pending_litigation_basefunction
         proxy_tier: INFERRED_PROXY
@@ -400,7 +553,14 @@ directors_officers:
           group_id: litigation
           risk:
             correlation_direction: positive
-            weight: 0.10      
+            weight: 0.10
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "whistleblower"
         inference_utility_function: whistleblower_basefunction
@@ -410,6 +570,10 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.05
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "executive_stability"
         inference_utility_function: executive_stability_basefunction
@@ -419,7 +583,11 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "cfo_quality"
         inference_utility_function: cfo_quality_basefunction
         proxy_tier: INFERRED_PROXY
@@ -428,16 +596,30 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "insider_trading"
         inference_utility_function: insider_trading_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: executive
           risk:
-            correlation_direction: positive
+            correlation_direction: negative
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.20
+            severity:
+              correlation_direction: negative
+              weight: 0.15
+
       - id: "executive_background"
         inference_utility_function: executive_background_basefunction
         proxy_tier: INFERRED_PROXY
@@ -445,13 +627,20 @@ directors_officers:
           group_id: executive
           risk:
             correlation_direction: positive
-            weight: 0.15   
+            weight: 0.15
             score_conditions:
-              - {threshold: 35, comparison: "<=", action: "REFER",  override: 4, note: "Executive background concerns"}
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Executive background concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "trading_plan"
         inference_utility_function: trading_plan_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: executive
           risk:
@@ -466,24 +655,28 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "governance_page"
         inference_utility_function: governance_page_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+
       - id: "esg_reporting"
         inference_utility_function: esg_reporting_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.15  
+            weight: 0.15
 
       - id: "press_release"
         inference_utility_function: press_release_basefunction
@@ -493,7 +686,11 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "leadership_visibility"
         inference_utility_function: leadership_visability_basefunction
         proxy_tier: INFERRED_PROXY
@@ -502,7 +699,7 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+
       - id: "hiring_signals"
         inference_utility_function: hiring_signals_basefunction
         proxy_tier: INFERRED_PROXY
@@ -511,37 +708,48 @@ directors_officers:
           risk:
             correlation_direction: positive
             weight: 0.10
-        
-       - id: "credit_rating"
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
+            complexity:
+              correlation_direction: positive
+              weight: 0.10
+
+      - id: "credit_rating"
         inference_utility_function: credit_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: structured_data
           risk:
             correlation_direction: positive
             weight: 0.30
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.25
+
       - id: "esg_rating"
         inference_utility_function: esg_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: structured_data
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+
       - id: "governance_rating"
         inference_utility_function: governance_rating_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: structured_data
           risk:
             correlation_direction: positive
             weight: 0.30
-        
+
       - id: "iss_governance"
         inference_utility_function: iss_governance_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
           group_id: structured_data
           risk:
@@ -855,25 +1063,136 @@ directors_officers:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.65}
-          - {limit: 5000000, factor: 2.80}
-          - {limit: 10000000, factor: 4.20}
-          - {limit: 25000000, factor: 7.50}
-          - {limit: 50000000, factor: 11.00}
-          - {limit: 100000000, factor: 16.00}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # SIDE A - Personal asset protection for D&Os
+        # Steepest curve; personal liability, catastrophic potential
+        # -----------------------------------------------------------------------
+        side_a:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.90}
+              - {limit: 5000000, factor: 3.80}
+              - {limit: 10000000, factor: 6.20}
+              - {limit: 25000000, factor: 12.00}
+              - {limit: 50000000, factor: 19.00}
+              - {limit: 100000000, factor: 30.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # SIDE B - Corporate reimbursement
+        # Steep curve; indemnification costs scale with severity
+        # -----------------------------------------------------------------------
+        side_b:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.80}
+              - {limit: 5000000, factor: 3.50}
+              - {limit: 10000000, factor: 5.60}
+              - {limit: 25000000, factor: 10.50}
+              - {limit: 50000000, factor: 16.50}
+              - {limit: 100000000, factor: 26.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
+        # -----------------------------------------------------------------------
+        # SIDE C - Entity coverage (securities claims)
+        # Steepest curve; class action settlements can be massive
+        # -----------------------------------------------------------------------
+        side_c:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.95}
+              - {limit: 5000000, factor: 4.00}
+              - {limit: 10000000, factor: 6.80}
+              - {limit: 25000000, factor: 13.50}
+              - {limit: 50000000, factor: 22.00}
+              - {limit: 100000000, factor: 35.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
+            - {min_pct: 0.020, max_pct: null, credit: 0.15}
+
+        # -----------------------------------------------------------------------
+        # SIDE A DIC - Difference in conditions
+        # Very steep; fills gaps in other coverage, catastrophic scenarios
+        # -----------------------------------------------------------------------
+        side_a_dic:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 2.00}
+              - {limit: 5000000, factor: 4.20}
+              - {limit: 10000000, factor: 7.20}
+              - {limit: 25000000, factor: 14.50}
+              - {limit: 50000000, factor: 24.00}
+              - {limit: 100000000, factor: 38.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.09}
+            - {min_pct: 0.020, max_pct: null, credit: 0.12}
+
+        # -----------------------------------------------------------------------
+        # EMPLOYMENT PRACTICES - Discrimination, wrongful termination
+        # Moderate curve; frequency-driven, settlement-heavy
+        # -----------------------------------------------------------------------
+        employment_practices:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.60}
+              - {limit: 5000000, factor: 2.80}
+              - {limit: 10000000, factor: 4.20}
+              - {limit: 25000000, factor: 7.00}
+              - {limit: 50000000, factor: 10.50}
+              - {limit: 100000000, factor: 15.50}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+        # -----------------------------------------------------------------------
+        # FIDUCIARY - ERISA, pension plan management
+        # Moderate curve; class action potential but more predictable
+        # -----------------------------------------------------------------------
+        fiduciary:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.70}
+              - {limit: 5000000, factor: 3.10}
+              - {limit: 10000000, factor: 4.80}
+              - {limit: 25000000, factor: 8.50}
+              - {limit: 50000000, factor: 13.00}
+              - {limit: 100000000, factor: 20.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05

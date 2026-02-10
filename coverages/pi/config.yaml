@@ -29,7 +29,14 @@ professional_indemnity:
         - "errors_omissions"
         - "malpractice"
       applicable_markets: ["us", "uk", "eu", "apac"]
-      minimum_viable_input: ["client name (domain optional)","Limit in USD"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: professional_liability, errors_omissions, malpractice"
+          - field: "limit"
+            description: "Requested limit in USD"
       min_premium: 2500
       default_currency: "USD"
 
@@ -85,6 +92,7 @@ professional_indemnity:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: profession_type
+          source: metadata.profession_type
           features:
             - {cat: "LAW_FIRM", label: "Law Firm", value: 8500}
             - {cat: "ACCOUNTING_FIRM", label: "Accounting Firm", value: 9000}
@@ -102,10 +110,11 @@ professional_indemnity:
             - {cat: "OTHER", label: "Other Professional", value: 6000}
 
       - id: sub_profession_type
-        inference_utility_function: notdefined
+        inference_utility_function: sub_profession_classification_basefunction
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: sub_profession_type
+          source: metadata.sub_profession_type
           features:
             - {cat: "SECURITIES", label: "Securities Law", applied: 1.40}
             - {cat: "CORPORATE_MA", label: "Corporate M&A", applied: 1.25}
@@ -158,6 +167,7 @@ professional_indemnity:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: firm_size
+          source: metadata.firm_size
           features:
             - {cat: "SOLO", label: "Solo Practitioner", applied: 1.20}
             - {cat: "MICRO", label: "Micro Firm (2 - 5)", applied: 1.10}
@@ -172,6 +182,7 @@ professional_indemnity:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: revenue_size
+          source: metadata.revenue_size
           features:
             - {cat: "UNDER_500K", label: "Under $500K", applied: 0.85}
             - {cat: "R_500K_1M", label: "$500K - $1M", applied: 0.90}
@@ -184,186 +195,260 @@ professional_indemnity:
 
       - id: "peer_ranking"
         inference_utility_function: peer_ranking_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: COHORT_INFERENCE
         three_layer_assessment:
-          group_id:  network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "client_quality"
         inference_utility_function: client_quality_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.15
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "referral_network"
         inference_utility_function: referral_quality_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "association_leadership"
         inference_utility_function: association_leadership_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+
       - id: "thought_leadership"
         inference_utility_function: thought_leadership_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+
       - id: "panel_membership"
         inference_utility_function: panel_membership_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  network_authority
+          group_id: network_authority
           risk:
             correlation_direction: positive
             weight: 0.10
         
       - id: "license_status"
         inference_utility_function: license_status_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  regulatory_standing
+          group_id: regulatory_standing
           risk:
             correlation_direction: positive
-            weight: 0.25   
+            weight: 0.25
             score_conditions:
               - {threshold: 35, comparison: "<=", action: "REFER", override: 5, note: "License status critical"}
               - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "License status concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+            severity:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "disciplinary_history"
         inference_utility_function: disciplinary_history_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  regulatory_standing
+          group_id: regulatory_standing
           risk:
             correlation_direction: positive
             weight: 0.30
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe disciplinary history"}
               - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant disciplinary history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+            severity:
+              correlation_direction: positive
+              weight: 0.25
 
       - id: "malpractice_record"
         inference_utility_function: malpractice_record_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  regulatory_standing
+          group_id: regulatory_standing
           risk:
             correlation_direction: positive
-            weight: 0.15     
+            weight: 0.15
             score_conditions:
               - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Malpractice record concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.30
 
       - id: "ce_compliance"
         inference_utility_function: ce_compliance_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  regulatory_standing
+          group_id: regulatory_standing
           risk:
             correlation_direction: positive
             weight: 0.05
-        
+
       - id: "specialty_certification"
         inference_utility_function: speciality_certifications_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  regulatory_standing
+          group_id: regulatory_standing
           risk:
             correlation_direction: positive
             weight: 0.10
 
       - id: "peer_review"
         inference_utility_function: peer_review_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  regulatory_standing
+          group_id: regulatory_standing
           risk:
             correlation_direction: positive
             weight: 0.10
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Failed peer review"}
               - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Peer review deficiencies"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "pcaob_standing"
         inference_utility_function: pcaob_standing_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  regulatory_standing
+          group_id: regulatory_standing
           risk:
             correlation_direction: positive
             weight: 0.05
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+            severity:
+              correlation_direction: positive
+              weight: 0.15
         
       - id: "tenure"
         inference_utility_function: years_inpractice_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  firm_stability
+          group_id: firm_stability
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "partner_stability"
         inference_utility_function: partner_stability_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  firm_stability
+          group_id: firm_stability
           risk:
             correlation_direction: positive
-            weight: 0.25 
+            weight: 0.25
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Partner stability concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+          exposure:
+            complexity:
+              correlation_direction: negative
+              weight: 0.10
 
       - id: "staff_retention"
         inference_utility_function: staff_retention_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  firm_stability
+          group_id: firm_stability
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "office_stability"
         inference_utility_function: office_stability_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  firm_stability
+          group_id: firm_stability
           risk:
             correlation_direction: positive
-            weight: 0.10       
+            weight: 0.10
 
       - id: "financial_stability"
         inference_utility_function: financial_stability_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  firm_stability
+          group_id: firm_stability
           risk:
             correlation_direction: positive
-            weight: 0.20   
+            weight: 0.20
             score_conditions:
               - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Financial stability concerns"}
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.15
 
       - id: "succession_planning"
         inference_utility_function: succession_planning_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  firm_stability
+          group_id: firm_stability
           risk:
             correlation_direction: positive
             weight: 0.10
@@ -372,200 +457,298 @@ professional_indemnity:
         inference_utility_function: outcome_patterns_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  practice_quality
+          group_id: practice_quality
           risk:
             correlation_direction: positive
-            weight: 0.20  
+            weight: 0.20
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "client_reviews"
         inference_utility_function: client_reviews_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  practice_quality
+          group_id: practice_quality
           risk:
             correlation_direction: positive
             weight: 0.25
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+
       - id: "work_quality"
         inference_utility_function: work_quality_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  practice_quality
+          group_id: practice_quality
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "fee_dispute"
         inference_utility_function: fee_dispute_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  practice_quality
+          group_id: practice_quality
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "complaint_history"
         inference_utility_function: complaint_history_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  practice_quality
+          group_id: practice_quality
           risk:
             correlation_direction: positive
             weight: 0.25
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.15
         
       - id: "tls_score"
         inference_utility_function: tls_score_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
-            weight: 0.25      
+            weight: 0.25
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "email_auth"
         inference_utility_function: email_authentication_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
-            weight: 0.25      
+            weight: 0.25
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
 
       - id: "security_headers"
         inference_utility_function: security_headers_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "portal_security"
         inference_utility_function: portal_security_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  technical_infrastructure
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "breach_history"
         inference_utility_function: breach_history_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  technical_infrastructure
-          risk:
-            correlation_direction: positive
-            weight: 0.20      
-            score_conditions:
-              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Data breach history concerns"}
-
-      - id: "website_quality"
-        inference_utility_function: website_quality_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id:  corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.25      
-
-      - id: "bio_completeness"
-        inference_utility_function: bio_completeness_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id:  corporate_footprint
+          group_id: technical_infrastructure
           risk:
             correlation_direction: positive
             weight: 0.20
-        
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Data breach history concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+            severity:
+              correlation_direction: positive
+              weight: 0.25
+
+      - id: "website_quality"
+        inference_utility_function: website_quality_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+
+      - id: "bio_completeness"
+        inference_utility_function: bio_completeness_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: corporate_footprint
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "practice_clarity"
         inference_utility_function: practice_clarity_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+
       - id: "publications"
         inference_utility_function: publications_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+
       - id: "community_involvement"
         inference_utility_function: community_involvement_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
-            weight: 0.15      
+            weight: 0.15
 
       - id: "diversity"
         inference_utility_function: diversity_basefunction
         proxy_tier: INFERRED_PROXY
         three_layer_assessment:
-          group_id:  corporate_footprint
+          group_id: corporate_footprint
           risk:
             correlation_direction: positive
             weight: 0.10    
 
       - id: "malpractice_suits"
         inference_utility_function: malpractice_suits_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  litigation_history
+          group_id: litigation_history
           risk:
             correlation_direction: positive
             weight: 0.35
             score_conditions:
-              - {threshold: 25,  comparison: "<=", action: "REFER", override: 5, note: "Multiple active malpractice suits"}
-              - {threshold: 40,  comparison: "<=", action: "REFER", override: 4, note: "Active malpractice litigation"}
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Multiple active malpractice suits"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Active malpractice litigation"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.35
+            severity:
+              correlation_direction: positive
+              weight: 0.40
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.15
+            complexity:
+              correlation_direction: positive
+              weight: 0.10
 
       - id: "fee_disputes_litigation"
         inference_utility_function: fee_disputes_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  litigation_history
+          group_id: litigation_history
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
       - id: "regulatory_enforcement"
         inference_utility_function: regulatory_enforcement_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  litigation_history
+          group_id: litigation_history
           risk:
             correlation_direction: positive
-            weight: 0.25      
+            weight: 0.25
             score_conditions:
               - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Active regulatory enforcement"}
               - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Regulatory enforcement history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+            severity:
+              correlation_direction: positive
+              weight: 0.30
 
       - id: "civil_litigation"
         inference_utility_function: civil_litigation_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  litigation_history
+          group_id: litigation_history
           risk:
             correlation_direction: positive
             weight: 0.15
-        
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+            severity:
+              correlation_direction: positive
+              weight: 0.10
+
       - id: "bankruptcy"
         inference_utility_function: bankruptcy_basefunction
-        proxy_tier: INFERRED_PROXY
+        proxy_tier: DIRECT_OBSERVABLE
         three_layer_assessment:
-          group_id:  litigation_history
+          group_id: litigation_history
           risk:
             correlation_direction: positive
             weight: 0.10
             score_conditions:
               - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Bankruptcy history concerns"}
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.20
 
     # =========================================================================
     # GROUPS
@@ -880,25 +1063,73 @@ professional_indemnity:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 250000, factor: 0.50}
-          - {limit: 500000, factor: 0.75}
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.60}
-          - {limit: 3000000, factor: 2.10}
-          - {limit: 5000000, factor: 2.80}
-          - {limit: 10000000, factor: 4.20}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # PROFESSIONAL LIABILITY - General E&O for professional services
+        # Moderate curve; claims-made, settlement-driven
+        # -----------------------------------------------------------------------
+        professional_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.50}
+              - {limit: 500000, factor: 0.75}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 3000000, factor: 2.20}
+              - {limit: 5000000, factor: 3.00}
+              - {limit: 10000000, factor: 4.50}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # ERRORS & OMISSIONS - Technical/consulting professional services
+        # Flatter curve; losses more predictable, frequency-based
+        # -----------------------------------------------------------------------
+        errors_omissions:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.48}
+              - {limit: 500000, factor: 0.72}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.55}
+              - {limit: 3000000, factor: 2.00}
+              - {limit: 5000000, factor: 2.70}
+              - {limit: 10000000, factor: 4.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
+        # -----------------------------------------------------------------------
+        # MALPRACTICE - Medical, legal, accounting malpractice
+        # Steeper curve; higher severity, regulatory exposure
+        # -----------------------------------------------------------------------
+        malpractice:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.55}
+              - {limit: 500000, factor: 0.80}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.75}
+              - {limit: 3000000, factor: 2.40}
+              - {limit: 5000000, factor: 3.30}
+              - {limit: 10000000, factor: 5.20}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05

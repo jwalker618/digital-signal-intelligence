@@ -30,7 +30,14 @@ cyber:
         - "privacy_liability"
         - "cyber_extortion"
       applicable_markets: ["us", "uk", "eu", "apac"]
-      minimum_viable_input: ["client name (domain optional)", "Limit in USD"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: cyber_liability, network_security, privacy_liability, cyber_extortion"
+          - field: "limit"
+            description: "Requested limit in USD"
       min_premium: 5000
       default_currency: "USD"
 
@@ -96,6 +103,7 @@ cyber:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: industry_classification
+          source: metadata.industry_classification
           features:
             - {cat: "TECHNOLOGY", label: "Technology", applied: 1.15}
             - {cat: "FINANCIAL_SERVICES", label: "Financial Services", applied: 1.40}
@@ -113,6 +121,7 @@ cyber:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: size_band
+          source: metadata.size_band
           features:
             - {cat: "MICRO", label: "Micro", applied: 0.40}
             - {cat: "SMALL", label: "Small", applied: 0.60}
@@ -126,6 +135,7 @@ cyber:
         proxy_tier: INFERRED_PROXY
         categories:
           group_id: geography
+          source: metadata.geography
           features:
             - {cat: "US", label: "United States", applied: 1.00}
             - {cat: "UK", label: "United Kingdom", applied: 1.05}
@@ -1059,25 +1069,94 @@ cyber:
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves reflecting different loss development
     # =========================================================================
     pricing:
 
-      ilf_curve:
-        base_limit: 1000000
-        factors:
-          - {limit: 1000000, factor: 1.00}
-          - {limit: 2000000, factor: 1.70}
-          - {limit: 5000000, factor: 3.20}
-          - {limit: 10000000, factor: 5.00}
-          - {limit: 25000000, factor: 9.00}
-          - {limit: 50000000, factor: 14.00}
-          - {limit: 100000000, factor: 22.00}
+      by_product_type:
+        # -----------------------------------------------------------------------
+        # CYBER LIABILITY - Third-party claims, legal defence, settlements
+        # Steeper curve due to catastrophic loss potential and legal costs
+        # -----------------------------------------------------------------------
+        cyber_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.75}
+              - {limit: 5000000, factor: 3.40}
+              - {limit: 10000000, factor: 5.50}
+              - {limit: 25000000, factor: 10.00}
+              - {limit: 50000000, factor: 16.00}
+              - {limit: 100000000, factor: 25.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
+            - {min_pct: 0.020, max_pct: null, credit: 0.20}
 
-      deductible_credits:
-        - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-        - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-        - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-        - {min_pct: 0.020, max_pct: null, credit: 0.20}
+        # -----------------------------------------------------------------------
+        # NETWORK SECURITY - First-party BI, forensics, restoration
+        # Moderate curve; losses tend to be more predictable
+        # -----------------------------------------------------------------------
+        network_security:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 5000000, factor: 3.00}
+              - {limit: 10000000, factor: 4.50}
+              - {limit: 25000000, factor: 8.00}
+              - {limit: 50000000, factor: 12.50}
+              - {limit: 100000000, factor: 19.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.18}
 
+        # -----------------------------------------------------------------------
+        # PRIVACY LIABILITY - Regulatory fines, notification costs
+        # Flatter curve; per-record costs scale more linearly
+        # -----------------------------------------------------------------------
+        privacy_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.60}
+              - {limit: 5000000, factor: 2.80}
+              - {limit: 10000000, factor: 4.20}
+              - {limit: 25000000, factor: 7.50}
+              - {limit: 50000000, factor: 11.50}
+              - {limit: 100000000, factor: 17.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
+            - {min_pct: 0.020, max_pct: null, credit: 0.16}
+
+        # -----------------------------------------------------------------------
+        # CYBER EXTORTION - Ransom payments, negotiation fees
+        # Steepest curve; catastrophic and volatile loss potential
+        # -----------------------------------------------------------------------
+        cyber_extortion:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.85}
+              - {limit: 5000000, factor: 3.80}
+              - {limit: 10000000, factor: 6.50}
+              - {limit: 25000000, factor: 12.00}
+              - {limit: 50000000, factor: 20.00}
+              - {limit: 100000000, factor: 32.00}
+          deductible_credits:
+            - {min_pct: 0.001, max_pct: 0.005, credit: 0.06}
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.12}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.18}
+            - {min_pct: 0.020, max_pct: null, credit: 0.25}
+
+      # Shared across all product types
       taxes_fees_rate: 0.05

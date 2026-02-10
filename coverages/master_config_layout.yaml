@@ -40,8 +40,19 @@
         - "{product_type}"
       applicable_markets:                  # Geographic markets
         - "{market_code}"                  # e.g., us, uk, eu, apac
-      minimum_viable_input:                # Required inputs for pricing
-        - "{input_description}"            # IMPORTANT: Must include basis field if MULTIPLIER method used
+      minimum_viable_input:                # Required inputs for pricing (explicit format)
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "Product type from product_types list above"
+          - field: "limit"
+            description: "Requested limit in default_currency"
+          # Additional fields as needed:
+          # - field: "tiv"
+          #   description: "Total Insured Value (required if MULTIPLIER method uses tiv basis)"
+          # - field: "revenue"
+          #   description: "Annual revenue (required if MULTIPLIER method uses revenue basis)"
       min_premium: {integer}               # Minimum premium floor
       default_currency: "{currency}"       # ISO 4217 currency code
 
@@ -477,24 +488,37 @@
 
     # =========================================================================
     # PRICING PARAMETERS
-    # ILF curves, deductible credits, taxes/fees
+    # Product-type-specific ILF curves, deductible credits, taxes/fees
+    # Each product_type listed in metadata.product_types should have its own
+    # pricing parameters to reflect different loss development patterns
     # =========================================================================
     pricing:
 
-      # Increased Limit Factors
-      ilf_curve:
-        base_limit: {integer}              # Base limit for ILF = 1.00
-        factors:
-          - limit: {integer}
-            factor: {float}                # ILF multiplier
+      # Product-type-specific pricing (REQUIRED for each product_type)
+      by_product_type:
+        "{product_type_1}":                # Must match entry in metadata.product_types
+          ilf_curve:
+            base_limit: {integer}          # Base limit for ILF = 1.00
+            factors:
+              - limit: {integer}
+                factor: {float}            # ILF multiplier
+          deductible_credits:
+            - min_pct: {float}             # Minimum deductible as % of limit
+              max_pct: {float|null}        # Maximum (null = no upper bound)
+              credit: {float}              # Premium credit
 
-      # Deductible credits (percentage of limit)
-      deductible_credits:
-        - min_pct: {float}                 # Minimum deductible as % of limit
-          max_pct: {float|null}            # Maximum (null = no upper bound)
-          credit: {float}                  # Premium credit
+        "{product_type_2}":                # Different product type
+          ilf_curve:
+            base_limit: {integer}
+            factors:
+              - limit: {integer}
+                factor: {float}
+          deductible_credits:
+            - min_pct: {float}
+              max_pct: {float|null}
+              credit: {float}
 
-      # Tax and fee loading
+      # Shared parameters (apply to all product types)
       taxes_fees_rate: {float}             # e.g., 0.05 = 5%
 
 
