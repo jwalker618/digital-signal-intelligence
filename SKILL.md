@@ -855,7 +855,7 @@ The current development plan is defined in `development/project/version/active/`
 - Type naming: Tests expect `SignalConfig` (use `SignalGroupConfig`)
 - Missing routing bridge implementations
 
-### Phase V4: Multi-Configuration Multiplexer
+### Phase V4: Multi-Configuration Multiplexer - COMPLETE ✅
 
 **Documentation**: `development/project/version/active/phase_v4.md`
 
@@ -864,21 +864,30 @@ The current development plan is defined in `development/project/version/active/`
 **Key Deliverables**:
 | Component | Description | Status |
 |-|-|-|
-| `DSIMultiplexer` | Signal broker - unions signal requirements, deduplicates, parallel execution | 🔲 Pending |
-| `ConfigArbiter` | Ranks outcomes by validity → confidence → specificity → margin | 🔲 Pending |
-| Schema: `model_specificity` | Specificity score (1-5) for arbiter ranking | 🔲 Pending |
-| Schema: `routing_constraints` | Hard filters before signal execution (revenue, TIV thresholds) | 🔲 Pending |
-| `signal_completeness` metric | % signals returned non-null, prevents phantom approvals | 🔲 Pending |
+| `DSIMultiplexer` | Signal broker - unions signal requirements, deduplicates, parallel execution | ✅ Complete |
+| `ConfigArbiter` | Ranks outcomes by validity → confidence → specificity → margin | ✅ Complete |
+| Schema: `model_specificity` | Specificity score (1-5) for arbiter ranking | ✅ Complete |
+| Schema: `routing_constraints` | Hard filters before signal execution (revenue, TIV thresholds) | ✅ Complete |
+| `signal_completeness` metric | % signals returned non-null, prevents phantom approvals | ✅ Complete |
+| `MultiplexedWorkflow` | Integration with MultiCoverageOrchestrator | ✅ Complete |
+| Unit tests | 16 tests covering broker, arbiter, constraints, integration | ✅ Complete |
+
+**Files Created**:
+- `signal_architecture/multiplexer/types.py` - Data structures
+- `signal_architecture/multiplexer/broker.py` - DSIMultiplexer class
+- `signal_architecture/multiplexer/arbiter.py` - ConfigArbiter class
+- `signal_architecture/multiplexer/integration.py` - Orchestrator integration
+- `signal_architecture/multiplexer/__init__.py` - Module exports
+- `tests/unit/test_multiplexer.py` - 16 unit tests (all passing)
+
+**Schema Updates**:
+- `coverages/master_config_layout.yaml` v2.1 - Added multiplexer schema and documentation
+- `coverages/cyber/config.yaml` v2.2.0 - Added model_specificity: 1, routing_constraints: []
 
 **Relationship to Phase 10 (Multi-Coverage Orchestrator)**:
 - Phase 10: Inter-coverage (Cyber + D&O + PI for same client)
 - Phase V4: Intra-coverage (Cyber General vs Cyber Tech vs Cyber SME)
-- These are complementary layers that can be composed
-
-**Implementation Notes**:
-1. Path references in phase_v4.md use legacy `technical_pricing/` - update to current paths (`signal_architecture/`, `layers/`, `infrastructure/`)
-2. Schema placement: Recommend Option 1 (within existing config.yaml) for self-contained configs
-3. Prerequisite: WorkflowResult needs `signal_completeness` metric added
+- These are complementary layers that can be composed via `create_multiplexed_workflow_factory()`
 
 ### Mandatory Pending Items
 
