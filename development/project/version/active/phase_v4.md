@@ -56,24 +56,42 @@ The new architecture introduces a layer *above* the individual pricing models.
 ```
 
 ### 4.2 Schema Updates (master_config_layout.yaml)
-We must update the metadata section to support arbitration logic.
+We must introduce a coverage specific metadata layer to support arbitration logic.
 
-metadata:
-  # ... existing fields ...
+Open question: is this best placed within the existing confog.yaml files? Or should this be abstracted into its own file? Potentially one thats at the coverage level, which could also be used to facilitate model generation across multiple coverage types in parallel?
+
+**Option1:** revise coverages/{coverage}/config.yaml
+{coverage}:
+  metadata:
+    
+  {configuration}:
+    metadata:
+    direct_queries:
+    ...
+
+**Option2:** create coverages/master_routing.yaml
+{coverage}:
+  metadata:
+{coverage}:
+  metadata:
+{coverage}:
+  metadata:  
+
+In either option we need to introduce a 
   
-  # NEW: Specificity Score (1-5)
-  # Used by Arbiter: If two models approve, the one with higher specificity wins.
-  # 1 = General/Base, 2 = Segment Specific, 3 = Niche/Bespoke
-  model_specificity: 2
+NEW: Specificity Score (1-5)
+Used by Arbiter: If two models approve, the one with higher specificity wins.
+1 = General/Base, 2 = Segment Specific, 3 = Niche/Bespoke, 4 = ?
+For example, model_specificity: 2
 
-  # NEW: Routing Constraints
-  # Hard filters to optimize candidate selection BEFORE signal execution.
-  # Prevents running "SME" models for "Enterprise" clients.
-  routing_constraints:
-    - field: "revenue"         # Checks input JSON
-      operator: "<"            # <, >, <=, >=, ==
-      value: 50000000          # Threshold
-      required_in_input: false # If false, passes if field is missing
+NEW: Routing Constraints
+Hard filters to optimise candidate selection BEFORE signal execution.
+Prevents running "SME" models for "Enterprise" clients.
+routing_constraints:
+  - field: "revenue"         # Checks input JSON
+    operator: "<"            # <, >, <=, >=, ==
+    value: 50000000          # Threshold
+    required_in_input: false # If false, passes if field is missing
 
 ### 4.3 The Signal Broker (DSIMultiplexer)
 This class is responsible for identifying candidates and optimising signal retrieval.
