@@ -23,7 +23,7 @@ cyber:
     metadata:
       name: "DSI Cyber Technical Pricing Model"
       description: "Cyber liability model based on externally observable technical signals"
-      version: "2.1.0"
+      version: "2.2.0"
       product_types:
         - "cyber_liability"
         - "network_security"
@@ -40,6 +40,10 @@ cyber:
             description: "Requested limit in USD"
       min_premium: 5000
       default_currency: "USD"
+
+      # Multiplexer support (Phase V4)
+      model_specificity: 1                 # General/Base - broad applicability, fallback config
+      routing_constraints: []              # No constraints - accepts all submissions
 
     # =========================================================================
     # DIRECT QUERIES
