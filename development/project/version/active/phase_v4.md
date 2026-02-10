@@ -1,13 +1,7 @@
 # Phase 4: Multi-Configuration Multiplexer
 
-##Context
-The existing process - which loads a coverage / configuration in isolation - requires augmentation. 
-Ultimately, the minimum viable inputs to each configuration are likely to be very similar. But they will differ by product type, applicable markets, signal weights etc.
-So, we need a mechanism that identifies all valid configurations based on a single set of minimum_viable_inputs and then executes those configurations,
-making sure to reuse discovery; signals; and any other relevant items when possible, in parallel.
-This would return multiple results, all of which need to be stored (to enable analysis at a later date, and operating as proxy scenarios to enable model tuning.
-Each of the results would then be compared for applicability, say total % of signals successfully returned - a proxy for model confidence, and overall potential profitability.
-One would be selected and this would move forwards to be bound, declined, or refered.
+## Context
+The existing process - which loads a coverage / configuration in isolation - requires augmentation. Ultimately, the minimum viable inputs to each configuration are likely to be very similar. But they will differ by product type, applicable markets, signal weights etc. So, we need a mechanism that identifies all valid configurations based on a single set of minimum_viable_inputs and then executes those configurations, making sure to reuse discovery; signals; and any other relevant items when possible, in parallel. This would return multiple results, all of which need to be stored (to enable analysis at a later date, and operating as proxy scenarios to enable model tuning. Each of the results would then be compared for applicability, say total % of signals successfully returned - a proxy for model confidence, and overall potential profitability. One would be selected and this would move forwards to be bound, declined, or refered.
 
 ## Purpose
 Implement a **"Signal Broker"** and **"Configuration Multiplexer"** architecture. This mechanism enables the system to dynamically discover all applicable configurations 
