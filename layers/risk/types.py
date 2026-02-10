@@ -1013,6 +1013,12 @@ class WorkflowResult:
     tier_label: str = "STANDARD"
     confidence: float = 1.0
 
+    # Signal completeness (Phase V4 - Multiplexer support)
+    # Ratio of signals returned non-null to signals defined in registry
+    signal_completeness: float = 1.0
+    signals_returned: int = 0
+    signals_defined: int = 0
+
     # Discovery summary (Step 0)
     discovered_domain: Optional[str] = None
     discovery_confidence: Optional[str] = None
