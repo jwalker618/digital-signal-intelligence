@@ -78,7 +78,7 @@ metadata:
 ### 4.3 The Signal Broker (DSIMultiplexer)
 This class is responsible for identifying candidates and optimising signal retrieval.
 
-# technical_pricing/multiplexer/broker.py
+**technical_pricing/multiplexer/broker.py**
 
 ```python
 from typing import List, Dict, Any
@@ -175,7 +175,7 @@ class DSIMultiplexer:
 ### 4.4 The Arbiter (ConfigArbiter)
 This component selects the "Winner" from the list of quote_results.
 
-# technical_pricing/multiplexer/arbiter.py
+**technical_pricing/multiplexer/arbiter.py**
 
 ```python
 from typing import List, Dict
@@ -220,7 +220,7 @@ class ConfigArbiter:
 ### 4.5 Integration into main.py
 The entry point simply changes from initialising one model to initialising the Multiplexer.
 
-# main.py (Updated)
+**main.py (Updated)**
 
 ```python
 async def handle_submission(submission_payload):
@@ -244,7 +244,7 @@ async def handle_submission(submission_payload):
 ### 4.6 Logic Engine Updates
 We must modify the LogicEngine to support Fan-In execution.
 
-# technical_pricing/engine/logic_engine.py
+**technical_pricing/engine/logic_engine.py**
 
 ```python
 class LogicEngine:
