@@ -53,6 +53,7 @@ The new architecture introduces a layer *above* the individual pricing models.
 │                                                       │(Select Best)│   │
 │                                                       └─────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
+```
 
 ### 4.2 Schema Updates (master_config_layout.yaml)
 We must update the metadata section to support arbitration logic.
