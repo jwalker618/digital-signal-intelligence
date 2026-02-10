@@ -12,10 +12,10 @@ Demonstrates:
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from layers.risk.workflow import run_assessment
-from examples.utils import print_full_report
+from demo.examples.utils import print_full_report
 
 
 def run_example():

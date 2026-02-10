@@ -43,13 +43,13 @@ When starting any DSI work:
 | 13 | LLM Builder | ✅ Complete |  `development/project/phase_13.md` |
 | 14 | Examples | ✅ Complete |  `development/project/phase_14.md` |
 | 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
-| 16 | Loss Correlation | 🔲 Not Started |  `development/project/phase_16.md` |
-| 17 | Exposure Shadow Layer | 🔲 Not Started | `development/project/phase_17.md` |
+| 16 | Loss Correlation | ✅ Complete |  `development/project/version/2/phase_p4_e2e_integration_testing.md` |
+| 17 | Exposure Shadow Layer | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
 | 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
-| 19 | DSI Demo Production Build | 🔄 In Progress | `development/project/phase_19.md` |
+| 19 | DSI Demo Production Build | ✅ Complete | `development/project/version/2/phase_p1_fix_broken_fundamentals.md` |
 | 20 | Config Architecture & Org Graph | ✅ Complete | `development/project/phase_20.md` |
-| 21 | Loss Correlation Implementation | 🔲 Not Started | TBD |
-| 22 | Exposure Shadow Implementation | 🔲 Not Started | TBD |
+| 21 | Loss Correlation Implementation | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
+| 22 | Exposure Shadow Implementation | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
 | 23 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` (R8) |
 
 ### DSI Comprehensive Restructure (Complete)
@@ -102,15 +102,15 @@ When starting any DSI work:
 - ✅ score_conditions enforce FLAG|MODIFIER|REFER only (DECLINE tier-level only)
 - ✅ Generated configs match canonical structure: `coverage_id → config_name → {metadata, signal_registry, groups, risk_tier_bands, ...}`
 
-**Validation Status** (January 2026):
+**Validation Status** (February 2026):
 - ✅ All core Python imports validated and working
 - ✅ Signal analytics module fixed (import order corrected)
 - ✅ API schemas complete (country_hint field added)
 - ✅ Configuration YAML syntax errors fixed
 - ✅ Documentation links validated and corrected
 - ✅ 32 API endpoints documented and functional
-- ✅ All 7 demo applications validated
-- ⚠️ Test coverage at ~12.6% (critical modules need unit tests)
+- ✅ All 7 demo applications validated (path fixes applied Feb 2026)
+- ⚠️ Test coverage at ~17% (target: 80%)
 - ✅ 21 inference function name typos fixed across 6 coverage configs
 - ✅ All 7 coverage configs rebuilt to v2.0 structure (banded score_conditions, loss/exposure tier bands, application format)
 - ✅ Cross-coverage structural validation passed (all 7 configs consistent)
@@ -122,6 +122,8 @@ When starting any DSI work:
 - ✅ Model configuration validator: all 7 configs pass validation (0 errors, 0 warnings)
 - ✅ Organisational Graph Runtime: 6 node types, 6 edge types, 5 derivatives, PageRank propagation
 - ✅ Rust dsi-core crate: PageRank, derivatives, validation via PyO3 (release build with LTO)
+- ✅ **Three-Layer Assessment Corrections (Feb 2026)**: All 7 coverage configs updated with proper proxy_tier, correlation_direction, loss/exposure dimensions
+- ✅ **Demo Path Fixes (Feb 2026)**: Fixed sys.path.insert (3 levels) and import paths in all 9 demo files
 
 **Next Steps**: See [Outstanding Work](#outstanding-work) section for consolidated pending, planned, and optional items.
 
@@ -835,6 +837,24 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 
 This section consolidates all pending, optional, and planned work items. Completed items are tracked in their respective phase documents.
 
+### V3 Active Development Plan
+
+The current development plan is defined in `development/project/version/active/`. See `development/project/version/active/README.md` for dependency graph.
+
+| Phase | Name | Status | Priority | Notes |
+|-|-|-|-|-|
+| V3-1 | Test Suite Recovery | 🔲 Not Started | Critical | Fix import paths in test files, add type aliases |
+| V3-2 | Continuous Monitoring Pipeline | 🔲 Not Started | High | TTL-based refresh, delta detection, alert pipeline |
+| V3-3 | LLM Integration for Builder | 🔲 Not Started | Medium | Enhanced LLM prompts for coverage building |
+| V3-4 | Production Signal Extractors | 🔲 Not Started | Medium | Real API integrations (free: security headers, TLS, DNS) |
+| V3-5 | Simulation Engine Foundation | 🔲 Not Started | Medium | Graph snapshots, counterfactual analysis |
+| V3-6 | Release v1.0.0 | 🔲 Not Started | High | Clean baseline for external demonstration |
+
+**V3-1 Blocking Issues (Est. 3-4 hours to fix)**:
+- Import path mismatches: `from analytics import ...` → `from infrastructure.analytics import ...`
+- Type naming: Tests expect `SignalConfig` (use `SignalGroupConfig`)
+- Missing routing bridge implementations
+
 ### Mandatory Pending Items
 
 | Item | Phase | Priority | Notes |
@@ -845,10 +865,12 @@ This section consolidates all pending, optional, and planned work items. Complet
 | ~~Implement Loss Correlation Runtime~~ | 21 | ~~High~~ ✅ | **COMPLETE** (R6) - Loss config adapter, tier band mapping |
 | ~~Implement Exposure Shadow Runtime~~ | 22 | ~~High~~ ✅ | **COMPLETE** (R6) - Exposure scorer, magnitude/band assessment |
 | ~~Implement Organisational Graph Runtime~~ | 23 | ~~Medium~~ ✅ | **COMPLETE** (R8) - Full graph runtime with PageRank + derivatives |
-| Tag v1.0.0 release | 14 | Medium | P1-P7 complete, ready for release tagging |
-| Increase unit test coverage | - | Medium | Target 80%, currently ~12.6% |
+| ~~Three-Layer Assessment Corrections~~ | - | ~~Critical~~ ✅ | **COMPLETE** (Feb 2026) - All 7 configs with proxy_tier, loss/exposure dims |
+| Fix test import paths | V3-1 | Critical | 10 test files with wrong import paths |
+| Increase unit test coverage | V3-1 | High | Target 80%, currently ~17% |
 | Compile Rust dsi_core wheel | P7 | Medium | Run `maturin develop` to activate Rust speedups |
-| Implement paid extractors (Shodan, VirusTotal, D&B) | 15 | Low | See `development/extractor_implementation_plan.md` |
+| Implement paid extractors (Shodan, VirusTotal, D&B) | V3-4 | Low | See `development/extractor_implementation_plan.md` |
+| Tag v1.0.0 release | V3-6 | Medium | After V3-1 test fixes complete |
 
 ### Architecture & Configuration Status
 
@@ -915,6 +937,27 @@ Based on retrospective analysis of major insurance losses (2019-2024). See `deve
 | 2 | Aerospace | Certification transparency, supply chain quality | Boeing 737 MAX analysis |
 | 3 | Cross-Coverage | Real-time regulatory monitoring | SVB, BP Deepwater analysis |
 
+### Inference Functions Reference
+
+All inference functions follow the pattern `{signal_name}_basefunction` and are registered via `@register_inference_function()` decorator.
+
+**Source Locations by Coverage:**
+
+| Coverage | Source File | Functions |
+|-|-|-|
+| Aerospace | `signal_architecture/signals/inference/functions/aerospace/signals.py` | 40+ |
+| Cyber | `signal_architecture/signals/inference/functions/cyber/signals.py` | 50+ |
+| D&O | `signal_architecture/signals/inference/functions/do/signals.py` | 48 |
+| Energy | `signal_architecture/signals/inference/functions/energy/signals.py` | 45+ |
+| FI | `signal_architecture/signals/inference/functions/fi/signals.py` | 50+ |
+| Marine | `signal_architecture/signals/inference/functions/marine/signals.py` | 50+ |
+| PI | `signal_architecture/signals/inference/functions/pi/signals.py` | 60+ |
+| Cross-coverage | `signal_architecture/signals/inference/functions/cross_coverage/signals.py` | Shared |
+
+**Infrastructure:**
+- **Registry**: `signal_architecture/signals/inference/registry.py` - `register_inference_function()`, `get_inference_function()`, `list_inference_functions()`
+- **Metadata**: `signal_architecture/signals/inference/metadata_registry.py` - Signal metadata with proxy tiers, TTLs, extractors
+
 ### Reference Documents
 
 | Document | Location | Purpose |
@@ -923,3 +966,4 @@ Based on retrospective analysis of major insurance losses (2019-2024). See `deve
 | Signal Mapping | `development/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
 | Retrospective Case Studies | `development/retrospective_case_study_detail.md` | Comprehensive loss analysis |
 | Client Assessment Samples | `development/client_assessment_samples.md` | Real-world assessment examples |
+| Completeness Assessment | `development/project/version/active/completeness_assessment.md` | Whitepaper/Vision paper delivery status |
