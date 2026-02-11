@@ -248,6 +248,325 @@ class TestConstraintEvaluation:
 
 
 # =============================================================================
+# Phase V4.1: Enhanced Constraint Tests
+# =============================================================================
+
+class TestConstraintTypeCoercion:
+    """Tests for type coercion in constraint evaluation (Phase V4.1)."""
+
+    def test_string_to_number_coercion(self, multiplexer):
+        """Test that string values are coerced to numbers for comparison."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.LTE,
+                value=50000000,  # int target
+            )
+        ]
+
+        # String input should be coerced to float for comparison
+        assert multiplexer._check_constraints(constraints, {"revenue": "40000000"})
+        assert multiplexer._check_constraints(constraints, {"revenue": "50000000"})
+        assert not multiplexer._check_constraints(constraints, {"revenue": "60000000"})
+
+    def test_number_to_string_target_coercion(self, multiplexer):
+        """Test that string target values are coerced to numbers."""
+        constraints = [
+            RoutingConstraint(
+                field="limit",
+                operator=ConstraintOperator.GT,
+                value="5000000",  # string target
+            )
+        ]
+
+        # Numeric input with string target
+        assert multiplexer._check_constraints(constraints, {"limit": 10000000})
+        assert not multiplexer._check_constraints(constraints, {"limit": 5000000})
+        assert not multiplexer._check_constraints(constraints, {"limit": 1000000})
+
+    def test_invalid_string_conversion_fails(self, multiplexer):
+        """Test that invalid string conversion fails safely."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.LT,
+                value=50000000,
+            )
+        ]
+
+        # Non-numeric string should fail
+        assert not multiplexer._check_constraints(constraints, {"revenue": "not_a_number"})
+        assert not multiplexer._check_constraints(constraints, {"revenue": "fifty million"})
+
+    def test_float_coercion_precision(self, multiplexer):
+        """Test float coercion handles decimal values."""
+        constraints = [
+            RoutingConstraint(
+                field="rate",
+                operator=ConstraintOperator.LTE,
+                value=0.05,
+            )
+        ]
+
+        assert multiplexer._check_constraints(constraints, {"rate": "0.03"})
+        assert multiplexer._check_constraints(constraints, {"rate": "0.05"})
+        assert not multiplexer._check_constraints(constraints, {"rate": "0.06"})
+
+
+class TestConstraintBoundaryValues:
+    """Tests for boundary value handling in constraints (Phase V4.1)."""
+
+    def test_less_than_or_equal_boundary(self, multiplexer):
+        """Test <= constraint at exact boundary."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.LTE,
+                value=50000000,
+            )
+        ]
+
+        # At boundary
+        assert multiplexer._check_constraints(constraints, {"revenue": 50000000})
+        # Just below
+        assert multiplexer._check_constraints(constraints, {"revenue": 49999999})
+        # Just above
+        assert not multiplexer._check_constraints(constraints, {"revenue": 50000001})
+
+    def test_greater_than_or_equal_boundary(self, multiplexer):
+        """Test >= constraint at exact boundary."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.GTE,
+                value=50000000,
+            )
+        ]
+
+        # At boundary
+        assert multiplexer._check_constraints(constraints, {"revenue": 50000000})
+        # Just above
+        assert multiplexer._check_constraints(constraints, {"revenue": 50000001})
+        # Just below
+        assert not multiplexer._check_constraints(constraints, {"revenue": 49999999})
+
+    def test_less_than_boundary(self, multiplexer):
+        """Test < constraint at exact boundary."""
+        constraints = [
+            RoutingConstraint(
+                field="limit",
+                operator=ConstraintOperator.LT,
+                value=5000000,
+            )
+        ]
+
+        # At boundary (should fail for strict <)
+        assert not multiplexer._check_constraints(constraints, {"limit": 5000000})
+        # Just below
+        assert multiplexer._check_constraints(constraints, {"limit": 4999999})
+        # Just above
+        assert not multiplexer._check_constraints(constraints, {"limit": 5000001})
+
+    def test_greater_than_boundary(self, multiplexer):
+        """Test > constraint at exact boundary."""
+        constraints = [
+            RoutingConstraint(
+                field="employees",
+                operator=ConstraintOperator.GT,
+                value=1000,
+            )
+        ]
+
+        # At boundary (should fail for strict >)
+        assert not multiplexer._check_constraints(constraints, {"employees": 1000})
+        # Just above
+        assert multiplexer._check_constraints(constraints, {"employees": 1001})
+        # Just below
+        assert not multiplexer._check_constraints(constraints, {"employees": 999})
+
+
+class TestConstraintOperators:
+    """Tests for all constraint operators (Phase V4.1)."""
+
+    def test_equality_operator(self, multiplexer):
+        """Test == operator for exact matches."""
+        constraints = [
+            RoutingConstraint(
+                field="industry",
+                operator=ConstraintOperator.EQ,
+                value="tech",
+            )
+        ]
+
+        assert multiplexer._check_constraints(constraints, {"industry": "tech"})
+        assert not multiplexer._check_constraints(constraints, {"industry": "healthcare"})
+        assert not multiplexer._check_constraints(constraints, {"industry": "TECH"})  # Case sensitive
+
+    def test_not_equal_operator(self, multiplexer):
+        """Test != operator for exclusion."""
+        constraints = [
+            RoutingConstraint(
+                field="status",
+                operator=ConstraintOperator.NEQ,
+                value="blocked",
+            )
+        ]
+
+        assert multiplexer._check_constraints(constraints, {"status": "active"})
+        assert multiplexer._check_constraints(constraints, {"status": "pending"})
+        assert not multiplexer._check_constraints(constraints, {"status": "blocked"})
+
+    def test_numeric_equality(self, multiplexer):
+        """Test == operator with numeric values."""
+        constraints = [
+            RoutingConstraint(
+                field="tier",
+                operator=ConstraintOperator.EQ,
+                value=2,
+            )
+        ]
+
+        assert multiplexer._check_constraints(constraints, {"tier": 2})
+        assert not multiplexer._check_constraints(constraints, {"tier": 1})
+        assert not multiplexer._check_constraints(constraints, {"tier": 3})
+
+
+class TestMultipleConstraints:
+    """Tests for multiple constraint evaluation (AND logic) (Phase V4.1)."""
+
+    def test_multiple_constraints_all_pass(self, multiplexer):
+        """Test that all constraints must pass (AND logic)."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.LTE,
+                value=50000000,
+            ),
+            RoutingConstraint(
+                field="limit",
+                operator=ConstraintOperator.LTE,
+                value=5000000,
+            ),
+        ]
+
+        # Both pass
+        assert multiplexer._check_constraints(
+            constraints, {"revenue": 40000000, "limit": 3000000}
+        )
+        # Both at boundary
+        assert multiplexer._check_constraints(
+            constraints, {"revenue": 50000000, "limit": 5000000}
+        )
+
+    def test_multiple_constraints_one_fails(self, multiplexer):
+        """Test that if any constraint fails, the check fails."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.LTE,
+                value=50000000,
+            ),
+            RoutingConstraint(
+                field="limit",
+                operator=ConstraintOperator.LTE,
+                value=5000000,
+            ),
+        ]
+
+        # First fails
+        assert not multiplexer._check_constraints(
+            constraints, {"revenue": 60000000, "limit": 3000000}
+        )
+        # Second fails
+        assert not multiplexer._check_constraints(
+            constraints, {"revenue": 40000000, "limit": 10000000}
+        )
+        # Both fail
+        assert not multiplexer._check_constraints(
+            constraints, {"revenue": 60000000, "limit": 10000000}
+        )
+
+    def test_multiple_constraints_mixed_required(self, multiplexer):
+        """Test multiple constraints with different required_in_input settings."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.LTE,
+                value=50000000,
+                required_in_input=True,  # Required
+            ),
+            RoutingConstraint(
+                field="employees",
+                operator=ConstraintOperator.LTE,
+                value=500,
+                required_in_input=False,  # Optional
+            ),
+        ]
+
+        # Both present and pass
+        assert multiplexer._check_constraints(
+            constraints, {"revenue": 40000000, "employees": 200}
+        )
+        # Only required present
+        assert multiplexer._check_constraints(
+            constraints, {"revenue": 40000000}
+        )
+        # Required missing - fails
+        assert not multiplexer._check_constraints(
+            constraints, {"employees": 200}
+        )
+        # Both present, one fails
+        assert not multiplexer._check_constraints(
+            constraints, {"revenue": 40000000, "employees": 1000}
+        )
+
+    def test_empty_constraints_always_passes(self, multiplexer):
+        """Test that empty constraint list always passes."""
+        assert multiplexer._check_constraints([], {})
+        assert multiplexer._check_constraints([], {"revenue": 100000000})
+
+    def test_three_constraint_chain(self, multiplexer):
+        """Test chain of three constraints mimicking SME model profile."""
+        constraints = [
+            RoutingConstraint(
+                field="revenue",
+                operator=ConstraintOperator.LTE,
+                value=50000000,
+                required_in_input=True,
+            ),
+            RoutingConstraint(
+                field="limit",
+                operator=ConstraintOperator.LTE,
+                value=5000000,
+                required_in_input=True,
+            ),
+            RoutingConstraint(
+                field="employees",
+                operator=ConstraintOperator.LTE,
+                value=500,
+                required_in_input=False,
+            ),
+        ]
+
+        # Perfect SME candidate
+        assert multiplexer._check_constraints(
+            constraints, {"revenue": 25000000, "limit": 2000000, "employees": 100}
+        )
+        # SME candidate without optional field
+        assert multiplexer._check_constraints(
+            constraints, {"revenue": 25000000, "limit": 2000000}
+        )
+        # Too large (revenue exceeds)
+        assert not multiplexer._check_constraints(
+            constraints, {"revenue": 75000000, "limit": 2000000, "employees": 100}
+        )
+        # Missing required field
+        assert not multiplexer._check_constraints(
+            constraints, {"revenue": 25000000, "employees": 100}
+        )
+
+
+# =============================================================================
 # ConfigArbiter Tests
 # =============================================================================
 

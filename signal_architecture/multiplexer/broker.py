@@ -1,12 +1,15 @@
 """
-DSI Signal Broker / Multiplexer (Phase V4)
+DSI Signal Broker / Multiplexer (Phase V4 + V4.1)
 
 Implements the "Race-Track" model for multi-configuration evaluation.
 Identifies candidates, deduplicates signals, executes once, fans out results.
+
+Phase V4.1 adds robust routing constraint evaluation with type safety.
 """
 
 import asyncio
 import logging
+import operator
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
@@ -24,6 +27,17 @@ from .types import (
 
 
 logger = logging.getLogger("dsi.multiplexer")
+
+
+# Operator mapping for constraint evaluation (Phase V4.1)
+CONSTRAINT_OPS = {
+    ConstraintOperator.LT: operator.lt,
+    ConstraintOperator.GT: operator.gt,
+    ConstraintOperator.LTE: operator.le,
+    ConstraintOperator.GTE: operator.ge,
+    ConstraintOperator.EQ: operator.eq,
+    ConstraintOperator.NEQ: operator.ne,
+}
 
 
 class DSIMultiplexer:
@@ -416,27 +430,63 @@ class DSIMultiplexer:
         constraints: List[RoutingConstraint],
         user_input: Dict[str, Any],
     ) -> bool:
-        """Evaluate all routing constraints against input."""
+        """
+        Evaluate all routing constraints against input (Phase V4.1 enhanced).
+
+        Handles:
+        - Missing fields (based on required_in_input flag)
+        - Type coercion (string to numeric conversion)
+        - All comparison operators via operator module
+
+        Returns True if ALL constraints pass, False if ANY fails.
+        """
+        if not constraints:
+            return True
+
         for c in constraints:
+            # 1. Handle Missing Fields
             if c.field not in user_input:
                 if c.required_in_input:
+                    # Strict fail: The model NEEDS this field to decide
+                    logger.debug(
+                        f"Constraint failed: required field '{c.field}' missing"
+                    )
                     return False
-                continue
+                else:
+                    # Permissive pass: Field missing, but rule not strict
+                    continue
 
-            val = user_input[c.field]
-            target = c.value
+            # 2. Extract Values
+            actual_val = user_input[c.field]
+            target_val = c.value
 
-            if c.operator == ConstraintOperator.LT and not (val < target):
+            # 3. Type Safety / Conversion
+            # Ensure we don't crash comparing "500" (str) > 100 (int)
+            try:
+                if isinstance(target_val, (int, float)) and isinstance(actual_val, str):
+                    actual_val = float(actual_val)
+                elif isinstance(actual_val, (int, float)) and isinstance(target_val, str):
+                    target_val = float(target_val)
+            except (ValueError, TypeError) as e:
+                # If conversion fails, we can't evaluate mathematical ops
+                # Default to Fail for safety
+                logger.warning(
+                    f"Constraint type conversion failed for field '{c.field}': {e}"
+                )
                 return False
-            if c.operator == ConstraintOperator.GT and not (val > target):
+
+            # 4. Evaluate Operator
+            op_func = CONSTRAINT_OPS.get(c.operator)
+            if not op_func:
+                # Configuration Error: Unknown operator
+                logger.warning(f"Unknown constraint operator: {c.operator}")
                 return False
-            if c.operator == ConstraintOperator.LTE and not (val <= target):
-                return False
-            if c.operator == ConstraintOperator.GTE and not (val >= target):
-                return False
-            if c.operator == ConstraintOperator.EQ and not (val == target):
-                return False
-            if c.operator == ConstraintOperator.NEQ and not (val != target):
+
+            if not op_func(actual_val, target_val):
+                logger.debug(
+                    f"Constraint failed: {c.field} ({actual_val}) "
+                    f"{c.operator.value} {target_val}"
+                )
                 return False
 
         return True

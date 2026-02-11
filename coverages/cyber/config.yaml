@@ -1164,3 +1164,316 @@ cyber:
 
       # Shared across all product types
       taxes_fees_rate: 0.05
+
+  # ===========================================================================
+  # CYBER SME CONFIGURATION (Phase V4.1)
+  # Targeted at small/medium businesses with revenue <= $50M, limits <= $5M
+  # Higher specificity (2) means this config wins over cyber_general when
+  # submission matches the routing constraints.
+  # ===========================================================================
+  cyber_sme:
+    metadata:
+      name: "DSI Cyber SME Automated Pricing Model"
+      description: "Cyber liability model for SME segment - automated underwriting for small businesses"
+      version: "2.2.0"
+      product_types:
+        - "cyber_liability"
+        - "network_security"
+      applicable_markets: ["us", "uk"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: cyber_liability, network_security"
+          - field: "limit"
+            description: "Requested limit in USD (max $5M for SME)"
+          - field: "revenue"
+            description: "Annual revenue in USD (required for SME qualification)"
+      min_premium: 2500
+      default_currency: "USD"
+
+      # Multiplexer support (Phase V4.1)
+      model_specificity: 2               # Segment-Specific - wins over cyber_general
+      routing_constraints:
+        - field: "revenue"
+          operator: "<="
+          value: 50000000                # Revenue <= $50M
+          required_in_input: true        # Must provide revenue to qualify
+        - field: "limit"
+          operator: "<="
+          value: 5000000                 # Limit <= $5M
+          required_in_input: true        # Must provide limit to qualify
+
+    # =========================================================================
+    # DIRECT QUERIES - Simplified for SME (max 5)
+    # =========================================================================
+    direct_queries:
+      - id: "mfa_enabled"
+        question: "Is multi-factor authentication enabled for all remote access?"
+        query_condition:
+          - {return: false, action: "REFER", override: 4, applied: null, note: "MFA not enabled - increased ransomware risk"}
+
+      - id: "backup_frequency"
+        question: "Are critical systems backed up at least weekly with offline copies?"
+        query_condition:
+          - {return: false, action: "MODIFIER", override: null, applied: 1.15, note: "Inadequate backup practices"}
+
+    # =========================================================================
+    # SIGNAL REGISTRY - Core signals for SME (simplified subset)
+    # SME focuses on fundamental security hygiene rather than advanced controls
+    # =========================================================================
+    signal_registry:
+      # Network Authority - Who trusts this entity
+      - id: "industry_classification"
+        inference_utility_function: industry_classification_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        categories:
+          group_id: industry_classification
+          source: metadata.industry_code
+          features:
+            - {cat: "TECH", label: "Technology", applied: 1.15}
+            - {cat: "HEALTHCARE", label: "Healthcare", applied: 1.25}
+            - {cat: "RETAIL", label: "Retail", applied: 1.10}
+            - {cat: "SERVICES", label: "Professional Services", applied: 1.00}
+            - {cat: "MANUFACTURING", label: "Manufacturing", applied: 0.95}
+            - {cat: "OTHER", label: "Other", applied: 1.00}
+
+      - id: "company_size"
+        inference_utility_function: company_size_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        categories:
+          group_id: company_size
+          source: metadata.employee_band
+          features:
+            - {cat: "MICRO", label: "1-10 employees", applied: 0.85}
+            - {cat: "SMALL", label: "11-50 employees", applied: 0.95}
+            - {cat: "MEDIUM", label: "51-250 employees", applied: 1.10}
+
+      # Technical Infrastructure - Core security posture
+      - id: "tls_configuration"
+        inference_utility_function: tls_configuration_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: technical_security
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent TLS configuration"}
+              - {threshold: 75, comparison: ">=", action: "FLAG", note: "Weak TLS configuration"}
+          loss:
+            frequency: {correlation_direction: positive, weight: 0.25}
+            severity: {correlation_direction: positive, weight: 0.20}
+          exposure:
+            size: {correlation_direction: positive, weight: 0.15}
+            complexity: {correlation_direction: positive, weight: 0.10}
+
+      - id: "email_authentication"
+        inference_utility_function: email_authentication_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: technical_security
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "MODIFIER", applied: 0.92, note: "Strong email authentication (SPF/DKIM/DMARC)"}
+              - {threshold: 80, comparison: ">=", action: "REFER", override: 4, note: "Missing email authentication - high phishing risk"}
+          loss:
+            frequency: {correlation_direction: positive, weight: 0.30}
+            severity: {correlation_direction: positive, weight: 0.15}
+          exposure:
+            size: {correlation_direction: positive, weight: 0.10}
+            complexity: {correlation_direction: positive, weight: 0.10}
+
+      - id: "security_headers"
+        inference_utility_function: security_headers_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: technical_security
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+          loss:
+            frequency: {correlation_direction: positive, weight: 0.20}
+            severity: {correlation_direction: positive, weight: 0.15}
+          exposure:
+            size: {correlation_direction: positive, weight: 0.10}
+            complexity: {correlation_direction: positive, weight: 0.10}
+
+      # Public Record - Historical incidents
+      - id: "breach_history"
+        inference_utility_function: breach_history_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: public_record
+          risk:
+            correlation_direction: negative
+            weight: 0.50
+            score_conditions:
+              - {threshold: 70, comparison: ">=", action: "REFER", override: 4, note: "Prior breach history"}
+          loss:
+            frequency: {correlation_direction: negative, weight: 0.40}
+            severity: {correlation_direction: negative, weight: 0.35}
+          exposure:
+            size: {correlation_direction: negative, weight: 0.15}
+            complexity: {correlation_direction: negative, weight: 0.10}
+
+      - id: "security_rating"
+        inference_utility_function: security_rating_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: public_record
+          risk:
+            correlation_direction: positive
+            weight: 0.50
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "MODIFIER", applied: 0.88, note: "Excellent security rating"}
+              - {threshold: 75, comparison: ">=", action: "FLAG", note: "Poor security rating"}
+          loss:
+            frequency: {correlation_direction: positive, weight: 0.25}
+            severity: {correlation_direction: positive, weight: 0.20}
+          exposure:
+            size: {correlation_direction: positive, weight: 0.15}
+            complexity: {correlation_direction: positive, weight: 0.10}
+
+    # =========================================================================
+    # GROUPS - SME simplified structure
+    # =========================================================================
+    groups:
+      categories:
+        - id: industry_classification
+          label: "Industry Classification"
+          description: "Industry-based risk modifier"
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: company_size
+          label: "Company Size"
+          description: "Employee count band"
+          impact: "MODIFIER"
+          default_cat: "SMALL"
+
+      three_layer_assessment:
+        - id: technical_security
+          label: "Technical Security"
+          description: "Core security posture signals"
+          risk: {weight: 0.60}
+          loss: {weight: 0.55}
+          exposure: {weight: 0.45}
+
+        - id: public_record
+          label: "Public Record"
+          description: "Historical incidents and ratings"
+          risk: {weight: 0.40}
+          loss: {weight: 0.45}
+          exposure: {weight: 0.55}
+
+    # =========================================================================
+    # TIER BANDS - SME optimized for smaller limits
+    # =========================================================================
+    risk_tier_bands:
+      bands:
+        - id: 1
+          label: "PREFERRED"
+          description: "Excellent risk - automated approval"
+          interpretation:
+            bands: {min: 0, max: 250}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 1500}
+
+        - id: 2
+          label: "STANDARD_PLUS"
+          description: "Good risk - automated approval"
+          interpretation:
+            bands: {min: 251, max: 450}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 2500}
+
+        - id: 3
+          label: "STANDARD"
+          description: "Average risk - automated approval"
+          interpretation:
+            bands: {min: 451, max: 650}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 4000}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          description: "Elevated risk - requires review"
+          interpretation:
+            bands: {min: 651, max: 850}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 6500}
+
+        - id: 5
+          label: "DECLINE"
+          description: "Unacceptable risk"
+          interpretation:
+            bands: {min: 851, max: 1000}
+            action: "DECLINE"
+            application: {method: "PREMIUM_BASE", value: 0}
+
+    loss_tier_bands:
+      bands:
+        - {id: 1, label: "VERY_LOW", interpretation: {bands: {min: 0, max: 200}, application: {frequency_modifier: 0.80, severity_modifier: 0.85}}}
+        - {id: 2, label: "LOW", interpretation: {bands: {min: 201, max: 400}, application: {frequency_modifier: 0.90, severity_modifier: 0.92}}}
+        - {id: 3, label: "MODERATE", interpretation: {bands: {min: 401, max: 600}, application: {frequency_modifier: 1.00, severity_modifier: 1.00}}}
+        - {id: 4, label: "HIGH", interpretation: {bands: {min: 601, max: 800}, application: {frequency_modifier: 1.15, severity_modifier: 1.20}}}
+        - {id: 5, label: "VERY_HIGH", interpretation: {bands: {min: 801, max: 1000}, application: {frequency_modifier: 1.35, severity_modifier: 1.45}}}
+      constraints: {floor: 0.70, cap: 1.60}
+
+    exposure:
+      size:
+        weight: 0.55
+        bands:
+          - {id: 1, label: "MICRO", interpretation: {bands: {min: 0, max: 200}, application: {method: "MODIFIER", applied: 0.75}, implied_thresholds: {min: null, max: 1000000}}}
+          - {id: 2, label: "SMALL", interpretation: {bands: {min: 201, max: 500}, application: {method: "MODIFIER", applied: 0.90}, implied_thresholds: {min: 1000001, max: 5000000}}}
+          - {id: 3, label: "MEDIUM", interpretation: {bands: {min: 501, max: 800}, application: {method: "MODIFIER", applied: 1.05}, implied_thresholds: {min: 5000001, max: 25000000}}}
+          - {id: 4, label: "LARGE", interpretation: {bands: {min: 801, max: 1000}, application: {method: "MODIFIER", applied: 1.25}, implied_thresholds: {min: 25000001, max: 50000000}}}
+      complexity:
+        weight: 0.45
+        bands:
+          - {id: 1, label: "SIMPLE", interpretation: {bands: {min: 0, max: 300}, application: {method: "MODIFIER", applied: 0.90}}}
+          - {id: 2, label: "MODERATE", interpretation: {bands: {min: 301, max: 600}, application: {method: "MODIFIER", applied: 1.00}}}
+          - {id: 3, label: "COMPLEX", interpretation: {bands: {min: 601, max: 1000}, application: {method: "MODIFIER", applied: 1.15}}}
+
+    limit_bandings:
+      - {id: 1, limit: 250000, deductible: 2500}
+      - {id: 2, limit: 500000, deductible: 5000}
+      - {id: 3, limit: 1000000, deductible: 10000}
+      - {id: 4, limit: 2000000, deductible: 15000}
+      - {id: 5, limit: 5000000, deductible: 25000}
+
+    pricing:
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.45}
+              - {limit: 500000, factor: 0.70}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 5000000, factor: 2.80}
+          deductible_credits:
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
+            - {min_pct: 0.020, max_pct: null, credit: 0.15}
+
+        network_security:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.50}
+              - {limit: 500000, factor: 0.75}
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.70}
+              - {limit: 5000000, factor: 2.90}
+          deductible_credits:
+            - {min_pct: 0.005, max_pct: 0.010, credit: 0.05}
+            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
+            - {min_pct: 0.020, max_pct: null, credit: 0.15}
+
+      taxes_fees_rate: 0.05
