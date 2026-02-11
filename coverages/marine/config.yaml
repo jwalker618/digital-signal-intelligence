@@ -23,7 +23,7 @@ marine:
     metadata:
       name: "DSI Marine Technical Pricing Model"
       description: "Marine hull and liability coverage based on observable operator behavior, safety records, and fleet patterns"
-      version: "2.1.0"
+      version: "2.2.0"
       product_types:
         - "hull_machinery"
         - "total_loss"

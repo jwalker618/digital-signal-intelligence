@@ -23,7 +23,7 @@ aerospace:
     metadata:
       name: "DSI Aerospace Insurance Model"
       description: "Aviation hull and liability coverage based on observable safety and operational signals"
-      version: "2.1.0"
+      version: "2.2.0"
       product_types:
         - "aviation_hull"
         - "aviation_liability"
@@ -41,6 +41,9 @@ aerospace:
             description: "Total hull value in USD"
       min_premium: 25000
       default_currency: "USD"
+      # MULTIPLEXER SUPPORT (Phase V4)
+      model_specificity: 1  # General/Base model - broad applicability
+      routing_constraints: []  # No restrictions - accepts all submissions
 
     # =========================================================================
     # DIRECT QUERIES
@@ -1196,4 +1199,655 @@ aerospace:
             - {min_pct: 0.050, max_pct: null, credit: 0.19}
 
       # Shared across all product types
+      taxes_fees_rate: 0.05
+
+  # ===========================================================================
+  # AEROSPACE SME - Small/Medium Enterprise Segment
+  # ===========================================================================
+  # Target: Smaller operators with hull value under $50M
+  # Routing: hull_value <= $50M, limit <= $10M
+  # Specificity: 2 (more specific than general)
+  # ===========================================================================
+  aerospace_sme:
+    metadata:
+      name: "DSI Aerospace SME Model"
+      description: "Aviation coverage for small/medium operators with hull value under $50M"
+      version: "2.2.0"
+      product_types:
+        - "aviation_hull"
+        - "aviation_liability"
+        - "aviation_hull_liability_combined"
+      applicable_markets: ["us", "uk", "eu", "apac", "latam", "mea"]
+      minimum_viable_input:
+        required:
+          - field: "client_name"
+            description: "Client name (domain optional for discovery)"
+          - field: "product_type"
+            description: "One of: aviation_hull, aviation_liability, aviation_hull_liability_combined"
+          - field: "limit"
+            description: "Requested limit in USD"
+          - field: "hull_value"
+            description: "Total hull value in USD"
+      min_premium: 15000
+      default_currency: "USD"
+      # MULTIPLEXER SUPPORT (Phase V4)
+      model_specificity: 2  # Segment-Specific - SME operators
+      routing_constraints:
+        - field: "hull_value"
+          operator: "<="
+          value: 50000000
+          required_in_input: true
+        - field: "limit"
+          operator: "<="
+          value: 10000000
+          required_in_input: true
+
+    direct_queries:
+      - id: "pending_claims"
+        question: "Are there any pending aviation liability claims exceeding $500K?"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Pending claims >$500K"}
+
+      - id: "regulatory_action"
+        question: "Is there any pending regulatory enforcement action against the operator?"
+        query_condition:
+          - {return: true, action: "REFER", override: 5, applied: null, note: "Pending regulatory enforcement"}
+
+      - id: "coverage_declined"
+        question: "Has aviation coverage been declined or non-renewed in the past 3 years?"
+        query_condition:
+          - {return: true, action: "REFER", override: 5, applied: null, note: "Prior declination"}
+
+      - id: "fleet_change"
+        question: "Are there planned fleet changes exceeding 30% in the next 12 months?"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Major fleet change planned"}
+
+      - id: "route_expansion"
+        question: "Is there planned expansion into conflict zones or sanctioned regions?"
+        query_condition:
+          - {return: true, action: "REFER", override: 4, applied: null, note: "Conflict zone expansion"}
+
+      - id: "ownership_change"
+        question: "Has there been a change in majority ownership in the past 12 months?"
+        query_condition:
+          - {return: true, action: "REFER", override: 3, applied: null, note: "Recent ownership change"}
+
+    signal_registry:
+      - id: operator_type
+        inference_utility_function: operatortype_basefunction
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: operator_type
+          source: metadata.operator_type
+          features:
+            - {cat: "CHARTER_OPERATOR", label: "Charter Operator", applied: 1.15}
+            - {cat: "CORPORATE_FLIGHT", label: "Corporate Flight Department", applied: 1.05}
+            - {cat: "HELICOPTER_OPERATOR", label: "Helicopter Operator", applied: 1.30}
+            - {cat: "FLIGHT_SCHOOL", label: "Flight Training Organization", applied: 1.40}
+            - {cat: "PRIVATE_OWNER", label: "Private Owner/Operator", applied: 1.25}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
+
+      - id: fleet_category
+        inference_utility_function: fleetcategory_basefunction
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: fleet_category
+          source: metadata.fleet_category
+          features:
+            - {cat: "TURBOPROP", label: "Turboprop", applied: 0.95}
+            - {cat: "BUSINESS_JET", label: "Business Jet", applied: 1.10}
+            - {cat: "HELICOPTER", label: "Helicopter", applied: 1.25}
+            - {cat: "PISTON", label: "Piston Aircraft", applied: 1.15}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
+
+      - id: fleet_size
+        inference_utility_function: fleetsize_basefunction
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: fleet_size
+          source: metadata.fleet_size
+          features:
+            - {cat: "SINGLE", label: "Single Aircraft", applied: 1.20}
+            - {cat: "MICRO", label: "Micro Fleet (2-5)", applied: 1.10}
+            - {cat: "SMALL", label: "Small Fleet (6-20)", applied: 1.00}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
+
+      - id: regulatory_framework
+        inference_utility_function: regulatoryframework_basefunction
+        proxy_tier: INFERRED_PROXY
+        categories:
+          group_id: regulatory_framework
+          source: metadata.regulatory_framework
+          features:
+            - {cat: "FAA", label: "FAA (United States)", applied: 1.00}
+            - {cat: "EASA", label: "EASA (European Union)", applied: 1.00}
+            - {cat: "CAA_UK", label: "CAA (United Kingdom)", applied: 1.00}
+            - {cat: "TCCA", label: "TCCA (Canada)", applied: 1.00}
+            - {cat: "CASA", label: "CASA (Australia)", applied: 1.05}
+            - {cat: "OTHER_ICAO", label: "Other ICAO Compliant", applied: 1.15}
+            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
+
+      - id: "accident_history"
+        inference_utility_function: accident_history_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe accident history"}
+              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Material accident history"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.35
+            severity:
+              correlation_direction: positive
+              weight: 0.40
+
+      - id: "incident_history"
+        inference_utility_function: incident_history_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+
+      - id: "fatality_history"
+        inference_utility_function: fatality_history_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Recent fatal accidents"}
+          loss:
+            severity:
+              correlation_direction: positive
+              weight: 0.45
+
+      - id: "investigation_findings"
+        inference_utility_function: investigation_finding_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: safety_record
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
+      - id: "certificate_status"
+        inference_utility_function: certificate_status_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Certificate at risk"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Certificate concerns"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+
+      - id: "enforcement_actions"
+        inference_utility_function: enforcement_action_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Severe enforcement history"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Material enforcement actions"}
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+
+      - id: "ramp_inspection"
+        inference_utility_function: ramp_inspection_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.20
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.20
+
+      - id: "state_safety_rating"
+        inference_utility_function: state_safety_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: regulatory_compliance
+          risk:
+            correlation_direction: positive
+            weight: 0.15
+
+      - id: "crew_experience"
+        inference_utility_function: crew_experience_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+            severity:
+              correlation_direction: positive
+              weight: 0.20
+
+      - id: "training_indicators"
+        inference_utility_function: training_indicators_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.30
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+
+      - id: "operational_complexity"
+        inference_utility_function: operational_complexity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: negative
+            weight: 0.20
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.20
+
+      - id: "growth_rate"
+        inference_utility_function: growth_rate_basefunction
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer_assessment:
+          group_id: operational_quality
+          risk:
+            correlation_direction: negative
+            weight: 0.15
+          exposure:
+            size:
+              correlation_direction: positive
+              weight: 0.20
+
+      - id: "fleet_age"
+        inference_utility_function: fleet_age_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: negative
+            weight: 0.40
+          loss:
+            frequency:
+              correlation_direction: negative
+              weight: 0.30
+            severity:
+              correlation_direction: negative
+              weight: 0.20
+
+      - id: "fleet_homogeneity"
+        inference_utility_function: fleet_homogeneity_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.15
+
+      - id: "maintenance_indicators"
+        inference_utility_function: maintenance_indicators_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: fleet_quality
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+
+      - id: "management_stability"
+        inference_utility_function: management_stability_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.40
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.25
+
+      - id: "safety_leadership"
+        inference_utility_function: safety_leadership_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.35
+          loss:
+            frequency:
+              correlation_direction: positive
+              weight: 0.30
+            severity:
+              correlation_direction: positive
+              weight: 0.20
+
+      - id: "corporate_structure"
+        inference_utility_function: corporate_structure_basefunction
+        proxy_tier: INFERRED_PROXY
+        three_layer_assessment:
+          group_id: corporate_governance
+          risk:
+            correlation_direction: positive
+            weight: 0.25
+
+    groups:
+      categories:
+        - id: "operator_type"
+          label: "Operator Type"
+          description: "SME operator classification"
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "fleet_category"
+          label: "Fleet Category"
+          description: "SME fleet type"
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "fleet_size"
+          label: "Fleet Size"
+          description: "SME fleet size bands"
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+        - id: "regulatory_framework"
+          label: "Regulatory Framework"
+          description: ""
+          impact: "MODIFIER"
+          default_cat: "OTHER"
+
+      three_layer_assessment:
+        - id: "safety_record"
+          label: "Safety Record"
+          description: "Historical safety performance"
+          risk:
+            weight: 0.35
+            score_conditions:
+              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Unacceptable safety record"}
+              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant safety concerns"}
+
+        - id: "regulatory_compliance"
+          label: "Regulatory Compliance"
+          description: "Certificate and enforcement status"
+          risk:
+            weight: 0.25
+            score_conditions:
+              - {threshold: 35, comparison: "<=", action: "REFER", override: 5, note: "Severe regulatory deficiencies"}
+              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Material regulatory concerns"}
+
+        - id: "operational_quality"
+          label: "Operational Quality"
+          description: "Crew and operational standards"
+          risk:
+            weight: 0.20
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent operational quality"}
+
+        - id: "fleet_quality"
+          label: "Fleet Quality"
+          description: "Aircraft condition and maintenance"
+          risk:
+            weight: 0.15
+            score_conditions:
+              - {threshold: 25, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent fleet quality"}
+
+        - id: "corporate_governance"
+          label: "Corporate Governance"
+          description: "Management and safety culture"
+          risk:
+            weight: 0.05
+
+    risk_tier_bands:
+      bands:
+        - id: 1
+          label: "PREFERRED"
+          description: "Excellent SME risk - automatic approval"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 800}
+
+        - id: 2
+          label: "STANDARD_PLUS"
+          description: "Good SME risk - automatic approval"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 1200}
+
+        - id: 3
+          label: "STANDARD"
+          description: "Average SME risk - may require referral"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 1800}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          description: "Elevated SME risk - requires review"
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 2800}
+
+        - id: 5
+          label: "DECLINE"
+          description: "Unacceptable risk - decline"
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "PREMIUM_BASE", value: 5000}
+
+    loss_tier_bands:
+      bands:
+        - id: 1
+          label: "VERY_LOW"
+          description: "Very low loss risk"
+          interpretation:
+            bands: {min: 80, max: 100}
+            application:
+              frequency_modifier: 0.70
+              severity_modifier: 0.80
+
+        - id: 2
+          label: "LOW"
+          description: "Low loss risk"
+          interpretation:
+            bands: {min: 60, max: 79}
+            application:
+              frequency_modifier: 0.85
+              severity_modifier: 0.90
+
+        - id: 3
+          label: "MODERATE"
+          description: "Moderate loss risk"
+          interpretation:
+            bands: {min: 40, max: 59}
+            application:
+              frequency_modifier: 1.00
+              severity_modifier: 1.00
+
+        - id: 4
+          label: "ELEVATED"
+          description: "Elevated loss risk"
+          interpretation:
+            bands: {min: 20, max: 39}
+            application:
+              frequency_modifier: 1.15
+              severity_modifier: 1.15
+
+        - id: 5
+          label: "HIGH"
+          description: "High loss risk"
+          interpretation:
+            bands: {min: 0, max: 19}
+            application:
+              frequency_modifier: 1.30
+              severity_modifier: 1.35
+      constraints:
+        floor: 0.60
+        cap: 1.50
+
+    exposure:
+      size:
+        weight: 0.65
+        bands:
+          - id: 1
+            label: "MICRO"
+            description: "Micro hull value ($0 - $1M)"
+            interpretation:
+              bands: {min: 0, max: 25}
+              application: {method: "MODIFIER", applied: 0.60, implied_thresholds: {min: 0, max: 1000000}}
+
+          - id: 2
+            label: "SMALL"
+            description: "Small hull value ($1M - $10M)"
+            interpretation:
+              bands: {min: 26, max: 50}
+              application: {method: "MODIFIER", applied: 0.80, implied_thresholds: {min: 1000000, max: 10000000}}
+
+          - id: 3
+            label: "MEDIUM"
+            description: "Medium hull value ($10M - $25M)"
+            interpretation:
+              bands: {min: 51, max: 75}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 25000000}}
+
+          - id: 4
+            label: "MEDIUM_LARGE"
+            description: "Medium-large hull value ($25M - $50M)"
+            interpretation:
+              bands: {min: 76, max: 100}
+              application: {method: "MODIFIER", applied: 1.20, implied_thresholds: {min: 25000000, max: 50000000}}
+
+      complexity:
+        weight: 0.35
+        bands:
+          - id: 1
+            label: "SIMPLE"
+            description: "Simple SME operations"
+            interpretation:
+              bands: {min: 0, max: 33}
+              application: {method: "MODIFIER", applied: 0.90}
+
+          - id: 2
+            label: "MODERATE"
+            description: "Moderate SME operations"
+            interpretation:
+              bands: {min: 34, max: 66}
+              application: {method: "MODIFIER", applied: 1.00}
+
+          - id: 3
+            label: "COMPLEX"
+            description: "Complex SME operations"
+            interpretation:
+              bands: {min: 67, max: 100}
+              application: {method: "MODIFIER", applied: 1.15}
+
+    limit_bandings:
+      - id: 1
+        limit: 1000000
+        deductible: 25000
+
+      - id: 2
+        limit: 2500000
+        deductible: 50000
+
+      - id: 3
+        limit: 5000000
+        deductible: 100000
+
+      - id: 4
+        limit: 10000000
+        deductible: 250000
+
+    pricing:
+      by_product_type:
+        aviation_hull:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2500000, factor: 2.00}
+              - {limit: 5000000, factor: 3.50}
+              - {limit: 10000000, factor: 6.00}
+          deductible_credits:
+            - {min_pct: 0.01, max_pct: 0.02, credit: 0.05}
+            - {min_pct: 0.02, max_pct: 0.05, credit: 0.10}
+            - {min_pct: 0.05, max_pct: null, credit: 0.15}
+
+        aviation_liability:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2500000, factor: 2.20}
+              - {limit: 5000000, factor: 4.00}
+              - {limit: 10000000, factor: 7.00}
+          deductible_credits:
+            - {min_pct: 0.01, max_pct: 0.02, credit: 0.04}
+            - {min_pct: 0.02, max_pct: 0.05, credit: 0.08}
+            - {min_pct: 0.05, max_pct: null, credit: 0.12}
+
+        aviation_hull_liability_combined:
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2500000, factor: 2.10}
+              - {limit: 5000000, factor: 3.75}
+              - {limit: 10000000, factor: 6.50}
+          deductible_credits:
+            - {min_pct: 0.01, max_pct: 0.02, credit: 0.05}
+            - {min_pct: 0.02, max_pct: 0.05, credit: 0.09}
+            - {min_pct: 0.05, max_pct: null, credit: 0.14}
+
       taxes_fees_rate: 0.05

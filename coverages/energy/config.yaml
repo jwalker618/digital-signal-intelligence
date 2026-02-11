@@ -23,7 +23,7 @@ energy:
     metadata:
       name: "DSI Energy Technical Pricing Model"
       description: "Energy property and liability coverage based on observable safety, environmental, and operational signals"
-      version: "2.1.0"
+      version: "2.2.0"
       product_types:
         - "property_damage"
         - "business_interruption"
@@ -45,6 +45,9 @@ energy:
             description: "Total Insured Value in USD"
       min_premium: 100000
       default_currency: "USD"
+      # MULTIPLEXER SUPPORT (Phase V4)
+      model_specificity: 1  # General/Base model - broad applicability
+      routing_constraints: []  # No restrictions - accepts all submissions
 
     # =========================================================================
     # DIRECT QUERIES

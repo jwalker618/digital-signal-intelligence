@@ -23,7 +23,7 @@ professional_indemnity:
     metadata:
       name: "DSI Professional Indemnity Technical Pricing Model"
       description: "PI/E&O coverage based on observable regulatory, practice quality, and stability signals"
-      version: "2.1.0"
+      version: "2.2.0"
       product_types:
         - "professional_liability"
         - "errors_omissions"
@@ -39,6 +39,9 @@ professional_indemnity:
             description: "Requested limit in USD"
       min_premium: 2500
       default_currency: "USD"
+      # MULTIPLEXER SUPPORT (Phase V4)
+      model_specificity: 1  # General/Base model - broad applicability
+      routing_constraints: []  # No restrictions - accepts all submissions
 
     # =========================================================================
     # DIRECT QUERIES

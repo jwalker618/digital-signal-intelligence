@@ -23,7 +23,7 @@ financial_institutions:
     metadata:
       name: "DSI Financial Institutions Technical Pricing Model"
       description: "FI bond, professional liability, D&O, cyber coverage based on observable regulatory and financial signals"
-      version: "2.1.0"
+      version: "2.2.0"
       product_types:
         - "financial_institution_bond"
         - "professional_liability"
