@@ -1,8 +1,14 @@
-# Premium Calculation Methodology
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
-| Version | Date | Status |
-| :--- | :--- | :--- |
-| 1.0 | Feb 2026 | Approved |
+## Premium Calculation Methodology
+
+| Item | Value |
+|-|-|
+|Version|1.0|
+|Date|February 2026|
+|Classification|Methodology|
+
+---
 
 ## 1. Overview
 The DSI Pricing Engine uses a **"Base × Modifiers"** approach, augmented by **Anchored Relativities**. This ensures that pricing scales logically across different client sizes (SME to Enterprise) and coverage choices (Limits/Deductibles).
@@ -49,7 +55,6 @@ The engine supports two primary methods for determining the **Base ($B \times R$
 
 To make Rate-Based pricing work, we must define **what coverage the rate buys**. This is the **Anchor Point**.
 
-
 ### The Anchor Definition
 Defined in `config.yaml`:
 ```yaml
@@ -62,11 +67,13 @@ pricing:
 
 **Scaling Logic**
 If the user requests a $5M Limit with a $100k Deductible:
-1/. Limit Scaling:
+
+1. Limit Scaling:
   * Anchor ILF ($1M) = 1.00
   * Requested ILF ($5M) = 3.50
   * Multiplier = $3.50 / 1.00 = \mathbf{3.50}$
-2/. Deductible Scaling:
+
+2. Deductible Scaling:
   * Anchor Factor ($50k) = 1.00
   * Requested Factor ($100k) = 0.85
   * Multiplier = $\mathbf{0.85}$
@@ -94,8 +101,8 @@ Modifiers are applied multiplicatively to the Scaled Base Premium.
 
 ## 7. Summary of Logic Flow
 
-1/. Determine Tier: Signals $\rightarrow$ Risk Score $\rightarrow$ Tier Band $\rightarrow$ Base Rate.
-2/. Calculate Base: Base Rate $\times$ Client Revenue = Anchor Premium.
-3/. Scale Coverage: Anchor Premium $\times$ ILF Relativity $\times$ Deductible Factor = Technical Premium.
+1. Determine Tier: Signals $\rightarrow$ Risk Score $\rightarrow$ Tier Band $\rightarrow$ Base Rate.
+2. Calculate Base: Base Rate $\times$ Client Revenue = Anchor Premium.
+3. Scale Coverage: Anchor Premium $\times$ ILF Relativity $\times$ Deductible Factor = Technical Premium.
 4/. Apply Modifiers: Technical Premium $\times$ Size $\times$ Loss $\times$ Complexity = Final Technical Price.
 5/. Apply Constraints: Check Min Premium and Limit Capacity rules.
