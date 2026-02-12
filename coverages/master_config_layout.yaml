@@ -5,7 +5,8 @@
 # This file defines the complete structure for a coverage configuration.
 # All field names, types, and relationships are annotated.
 #
-# VERSION: 2.1 - Added multiplexer support (model_specificity, routing_constraints)
+# VERSION: 2.1 - Added multiplexer support (model_specificity, routing_constraints) (Phase V4)
+# VERSION: 2.2 - Added Pricing Anchors & Decoupled Limits (Phase V5)
 #
 # STRUCTURAL PRINCIPLES:
 # 1. Signals are defined once in signal_registry
@@ -506,13 +507,26 @@
                 applied: {float}           # Complexity modifier (e.g., 1.10)
 
     # =========================================================================
-    # LIMIT BANDINGS
-    # Standard limit/deductible combinations offered
+    # LIMIT & DEDUCTIBLE CONFIGURATION (Phase V5 Update)
+    # Choose ONE of the following blocks (Mutually Exclusive)
     # =========================================================================
+    
+    # OPTION A: BUNDLED (Menu Pricing)
+    # Used for SME/Micro. Limits and Deductibles are locked together.
     limit_bandings:
       - id: {integer}
-        limit: {integer}                   # Policy limit
-        deductible: {integer}              # Standard deductible for limit
+        label: "{string}"                  # e.g., "GOLD PACKAGE"
+        limit: {integer}
+        deductible: {integer}
+
+    # OPTION B: DECOUPLED (Tower Pricing)
+    # Used for Corporate. Client selects Limit and Deductible independently.
+    limit_configuration:
+      type: "DECOUPLED"
+      valid_limits:                        # Allowed Limit options
+        - {integer}
+      valid_deductibles:                   # Allowed Deductible options
+        - {integer}
 
     # =========================================================================
     # PRICING PARAMETERS
@@ -522,33 +536,51 @@
     # =========================================================================
     pricing:
 
+      # -----------------------------------------------------------------------
+      # ANCHOR POINTS (Phase V5)
+      # Essential for normalization. Defines what coverage the "Base Price" buys.
+      # -----------------------------------------------------------------------
+      base_limit_reference: {integer}      # e.g., 1000000 ($1M)
+                                           # The Risk Tier Rate (0.10%) buys THIS limit.
+      
+      base_deductible_reference: {integer} # e.g., 25000 ($25k)
+                                           # The Risk Tier Rate assumes THIS deductible.
+
+      # -----------------------------------------------------------------------
+      # CURVES & FACTORS
       # Product-type-specific pricing (REQUIRED for each product_type)
+      # -----------------------------------------------------------------------
       by_product_type:
         "{product_type_1}":                # Must match entry in metadata.product_types
+          # Increased Limit Factors (ILF)
           ilf_curve:
-            base_limit: {integer}          # Base limit for ILF = 1.00
+            base_limit: {integer}          # Should match base_limit_reference
             factors:
               - limit: {integer}
-                factor: {float}            # ILF multiplier
-          deductible_credits:
-            - min_pct: {float}             # Minimum deductible as % of limit
-              max_pct: {float|null}        # Maximum (null = no upper bound)
-              credit: {float}              # Premium credit
+                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+
+          # Deductible Adjustments
+          # Can use credits (SME) or factors (Corp)
+          deductible_factors:
+            - deductible: {integer}
+              factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
 
         "{product_type_2}":                # Different product type
+          # Increased Limit Factors (ILF)
           ilf_curve:
-            base_limit: {integer}
+            base_limit: {integer}          # Should match base_limit_reference
             factors:
               - limit: {integer}
-                factor: {float}
-          deductible_credits:
-            - min_pct: {float}
-              max_pct: {float|null}
-              credit: {float}
+                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+
+          # Deductible Adjustments
+          # Can use credits (SME) or factors (Corp)
+          deductible_factors:
+            - deductible: {integer}
+              factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
 
       # Shared parameters (apply to all product types)
       taxes_fees_rate: {float}             # e.g., 0.05 = 5%
-
 
 # =============================================================================
 # SCORE_CONDITIONS EVALUATION LOGIC
