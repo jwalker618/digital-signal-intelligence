@@ -52,7 +52,13 @@ limit_configuration:
 ```
 
 ### 5.2 Mathematical LogicThe premium calculation formula changes to explicit relativity:
+The premium calculation formula changes to explicit relativity:
+$$ P_{final} = P_{base} \times \text{ILF}_{rel} \times \text{Ded}_{rel} \times \text{Mods} $$
 
+Where:
+* $P_{base}$: derived from Risk Tier (Fixed Value OR Rate $\times$ Revenue)
+* $\text{ILF}_{rel} = \frac{\text{ILF}(\text{Requested Limit})}{\text{ILF}(\text{Anchor Limit})}
+* $$\text{Ded}_{rel}$: Factor lookup for Requested Deductible (normalized to Anchor=1.0)
 
 ### 5.3 Implementation Tasks
 
