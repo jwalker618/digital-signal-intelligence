@@ -53,6 +53,7 @@ limit_configuration:
 
 ### 5.2 Mathematical LogicThe premium calculation formula changes to explicit relativity:
 The premium calculation formula changes to explicit relativity:
+
 $$ P_{final} = P_{base} \times \text{ILF}_{rel} \times \text{Ded}_{rel} \times \text{Mods} $$
 
 Where:
