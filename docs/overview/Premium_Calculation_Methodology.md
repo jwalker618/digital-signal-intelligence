@@ -51,7 +51,7 @@ The engine supports two primary methods for determining the **Base ($B \times R$
 
 ---
 
-## 4. Anchoring & Relativity (The Phase 5 Update)
+## 4. Anchoring & Relativity 
 
 To make Rate-Based pricing work, we must define **what coverage the rate buys**. This is the **Anchor Point**.
 
