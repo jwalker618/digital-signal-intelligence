@@ -23,7 +23,7 @@ cyber:
     metadata:
       name: "DSI Cyber Technical Pricing Model"
       description: "Cyber liability model based on externally observable technical signals"
-      version: "2.2.0"
+      version: "2.3.0"
       product_types:
         - "cyber_liability"
         - "network_security"
@@ -38,12 +38,18 @@ cyber:
             description: "One of: cyber_liability, network_security, privacy_liability, cyber_extortion"
           - field: "limit"
             description: "Requested limit in USD"
+          - field: "revenue"
+            description: "Annual revenue in USD (required for model qualification)"
       min_premium: 5000
       default_currency: "USD"
 
       # Multiplexer support (Phase V4)
-      model_specificity: 1                 # General/Base - broad applicability, fallback config
-      routing_constraints: []              # No constraints - accepts all submissions
+      model_specificity: 1               # General/Base - broad applicability, fallback config
+      routing_constraints:
+        - field: "revenue"
+          operator: ">"
+          value: 50000000
+          required_in_input: true        # Must provide revenue to qualify
 
     # =========================================================================
     # DIRECT QUERIES
@@ -874,7 +880,7 @@ cyber:
           interpretation:
             bands: {min: 800, max: 1000}
             action: "APPROVE"
-            application: {method: "PREMIUM_BASE", value: 8000}
+            application: {method: "MULTIPLIER", basis: "revenue", applied: 0.0010}
 
         - id: 2
           label: "STANDARD_PLUS"
@@ -882,7 +888,7 @@ cyber:
           interpretation:
             bands: {min: 650, max: 799}
             action: "APPROVE"
-            application: {method: "PREMIUM_BASE", value: 12000}
+            application: {method: "MULTIPLIER", basis: "revenue", applied: 0.0015}
 
         - id: 3
           label: "STANDARD"
@@ -890,7 +896,7 @@ cyber:
           interpretation:
             bands: {min: 500, max: 649}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", value: 18000}
+            application: {method: "MULTIPLIER", basis: "revenue", applied: 0.0025}
 
         - id: 4
           label: "SUBSTANDARD"
@@ -898,7 +904,7 @@ cyber:
           interpretation:
             bands: {min: 350, max: 499}
             action: "REFER"
-            application: {method: "PREMIUM_BASE", value: 30000}
+            application: {method: "MULTIPLIER", basis: "revenue", applied: 0.0040}
 
         - id: 5
           label: "DECLINE"
@@ -906,7 +912,7 @@ cyber:
           interpretation:
             bands: {min: 0, max: 349}
             action: "DECLINE"
-            application: {method: "PREMIUM_BASE", value: 50000}
+            application: {method: "MULTIPLIER", basis: "revenue", applied: 0.0100}
 
     # =========================================================================
     # LOSS TIER BANDS
@@ -974,39 +980,32 @@ cyber:
         weight: 0.60
         bands:
           - id: 1
-            label: "MICRO"
-            description: "Micro exposure value ($0 - $1M)"
+            label: "MID_MARKET"
+            description: "Revenue $50M - $100M"
             interpretation:
               bands: {min: 0, max: 20}
-              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
+              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 50000000, max: 100000000}}
 
           - id: 2
-            label: "SMALL"
-            description: "Small exposure value ($1M - $10M)"
+            label: "LARGE_CORP"
+            description: "Revenue $100M - $500M"
             interpretation:
-              bands: {min: 21, max: 40}
-              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
+              bands: {min: 21, max: 60}
+              application: {method: "MODIFIER", applied: 0.90, implied_thresholds: {min: 100000001, max: 500000000}}
 
           - id: 3
-            label: "MEDIUM"
-            description: "Medium exposure value ($10M - $50M)"
-            interpretation:
-              bands: {min: 41, max: 60}
-              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
-
-          - id: 4
-            label: "LARGE"
-            description: "Large exposure value ($50M - $250M)"
+            label: "ENTERPRISE"
+            description: "Revenue $500M - $1B"
             interpretation:
               bands: {min: 61, max: 80}
-              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
+              application: {method: "MODIFIER", applied: 0.80, implied_thresholds: {min: 500000001, max: 1000000000}}
 
-          - id: 5
-            label: "VERY_LARGE"
-            description: "Very large exposure value ($250M+)"
+          - id: 4
+            label: "GLOBAL"
+            description: "Revenue $1B+"
             interpretation:
               bands: {min: 81, max: 100}
-              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
+              application: {method: "MODIFIER", applied: 0.70, implied_thresholds: {min: 1000000001, max: None}}
 
       complexity:
         weight: 0.40
@@ -1015,36 +1014,22 @@ cyber:
             label: "SIMPLE"
             description: "Simple operational complexity"
             interpretation:
-              bands: {min: 0, max: 20}
-              application: {method: "MODIFIER", applied: 0.85}
+              bands: {min: 0, max: 40}
+              application: {method: "MODIFIER", applied: 1.00}
 
           - id: 2
-            label: "MODERATE"
-            description: "Moderate operational complexity"
-            interpretation:
-              bands: {min: 21, max: 40}
-              application: {method: "MODIFIER", applied: 0.95}
-
-          - id: 3
             label: "COMPLEX"
             description: "Complex operations"
             interpretation:
-              bands: {min: 41, max: 60}
-              application: {method: "MODIFIER", applied: 1.10}
+              bands: {min: 41, max: 70}
+              application: {method: "MODIFIER", applied: 1.15}
 
-          - id: 4
+          - id: 3
             label: "HIGHLY_COMPLEX"
             description: "Highly complex operations"
             interpretation:
-              bands: {min: 61, max: 80}
+              bands: {min: 71, max: 100}
               application: {method: "MODIFIER", applied: 1.30}
-
-          - id: 5
-            label: "EXTREMELY_COMPLEX"
-            description: "Extremely complex operations"
-            interpretation:
-              bands: {min: 81, max: 100}
-              application: {method: "MODIFIER", applied: 1.60}
 
     # =========================================================================
     # LIMIT BANDINGS
@@ -1379,7 +1364,7 @@ cyber:
           label: "PREFERRED"
           description: "Excellent risk - automated approval"
           interpretation:
-            bands: {min: 0, max: 250}
+            bands: {min: 800, max: 1000}
             action: "APPROVE"
             application: {method: "PREMIUM_BASE", value: 1500}
 
@@ -1387,7 +1372,7 @@ cyber:
           label: "STANDARD_PLUS"
           description: "Good risk - automated approval"
           interpretation:
-            bands: {min: 251, max: 450}
+            bands: {min: 650, max: 799}
             action: "APPROVE"
             application: {method: "PREMIUM_BASE", value: 2500}
 
@@ -1395,7 +1380,7 @@ cyber:
           label: "STANDARD"
           description: "Average risk - automated approval"
           interpretation:
-            bands: {min: 451, max: 650}
+            bands: {min: 500, max: 649}
             action: "APPROVE"
             application: {method: "PREMIUM_BASE", value: 4000}
 
@@ -1403,7 +1388,7 @@ cyber:
           label: "SUBSTANDARD"
           description: "Elevated risk - requires review"
           interpretation:
-            bands: {min: 651, max: 850}
+            bands: {min: 350, max: 499}
             action: "REFER"
             application: {method: "PREMIUM_BASE", value: 6500}
 
@@ -1411,7 +1396,7 @@ cyber:
           label: "DECLINE"
           description: "Unacceptable risk"
           interpretation:
-            bands: {min: 851, max: 1000}
+            bands: {min: 0, max: 349}
             action: "DECLINE"
             application: {method: "PREMIUM_BASE", value: 0}
 
