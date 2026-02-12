@@ -68,12 +68,12 @@ pricing:
 **Scaling Logic**
 If the user requests a $5M Limit with a $100k Deductible:
 
-1. Limit Scaling:
+1. **Limit Scaling:**
   * Anchor ILF ($1M) = 1.00
   * Requested ILF ($5M) = 3.50
   * Multiplier = $3.50 / 1.00 = \mathbf{3.50}$
 
-2. Deductible Scaling:
+2. **Deductible Scaling:**
   * Anchor Factor ($50k) = 1.00
   * Requested Factor ($100k) = 0.85
   * Multiplier = $\mathbf{0.85}$
@@ -101,8 +101,8 @@ Modifiers are applied multiplicatively to the Scaled Base Premium.
 
 ## 7. Summary of Logic Flow
 
-1. Determine Tier: Signals $\rightarrow$ Risk Score $\rightarrow$ Tier Band $\rightarrow$ Base Rate.
-2. Calculate Base: Base Rate $\times$ Client Revenue = Anchor Premium.
-3. Scale Coverage: Anchor Premium $\times$ ILF Relativity $\times$ Deductible Factor = Technical Premium.
-4/. Apply Modifiers: Technical Premium $\times$ Size $\times$ Loss $\times$ Complexity = Final Technical Price.
-5/. Apply Constraints: Check Min Premium and Limit Capacity rules.
+1. **Determine Tier:** Signals $\rightarrow$ Risk Score $\rightarrow$ Tier Band $\rightarrow$ Base Rate.
+2. **Calculate Base:** Base Rate $\times$ Client Revenue = Anchor Premium.
+3. **Scale Coverage:** Anchor Premium $\times$ ILF Relativity $\times$ Deductible Factor = Technical Premium.
+4. **Apply Modifiers:** Technical Premium $\times$ Size $\times$ Loss $\times$ Complexity = Final Technical Price.
+5. **Apply Constraints:** Check Min Premium and Limit Capacity rules.
