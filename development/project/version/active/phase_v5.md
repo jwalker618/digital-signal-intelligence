@@ -58,8 +58,8 @@ $$ P_{final} = P_{base} \times \text{ILF}_{rel} \times \text{Ded}_{rel} \times \
 
 Where:
 * $P_{base}$: derived from Risk Tier (Fixed Value OR Rate $\times$ Revenue)
-* $\text{ILF}_{rel} = \frac{\text{ILF}(\text{Requested Limit})}{\text{ILF}(\text{Anchor Limit})}
-* $$\text{Ded}_{rel}$: Factor lookup for Requested Deductible (normalized to Anchor=1.0)
+* $\text{ILF}_{rel} = \frac{\text{ILF}(\text{Requested Limit})}{\text{ILF}(\text{Anchor Limit})}$
+* $\text{Ded}_{rel}$: Factor lookup for Requested Deductible (normalized to Anchor=1.0)
 
 ### 5.3 Implementation Tasks
 
