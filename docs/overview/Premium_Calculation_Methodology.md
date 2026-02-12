@@ -24,7 +24,7 @@ The final premium ($P_{final}$) is calculated as:
 $$P_{final} = \underbrace{(B \times R)}_{\text{Base}} \times \underbrace{\frac{ILF_{req}}{ILF_{ref}}}_{\text{Limit}} \times \underbrace{D_{fac}}_{\text{Ded}} \times \underbrace{M_{risk} \times M_{loss} \times M_{exp}}_{\text{Modifiers}}$$
 
 ### Components:
-1.  **Basis ($B$):** The exposure unit (Revenue, TIV) OR 1 (for Flat Rated).
+1.  **Basis ($B$):** The exposure unit (Revenue, TIV, etc) OR 1 (for Flat Rated).
 2.  **Rate ($R$):** The Risk Tier Rate (e.g., 0.10%) OR Flat Premium ($1,500).
 3.  **Limit Relativity ($ILF$):** Scaling for higher/lower limits.
 4.  **Deductible Factor ($D$):** Credit/Load for deductible choice.
