@@ -13,12 +13,20 @@
 # 7. Normalisation handled by inference functions, not config
 #
 # AUGMENTED BY:
-# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - analysis_outputs/{coverage}_v{date}.yaml - empirically-derived parameters
 # - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
 # =============================================================================
 
+
 cyber:
+
+  # ===========================================================================
+  # CYBER GENERAL CONFIGURATION 
+  # Targeted at corporates with revenue > $50M
+  # LOwer specificity (1) means this config operates as a fallback when
+  # submission matches the routing constraints.
+  # ===========================================================================
   cyber_general:
     metadata:
       name: "DSI Cyber Technical Pricing Model"
@@ -1150,17 +1158,18 @@ cyber:
       # Shared across all product types
       taxes_fees_rate: 0.05
 
+
   # ===========================================================================
-  # CYBER SME CONFIGURATION (Phase V4.1)
+  # CYBER SME CONFIGURATION 
   # Targeted at small/medium businesses with revenue <= $50M, limits <= $5M
-  # Higher specificity (2) means this config wins over cyber_general when
-  # submission matches the routing constraints.
+  # Higher specificity (2) means this config wins over lower specificity config
+  # when submission matches the routing constraints.
   # ===========================================================================
   cyber_sme:
     metadata:
-      name: "DSI Cyber SME Automated Pricing Model"
+      name: "Cyber SME Automated Pricing Model"
       description: "Cyber liability model for SME segment - automated underwriting for small businesses"
-      version: "2.2.0"
+      version: "2.3.0"
       product_types:
         - "cyber_liability"
         - "network_security"
@@ -1177,8 +1186,6 @@ cyber:
             description: "Annual revenue in USD (required for SME qualification)"
       min_premium: 2500
       default_currency: "USD"
-
-      # Multiplexer support (Phase V4.1)
       model_specificity: 2               # Segment-Specific - wins over cyber_general
       routing_constraints:
         - field: "revenue"
@@ -1398,7 +1405,7 @@ cyber:
           interpretation:
             bands: {min: 0, max: 349}
             action: "DECLINE"
-            application: {method: "PREMIUM_BASE", value: 0}
+            application: {method: "PREMIUM_BASE", value: 10000}
 
     loss_tier_bands:
       bands:
