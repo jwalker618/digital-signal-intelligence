@@ -22,11 +22,12 @@ aerospace:
     metadata:
       name: DSI Aerospace Insurance Model
       description: Aviation hull and liability coverage based on observable safety and operational signals
-      version: 2.2.0
+      version: 2.3.0
       product_types:
       - aviation_hull
       - aviation_liability
       - aviation_hull_liability_combined
+      # Note: 'aviation_liability' stand-alone is routed to a specialised config or calculated via hull_value = 0 exceptions (not handled here for purity)
       applicable_markets:
       - us
       - uk
@@ -47,64 +48,39 @@ aerospace:
       min_premium: 25000
       default_currency: USD
       model_specificity: 1
-      routing_constraints: []
+      routing_constraints:
+        - {field: "hull_value", operator: ">", value: 50000000, required_in_input: true}
+    
     direct_queries:
     - id: pending_claims
       question: Are there any pending aviation liability claims exceeding $1M?
       query_condition:
-      - return: true
-        action: REFER
-        override: 3
-        applied: null
-        note: Pending claims >$1M
+      - {return: true, action: REFER, override: 3, applied: null, note: Pending claims >$1M}
     - id: regulatory_action
       question: Is there any pending regulatory enforcement action against the operator?
       query_condition:
-      - return: true
-        action: REFER
-        override: 5
-        applied: null
-        note: Pending regulatory enforcement
+      - {return: true, action: REFER,  override: 5, applied: null, note: Pending regulatory enforcement}
     - id: coverage_declined
       question: Has aviation coverage been declined or non-renewed in the past 3 years?
       query_condition:
-      - return: true
-        action: REFER
-        override: 5
-        applied: null
-        note: Prior declination
+      - {return: true, action: REFER, override: 5, applied: null, note: Prior declination}
     - id: fleet_change
       question: Are there planned fleet changes exceeding 20% in the next 12 months?
       query_condition:
-      - return: true
-        action: REFER
-        override: 3
-        applied: null
-        note: Major fleet change planned
+      - {return: true, action: REFER, override: 3, applied: null, note: Major fleet change planned}
     - id: route_expansion
       question: Is there planned expansion into conflict zones or sanctioned regions?
       query_condition:
-      - return: true
-        action: REFER
-        override: 4
-        applied: null
-        note: Conflict zone expansion
+      - {return: true, action: REFER, override: 4, applied: null, note: Conflict zone expansion}
     - id: ownership_change
       question: Has there been a change in majority ownership in the past 12 months?
       query_condition:
-      - return: true
-        action: REFER
-        override: 3
-        applied: null
-        note: Recent ownership change
+      - {return: true, action: REFER, override: 3, applied: null, note: Recent ownership change}
     - id: wet_lease_operations
       question: Do you operate aircraft under wet lease arrangements?
       query_condition:
-      - return: true
-        action: MODIFIER
-        override: null
-        applied: 1.15
-        note: Wet lease operations
+      - {return: true, action: MODIFIER, override: null, applied: 1.15, note: Wet lease operations}
+    
     signal_registry:
     - id: operator_type
       inference_utility_function: operatortype_basefunction
@@ -890,6 +866,7 @@ aerospace:
         risk:
           correlation_direction: positive
           weight: 0.15
+    
     groups:
       categories:
       - id: operator_type
@@ -917,6 +894,7 @@ aerospace:
         description: ''
         impact: MODIFIER
         default_cat: NOT_APPLICABLE
+      
       three_layer_assessment:
       - id: network_authority
         label: Network Authority
@@ -1031,6 +1009,7 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent corporate governance - modifier applied
+    
     risk_tier_bands:
       bands:
       - id: 1
@@ -1042,8 +1021,9 @@ aerospace:
             max: 1000
           action: APPROVE
           application:
-            method: PREMIUM_BASE
-            value: 1200
+            method: MULTIPLIER
+            basis: "hull_value"
+            applied: 0.0012          # 0.12% Rate (e.g. $60k for $50M jet)
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1053,8 +1033,9 @@ aerospace:
             max: 799
           action: APPROVE
           application:
-            method: PREMIUM_BASE
-            value: 1800
+            method: MULTIPLIER
+            basis: "hull_value"
+            applied: 0.0018
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1064,8 +1045,9 @@ aerospace:
             max: 649
           action: REFER
           application:
-            method: PREMIUM_BASE
-            value: 2800
+            method: MULTIPLIER
+            basis: "hull_value"
+            applied: 0.0028
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1075,8 +1057,9 @@ aerospace:
             max: 499
           action: REFER
           application:
-            method: PREMIUM_BASE
-            value: 4500
+            method: MULTIPLIER
+            basis: "hull_value"
+            applied: 0.0045
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1086,317 +1069,244 @@ aerospace:
             max: 349
           action: DECLINE
           application:
-            method: PREMIUM_BASE
-            value: 8000
+            method: MULTIPLIER
+            basis: "hull_value"
+            applied: 0.0150
+
     loss_tier_bands:
       bands:
-      - id: 1
-        label: VERY_LOW
-        description: Very low risk of loss
-        interpretation:
-          bands:
-            min: 80
-            max: 100
-          application:
-            frequency_modifier: 0.7
-            severity_modifier: 0.8
-      - id: 2
-        label: LOW
-        description: Low risk of loss
-        interpretation:
-          bands:
-            min: 60
-            max: 79
-          application:
-            frequency_modifier: 0.85
-            severity_modifier: 0.9
-      - id: 3
-        label: MODERATE
-        description: Moderate risk of loss
-        interpretation:
-          bands:
-            min: 40
-            max: 59
-          application:
-            frequency_modifier: 1.0
-            severity_modifier: 1.0
-      - id: 4
-        label: ELEVATED
-        description: Elevated risk of loss
-        interpretation:
-          bands:
-            min: 20
-            max: 39
-          application:
-            frequency_modifier: 1.15
-            severity_modifier: 1.15
-      - id: 5
-        label: HIGH
-        description: High risk of loss
-        interpretation:
-          bands:
-            min: 0
-            max: 19
-          application:
-            frequency_modifier: 1.35
-            severity_modifier: 1.4
-      constraints:
-        floor: 0.55
-        cap: 1.6
+      - {id: 1, label: "VERY_LOW", interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
+      - {id: 2, label: "LOW", interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
+      - {id: 3, label: "MODERATE", interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
+      - {id: 4, label: "ELEVATED", interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.15, severity_modifier: 1.15}}}
+      - {id: 5, label: "HIGH", interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.35, severity_modifier: 1.4}}}
+      constraints: {floor: 0.55, cap: 1.6}
+
     exposure:
-      size:
+      size: # Volume Discount logic for large fleets
         weight: 0.6
         bands:
         - id: 1
-          label: MICRO
+          label: "MICRO"
           description: Micro exposure value ($0 - $1M)
-          interpretation:
-            bands:
-              min: 0
+          interpretation: 
+            bands: 
+              min: 0 
               max: 20
-            application:
-              method: MODIFIER
-              applied: 0.5
+            application: 
+              method: "MODIFIER"
+              applied: 1.0
               implied_thresholds:
                 min: 0
                 max: 1000000
         - id: 2
-          label: SMALL
+          label: "SMALL"
           description: Small exposure value ($1M - $10M)
-          interpretation:
-            bands:
-              min: 21
+          interpretation: 
+            bands: 
+              min: 21 
               max: 40
-            application:
-              method: MODIFIER
-              applied: 0.75
+            application: 
+              method: "MODIFIER" 
+              applied: 0.95
               implied_thresholds:
-                min: 1000000
+                min: 1000001
                 max: 10000000
         - id: 3
-          label: MEDIUM
+          label: "MEDIUM"
           description: Medium exposure value ($10M - $50M)
-          interpretation:
-            bands:
+          interpretation: 
+            bands: 
               min: 41
               max: 60
-            application:
-              method: MODIFIER
-              applied: 1.0
+            application: 
+              method: "MODIFIER" 
+              applied: 0.90
               implied_thresholds:
-                min: 10000000
+                min: 10000001
                 max: 50000000
         - id: 4
-          label: LARGE
+          label: "LARGE"
           description: Large exposure value ($50M - $250M)
-          interpretation:
-            bands:
+          interpretation: 
+            bands: 
               min: 61
               max: 80
-            application:
-              method: MODIFIER
-              applied: 1.5
+            application: 
+              method: "MODIFIER"
+              applied: 0.85
               implied_thresholds:
-                min: 50000000
+                min: 50000001
                 max: 250000000
         - id: 5
-          label: VERY_LARGE
+          label: "VERY_LARGE"
           description: Very large exposure value ($250M+)
-          interpretation:
-            bands:
+          interpretation: 
+            bands: 
               min: 81
               max: 100
-            application:
-              method: MODIFIER
-              applied: 2.5
+            application: 
+              method: "MODIFIER"
+              applied: 0.80
               implied_thresholds:
-                min: 250000000
+                min: 250000001
                 max: 1000000000
+      
       complexity:
         weight: 0.4
         bands:
         - id: 1
-          label: SIMPLE
+          label: "SIMPLE"
           description: Simple operational complexity
-          interpretation:
-            bands:
+          interpretation: 
+            bands: 
               min: 0
               max: 20
-            application:
-              method: MODIFIER
-              applied: 0.85
+            application: 
+              method: "MODIFIER"
+              applied: 0.8
         - id: 2
-          label: MODERATE
+          label: "MODERATE" 
           description: Moderate operational complexity
-          interpretation:
-            bands:
-              min: 21
-              max: 40
+          interpretation: 
+            bands: min: 21
+            max: 40
             application:
-              method: MODIFIER
+              method: "MODIFIER"
               applied: 0.95
         - id: 3
-          label: COMPLEX
+          label: "COMPLEX"
           description: Complex operations
-          interpretation:
-            bands:
+          interpretation: 
+            bands: 
               min: 41
               max: 60
-            application:
-              method: MODIFIER
+            application: 
+              method: "MODIFIER"
               applied: 1.1
         - id: 4
-          label: HIGHLY_COMPLEX
+          label: "HIGHLY_COMPLEX" 
           description: Highly complex operations
-          interpretation:
-            bands:
+          interpretation: 
+            bands: 
               min: 61
               max: 80
-            application:
-              method: MODIFIER
+            application: 
+              method: "MODIFIER"
               applied: 1.3
-        - id: 5
-          label: EXTREMELY_COMPLEX
+        - id: 5 
+          label: "EXTREMELY_COMPLEX"
           description: Extremely complex operations
-          interpretation:
-            bands:
+          interpretation: 
+            bands: 
               min: 81
               max: 100
-            application:
-              method: MODIFIER
-              applied: 1.6
-    limit_bandings:
-    - id: 1
-      limit: 10000000
-      deductible: 500000
-    - id: 2
-      limit: 25000000
-      deductible: 1000000
-    - id: 3
-      limit: 50000000
-      deductible: 2000000
-    - id: 4
-      limit: 100000000
-      deductible: 5000000
-    - id: 5
-      limit: 250000000
-      deductible: 10000000
+          application: 
+            method: "MODIFIER"
+            applied: 1.6
+
+    limit_configuration:
+      type: "DECOUPLED"
+      valid_limits: 
+        - 10000000
+        - 25000000
+        - 50000000
+        - 100000000
+        - 250000000
+        - 500000000
+      valid_deductibles: 
+        - 10000
+        - 25000
+        - 50000
+        - 100000
+        - 250000
+        - 500000
+    
     pricing:
       by_product_type:
+        
         aviation_hull:
+          
+          base_limit_reference: 10000000
+          base_deductible_reference: 50000
+          
           ilf_curve:
             base_limit: 10000000
             factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 2.0
-            - limit: 50000000
-              factor: 3.5
-            - limit: 100000000
-              factor: 6.0
-            - limit: 250000000
-              factor: 12.0
-            - limit: 500000000
-              factor: 20.0
-            - limit: 1000000000
-              factor: 35.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+            - {limit: 10000000,  factor: 1.0}
+            - {limit: 25000000,  factor: 2.0}
+            - {limit: 50000000,  factor: 3.5}
+            - {limit: 100000000, factor: 6.0}
+            - {limit: 250000000, factor: 12.0}
+            - {limit: 500000000, factor: 20.0}
+  
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 10000,  factor: 1.5}
+          - {deductible: 25000,  factor: 1.15}
+          - {deductible: 50000,  factor: 1.0}
+          - {deductible: 100000,  factor: 0.95}
+          - {deductible: 250000,  factor: 0.9}
+          - {deductible: 500000,  factor: 0.7}
+        
         aviation_liability:
+          
+          base_limit_reference: 10000000
+          base_deductible_reference: 50000
+          
           ilf_curve:
             base_limit: 10000000
             factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 2.3
-            - limit: 50000000
-              factor: 4.2
-            - limit: 100000000
-              factor: 7.5
-            - limit: 250000000
-              factor: 15.5
-            - limit: 500000000
-              factor: 27.0
-            - limit: 1000000000
-              factor: 48.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+            - {limit: 10000000, factor: 1.0}
+            - {limit: 25000000, factor: 2.3}
+            - {limit: 50000000, factor: 4.2}
+            - {limit: 100000000, factor: 7.5}
+            - {limit: 250000000, factor: 15.5}
+            - {limit: 500000000, factor: 27.0}
+
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.96
-          - deductible: 250000
-            factor: 0.92
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}
+          - {deductible: 100000, factor: 0.96}
+          - {deductible: 250000, factor: 0.92}
+          - {deductible: 500000, factor: 0.7}
+        
         aviation_hull_liability_combined:
+          
+          base_limit_reference: 10000000
+          base_deductible_reference: 50000
+          
           ilf_curve:
             base_limit: 10000000
             factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 2.15
-            - limit: 50000000
-              factor: 3.85
-            - limit: 100000000
-              factor: 6.75
-            - limit: 250000000
-              factor: 13.75
-            - limit: 500000000
-              factor: 23.5
-            - limit: 1000000000
-              factor: 41.5
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+            - {limit: 10000000, factor: 1.0}
+            - {limit: 25000000, factor: 2.15}
+            - {limit: 50000000, factor: 3.85}
+            - {limit: 100000000,factor: 6.75}
+            - {limit: 250000000, factor: 13.75}
+            - {limit: 500000000, factor: 23.5}
+
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.91
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}
+          - {deductible: 100000, factor: 0.95}
+          - {deductible: 250000, factor: 0.91}
+          - {deductible: 500000, factor: 0.7}
+          
       taxes_fees_rate: 0.05
+
+  # ===========================================================================
+  # AEROSPACE SME (General Aviation)
+  # Target: Hull Value <= $50M. Fixed Pricing.
+  # ===========================================================================
   aerospace_sme:
     metadata:
       name: DSI Aerospace SME Model
       description: Aviation coverage for small/medium operators with hull value under $50M
-      version: 2.2.0
+      version: 2.3.0
       product_types:
       - aviation_hull
-      - aviation_liability
       - aviation_hull_liability_combined
       applicable_markets:
       - us
@@ -1415,7 +1325,7 @@ aerospace:
           description: Requested limit in USD
         - field: hull_value
           description: Total hull value in USD
-      min_premium: 15000
+      min_premium: 5000
       default_currency: USD
       model_specificity: 2
       routing_constraints:
@@ -1427,6 +1337,7 @@ aerospace:
         operator: <=
         value: 10000000
         required_in_input: true
+    
     direct_queries:
     - id: pending_claims
       question: Are there any pending aviation liability claims exceeding $500K?
@@ -1476,6 +1387,7 @@ aerospace:
         override: 3
         applied: null
         note: Recent ownership change
+    
     signal_registry:
     - id: operator_type
       inference_utility_function: operatortype_basefunction
@@ -1830,6 +1742,7 @@ aerospace:
         risk:
           correlation_direction: positive
           weight: 0.25
+    
     groups:
       categories:
       - id: operator_type
@@ -1852,6 +1765,7 @@ aerospace:
         description: ''
         impact: MODIFIER
         default_cat: OTHER
+      
       three_layer_assessment:
       - id: safety_record
         label: Safety Record
@@ -1912,63 +1826,44 @@ aerospace:
         description: Management and safety culture
         risk:
           weight: 0.05
+
     risk_tier_bands:
       bands:
-      - id: 1
-        label: PREFERRED
-        description: Excellent SME risk - automatic approval
-        interpretation:
-          bands:
-            min: 800
-            max: 1000
-          action: APPROVE
-          application:
-            method: PREMIUM_BASE
-            value: 800
-      - id: 2
-        label: STANDARD_PLUS
-        description: Good SME risk - automatic approval
-        interpretation:
-          bands:
-            min: 650
-            max: 799
-          action: APPROVE
-          application:
-            method: PREMIUM_BASE
-            value: 1200
-      - id: 3
-        label: STANDARD
-        description: Average SME risk - may require referral
-        interpretation:
-          bands:
-            min: 500
-            max: 649
-          action: REFER
-          application:
-            method: PREMIUM_BASE
-            value: 1800
-      - id: 4
-        label: SUBSTANDARD
-        description: Elevated SME risk - requires review
-        interpretation:
-          bands:
-            min: 350
-            max: 499
-          action: REFER
-          application:
-            method: PREMIUM_BASE
-            value: 2800
-      - id: 5
-        label: DECLINE
-        description: Unacceptable risk - decline
-        interpretation:
-          bands:
-            min: 0
-            max: 349
-          action: DECLINE
-          application:
-            method: PREMIUM_BASE
-            value: 5000
+        - id: 1
+          label: "PREFERRED"
+          interpretation:
+            bands: {min: 800, max: 1000}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 3500} # e.g. Cirrus SR22
+
+        - id: 2
+          label: "STANDARD_PLUS"
+          interpretation:
+            bands: {min: 650, max: 799}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 5000}
+
+        - id: 3
+          label: "STANDARD"
+          interpretation:
+            bands: {min: 500, max: 649}
+            action: "APPROVE"
+            application: {method: "PREMIUM_BASE", value: 7500}
+
+        - id: 4
+          label: "SUBSTANDARD"
+          interpretation:
+            bands: {min: 350, max: 499}
+            action: "REFER"
+            application: {method: "PREMIUM_BASE", value: 12000}
+
+        - id: 5
+          label: "DECLINE"
+          interpretation:
+            bands: {min: 0, max: 349}
+            action: "DECLINE"
+            application: {method: "PREMIUM_BASE", value: 20000}
+    
     loss_tier_bands:
       bands:
       - id: 1
@@ -2024,6 +1919,7 @@ aerospace:
       constraints:
         floor: 0.6
         cap: 1.5
+    
     exposure:
       size:
         weight: 0.65
@@ -2113,106 +2009,52 @@ aerospace:
             application:
               method: MODIFIER
               applied: 1.15
+
+    # 2. LIMIT CONFIGURATION: BUNDLED
     limit_bandings:
-    - id: 1
-      limit: 1000000
-      deductible: 25000
-    - id: 2
-      limit: 2500000
-      deductible: 50000
-    - id: 3
-      limit: 5000000
-      deductible: 100000
-    - id: 4
-      limit: 10000000
-      deductible: 250000
+      - {id: 1, limit: 1000000, deductible: 2500}
+      - {id: 2, limit: 2000000, deductible: 5000}
+      - {id: 3, limit: 5000000, deductible: 10000} # Anchor
+      - {id: 4, limit: 10000000, deductible: 25000}
+
     pricing:
       by_product_type:
         aviation_hull:
+          
+          base_limit_reference: 5000000
+          base_deductible_reference: 10000
+          
           ilf_curve:
-            base_limit: 1000000
+            base_limit: 5000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2500000
-              factor: 2.0
-            - limit: 5000000
-              factor: 3.5
-            - limit: 10000000
-              factor: 6.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+              - {limit: 1000000, factor: 0.60}
+              - {limit: 2000000, factor: 0.75}
+              - {limit: 5000000, factor: 1.00} # Anchor
+              - {limit: 10000000, factor: 1.45}
+
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
-        aviation_liability:
-          ilf_curve:
-            base_limit: 1000000
-            factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2500000
-              factor: 2.2
-            - limit: 5000000
-              factor: 4.0
-            - limit: 10000000
-              factor: 7.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
-          deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.96
-          - deductible: 250000
-            factor: 0.92
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+            - {deductible: 2500, factor: 1.25}
+            - {deductible: 5000, factor: 1.10}
+            - {deductible: 10000, factor: 1.00} # Anchor
+            - {deductible: 25000, factor: 0.85}
+
         aviation_hull_liability_combined:
+          
+          base_limit_reference: 5000000
+          base_deductible_reference: 10000
+          
           ilf_curve:
-            base_limit: 1000000
+            base_limit: 5000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2500000
-              factor: 2.1
-            - limit: 5000000
-              factor: 3.75
-            - limit: 10000000
-              factor: 6.5
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+              - {limit: 1000000, factor: 0.60}
+              - {limit: 2000000, factor: 0.75}
+              - {limit: 5000000, factor: 1.00} # Anchor
+              - {limit: 10000000, factor: 1.45}
+
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.91
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+            - {deductible: 2500, factor: 1.25}
+            - {deductible: 5000, factor: 1.10}
+            - {deductible: 10000, factor: 1.00} # Anchor
+            - {deductible: 25000, factor: 0.85}
+      
       taxes_fees_rate: 0.05
