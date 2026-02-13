@@ -17,1253 +17,1495 @@
 # - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
 # =============================================================================
-
 marine:
   marine_general:
     metadata:
-      name: "DSI Marine Technical Pricing Model"
-      description: "Marine hull and liability coverage based on observable operator behavior, safety records, and fleet patterns"
-      version: "2.2.0"
+      name: DSI Marine Technical Pricing Model
+      description: Marine hull and liability coverage based on observable operator behavior, safety records, and fleet patterns
+      version: 2.2.0
       product_types:
-        - "hull_machinery"
-        - "total_loss"
-        - "increased_value"
-        - "loss_of_hire"
-        - "war_risks"
-        - "pi_liability"
-        - "cargo"
-      applicable_markets: ["global"]
+      - hull_machinery
+      - total_loss
+      - increased_value
+      - loss_of_hire
+      - war_risks
+      - pi_liability
+      - cargo
+      applicable_markets:
+      - global
       minimum_viable_input:
         required:
-          - field: "client_name"
-            description: "Client name (domain optional for discovery)"
-          - field: "product_type"
-            description: "One of: hull_machinery, total_loss, increased_value, loss_of_hire, war_risks, pi_liability, cargo"
-          - field: "limit"
-            description: "Requested limit in USD"
-          - field: "hull_value"
-            description: "Total hull value in USD"
+        - field: client_name
+          description: Client name (domain optional for discovery)
+        - field: product_type
+          description: 'One of: hull_machinery, total_loss, increased_value, loss_of_hire, war_risks, pi_liability, cargo'
+        - field: limit
+          description: Requested limit in USD
+        - field: hull_value
+          description: Total hull value in USD
       min_premium: 50000
-      default_currency: "USD"
-
-    # =========================================================================
-    # DIRECT QUERIES
-    # Binary questions that cannot be externally observed (max 10)
-    # Actions: FLAG | MODIFIER | REFER
-    # =========================================================================
+      default_currency: USD
+      model_specificity: 1
+      routing_constraints: []
     direct_queries:
-      
-      - id: "psc_detentions"
-        question: "Any vessels detained by port state control in past 36 months?"
-        query_condition:
-          - {return: true, action: "REFER", override: 3, applied: null, note: "PSC detentions in past 36 months"}
-      
-      - id: "total_losses"
-        question: "Any total losses or major casualties in past 5 years?"
-        query_condition:
-          - {return: true, action: "REFER", override: 4, applied: null, note: "Total losses in past 5 years"}
-      
-      - id: "third_party_manager"
-        question: "Is the fleet managed by a third-party technical manager?"
-        query_condition:
-          - {return: true, action: "FLAG", override: null, applied: null, note: "Third-party technical management"}
-      
-      - id: "sanctioned_trade"
-        question: "Any vessels currently trading to sanctioned regions?"
-        query_condition:
-          - {return: true, action: "REFER", override: 5, applied: null, note: "Trading to sanctioned regions - coverage not available"}
-
-    # =========================================================================
-    # SIGNAL REGISTRY
-    # All signals defined once with group_id reference
-    # proxy_tier at signal level; normalisation in inference functions
-    # =========================================================================
+    - id: psc_detentions
+      question: Any vessels detained by port state control in past 36 months?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: PSC detentions in past 36 months
+    - id: total_losses
+      question: Any total losses or major casualties in past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Total losses in past 5 years
+    - id: third_party_manager
+      question: Is the fleet managed by a third-party technical manager?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Third-party technical management
+    - id: sanctioned_trade
+      question: Any vessels currently trading to sanctioned regions?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Trading to sanctioned regions - coverage not available
     signal_registry:
-
-      # -----------------------------------------------------------------------
-      # CATEGORICAL SIGNALS
-      # Return discrete categories that apply as pricing modifiers
-      # -----------------------------------------------------------------------
-      - id: operator_type
-        inference_utility_function: operator_classification_basefunction
-        proxy_tier: INFERRED_PROXY
-        categories:
-          group_id: operator_type
-          source: metadata.operator_type
-          features:
-            - {cat: "MAJOR_LINER", label: "Major Liner Operator", applied: 0.80}
-            - {cat: "MAJOR_TANKER", label: "Major Tanker Operator", applied: 0.90}
-            - {cat: "MAJOR_BULK", label: "Major Bulk Operator", applied: 0.95}
-            - {cat: "REGIONAL_OPERATOR", label: "Regional Fleet Operator", applied: 1.00}
-            - {cat: "INDEPENDENT", label: "Independent Operator", applied: 1.25}
-            - {cat: "STATE_OWNED", label: "State-Owned Operator", applied: 1.10}
-            - {cat: "UNKNOWN", label: "Unknown Operator", applied: 1.50}
-
-      - id: vessel_category
-        inference_utility_function: primaryvessel_category_basefunction
-        proxy_tier: INFERRED_PROXY
-        categories:
-          group_id: vessel_category
-          source: metadata.vessel_category
-          features:
-            - {cat: "CONTAINER", label: "Container", applied: 0.90}
-            - {cat: "TANKER", label: "Tanker", applied: 1.10}
-            - {cat: "DRY_BULK", label: "Dry Bulk", applied: 1.00}
-            - {cat: "LNG_LPG", label: "LNG/LPG Carrier", applied: 0.85}
-            - {cat: "OFFSHORE", label: "Offshore", applied: 1.30}
-            - {cat: "PASSENGER", label: "Passenger", applied: 1.25}
-            - {cat: "GENERAL_CARGO", label: "General Cargo", applied: 1.10}
-            - {cat: "MIXED", label: "Mixed Fleet", applied: 1.05}
-            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
-
-      - id: trading_pattern
-        inference_utility_function: trading_pattern_basefunction
-        proxy_tier: INFERRED_PROXY
-        categories:
-          group_id: trading_pattern
-          source: metadata.trading_pattern
-          features:
-            - {cat: "LINER_REGULAR", label: "Liner/Regular Service", applied: 0.85}
-            - {cat: "SPOT_TRAMP", label: "Spot/Tramp Trading", applied: 1.15}
-            - {cat: "INDUSTRIAL", label: "Industrial Shipping", applied: 0.90}
-            - {cat: "MIXED", label: "Mixed Trading", applied: 1.00}
-            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
-
-      - id: flag_state_quality
-        inference_utility_function: flagstate_quality_basefunction
-        proxy_tier: INFERRED_PROXY
-        categories:
-          group_id: flag_state_quality
-          features:
-            - {cat: "WHITE_LIST", label: "Paris MoU White List", applied: 0.95}
-            - {cat: "GREY_LIST", label: "Paris MoU Grey List", applied: 1.10}
-            - {cat: "BLACK_LIST", label: "Paris MoU Black List", applied: 1.40}
-            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
-
-      - id: fleet_age_band
-        inference_utility_function: fleet_age_basefunction
-        proxy_tier: INFERRED_PROXY
-        categories:
-          group_id: fleet_age_band
-          features:
-            - {cat: "AGE_0_5", label: "0-5 Years", applied: 0.85}
-            - {cat: "AGE_5_10", label: "5-10 Years", applied: 0.95}
-            - {cat: "AGE_10_15", label: "10-15 Years", applied: 1.05}
-            - {cat: "AGE_15_20", label: "15-20 Years", applied: 1.20}
-            - {cat: "AGE_20_25", label: "20-25 Years", applied: 1.40}
-            - {cat: "AGE_25_PLUS", label: "25+ Years", applied: 1.60}
-            - {cat: "OTHER", label: "UNKNOWN", applied: 1.00}
-
-      - id: "classification_society"
-        inference_utility_function: classification_society_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.15
-            severity:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "pi_club"
-        inference_utility_function: pi_club_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-          loss:
-            severity:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "charterer_quality"
-        inference_utility_function: charterer_quality_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-          exposure:
-            size:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "banking_relationship"
-        inference_utility_function: banking_relationship_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-          loss:
-            severity:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "flag_state"
-        inference_utility_function: flag_state_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "industry_association"
-        inference_utility_function: industry_association_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-
-      - id: "technical_manager"
-        inference_utility_function: technical_manager_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "port_relationship"
-        inference_utility_function: port_relationship_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.00
-
-      - id: "port_state_control"
-        inference_utility_function: port_state_control_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.05
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "classification_society_quality"
-        inference_utility_function: classification_society_quality_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: network_authority
-          risk:
-            correlation_direction: positive
-            weight: 0.05     
-
-      - id: "ais_compliance"
-        inference_utility_function: ais_compliance_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: operational_telemetry
-          risk:
-            correlation_direction: positive
-            weight: 0.25
-            score_conditions:
-              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "AIS compliance concerns"}
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.20
-            severity:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "dark_activity"
-        inference_utility_function: dark_activity_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: operational_telemetry
-          risk:
-            correlation_direction: negative
-            weight: 0.25
-            score_conditions:
-              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "High-risk dark activity"}
-              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Concerning dark activity patterns"}
-          loss:
-            frequency:
-              correlation_direction: negative
-              weight: 0.25
-            severity:
-              correlation_direction: negative
-              weight: 0.20
-          exposure:
-            complexity:
-              correlation_direction: negative
-              weight: 0.15
-
-      - id: "route_risk"
-        inference_utility_function: route_risk_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: operational_telemetry
-          risk:
-            correlation_direction: negative
-            weight: 0.20
-          loss:
-            frequency:
-              correlation_direction: negative
-              weight: 0.15
-            severity:
-              correlation_direction: negative
-              weight: 0.20
-          exposure:
-            complexity:
-              correlation_direction: negative
-              weight: 0.10
-
-      - id: "psc_region_exposure"
-        inference_utility_function: psc_regions_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: operational_telemetry
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "operational_efficiency"
-        inference_utility_function: operational_efficiency_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: operational_telemetry
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-
-      - id: "weather_routing"
-        inference_utility_function: weather_routing_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: operational_telemetry
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10    
-
-      - id: "psc_detention"
-        inference_utility_function: psc_detention_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: safety_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.25
-            score_conditions:
-              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Elevated PSC detention rate"}
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.25
-            severity:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "psc_deficiency"
-        inference_utility_function: psc_deficiency_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: safety_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.20
-
-      - id: "class_status"
-        inference_utility_function: class_status_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: safety_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-            score_conditions:
-              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Class suspended/withdrawn"}
-              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "Class status concerns"}
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.20
-            severity:
-              correlation_direction: positive
-              weight: 0.25
-
-      - id: "ism_compliance"
-        inference_utility_function: ism_compliance_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: safety_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-            score_conditions:
-              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "ISM compliance failure"}
-              - {threshold: 50, comparison: "<=", action: "REFER", override: 4, note: "ISM concerns"}
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "casualty_history"
-        inference_utility_function: casualty_history_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: safety_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-            score_conditions:
-              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Serious casualty history"}
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.20
-            severity:
-              correlation_direction: positive
-              weight: 0.30
-          exposure:
-            size:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "total_loss"
-        inference_utility_function: totalloss_history_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: safety_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-            score_conditions:
-              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Total loss history"}
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.15
-            severity:
-              correlation_direction: positive
-              weight: 0.40
-
-      - id: "fleet_age"
-        inference_utility_function: fleet_age_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: fleet_profile
-          risk:
-            correlation_direction: negative
-            weight: 0.30
-          loss:
-            frequency:
-              correlation_direction: negative
-              weight: 0.25
-            severity:
-              correlation_direction: negative
-              weight: 0.15
-          exposure:
-            complexity:
-              correlation_direction: negative
-              weight: 0.10
-
-      - id: "fleet_stability"
-        inference_utility_function: fleet_stability_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: fleet_profile
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "vessel_quality"
-        inference_utility_function: vessel_quality_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: fleet_profile
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.20
-            severity:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "crew_certification"
-        inference_utility_function: crew_certification_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: fleet_profile
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "management_consistency"
-        inference_utility_function: management_consistency_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: fleet_profile
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10      
-
-      - id: "sanctions_status"
-        inference_utility_function: sanctions_status_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: sanctions_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.30
-            score_conditions:
-              - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Sanctions listed - coverage not available"}
-          loss:
-            severity:
-              correlation_direction: positive
-              weight: 0.40
-
-      - id: "ownership_transparency"
-        inference_utility_function: ownership_transparency_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: sanctions_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-            score_conditions:
-              - {threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Ownership transparency concerns"}
-          exposure:
-            complexity:
-              correlation_direction: negative
-              weight: 0.15
-
-      - id: "jurisdiction_risk"
-        inference_utility_function: jurisdiction_risk_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: sanctions_compliance
-          risk:
-            correlation_direction: negative
-            weight: 0.20
-            score_conditions:
-              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "Sanctioned jurisdiction exposure"}
-              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "High-risk jurisdiction exposure"}
-          loss:
-            frequency:
-              correlation_direction: negative
-              weight: 0.15
-            severity:
-              correlation_direction: negative
-              weight: 0.20
-
-      - id: "sts_pattern"
-        inference_utility_function: sts_pattern_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: sanctions_compliance
-          risk:
-            correlation_direction: negative
-            weight: 0.15
-            score_conditions:
-              - {threshold: 25, comparison: "<=", action: "REFER", override: 5, note: "High-risk STS activity"}
-              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Suspicious STS patterns"}
-          loss:
-            frequency:
-              correlation_direction: negative
-              weight: 0.15
-
-      - id: "historical_sanctions"
-        inference_utility_function: historical_sanctions_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: sanctions_compliance
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-          loss:
-            severity:
-              correlation_direction: positive
-              weight: 0.15
-        
-      - id: "imo2020_compliance"
-        inference_utility_function: imo_compliance_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: environmental
-          risk:
-            correlation_direction: positive
-            weight: 0.30
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "bwm_compliance"
-        inference_utility_function: bwm_compliance_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: environmental
-          risk:
-            correlation_direction: positive
-            weight: 0.25
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "cii_rating"
-        inference_utility_function: cii_rating_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: environmental
-          risk:
-            correlation_direction: positive
-            weight: 0.25
-
-      - id: "environmental_incident"
-        inference_utility_function: environmental_incident_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: environmental
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.20
-            severity:
-              correlation_direction: positive
-              weight: 0.30
-          exposure:
-            size:
-              correlation_direction: positive
-              weight: 0.15
-        
-      - id: "website_quality"
-        inference_utility_function: website_quality_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-
-      - id: "fleet_disclosure"
-        inference_utility_function: fleet_list_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-          exposure:
-            size:
-              correlation_direction: positive
-              weight: 0.15
-
-      - id: "sustainability_reporting"
-        inference_utility_function: sustainability_reporting_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-
-      - id: "safety_communication"
-        inference_utility_function: safety_culture_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.10
-
-      - id: "crew_welfare"
-        inference_utility_function: crew_welfare_basefunction
-        proxy_tier: INFERRED_PROXY
-        three_layer_assessment:
-          group_id: corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.10
-
-      - id: "industry_presence"
-        inference_utility_function: industry_presence_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: corporate_footprint
-          risk:
-            correlation_direction: positive
-            weight: 0.15
-
-      - id: "vetting"
-        inference_utility_function: vetting_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: structured_data
-          risk:
-            correlation_direction: positive
-            weight: 0.50
-          loss:
-            frequency:
-              correlation_direction: positive
-              weight: 0.25
-            severity:
-              correlation_direction: positive
-              weight: 0.20
-
-      - id: "esg_rating"
-        inference_utility_function: esg_rating_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: structured_data
-          risk:
-            correlation_direction: positive
-            weight: 0.30
-
-      - id: "credit_rating"
-        inference_utility_function: credit_rating_basefunction
-        proxy_tier: DIRECT_OBSERVABLE
-        three_layer_assessment:
-          group_id: structured_data
-          risk:
-            correlation_direction: positive
-            weight: 0.20
-          loss:
-            severity:
-              correlation_direction: positive
-              weight: 0.15
-          
-    # =========================================================================
-    # GROUPS
-    # Categorical modifiers and three-layer assessment groupings
-    # =========================================================================
-    groups:
-
-      # -----------------------------------------------------------------------
-      # CATEGORICAL GROUPS
-      # Apply pricing modifiers (applied:), not scores
-      # -----------------------------------------------------------------------
+    - id: operator_type
+      inference_utility_function: operator_classification_basefunction
+      proxy_tier: INFERRED_PROXY
       categories:
-        - id: "operator_type"
-          label: "Operator Type"
-          description: ""
-          impact: "MODIFIER"
-          default_cat: "UNKNOWN"
-
-        - id: "vessel_category"
-          label: "Vessel Category"
-          description: ""
-          impact: "MODIFIER"
-          default_cat: "OTHER"
-
-        - id: " trading_pattern"
-          label: "Trading Pattern"
-          description: ""
-          impact: "MODIFIER"
-          default_cat: "OTHER"
-
-        - id: "flag_state_quality"
-          label: "Flag State Quality"
-          description: ""
-          impact: "MODIFIER"
-          default_cat: "OTHER"
-
-        - id: "fleet_age_band"
-          label: "Fleet Age Band"
-          description: ""
-          impact: "MODIFIER"
-          default_cat: "OTHER"
-
-      # -----------------------------------------------------------------------
-      # THREE-LAYER ASSESSMENT GROUPS
-      # Aggregate signals into scoring dimensions
-      # Weights within each dimension must sum to 1.0
-      # -----------------------------------------------------------------------
+        group_id: operator_type
+        source: metadata.operator_type
+        features:
+        - cat: MAJOR_LINER
+          label: Major Liner Operator
+          applied: 0.8
+        - cat: MAJOR_TANKER
+          label: Major Tanker Operator
+          applied: 0.9
+        - cat: MAJOR_BULK
+          label: Major Bulk Operator
+          applied: 0.95
+        - cat: REGIONAL_OPERATOR
+          label: Regional Fleet Operator
+          applied: 1.0
+        - cat: INDEPENDENT
+          label: Independent Operator
+          applied: 1.25
+        - cat: STATE_OWNED
+          label: State-Owned Operator
+          applied: 1.1
+        - cat: UNKNOWN
+          label: Unknown Operator
+          applied: 1.5
+    - id: vessel_category
+      inference_utility_function: primaryvessel_category_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: vessel_category
+        source: metadata.vessel_category
+        features:
+        - cat: CONTAINER
+          label: Container
+          applied: 0.9
+        - cat: TANKER
+          label: Tanker
+          applied: 1.1
+        - cat: DRY_BULK
+          label: Dry Bulk
+          applied: 1.0
+        - cat: LNG_LPG
+          label: LNG/LPG Carrier
+          applied: 0.85
+        - cat: OFFSHORE
+          label: Offshore
+          applied: 1.3
+        - cat: PASSENGER
+          label: Passenger
+          applied: 1.25
+        - cat: GENERAL_CARGO
+          label: General Cargo
+          applied: 1.1
+        - cat: MIXED
+          label: Mixed Fleet
+          applied: 1.05
+        - cat: OTHER
+          label: UNKNOWN
+          applied: 1.0
+    - id: trading_pattern
+      inference_utility_function: trading_pattern_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: trading_pattern
+        source: metadata.trading_pattern
+        features:
+        - cat: LINER_REGULAR
+          label: Liner/Regular Service
+          applied: 0.85
+        - cat: SPOT_TRAMP
+          label: Spot/Tramp Trading
+          applied: 1.15
+        - cat: INDUSTRIAL
+          label: Industrial Shipping
+          applied: 0.9
+        - cat: MIXED
+          label: Mixed Trading
+          applied: 1.0
+        - cat: OTHER
+          label: UNKNOWN
+          applied: 1.0
+    - id: flag_state_quality
+      inference_utility_function: flagstate_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: flag_state_quality
+        features:
+        - cat: WHITE_LIST
+          label: Paris MoU White List
+          applied: 0.95
+        - cat: GREY_LIST
+          label: Paris MoU Grey List
+          applied: 1.1
+        - cat: BLACK_LIST
+          label: Paris MoU Black List
+          applied: 1.4
+        - cat: OTHER
+          label: UNKNOWN
+          applied: 1.0
+    - id: fleet_age_band
+      inference_utility_function: fleet_age_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: fleet_age_band
+        features:
+        - cat: AGE_0_5
+          label: 0-5 Years
+          applied: 0.85
+        - cat: AGE_5_10
+          label: 5-10 Years
+          applied: 0.95
+        - cat: AGE_10_15
+          label: 10-15 Years
+          applied: 1.05
+        - cat: AGE_15_20
+          label: 15-20 Years
+          applied: 1.2
+        - cat: AGE_20_25
+          label: 20-25 Years
+          applied: 1.4
+        - cat: AGE_25_PLUS
+          label: 25+ Years
+          applied: 1.6
+        - cat: OTHER
+          label: UNKNOWN
+          applied: 1.0
+    - id: classification_society
+      inference_utility_function: classification_society_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        - id: "network_authority"
-          label: "Network Authority"
-          description: "Classification society, P&I Club, charterer relationships"
-          risk:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
             weight: 0.15
-            score_conditions:
-              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent network authority - modifier applied"}
-  
-        - id: "operational_telemetry"
-          label: "Operational Telemetry"
-          description: "AIS behavior patterns, dark activity, route risk"
-          risk:
-            weight: 0.20
-            score_conditions:
-              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Critical AIS/operational concerns"}
-              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant operational concerns"}
-              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent operational telemetry - modifier applied"}
-  
-        - id: "safety_compliance"
-          label: "Safety Compliance"
-          description: "PSC performance, class status, incident history"
-          risk:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: pi_club
+      inference_utility_function: pi_club_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: charterer_quality
+      inference_utility_function: charterer_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: banking_relationship
+      inference_utility_function: banking_relationship_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: flag_state
+      inference_utility_function: flag_state_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: industry_association
+      inference_utility_function: industry_association_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+    - id: technical_manager
+      inference_utility_function: technical_manager_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: port_relationship
+      inference_utility_function: port_relationship_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.0
+    - id: port_state_control
+      inference_utility_function: port_state_control_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: classification_society_quality
+      inference_utility_function: classification_society_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+    - id: ais_compliance
+      inference_utility_function: ais_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: AIS compliance concerns
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: dark_activity
+      inference_utility_function: dark_activity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: negative
+          weight: 0.25
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 5
+            note: High-risk dark activity
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Concerning dark activity patterns
+        loss:
+          frequency:
+            correlation_direction: negative
             weight: 0.25
-            score_conditions:
-              - {threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Critical safety compliance issues"}
-              - {threshold: 45, comparison: "<=", action: "REFER", override: 4, note: "Significant safety concerns"}
-              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent safety compliance - modifier applied"}
-  
-        - id: "fleet_profile"
-          label: "Fleet Profile"
-          description: "Fleet age, stability, vessel quality, crew certification"
-          risk:
-            weight: 0.10
-            score_conditions:
-              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent fleet profile - modifier applied"}
-  
-        - id: "sanctions_compliance"
-          label: "Sanctions Compliance"
-          description: "Sanctions status, ownership transparency, STS patterns"
-          risk:
+          severity:
+            correlation_direction: negative
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: negative
             weight: 0.15
-            score_conditions:
-              - {threshold: 20, comparison: "<=", action: "REFER", override: 5, note: "Sanctions exposure - coverage not available"}
-              - {threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Sanctions concerns require review"}
-              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.85, note: "Excellent sanctions compliance - modifier applied"}
-  
-        - id: "environmental"
-          label: "Environmental Compliance"
-          description: "IMO 2020, ballast water, CII rating, incidents"
-          risk:
-            weight: 0.05
-            score_conditions:
-              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90,  note: "Excellent environmental compliance - modifier applied"}
-  
-        - id: "corporate_footprint"
-          label: "Corporate Footprint"
-          description: "Transparency, sustainability reporting, safety culture"
-          risk:
-            weight: 0.05
-            score_conditions:
-              - {threshold: 20, comparison: "<=", action: "MODIFIER", applied: 0.90, note: "Excellent corporate footprint - modifier applied"}
-  
-        - id: "structured_data"
-          label: "Structured Data"
-          description: "RightShip vetting, ESG ratings, credit ratings"
-          risk:
-            weight: 0.05
-            score_conditions:
-              - {threshold: 20,  comparison: "<=",  action: "MODIFIER", applied: 0.90,  note: "Excellent structured data - modifier applied"}
-
-     # =========================================================================
-    # RISK TIER BANDS
-    # Maps composite risk score (0-1000) to pricing tiers
-    # =========================================================================
+    - id: route_risk
+      inference_utility_function: route_risk_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: negative
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.15
+          severity:
+            correlation_direction: negative
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: negative
+            weight: 0.1
+    - id: psc_region_exposure
+      inference_utility_function: psc_regions_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: operational_efficiency
+      inference_utility_function: operational_efficiency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+    - id: weather_routing
+      inference_utility_function: weather_routing_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: psc_detention
+      inference_utility_function: psc_detention_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Elevated PSC detention rate
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: psc_deficiency
+      inference_utility_function: psc_deficiency_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+    - id: class_status
+      inference_utility_function: class_status_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Class suspended/withdrawn
+          - threshold: 50
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Class status concerns
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: ism_compliance
+      inference_utility_function: ism_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: ISM compliance failure
+          - threshold: 50
+            comparison: <=
+            action: REFER
+            override: 4
+            note: ISM concerns
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: casualty_history
+      inference_utility_function: casualty_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Serious casualty history
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: total_loss
+      inference_utility_function: totalloss_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Total loss history
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.4
+    - id: fleet_age
+      inference_utility_function: fleet_age_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: negative
+          weight: 0.3
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.25
+          severity:
+            correlation_direction: negative
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: negative
+            weight: 0.1
+    - id: fleet_stability
+      inference_utility_function: fleet_stability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: vessel_quality
+      inference_utility_function: vessel_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: crew_certification
+      inference_utility_function: crew_certification_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: management_consistency
+      inference_utility_function: management_consistency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: sanctions_status
+      inference_utility_function: sanctions_status_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: sanctions_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Sanctions listed - coverage not available
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.4
+    - id: ownership_transparency
+      inference_utility_function: ownership_transparency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: sanctions_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Ownership transparency concerns
+        exposure:
+          complexity:
+            correlation_direction: negative
+            weight: 0.15
+    - id: jurisdiction_risk
+      inference_utility_function: jurisdiction_risk_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: sanctions_compliance
+        risk:
+          correlation_direction: negative
+          weight: 0.2
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Sanctioned jurisdiction exposure
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: High-risk jurisdiction exposure
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.15
+          severity:
+            correlation_direction: negative
+            weight: 0.2
+    - id: sts_pattern
+      inference_utility_function: sts_pattern_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: sanctions_compliance
+        risk:
+          correlation_direction: negative
+          weight: 0.15
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 5
+            note: High-risk STS activity
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Suspicious STS patterns
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.15
+    - id: historical_sanctions
+      inference_utility_function: historical_sanctions_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: sanctions_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: imo2020_compliance
+      inference_utility_function: imo_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: environmental
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: bwm_compliance
+      inference_utility_function: bwm_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: environmental
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: cii_rating
+      inference_utility_function: cii_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: environmental
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+    - id: environmental_incident
+      inference_utility_function: environmental_incident_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: environmental
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: website_quality
+      inference_utility_function: website_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+    - id: fleet_disclosure
+      inference_utility_function: fleet_list_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: sustainability_reporting
+      inference_utility_function: sustainability_reporting_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+    - id: safety_communication
+      inference_utility_function: safety_culture_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: crew_welfare
+      inference_utility_function: crew_welfare_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+    - id: industry_presence
+      inference_utility_function: industry_presence_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+    - id: vetting
+      inference_utility_function: vetting_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: esg_rating
+      inference_utility_function: esg_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+    - id: credit_rating
+      inference_utility_function: credit_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      categories:
+      - id: operator_type
+        label: Operator Type
+        description: ''
+        impact: MODIFIER
+        default_cat: UNKNOWN
+      - id: vessel_category
+        label: Vessel Category
+        description: ''
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: ' trading_pattern'
+        label: Trading Pattern
+        description: ''
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: flag_state_quality
+        label: Flag State Quality
+        description: ''
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: fleet_age_band
+        label: Fleet Age Band
+        description: ''
+        impact: MODIFIER
+        default_cat: OTHER
+      three_layer_assessment:
+      - id: network_authority
+        label: Network Authority
+        description: Classification society, P&I Club, charterer relationships
+        risk:
+          weight: 0.15
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent network authority - modifier applied
+      - id: operational_telemetry
+        label: Operational Telemetry
+        description: AIS behavior patterns, dark activity, route risk
+        risk:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical AIS/operational concerns
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant operational concerns
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent operational telemetry - modifier applied
+      - id: safety_compliance
+        label: Safety Compliance
+        description: PSC performance, class status, incident history
+        risk:
+          weight: 0.25
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical safety compliance issues
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant safety concerns
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent safety compliance - modifier applied
+      - id: fleet_profile
+        label: Fleet Profile
+        description: Fleet age, stability, vessel quality, crew certification
+        risk:
+          weight: 0.1
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent fleet profile - modifier applied
+      - id: sanctions_compliance
+        label: Sanctions Compliance
+        description: Sanctions status, ownership transparency, STS patterns
+        risk:
+          weight: 0.15
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Sanctions exposure - coverage not available
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Sanctions concerns require review
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent sanctions compliance - modifier applied
+      - id: environmental
+        label: Environmental Compliance
+        description: IMO 2020, ballast water, CII rating, incidents
+        risk:
+          weight: 0.05
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent environmental compliance - modifier applied
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: Transparency, sustainability reporting, safety culture
+        risk:
+          weight: 0.05
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent corporate footprint - modifier applied
+      - id: structured_data
+        label: Structured Data
+        description: RightShip vetting, ESG ratings, credit ratings
+        risk:
+          weight: 0.05
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent structured data - modifier applied
     risk_tier_bands:
       bands:
-        - id: 1
-          label: "PREFERRED"
-          description: "Excellent risk - automatic approval, preferred pricing"
-          interpretation:
-            bands: {min: 800, max: 1000}
-            action: "APPROVE"
-            application: {method: "MULTIPLIER", applied: 0.0015, basis: "tiv"}
-
-        - id: 2
-          label: "STANDARD_PLUS"
-          description: "Good risk - automatic approval, standard pricing"
-          interpretation:
-            bands: {min: 650, max: 799}
-            action: "APPROVE"
-            application: {method: "MULTIPLIER", applied: 0.0022, basis: "tiv"}
-
-        - id: 3
-          label: "STANDARD"
-          description: "Average risk - may require referral"
-          interpretation:
-            bands: {min: 500, max: 649}
-            action: "REFER"
-            application: {method: "MULTIPLIER", applied: 0.0032, basis: "tiv"}
-
-        - id: 4
-          label: "SUBSTANDARD"
-          description: "Elevated risk - requires senior review"
-          interpretation:
-            bands: {min: 350, max: 499}
-            action: "REFER"
-            application: {method: "MULTIPLIER", applied: 0.0050, basis: "tiv"}
-
-        - id: 5
-          label: "DECLINE"
-          description: "Unacceptable risk - decline"
-          interpretation:
-            bands: {min: 0, max: 349}
-            action: "DECLINE"
-            application: {method: "MULTIPLIER", applied: 0.0080, basis: "tiv"}
-
-    # =========================================================================
-    # LOSS TIER BANDS
-    # Maps composite loss score (0-100) to pricing modifiers
-    # Calculation: (frequency_score × frequency_weight) + (severity_score × severity_weight)
-    # Result maps to band, constrained by floor/cap
-    # =========================================================================
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0015
+            basis: tiv
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: tiv
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0032
+            basis: tiv
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: tiv
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.008
+            basis: tiv
     loss_tier_bands:
       bands:
-        - id: 1
-          label: "VERY_LOW"
-          description: "Very low risk of loss"
-          interpretation:
-            bands: {min: 80, max: 100}
-            application:
-              frequency_modifier: 0.70
-              severity_modifier: 0.80
-
-        - id: 2
-          label: "LOW"
-          description: "Low risk of loss"
-          interpretation:
-            bands: {min: 60, max: 79}
-            application:
-              frequency_modifier: 0.85
-              severity_modifier: 0.90
-
-        - id: 3
-          label: "MODERATE"
-          description: "Moderate risk of loss"
-          interpretation:
-            bands: {min: 40, max: 59}
-            application:
-              frequency_modifier: 1.00
-              severity_modifier: 1.00
-
-        - id: 4
-          label: "ELEVATED"
-          description: "Elevated risk of loss"
-          interpretation:
-            bands: {min: 20, max: 39}
-            application:
-              frequency_modifier: 1.15
-              severity_modifier: 1.15
-
-        - id: 5
-          label: "HIGH"
-          description: "High risk of loss"
-          interpretation:
-            bands: {min: 0, max: 19}
-            application:
-              frequency_modifier: 1.35
-              severity_modifier: 1.40
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
       constraints:
         floor: 0.55
-        cap: 1.60
-
-    # =========================================================================
-    # EXPOSURE TIER BANDS
-    # Maps exposure scores to size and complexity modifiers
-    # Calculation: (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
-    # =========================================================================
+        cap: 1.6
     exposure:
       size:
-        weight: 0.60
+        weight: 0.6
         bands:
-          - id: 1
-            label: "MICRO"
-            description: "Micro exposure value ($0 - $1M)"
-            interpretation:
-              bands: {min: 0, max: 20}
-              application: {method: "MODIFIER", applied: 0.50, implied_thresholds: {min: 0, max: 1000000}}
-
-          - id: 2
-            label: "SMALL"
-            description: "Small exposure value ($1M - $10M)"
-            interpretation:
-              bands: {min: 21, max: 40}
-              application: {method: "MODIFIER", applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}
-
-          - id: 3
-            label: "MEDIUM"
-            description: "Medium exposure value ($10M - $50M)"
-            interpretation:
-              bands: {min: 41, max: 60}
-              application: {method: "MODIFIER", applied: 1.00, implied_thresholds: {min: 10000000, max: 50000000}}
-
-          - id: 4
-            label: "LARGE"
-            description: "Large exposure value ($50M - $250M)"
-            interpretation:
-              bands: {min: 61, max: 80}
-              application: {method: "MODIFIER", applied: 1.50, implied_thresholds: {min: 50000000, max: 250000000}}
-
-          - id: 5
-            label: "VERY_LARGE"
-            description: "Very large exposure value ($250M+)"
-            interpretation:
-              bands: {min: 81, max: 100}
-              application: {method: "MODIFIER", applied: 2.50, implied_thresholds: {min: 250000000, max: 1000000000}}
-
+        - id: 1
+          label: MICRO
+          description: Micro exposure value ($0 - $1M)
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value ($1M - $10M)
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value ($10M - $50M)
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value ($50M - $250M)
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very large exposure value ($250M+)
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
       complexity:
-        weight: 0.40
+        weight: 0.4
         bands:
-          - id: 1
-            label: "SIMPLE"
-            description: "Simple operational complexity"
-            interpretation:
-              bands: {min: 0, max: 20}
-              application: {method: "MODIFIER", applied: 0.85}
-
-          - id: 2
-            label: "MODERATE"
-            description: "Moderate operational complexity"
-            interpretation:
-              bands: {min: 21, max: 40}
-              application: {method: "MODIFIER", applied: 0.95}
-
-          - id: 3
-            label: "COMPLEX"
-            description: "Complex operations"
-            interpretation:
-              bands: {min: 41, max: 60}
-              application: {method: "MODIFIER", applied: 1.10}
-
-          - id: 4
-            label: "HIGHLY_COMPLEX"
-            description: "Highly complex operations"
-            interpretation:
-              bands: {min: 61, max: 80}
-              application: {method: "MODIFIER", applied: 1.30}
-
-          - id: 5
-            label: "EXTREMELY_COMPLEX"
-            description: "Extremely complex operations"
-            interpretation:
-              bands: {min: 81, max: 100}
-              application: {method: "MODIFIER", applied: 1.60}
-
-    # =========================================================================
-    # LIMIT BANDINGS
-    # Standard limit/deductible combinations
-    # =========================================================================
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operations
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operations
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operations
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
     limit_bandings:
-      - id: 1
-        limit: 5000000
-        deductible: 250000
-
-      - id: 2
-        limit: 10000000
-        deductible: 500000
-
-      - id: 3
-        limit: 25000000
-        deductible: 1000000
-
-      - id: 4
-        limit: 50000000
-        deductible: 2000000
-
-      - id: 5
-        limit: 100000000
-        deductible: 5000000
-
-    # =========================================================================
-    # PRICING PARAMETERS
-    # Product-type-specific ILF curves reflecting different loss development
-    # =========================================================================
+    - id: 1
+      limit: 5000000
+      deductible: 250000
+    - id: 2
+      limit: 10000000
+      deductible: 500000
+    - id: 3
+      limit: 25000000
+      deductible: 1000000
+    - id: 4
+      limit: 50000000
+      deductible: 2000000
+    - id: 5
+      limit: 100000000
+      deductible: 5000000
     pricing:
-
       by_product_type:
-        # -----------------------------------------------------------------------
-        # HULL & MACHINERY - Physical damage to vessel
-        # Moderate curve; hull value based, attritional + catastrophic
-        # -----------------------------------------------------------------------
         hull_machinery:
           ilf_curve:
             base_limit: 10000000
             factors:
-              - {limit: 10000000, factor: 1.00}
-              - {limit: 25000000, factor: 2.10}
-              - {limit: 50000000, factor: 3.80}
-              - {limit: 100000000, factor: 6.50}
-              - {limit: 250000000, factor: 13.00}
-              - {limit: 500000000, factor: 22.00}
-              - {limit: 1000000000, factor: 38.00}
-          deductible_credits:
-            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-            - {min_pct: 0.020, max_pct: null, credit: 0.20}
-
-        # -----------------------------------------------------------------------
-        # TOTAL LOSS - Constructive/actual total loss only
-        # Flatter curve; binary outcome, hull value caps loss
-        # -----------------------------------------------------------------------
+            - limit: 10000000
+              factor: 1.0
+            - limit: 25000000
+              factor: 2.1
+            - limit: 50000000
+              factor: 3.8
+            - limit: 100000000
+              factor: 6.5
+            - limit: 250000000
+              factor: 13.0
+            - limit: 500000000
+              factor: 22.0
+            - limit: 1000000000
+              factor: 38.0
+          base_limit_reference: 10000000
+          base_deductible_reference: 50000
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 250000
+            factor: 0.9
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         total_loss:
           ilf_curve:
             base_limit: 10000000
             factors:
-              - {limit: 10000000, factor: 1.00}
-              - {limit: 25000000, factor: 1.90}
-              - {limit: 50000000, factor: 3.30}
-              - {limit: 100000000, factor: 5.50}
-              - {limit: 250000000, factor: 10.50}
-              - {limit: 500000000, factor: 17.50}
-              - {limit: 1000000000, factor: 30.00}
-          deductible_credits:
-            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
-            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
-            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
-            - {min_pct: 0.020, max_pct: null, credit: 0.18}
-
-        # -----------------------------------------------------------------------
-        # INCREASED VALUE - Additional value above hull
-        # Similar to hull curve but typically smaller limits
-        # -----------------------------------------------------------------------
+            - limit: 10000000
+              factor: 1.0
+            - limit: 25000000
+              factor: 1.9
+            - limit: 50000000
+              factor: 3.3
+            - limit: 100000000
+              factor: 5.5
+            - limit: 250000000
+              factor: 10.5
+            - limit: 500000000
+              factor: 17.5
+            - limit: 1000000000
+              factor: 30.0
+          base_limit_reference: 10000000
+          base_deductible_reference: 50000
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.96
+          - deductible: 250000
+            factor: 0.92
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         increased_value:
           ilf_curve:
             base_limit: 5000000
             factors:
-              - {limit: 5000000, factor: 1.00}
-              - {limit: 10000000, factor: 1.80}
-              - {limit: 25000000, factor: 3.60}
-              - {limit: 50000000, factor: 6.00}
-              - {limit: 100000000, factor: 10.50}
-              - {limit: 250000000, factor: 21.00}
-              - {limit: 500000000, factor: 36.00}
-          deductible_credits:
-            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-            - {min_pct: 0.020, max_pct: null, credit: 0.20}
-
-        # -----------------------------------------------------------------------
-        # LOSS OF HIRE - Business interruption for vessels
-        # Steeper curve; time-based exposure compounds
-        # -----------------------------------------------------------------------
+            - limit: 5000000
+              factor: 1.0
+            - limit: 10000000
+              factor: 1.8
+            - limit: 25000000
+              factor: 3.6
+            - limit: 50000000
+              factor: 6.0
+            - limit: 100000000
+              factor: 10.5
+            - limit: 250000000
+              factor: 21.0
+            - limit: 500000000
+              factor: 36.0
+          base_limit_reference: 5000000
+          base_deductible_reference: 50000
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 250000
+            factor: 0.9
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         loss_of_hire:
           ilf_curve:
             base_limit: 5000000
             factors:
-              - {limit: 5000000, factor: 1.00}
-              - {limit: 10000000, factor: 1.95}
-              - {limit: 25000000, factor: 4.20}
-              - {limit: 50000000, factor: 7.20}
-              - {limit: 100000000, factor: 12.80}
-              - {limit: 250000000, factor: 26.00}
-              - {limit: 500000000, factor: 45.00}
-          deductible_credits:
-            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
-            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
-            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
-            - {min_pct: 0.020, max_pct: null, credit: 0.18}
-
-        # -----------------------------------------------------------------------
-        # WAR RISKS - War, terrorism, piracy
-        # Volatile curve; geopolitical exposure, catastrophic potential
-        # -----------------------------------------------------------------------
+            - limit: 5000000
+              factor: 1.0
+            - limit: 10000000
+              factor: 1.95
+            - limit: 25000000
+              factor: 4.2
+            - limit: 50000000
+              factor: 7.2
+            - limit: 100000000
+              factor: 12.8
+            - limit: 250000000
+              factor: 26.0
+            - limit: 500000000
+              factor: 45.0
+          base_limit_reference: 5000000
+          base_deductible_reference: 50000
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.96
+          - deductible: 250000
+            factor: 0.92
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         war_risks:
           ilf_curve:
             base_limit: 10000000
             factors:
-              - {limit: 10000000, factor: 1.00}
-              - {limit: 25000000, factor: 2.30}
-              - {limit: 50000000, factor: 4.40}
-              - {limit: 100000000, factor: 7.80}
-              - {limit: 250000000, factor: 16.00}
-              - {limit: 500000000, factor: 28.00}
-              - {limit: 1000000000, factor: 50.00}
-          deductible_credits:
-            - {min_pct: 0.001, max_pct: 0.005, credit: 0.03}
-            - {min_pct: 0.005, max_pct: 0.010, credit: 0.06}
-            - {min_pct: 0.010, max_pct: 0.020, credit: 0.10}
-            - {min_pct: 0.020, max_pct: null, credit: 0.15}
-
-        # -----------------------------------------------------------------------
-        # P&I LIABILITY - Protection & indemnity
-        # Steep curve; pollution, cargo, crew claims
-        # -----------------------------------------------------------------------
+            - limit: 10000000
+              factor: 1.0
+            - limit: 25000000
+              factor: 2.3
+            - limit: 50000000
+              factor: 4.4
+            - limit: 100000000
+              factor: 7.8
+            - limit: 250000000
+              factor: 16.0
+            - limit: 500000000
+              factor: 28.0
+            - limit: 1000000000
+              factor: 50.0
+          base_limit_reference: 10000000
+          base_deductible_reference: 50000
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.97
+          - deductible: 250000
+            factor: 0.94
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         pi_liability:
           ilf_curve:
             base_limit: 10000000
             factors:
-              - {limit: 10000000, factor: 1.00}
-              - {limit: 25000000, factor: 2.20}
-              - {limit: 50000000, factor: 4.10}
-              - {limit: 100000000, factor: 7.20}
-              - {limit: 250000000, factor: 15.00}
-              - {limit: 500000000, factor: 26.00}
-              - {limit: 1000000000, factor: 46.00}
-          deductible_credits:
-            - {min_pct: 0.001, max_pct: 0.005, credit: 0.04}
-            - {min_pct: 0.005, max_pct: 0.010, credit: 0.08}
-            - {min_pct: 0.010, max_pct: 0.020, credit: 0.12}
-            - {min_pct: 0.020, max_pct: null, credit: 0.18}
-
-        # -----------------------------------------------------------------------
-        # CARGO - Goods in transit
-        # Moderate curve; value-based, attritional losses
-        # -----------------------------------------------------------------------
+            - limit: 10000000
+              factor: 1.0
+            - limit: 25000000
+              factor: 2.2
+            - limit: 50000000
+              factor: 4.1
+            - limit: 100000000
+              factor: 7.2
+            - limit: 250000000
+              factor: 15.0
+            - limit: 500000000
+              factor: 26.0
+            - limit: 1000000000
+              factor: 46.0
+          base_limit_reference: 10000000
+          base_deductible_reference: 50000
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.96
+          - deductible: 250000
+            factor: 0.92
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         cargo:
           ilf_curve:
             base_limit: 5000000
             factors:
-              - {limit: 5000000, factor: 1.00}
-              - {limit: 10000000, factor: 1.75}
-              - {limit: 25000000, factor: 3.50}
-              - {limit: 50000000, factor: 5.80}
-              - {limit: 100000000, factor: 10.00}
-              - {limit: 250000000, factor: 20.00}
-              - {limit: 500000000, factor: 34.00}
-          deductible_credits:
-            - {min_pct: 0.001, max_pct: 0.005, credit: 0.05}
-            - {min_pct: 0.005, max_pct: 0.010, credit: 0.10}
-            - {min_pct: 0.010, max_pct: 0.020, credit: 0.15}
-            - {min_pct: 0.020, max_pct: null, credit: 0.20}
-
-      # Shared across all product types
+            - limit: 5000000
+              factor: 1.0
+            - limit: 10000000
+              factor: 1.75
+            - limit: 25000000
+              factor: 3.5
+            - limit: 50000000
+              factor: 5.8
+            - limit: 100000000
+              factor: 10.0
+            - limit: 250000000
+              factor: 20.0
+            - limit: 500000000
+              factor: 34.0
+          base_limit_reference: 5000000
+          base_deductible_reference: 50000
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 250000
+            factor: 0.9
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
       taxes_fees_rate: 0.03
