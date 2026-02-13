@@ -91,7 +91,7 @@ class TestBuilderV2Output:
             assert section in inner, f"Missing section: {section}"
 
     def test_metadata_has_required_fields(self, builder, cyber_spec):
-        """Metadata section must have name, version, etc."""
+        """Metadata section must have name, version, and V4 multiplexer fields."""
         result = asyncio.get_event_loop().run_until_complete(
             builder.create_coverage(cyber_spec)
         )
@@ -100,10 +100,17 @@ class TestBuilderV2Output:
 
         assert "name" in metadata
         assert "version" in metadata
-        assert metadata["version"] == "2.0.0"
+        assert metadata["version"] == "2.2.0"  # V2.2 with V4/V5 support
         assert "minimum_viable_input" in metadata
         assert isinstance(metadata["minimum_viable_input"], list)
         assert metadata["applicable_markets"] == ["jp"]
+
+        # V4 Multiplexer support
+        assert "model_specificity" in metadata
+        assert isinstance(metadata["model_specificity"], int)
+        assert 1 <= metadata["model_specificity"] <= 5
+        assert "routing_constraints" in metadata
+        assert isinstance(metadata["routing_constraints"], list)
 
     def test_signal_registry_uses_three_layer_assessment(self, builder, cyber_spec):
         """Signals must use three_layer_assessment (not signal_groups + signal_features)."""
@@ -245,16 +252,32 @@ class TestBuilderV2Output:
             assert "bands" not in q  # Must NOT use old v1.5 key
 
     def test_pricing_section_present(self, builder, cyber_spec):
-        """Config must include pricing with ILF curve."""
+        """Config must include pricing with ILF curve and V5 anchors."""
         result = asyncio.get_event_loop().run_until_complete(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
         pricing = config["cyber_japan"]["cyber_japan_general"]["pricing"]
 
+        # V5 Pricing Anchors
+        assert "base_limit_reference" in pricing
+        assert "base_deductible_reference" in pricing
         assert "ilf_curve" in pricing
-        assert "deductible_credits" in pricing
+        # V5: deductible_factors replaces deductible_credits
+        assert "deductible_factors" in pricing
+        assert "deductible_credits" not in pricing  # Deprecated
         assert "taxes_fees_rate" in pricing
+
+        # Validate deductible_factors structure
+        for factor in pricing["deductible_factors"]:
+            assert "deductible" in factor
+            assert "factor" in factor
+
+        # Validate anchor deductible has factor 1.00
+        anchor_ded = pricing["base_deductible_reference"]
+        anchor_factors = [f for f in pricing["deductible_factors"] if f["deductible"] == anchor_ded]
+        assert len(anchor_factors) == 1
+        assert anchor_factors[0]["factor"] == 1.00
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ Tests for LLM-assisted coverage building.
 import pytest
 import yaml
 
-from builder import (
+from infrastructure.builder import (
     # Types
     CoverageSpec,
     CoverageBuildResult,

@@ -1,27 +1,35 @@
 """
-DSI Coverage Builder (Phase 13 → v2.0 Overhaul)
+DSI Coverage Builder (Phase 13 → v2.2 Overhaul)
 
-Generates v2.0 compliant coverage configurations matching the canonical
+Generates v2.2 compliant coverage configurations matching the canonical
 schema used by existing coverages (cyber, D&O, etc.).
+
+Version History:
+- v2.0: Original schema with signal_registry, groups, tier_bands
+- v2.1: Added V4 multiplexer support (model_specificity, routing_constraints)
+- v2.2: Added V5 pricing anchors (base_limit_reference, base_deductible_reference,
+        deductible_factors, BUNDLED/DECOUPLED modes)
 
 Output structure:
   coverage_id:
     coverage_id_general:
-      metadata: {...}
+      metadata: {..., model_specificity, routing_constraints}
       direct_queries: [...]
       signal_registry: [...]
       groups: {categories: [...], three_layer_assessment: [...]}
       risk_tier_bands: {bands: [...]}
       loss_tier_bands: {bands: [...], constraints: {...}}
       exposure: {size: {...}, complexity: {...}}
-      limit_bandings: [...]
-      pricing: {...}
+      limit_bandings: [...] | limit_configuration: {...}
+      pricing: {..., base_limit_reference, base_deductible_reference, deductible_factors}
 
 Constraints:
 - score_conditions actions: FLAG | MODIFIER | REFER (DECLINE is tier-level only)
 - score_conditions are banded (plural, list of multiple conditions)
 - score_conditions do NOT apply to tier bands
 - Signals defined once in signal_registry with group_id reference
+- base_limit_reference MUST exist as a key in ilf_curve
+- base_deductible_reference MUST have factor 1.00 in deductible_factors
 """
 
 import logging
@@ -48,10 +56,14 @@ logger = logging.getLogger("dsi.builder")
 
 class CoverageBuilder:
     """
-    Coverage configuration builder producing v2.0 compliant YAML.
+    Coverage configuration builder producing v2.2 compliant YAML.
 
     Generates complete coverage configs from high-level specifications.
     Configs match the canonical schema used by existing DSI coverages.
+
+    V2.2 Features:
+    - Phase V4: model_specificity, routing_constraints for multiplexer support
+    - Phase V5: Pricing anchors, deductible_factors, BUNDLED/DECOUPLED modes
     """
 
     def __init__(
@@ -81,13 +93,13 @@ class CoverageBuilder:
 
     async def create_coverage(self, spec: CoverageSpec) -> CoverageBuildResult:
         """
-        Create a complete v2.0 coverage from specification.
+        Create a complete v2.2 coverage from specification.
 
         Steps:
         1. Analyze industry requirements
         2. Select and configure signals
-        3. Generate v2.0 configuration
-        4. Validate against v2.0 schema
+        3. Generate v2.2 configuration (with V4/V5 features)
+        4. Validate against v2.2 schema
         5. Generate code stubs
         """
         start_time = time.time()
@@ -109,8 +121,8 @@ class CoverageBuilder:
                 )
                 human_review.append("Review signal selection - below minimum count")
 
-            # Step 3: Generate v2.0 configuration
-            self._update_progress(BuildStage.CONFIG_GENERATION, 0.5, "Generating v2.0 configuration...")
+            # Step 3: Generate v2.2 configuration
+            self._update_progress(BuildStage.CONFIG_GENERATION, 0.5, "Generating v2.2 configuration...")
             config_yaml = await self.generate_config(spec, selections)
 
             # Step 4: Validate
@@ -226,8 +238,8 @@ class CoverageBuilder:
         spec: CoverageSpec,
         selections: List[SignalSelection],
     ) -> str:
-        """Generate complete v2.0 compliant YAML configuration."""
-        logger.info(f"Generating v2.0 config for {spec.name}")
+        """Generate complete v2.2 compliant YAML configuration."""
+        logger.info(f"Generating v2.2 config for {spec.name}")
 
         coverage_id = spec.name.lower().replace(" ", "_")
         config_name = f"{coverage_id}_general"
@@ -240,16 +252,22 @@ class CoverageBuilder:
             "risk_tier_bands": self._build_risk_tier_bands(spec.tier_strategy),
             "loss_tier_bands": self._build_loss_tier_bands(),
             "exposure": self._build_exposure(),
-            "limit_bandings": self._build_limit_bandings(),
-            "pricing": self._build_pricing(),
         }
+
+        # V5: BUNDLED mode uses limit_bandings, DECOUPLED uses limit_configuration
+        if spec.pricing_mode == "DECOUPLED":
+            inner_config["limit_configuration"] = self._build_limit_configuration(spec)
+        else:
+            inner_config["limit_bandings"] = self._build_limit_bandings(spec)
+
+        inner_config["pricing"] = self._build_pricing(spec)
 
         config = {coverage_id: {config_name: inner_config}}
 
         return yaml.dump(config, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
     async def validate_config(self, config_yaml: str) -> ValidationResult:
-        """Validate generated configuration against v2.0 schema."""
+        """Validate generated configuration against v2.2 schema."""
         return self.validator.validate_yaml(config_yaml)
 
     async def generate_stubs(
@@ -278,20 +296,23 @@ class CoverageBuilder:
         return GeneratedCode(files=files)
 
     # =========================================================================
-    # V2.0 CONFIG BUILDERS
+    # V2.2 CONFIG BUILDERS
     # =========================================================================
 
     def _build_metadata(self, spec: CoverageSpec) -> Dict[str, Any]:
-        """Build metadata section."""
+        """Build metadata section with V4 multiplexer support."""
         return {
             "name": f"DSI {spec.name} Technical Pricing Model",
             "description": spec.description,
-            "version": "2.0.0",
+            "version": "2.2.0",
             "product_types": spec.product_types or [spec.name.lower().replace(" ", "_")],
             "applicable_markets": spec.applicable_markets,
             "minimum_viable_input": ["client name (domain optional)", "Limit in USD"],
             "min_premium": spec.min_premium,
             "default_currency": spec.default_currency,
+            # V4 Multiplexer support
+            "model_specificity": spec.model_specificity,
+            "routing_constraints": spec.routing_constraints,
         }
 
     def _build_direct_queries(self, spec: CoverageSpec) -> List[Dict[str, Any]]:
@@ -778,39 +799,70 @@ class CoverageBuilder:
             },
         }
 
-    def _build_limit_bandings(self) -> List[Dict[str, Any]]:
-        """Build standard limit/deductible combinations."""
+    def _build_limit_bandings(self, spec: CoverageSpec) -> List[Dict[str, Any]]:
+        """Build standard limit/deductible combinations for BUNDLED mode."""
+        # Use base_deductible_reference as the anchor point
+        base_ded = spec.base_deductible_reference
         return [
-            {"id": 1, "limit": 1000000, "deductible": 25000},
-            {"id": 2, "limit": 5000000, "deductible": 50000},
-            {"id": 3, "limit": 10000000, "deductible": 100000},
-            {"id": 4, "limit": 25000000, "deductible": 250000},
-            {"id": 5, "limit": 50000000, "deductible": 500000},
+            {"id": 1, "limit": 1000000, "deductible": int(base_ded * 0.5)},  # 25k if base=50k
+            {"id": 2, "limit": 5000000, "deductible": base_ded},             # 50k anchor
+            {"id": 3, "limit": 10000000, "deductible": int(base_ded * 2)},   # 100k
+            {"id": 4, "limit": 25000000, "deductible": int(base_ded * 5)},   # 250k
+            {"id": 5, "limit": 50000000, "deductible": int(base_ded * 10)},  # 500k
         ]
 
-    def _build_pricing(self) -> Dict[str, Any]:
-        """Build pricing section with ILF curve and deductible credits."""
+    def _build_limit_configuration(self, spec: CoverageSpec) -> Dict[str, Any]:
+        """Build limit configuration for DECOUPLED mode (independent limits/deductibles)."""
         return {
-            "ilf_curve": {
-                "base_limit": 1000000,
-                "factors": [
-                    {"limit": 1000000, "factor": 1.00},
-                    {"limit": 2000000, "factor": 1.70},
-                    {"limit": 5000000, "factor": 3.20},
-                    {"limit": 10000000, "factor": 5.00},
-                    {"limit": 25000000, "factor": 9.00},
-                    {"limit": 50000000, "factor": 14.00},
-                    {"limit": 100000000, "factor": 22.00},
-                ],
-            },
-            "deductible_credits": [
-                {"min_pct": 0.001, "max_pct": 0.005, "credit": 0.05},
-                {"min_pct": 0.005, "max_pct": 0.010, "credit": 0.10},
-                {"min_pct": 0.010, "max_pct": 0.020, "credit": 0.15},
-                {"min_pct": 0.020, "max_pct": None, "credit": 0.20},
-            ],
+            "type": "DECOUPLED",
+            "valid_limits": spec.valid_limits or [1000000, 5000000, 10000000, 25000000, 50000000],
+            "valid_deductibles": spec.valid_deductibles or [25000, 50000, 100000, 250000, 500000],
+        }
+
+    def _build_pricing(self, spec: CoverageSpec) -> Dict[str, Any]:
+        """Build pricing section with V5 anchors, ILF curve, and deductible factors."""
+        return {
+            # V5 Pricing Anchors - define what the base price buys
+            "base_limit_reference": spec.base_limit_reference,
+            "base_deductible_reference": spec.base_deductible_reference,
+            "ilf_curve": self._build_ilf_curve(spec),
+            # V5 Deductible Factors (replaces deductible_credits)
+            "deductible_factors": self._build_deductible_factors(spec),
             "taxes_fees_rate": 0.05,
         }
+
+    def _build_ilf_curve(self, spec: CoverageSpec) -> Dict[str, Any]:
+        """Build ILF curve with anchor limit included."""
+        base_limit = spec.base_limit_reference
+        return {
+            "base_limit": base_limit,
+            "factors": [
+                {"limit": 1000000, "factor": 1.00 if base_limit == 1000000 else 0.50},
+                {"limit": 2000000, "factor": 1.70 if base_limit == 1000000 else 0.85},
+                {"limit": 5000000, "factor": 3.20 if base_limit == 1000000 else 1.60},
+                {"limit": 10000000, "factor": 5.00 if base_limit == 1000000 else 2.50},
+                {"limit": 25000000, "factor": 9.00 if base_limit == 1000000 else 4.50},
+                {"limit": 50000000, "factor": 14.00 if base_limit == 1000000 else 7.00},
+                {"limit": 100000000, "factor": 22.00 if base_limit == 1000000 else 11.00},
+            ],
+        }
+
+    def _build_deductible_factors(self, spec: CoverageSpec) -> List[Dict[str, Any]]:
+        """
+        Build deductible factor table with anchor = 1.00.
+
+        The anchor deductible (base_deductible_reference) has factor 1.00.
+        Lower deductibles have factors > 1.00 (premium loading).
+        Higher deductibles have factors < 1.00 (premium credit).
+        """
+        anchor = spec.base_deductible_reference
+        return [
+            {"deductible": int(anchor * 0.5), "factor": 1.15},   # 25k: +15%
+            {"deductible": anchor, "factor": 1.00},               # 50k: anchor
+            {"deductible": int(anchor * 2), "factor": 0.85},      # 100k: -15%
+            {"deductible": int(anchor * 5), "factor": 0.70},      # 250k: -30%
+            {"deductible": int(anchor * 10), "factor": 0.55},     # 500k: -45%
+        ]
 
     # =========================================================================
     # HELPERS

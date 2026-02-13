@@ -1,12 +1,13 @@
-# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
+# Digital Signal Intelligence (DSI)
 
 ## Premium Calculation Methodology
 
 | Item | Value |
 |-|-|
-|Version|1.0|
+|Version|2.0|
 |Date|February 2026|
 |Classification|Methodology|
+|Schema Version|v2.2|
 
 ---
 
@@ -69,16 +70,40 @@ pricing:
 If the user requests a $5M Limit with a $100k Deductible:
 
 1. **Limit Scaling:**
-  * Anchor ILF ($1M) = 1.00
-  * Requested ILF ($5M) = 3.50
-  * Multiplier = $3.50 / 1.00 = \mathbf{3.50}$
+   * Anchor ILF ($1M) = 1.00
+   * Requested ILF ($5M) = 3.50
+   * Multiplier = $3.50 / 1.00 = \mathbf{3.50}$
 
 2. **Deductible Scaling:**
-  * Anchor Factor ($50k) = 1.00
-  * Requested Factor ($100k) = 0.85
-  * Multiplier = $\mathbf{0.85}$
+   * Anchor Factor ($50k) = 1.00
+   * Requested Factor ($100k) = 0.85
+   * Multiplier = $\mathbf{0.85}$
 
-Result: The premium is $3.50 \times 0.85 = \mathbf{2.975} \times$ the Base Price.
+Result: The premium is $3.50 \times 0.85 = \mathbf{2.975}\times$ the Base Price.
+
+### Deductible Factor Table
+
+The `deductible_factors` table defines the pricing adjustment for each deductible option. The anchor deductible always has a factor of 1.00.
+
+```yaml
+pricing:
+  base_deductible_reference: 50000  # Anchor = $50k
+  deductible_factors:
+    - deductible: 25000    # Lower ded = premium loading
+      factor: 1.15         # +15%
+    - deductible: 50000    # Anchor deductible
+      factor: 1.00         # Base price
+    - deductible: 100000   # Higher ded = premium credit
+      factor: 0.85         # -15%
+    - deductible: 250000
+      factor: 0.70         # -30%
+    - deductible: 500000
+      factor: 0.55         # -45%
+```
+
+**Key Principle:** Lower deductibles increase premium (factor > 1.0), higher deductibles decrease premium (factor < 1.0). The anchor deductible is the reference point where factor = 1.00.
+
+---
 
 ## 5. Pricing Towers (Corporate Structure)
 
