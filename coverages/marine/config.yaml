@@ -13,7 +13,7 @@
 # 7. Normalisation handled by inference functions, not config
 #
 # AUGMENTED BY:
-# - analysis_outputs/cyber_v{date}.yaml - empirically-derived parameters
+# - analysis_outputs/{coverage}_v{date}.yaml - empirically-derived parameters
 # - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
 #
 # =============================================================================
