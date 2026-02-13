@@ -1187,22 +1187,23 @@ cyber:
             application:
               method: MODIFIER
               applied: 1.3
-    limit_bandings:
-    - id: 1
-      limit: 1000000
-      deductible: 25000
-    - id: 2
-      limit: 5000000
-      deductible: 50000
-    - id: 3
-      limit: 10000000
-      deductible: 100000
-    - id: 4
-      limit: 25000000
-      deductible: 250000
-    - id: 5
-      limit: 50000000
-      deductible: 500000
+   
+    limit_configuration:
+      type: "DECOUPLED"
+      valid_limits:
+        - 1000000
+        - 3000000
+        - 5000000
+        - 10000000
+        - 25000000
+      valid_deductibles:
+        - 10000
+        - 25000
+        - 50000
+        - 100000
+        - 250000
+        - 500000    
+    
     pricing:
       by_product_type:
         cyber_liability:
