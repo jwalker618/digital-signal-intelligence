@@ -33,7 +33,7 @@ Items annotated with **(Test)** can and should be verified programmatically. Ite
 
 ## Configuration Documentation
 
-- Is there a `logic.md` file for every `config.yaml` file which explains the logic / decision making used? **(Manual)**
+- Is there a `logic.md` file for every `config.yaml` file which explains the logic / decision making used? **(Test)**
   - Does this include each configuration under the config (e.g., `cyber_general` and `cyber_sme` under `cyber`)?
   - Does this show risk, loss, and exposure weights that add to 1? **(Test)**
   - Does this explain the rationale for signal selection and weighting for this coverage?
