@@ -11,11 +11,11 @@
 ---
 
 # coverages
-- Is there a file
-- Is there not a file
+- Is there a logic.md file for every config.yaml file which explains then logic / decision making used?
+- Is the premium-methodology used by each configuration correct? (Test)
   - Is there a sublits
   - is there not a sublit
-
+- Is the config.yaml and all underlying configurations compliant with the master_config_layout?
 
 
 1. Is there a logic.md file for every config.yaml file which explains then logic / decision making used?
