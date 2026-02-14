@@ -10,7 +10,7 @@
 
 ---
 
-# coverages
+# coverages (coverages/)
 - Is there a logic.md file for every config.yaml file which explains then logic / decision making used?
   - Does this include each configuration under the config?
   - Does this show risk, loss, and exposure weights that add to 1? (Test)
@@ -22,5 +22,29 @@
       - For example, First-Party Property (Energy, Aerospace, Marine), where the kimit is often equal ot the TIV.
       - For example, A Hedge Fund's exposure is directly correlated to Assets Under Management (AUM).
       - For example, Mid-Market to Enterprise Cyber.
-- Is the config.yaml and all underlying configurations compliant with the master_config_layout?
+- Is the config.yaml and all underlying configurations compliant with the master_config_layout? (Test)
+    - Are all components included? This should include: direct_queries, signal_registry, risk_tier_bands, loss_tier_bands, exposure, limit_bandings, pricing (including a correct anchor)
 
+
+# demo (demo/)
+- does the demo work? 
+- do all examples work?
+
+# deploy (deploy/)
+- Is the deployment_guide.md comprehensive and include all neccessary steps to deploy DSI?
+
+# docs (docs/overview/)
+- Is the project correctly reflective of the whitepaper?
+- Is the project correctly reflective of the visionpaper?
+
+# infrastructure (infrastructure/)
+
+# layers (layers/)
+
+# rust (rust/)
+
+# schemas (schemas/)
+
+# signal_architecture (signal_architecture/)
+
+# tests (tests/)
