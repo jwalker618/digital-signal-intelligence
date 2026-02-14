@@ -907,6 +907,10 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent network authority - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
       - id: safety_record
         label: Safety Record
         description: Historical safety performance from public databases
@@ -928,6 +932,10 @@ aerospace:
             action: MODIFIER
             applied: 0.85
             note: Excellent safety record - modifier applied
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.1
       - id: regulatory_compliance
         label: Regulatory Compliance
         description: Certificate status, enforcement actions, audit results
@@ -949,6 +957,10 @@ aerospace:
             action: MODIFIER
             applied: 0.85
             note: Excellent regulatory compliance - modifier applied
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.1
       - id: operational_quality
         label: Operational Quality
         description: Observable operational metrics
@@ -960,6 +972,10 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent operational quality - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
       - id: fleet_quality
         label: Fleet Quality
         description: Aircraft age, composition, maintenance indicators
@@ -971,6 +987,10 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent fleet quality - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.35
       - id: financial_stability
         label: Financial Stability
         description: Public financial indicators
@@ -982,6 +1002,10 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent financial stability - modifier applied
+        loss:
+          weight: 0.03
+        exposure:
+          weight: 0.1
       - id: route_risk
         label: Route Risk
         description: Geographic and operational risk exposure
@@ -998,6 +1022,10 @@ aerospace:
             action: MODIFIER
             applied: 0.85
             note: Excellent route risk - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.1
       - id: corporate_governance
         label: Corporate Governance
         description: Management quality and safety culture indicators
@@ -1009,6 +1037,10 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent corporate governance - modifier applied
+        loss:
+          weight: 0.02
+        exposure:
+          weight: 0.05
     
     risk_tier_bands:
       bands:
@@ -1166,11 +1198,12 @@ aerospace:
               method: "MODIFIER"
               applied: 0.8
         - id: 2
-          label: "MODERATE" 
+          label: "MODERATE"
           description: Moderate operational complexity
-          interpretation: 
-            bands: min: 21
-            max: 40
+          interpretation:
+            bands:
+              min: 21
+              max: 40
             application:
               method: "MODIFIER"
               applied: 0.95
@@ -1783,6 +1816,10 @@ aerospace:
             action: REFER
             override: 4
             note: Significant safety concerns
+        loss:
+          weight: 0.45
+        exposure:
+          weight: 0.1
       - id: regulatory_compliance
         label: Regulatory Compliance
         description: Certificate and enforcement status
@@ -1799,6 +1836,10 @@ aerospace:
             action: REFER
             override: 4
             note: Material regulatory concerns
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.1
       - id: operational_quality
         label: Operational Quality
         description: Crew and operational standards
@@ -1810,6 +1851,10 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent operational quality
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
       - id: fleet_quality
         label: Fleet Quality
         description: Aircraft condition and maintenance
@@ -1821,11 +1866,19 @@ aerospace:
             action: MODIFIER
             applied: 0.9
             note: Excellent fleet quality
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.55
       - id: corporate_governance
         label: Corporate Governance
         description: Management and safety culture
         risk:
           weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.1
 
     risk_tier_bands:
       bands:

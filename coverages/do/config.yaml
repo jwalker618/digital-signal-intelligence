@@ -43,10 +43,16 @@ directors_officers:
           description: 'One of: side_a, side_b, side_c, side_a_dic, employment_practices, fiduciary'
         - field: limit
           description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD for premium basis
       min_premium: 10000
       default_currency: USD
       model_specificity: 1
-      routing_constraints: []
+      routing_constraints:
+      - field: revenue
+        operator: ">"
+        value: 100000000
+        required_in_input: true
     direct_queries:
     - id: pending_claims
       question: Are there any pending securities class actions or derivative suits?
@@ -835,6 +841,10 @@ directors_officers:
             action: MODIFIER
             applied: 0.9
             note: Excellent network authority - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
       - id: governance
         label: Corporate Governance
         description: Board composition, structure, and shareholder rights
@@ -856,6 +866,10 @@ directors_officers:
             action: MODIFIER
             applied: 0.85
             note: Excellent governance - modifier applied
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.1
       - id: financial
         label: Financial Integrity
         description: Audit quality, internal controls, financial reporting
@@ -877,6 +891,10 @@ directors_officers:
             action: MODIFIER
             applied: 0.85
             note: Excellent financial integrity - modifier applied
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
       - id: litigation
         label: Litigation Profile
         description: Securities litigation, regulatory actions, enforcement history
@@ -898,6 +916,10 @@ directors_officers:
             action: MODIFIER
             applied: 0.85
             note: Excellent litigation profile - modifier applied
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.05
       - id: executive
         label: Executive Profile
         description: Executive stability, quality, and conduct
@@ -909,6 +931,10 @@ directors_officers:
             action: MODIFIER
             applied: 0.9
             note: Excellent executive profile - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
       - id: corporate_footprint
         label: Corporate Footprint
         description: Investor relations, transparency, ESG commitment
@@ -920,6 +946,10 @@ directors_officers:
             action: MODIFIER
             applied: 0.9
             note: Excellent corporate footprint - modifier applied
+        loss:
+          weight: 0.03
+        exposure:
+          weight: 0.2
       - id: structured_data
         label: Structured Data
         description: Third-party governance and credit ratings
@@ -931,6 +961,10 @@ directors_officers:
             action: MODIFIER
             applied: 0.9
             note: Excellent structured data - modifier applied
+        loss:
+          weight: 0.02
+        exposure:
+          weight: 0.25
     risk_tier_bands:
       bands:
       - id: 1
@@ -942,8 +976,9 @@ directors_officers:
             max: 1000
           action: APPROVE
           application:
-            method: PREMIUM_BASE
-            value: 4000
+            method: MULTIPLIER
+            basis: revenue
+            applied: 0.0005
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -953,8 +988,9 @@ directors_officers:
             max: 799
           action: APPROVE
           application:
-            method: PREMIUM_BASE
-            value: 6000
+            method: MULTIPLIER
+            basis: revenue
+            applied: 0.00075
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -964,8 +1000,9 @@ directors_officers:
             max: 649
           action: REFER
           application:
-            method: PREMIUM_BASE
-            value: 9000
+            method: MULTIPLIER
+            basis: revenue
+            applied: 0.001
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -975,8 +1012,9 @@ directors_officers:
             max: 499
           action: REFER
           application:
-            method: PREMIUM_BASE
-            value: 15000
+            method: MULTIPLIER
+            basis: revenue
+            applied: 0.002
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -986,8 +1024,9 @@ directors_officers:
             max: 349
           action: DECLINE
           application:
-            method: PREMIUM_BASE
-            value: 25000
+            method: MULTIPLIER
+            basis: revenue
+            applied: 0.005
     loss_tier_bands:
       bands:
       - id: 1
@@ -1705,6 +1744,10 @@ directors_officers:
             action: REFER
             override: 4
             note: Governance concerns
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.15
       - id: financial
         label: Financial Health
         description: Financial stability and audit quality
@@ -1716,6 +1759,10 @@ directors_officers:
             action: REFER
             override: 4
             note: Financial concerns
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.25
       - id: litigation
         label: Litigation Profile
         description: Claims and regulatory history
@@ -1727,11 +1774,19 @@ directors_officers:
             action: REFER
             override: 5
             note: Elevated litigation risk
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.2
       - id: footprint
         label: Corporate Footprint
         description: Company size and complexity indicators
         risk:
           weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.4
     risk_tier_bands:
       bands:
       - id: 1

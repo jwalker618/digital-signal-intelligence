@@ -43,6 +43,8 @@ marine:
           description: Requested limit in USD
         - field: hull_value
           description: Total hull value in USD
+        - field: tiv
+          description: Total Insured Value (combined hull, increased value, loss of hire)
       min_premium: 50000
       default_currency: USD
       model_specificity: 1
@@ -899,6 +901,10 @@ marine:
             action: MODIFIER
             applied: 0.9
             note: Excellent network authority - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.05
       - id: operational_telemetry
         label: Operational Telemetry
         description: AIS behavior patterns, dark activity, route risk
@@ -920,6 +926,10 @@ marine:
             action: MODIFIER
             applied: 0.85
             note: Excellent operational telemetry - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
       - id: safety_compliance
         label: Safety Compliance
         description: PSC performance, class status, incident history
@@ -941,6 +951,10 @@ marine:
             action: MODIFIER
             applied: 0.85
             note: Excellent safety compliance - modifier applied
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.1
       - id: fleet_profile
         label: Fleet Profile
         description: Fleet age, stability, vessel quality, crew certification
@@ -952,6 +966,10 @@ marine:
             action: MODIFIER
             applied: 0.9
             note: Excellent fleet profile - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.35
       - id: sanctions_compliance
         label: Sanctions Compliance
         description: Sanctions status, ownership transparency, STS patterns
@@ -973,6 +991,10 @@ marine:
             action: MODIFIER
             applied: 0.85
             note: Excellent sanctions compliance - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
       - id: environmental
         label: Environmental Compliance
         description: IMO 2020, ballast water, CII rating, incidents
@@ -984,6 +1006,10 @@ marine:
             action: MODIFIER
             applied: 0.9
             note: Excellent environmental compliance - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.1
       - id: corporate_footprint
         label: Corporate Footprint
         description: Transparency, sustainability reporting, safety culture
@@ -995,6 +1021,10 @@ marine:
             action: MODIFIER
             applied: 0.9
             note: Excellent corporate footprint - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.1
       - id: structured_data
         label: Structured Data
         description: RightShip vetting, ESG ratings, credit ratings
@@ -1006,6 +1036,10 @@ marine:
             action: MODIFIER
             applied: 0.9
             note: Excellent structured data - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
     risk_tier_bands:
       bands:
       - id: 1

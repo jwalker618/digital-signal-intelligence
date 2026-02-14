@@ -41,10 +41,16 @@ financial_institutions:
             fiduciary_liability'
         - field: limit
           description: Requested limit in USD
+        - field: total_assets
+          description: Total assets in USD for premium basis
       min_premium: 25000
       default_currency: USD
       model_specificity: 1
-      routing_constraints: []
+      routing_constraints:
+      - field: total_assets
+        operator: ">"
+        value: 10000000000
+        required_in_input: true
     direct_queries:
     - id: regulatory_action
       question: Any pending or recent (3 years) regulatory enforcement actions?
@@ -955,6 +961,10 @@ financial_institutions:
             action: MODIFIER
             applied: 1.1
             note: Weak network authority loading
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
       - id: regulatory_compliance
         label: Regulatory Compliance
         description: Examination results, enforcement actions, compliance ratings
@@ -971,6 +981,10 @@ financial_institutions:
             action: REFER
             override: 4
             note: Significant regulatory concerns
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.1
       - id: financial_condition
         label: Financial Condition
         description: Capital, asset quality, liquidity, earnings (CAMELS proxies)
@@ -987,6 +1001,10 @@ financial_institutions:
             action: REFER
             override: 4
             note: Material financial concerns
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.25
       - id: governance
         label: Corporate Governance
         description: Board composition, executive stability, committee quality
@@ -1003,6 +1021,10 @@ financial_institutions:
             action: MODIFIER
             applied: 1.15
             note: Weak governance loading
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.1
       - id: operational_risk
         label: Operational Risk
         description: Complaints, litigation, breach history, incidents
@@ -1014,6 +1036,10 @@ financial_institutions:
             action: REFER
             override: 4
             note: Elevated operational risk
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
       - id: cyber_security
         label: Cyber Security
         description: Observable technical security posture
@@ -1025,6 +1051,10 @@ financial_institutions:
             action: REFER
             override: 4
             note: Cyber security deficiencies
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
       - id: corporate_footprint
         label: Corporate Footprint
         description: Transparency, disclosure, investor relations
@@ -1041,6 +1071,10 @@ financial_institutions:
             action: MODIFIER
             applied: 1.1
             note: Poor transparency loading
+        loss:
+          weight: 0.03
+        exposure:
+          weight: 0.15
       - id: structured_data
         label: Structured Data
         description: Third-party ratings and benchmarks
@@ -1057,6 +1091,10 @@ financial_institutions:
             action: MODIFIER
             applied: 1.1
             note: Weak third-party ratings loading
+        loss:
+          weight: 0.02
+        exposure:
+          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1
@@ -1068,8 +1106,9 @@ financial_institutions:
             max: 1000
           action: APPROVE
           application:
-            method: PREMIUM_BASE
-            value: 1500
+            method: MULTIPLIER
+            basis: total_assets
+            applied: 0.00001
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1079,8 +1118,9 @@ financial_institutions:
             max: 799
           action: APPROVE
           application:
-            method: PREMIUM_BASE
-            value: 2200
+            method: MULTIPLIER
+            basis: total_assets
+            applied: 0.000015
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1090,8 +1130,9 @@ financial_institutions:
             max: 649
           action: REFER
           application:
-            method: PREMIUM_BASE
-            value: 3200
+            method: MULTIPLIER
+            basis: total_assets
+            applied: 0.00002
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1101,8 +1142,9 @@ financial_institutions:
             max: 499
           action: REFER
           application:
-            method: PREMIUM_BASE
-            value: 5000
+            method: MULTIPLIER
+            basis: total_assets
+            applied: 0.00003
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1112,8 +1154,9 @@ financial_institutions:
             max: 349
           action: DECLINE
           application:
-            method: PREMIUM_BASE
-            value: 8000
+            method: MULTIPLIER
+            basis: total_assets
+            applied: 0.00006
     loss_tier_bands:
       bands:
       - id: 1

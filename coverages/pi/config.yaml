@@ -955,6 +955,10 @@ professional_indemnity:
             action: MODIFIER
             applied: 0.9
             note: Excellent network authority - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.05
       - id: regulatory_standing
         label: Regulatory Standing
         description: License status, disciplinary history, certifications
@@ -976,6 +980,10 @@ professional_indemnity:
             action: MODIFIER
             applied: 0.85
             note: Excellent regulatory standing - modifier applied
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.1
       - id: firm_stability
         label: Firm Stability
         description: Tenure, partner retention, financial health
@@ -992,6 +1000,10 @@ professional_indemnity:
             action: MODIFIER
             applied: 0.85
             note: Excellent firm stability - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
       - id: practice_quality
         label: Practice Quality
         description: Client reviews, outcomes, complaint history
@@ -1003,6 +1015,10 @@ professional_indemnity:
             action: MODIFIER
             applied: 0.9
             note: Excellent practice quality - modifier applied
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
       - id: technical_infrastructure
         label: Technical Infrastructure
         description: Digital security posture for client confidentiality
@@ -1014,6 +1030,10 @@ professional_indemnity:
             action: MODIFIER
             applied: 0.9
             note: Excellent technical infrastructure - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
       - id: corporate_footprint
         label: Corporate Footprint
         description: Website quality, thought leadership, transparency
@@ -1025,6 +1045,10 @@ professional_indemnity:
             action: MODIFIER
             applied: 0.9
             note: Excellent corporate footprint - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.25
       - id: litigation_history
         label: Litigation History
         description: Malpractice suits, fee disputes, regulatory enforcement
@@ -1046,6 +1070,10 @@ professional_indemnity:
             action: MODIFIER
             applied: 0.85
             note: Excellent litigation history - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1

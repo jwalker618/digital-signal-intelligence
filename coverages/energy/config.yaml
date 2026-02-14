@@ -932,6 +932,10 @@ energy:
             action: MODIFIER
             applied: 0.9
             note: Excellent network authority - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
       - id: safety_performance
         label: Safety Performance
         description: OSHA metrics, incidents, process safety events
@@ -953,6 +957,10 @@ energy:
             action: REFER
             override: 4
             note: Significant safety concerns
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.1
       - id: environmental_compliance
         label: Environmental Compliance
         description: EPA violations, spills, emissions, flaring
@@ -974,6 +982,10 @@ energy:
             action: REFER
             override: 4
             note: Significant environmental concerns
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.1
       - id: operational_telemetry
         label: Operational Telemetry
         description: Production patterns, facility activity, maintenance signals
@@ -985,6 +997,10 @@ energy:
             action: MODIFIER
             applied: 0.9
             note: Excellent operational telemetry - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
       - id: financial_stability
         label: Financial Stability
         description: Credit rating, leverage, ARO coverage, capex trends
@@ -1001,6 +1017,10 @@ energy:
             action: REFER
             override: 4
             note: Financial stability concerns
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.2
       - id: asset_portfolio
         label: Asset Portfolio
         description: Asset age, concentration, complexity, permit status
@@ -1012,6 +1032,10 @@ energy:
             action: MODIFIER
             applied: 0.9
             note: Excellent asset portfolio - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: Safety culture communication, ESG reporting, HSE leadership
@@ -1023,6 +1047,10 @@ energy:
             action: MODIFIER
             applied: 0.9
             note: Excellent corporate footprint - modifier applied
+        loss:
+          weight: 0.03
+        exposure:
+          weight: 0.03
       - id: structured_data
         label: Structured Data
         description: Third-party ESG ratings and industry benchmarks
@@ -1034,6 +1062,10 @@ energy:
             action: MODIFIER
             applied: 0.9
             note: Excellent structured data - modifier applied
+        loss:
+          weight: 0.02
+        exposure:
+          weight: 0.02
     risk_tier_bands:
       bands:
       - id: 1
