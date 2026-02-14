@@ -12,10 +12,8 @@
 
 # coverages
 1. Is there a logic.md file for every config.yaml file which explains then logic / decision making used?
-2.  Does this work
-3.   Or does it not 
-  * Does this include each configuration under the config?
-  * Does this show risk, loss, and exposure weights that add to 1? (Test)
+ - Does this include each configuration under the config?
+ - Does this show risk, loss, and exposure weights that add to 1? (Test)
 2. Is the premium-methodology used by each configuration correct? (Test)
   * PREMIUM_BASE (Fixed Price) should be used for high volume / low variance profile risks, where a multiplier would add un-neccessary complexity.
     * For example, SME / Micro business schemes (e.g., turnover < $5M)
