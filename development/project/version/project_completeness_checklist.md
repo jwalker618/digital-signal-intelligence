@@ -61,7 +61,7 @@ Items annotated with **(Test)** can and should be verified programmatically. Ite
 
 ## Per-Coverage Verification
 
-Repeat for each of the 7 coverages: **Cyber**, **D&O**, **Energy**, **Marine**, **FI**, **Aerospace**, **PI**
+Repeat for each coverage within coverages/
 
 | Check | Testable | Description |
 |-|-|-|
@@ -95,10 +95,10 @@ Repeat for each of the 7 coverages: **Cyber**, **D&O**, **Energy**, **Marine**, 
 
 ## Cross-Coverage Consistency
 
-- Do all 7 coverages follow identical structural pattern? **(Test)**
+- Do all coverages follow identical structural pattern? **(Test)**
 - Is the coverage crosswalk documented (`signal_architecture/signals/cross_walk/`)? **(Manual)**
 - Are common concepts (credit rating, certification, leadership stability, regulatory actions, breach history, litigation history, industry engagement) mapped across coverages? **(Manual)**
-- Do all 7 configs pass the same validator with 0 errors? **(Test)**
+- Do all configs pass the same validator with 0 errors? **(Test)**
 
 ---
 
@@ -111,14 +111,7 @@ Repeat for each of the 7 coverages: **Cyber**, **D&O**, **Energy**, **Marine**, 
 
 ## Coverage Examples
 
-- Does `demo/examples/run_aerospace.py` run without error? **(Test)**
-- Does `demo/examples/run_cyber.py` run without error? **(Test)**
-- Does `demo/examples/run_do.py` run without error? **(Test)**
-- Does `demo/examples/run_energy.py` run without error? **(Test)**
-- Does `demo/examples/run_fi.py` run without error? **(Test)**
-- Does `demo/examples/run_marine.py` run without error? **(Test)**
-- Does `demo/examples/run_multi.py` (multi-coverage) run without error? **(Test)**
-- Does `demo/examples/run_hybrid.py` (hybrid routing) run without error? **(Test)**
+- Does `demo/examples/run_{coverage}.py` run without error? **(Test)**
 - Are all `sys.path.insert` paths correct (3 levels up to repo root)? **(Test)**
 - Do the examples produce valid WorkflowResult output with all required fields? **(Test)**
 - Do the examples demonstrate all three pricing decisions (APPROVE, REFER, DECLINE)? **(Manual)**
@@ -308,16 +301,6 @@ Reference: `docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf`
 | README.md (Project Overview) | `README.md` | | |
 | CHANGELOG.md | `CHANGELOG.md` | | |
 | CONTRIBUTING.md | `CONTRIBUTING.md` | | |
-
-## Coverage Documentation
-
-- Does `docs/coverages/aerospace.md` exist and reflect current config? **(Manual)**
-- Does `docs/coverages/cyber.md` exist and reflect current config? **(Manual)**
-- Does `docs/coverages/do.md` exist and reflect current config? **(Manual)**
-- Does `docs/coverages/energy.md` exist and reflect current config? **(Manual)**
-- Does `docs/coverages/fi.md` exist and reflect current config? **(Manual)**
-- Does `docs/coverages/marine.md` exist and reflect current config? **(Manual)**
-- Does `docs/coverages/pi.md` exist and reflect current config? **(Manual)**
 
 ---
 
