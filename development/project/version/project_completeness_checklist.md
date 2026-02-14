@@ -87,7 +87,7 @@ Repeat for each coverage within coverages/
 | ILF curve defined | Test | Per product_type, with base_limit matching base_limit_reference |
 | Deductible factors defined | Test | Per product_type |
 | Taxes/fees rate defined | Test | taxes_fees_rate present |
-| Coverage docs exist | Manual | `docs/coverages/{coverage}.md` exists and is current |
+| Coverage docs exist | Test | `coverage/{coverage}/logic.md` exists and is current |
 | Legacy fields removed | Test | Ensure deductible_credits and deductible_buy_down_rates are not present in any config (Phase 5 deprecation). |
 | Routing exclusivity | Test | Ensure SME and Corporate configs within the same coverage have mutually exclusive routing_constraints (e.g., revenue <= 50M vs revenue > 50M) to prevent Arbiter collisions. |
 | Dynamic input validation | Test | Does the API schema require fields used in routing_constraints (like revenue, hull_value) to be present in the submission payload before initiating the Multiplexer? |
