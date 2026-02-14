@@ -23,12 +23,3 @@
     * For example, A Hedge Fund's exposure is directly correlated to Assets Under Management (AUM).
     * For example, Mid-Market to Enterprise Cyber.
 3. Is the config.yaml and all underlying configurations compliant with the master_config_layout?
-
-
-
-1. HELP
-2. HELP
-3. HELP
-
-
-
