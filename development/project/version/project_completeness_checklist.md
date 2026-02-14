@@ -41,16 +41,16 @@ Items annotated with **(Test)** can and should be verified programmatically. Ite
 
 ## Premium Methodology
 
-- Is the premium methodology used by each configuration correct? **(Manual)**
-  - **PREMIUM_BASE** (Fixed Price) should be used for high volume / low variance profile risks, where a multiplier would add unnecessary complexity.
-      - For example, SME / Micro business schemes (e.g., turnover < $5M)
-      - For example, Liability-Driven Lines where the maximum possible loss is capped strictly by the Policy Limit (not the client's asset size)
-  - **MULTIPLIER** (Rate × Basis) should be used for lines where the Exposure Basis scales significantly (10x+) or where the asset is the insurance object.
-      - For example, First-Party Property (Energy, Aerospace, Marine), where the limit is often equal to the TIV
-      - For example, A Hedge Fund's exposure is directly correlated to Assets Under Management (AUM)
-      - For example, Mid-Market to Enterprise Cyber
+- Is the premium methodology contextually valid against routing constraints? **(Test)**
+  - **Scalability Trap Check:** If `PREMIUM_BASE` is used, the validator MUST confirm a `routing_constraint` exists that caps the maximum size of the entity (e.g., `revenue <= 50M` or `hull_value <= 50M`).
+  - **Enterprise Enforcement:** If the config lacks size constraints or explicitly targets large limits/revenues, the validator MUST enforce the use of `MULTIPLIER` (Rate × Basis).
 - When MULTIPLIER is used, is the `basis` field listed in `minimum_viable_input`? **(Test)**
-- Are the tier rate progressions actuarially reasonable (e.g., Tier 5 rate should be meaningfully higher than Tier 1)? **(Manual)**
+- Are the tier rate progressions actuarially monotonic? **(Test)**
+  - Validator must assert that Tier 1 < Tier 2 < Tier 3 < Tier 4 < Tier 5 (prices strictly increase as risk score drops).
+  - Validator must assert the penalty ratio (Tier 5 price / Tier 1 price) is >= 2.0.
+- Does the Pricing block contain valid Anchors (`base_limit_reference` and `base_deductible_reference`)? **(Test)**
+- Does the ILF Curve explicitly contain the `base_limit_reference` with a factor of exactly 1.00? **(Test)**
+- Do the Deductible Factors explicitly contain the `base_deductible_reference` with a factor of exactly 1.00? **(Test)**
 
 ## Schema Compliance
 
