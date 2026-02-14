@@ -12,6 +12,8 @@
 
 # coverages
 1. Is there a logic.md file for every config.yaml file which explains then logic / decision making used?
+2.  Does this work
+3.   Or does it not 
   * Does this include each configuration under the config?
   * Does this show risk, loss, and exposure weights that add to 1? (Test)
 2. Is the premium-methodology used by each configuration correct? (Test)
