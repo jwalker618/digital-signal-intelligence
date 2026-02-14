@@ -507,26 +507,15 @@
                 applied: {float}           # Complexity modifier (e.g., 1.10)
 
     # =========================================================================
-    # LIMIT & DEDUCTIBLE CONFIGURATION (Phase V5 Update)
-    # Choose ONE of the following blocks (Mutually Exclusive)
+    # LIMIT & DEDUCTIBLE CONFIGURATION (Phase V5)
+    # Defines valid limits and deductibles for the configuration
     # =========================================================================
-    
-    # OPTION A: BUNDLED (Menu Pricing)
-    # Used for SME/Micro. Limits and Deductibles are locked together.
-    limit_bandings:
-      - id: {integer}
-        label: "{string}"                  # e.g., "GOLD PACKAGE"
-        limit: {integer}
-        deductible: {integer}
-
-    # OPTION B: DECOUPLED (Tower Pricing)
-    # Used for Corporate. Client selects Limit and Deductible independently.
     limit_configuration:
-      type: "DECOUPLED"
-      valid_limits:                        # Allowed Limit options
-        - {integer}
-      valid_deductibles:                   # Allowed Deductible options
-        - {integer}
+      type: "DECOUPLED"                    # Limits and deductibles are independent
+      valid_limits:                        # Allowed limit options (in default_currency)
+        - {integer}                        # e.g., 1000000, 2000000, 5000000
+      valid_deductibles:                   # Allowed deductible options (in default_currency)
+        - {integer}                        # e.g., 10000, 25000, 50000, 100000
 
     # =========================================================================
     # PRICING PARAMETERS

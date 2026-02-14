@@ -14,6 +14,25 @@
 
 A repeatable, comprehensive checklist for assessing the completeness of the DSI framework against its defining specifications: the Whitepaper, Vision Paper, Foundational Principles, Configuration Schema (v2.2.0), and implementation architecture. Run this periodically to identify gaps, track progress, and ensure nothing is missed.
 
+## Automated Assessment Tools
+
+The following automated tools should be used to verify checklist items marked **(Test)**:
+
+| Tool | Purpose | Command |
+|-|-|-|
+| **Comprehensive Assessor** | Full project assessment | `python tests/comprehensive_assessor.py` |
+| **Phase 5 Config Assessor** | Per-coverage config validation | `python tests/assess_completeness.py coverages/{coverage}/config.yaml` |
+| **Config Validator** | Schema validation | `python -m infrastructure.builder.cli validate` |
+
+**Recommended Assessment Workflow:**
+
+1. Run `python tests/comprehensive_assessor.py` for full project status
+2. Review failures and warnings
+3. Fix critical failures before proceeding
+4. Document any accepted warnings with rationale
+
+See `docs/assessment/ASSESSMENT_METHODOLOGY.md` for detailed assessment methodology.
+
 ## How to Use
 
 Each item is a concrete, verifiable assertion. When running an assessment:
@@ -55,7 +74,7 @@ Items annotated with **(Test)** can and should be verified programmatically. Ite
 ## Schema Compliance
 
 - Is the `config.yaml` and all underlying configurations compliant with the `master_config_layout.yaml`? **(Test)**
-  - Are all required components included? This should include: `direct_queries`, `signal_registry`, `groups`, `risk_tier_bands`, `loss_tier_bands`, `exposure`, `limit_bandings` or `limit_configuration`, `pricing` (including correct anchors: `base_limit_reference` and `base_deductible_reference`)
+  - Are all required components included? This should include: `direct_queries`, `signal_registry`, `groups`, `risk_tier_bands`, `loss_tier_bands`, `exposure`, `limit_configuration`, `pricing` (including correct anchors: `base_limit_reference` and `base_deductible_reference`)
 - Does the config pass `infrastructure/validation/config_validator.py` with 0 errors, 0 warnings? **(Test)**
 - Is the schema version declared in metadata v2.2.0 or later? **(Test)**
 

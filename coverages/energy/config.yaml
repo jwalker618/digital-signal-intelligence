@@ -1305,22 +1305,25 @@ energy:
             application:
               method: MODIFIER
               applied: 1.6
-    limit_bandings:
-    - id: 1
-      limit: 10000000
-      deductible: 500000
-    - id: 2
-      limit: 25000000
-      deductible: 1000000
-    - id: 3
-      limit: 50000000
-      deductible: 2000000
-    - id: 4
-      limit: 100000000
-      deductible: 5000000
-    - id: 5
-      limit: 250000000
-      deductible: 10000000
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+        - 5000000
+        - 10000000
+        - 25000000
+        - 50000000
+        - 100000000
+        - 250000000
+        - 500000000
+        - 1000000000
+      valid_deductibles:
+        - 10000
+        - 25000
+        - 50000
+        - 100000
+        - 250000
+        - 500000
+        - 1000000
     pricing:
       by_product_type:
         property_damage:

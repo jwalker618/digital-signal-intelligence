@@ -115,6 +115,38 @@ The DSI engine handles this natively via the ILF Curve.
 * The curve represents the cumulative price of the tower.
 * Price of Layer $X$ to $Y$ = Price($Y$) - Price($X$).
 
+---
+
+## 5a. Limit & Deductible Configuration
+
+All DSI configurations use a **DECOUPLED** limit/deductible structure via `limit_configuration`. This allows clients to independently select their preferred limit and deductible from predefined valid options.
+
+### Configuration Structure
+```yaml
+limit_configuration:
+  type: "DECOUPLED"
+  valid_limits:
+    - 1000000      # $1M
+    - 2000000      # $2M
+    - 5000000      # $5M
+    - 10000000     # $10M
+  valid_deductibles:
+    - 10000        # $10k
+    - 25000        # $25k
+    - 50000        # $50k
+    - 100000       # $100k
+```
+
+### Rationale
+The DECOUPLED approach provides:
+1. **Flexibility:** Clients can select the exact limit/deductible combination that fits their risk tolerance and budget.
+2. **Transparency:** Pricing scales predictably via ILF curves and deductible factors.
+3. **Consistency:** All coverages use the same structural approach, simplifying the pricing engine.
+
+**Note:** Legacy "bundled" (menu-style) configurations where limits and deductibles were locked together have been deprecated. The decoupled structure with anchor-based relativities provides superior flexibility and actuarial integrity.
+
+---
+
 ## 6. Modifier Application
 Modifiers are applied multiplicatively to the Scaled Base Premium.
 
