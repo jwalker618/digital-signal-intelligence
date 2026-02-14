@@ -11,6 +11,13 @@
 ---
 
 # coverages
+- Is there a file
+- Is there not a file
+  - Is there a sublits
+  - is there not a sublit
+
+
+
 1. Is there a logic.md file for every config.yaml file which explains then logic / decision making used?
   * Does this include each configuration under the config?
   * Does this show risk, loss, and exposure weights that add to 1? (Test)
