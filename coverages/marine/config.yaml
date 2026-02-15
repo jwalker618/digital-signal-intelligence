@@ -879,7 +879,7 @@ marine:
         description: ''
         impact: MODIFIER
         default_cat: OTHER
-      - id: ' trading_pattern'
+      - id: trading_pattern
         label: Trading Pattern
         description: ''
         impact: MODIFIER
@@ -1552,8 +1552,97 @@ marine:
         proxy_tier: "DIRECT_OBSERVABLE"
         three_layer_assessment:
           group_id: "operational_telemetry"
-          risk: {correlation_direction: "positive", weight: 1.00, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "AIS compliance concerns"}]}
-          loss: {frequency: {correlation_direction: "positive", weight: 1.00}}
+          risk: {correlation_direction: "positive", weight: 0.35, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "AIS compliance concerns"}]}
+          loss: {frequency: {correlation_direction: "positive", weight: 0.35}}
+          exposure: {size: {correlation_direction: "positive", weight: 0.20}}
+
+      - id: "route_risk"
+        inference_utility_function: "route_risk_basefunction"
+        proxy_tier: "DIRECT_OBSERVABLE"
+        three_layer_assessment:
+          group_id: "operational_telemetry"
+          risk: {correlation_direction: "negative", weight: 0.35}
+          loss: {frequency: {correlation_direction: "negative", weight: 0.35}}
+          exposure: {complexity: {correlation_direction: "negative", weight: 0.30}}
+
+      - id: "operational_efficiency"
+        inference_utility_function: "operational_efficiency_basefunction"
+        proxy_tier: "INFERRED_PROXY"
+        three_layer_assessment:
+          group_id: "operational_telemetry"
+          risk: {correlation_direction: "positive", weight: 0.30}
+          loss: {frequency: {correlation_direction: "positive", weight: 0.30}}
+          exposure: {complexity: {correlation_direction: "positive", weight: 0.25}}
+
+      - id: "class_status"
+        inference_utility_function: "class_status_basefunction"
+        proxy_tier: "DIRECT_OBSERVABLE"
+        three_layer_assessment:
+          group_id: "safety_compliance"
+          risk: {correlation_direction: "positive", weight: 0.30, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Class status concerns"}]}
+          loss: {severity: {correlation_direction: "positive", weight: 0.30}}
+
+      - id: "ism_compliance"
+        inference_utility_function: "ism_compliance_basefunction"
+        proxy_tier: "DIRECT_OBSERVABLE"
+        three_layer_assessment:
+          group_id: "safety_compliance"
+          risk: {correlation_direction: "positive", weight: 0.20, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "ISM concerns"}]}
+          loss: {frequency: {correlation_direction: "positive", weight: 0.30}}
+
+      - id: "flag_state"
+        inference_utility_function: "flag_state_basefunction"
+        proxy_tier: "DIRECT_OBSERVABLE"
+        three_layer_assessment:
+          group_id: "network_authority"
+          risk: {correlation_direction: "positive", weight: 0.35}
+          loss: {frequency: {correlation_direction: "positive", weight: 0.35}}
+          exposure: {size: {correlation_direction: "positive", weight: 0.30}}
+
+      - id: "classification_society"
+        inference_utility_function: "classification_society_basefunction"
+        proxy_tier: "DIRECT_OBSERVABLE"
+        three_layer_assessment:
+          group_id: "network_authority"
+          risk: {correlation_direction: "positive", weight: 0.35}
+          loss: {severity: {correlation_direction: "positive", weight: 0.35}}
+          exposure: {size: {correlation_direction: "positive", weight: 0.20}}
+
+      - id: "pi_club"
+        inference_utility_function: "pi_club_basefunction"
+        proxy_tier: "DIRECT_OBSERVABLE"
+        three_layer_assessment:
+          group_id: "network_authority"
+          risk: {correlation_direction: "positive", weight: 0.30}
+          loss: {severity: {correlation_direction: "positive", weight: 0.30}}
+          exposure: {complexity: {correlation_direction: "positive", weight: 0.25}}
+
+      - id: "fleet_stability"
+        inference_utility_function: "fleet_stability_basefunction"
+        proxy_tier: "INFERRED_PROXY"
+        three_layer_assessment:
+          group_id: "fleet_profile"
+          risk: {correlation_direction: "positive", weight: 0.50}
+          loss: {frequency: {correlation_direction: "positive", weight: 0.50}}
+          exposure: {complexity: {correlation_direction: "positive", weight: 0.50}}
+
+      - id: "crew_certification"
+        inference_utility_function: "crew_certification_basefunction"
+        proxy_tier: "DIRECT_OBSERVABLE"
+        three_layer_assessment:
+          group_id: "fleet_profile"
+          risk: {correlation_direction: "positive", weight: 0.45}
+          loss: {frequency: {correlation_direction: "positive", weight: 0.45}}
+          exposure: {size: {correlation_direction: "positive", weight: 0.45}}
+
+      - id: "vessel_quality"
+        inference_utility_function: "vessel_quality_basefunction"
+        proxy_tier: "INFERRED_PROXY"
+        three_layer_assessment:
+          group_id: "fleet_profile"
+          risk: {correlation_direction: "positive", weight: 0.05}
+          loss: {frequency: {correlation_direction: "positive", weight: 0.05}}
+          exposure: {complexity: {correlation_direction: "positive", weight: 0.05}}
 
     groups:
       categories:
@@ -1562,14 +1651,24 @@ marine:
       three_layer_assessment:
         - id: "safety_compliance"
           label: "Safety Compliance"
-          risk: {weight: 0.60}
-          loss: {weight: 0.70}
-          exposure: {weight: 0.50}
+          risk: {weight: 0.30}
+          loss: {weight: 0.35}
+          exposure: {weight: 0.20}
         - id: "operational_telemetry"
           label: "Operational Telemetry"
-          risk: {weight: 0.40}
-          loss: {weight: 0.30}
-          exposure: {weight: 0.50}
+          risk: {weight: 0.25}
+          loss: {weight: 0.25}
+          exposure: {weight: 0.25}
+        - id: "network_authority"
+          label: "Network Authority"
+          risk: {weight: 0.25}
+          loss: {weight: 0.25}
+          exposure: {weight: 0.30}
+        - id: "fleet_profile"
+          label: "Fleet Profile"
+          risk: {weight: 0.20}
+          loss: {weight: 0.15}
+          exposure: {weight: 0.25}
 
     # Rates are higher for SME than Corporate due to lower spread of risk
     risk_tier_bands:
@@ -1591,11 +1690,17 @@ marine:
 
     exposure:
       size:
-        weight: 1.00 # Simplified to only use size
+        weight: 0.70
         bands:
           - {id: 1, label: "MICRO", interpretation: {bands: {min: 0, max: 33}, application: {method: "MODIFIER", applied: 0.85}}}
           - {id: 2, label: "SMALL", interpretation: {bands: {min: 34, max: 66}, application: {method: "MODIFIER", applied: 1.00}}}
           - {id: 3, label: "MEDIUM", interpretation: {bands: {min: 67, max: 100}, application: {method: "MODIFIER", applied: 1.15}}}
+      complexity:
+        weight: 0.30
+        bands:
+          - {id: 1, label: "SIMPLE", interpretation: {bands: {min: 0, max: 40}, application: {method: "MODIFIER", applied: 0.90}}}
+          - {id: 2, label: "MODERATE", interpretation: {bands: {min: 41, max: 70}, application: {method: "MODIFIER", applied: 1.00}}}
+          - {id: 3, label: "COMPLEX", interpretation: {bands: {min: 71, max: 100}, application: {method: "MODIFIER", applied: 1.15}}}
 
     # DECOUPLED Limits (Required for Hull)
     limit_configuration:

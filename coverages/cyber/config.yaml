@@ -1509,7 +1509,7 @@ cyber:
         group_id: public_record
         risk:
           correlation_direction: positive
-          weight: 0.5
+          weight: 0.35
           score_conditions:
           - threshold: 25
             comparison: <=
@@ -1523,17 +1523,193 @@ cyber:
         loss:
           frequency:
             correlation_direction: positive
-            weight: 0.25
+            weight: 0.20
           severity:
             correlation_direction: positive
-            weight: 0.2
+            weight: 0.15
         exposure:
           size:
             correlation_direction: positive
-            weight: 0.15
+            weight: 0.10
           complexity:
             correlation_direction: positive
-            weight: 0.1
+            weight: 0.08
+    - id: credential_exposure
+      inference_utility_function: credential_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.07
+          complexity:
+            correlation_direction: positive
+            weight: 0.07
+    - id: dnssec_status
+      inference_utility_function: dnssec_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_security
+        risk:
+          correlation_direction: positive
+          weight: 0.10
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.08
+          severity:
+            correlation_direction: positive
+            weight: 0.08
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+          complexity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: waf_presence
+      inference_utility_function: waf_presence_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_security
+        risk:
+          correlation_direction: positive
+          weight: 0.10
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+          complexity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: cdn_usage
+      inference_utility_function: cdn_usage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_security
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+          complexity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: security_page_presence
+      inference_utility_function: security_page_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.35
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.12
+          complexity:
+            correlation_direction: positive
+            weight: 0.12
+    - id: privacy_policy_presence
+      inference_utility_function: privacy_policy_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.30
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.10
+          severity:
+            correlation_direction: positive
+            weight: 0.10
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.08
+          complexity:
+            correlation_direction: positive
+            weight: 0.08
+    - id: compliance_badges
+      inference_utility_function: compliance_badges_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.30
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.08
+          severity:
+            correlation_direction: positive
+            weight: 0.08
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.08
+          complexity:
+            correlation_direction: positive
+            weight: 0.08
+    - id: vulnerability_disclosure
+      inference_utility_function: vuln_disclosure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.10
+          severity:
+            correlation_direction: positive
+            weight: 0.10
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.08
+          complexity:
+            correlation_direction: positive
+            weight: 0.07
     groups:
       categories:
       - id: industry_classification
@@ -1551,20 +1727,29 @@ cyber:
         label: Technical Security
         description: Core security posture signals
         risk:
-          weight: 0.6
+          weight: 0.40
         loss:
-          weight: 0.55
+          weight: 0.35
         exposure:
-          weight: 0.45
+          weight: 0.30
       - id: public_record
         label: Public Record
         description: Historical incidents and ratings
         risk:
-          weight: 0.4
+          weight: 0.35
         loss:
-          weight: 0.45
+          weight: 0.40
         exposure:
-          weight: 0.55
+          weight: 0.40
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: Security page, privacy policy, compliance signals
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.30
     risk_tier_bands:
       bands:
       - id: 1

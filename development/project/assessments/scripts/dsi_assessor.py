@@ -27,6 +27,11 @@ class DSIProjectAssessor:
         self.scores = {
             "infrastructure": {"pass": 0, "total": 0, "gaps": []},
             "layers": {"pass": 0, "total": 0, "gaps": []},
+            "deploy": {"pass": 0, "total": 0, "gaps": []},
+            "docs": {"pass": 0, "total": 0, "gaps": []},
+            "rust": {"pass": 0, "total": 0, "gaps": []},
+            "schemas": {"pass": 0, "total": 0, "gaps": []},
+            "signal_arch_files": {"pass": 0, "total": 0, "gaps": []},
             "coverages": {"pass": 0, "total": 0, "gaps": []},
             "schema_compliance": {"pass": 0, "total": 0, "gaps": []},
             "signal_architecture": {"pass": 0, "total": 0, "gaps": []},
@@ -92,6 +97,111 @@ class DSIProjectAssessor:
         # Exposure layer
         self._assert(cat, (self.root / "layers/exposure/scorer.py").exists(),
                      "Exposure scorer missing (layers/exposure/scorer.py)")
+
+    # =========================================================================
+    # DEPLOY CHECKS
+    # =========================================================================
+
+    def check_deploy(self):
+        """Check deployment configuration files exist."""
+        cat = "deploy"
+
+        # Docker
+        self._assert(cat, (self.root / "deploy/docker/Dockerfile").exists(),
+                     "Dockerfile missing (deploy/docker/Dockerfile)")
+        self._assert(cat, (self.root / "deploy/docker/docker-compose.yml").exists(),
+                     "docker-compose.yml missing (deploy/docker/)")
+
+        # Kubernetes
+        self._assert(cat, (self.root / "deploy/kubernetes").exists(),
+                     "Kubernetes manifests directory missing (deploy/kubernetes/)")
+
+        # CI/CD
+        self._assert(cat, (self.root / ".github/workflows").exists() or
+                     (self.root / ".gitlab-ci.yml").exists(),
+                     "CI/CD configuration missing (.github/workflows/ or .gitlab-ci.yml)")
+
+    # =========================================================================
+    # DOCS CHECKS
+    # =========================================================================
+
+    def check_docs(self):
+        """Check core documentation files exist."""
+        cat = "docs"
+
+        # Core documents
+        self._assert(cat, (self.root / "docs/DSI_Whitepaper.md").exists(),
+                     "DSI Whitepaper missing (docs/DSI_Whitepaper.md)")
+        self._assert(cat, (self.root / "docs/DSI_Vision_Paper.md").exists(),
+                     "DSI Vision Paper missing (docs/DSI_Vision_Paper.md)")
+        self._assert(cat, (self.root / "docs/DSI_Pricing_Methodology.md").exists(),
+                     "DSI Pricing Methodology missing (docs/DSI_Pricing_Methodology.md)")
+
+        # API documentation
+        self._assert(cat, (self.root / "docs/api").exists(),
+                     "API documentation directory missing (docs/api/)")
+
+    # =========================================================================
+    # RUST CHECKS
+    # =========================================================================
+
+    def check_rust(self):
+        """Check Rust performance layer files exist."""
+        cat = "rust"
+
+        # Cargo project
+        self._assert(cat, (self.root / "rust/Cargo.toml").exists(),
+                     "Cargo.toml missing (rust/Cargo.toml)")
+
+        # Core modules
+        self._assert(cat, (self.root / "rust/src/lib.rs").exists(),
+                     "Rust lib.rs missing (rust/src/lib.rs)")
+
+        # PyO3 bindings
+        self._assert(cat, (self.root / "rust/src/bindings.rs").exists() or
+                     (self.root / "rust/src/python.rs").exists(),
+                     "PyO3 bindings missing (rust/src/bindings.rs or python.rs)")
+
+    # =========================================================================
+    # SCHEMAS CHECKS
+    # =========================================================================
+
+    def check_schemas(self):
+        """Check schema definition files exist."""
+        cat = "schemas"
+
+        self._assert(cat, (self.root / "schemas/organisational_graph.yaml").exists(),
+                     "organisational_graph.yaml missing (schemas/)")
+        self._assert(cat, (self.root / "schemas/master_config_layout.yaml").exists(),
+                     "master_config_layout.yaml missing (schemas/)")
+
+    # =========================================================================
+    # SIGNAL ARCHITECTURE FILES CHECKS
+    # =========================================================================
+
+    def check_signal_arch_files(self):
+        """Check signal architecture component files exist."""
+        cat = "signal_arch_files"
+
+        # Extractors
+        self._assert(cat, (self.root / "signal_architecture/extractors").exists(),
+                     "Extractors directory missing (signal_architecture/extractors/)")
+
+        # Aggregators
+        self._assert(cat, (self.root / "signal_architecture/aggregators").exists(),
+                     "Aggregators directory missing (signal_architecture/aggregators/)")
+
+        # Discovery engine
+        self._assert(cat, (self.root / "signal_architecture/discovery").exists(),
+                     "Discovery engine missing (signal_architecture/discovery/)")
+
+        # Graph types
+        self._assert(cat, (self.root / "signal_architecture/graph").exists(),
+                     "Graph types directory missing (signal_architecture/graph/)")
+
+        # Inference utilities
+        self._assert(cat, (self.root / "signal_architecture/inference_utilities").exists(),
+                     "Inference utilities missing (signal_architecture/inference_utilities/)")
 
     # =========================================================================
     # COVERAGE CONFIGURATION CHECKS
@@ -352,6 +462,13 @@ class DSIProjectAssessor:
         # Infrastructure & Layers
         self.check_infrastructure()
         self.check_layers()
+
+        # Additional directory checks
+        self.check_deploy()
+        self.check_docs()
+        self.check_rust()
+        self.check_schemas()
+        self.check_signal_arch_files()
 
         # Coverage configurations
         cov_dir = self.root / "coverages"

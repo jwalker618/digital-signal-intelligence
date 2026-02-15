@@ -91,25 +91,27 @@ This configuration contains **44 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Technical Security | 0.60 | 0.55 | 0.45 |
-| Public Record | 0.40 | 0.45 | 0.55 |
+| Technical Security | 0.40 | 0.35 | 0.30 |
+| Public Record | 0.35 | 0.40 | 0.40 |
+| Corporate Footprint | 0.25 | 0.25 | 0.30 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **7 signals** distributed as follows:
+This configuration contains **15 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
+- `DIRECT_OBSERVABLE` (14 signals): Highest confidence
 - `INFERRED_PROXY` (1 signals): Medium confidence
 
 **Signal Count by Group:**
-- `technical_security`: 3 signals
-- `public_record`: 2 signals
+- `technical_security`: 6 signals
+- `public_record`: 4 signals
+- `corporate_footprint`: 3 signals
 - `industry_classification`: 1 signals
 - `company_size`: 1 signals
 
 **Selection Rationale:**
-- 86% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 93% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -118,11 +120,12 @@ This configuration contains **7 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Technical Security | 1.60 | 0.60 | 0.55 | 0.45 |
-| 2 | Public Record | 1.40 | 0.40 | 0.45 | 0.55 |
+| 1 | Public Record | 1.15 | 0.35 | 0.40 | 0.40 |
+| 2 | Technical Security | 1.05 | 0.40 | 0.35 | 0.30 |
+| 3 | Corporate Footprint | 0.80 | 0.25 | 0.25 | 0.30 |
 
-**Primary Assessment Driver:** `Technical Security` with combined weight of 1.60
-**Secondary Driver:** `Public Record` with combined weight of 1.40
+**Primary Assessment Driver:** `Public Record` with combined weight of 1.15
+**Secondary Driver:** `Technical Security` with combined weight of 1.05
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*

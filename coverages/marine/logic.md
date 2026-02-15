@@ -101,25 +101,29 @@ This configuration contains **50 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Safety Compliance | 0.60 | 0.70 | 0.50 |
-| Operational Telemetry | 0.40 | 0.30 | 0.50 |
+| Safety Compliance | 0.30 | 0.35 | 0.20 |
+| Operational Telemetry | 0.25 | 0.25 | 0.25 |
+| Network Authority | 0.25 | 0.25 | 0.30 |
+| Fleet Profile | 0.20 | 0.15 | 0.25 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **15 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
-- `INFERRED_PROXY` (2 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (10 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
-- `safety_compliance`: 2 signals
+- `safety_compliance`: 4 signals
+- `operational_telemetry`: 3 signals
+- `network_authority`: 3 signals
+- `fleet_profile`: 3 signals
 - `vessel_category`: 1 signals
 - `fleet_age_band`: 1 signals
-- `operational_telemetry`: 1 signals
 
 **Selection Rationale:**
-- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 67% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -128,11 +132,13 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Compliance | 1.80 | 0.60 | 0.70 | 0.50 |
-| 2 | Operational Telemetry | 1.20 | 0.40 | 0.30 | 0.50 |
+| 1 | Safety Compliance | 0.85 | 0.30 | 0.35 | 0.20 |
+| 2 | Network Authority | 0.80 | 0.25 | 0.25 | 0.30 |
+| 3 | Operational Telemetry | 0.75 | 0.25 | 0.25 | 0.25 |
+| 4 | Fleet Profile | 0.60 | 0.20 | 0.15 | 0.25 |
 
-**Primary Assessment Driver:** `Safety Compliance` with combined weight of 1.80
-**Secondary Driver:** `Operational Telemetry` with combined weight of 1.20
+**Primary Assessment Driver:** `Safety Compliance` with combined weight of 0.85
+**Secondary Driver:** `Network Authority` with combined weight of 0.80
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
