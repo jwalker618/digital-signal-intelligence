@@ -1,639 +1,158 @@
-# Aerospace Coverage Configuration
+# DSI Logic Document: `AEROSPACE`
+*Generated: 2026-02-15*
 
-**Coverage ID:** `aerospace`
-**Generated:** 2026-02-15 09:41
-**Schema Version:** v2.2
-
-This document describes the configuration, decision logic, and pricing structure
-for the Aerospace coverage vertical in the DSI platform.
-
-## Table of Contents
-
-1. [Configuration Overview](#configuration-overview)
-2. [Signal Groups](#signal-groups)
-3. [Scoring Logic](#scoring-logic)
-4. [Pricing Structure](#pricing-structure)
-5. [Direct Queries](#direct-queries)
-6. [Decision Flow](#decision-flow)
-
+## DSI Foundational Principles Adherence
+This configuration is validated against the DSI Whitepaper & Vision Paper:
+- **Objective Observation:** Signals derived from verifiable digital footprints, avoiding subjective interpretation.
+- **Three-Layer Engine:** Modifiers explicitly target Risk, Loss, and Exposure dimensions.
+- **Phase 5 Anchoring:** Polymorphic pricing limits scale from mathematically absolute anchor points.
 
 ---
 
-
-## Configuration: Aerospace General
-
-### Metadata
-
-- **Name:** DSI Aerospace Insurance Model
-- **Version:** 2.3.0
-- **Description:** Aviation hull and liability coverage based on observable safety and operational signals
-- **Product Types:** `aviation_hull`, `aviation_liability`, `aviation_hull_liability_combined`
-- **Markets:** US, UK, EU, APAC, LATAM, MEA
-- **Minimum Premium:** $25,000
-- **Currency:** USD
-
-#### Multiplexer Configuration (V4)
-
-- **Model Specificity:** 1 (General)
-- **Routing Constraints:**
-  - `hull_value > 50000000` (required)
-
-### Signal Registry
-
-**Total Signals:** 48
-
-
-#### Group: `corporate_governance`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `management_stability` | Scoring | 25.00% | positive | INFERRED_PROXY |
-| `safety_leadership` | Scoring | 25.00% | positive | INFERRED_PROXY |
-| `safety_reporting` | Scoring | 20.00% | positive | DIRECT_OBSERVABLE |
-| `corporate_structure` | Scoring | 15.00% | positive | INFERRED_PROXY |
-| `industry_engagement` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-
-#### Group: `financial_stability`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `credit_rating` | Scoring | 35.00% | positive | DIRECT_OBSERVABLE |
-| `public_financials` | Scoring | 30.00% | positive | DIRECT_OBSERVABLE |
-| `market_position` | Scoring | 20.00% | positive | INFERRED_PROXY |
-| `government_support` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-
-#### Group: `fleet_category`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `fleet_category` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `fleet_quality`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `fleet_age` | Scoring | 30.00% | negative | INFERRED_PROXY |
-| `fleet_homogeneity` | Scoring | 20.00% | positive | INFERRED_PROXY |
-| `aircraft_generation` | Scoring | 25.00% | positive | INFERRED_PROXY |
-| `order_backlog` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-| `maintenance_indicators` | Scoring | 5.00% | positive | INFERRED_PROXY |
-| `supply_chain_quality` | Scoring | 5.00% | positive | INFERRED_PROXY |
-
-#### Group: `fleet_size`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `fleet_size` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `iosa_status`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `iosa_status` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `network_authority`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `alliance_membership` | Scoring | 25.00% | positive | DIRECT_OBSERVABLE |
-| `codeshare_quality` | Scoring | 20.00% | positive | INFERRED_PROXY |
-| `lessor_quality` | Scoring | 20.00% | positive | INFERRED_PROXY |
-| `oem_relationship` | Scoring | 15.00% | positive | INFERRED_PROXY |
-| `mro_quality` | Scoring | 20.00% | positive | INFERRED_PROXY |
-
-#### Group: `operational_quality`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `otp_score` | Scoring | 20.00% | positive | DIRECT_OBSERVABLE |
-| `dispatch_reliability` | Scoring | 20.00% | positive | DIRECT_OBSERVABLE |
-| `crew_experience` | Scoring | 15.00% | positive | INFERRED_PROXY |
-| `training_indicators` | Scoring | 15.00% | positive | INFERRED_PROXY |
-| `operational_complexity` | Scoring | 15.00% | negative | INFERRED_PROXY |
-| `growth_rate` | Scoring | 15.00% | negative | DIRECT_OBSERVABLE |
-
-#### Group: `operator_type`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `operator_type` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `regulatory_compliance`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `certificate_status` | Scoring | 25.00% | positive | DIRECT_OBSERVABLE |
-| `enforcement_actions` | Scoring | 20.00% | positive | DIRECT_OBSERVABLE |
-| `iosa_audit_status` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-| `ramp_inspection` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-| `eu_safety_list` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-| `state_safety_rating` | Scoring | 5.00% | positive | DIRECT_OBSERVABLE |
-| `certification_transparency` | Scoring | 5.00% | positive | INFERRED_PROXY |
-
-#### Group: `regulatory_framework`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `regulatory_framework` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `route_risk`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `conflict_zone_exposure` | Scoring | 30.00% | negative | DIRECT_OBSERVABLE |
-| `challenging_airports` | Scoring | 20.00% | negative | DIRECT_OBSERVABLE |
-| `high_risk_destinations` | Scoring | 25.00% | negative | DIRECT_OBSERVABLE |
-| `weather_exposure` | Scoring | 15.00% | negative | INFERRED_PROXY |
-| `terrain_exposure` | Scoring | 10.00% | negative | INFERRED_PROXY |
-
-#### Group: `safety_record`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `accident_history` | Scoring | 30.00% | positive | DIRECT_OBSERVABLE |
-| `incident_history` | Scoring | 20.00% | positive | DIRECT_OBSERVABLE |
-| `accident_rate` | Scoring | 20.00% | positive | COHORT_INFERENCE |
-| `fatality_history` | Scoring | 20.00% | positive | DIRECT_OBSERVABLE |
-| `investigation_findings` | Scoring | 10.00% | positive | DIRECT_OBSERVABLE |
-
-### Signal Groups
-
-#### Categorical Groups
-
-These groups apply modifiers based on classification:
-
-| Group ID | Label | Impact | Default |
-|----------|-------|--------|---------|
-| `operator_type` | Operator Type | MODIFIER | OTHER |
-| `fleet_category` | Fleet category | MODIFIER | OTHER |
-| `fleet_size` | Fleet Size | MODIFIER | OTHER |
-| `regulatory_framework` | Regulatory Framework | MODIFIER | OTHER |
-| `iosa_status` | IOSA Status | MODIFIER | NOT_APPLICABLE |
-
-#### Three-Layer Assessment Groups
-
-These groups contribute to Risk, Loss, and Exposure scoring:
-
-| Group ID | Risk Weight | Loss Weight | Exposure Weight |
-|----------|-------------|-------------|-----------------|
-| `network_authority` | 10% | 5% | 5% |
-| `safety_record` | 30% | 40% | 10% |
-| `regulatory_compliance` | 20% | 20% | 10% |
-| `operational_quality` | 15% | 15% | 15% |
-| `fleet_quality` | 10% | 10% | 35% |
-| `financial_stability` | 5% | 3% | 10% |
-| `route_risk` | 5% | 5% | 10% |
-| `corporate_governance` | 5% | 2% | 5% |
-
-### Risk Tier Bands
-
-Risk tiers determine the base pricing and underwriting action:
-
-| Tier | Label | Score Range | Action | Base Premium |
-|------|-------|-------------|--------|--------------|
-| 1 | PREFERRED | 800-1000 | APPROVE | 0.0012x |
-| 2 | STANDARD_PLUS | 650-799 | APPROVE | 0.0018x |
-| 3 | STANDARD | 500-649 | REFER | 0.0028x |
-| 4 | SUBSTANDARD | 350-499 | REFER | 0.0045x |
-| 5 | DECLINE | 0-349 | DECLINE | 0.015x |
-
-**Decision Logic:**
-- Scores 0-1000 (composite from weighted signals)
-- Higher scores = better risk = lower tier number
-- APPROVE: Automatic binding eligible
-- REFER: Requires underwriter review
-- DECLINE: Outside risk appetite
-
-### Loss Tier Bands
-
-Loss tiers adjust premium based on expected loss frequency and severity:
-
-| Tier | Label | Score Range | Freq Modifier | Sev Modifier |
-|------|-------|-------------|---------------|--------------|
-| 1 | VERY_LOW | 80-100 | 0.70x | 0.80x |
-| 2 | LOW | 60-79 | 0.85x | 0.90x |
-| 3 | MODERATE | 40-59 | 1.00x | 1.00x |
-| 4 | ELEVATED | 20-39 | 1.15x | 1.15x |
-| 5 | HIGH | 0-19 | 1.35x | 1.40x |
-
-**Constraints:** Floor = 0.55, Cap = 1.60
-
-### Direct Queries
-
-Binary questions that cannot be inferred from external signals:
-
-| Query ID | Question | Trigger | Action | Impact |
-|----------|----------|---------|--------|--------|
-| `pending_claims` | Are there any pending aviation liability claims ex... | Answer = True | REFER | Override to Tier 3 |
-| `regulatory_action` | Is there any pending regulatory enforcement action... | Answer = True | REFER | Override to Tier 5 |
-| `coverage_declined` | Has aviation coverage been declined or non-renewed... | Answer = True | REFER | Override to Tier 5 |
-| `fleet_change` | Are there planned fleet changes exceeding 20% in t... | Answer = True | REFER | Override to Tier 3 |
-| `route_expansion` | Is there planned expansion into conflict zones or ... | Answer = True | REFER | Override to Tier 4 |
-| `ownership_change` | Has there been a change in majority ownership in t... | Answer = True | REFER | Override to Tier 3 |
-| `wet_lease_operations` | Do you operate aircraft under wet lease arrangemen... | Answer = True | MODIFIER | Modifier: 1.15x |
-
-**Action Types:**
-- **FLAG:** Adds note to underwriter; no pricing impact
-- **MODIFIER:** Applies premium multiplier
-- **REFER:** Forces underwriter review regardless of score
-
-### Limit & Deductible Configuration
-
-**Type:** `DECOUPLED`
-
-**Mode:** Tower Pricing (Independent Selection)
-
-Clients independently select from valid limits and deductibles. 
-Pricing scales via ILF curves and deductible factors.
-
-**Available Limits:**
-
-- $10,000,000
-- $25,000,000
-- $50,000,000
-- $100,000,000
-- $250,000,000
-- $500,000,000
-
-**Available Deductibles:**
-
-- $10,000
-- $25,000
-- $50,000
-- $100,000
-- $250,000
-- $500,000
-
-### Pricing Structure
-
-Pricing varies by product type:
-
-
-#### Aviation Hull
-
-**Pricing Anchors (V5):**
-- Base Limit Reference: $10,000,000
-- Base Deductible Reference: $50,000
-
-**Increased Limit Factors (ILF):**
-
-| Limit | Factor | Premium Multiplier |
-|-------|--------|-------------------|
-| $10,000,000 (base) | 1.00 | 1.00x base |
-| $25,000,000 | 2.00 | 2.00x base |
-| $50,000,000 | 3.50 | 3.50x base |
-| $100,000,000 | 6.00 | 6.00x base |
-| $250,000,000 | 12.00 | 12.00x base |
-| $500,000,000 | 20.00 | 20.00x base |
-
-**Deductible Factors (V5):**
-
-| Deductible | Factor | Effect |
-|------------|--------|--------|
-| $10,000 | 1.50 | +50% loading |
-| $25,000 | 1.15 | +15% loading |
-| $50,000 (anchor) | 1.00 | Base price |
-| $100,000 | 0.95 | -5% credit |
-| $250,000 | 0.90 | -10% credit |
-| $500,000 | 0.70 | -30% credit |
-
-
-#### Aviation Liability
-
-**Pricing Anchors (V5):**
-- Base Limit Reference: $10,000,000
-- Base Deductible Reference: $50,000
-
-**Increased Limit Factors (ILF):**
-
-| Limit | Factor | Premium Multiplier |
-|-------|--------|-------------------|
-| $10,000,000 (base) | 1.00 | 1.00x base |
-| $25,000,000 | 2.30 | 2.30x base |
-| $50,000,000 | 4.20 | 4.20x base |
-| $100,000,000 | 7.50 | 7.50x base |
-| $250,000,000 | 15.50 | 15.50x base |
-| $500,000,000 | 27.00 | 27.00x base |
-
-**Deductible Factors (V5):**
-
-| Deductible | Factor | Effect |
-|------------|--------|--------|
-| $10,000 | 1.50 | +50% loading |
-| $25,000 | 1.15 | +15% loading |
-| $50,000 (anchor) | 1.00 | Base price |
-| $100,000 | 0.96 | -4% credit |
-| $250,000 | 0.92 | -8% credit |
-| $500,000 | 0.70 | -30% credit |
-
-
-#### Aviation Hull Liability Combined
-
-**Pricing Anchors (V5):**
-- Base Limit Reference: $10,000,000
-- Base Deductible Reference: $50,000
-
-**Increased Limit Factors (ILF):**
-
-| Limit | Factor | Premium Multiplier |
-|-------|--------|-------------------|
-| $10,000,000 (base) | 1.00 | 1.00x base |
-| $25,000,000 | 2.15 | 2.15x base |
-| $50,000,000 | 3.85 | 3.85x base |
-| $100,000,000 | 6.75 | 6.75x base |
-| $250,000,000 | 13.75 | 13.75x base |
-| $500,000,000 | 23.50 | 23.50x base |
-
-**Deductible Factors (V5):**
-
-| Deductible | Factor | Effect |
-|------------|--------|--------|
-| $10,000 | 1.50 | +50% loading |
-| $25,000 | 1.15 | +15% loading |
-| $50,000 (anchor) | 1.00 | Base price |
-| $100,000 | 0.95 | -5% credit |
-| $250,000 | 0.91 | -9% credit |
-| $500,000 | 0.70 | -30% credit |
-
-
+## Model: `aerospace_general`
+*Aviation hull and liability coverage based on observable safety and operational signals*
+
+### Routing Protocol (Multiplexer)
+- `hull_value > 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Safety Record | 0.30 | 0.40 | 0.10 |
+| Regulatory Compliance | 0.20 | 0.20 | 0.10 |
+| Operational Quality | 0.15 | 0.15 | 0.15 |
+| Fleet Quality | 0.10 | 0.10 | 0.35 |
+| Financial Stability | 0.05 | 0.03 | 0.10 |
+| Route Risk | 0.05 | 0.05 | 0.10 |
+| Corporate Governance | 0.05 | 0.02 | 0.05 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **48 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (23 signals): Highest confidence
+- `INFERRED_PROXY` (24 signals): Medium confidence
+- `COHORT_INFERENCE` (1 signals): Lowest confidence
+
+**Signal Count by Group:**
+- `regulatory_compliance`: 7 signals
+- `operational_quality`: 6 signals
+- `fleet_quality`: 6 signals
+- `network_authority`: 5 signals
+- `safety_record`: 5 signals
+- `route_risk`: 5 signals
+- `corporate_governance`: 5 signals
+- `financial_stability`: 4 signals
+- `operator_type`: 1 signals
+- `fleet_category`: 1 signals
+- `fleet_size`: 1 signals
+- `regulatory_framework`: 1 signals
+- `iosa_status`: 1 signals
+
+**Selection Rationale:**
+- 48% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Safety Record | 0.80 | 0.30 | 0.40 | 0.10 |
+| 2 | Fleet Quality | 0.55 | 0.10 | 0.10 | 0.35 |
+| 3 | Regulatory Compliance | 0.50 | 0.20 | 0.20 | 0.10 |
+| 4 | Operational Quality | 0.45 | 0.15 | 0.15 | 0.15 |
+| 5 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 6 | Route Risk | 0.20 | 0.05 | 0.05 | 0.10 |
+| 7 | Financial Stability | 0.18 | 0.05 | 0.03 | 0.10 |
+| 8 | Corporate Governance | 0.12 | 0.05 | 0.02 | 0.05 |
+
+**Primary Assessment Driver:** `Safety Record` with combined weight of 0.80
+**Secondary Driver:** `Fleet Quality` with combined weight of 0.55
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.27999999999999997%` on `hull_value` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `hull_value` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0028 = **$28,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$28,000**.
 
 ---
 
+## Model: `aerospace_sme`
+*Aviation coverage for small/medium operators with hull value under $50M*
+
+### Routing Protocol (Multiplexer)
+- `hull_value <= 50000000`
+- `limit <= 10000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Safety Record | 0.35 | 0.45 | 0.10 |
+| Regulatory Compliance | 0.25 | 0.20 | 0.10 |
+| Operational Quality | 0.20 | 0.15 | 0.15 |
+| Fleet Quality | 0.15 | 0.15 | 0.55 |
+| Corporate Governance | 0.05 | 0.05 | 0.10 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **22 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (9 signals): Highest confidence
+- `INFERRED_PROXY` (13 signals): Medium confidence
+
+**Signal Count by Group:**
+- `safety_record`: 4 signals
+- `regulatory_compliance`: 4 signals
+- `operational_quality`: 4 signals
+- `fleet_quality`: 3 signals
+- `corporate_governance`: 3 signals
+- `operator_type`: 1 signals
+- `fleet_category`: 1 signals
+- `fleet_size`: 1 signals
+- `regulatory_framework`: 1 signals
+
+**Selection Rationale:**
+- 41% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Safety Record | 0.90 | 0.35 | 0.45 | 0.10 |
+| 2 | Fleet Quality | 0.85 | 0.15 | 0.15 | 0.55 |
+| 3 | Regulatory Compliance | 0.55 | 0.25 | 0.20 | 0.10 |
+| 4 | Operational Quality | 0.50 | 0.20 | 0.15 | 0.15 |
+| 5 | Corporate Governance | 0.20 | 0.05 | 0.05 | 0.10 |
+
+**Primary Assessment Driver:** `Safety Record` with combined weight of 0.90
+**Secondary Driver:** `Fleet Quality` with combined weight of 0.85
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Flat Premium of `$7,500` purchases exactly the `$5,000,000` Limit / `$10,000` Deductible Base Package.
+**2. Theoretical Execution:**
+  - Technical Premium = **$7,500**
+  - *Scaling relies entirely on selecting a different Limit ID from the Bundled limit_configuration packages.*
 
-## Configuration: Aerospace Sme
-
-### Metadata
-
-- **Name:** DSI Aerospace SME Model
-- **Version:** 2.3.0
-- **Description:** Aviation coverage for small/medium operators with hull value under $50M
-- **Product Types:** `aviation_hull`, `aviation_hull_liability_combined`
-- **Markets:** US, UK, EU, APAC, LATAM, MEA
-- **Minimum Premium:** $5,000
-- **Currency:** USD
-
-#### Multiplexer Configuration (V4)
-
-- **Model Specificity:** 2 (Segment)
-- **Routing Constraints:**
-  - `hull_value <= 50000000` (required)
-  - `limit <= 10000000` (required)
-
-### Signal Registry
-
-**Total Signals:** 22
-
-
-#### Group: `corporate_governance`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `management_stability` | Scoring | 40.00% | positive | INFERRED_PROXY |
-| `safety_leadership` | Scoring | 35.00% | positive | INFERRED_PROXY |
-| `corporate_structure` | Scoring | 25.00% | positive | INFERRED_PROXY |
-
-#### Group: `fleet_category`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `fleet_category` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `fleet_quality`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `fleet_age` | Scoring | 40.00% | negative | INFERRED_PROXY |
-| `fleet_homogeneity` | Scoring | 25.00% | positive | INFERRED_PROXY |
-| `maintenance_indicators` | Scoring | 35.00% | positive | INFERRED_PROXY |
-
-#### Group: `fleet_size`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `fleet_size` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `operational_quality`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `crew_experience` | Scoring | 35.00% | positive | INFERRED_PROXY |
-| `training_indicators` | Scoring | 30.00% | positive | INFERRED_PROXY |
-| `operational_complexity` | Scoring | 20.00% | negative | INFERRED_PROXY |
-| `growth_rate` | Scoring | 15.00% | negative | DIRECT_OBSERVABLE |
-
-#### Group: `operator_type`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `operator_type` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `regulatory_compliance`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `certificate_status` | Scoring | 35.00% | positive | DIRECT_OBSERVABLE |
-| `enforcement_actions` | Scoring | 30.00% | positive | DIRECT_OBSERVABLE |
-| `ramp_inspection` | Scoring | 20.00% | positive | DIRECT_OBSERVABLE |
-| `state_safety_rating` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-
-#### Group: `regulatory_framework`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `regulatory_framework` | Categorical | N/A | modifier | INFERRED_PROXY |
-
-#### Group: `safety_record`
-
-| Signal ID | Type | Weight | Direction | Proxy Tier |
-|-----------|------|--------|-----------|------------|
-| `accident_history` | Scoring | 35.00% | positive | DIRECT_OBSERVABLE |
-| `incident_history` | Scoring | 25.00% | positive | DIRECT_OBSERVABLE |
-| `fatality_history` | Scoring | 25.00% | positive | DIRECT_OBSERVABLE |
-| `investigation_findings` | Scoring | 15.00% | positive | DIRECT_OBSERVABLE |
-
-### Signal Groups
-
-#### Categorical Groups
-
-These groups apply modifiers based on classification:
-
-| Group ID | Label | Impact | Default |
-|----------|-------|--------|---------|
-| `operator_type` | Operator Type | MODIFIER | OTHER |
-| `fleet_category` | Fleet Category | MODIFIER | OTHER |
-| `fleet_size` | Fleet Size | MODIFIER | OTHER |
-| `regulatory_framework` | Regulatory Framework | MODIFIER | OTHER |
-
-#### Three-Layer Assessment Groups
-
-These groups contribute to Risk, Loss, and Exposure scoring:
-
-| Group ID | Risk Weight | Loss Weight | Exposure Weight |
-|----------|-------------|-------------|-----------------|
-| `safety_record` | 35% | 45% | 10% |
-| `regulatory_compliance` | 25% | 20% | 10% |
-| `operational_quality` | 20% | 15% | 15% |
-| `fleet_quality` | 15% | 15% | 55% |
-| `corporate_governance` | 5% | 5% | 10% |
-
-### Risk Tier Bands
-
-Risk tiers determine the base pricing and underwriting action:
-
-| Tier | Label | Score Range | Action | Base Premium |
-|------|-------|-------------|--------|--------------|
-| 1 | PREFERRED | 800-1000 | APPROVE | $0 |
-| 2 | STANDARD_PLUS | 650-799 | APPROVE | $0 |
-| 3 | STANDARD | 500-649 | APPROVE | $0 |
-| 4 | SUBSTANDARD | 350-499 | REFER | $0 |
-| 5 | DECLINE | 0-349 | DECLINE | $0 |
-
-**Decision Logic:**
-- Scores 0-1000 (composite from weighted signals)
-- Higher scores = better risk = lower tier number
-- APPROVE: Automatic binding eligible
-- REFER: Requires underwriter review
-- DECLINE: Outside risk appetite
-
-### Loss Tier Bands
-
-Loss tiers adjust premium based on expected loss frequency and severity:
-
-| Tier | Label | Score Range | Freq Modifier | Sev Modifier |
-|------|-------|-------------|---------------|--------------|
-| 1 | VERY_LOW | 80-100 | 0.70x | 0.80x |
-| 2 | LOW | 60-79 | 0.85x | 0.90x |
-| 3 | MODERATE | 40-59 | 1.00x | 1.00x |
-| 4 | ELEVATED | 20-39 | 1.15x | 1.15x |
-| 5 | HIGH | 0-19 | 1.30x | 1.35x |
-
-**Constraints:** Floor = 0.60, Cap = 1.50
-
-### Direct Queries
-
-Binary questions that cannot be inferred from external signals:
-
-| Query ID | Question | Trigger | Action | Impact |
-|----------|----------|---------|--------|--------|
-| `pending_claims` | Are there any pending aviation liability claims ex... | Answer = True | REFER | Override to Tier 3 |
-| `regulatory_action` | Is there any pending regulatory enforcement action... | Answer = True | REFER | Override to Tier 5 |
-| `coverage_declined` | Has aviation coverage been declined or non-renewed... | Answer = True | REFER | Override to Tier 5 |
-| `fleet_change` | Are there planned fleet changes exceeding 30% in t... | Answer = True | REFER | Override to Tier 3 |
-| `route_expansion` | Is there planned expansion into conflict zones or ... | Answer = True | REFER | Override to Tier 4 |
-| `ownership_change` | Has there been a change in majority ownership in t... | Answer = True | REFER | Override to Tier 3 |
-
-**Action Types:**
-- **FLAG:** Adds note to underwriter; no pricing impact
-- **MODIFIER:** Applies premium multiplier
-- **REFER:** Forces underwriter review regardless of score
-
-### Limit & Deductible Configuration
-
-**Type:** `BUNDLED`
-
-**Mode:** Menu Pricing (Fixed Packages)
-
-Pre-configured limit/deductible packages for simplified selection:
-
-| ID | Package | Limit | Deductible |
-|---:|---------|------:|----------:|
-| 1 | STARTER | $1,000,000 | $5,000 |
-| 2 | STANDARD | $2,000,000 | $10,000 |
-| 3 | ENHANCED | $5,000,000 | $15,000 |
-| 4 | PREMIUM | $10,000,000 | $25,000 |
-
-*Clients select a package; the associated limit and deductible are applied automatically.*
-### Pricing Structure
-
-Pricing varies by product type:
-
-
-#### Aviation Hull
-
-**Pricing Anchors (V5):**
-- Base Limit Reference: $5,000,000
-- Base Deductible Reference: $10,000
-
-**Increased Limit Factors (ILF):**
-
-| Limit | Factor | Premium Multiplier |
-|-------|--------|-------------------|
-| $1,000,000 | 0.60 | 0.60x base |
-| $2,000,000 | 0.75 | 0.75x base |
-| $5,000,000 (base) | 1.00 | 1.00x base |
-| $10,000,000 | 1.45 | 1.45x base |
-
-**Deductible Factors (V5):**
-
-| Deductible | Factor | Effect |
-|------------|--------|--------|
-| $2,500 | 1.25 | +25% loading |
-| $5,000 | 1.10 | +10% loading |
-| $10,000 (anchor) | 1.00 | Base price |
-| $25,000 | 0.85 | -15% credit |
-
-
-#### Aviation Hull Liability Combined
-
-**Pricing Anchors (V5):**
-- Base Limit Reference: $5,000,000
-- Base Deductible Reference: $10,000
-
-**Increased Limit Factors (ILF):**
-
-| Limit | Factor | Premium Multiplier |
-|-------|--------|-------------------|
-| $1,000,000 | 0.60 | 0.60x base |
-| $2,000,000 | 0.75 | 0.75x base |
-| $5,000,000 (base) | 1.00 | 1.00x base |
-| $10,000,000 | 1.45 | 1.45x base |
-
-**Deductible Factors (V5):**
-
-| Deductible | Factor | Effect |
-|------------|--------|--------|
-| $2,500 | 1.25 | +25% loading |
-| $5,000 | 1.10 | +10% loading |
-| $10,000 (anchor) | 1.00 | Base price |
-| $25,000 | 0.85 | -15% credit |
-
-
-
----
-
-## Decision Flow Summary
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    DSI Decision Flow                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  1. SIGNAL EXTRACTION                                       │
-│     └─► External APIs → Normalized Scores (0-100)          │
-│                                                             │
-│  2. GROUP AGGREGATION                                       │
-│     └─► Weighted combination within groups                  │
-│                                                             │
-│  3. THREE-LAYER ASSESSMENT                                  │
-│     ├─► Risk Score (0-1000)                                │
-│     ├─► Loss Score (frequency × severity)                  │
-│     └─► Exposure Score (size × complexity)                 │
-│                                                             │
-│  4. TIER ASSIGNMENT                                         │
-│     └─► Risk Score → Tier Band → Base Premium              │
-│                                                             │
-│  5. DIRECT QUERIES                                          │
-│     └─► Binary answers → FLAGS / MODIFIERS / REFERS        │
-│                                                             │
-│  6. PRICING CALCULATION                                     │
-│     └─► Base × ILF × Ded Factor × Modifiers × Tax          │
-│                                                             │
-│  7. DECISION OUTPUT                                         │
-│     └─► APPROVE / REFER / DECLINE + Audit Trail            │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-*Generated by DSI Coverage Documentation Generator*
