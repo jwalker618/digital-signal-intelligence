@@ -51,8 +51,9 @@ directors_officers:
       routing_constraints:
       - field: revenue
         operator: ">"
-        value: 100000000
+        value: 50000000          # Changed from 100M to 50M to prevent gap
         required_in_input: true
+     
     direct_queries:
     - id: pending_claims
       question: Are there any pending securities class actions or derivative suits?
@@ -1456,13 +1457,10 @@ directors_officers:
       model_specificity: 2
       routing_constraints:
       - field: revenue
-        operator: <=
-        value: 100000000
+        operator: "<="
+        value: 50000000
         required_in_input: true
-      - field: limit
-        operator: <=
-        value: 5000000
-        required_in_input: true
+       
     direct_queries:
     - id: pending_claims
       question: Are there any pending claims against directors or officers?
@@ -1983,126 +1981,90 @@ directors_officers:
             application:
               method: MODIFIER
               applied: 1.15
+
+    # =========================================================================
+    # LIMIT CONFIGURATION: BUNDLED (Menu Pricing for SME)
+    # Replaces legacy limit_bandings
+    # =========================================================================
     limit_configuration:
-      type: BUNDLED
+      type: "BUNDLED"
       packages:
         - id: 1
           label: "STARTER"
           limit: 1000000
-          deductible: 25000
+          deductible: 10000
         - id: 2
           label: "STANDARD"
           limit: 2000000
-          deductible: 50000
+          deductible: 25000
         - id: 3
-          label: "PREMIUM"
+          label: "PREMIUM"                 # This aligns with the 50k Anchor
           limit: 5000000
-          deductible: 100000
+          deductible: 50000
+    
+    # 3. PRICING ANCHORS: Calibrated specifically for SME packages
     pricing:
-      
+      # ANCHOR: The Base Premium buys the Starter Package ($1M / $10k)
       base_limit_reference: 1000000
-      base_deductible_reference: 50000
+      base_deductible_reference: 10000
     
       by_product_type:
         side_a:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.8
-            - limit: 5000000
-              factor: 3.5
+            - {limit: 1000000, factor: 1.00} # Anchor
+            - {limit: 2000000, factor: 1.80}
+            - {limit: 5000000, factor: 3.50}
 
+          # Deductibles stripped of corporate values; anchored to 10k
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 5000, factor: 1.15}
+          - {deductible: 10000, factor: 1.00} # Anchor
+          - {deductible: 25000, factor: 0.90}
+          - {deductible: 50000, factor: 0.80}
+          - {deductible: 100000, factor: 0.70}
+
         side_b:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.7
-            - limit: 5000000
-              factor: 3.2
+            - {limit: 1000000, factor: 1.00} # Anchor
+            - {limit: 2000000, factor: 1.70}
+            - {limit: 5000000, factor: 3.20}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 5000, factor: 1.15}
+          - {deductible: 10000, factor: 1.00} # Anchor
+          - {deductible: 25000, factor: 0.90}
+          - {deductible: 50000, factor: 0.80}
+          - {deductible: 100000, factor: 0.70}
+
         employment_practices:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.55
-            - limit: 5000000
-              factor: 2.6
+            - {limit: 1000000, factor: 1.00} # Anchor
+            - {limit: 2000000, factor: 1.55}
+            - {limit: 5000000, factor: 2.60}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 5000, factor: 1.20}
+          - {deductible: 10000, factor: 1.00} # Anchor
+          - {deductible: 25000, factor: 0.85}
+          - {deductible: 50000, factor: 0.75}
+          - {deductible: 100000, factor: 0.65}
+
         fiduciary:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.6
-            - limit: 5000000
-              factor: 2.8
+            - {limit: 1000000, factor: 1.00} # Anchor
+            - {limit: 2000000, factor: 1.60}
+            - {limit: 5000000, factor: 2.80}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 5000, factor: 1.15}
+          - {deductible: 10000, factor: 1.00} # Anchor
+          - {deductible: 25000, factor: 0.90}
+          - {deductible: 50000, factor: 0.80}
+          - {deductible: 100000, factor: 0.70}
+
       taxes_fees_rate: 0.05
