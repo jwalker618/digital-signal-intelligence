@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 DSI Coverage Documentation Generator (Phase 5)
 ==============================================
