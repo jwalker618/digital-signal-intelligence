@@ -2057,25 +2057,25 @@ aerospace:
               applied: 1.15
 
     limit_configuration:
-      type: BUNDLED
+      type: "BUNDLED"
       packages:
         - id: 1
           label: "STARTER"
           limit: 1000000
-          deductible: 5000
+          deductible: 2500
         - id: 2
           label: "STANDARD"
           limit: 2000000
-          deductible: 10000
+          deductible: 5000
         - id: 3
-          label: "ENHANCED"
+          label: "ENHANCED"                # This aligns with the 5M / 10k Anchor
           limit: 5000000
-          deductible: 15000
+          deductible: 10000
         - id: 4
           label: "PREMIUM"
           limit: 10000000
           deductible: 25000
-
+          
     # =========================================================================
     # PRICING PARAMETERS (AEROSPACE SME)
     # =========================================================================
