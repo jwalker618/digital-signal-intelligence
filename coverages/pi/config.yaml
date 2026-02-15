@@ -1172,7 +1172,7 @@ professional_indemnity:
           - {deductible: 500000, factor: 0.7}
           - {deductible: 1000000, factor: 0.6}
 
-         malpractice:
+        malpractice:
           ilf_curve:
             base_limit: 1000000
             factors:
