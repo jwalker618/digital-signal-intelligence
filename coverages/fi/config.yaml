@@ -1353,6 +1353,9 @@ financial_institutions:
         - 500000
         - 1000000
     pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      
       by_product_type:
         financial_institution_bond:
           ilf_curve:
@@ -1372,8 +1375,7 @@ financial_institutions:
               factor: 11.5
             - limit: 100000000
               factor: 17.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1407,8 +1409,7 @@ financial_institutions:
               factor: 15.0
             - limit: 100000000
               factor: 23.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1442,8 +1443,7 @@ financial_institutions:
               factor: 18.0
             - limit: 100000000
               factor: 28.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1477,8 +1477,7 @@ financial_institutions:
               factor: 16.0
             - limit: 100000000
               factor: 25.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1512,8 +1511,7 @@ financial_institutions:
               factor: 10.5
             - limit: 100000000
               factor: 15.5
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1547,8 +1545,7 @@ financial_institutions:
               factor: 13.0
             - limit: 100000000
               factor: 20.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
