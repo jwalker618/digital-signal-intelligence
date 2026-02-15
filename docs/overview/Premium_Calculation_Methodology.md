@@ -1,4 +1,4 @@
-# Digital Signal Intelligence (DSI)
+# ${\color{blue}Digital\space Signal\space Intelligence\space (DSI)}$
 
 ## Premium Calculation Methodology
 
