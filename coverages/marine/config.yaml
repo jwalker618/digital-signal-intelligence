@@ -1299,6 +1299,9 @@ marine:
         - 500000
         - 1000000
     pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      
       by_product_type:
         hull_machinery:
           ilf_curve:
@@ -1318,8 +1321,7 @@ marine:
               factor: 22.0
             - limit: 1000000000
               factor: 38.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1353,8 +1355,7 @@ marine:
               factor: 17.5
             - limit: 1000000000
               factor: 30.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1388,8 +1389,7 @@ marine:
               factor: 21.0
             - limit: 500000000
               factor: 36.0
-          base_limit_reference: 5000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1423,8 +1423,7 @@ marine:
               factor: 26.0
             - limit: 500000000
               factor: 45.0
-          base_limit_reference: 5000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1458,8 +1457,7 @@ marine:
               factor: 28.0
             - limit: 1000000000
               factor: 50.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1493,8 +1491,7 @@ marine:
               factor: 26.0
             - limit: 1000000000
               factor: 46.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1528,8 +1525,7 @@ marine:
               factor: 20.0
             - limit: 500000000
               factor: 34.0
-          base_limit_reference: 5000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
