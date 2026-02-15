@@ -1256,13 +1256,13 @@ aerospace:
         - 500000
     
     pricing:
+      
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      
       by_product_type:
         
         aviation_hull:
-          
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
-          
           ilf_curve:
             base_limit: 10000000
             factors:
@@ -1283,9 +1283,6 @@ aerospace:
         
         aviation_liability:
           
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
-          
           ilf_curve:
             base_limit: 10000000
             factors:
@@ -1305,9 +1302,6 @@ aerospace:
           - {deductible: 500000, factor: 0.7}
         
         aviation_hull_liability_combined:
-          
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
           
           ilf_curve:
             base_limit: 10000000
@@ -2084,12 +2078,12 @@ aerospace:
           deductible: 25000
 
     pricing:
+
+      base_limit_reference: 5000000
+      base_deductible_reference: 10000      
+      
       by_product_type:
         aviation_hull:
-          
-          base_limit_reference: 5000000
-          base_deductible_reference: 10000
-          
           ilf_curve:
             base_limit: 5000000
             factors:
@@ -2105,10 +2099,6 @@ aerospace:
             - {deductible: 25000, factor: 0.85}
 
         aviation_hull_liability_combined:
-          
-          base_limit_reference: 5000000
-          base_deductible_reference: 10000
-          
           ilf_curve:
             base_limit: 5000000
             factors:
