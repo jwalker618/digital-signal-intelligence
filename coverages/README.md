@@ -15,21 +15,9 @@ coverages/
 ├── cyber/
 │   ├── config.yaml
 │   └── logic.md
-├── do/
+├── {coverage}/
 │   ├── config.yaml
 │   └── logic.md
-├── energy/
-│   ├── config.yaml
-│   └── logic.md
-├── fi/
-│   ├── config.yaml
-│   └── logic.md
-├── marine/
-│   ├── config.yaml
-│   └── logic.md
-└── pi/
-    ├── config.yaml
-    └── logic.md
 ```
 
 ## Documentation Generator
