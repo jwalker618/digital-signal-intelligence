@@ -12,11 +12,12 @@ A unified assessment framework that validates the DSI project against:
 6. Documentation completeness
 
 Usage:
-    python tests/comprehensive_assessor.py                    # Full assessment
-    python tests/comprehensive_assessor.py --config-only      # Config assessment only
-    python tests/comprehensive_assessor.py --structure-only   # Structure assessment only
-    python tests/comprehensive_assessor.py --json             # JSON output
-    python tests/comprehensive_assessor.py --coverage cyber   # Specific coverage
+    python development/project/assessments/scripts/assess_project.py                    # Full assessment
+    python development/project/assessments/scripts/assess_project.py --config-only      # Config assessment only
+    python development/project/assessments/scripts/assess_project.py --structure-only   # Structure assessment only
+    python development/project/assessments/scripts/assess_project.py --json             # JSON output
+    python development/project/assessments/scripts/assess_project.py --coverage cyber   # Specific coverage
+    python development/project/assessments/scripts/assess_project.py --output-dir PATH  # Save to custom directory
 
 Version: 1.0.0
 Date: February 2026
@@ -178,7 +179,7 @@ class DSIComprehensiveAssessor:
         "docs/overview/Premium_Calculation_Methodology.md",
         "docs/overview/Configuration_Architecture.md",
         "docs/overview/Foundational Principles.md",
-        "development/project/version/project_completeness_checklist.md",
+        "development/project/assessments/project_completeness_checklist.md",
         "coverages/master_config_layout.yaml"
     ]
 
@@ -281,19 +282,21 @@ class DSIComprehensiveAssessor:
                 f"Documentation exists" if exists else f"Missing documentation: {doc_path}"
             )
 
-        # Check master config layout
+        # Check master config layout - should document both BUNDLED and DECOUPLED options
         master_layout = self.project_root / "coverages" / "master_config_layout.yaml"
         if master_layout.exists():
             with open(master_layout) as f:
                 content = f.read()
             has_limit_config = "limit_configuration:" in content
-            has_limit_bandings = "limit_bandings:" in content and "# OPTION A: BUNDLED" in content
+            has_bundled_option = "BUNDLED" in content
+            has_decoupled_option = "DECOUPLED" in content
+            has_legacy_bandings = "limit_bandings:" in content and "limit_configuration:" not in content
 
             self._add_result(
                 "STRUCTURE", "Master Layout: limit_configuration",
-                has_limit_config and not has_limit_bandings,
-                "Master layout uses limit_configuration only" if has_limit_config and not has_limit_bandings
-                else "Master layout should use limit_configuration only (remove BUNDLED option)"
+                has_limit_config and has_bundled_option and has_decoupled_option and not has_legacy_bandings,
+                "Master layout documents both BUNDLED and DECOUPLED modes" if has_bundled_option and has_decoupled_option
+                else "Master layout should document both BUNDLED and DECOUPLED limit_configuration modes"
             )
 
     # =========================================================================
@@ -538,7 +541,7 @@ class DSIComprehensiveAssessor:
             )
 
     def _test_limit_configuration(self, config_name: str, config: Dict):
-        """Test limit_configuration structure."""
+        """Test limit_configuration structure for both BUNDLED and DECOUPLED types."""
         limit_config = config.get('limit_configuration')
         limit_bandings = config.get('limit_bandings')
 
@@ -550,17 +553,38 @@ class DSIComprehensiveAssessor:
                 config_name=config_name
             )
         elif limit_config:
-            has_type = limit_config.get('type') == 'DECOUPLED'
-            has_limits = bool(limit_config.get('valid_limits'))
-            has_deductibles = bool(limit_config.get('valid_deductibles'))
+            config_type = limit_config.get('type')
 
-            self._add_result(
-                "CONFIG", "Limit Configuration",
-                has_type and has_limits and has_deductibles,
-                "Valid limit_configuration structure" if has_type and has_limits and has_deductibles
-                else "Incomplete limit_configuration",
-                config_name=config_name
-            )
+            if config_type == 'BUNDLED':
+                packages = limit_config.get('packages', [])
+                has_valid_packages = len(packages) > 0 and all(
+                    all(k in pkg for k in ['id', 'label', 'limit', 'deductible'])
+                    for pkg in packages
+                )
+                self._add_result(
+                    "CONFIG", "Limit Configuration",
+                    has_valid_packages,
+                    f"Valid BUNDLED config with {len(packages)} packages" if has_valid_packages
+                    else "BUNDLED config missing valid packages structure",
+                    config_name=config_name
+                )
+            elif config_type == 'DECOUPLED':
+                has_limits = bool(limit_config.get('valid_limits'))
+                has_deductibles = bool(limit_config.get('valid_deductibles'))
+                self._add_result(
+                    "CONFIG", "Limit Configuration",
+                    has_limits and has_deductibles,
+                    "Valid DECOUPLED limit_configuration" if has_limits and has_deductibles
+                    else "DECOUPLED config missing valid_limits or valid_deductibles",
+                    config_name=config_name
+                )
+            else:
+                self._add_result(
+                    "CONFIG", "Limit Configuration",
+                    False,
+                    f"Invalid limit_configuration type: {config_type}. Must be BUNDLED or DECOUPLED",
+                    config_name=config_name
+                )
         else:
             self._add_result(
                 "CONFIG", "Limit Configuration",
@@ -940,6 +964,9 @@ def main():
     parser.add_argument("--show-passes", action="store_true", help="Show passing tests")
     parser.add_argument("--coverage", type=str, help="Assess specific coverage only")
     parser.add_argument("--project-root", type=str, help="Project root path")
+    parser.add_argument("--output-dir", type=str, default="development/project/assessments/results",
+                       help="Directory for output files (default: development/project/assessments/results)")
+    parser.add_argument("--save-report", action="store_true", help="Save report as timestamped markdown file")
 
     args = parser.parse_args()
 
@@ -956,6 +983,24 @@ def main():
         print(json.dumps(report.to_dict(), indent=2))
     else:
         assessor.print_report(show_passes=args.show_passes)
+
+    # Save report if requested
+    if args.save_report:
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        report_path = output_dir / f"assessment_results_{datetime.now().strftime('%Y-%m-%d')}.md"
+        with open(report_path, 'w') as f:
+            f.write(f"# DSI Assessment Results - {datetime.now().strftime('%Y-%m-%d')}\n\n")
+            f.write(f"**Overall Score:** {report.overall_score:.1f}%\n\n")
+            f.write(f"**Status:** {'ACTION REQUIRED' if report.total_failures > 0 else 'ALL CHECKS PASSED'}\n\n")
+            for category, summary in sorted(report.summaries.items()):
+                f.write(f"## {assessor.CATEGORIES.get(category, category)}\n")
+                f.write(f"Score: {summary.score:.1f}% ({summary.passed} pass, {summary.warnings} warn, {summary.failed} fail)\n\n")
+                for result in report.results:
+                    if result.category == category and result.severity in [Severity.FAIL, Severity.WARNING]:
+                        f.write(f"- [{result.severity.value.upper()}] {result.test_name}: {result.message}\n")
+                f.write("\n")
+        print(f"\nReport saved to: {report_path}")
 
     # Exit with error code if failures
     sys.exit(1 if report.total_failures > 0 else 0)

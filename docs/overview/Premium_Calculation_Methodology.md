@@ -119,9 +119,40 @@ The DSI engine handles this natively via the ILF Curve.
 
 ## 5a. Limit & Deductible Configuration
 
-All DSI configurations use a **DECOUPLED** limit/deductible structure via `limit_configuration`. This allows clients to independently select their preferred limit and deductible from predefined valid options.
+DSI supports two limit/deductible configuration modes via `limit_configuration`. The `type` field determines which mode applies and how the pricing engine processes limit/deductible selection.
 
-### Configuration Structure
+### Mode 1: BUNDLED (Menu Pricing)
+
+**Use case:** SME (Small & Medium Enterprise) segments where simplified selection is preferred.
+
+```yaml
+limit_configuration:
+  type: "BUNDLED"
+  packages:
+    - id: 1
+      label: "STARTER"
+      limit: 250000
+      deductible: 10000
+    - id: 2
+      label: "STANDARD"
+      limit: 500000
+      deductible: 25000
+    - id: 3
+      label: "PREMIUM"
+      limit: 1000000
+      deductible: 50000
+```
+
+**Characteristics:**
+- Fixed limit/deductible combinations in predefined packages
+- Simpler client selection (choose a package label rather than individual values)
+- Each package has a unique `id` and human-readable `label`
+- Pricing engine uses the package's limit/deductible directly without ILF/deductible factor scaling
+
+### Mode 2: DECOUPLED (Tower Pricing)
+
+**Use case:** Corporate/General segments requiring flexible limit and deductible selection.
+
 ```yaml
 limit_configuration:
   type: "DECOUPLED"
@@ -137,13 +168,17 @@ limit_configuration:
     - 100000       # $100k
 ```
 
-### Rationale
-The DECOUPLED approach provides:
-1. **Flexibility:** Clients can select the exact limit/deductible combination that fits their risk tolerance and budget.
-2. **Transparency:** Pricing scales predictably via ILF curves and deductible factors.
-3. **Consistency:** All coverages use the same structural approach, simplifying the pricing engine.
+**Characteristics:**
+- Independent limit and deductible selection from valid options
+- Pricing scales via ILF curves (for limits) and deductible factors
+- Maximum flexibility for sophisticated buyers
+- Requires anchor references (`base_limit_reference`, `base_deductible_reference`) in pricing section
 
-**Note:** Legacy "bundled" (menu-style) configurations where limits and deductibles were locked together have been deprecated. The decoupled structure with anchor-based relativities provides superior flexibility and actuarial integrity.
+### Engine Behaviour
+
+The pricing engine reads the `type` field to determine behaviour:
+- **BUNDLED:** Validates that selected package exists, applies package limit/deductible directly
+- **DECOUPLED:** Validates limit ∈ valid_limits and deductible ∈ valid_deductibles, applies ILF and deductible factor scaling
 
 ---
 

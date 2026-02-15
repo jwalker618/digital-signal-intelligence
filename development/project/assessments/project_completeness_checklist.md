@@ -20,18 +20,18 @@ The following automated tools should be used to verify checklist items marked **
 
 | Tool | Purpose | Command |
 |-|-|-|
-| **Comprehensive Assessor** | Full project assessment | `python tests/comprehensive_assessor.py` |
-| **Phase 5 Config Assessor** | Per-coverage config validation | `python tests/assess_completeness.py coverages/{coverage}/config.yaml` |
+| **Project Assessor** | Full project assessment | `python development/project/assessments/scripts/assess_project.py` |
+| **Config Compliance Assessor** | Per-coverage config validation | `python development/project/assessments/scripts/assess_config_compliance.py coverages/{coverage}/config.yaml` |
 | **Config Validator** | Schema validation | `python -m infrastructure.builder.cli validate` |
 
 **Recommended Assessment Workflow:**
 
-1. Run `python tests/comprehensive_assessor.py` for full project status
+1. Run `python development/project/assessments/scripts/assess_project.py` for full project status
 2. Review failures and warnings
 3. Fix critical failures before proceeding
 4. Document any accepted warnings with rationale
 
-See `docs/assessment/ASSESSMENT_METHODOLOGY.md` for detailed assessment methodology.
+See `ASSESSMENT_METHODOLOGY.md` in this directory for detailed assessment methodology.
 
 ## How to Use
 

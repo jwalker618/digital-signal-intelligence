@@ -1,7 +1,7 @@
 # Energy Coverage Configuration
 
 **Coverage ID:** `energy`
-**Generated:** 2026-02-13 13:34
+**Generated:** 2026-02-15 09:41
 **Schema Version:** v2.2
 
 This document describes the configuration, decision logic, and pricing structure
@@ -162,14 +162,14 @@ These groups contribute to Risk, Loss, and Exposure scoring:
 
 | Group ID | Risk Weight | Loss Weight | Exposure Weight |
 |----------|-------------|-------------|-----------------|
-| `network_authority` | 10% | 0% | 0% |
-| `safety_performance` | 30% | 0% | 0% |
-| `environmental_compliance` | 20% | 0% | 0% |
-| `operational_telemetry` | 10% | 0% | 0% |
-| `financial_stability` | 10% | 0% | 0% |
-| `asset_portfolio` | 10% | 0% | 0% |
-| `corporate_footprint` | 5% | 0% | 0% |
-| `structured_data` | 5% | 0% | 0% |
+| `network_authority` | 10% | 5% | 5% |
+| `safety_performance` | 30% | 35% | 10% |
+| `environmental_compliance` | 20% | 25% | 10% |
+| `operational_telemetry` | 10% | 10% | 20% |
+| `financial_stability` | 10% | 5% | 20% |
+| `asset_portfolio` | 10% | 15% | 30% |
+| `corporate_footprint` | 5% | 3% | 3% |
+| `structured_data` | 5% | 2% | 2% |
 
 ### Risk Tier Bands
 
@@ -221,6 +221,36 @@ Binary questions that cannot be inferred from external signals:
 - **FLAG:** Adds note to underwriter; no pricing impact
 - **MODIFIER:** Applies premium multiplier
 - **REFER:** Forces underwriter review regardless of score
+
+### Limit & Deductible Configuration
+
+**Type:** `DECOUPLED`
+
+**Mode:** Tower Pricing (Independent Selection)
+
+Clients independently select from valid limits and deductibles. 
+Pricing scales via ILF curves and deductible factors.
+
+**Available Limits:**
+
+- $5,000,000
+- $10,000,000
+- $25,000,000
+- $50,000,000
+- $100,000,000
+- $250,000,000
+- $500,000,000
+- $1,000,000,000
+
+**Available Deductibles:**
+
+- $10,000
+- $25,000
+- $50,000
+- $100,000
+- $250,000
+- $500,000
+- $1,000,000
 
 ### Pricing Structure
 
@@ -443,18 +473,6 @@ Pricing varies by product type:
 | $500,000 | 0.70 | -30% credit |
 | $1,000,000 | 0.70 | -30% credit |
 
-
-### Limit Bandings
-
-Pre-configured limit/deductible packages:
-
-| Package | Limit | Deductible |
-|---------|-------|------------|
-| 1 | $10,000,000 | $500,000 |
-| 2 | $25,000,000 | $1,000,000 |
-| 3 | $50,000,000 | $2,000,000 |
-| 4 | $100,000,000 | $5,000,000 |
-| 5 | $250,000,000 | $10,000,000 |
 
 
 ---

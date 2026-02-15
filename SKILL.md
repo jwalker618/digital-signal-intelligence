@@ -23,6 +23,8 @@ When starting any DSI work:
 1. **Check technical_pricing/cross_walk/by_coverage.json** for common concepts
 1. **For loss correlation work**: Review `loss/correlation_layer/development/` specification documents
 1. **For exposure shadow work**: Review `exposure/shadow_layer/development/` specification documents
+1. **After config changes**: Run `python coverages/doc_generator.py` to regenerate logic.md files
+1. **Before committing**: Run `python development/project/assessments/scripts/assess_project.py` to validate project compliance
 
 ## Implementation Status
 
@@ -444,9 +446,19 @@ digital-signal-intelligence/
 │   └── organisational_graph.yaml    # Graph schema for World Model
 │
 ├── development/                     # Development documentation
-│   ├── project/                     # Phase documents
-│   │   ├── phase_1.md ... phase_#.md   # Implementation phases
-│   │   └── original.md              # Master SKILL document
+│   ├── project/                     # Phase documents and assessments
+│   │   ├── version/                 # Phase documentation by version
+│   │   │   ├── 1/                   # Legacy phase docs (1-20)
+│   │   │   ├── 2/                   # Restructure phases (R1-R11, P1-P7)
+│   │   │   └── active/              # Current active phases (V3-V7)
+│   │   └── assessments/             ✅ Project assessment tooling
+│   │       ├── README.md            ✅ Assessment workflow guide
+│   │       ├── ASSESSMENT_METHODOLOGY.md ✅ Detailed methodology
+│   │       ├── project_completeness_checklist.md ✅ 293+ item checklist
+│   │       ├── scripts/             ✅ Assessment scripts
+│   │       │   ├── assess_project.py       ✅ Full project assessment
+│   │       │   └── assess_config_compliance.py ✅ Single config validation
+│   │       └── results/             ✅ Timestamped assessment results
 │   └── ...                          # Analysis and methodology docs
 │
 ├── signal_architecture/             # All signal-related code
@@ -537,8 +549,13 @@ digital-signal-intelligence/
 │   └── loss/                        ✅ Loss config adapter + types (v2.0 tier bands)
 │
 ├── coverages/                       # YAML coverage configurations
-│   ├── aerospace/config.yaml        ✅ 21 signals
-│   └── #other coverages#/config.yaml            
+│   ├── doc_generator.py             ✅ Generate logic.md files from configs
+│   ├── master_config_layout.yaml    ✅ Master schema template
+│   ├── README.md                    ✅ Coverages documentation
+│   ├── aerospace/
+│   │   ├── config.yaml              ✅ Configuration definitions
+│   │   └── logic.md                 ✅ Generated documentation
+│   └── #other coverages#/           ✅ Each has config.yaml + logic.md            
 │
 ├── exposure/                        # Exposure Shadow Layer specs (PHASE 17)
 │   └── shadow_layer/development/    ✅ Specification documents

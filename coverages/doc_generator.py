@@ -1,12 +1,18 @@
 """
 DSI Coverage Documentation Generator
 
-Generates dedicated .md documentation files for each coverage configuration.
+Generates dedicated logic.md documentation files for each coverage configuration.
 Documents the logic, decision-making, and structure of each coverage YAML.
 
-Usage:
-    from infrastructure.builder.doc_generator import CoverageDocGenerator
+Each coverage directory gets a logic.md file documenting all configurations
+(e.g., cyber_general and cyber_sme get sections in coverages/cyber/logic.md).
 
+Usage:
+    # From project root:
+    python coverages/doc_generator.py
+
+    # Programmatic usage:
+    from coverages.doc_generator import CoverageDocGenerator
     generator = CoverageDocGenerator()
     generator.generate_all_documentation()
 """
@@ -37,16 +43,12 @@ class CoverageDocGenerator:
 
     def __init__(
         self,
-        coverages_dir: str = "coverages",
-        docs_output_dir: str = "docs/coverages"
+        coverages_dir: str = "coverages"
     ):
         self.coverages_dir = Path(coverages_dir)
-        self.docs_output_dir = Path(docs_output_dir)
 
     def generate_all_documentation(self) -> Dict[str, bool]:
-        """Generate documentation for all coverage configs."""
-        # Ensure output directory exists
-        self.docs_output_dir.mkdir(parents=True, exist_ok=True)
+        """Generate logic.md documentation for all coverage configs."""
 
         results = {}
         for coverage_dir in sorted(self.coverages_dir.iterdir()):
@@ -71,7 +73,7 @@ class CoverageDocGenerator:
         return results
 
     def generate_documentation(self, config_path: str, coverage_name: str) -> bool:
-        """Generate documentation for a single coverage config."""
+        """Generate logic.md for a single coverage config."""
         logger.info(f"Generating documentation for {coverage_name}")
 
         with open(config_path, 'r') as f:
@@ -92,8 +94,8 @@ class CoverageDocGenerator:
             coverage_config
         )
 
-        # Write documentation file
-        output_path = self.docs_output_dir / f"{coverage_name}.md"
+        # Write documentation file to coverages/<name>/logic.md
+        output_path = self.coverages_dir / coverage_name / "logic.md"
         with open(output_path, 'w') as f:
             f.write(md_content)
 
@@ -183,13 +185,16 @@ for the {title} coverage vertical in the DSI platform.
         if 'direct_queries' in config:
             sections.append(self._document_direct_queries(config['direct_queries']))
 
+        # Limit Configuration (BUNDLED or DECOUPLED)
+        if 'limit_configuration' in config:
+            sections.append(self._document_limit_configuration(config['limit_configuration']))
+        # Legacy Limit Bandings (deprecated)
+        elif 'limit_bandings' in config:
+            sections.append(self._document_limit_bandings(config['limit_bandings']))
+
         # Pricing
         if 'pricing' in config:
             sections.append(self._document_pricing(config['pricing']))
-
-        # Limit Bandings
-        if 'limit_bandings' in config:
-            sections.append(self._document_limit_bandings(config['limit_bandings']))
 
         return '\n'.join(sections)
 
@@ -480,9 +485,56 @@ for the {title} coverage vertical in the DSI platform.
 
         return '\n'.join(lines)
 
+    def _document_limit_configuration(self, limit_config: Dict[str, Any]) -> str:
+        """Document limit_configuration section for BUNDLED or DECOUPLED types."""
+        config_type = limit_config.get('type', 'UNKNOWN')
+        lines = ["### Limit & Deductible Configuration\n"]
+        lines.append(f"**Type:** `{config_type}`\n")
+
+        if config_type == 'BUNDLED':
+            lines.append("**Mode:** Menu Pricing (Fixed Packages)\n")
+            lines.append("Pre-configured limit/deductible packages for simplified selection:\n")
+            lines.append("| ID | Package | Limit | Deductible |")
+            lines.append("|---:|---------|------:|----------:|")
+
+            packages = limit_config.get('packages', [])
+            for pkg in packages:
+                pkg_id = pkg.get('id', 0)
+                label = pkg.get('label', 'N/A')
+                limit = pkg.get('limit', 0)
+                ded = pkg.get('deductible', 0)
+                lines.append(f"| {pkg_id} | {label} | ${limit:,} | ${ded:,} |")
+
+            lines.append("")
+            lines.append("*Clients select a package; the associated limit and deductible are applied automatically.*")
+
+        elif config_type == 'DECOUPLED':
+            lines.append("**Mode:** Tower Pricing (Independent Selection)\n")
+            lines.append("Clients independently select from valid limits and deductibles. ")
+            lines.append("Pricing scales via ILF curves and deductible factors.\n")
+
+            valid_limits = limit_config.get('valid_limits', [])
+            if valid_limits:
+                lines.append("**Available Limits:**\n")
+                for limit in valid_limits:
+                    lines.append(f"- ${limit:,}")
+                lines.append("")
+
+            valid_deductibles = limit_config.get('valid_deductibles', [])
+            if valid_deductibles:
+                lines.append("**Available Deductibles:**\n")
+                for ded in valid_deductibles:
+                    lines.append(f"- ${ded:,}")
+                lines.append("")
+
+        else:
+            lines.append(f"*Unknown limit_configuration type: {config_type}*\n")
+
+        return '\n'.join(lines)
+
     def _document_limit_bandings(self, bandings: List[Dict[str, Any]]) -> str:
-        """Document limit bandings."""
-        lines = ["### Limit Bandings\n"]
+        """Document legacy limit bandings (deprecated)."""
+        lines = ["### Limit Bandings (Legacy)\n"]
         lines.append("Pre-configured limit/deductible packages:\n")
         lines.append("| Package | Limit | Deductible |")
         lines.append("|---------|-------|------------|")
@@ -539,45 +591,15 @@ for the {title} coverage vertical in the DSI platform.
 """
 
     def _generate_index(self, results: Dict[str, bool]) -> None:
-        """Generate index file linking to all coverage docs."""
-        index_content = f"""# DSI Coverage Documentation Index
+        """Log index of generated documentation (no separate index file needed)."""
+        # Each coverage now has its own logic.md in coverages/<name>/logic.md
+        # No central index needed as documentation lives alongside configs
+        successful = [c for c, s in results.items() if s]
+        failed = [c for c, s in results.items() if not s]
 
-**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
-**Total Coverages:** {len(results)}
-
-## Coverage Documentation
-
-| Coverage | Status | Documentation |
-|----------|--------|---------------|
-"""
-        for coverage, success in sorted(results.items()):
-            status = "✅" if success else "❌"
-            link = f"[{coverage}.md](./{coverage}.md)" if success else "Failed"
-            title = coverage.replace('_', ' ').title()
-            index_content += f"| {title} | {status} | {link} |\n"
-
-        index_content += """
-## Schema Version
-
-All configurations follow **DSI Schema v2.2** which includes:
-
-- **V4 Multiplexer Support:** `model_specificity`, `routing_constraints`
-- **V5 Pricing Anchors:** `base_limit_reference`, `base_deductible_reference`, `deductible_factors`
-- **Three-Layer Assessment:** Risk, Loss, Exposure dimensions
-- **Direct Queries:** Binary questions with FLAG/MODIFIER/REFER actions
-
-## Related Documentation
-
-- [Premium Calculation Methodology](../overview/Premium_Calculation_Methodology.md)
-- [Master Config Layout](../../coverages/master_config_layout.yaml)
-- [Phase V6 Plan](../../development/project/version/active/phase_v6.md)
-"""
-
-        index_path = self.docs_output_dir / "README.md"
-        with open(index_path, 'w') as f:
-            f.write(index_content)
-
-        logger.info(f"Index written to {index_path}")
+        logger.info(f"Generated {len(successful)} logic.md files")
+        if failed:
+            logger.warning(f"Failed to generate: {', '.join(failed)}")
 
 
 def generate_coverage_documentation() -> None:
@@ -590,13 +612,14 @@ def generate_coverage_documentation() -> None:
     print("=" * 60)
 
     for coverage, success in sorted(results.items()):
-        status = "✅ Generated" if success else "❌ Failed"
-        print(f"  {coverage}: {status}")
+        status = "Generated" if success else "Failed"
+        output = f"coverages/{coverage}/logic.md" if success else ""
+        print(f"  {coverage}: {status} {output}")
 
     total = len(results)
     passed = sum(1 for s in results.values() if s)
-    print(f"\nTotal: {passed}/{total} coverage docs generated")
-    print(f"Output: docs/coverages/")
+    print(f"\nTotal: {passed}/{total} logic.md files generated")
+    print(f"Output: coverages/<coverage>/logic.md")
 
 
 if __name__ == "__main__":

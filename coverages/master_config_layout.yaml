@@ -508,9 +508,34 @@
 
     # =========================================================================
     # LIMIT & DEDUCTIBLE CONFIGURATION (Phase V5)
-    # Defines valid limits and deductibles for the configuration
+    # Two modes supported: BUNDLED (menu pricing) and DECOUPLED (tower pricing)
     # =========================================================================
     limit_configuration:
+      # -----------------------------------------------------------------------
+      # OPTION A: BUNDLED (Menu Pricing)
+      # Fixed packages with coupled limit/deductible - appropriate for SME risks
+      # Simpler selection process, pre-defined combinations
+      # -----------------------------------------------------------------------
+      # type: "BUNDLED"
+      # packages:                            # Pre-defined limit/deductible combinations
+      #   - id: 1                            # Unique package identifier
+      #     label: "STARTER"                 # Human-readable package name
+      #     limit: 250000                    # Fixed limit for this package
+      #     deductible: 10000                # Fixed deductible for this package
+      #   - id: 2
+      #     label: "STANDARD"
+      #     limit: 500000
+      #     deductible: 25000
+      #   - id: 3
+      #     label: "PREMIUM"
+      #     limit: 1000000
+      #     deductible: 50000
+
+      # -----------------------------------------------------------------------
+      # OPTION B: DECOUPLED (Tower Pricing)
+      # Independent limit/deductible selection - appropriate for corporate risks
+      # Maximum flexibility, ILF/deductible factor scaling applies
+      # -----------------------------------------------------------------------
       type: "DECOUPLED"                    # Limits and deductibles are independent
       valid_limits:                        # Allowed limit options (in default_currency)
         - {integer}                        # e.g., 1000000, 2000000, 5000000

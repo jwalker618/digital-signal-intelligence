@@ -1,7 +1,7 @@
 # Cyber Coverage Configuration
 
 **Coverage ID:** `cyber`
-**Generated:** 2026-02-13 13:34
+**Generated:** 2026-02-15 09:41
 **Schema Version:** v2.2
 
 This document describes the configuration, decision logic, and pricing structure
@@ -204,6 +204,32 @@ Binary questions that cannot be inferred from external signals:
 - **MODIFIER:** Applies premium multiplier
 - **REFER:** Forces underwriter review regardless of score
 
+### Limit & Deductible Configuration
+
+**Type:** `DECOUPLED`
+
+**Mode:** Tower Pricing (Independent Selection)
+
+Clients independently select from valid limits and deductibles. 
+Pricing scales via ILF curves and deductible factors.
+
+**Available Limits:**
+
+- $1,000,000
+- $3,000,000
+- $5,000,000
+- $10,000,000
+- $25,000,000
+
+**Available Deductibles:**
+
+- $10,000
+- $25,000
+- $50,000
+- $100,000
+- $250,000
+- $500,000
+
 ### Pricing Structure
 
 Pricing varies by product type:
@@ -333,18 +359,6 @@ Pricing varies by product type:
 | $1,000,000 | 0.70 | -30% credit |
 
 
-### Limit Bandings
-
-Pre-configured limit/deductible packages:
-
-| Package | Limit | Deductible |
-|---------|-------|------------|
-| 1 | $1,000,000 | $25,000 |
-| 2 | $5,000,000 | $50,000 |
-| 3 | $10,000,000 | $100,000 |
-| 4 | $25,000,000 | $250,000 |
-| 5 | $50,000,000 | $500,000 |
-
 
 ---
 
@@ -467,6 +481,23 @@ Binary questions that cannot be inferred from external signals:
 - **MODIFIER:** Applies premium multiplier
 - **REFER:** Forces underwriter review regardless of score
 
+### Limit & Deductible Configuration
+
+**Type:** `BUNDLED`
+
+**Mode:** Menu Pricing (Fixed Packages)
+
+Pre-configured limit/deductible packages for simplified selection:
+
+| ID | Package | Limit | Deductible |
+|---:|---------|------:|----------:|
+| 1 | STARTER | $250,000 | $10,000 |
+| 2 | BASIC | $500,000 | $25,000 |
+| 3 | STANDARD | $1,000,000 | $50,000 |
+| 4 | ENHANCED | $2,000,000 | $100,000 |
+| 5 | PREMIUM | $5,000,000 | $250,000 |
+
+*Clients select a package; the associated limit and deductible are applied automatically.*
 ### Pricing Structure
 
 Pricing varies by product type:
@@ -529,18 +560,6 @@ Pricing varies by product type:
 | $500,000 | 0.70 | -30% credit |
 | $1,000,000 | 0.70 | -30% credit |
 
-
-### Limit Bandings
-
-Pre-configured limit/deductible packages:
-
-| Package | Limit | Deductible |
-|---------|-------|------------|
-| 1 | $250,000 | $2,500 |
-| 2 | $500,000 | $5,000 |
-| 3 | $1,000,000 | $10,000 |
-| 4 | $2,000,000 | $15,000 |
-| 5 | $5,000,000 | $25,000 |
 
 
 ---

@@ -1807,21 +1807,28 @@ cyber:
               method: MODIFIER
               applied: 1.15
     limit_configuration:
-      type: DECOUPLED
-      valid_limits:
-        - 250000
-        - 500000
-        - 1000000
-        - 2000000
-        - 5000000
-      valid_deductibles:
-        - 10000
-        - 25000
-        - 50000
-        - 100000
-        - 250000
-        - 500000
-        - 1000000
+      type: BUNDLED
+      packages:
+        - id: 1
+          label: "STARTER"
+          limit: 250000
+          deductible: 10000
+        - id: 2
+          label: "BASIC"
+          limit: 500000
+          deductible: 25000
+        - id: 3
+          label: "STANDARD"
+          limit: 1000000
+          deductible: 50000
+        - id: 4
+          label: "ENHANCED"
+          limit: 2000000
+          deductible: 100000
+        - id: 5
+          label: "PREMIUM"
+          limit: 5000000
+          deductible: 250000
     pricing:
       by_product_type:
         cyber_liability:

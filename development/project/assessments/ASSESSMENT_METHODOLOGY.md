@@ -2,7 +2,7 @@
 
 | Item | Value |
 |-|-|
-| Version | 1.0.0 |
+| Version | 2.0.0 |
 | Date | February 2026 |
 | Classification | Process Documentation |
 
@@ -18,25 +18,31 @@ The DSI project uses a layered assessment approach with multiple tools:
 
 ### 1. Comprehensive Project Assessor (Primary)
 
-**Location:** `tests/comprehensive_assessor.py`
+**Location:** `development/project/assessments/scripts/assess_project.py`
 
 The primary assessment tool that validates all aspects of the project:
 
 ```bash
 # Full assessment
-python tests/comprehensive_assessor.py
+python development/project/assessments/scripts/assess_project.py
 
 # Configuration compliance only
-python tests/comprehensive_assessor.py --config-only
+python development/project/assessments/scripts/assess_project.py --config-only
 
 # Structure assessment only
-python tests/comprehensive_assessor.py --structure-only
+python development/project/assessments/scripts/assess_project.py --structure-only
 
 # JSON output for CI/CD
-python tests/comprehensive_assessor.py --json
+python development/project/assessments/scripts/assess_project.py --json
 
 # Show all results including passes
-python tests/comprehensive_assessor.py --show-passes
+python development/project/assessments/scripts/assess_project.py --show-passes
+
+# Save report to results directory
+python development/project/assessments/scripts/assess_project.py --save-report
+
+# Custom output directory
+python development/project/assessments/scripts/assess_project.py --save-report --output-dir /path/to/output
 ```
 
 **Assessment Categories:**
@@ -50,23 +56,23 @@ python tests/comprehensive_assessor.py --show-passes
 | TESTS | Test infrastructure | Test directories, collection, fixtures |
 | DOCS | Documentation | logic.md files, key documentation |
 
-### 2. Phase 5 Configuration Assessor
+### 2. Configuration Compliance Assessor
 
-**Location:** `tests/assess_completeness.py`
+**Location:** `development/project/assessments/scripts/assess_config_compliance.py`
 
-Focused assessment for Phase 5 pricing compliance:
+Focused assessment for individual configuration compliance:
 
 ```bash
 # Assess single coverage config
-python tests/assess_completeness.py coverages/cyber/config.yaml
+python development/project/assessments/scripts/assess_config_compliance.py coverages/cyber/config.yaml
 
 # Assess all coverages
 for config in coverages/*/config.yaml; do
-    python tests/assess_completeness.py "$config"
+    python development/project/assessments/scripts/assess_config_compliance.py "$config"
 done
 ```
 
-**Phase 5 Compliance Checks:**
+**Compliance Checks:**
 
 1. **Schema Version** - Must be >= 2.2.0
 2. **Weight Sums** - Risk, loss, exposure weights sum to 1.0
@@ -79,10 +85,11 @@ done
 9. **ILF Normalization** - Anchor limit has factor = 1.0
 10. **Deductible Normalization** - Anchor deductible has factor = 1.0
 11. **Phase 5 Deprecation** - No legacy deductible_credits fields
+12. **Limit Configuration** - Valid BUNDLED packages or DECOUPLED limits/deductibles
 
 ### 3. Configuration Validator
 
-**Location:** `infrastructure/validation/config_validator.py`
+**Location:** `infrastructure/builder/validator.py`
 
 Schema validation for individual configurations:
 
@@ -99,11 +106,11 @@ python -m infrastructure.builder.cli validate coverages/cyber/config.yaml
 
 | Trigger | Assessment Type | Command |
 |-|-|-|
-| Before commit | Full assessment | `python tests/comprehensive_assessor.py` |
-| After config change | Phase 5 compliance | `python tests/assess_completeness.py coverages/{coverage}/config.yaml` |
-| CI/CD pipeline | Full + JSON | `python tests/comprehensive_assessor.py --json` |
-| Adding new coverage | Full assessment | `python tests/comprehensive_assessor.py` |
-| Release preparation | Full + show-passes | `python tests/comprehensive_assessor.py --show-passes` |
+| Before commit | Full assessment | `python development/project/assessments/scripts/assess_project.py` |
+| After config change | Config compliance | `python development/project/assessments/scripts/assess_config_compliance.py coverages/{coverage}/config.yaml` |
+| CI/CD pipeline | Full + JSON | `python development/project/assessments/scripts/assess_project.py --json` |
+| Adding new coverage | Full assessment | `python development/project/assessments/scripts/assess_project.py` |
+| Release preparation | Full + save report | `python development/project/assessments/scripts/assess_project.py --save-report --show-passes` |
 
 ### Severity Levels
 
@@ -139,13 +146,35 @@ Every coverage configuration must include:
     risk_tier_bands:   # Required: 5 tiers, 0-1000 coverage
     loss_tier_bands:   # Required: with floor/cap constraints
     exposure:          # Required: size and complexity bands
-    limit_configuration: # Required: DECOUPLED type with valid_limits/deductibles
+    limit_configuration: # Required: BUNDLED or DECOUPLED type
     pricing:           # Required: anchors, ILF curves, deductible factors
 ```
 
 ### limit_configuration Structure
 
-All configurations must use the DECOUPLED limit_configuration format:
+Two modes are supported based on the segment:
+
+**BUNDLED (Menu Pricing) - For SME Segments:**
+
+```yaml
+limit_configuration:
+  type: BUNDLED
+  packages:
+    - id: 1
+      label: "STARTER"
+      limit: 250000
+      deductible: 10000
+    - id: 2
+      label: "STANDARD"
+      limit: 500000
+      deductible: 25000
+    - id: 3
+      label: "PREMIUM"
+      limit: 1000000
+      deductible: 50000
+```
+
+**DECOUPLED (Tower Pricing) - For Corporate/General Segments:**
 
 ```yaml
 limit_configuration:
@@ -159,8 +188,6 @@ limit_configuration:
     - 25000
     - 50000
 ```
-
-**Note:** The legacy `limit_bandings` (bundled menu pricing) has been deprecated.
 
 ### Pricing Anchor Requirements
 
@@ -191,6 +218,7 @@ limit_configuration:
   tests/              # Test suite
   docs/               # Documentation
   schemas/            # YAML schemas
+  development/project/assessments/  # Assessment tooling
 ```
 
 ### Required Files per Coverage
@@ -198,7 +226,7 @@ limit_configuration:
 | File | Purpose |
 |-|-|
 | `config.yaml` | Coverage configuration |
-| `logic.md` | Rationale for signal selection and weighting (recommended) |
+| `logic.md` | Rationale for signal selection and weighting (generated by doc_generator.py) |
 
 ### Required Documentation
 
@@ -207,57 +235,28 @@ limit_configuration:
 | Premium Methodology | `docs/overview/Premium_Calculation_Methodology.md` |
 | Configuration Architecture | `docs/overview/Configuration_Architecture.md` |
 | Foundational Principles | `docs/overview/Foundational Principles.md` |
-| Completeness Checklist | `development/project/version/project_completeness_checklist.md` |
+| Completeness Checklist | `development/project/assessments/project_completeness_checklist.md` |
 | Master Config Layout | `coverages/master_config_layout.yaml` |
+| Assessment Methodology | `development/project/assessments/ASSESSMENT_METHODOLOGY.md` |
 
 ---
 
-## Cross-Coverage Consistency
+## Assessment Results
 
-### Structural Consistency
+### Results Directory
 
-All configurations should have identical structural components:
-- direct_queries
-- signal_registry
-- groups (categories, three_layer_assessment)
-- risk_tier_bands
-- loss_tier_bands
-- exposure
-- limit_configuration
-- pricing
-
-### Version Alignment
-
-While minor version differences are acceptable during development, all production configurations should align on the same schema version.
-
----
-
-## Inference Registry Validation
-
-The assessment verifies that all `inference_utility_function` references in coverage configs resolve to registered functions in the inference registry.
-
-**Expected in Development:** Missing functions flagged as FAIL, but this is expected when using stub extractors.
-
-**Expected in Production:** All referenced functions must exist and be registered.
-
----
-
-## Test Infrastructure Assessment
-
-### Required Test Structure
+Assessment results are stored in `development/project/assessments/results/`:
 
 ```
-tests/
-  conftest.py          # Shared fixtures
-  unit/                # Unit tests
-  integration/         # Integration tests
-  api/                 # API tests
-  performance/         # Performance benchmarks
+results/
+├── assessment_results_2026-02-15.md   # Latest results
+├── assessment_results_2026-02-14.md   # Previous results
+└── assessment_results_2026-02-01.md   # Historical results
 ```
 
-### Test Collection
+### Relationship to Checklist
 
-The assessor runs `pytest --collect-only` to verify tests can be collected without import errors.
+The `project_completeness_checklist.md` provides a comprehensive list of 293+ items across all project categories. The assessment scripts validate a subset of these items automatically. Manual review is required for items not covered by automated checks.
 
 ---
 
@@ -268,7 +267,7 @@ The assessor runs `pytest --collect-only` to verify tests can be collected witho
 ```yaml
 - name: Run DSI Assessment
   run: |
-    python tests/comprehensive_assessor.py --json > assessment.json
+    python development/project/assessments/scripts/assess_project.py --json > assessment.json
 
 - name: Check Assessment Score
   run: |
@@ -299,14 +298,14 @@ The assessor runs `pytest --collect-only` to verify tests can be collected witho
 | Weights don't sum to 1.0 | Adjust group weights |
 | Missing anchors | Add base_limit_reference and base_deductible_reference |
 | ILF anchor != 1.0 | Ensure anchor limit has factor: 1.0 |
-| Using limit_bandings | Convert to limit_configuration with DECOUPLED type |
+| Invalid limit_configuration | Use BUNDLED with packages or DECOUPLED with valid_limits/valid_deductibles |
 | Scalability Trap | Add routing_constraints with ceiling operator |
 
 ### Documentation Failures
 
 | Issue | Resolution |
 |-|-|
-| Missing logic.md | Create logic.md explaining signal selection rationale |
+| Missing logic.md | Run `python coverages/doc_generator.py` |
 | Missing key docs | Create required documentation files |
 
 ### Registry Failures
@@ -317,37 +316,9 @@ The assessor runs `pytest --collect-only` to verify tests can be collected witho
 
 ---
 
-## Extending the Assessment Framework
-
-### Adding New Checks
-
-1. Add test method to `DSIComprehensiveAssessor` class
-2. Use `_add_result()` helper to record results
-3. Call new method from appropriate `assess_*` method
-
-Example:
-```python
-def _test_custom_requirement(self, config_name: str, config: Dict):
-    """Test custom requirement."""
-    passes = config.get('custom_field') is not None
-    self._add_result(
-        "CONFIG", "Custom Requirement",
-        passes,
-        "Custom requirement met" if passes else "Missing custom_field",
-        config_name=config_name
-    )
-```
-
-### Adding New Categories
-
-1. Add category to `CATEGORIES` dict
-2. Create `assess_*` method for the category
-3. Call from `run_full_assessment()`
-
----
-
 ## Version History
 
 | Version | Date | Changes |
 |-|-|-|
+| 2.0.0 | February 2026 | Consolidated to development/project/assessments/, added BUNDLED support |
 | 1.0.0 | February 2026 | Initial comprehensive assessment framework |

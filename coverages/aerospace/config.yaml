@@ -2064,17 +2064,24 @@ aerospace:
               applied: 1.15
 
     limit_configuration:
-      type: DECOUPLED
-      valid_limits:
-        - 1000000
-        - 2000000
-        - 5000000
-        - 10000000
-      valid_deductibles:
-        - 2500
-        - 5000
-        - 10000
-        - 25000
+      type: BUNDLED
+      packages:
+        - id: 1
+          label: "STARTER"
+          limit: 1000000
+          deductible: 5000
+        - id: 2
+          label: "STANDARD"
+          limit: 2000000
+          deductible: 10000
+        - id: 3
+          label: "ENHANCED"
+          limit: 5000000
+          deductible: 15000
+        - id: 4
+          label: "PREMIUM"
+          limit: 10000000
+          deductible: 25000
 
     pricing:
       by_product_type:

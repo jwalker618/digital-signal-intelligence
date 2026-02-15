@@ -1,7 +1,7 @@
 # Aerospace Coverage Configuration
 
 **Coverage ID:** `aerospace`
-**Generated:** 2026-02-13 13:34
+**Generated:** 2026-02-15 09:41
 **Schema Version:** v2.2
 
 This document describes the configuration, decision logic, and pricing structure
@@ -25,7 +25,7 @@ for the Aerospace coverage vertical in the DSI platform.
 ### Metadata
 
 - **Name:** DSI Aerospace Insurance Model
-- **Version:** 2.2.0
+- **Version:** 2.3.0
 - **Description:** Aviation hull and liability coverage based on observable safety and operational signals
 - **Product Types:** `aviation_hull`, `aviation_liability`, `aviation_hull_liability_combined`
 - **Markets:** US, UK, EU, APAC, LATAM, MEA
@@ -35,7 +35,8 @@ for the Aerospace coverage vertical in the DSI platform.
 #### Multiplexer Configuration (V4)
 
 - **Model Specificity:** 1 (General)
-- **Routing Constraints:** None (accepts all)
+- **Routing Constraints:**
+  - `hull_value > 50000000` (required)
 
 ### Signal Registry
 
@@ -175,14 +176,14 @@ These groups contribute to Risk, Loss, and Exposure scoring:
 
 | Group ID | Risk Weight | Loss Weight | Exposure Weight |
 |----------|-------------|-------------|-----------------|
-| `network_authority` | 10% | 0% | 0% |
-| `safety_record` | 30% | 0% | 0% |
-| `regulatory_compliance` | 20% | 0% | 0% |
-| `operational_quality` | 15% | 0% | 0% |
-| `fleet_quality` | 10% | 0% | 0% |
-| `financial_stability` | 5% | 0% | 0% |
-| `route_risk` | 5% | 0% | 0% |
-| `corporate_governance` | 5% | 0% | 0% |
+| `network_authority` | 10% | 5% | 5% |
+| `safety_record` | 30% | 40% | 10% |
+| `regulatory_compliance` | 20% | 20% | 10% |
+| `operational_quality` | 15% | 15% | 15% |
+| `fleet_quality` | 10% | 10% | 35% |
+| `financial_stability` | 5% | 3% | 10% |
+| `route_risk` | 5% | 5% | 10% |
+| `corporate_governance` | 5% | 2% | 5% |
 
 ### Risk Tier Bands
 
@@ -190,11 +191,11 @@ Risk tiers determine the base pricing and underwriting action:
 
 | Tier | Label | Score Range | Action | Base Premium |
 |------|-------|-------------|--------|--------------|
-| 1 | PREFERRED | 800-1000 | APPROVE | $0 |
-| 2 | STANDARD_PLUS | 650-799 | APPROVE | $0 |
-| 3 | STANDARD | 500-649 | REFER | $0 |
-| 4 | SUBSTANDARD | 350-499 | REFER | $0 |
-| 5 | DECLINE | 0-349 | DECLINE | $0 |
+| 1 | PREFERRED | 800-1000 | APPROVE | 0.0012x |
+| 2 | STANDARD_PLUS | 650-799 | APPROVE | 0.0018x |
+| 3 | STANDARD | 500-649 | REFER | 0.0028x |
+| 4 | SUBSTANDARD | 350-499 | REFER | 0.0045x |
+| 5 | DECLINE | 0-349 | DECLINE | 0.015x |
 
 **Decision Logic:**
 - Scores 0-1000 (composite from weighted signals)
@@ -236,6 +237,33 @@ Binary questions that cannot be inferred from external signals:
 - **MODIFIER:** Applies premium multiplier
 - **REFER:** Forces underwriter review regardless of score
 
+### Limit & Deductible Configuration
+
+**Type:** `DECOUPLED`
+
+**Mode:** Tower Pricing (Independent Selection)
+
+Clients independently select from valid limits and deductibles. 
+Pricing scales via ILF curves and deductible factors.
+
+**Available Limits:**
+
+- $10,000,000
+- $25,000,000
+- $50,000,000
+- $100,000,000
+- $250,000,000
+- $500,000,000
+
+**Available Deductibles:**
+
+- $10,000
+- $25,000
+- $50,000
+- $100,000
+- $250,000
+- $500,000
+
 ### Pricing Structure
 
 Pricing varies by product type:
@@ -257,7 +285,6 @@ Pricing varies by product type:
 | $100,000,000 | 6.00 | 6.00x base |
 | $250,000,000 | 12.00 | 12.00x base |
 | $500,000,000 | 20.00 | 20.00x base |
-| $1,000,000,000 | 35.00 | 35.00x base |
 
 **Deductible Factors (V5):**
 
@@ -269,7 +296,6 @@ Pricing varies by product type:
 | $100,000 | 0.95 | -5% credit |
 | $250,000 | 0.90 | -10% credit |
 | $500,000 | 0.70 | -30% credit |
-| $1,000,000 | 0.70 | -30% credit |
 
 
 #### Aviation Liability
@@ -288,7 +314,6 @@ Pricing varies by product type:
 | $100,000,000 | 7.50 | 7.50x base |
 | $250,000,000 | 15.50 | 15.50x base |
 | $500,000,000 | 27.00 | 27.00x base |
-| $1,000,000,000 | 48.00 | 48.00x base |
 
 **Deductible Factors (V5):**
 
@@ -300,7 +325,6 @@ Pricing varies by product type:
 | $100,000 | 0.96 | -4% credit |
 | $250,000 | 0.92 | -8% credit |
 | $500,000 | 0.70 | -30% credit |
-| $1,000,000 | 0.70 | -30% credit |
 
 
 #### Aviation Hull Liability Combined
@@ -319,7 +343,6 @@ Pricing varies by product type:
 | $100,000,000 | 6.75 | 6.75x base |
 | $250,000,000 | 13.75 | 13.75x base |
 | $500,000,000 | 23.50 | 23.50x base |
-| $1,000,000,000 | 41.50 | 41.50x base |
 
 **Deductible Factors (V5):**
 
@@ -331,20 +354,7 @@ Pricing varies by product type:
 | $100,000 | 0.95 | -5% credit |
 | $250,000 | 0.91 | -9% credit |
 | $500,000 | 0.70 | -30% credit |
-| $1,000,000 | 0.70 | -30% credit |
 
-
-### Limit Bandings
-
-Pre-configured limit/deductible packages:
-
-| Package | Limit | Deductible |
-|---------|-------|------------|
-| 1 | $10,000,000 | $500,000 |
-| 2 | $25,000,000 | $1,000,000 |
-| 3 | $50,000,000 | $2,000,000 |
-| 4 | $100,000,000 | $5,000,000 |
-| 5 | $250,000,000 | $10,000,000 |
 
 
 ---
@@ -355,11 +365,11 @@ Pre-configured limit/deductible packages:
 ### Metadata
 
 - **Name:** DSI Aerospace SME Model
-- **Version:** 2.2.0
+- **Version:** 2.3.0
 - **Description:** Aviation coverage for small/medium operators with hull value under $50M
-- **Product Types:** `aviation_hull`, `aviation_liability`, `aviation_hull_liability_combined`
+- **Product Types:** `aviation_hull`, `aviation_hull_liability_combined`
 - **Markets:** US, UK, EU, APAC, LATAM, MEA
-- **Minimum Premium:** $15,000
+- **Minimum Premium:** $5,000
 - **Currency:** USD
 
 #### Multiplexer Configuration (V4)
@@ -460,11 +470,11 @@ These groups contribute to Risk, Loss, and Exposure scoring:
 
 | Group ID | Risk Weight | Loss Weight | Exposure Weight |
 |----------|-------------|-------------|-----------------|
-| `safety_record` | 35% | 0% | 0% |
-| `regulatory_compliance` | 25% | 0% | 0% |
-| `operational_quality` | 20% | 0% | 0% |
-| `fleet_quality` | 15% | 0% | 0% |
-| `corporate_governance` | 5% | 0% | 0% |
+| `safety_record` | 35% | 45% | 10% |
+| `regulatory_compliance` | 25% | 20% | 10% |
+| `operational_quality` | 20% | 15% | 15% |
+| `fleet_quality` | 15% | 15% | 55% |
+| `corporate_governance` | 5% | 5% | 10% |
 
 ### Risk Tier Bands
 
@@ -474,7 +484,7 @@ Risk tiers determine the base pricing and underwriting action:
 |------|-------|-------------|--------|--------------|
 | 1 | PREFERRED | 800-1000 | APPROVE | $0 |
 | 2 | STANDARD_PLUS | 650-799 | APPROVE | $0 |
-| 3 | STANDARD | 500-649 | REFER | $0 |
+| 3 | STANDARD | 500-649 | APPROVE | $0 |
 | 4 | SUBSTANDARD | 350-499 | REFER | $0 |
 | 5 | DECLINE | 0-349 | DECLINE | $0 |
 
@@ -517,6 +527,22 @@ Binary questions that cannot be inferred from external signals:
 - **MODIFIER:** Applies premium multiplier
 - **REFER:** Forces underwriter review regardless of score
 
+### Limit & Deductible Configuration
+
+**Type:** `BUNDLED`
+
+**Mode:** Menu Pricing (Fixed Packages)
+
+Pre-configured limit/deductible packages for simplified selection:
+
+| ID | Package | Limit | Deductible |
+|---:|---------|------:|----------:|
+| 1 | STARTER | $1,000,000 | $5,000 |
+| 2 | STANDARD | $2,000,000 | $10,000 |
+| 3 | ENHANCED | $5,000,000 | $15,000 |
+| 4 | PREMIUM | $10,000,000 | $25,000 |
+
+*Clients select a package; the associated limit and deductible are applied automatically.*
 ### Pricing Structure
 
 Pricing varies by product type:
@@ -525,97 +551,52 @@ Pricing varies by product type:
 #### Aviation Hull
 
 **Pricing Anchors (V5):**
-- Base Limit Reference: $1,000,000
-- Base Deductible Reference: $50,000
+- Base Limit Reference: $5,000,000
+- Base Deductible Reference: $10,000
 
 **Increased Limit Factors (ILF):**
 
 | Limit | Factor | Premium Multiplier |
 |-------|--------|-------------------|
-| $1,000,000 (base) | 1.00 | 1.00x base |
-| $2,500,000 | 2.00 | 2.00x base |
-| $5,000,000 | 3.50 | 3.50x base |
-| $10,000,000 | 6.00 | 6.00x base |
+| $1,000,000 | 0.60 | 0.60x base |
+| $2,000,000 | 0.75 | 0.75x base |
+| $5,000,000 (base) | 1.00 | 1.00x base |
+| $10,000,000 | 1.45 | 1.45x base |
 
 **Deductible Factors (V5):**
 
 | Deductible | Factor | Effect |
 |------------|--------|--------|
-| $10,000 | 1.50 | +50% loading |
-| $25,000 | 1.15 | +15% loading |
-| $50,000 (anchor) | 1.00 | Base price |
-| $100,000 | 0.95 | -5% credit |
-| $250,000 | 0.90 | -10% credit |
-| $500,000 | 0.70 | -30% credit |
-| $1,000,000 | 0.70 | -30% credit |
-
-
-#### Aviation Liability
-
-**Pricing Anchors (V5):**
-- Base Limit Reference: $1,000,000
-- Base Deductible Reference: $50,000
-
-**Increased Limit Factors (ILF):**
-
-| Limit | Factor | Premium Multiplier |
-|-------|--------|-------------------|
-| $1,000,000 (base) | 1.00 | 1.00x base |
-| $2,500,000 | 2.20 | 2.20x base |
-| $5,000,000 | 4.00 | 4.00x base |
-| $10,000,000 | 7.00 | 7.00x base |
-
-**Deductible Factors (V5):**
-
-| Deductible | Factor | Effect |
-|------------|--------|--------|
-| $10,000 | 1.50 | +50% loading |
-| $25,000 | 1.15 | +15% loading |
-| $50,000 (anchor) | 1.00 | Base price |
-| $100,000 | 0.96 | -4% credit |
-| $250,000 | 0.92 | -8% credit |
-| $500,000 | 0.70 | -30% credit |
-| $1,000,000 | 0.70 | -30% credit |
+| $2,500 | 1.25 | +25% loading |
+| $5,000 | 1.10 | +10% loading |
+| $10,000 (anchor) | 1.00 | Base price |
+| $25,000 | 0.85 | -15% credit |
 
 
 #### Aviation Hull Liability Combined
 
 **Pricing Anchors (V5):**
-- Base Limit Reference: $1,000,000
-- Base Deductible Reference: $50,000
+- Base Limit Reference: $5,000,000
+- Base Deductible Reference: $10,000
 
 **Increased Limit Factors (ILF):**
 
 | Limit | Factor | Premium Multiplier |
 |-------|--------|-------------------|
-| $1,000,000 (base) | 1.00 | 1.00x base |
-| $2,500,000 | 2.10 | 2.10x base |
-| $5,000,000 | 3.75 | 3.75x base |
-| $10,000,000 | 6.50 | 6.50x base |
+| $1,000,000 | 0.60 | 0.60x base |
+| $2,000,000 | 0.75 | 0.75x base |
+| $5,000,000 (base) | 1.00 | 1.00x base |
+| $10,000,000 | 1.45 | 1.45x base |
 
 **Deductible Factors (V5):**
 
 | Deductible | Factor | Effect |
 |------------|--------|--------|
-| $10,000 | 1.50 | +50% loading |
-| $25,000 | 1.15 | +15% loading |
-| $50,000 (anchor) | 1.00 | Base price |
-| $100,000 | 0.95 | -5% credit |
-| $250,000 | 0.91 | -9% credit |
-| $500,000 | 0.70 | -30% credit |
-| $1,000,000 | 0.70 | -30% credit |
+| $2,500 | 1.25 | +25% loading |
+| $5,000 | 1.10 | +10% loading |
+| $10,000 (anchor) | 1.00 | Base price |
+| $25,000 | 0.85 | -15% credit |
 
-
-### Limit Bandings
-
-Pre-configured limit/deductible packages:
-
-| Package | Limit | Deductible |
-|---------|-------|------------|
-| 1 | $1,000,000 | $25,000 |
-| 2 | $2,500,000 | $50,000 |
-| 3 | $5,000,000 | $100,000 |
-| 4 | $10,000,000 | $250,000 |
 
 
 ---

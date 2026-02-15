@@ -1,7 +1,7 @@
 # Fi Coverage Configuration
 
 **Coverage ID:** `financial_institutions`
-**Generated:** 2026-02-13 13:34
+**Generated:** 2026-02-15 09:41
 **Schema Version:** v2.2
 
 This document describes the configuration, decision logic, and pricing structure
@@ -35,7 +35,8 @@ for the Fi coverage vertical in the DSI platform.
 #### Multiplexer Configuration (V4)
 
 - **Model Specificity:** 1 (General)
-- **Routing Constraints:** None (accepts all)
+- **Routing Constraints:**
+  - `total_assets > 10000000000` (required)
 
 ### Signal Registry
 
@@ -172,14 +173,14 @@ These groups contribute to Risk, Loss, and Exposure scoring:
 
 | Group ID | Risk Weight | Loss Weight | Exposure Weight |
 |----------|-------------|-------------|-----------------|
-| `network_authority` | 10% | 0% | 0% |
-| `regulatory_compliance` | 25% | 0% | 0% |
-| `financial_condition` | 20% | 0% | 0% |
-| `governance` | 15% | 0% | 0% |
-| `operational_risk` | 10% | 0% | 0% |
-| `cyber_security` | 10% | 0% | 0% |
-| `corporate_footprint` | 5% | 0% | 0% |
-| `structured_data` | 5% | 0% | 0% |
+| `network_authority` | 10% | 5% | 5% |
+| `regulatory_compliance` | 25% | 25% | 10% |
+| `financial_condition` | 20% | 30% | 25% |
+| `governance` | 15% | 15% | 10% |
+| `operational_risk` | 10% | 10% | 10% |
+| `cyber_security` | 10% | 10% | 10% |
+| `corporate_footprint` | 5% | 3% | 15% |
+| `structured_data` | 5% | 2% | 15% |
 
 ### Risk Tier Bands
 
@@ -187,11 +188,11 @@ Risk tiers determine the base pricing and underwriting action:
 
 | Tier | Label | Score Range | Action | Base Premium |
 |------|-------|-------------|--------|--------------|
-| 1 | PREFERRED | 800-1000 | APPROVE | $0 |
-| 2 | STANDARD_PLUS | 650-799 | APPROVE | $0 |
-| 3 | STANDARD | 500-649 | REFER | $0 |
-| 4 | SUBSTANDARD | 350-499 | REFER | $0 |
-| 5 | DECLINE | 0-349 | DECLINE | $0 |
+| 1 | PREFERRED | 800-1000 | APPROVE | 1e-05x |
+| 2 | STANDARD_PLUS | 650-799 | APPROVE | 1.5e-05x |
+| 3 | STANDARD | 500-649 | REFER | 2e-05x |
+| 4 | SUBSTANDARD | 350-499 | REFER | 3e-05x |
+| 5 | DECLINE | 0-349 | DECLINE | 6e-05x |
 
 **Decision Logic:**
 - Scores 0-1000 (composite from weighted signals)
@@ -231,6 +232,35 @@ Binary questions that cannot be inferred from external signals:
 - **FLAG:** Adds note to underwriter; no pricing impact
 - **MODIFIER:** Applies premium multiplier
 - **REFER:** Forces underwriter review regardless of score
+
+### Limit & Deductible Configuration
+
+**Type:** `DECOUPLED`
+
+**Mode:** Tower Pricing (Independent Selection)
+
+Clients independently select from valid limits and deductibles. 
+Pricing scales via ILF curves and deductible factors.
+
+**Available Limits:**
+
+- $1,000,000
+- $2,000,000
+- $5,000,000
+- $10,000,000
+- $25,000,000
+- $50,000,000
+- $100,000,000
+
+**Available Deductibles:**
+
+- $10,000
+- $25,000
+- $50,000
+- $100,000
+- $250,000
+- $500,000
+- $1,000,000
 
 ### Pricing Structure
 
@@ -422,18 +452,6 @@ Pricing varies by product type:
 | $500,000 | 0.70 | -30% credit |
 | $1,000,000 | 0.70 | -30% credit |
 
-
-### Limit Bandings
-
-Pre-configured limit/deductible packages:
-
-| Package | Limit | Deductible |
-|---------|-------|------------|
-| 1 | $5,000,000 | $100,000 |
-| 2 | $10,000,000 | $250,000 |
-| 3 | $25,000,000 | $500,000 |
-| 4 | $50,000,000 | $1,000,000 |
-| 5 | $100,000,000 | $2,000,000 |
 
 
 ---

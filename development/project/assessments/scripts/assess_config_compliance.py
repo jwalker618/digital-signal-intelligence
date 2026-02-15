@@ -39,6 +39,7 @@ class DSIConfigAssessor:
                 self.test_deprecation_rules(config_name, config)
                 self.test_premium_methodology(config_name, config)
                 self.test_monotonicity_and_penalty(config_name, config)
+                self.test_limit_configuration(config_name, config)
 
     # =========================================================================
     # MULTIPLEXER & ROUTING TESTS (Phase 4)
@@ -215,6 +216,47 @@ class DSIConfigAssessor:
                 f"Found deprecated 'deductible_credits' in {prod_name}. Use 'deductible_factors' instead."
             )
 
+    def test_limit_configuration(self, config_name: str, config: Dict):
+        """Validates limit_configuration structure for both BUNDLED and DECOUPLED types."""
+        limit_config = config.get('limit_configuration', {})
+        config_type = limit_config.get('type')
+
+        # Check type exists and is valid
+        self._assert(
+            config_type in ['BUNDLED', 'DECOUPLED'], "Limit Config Type", config_name,
+            f"Valid limit_configuration type: {config_type}",
+            f"Invalid or missing limit_configuration type: {config_type}. Must be BUNDLED or DECOUPLED."
+        )
+
+        if config_type == 'BUNDLED':
+            packages = limit_config.get('packages', [])
+            self._assert(
+                len(packages) > 0, "BUNDLED Packages", config_name,
+                f"BUNDLED config has {len(packages)} packages defined",
+                "BUNDLED config missing 'packages' list"
+            )
+            for pkg in packages:
+                has_required = all(k in pkg for k in ['id', 'label', 'limit', 'deductible'])
+                self._assert(
+                    has_required, "Package Structure", config_name,
+                    f"Package {pkg.get('id', '?')} has all required fields",
+                    f"Package missing required fields (id, label, limit, deductible): {pkg}"
+                )
+
+        elif config_type == 'DECOUPLED':
+            valid_limits = limit_config.get('valid_limits', [])
+            valid_deductibles = limit_config.get('valid_deductibles', [])
+            self._assert(
+                len(valid_limits) > 0, "DECOUPLED Limits", config_name,
+                f"DECOUPLED config has {len(valid_limits)} valid limits",
+                "DECOUPLED config missing 'valid_limits'"
+            )
+            self._assert(
+                len(valid_deductibles) > 0, "DECOUPLED Deductibles", config_name,
+                f"DECOUPLED config has {len(valid_deductibles)} valid deductibles",
+                "DECOUPLED config missing 'valid_deductibles'"
+            )
+
     def print_summary(self):
         print("\n" + "="*60)
         print(" DSI CONFIGURATION COMPLETENESS ASSESSMENT")
@@ -235,7 +277,7 @@ class DSIConfigAssessor:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python assess_completeness.py <path_to_config.yaml>")
+        print("Usage: python development/project/assessments/scripts/assess_config_compliance.py <path_to_config.yaml>")
         sys.exit(1)
         
     assessor = DSIConfigAssessor(sys.argv[1])
