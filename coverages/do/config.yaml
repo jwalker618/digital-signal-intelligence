@@ -1223,6 +1223,9 @@ directors_officers:
         - 500000
         - 1000000
     pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+
       by_product_type:
         side_a:
           ilf_curve:
@@ -1242,8 +1245,7 @@ directors_officers:
               factor: 19.0
             - limit: 100000000
               factor: 30.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1277,8 +1279,6 @@ directors_officers:
               factor: 16.5
             - limit: 100000000
               factor: 26.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1312,8 +1312,6 @@ directors_officers:
               factor: 22.0
             - limit: 100000000
               factor: 35.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1347,8 +1345,6 @@ directors_officers:
               factor: 24.0
             - limit: 100000000
               factor: 38.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1382,8 +1378,6 @@ directors_officers:
               factor: 10.5
             - limit: 100000000
               factor: 15.5
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1417,8 +1411,6 @@ directors_officers:
               factor: 13.0
             - limit: 100000000
               factor: 20.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1435,6 +1427,7 @@ directors_officers:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
+  
   do_sme:
     metadata:
       name: DSI D&O SME Model
@@ -2006,6 +1999,10 @@ directors_officers:
           limit: 5000000
           deductible: 100000
     pricing:
+      
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+    
       by_product_type:
         side_a:
           ilf_curve:
@@ -2017,8 +2014,7 @@ directors_officers:
               factor: 1.8
             - limit: 5000000
               factor: 3.5
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -2044,8 +2040,6 @@ directors_officers:
               factor: 1.7
             - limit: 5000000
               factor: 3.2
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -2071,8 +2065,6 @@ directors_officers:
               factor: 1.55
             - limit: 5000000
               factor: 2.6
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -2098,8 +2090,6 @@ directors_officers:
               factor: 1.6
             - limit: 5000000
               factor: 2.8
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
