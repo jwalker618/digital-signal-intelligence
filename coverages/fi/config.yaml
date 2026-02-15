@@ -47,10 +47,11 @@ financial_institutions:
       default_currency: USD
       model_specificity: 1
       routing_constraints:
-      - field: total_assets
+      - field: aum
         operator: ">"
-        value: 10000000000
+        value: 500000000
         required_in_input: true
+        
     direct_queries:
     - id: regulatory_action
       question: Any pending or recent (3 years) regulatory enforcement actions?
