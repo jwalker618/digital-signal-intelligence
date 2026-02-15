@@ -1204,146 +1204,97 @@ cyber:
         - 250000
         - 500000    
     
+    # =========================================================================
+    # PRICING PARAMETERS (CYBER GENERAL)
+    # =========================================================================
     pricing:
-      
+      # ANCHOR: The 0.10% Base Rate buys a $1M Limit with a $50k Deductible
       base_limit_reference: 1000000
       base_deductible_reference: 50000
-      
+
       by_product_type:
         cyber_liability:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.75
-            - limit: 5000000
-              factor: 3.4
-            - limit: 10000000
-              factor: 5.5
-            - limit: 25000000
-              factor: 10.0
-            - limit: 50000000
-              factor: 16.0
-            - limit: 100000000
-              factor: 25.0
-
+              - {limit: 1000000, factor: 1.00} # Anchor
+              - {limit: 2000000, factor: 1.75}
+              - {limit: 5000000, factor: 3.40}
+              - {limit: 10000000, factor: 5.50}
+              - {limit: 25000000, factor: 10.00}
+              - {limit: 50000000, factor: 16.00}
+              - {limit: 100000000, factor: 25.00}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+            - {deductible: 10000, factor: 1.25}
+            - {deductible: 25000, factor: 1.15}
+            - {deductible: 50000, factor: 1.00} # Anchor
+            - {deductible: 100000, factor: 0.90}
+            - {deductible: 250000, factor: 0.80}
+            - {deductible: 500000, factor: 0.70}
+            - {deductible: 1000000, factor: 0.60}
+
         network_security:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.65
-            - limit: 5000000
-              factor: 3.0
-            - limit: 10000000
-              factor: 4.5
-            - limit: 25000000
-              factor: 8.0
-            - limit: 50000000
-              factor: 12.5
-            - limit: 100000000
-              factor: 19.0
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 5000000, factor: 3.00}
+              - {limit: 10000000, factor: 4.50}
+              - {limit: 25000000, factor: 8.00}
+              - {limit: 50000000, factor: 12.50}
+              - {limit: 100000000, factor: 19.00}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.92
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+            - {deductible: 10000, factor: 1.20}
+            - {deductible: 25000, factor: 1.10}
+            - {deductible: 50000, factor: 1.00} # Anchor
+            - {deductible: 100000, factor: 0.92}
+            - {deductible: 250000, factor: 0.82}
+            - {deductible: 500000, factor: 0.75}
+            - {deductible: 1000000, factor: 0.65}
+
         privacy_liability:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.6
-            - limit: 5000000
-              factor: 2.8
-            - limit: 10000000
-              factor: 4.2
-            - limit: 25000000
-              factor: 7.5
-            - limit: 50000000
-              factor: 11.5
-            - limit: 100000000
-              factor: 17.0
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.60}
+              - {limit: 5000000, factor: 2.80}
+              - {limit: 10000000, factor: 4.20}
+              - {limit: 25000000, factor: 7.50}
+              - {limit: 50000000, factor: 11.50}
+              - {limit: 100000000, factor: 17.00}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.96
-          - deductible: 250000
-            factor: 0.92
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+            - {deductible: 10000, factor: 1.15}
+            - {deductible: 25000, factor: 1.08}
+            - {deductible: 50000, factor: 1.00} # Anchor
+            - {deductible: 100000, factor: 0.95}
+            - {deductible: 250000, factor: 0.88}
+            - {deductible: 500000, factor: 0.80}
+            - {deductible: 1000000, factor: 0.70}
+
         cyber_extortion:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.85
-            - limit: 5000000
-              factor: 3.8
-            - limit: 10000000
-              factor: 6.5
-            - limit: 25000000
-              factor: 12.0
-            - limit: 50000000
-              factor: 20.0
-            - limit: 100000000
-              factor: 32.0
+              - {limit: 1000000, factor: 1.00}
+              - {limit: 2000000, factor: 1.85}
+              - {limit: 5000000, factor: 3.80}
+              - {limit: 10000000, factor: 6.50}
+              - {limit: 25000000, factor: 12.00}
+              - {limit: 50000000, factor: 20.00}
+              - {limit: 100000000, factor: 32.00}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.94
-          - deductible: 250000
-            factor: 0.88
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
-      taxes_fees_rate: 0.05
+            - {deductible: 10000, factor: 1.30}
+            - {deductible: 25000, factor: 1.15}
+            - {deductible: 50000, factor: 1.00} # Anchor
+            - {deductible: 100000, factor: 0.85}
+            - {deductible: 250000, factor: 0.70}
+            - {deductible: 500000, factor: 0.55}
+            - {deductible: 1000000, factor: 0.45}
+
+      taxes_fees_rate: 0.05  
+  
   cyber_sme:
     metadata:
       name: Cyber SME Automated Pricing Model
@@ -1826,68 +1777,46 @@ cyber:
           label: "PREMIUM"
           limit: 5000000
           deductible: 250000
+
+    # =========================================================================
+    # PRICING PARAMETERS (CYBER SME)
+    # =========================================================================
     pricing:
+      # ANCHOR: The Base Premium (e.g. $1,500) buys a $1M Limit with a $5k Deductible
       base_limit_reference: 1000000
-      base_deductible_reference: 50000
-      
+      base_deductible_reference: 5000
+
       by_product_type:
         cyber_liability:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 250000
-              factor: 0.45
-            - limit: 500000
-              factor: 0.7
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.65
-            - limit: 5000000
-              factor: 2.8
-
+              - {limit: 250000, factor: 0.45}
+              - {limit: 500000, factor: 0.70}
+              - {limit: 1000000, factor: 1.00} # Anchor
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 5000000, factor: 2.80}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+            - {deductible: 1000, factor: 1.20}
+            - {deductible: 2500, factor: 1.10}
+            - {deductible: 5000, factor: 1.00}  # Anchor
+            - {deductible: 10000, factor: 0.90}
+            - {deductible: 25000, factor: 0.80}
+
         network_security:
           ilf_curve:
             base_limit: 1000000
             factors:
-            - limit: 250000
-              factor: 0.5
-            - limit: 500000
-              factor: 0.75
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.7
-            - limit: 5000000
-              factor: 2.9
+              - {limit: 250000, factor: 0.50}
+              - {limit: 500000, factor: 0.75}
+              - {limit: 1000000, factor: 1.00} # Anchor
+              - {limit: 2000000, factor: 1.70}
+              - {limit: 5000000, factor: 2.90}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+            - {deductible: 1000, factor: 1.15}
+            - {deductible: 2500, factor: 1.08}
+            - {deductible: 5000, factor: 1.00}  # Anchor
+            - {deductible: 10000, factor: 0.92}
+            - {deductible: 25000, factor: 0.85}
+
       taxes_fees_rate: 0.05
