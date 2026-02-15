@@ -252,6 +252,17 @@ class DSIDocGenerator:
 
     def execute(self):
         """Execute documentation generation for all coverages."""
+        # Map directory names to YAML top-level keys
+        yaml_key_map = {
+            'do': 'directors_officers',
+            'fi': 'financial_institutions',
+            'pi': 'professional_indemnity',
+            'cyber': 'cyber',
+            'aerospace': 'aerospace',
+            'energy': 'energy',
+            'marine': 'marine',
+        }
+
         generated = []
         for root, dirs, files in os.walk(self.coverages_dir):
             if "config.yaml" in files:
@@ -259,7 +270,15 @@ class DSIDocGenerator:
                 with open(Path(root) / "config.yaml", 'r') as f:
                     data = yaml.safe_load(f)
 
-                md_content = self.build_logic_md(cov_name, data.get(cov_name, {}))
+                # Try mapped key first, then directory name as fallback
+                yaml_key = yaml_key_map.get(cov_name, cov_name)
+                config_data = data.get(yaml_key, data.get(cov_name, {}))
+
+                if not config_data:
+                    print(f"Warning: No config found for {cov_name} (tried keys: {yaml_key}, {cov_name})")
+                    continue
+
+                md_content = self.build_logic_md(cov_name, config_data)
 
                 with open(Path(root) / "logic.md", 'w') as f:
                     f.write(md_content)

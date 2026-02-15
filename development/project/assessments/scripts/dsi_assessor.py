@@ -129,13 +129,27 @@ class DSIProjectAssessor:
         """Check core documentation files exist."""
         cat = "docs"
 
-        # Core documents
-        self._assert(cat, (self.root / "docs/DSI_Whitepaper.md").exists(),
-                     "DSI Whitepaper missing (docs/DSI_Whitepaper.md)")
-        self._assert(cat, (self.root / "docs/DSI_Vision_Paper.md").exists(),
-                     "DSI Vision Paper missing (docs/DSI_Vision_Paper.md)")
-        self._assert(cat, (self.root / "docs/DSI_Pricing_Methodology.md").exists(),
-                     "DSI Pricing Methodology missing (docs/DSI_Pricing_Methodology.md)")
+        # Core documents (check multiple possible locations/formats)
+        whitepaper_exists = (
+            (self.root / "docs/DSI_Whitepaper.md").exists() or
+            (self.root / "docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf").exists()
+        )
+        self._assert(cat, whitepaper_exists,
+                     "DSI Whitepaper missing (docs/DSI_Whitepaper.md or docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf)")
+
+        vision_paper_exists = (
+            (self.root / "docs/DSI_Vision_Paper.md").exists() or
+            (self.root / "docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf").exists()
+        )
+        self._assert(cat, vision_paper_exists,
+                     "DSI Vision Paper missing (docs/DSI_Vision_Paper.md or docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf)")
+
+        pricing_methodology_exists = (
+            (self.root / "docs/DSI_Pricing_Methodology.md").exists() or
+            (self.root / "docs/overview/Premium_Calculation_Methodology.md").exists()
+        )
+        self._assert(cat, pricing_methodology_exists,
+                     "DSI Pricing Methodology missing (docs/DSI_Pricing_Methodology.md or docs/overview/Premium_Calculation_Methodology.md)")
 
         # API documentation
         self._assert(cat, (self.root / "docs/api").exists(),
@@ -183,13 +197,21 @@ class DSIProjectAssessor:
         """Check signal architecture component files exist."""
         cat = "signal_arch_files"
 
-        # Extractors
-        self._assert(cat, (self.root / "signal_architecture/extractors").exists(),
-                     "Extractors directory missing (signal_architecture/extractors/)")
+        # Extractors (check both possible locations)
+        extractors_exist = (
+            (self.root / "signal_architecture/extractors").exists() or
+            (self.root / "signal_architecture/signals/extractors").exists()
+        )
+        self._assert(cat, extractors_exist,
+                     "Extractors directory missing (signal_architecture/signals/extractors/)")
 
-        # Aggregators
-        self._assert(cat, (self.root / "signal_architecture/aggregators").exists(),
-                     "Aggregators directory missing (signal_architecture/aggregators/)")
+        # Aggregators (check both possible locations)
+        aggregators_exist = (
+            (self.root / "signal_architecture/aggregators").exists() or
+            (self.root / "signal_architecture/signals/aggregators").exists()
+        )
+        self._assert(cat, aggregators_exist,
+                     "Aggregators directory missing (signal_architecture/signals/aggregators/)")
 
         # Discovery engine
         self._assert(cat, (self.root / "signal_architecture/discovery").exists(),
@@ -199,9 +221,53 @@ class DSIProjectAssessor:
         self._assert(cat, (self.root / "signal_architecture/graph").exists(),
                      "Graph types directory missing (signal_architecture/graph/)")
 
-        # Inference utilities
-        self._assert(cat, (self.root / "signal_architecture/inference_utilities").exists(),
-                     "Inference utilities missing (signal_architecture/inference_utilities/)")
+        # Inference utilities (check both possible locations)
+        inference_utils_exist = (
+            (self.root / "signal_architecture/inference_utilities").exists() or
+            (self.root / "signal_architecture/signals/inference").exists()
+        )
+        self._assert(cat, inference_utils_exist,
+                     "Inference utilities missing (signal_architecture/signals/inference/)")
+
+    def check_extractor_coverage(self):
+        """Check signal extractor production vs stub status."""
+        cat = "signal_arch_files"
+
+        production_dir = self.root / "signal_architecture/signals/extractors/production"
+        stubs_dir = self.root / "signal_architecture/signals/extractors/stubs"
+
+        # Count production extractors (exclude __init__.py, base.py, config.py, factory.py)
+        production_count = 0
+        production_files = []
+        exclude_files = {'__init__.py', 'base.py', 'config.py', 'factory.py'}
+        if production_dir.exists():
+            for f in production_dir.rglob("*.py"):
+                if f.name not in exclude_files:
+                    production_count += 1
+                    production_files.append(f.relative_to(production_dir))
+
+        # Count stub extractors (exclude __init__.py, common.py)
+        stub_count = 0
+        stub_files = []
+        stub_excludes = {'__init__.py', 'common.py'}
+        if stubs_dir.exists():
+            for f in stubs_dir.rglob("*.py"):
+                if f.name not in stub_excludes:
+                    stub_count += 1
+                    stub_files.append(f.relative_to(stubs_dir))
+
+        # Store counts for reporting
+        self.extractor_stats = {
+            'production_count': production_count,
+            'stub_count': stub_count,
+            'production_ratio': round(production_count / (production_count + stub_count) * 100, 1) if (production_count + stub_count) > 0 else 0
+        }
+
+        # Checks
+        self._assert(cat, production_count >= 30,
+                     f"Insufficient production extractors ({production_count} < 30 minimum)")
+        self._assert(cat, self.extractor_stats['production_ratio'] >= 50,
+                     f"Production ratio too low ({self.extractor_stats['production_ratio']}% < 50% target)")
 
     # =========================================================================
     # COVERAGE CONFIGURATION CHECKS
@@ -459,6 +525,9 @@ class DSIProjectAssessor:
 
     def run_assessment(self):
         """Execute all assessment checks."""
+        # Initialize extractor stats
+        self.extractor_stats = {'production_count': 0, 'stub_count': 0, 'production_ratio': 0}
+
         # Infrastructure & Layers
         self.check_infrastructure()
         self.check_layers()
@@ -469,6 +538,7 @@ class DSIProjectAssessor:
         self.check_rust()
         self.check_schemas()
         self.check_signal_arch_files()
+        self.check_extractor_coverage()
 
         # Coverage configurations
         cov_dir = self.root / "coverages"
@@ -523,6 +593,14 @@ class DSIProjectAssessor:
                 status = "PASS" if s['pass'] == s['total'] else "GAPS"
                 f.write(f"  {cat.ljust(22)} {s['pass']:3d} / {s['total']:3d}  [{status}]\n")
             f.write("```\n\n")
+
+            # Signal Extractor Stats
+            f.write("## Signal Extractor Coverage\n\n")
+            f.write("| Metric | Count |\n")
+            f.write("|--------|-------|\n")
+            f.write(f"| Production Extractors | {self.extractor_stats['production_count']} |\n")
+            f.write(f"| Stub Extractors | {self.extractor_stats['stub_count']} |\n")
+            f.write(f"| Production Ratio | {self.extractor_stats['production_ratio']}% |\n\n")
 
             # Summary
             total_gaps = sum(len(s['gaps']) for s in self.scores.values())

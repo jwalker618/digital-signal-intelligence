@@ -7,3 +7,139 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 - **Three-Layer Engine:** Modifiers explicitly target Risk, Loss, and Exposure dimensions.
 - **Phase 5 Anchoring:** Polymorphic pricing limits scale from mathematically absolute anchor points.
 
+---
+
+## Model: `do_general`
+*D&O liability coverage based on observable governance, financial, and litigation signals*
+
+### Routing Protocol (Multiplexer)
+- `revenue > 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Corporate Governance | 0.25 | 0.25 | 0.10 |
+| Financial Integrity | 0.20 | 0.30 | 0.20 |
+| Litigation Profile | 0.25 | 0.25 | 0.05 |
+| Executive Profile | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.05 | 0.03 | 0.20 |
+| Structured Data | 0.05 | 0.02 | 0.25 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **48 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (31 signals): Highest confidence
+- `INFERRED_PROXY` (17 signals): Medium confidence
+
+**Signal Count by Group:**
+- `network_authority`: 8 signals
+- `governance`: 8 signals
+- `financial`: 8 signals
+- `litigation`: 6 signals
+- `corporate_footprint`: 6 signals
+- `executive`: 5 signals
+- `structured_data`: 4 signals
+- `company_type`: 1 signals
+- `industry`: 1 signals
+- `stock_exchange`: 1 signals
+
+**Selection Rationale:**
+- 65% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Financial Integrity | 0.70 | 0.20 | 0.30 | 0.20 |
+| 2 | Corporate Governance | 0.60 | 0.25 | 0.25 | 0.10 |
+| 3 | Litigation Profile | 0.55 | 0.25 | 0.25 | 0.05 |
+| 4 | Executive Profile | 0.35 | 0.10 | 0.10 | 0.15 |
+| 5 | Structured Data | 0.32 | 0.05 | 0.02 | 0.25 |
+| 6 | Corporate Footprint | 0.28 | 0.05 | 0.03 | 0.20 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Financial Integrity` with combined weight of 0.70
+**Secondary Driver:** `Corporate Governance` with combined weight of 0.60
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.1%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.001 = **$10,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$10,000**.
+
+---
+
+## Model: `do_sme`
+*D&O coverage for private companies with revenue under $100M*
+
+### Routing Protocol (Multiplexer)
+- `revenue <= 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Governance | 0.30 | 0.30 | 0.15 |
+| Financial Health | 0.25 | 0.35 | 0.25 |
+| Litigation Profile | 0.30 | 0.25 | 0.20 |
+| Corporate Footprint | 0.15 | 0.10 | 0.40 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **15 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `INFERRED_PROXY` (15 signals): Medium confidence
+
+**Signal Count by Group:**
+- `governance`: 4 signals
+- `financial`: 4 signals
+- `litigation`: 3 signals
+- `footprint`: 2 signals
+- `company_type`: 1 signals
+- `industry`: 1 signals
+
+**Selection Rationale:**
+- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Financial Health | 0.85 | 0.25 | 0.35 | 0.25 |
+| 2 | Governance | 0.75 | 0.30 | 0.30 | 0.15 |
+| 3 | Litigation Profile | 0.75 | 0.30 | 0.25 | 0.20 |
+| 4 | Corporate Footprint | 0.65 | 0.15 | 0.10 | 0.40 |
+
+**Primary Assessment Driver:** `Financial Health` with combined weight of 0.85
+**Secondary Driver:** `Governance` with combined weight of 0.75
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Flat Premium of `$5,000` purchases exactly the `$1,000,000` Limit / `$10,000` Deductible Base Package.
+**2. Theoretical Execution:**
+  - Technical Premium = **$5,000**
+  - *Scaling relies entirely on selecting a different Limit ID from the Bundled limit_configuration packages.*
+
