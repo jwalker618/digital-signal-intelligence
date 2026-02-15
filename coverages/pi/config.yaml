@@ -1332,6 +1332,9 @@ professional_indemnity:
         - 500000
         - 1000000
     pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+    
       by_product_type:
         professional_liability:
           ilf_curve:
@@ -1351,8 +1354,7 @@ professional_indemnity:
               factor: 3.0
             - limit: 10000000
               factor: 4.5
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1386,8 +1388,7 @@ professional_indemnity:
               factor: 2.7
             - limit: 10000000
               factor: 4.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1421,8 +1422,7 @@ professional_indemnity:
               factor: 3.3
             - limit: 10000000
               factor: 5.2
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
