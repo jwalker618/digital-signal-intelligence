@@ -1255,72 +1255,71 @@ aerospace:
         - 250000
         - 500000
     
+    # =========================================================================
+    # PRICING PARAMETERS (AEROSPACE GENERAL)
+    # =========================================================================
     pricing:
-      
       base_limit_reference: 10000000
       base_deductible_reference: 50000
       
       by_product_type:
-        
+        # 1. PURE HULL: ILF is flat because premium already scales via hull_value MULTIPLIER
         aviation_hull:
           ilf_curve:
             base_limit: 10000000
             factors:
-            - {limit: 10000000,  factor: 1.0}
-            - {limit: 25000000,  factor: 2.0}
-            - {limit: 50000000,  factor: 3.5}
-            - {limit: 100000000, factor: 6.0}
-            - {limit: 250000000, factor: 12.0}
-            - {limit: 500000000, factor: 20.0}
-  
-          deductible_factors:
-          - {deductible: 10000,  factor: 1.5}
-          - {deductible: 25000,  factor: 1.15}
-          - {deductible: 50000,  factor: 1.0}
-          - {deductible: 100000,  factor: 0.95}
-          - {deductible: 250000,  factor: 0.9}
-          - {deductible: 500000,  factor: 0.7}
-        
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 1.00}
+              - {limit: 50000000, factor: 1.00}
+              - {limit: 100000000, factor: 1.00}
+              - {limit: 250000000, factor: 1.00}
+              - {limit: 500000000, factor: 1.00}
+          deductible_factors: # Physical damage deductibles
+            - {deductible: 10000, factor: 1.50}
+            - {deductible: 25000, factor: 1.15}
+            - {deductible: 50000, factor: 1.00} # Anchor
+            - {deductible: 100000, factor: 0.90}
+            - {deductible: 250000, factor: 0.75}
+            - {deductible: 500000, factor: 0.60}
+
+        # 2. PURE LIABILITY: Steep curve due to tail risk / passenger exposure
         aviation_liability:
-          
           ilf_curve:
             base_limit: 10000000
             factors:
-            - {limit: 10000000, factor: 1.0}
-            - {limit: 25000000, factor: 2.3}
-            - {limit: 50000000, factor: 4.2}
-            - {limit: 100000000, factor: 7.5}
-            - {limit: 250000000, factor: 15.5}
-            - {limit: 500000000, factor: 27.0}
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 2.25}
+              - {limit: 50000000, factor: 4.10}
+              - {limit: 100000000, factor: 7.20}
+              - {limit: 250000000, factor: 14.50}
+              - {limit: 500000000, factor: 25.00}
+          deductible_factors: # Liability deductibles have less impact on premium
+            - {deductible: 10000, factor: 1.15}
+            - {deductible: 25000, factor: 1.05}
+            - {deductible: 50000, factor: 1.00} # Anchor
+            - {deductible: 100000, factor: 0.95}
+            - {deductible: 250000, factor: 0.90}
+            - {deductible: 500000, factor: 0.85}
 
-          deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}
-          - {deductible: 100000, factor: 0.96}
-          - {deductible: 250000, factor: 0.92}
-          - {deductible: 500000, factor: 0.7}
-        
+        # 3. COMBINED: Blended curve (Hull tempers the liability steepness)
         aviation_hull_liability_combined:
-          
           ilf_curve:
             base_limit: 10000000
             factors:
-            - {limit: 10000000, factor: 1.0}
-            - {limit: 25000000, factor: 2.15}
-            - {limit: 50000000, factor: 3.85}
-            - {limit: 100000000,factor: 6.75}
-            - {limit: 250000000, factor: 13.75}
-            - {limit: 500000000, factor: 23.5}
-
+              - {limit: 10000000, factor: 1.00}
+              - {limit: 25000000, factor: 1.80}
+              - {limit: 50000000, factor: 3.10}
+              - {limit: 100000000, factor: 5.50}
+              - {limit: 250000000, factor: 11.00}
+              - {limit: 500000000, factor: 18.00}
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 250000, factor: 0.91}
-          - {deductible: 500000, factor: 0.7}
-          
+            - {deductible: 10000, factor: 1.35}
+            - {deductible: 25000, factor: 1.10}
+            - {deductible: 50000, factor: 1.00} # Anchor
+            - {deductible: 100000, factor: 0.92}
+            - {deductible: 250000, factor: 0.82}
+            - {deductible: 500000, factor: 0.72}
+
       taxes_fees_rate: 0.05
 
   # ===========================================================================
@@ -2077,12 +2076,15 @@ aerospace:
           limit: 10000000
           deductible: 25000
 
+    # =========================================================================
+    # PRICING PARAMETERS (AEROSPACE SME)
+    # =========================================================================
     pricing:
-
       base_limit_reference: 5000000
       base_deductible_reference: 10000      
       
       by_product_type:
+        # SME uses PREMIUM_BASE (Flat fee), so ILFs MUST scale for all products
         aviation_hull:
           ilf_curve:
             base_limit: 5000000
@@ -2091,26 +2093,41 @@ aerospace:
               - {limit: 2000000, factor: 0.75}
               - {limit: 5000000, factor: 1.00} # Anchor
               - {limit: 10000000, factor: 1.45}
-
           deductible_factors:
             - {deductible: 2500, factor: 1.25}
             - {deductible: 5000, factor: 1.10}
             - {deductible: 10000, factor: 1.00} # Anchor
+            - {deductible: 15000, factor: 0.92}
             - {deductible: 25000, factor: 0.85}
+
+        aviation_liability:
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.50}
+              - {limit: 2000000, factor: 0.70}
+              - {limit: 5000000, factor: 1.00} # Anchor
+              - {limit: 10000000, factor: 1.80}
+          deductible_factors:
+            - {deductible: 2500, factor: 1.10}
+            - {deductible: 5000, factor: 1.05}
+            - {deductible: 10000, factor: 1.00} # Anchor
+            - {deductible: 15000, factor: 0.95}
+            - {deductible: 25000, factor: 0.90}
 
         aviation_hull_liability_combined:
           ilf_curve:
             base_limit: 5000000
             factors:
-              - {limit: 1000000, factor: 0.60}
-              - {limit: 2000000, factor: 0.75}
+              - {limit: 1000000, factor: 0.55}
+              - {limit: 2000000, factor: 0.72}
               - {limit: 5000000, factor: 1.00} # Anchor
-              - {limit: 10000000, factor: 1.45}
-
+              - {limit: 10000000, factor: 1.65}
           deductible_factors:
-            - {deductible: 2500, factor: 1.25}
-            - {deductible: 5000, factor: 1.10}
+            - {deductible: 2500, factor: 1.15}
+            - {deductible: 5000, factor: 1.08}
             - {deductible: 10000, factor: 1.00} # Anchor
-            - {deductible: 25000, factor: 0.85}
-      
+            - {deductible: 15000, factor: 0.93}
+            - {deductible: 25000, factor: 0.87}
+
       taxes_fees_rate: 0.05
