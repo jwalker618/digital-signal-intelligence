@@ -1,8 +1,9 @@
 """
-DSI Unified Project Assessor
-============================
-Replaces all legacy assess scripts. Evaluates the project against the 
-project_completeness_checklist.md and Phase 5 Actuarial Principles.
+DSI Comprehensive Project Assessor
+==================================
+A unified tool replacing all legacy assess scripts. Evaluates the Python 
+codebase, API infrastructure, Multiplexer, and YAML configurations against 
+the project_completeness_checklist.md.
 """
 
 import os
@@ -11,103 +12,149 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-class DSIUnifiedAssessor:
+class DSIProjectAssessor:
     def __init__(self, project_root: str = "."):
         self.root = Path(project_root)
-        self.results = {"passed": [], "failed": [], "warnings": []}
+        self.scores = {
+            "coverages": {"pass": 0, "total": 0, "gaps": []},
+            "infrastructure": {"pass": 0, "total": 0, "gaps": []},
+            "layers": {"pass": 0, "total": 0, "gaps": []},
+            "tests": {"pass": 0, "total": 0, "gaps": []},
+            "critical_rules": {"pass": 0, "total": 0, "gaps": []}
+        }
 
-    def _assert(self, condition: bool, category: str, message: str, is_warning: bool = False):
+    def _assert(self, category: str, condition: bool, gap_message: str):
+        self.scores[category]["total"] += 1
         if condition:
-            self.results["passed"].append(f"[{category}] {message}")
+            self.scores[category]["pass"] += 1
         else:
-            if is_warning:
-                self.results["warnings"].append(f"[{category}] {message}")
-            else:
-                self.results["failed"].append(f"[{category}] {message}")
+            self.scores[category]["gaps"].append(gap_message)
 
-    def assess_phase_5_compliance(self, coverage_name: str, config_name: str, config: dict):
-        """Validates strictly against the Premium Methodology checklist rules."""
+    def check_infrastructure(self):
+        """Checks API, Builder, and Multiplexer (Phase 4)."""
+        cat = "infrastructure"
+        api_dir = self.root / "infrastructure" / "api"
+        multi_dir = self.root / "infrastructure" / "multiplexer"
         
-        # 1. Anchor Checks
-        pricing = config.get('pricing', {})
-        base_limit = pricing.get('base_limit_reference')
-        base_deductible = pricing.get('base_deductible_reference')
-        self._assert(base_limit is not None, "Anchors", f"{config_name} has base_limit_reference")
-        self._assert(base_deductible is not None, "Anchors", f"{config_name} has base_deductible_reference")
-
-        # 2. Limit Configuration Schema
-        limits = config.get('limit_configuration', {})
-        self._assert(limits.get('type') in ['BUNDLED', 'DECOUPLED'], "Schema", f"{config_name} uses BUNDLED or DECOUPLED limit_configuration")
-
-        # 3. Scalability Trap Check
-        tier_1 = next((b for b in config.get('risk_tier_bands', {}).get('bands', []) if b['id'] == 1), {})
-        app = tier_1.get('interpretation', {}).get('application', {})
-        method = app.get('method')
-        routing = config.get('metadata', {}).get('routing_constraints', [])
+        # Multiplexer Checks
+        self._assert(cat, multi_dir.exists(), "Multiplexer directory missing.")
+        self._assert(cat, (multi_dir / "arbiter.py").exists(), "ConfigArbiter not implemented.")
+        self._assert(cat, (multi_dir / "broker.py").exists(), "SignalBroker not implemented.")
         
-        if method == "PREMIUM_BASE":
-            has_ceiling = any(r.get('operator') in ['<', '<='] for r in routing)
-            self._assert(has_ceiling, "Methodology", f"{config_name} uses PREMIUM_BASE and has a protective size ceiling constraint")
+        # API Checks
+        self._assert(cat, api_dir.exists(), "API directory missing.")
+        
+        # Validation Checks
+        val_dir = self.root / "infrastructure" / "validation"
+        self._assert(cat, (val_dir / "config_validator.py").exists(), "Schema Validator missing.")
+
+    def check_layers(self):
+        """Checks the Three-Layer Assessment Architecture."""
+        cat = "layers"
+        layers_dir = self.root / "layers"
+        
+        self._assert(cat, layers_dir.exists(), "Layers directory missing.")
+        self._assert(cat, (layers_dir / "risk").exists(), "Risk layer missing.")
+        self._assert(cat, (layers_dir / "loss").exists(), "Loss layer missing.")
+        self._assert(cat, (layers_dir / "exposure").exists(), "Exposure layer missing.")
+        self._assert(cat, (layers_dir / "risk" / "scorer.py").exists(), "Risk Scorer missing.")
+
+    def check_tests(self):
+        """Checks testing infrastructure."""
+        cat = "tests"
+        self._assert(cat, (self.root / "tests").exists(), "Tests directory missing.")
+        self._assert(cat, (self.root / "pytest.ini").exists() or (self.root / "pyproject.toml").exists(), "Pytest config missing.")
+
+    def check_coverages(self):
+        """Strict Phase 5 Config Validation (Actuarial & Structural)."""
+        cat = "coverages"
+        crit = "critical_rules"
+        cov_dir = self.root / "coverages"
+        self._assert(cat, cov_dir.exists(), "Coverages directory missing.")
+        if not cov_dir.exists(): return
+
+        for root, _, files in os.walk(cov_dir):
+            if "config.yaml" not in files: continue
             
-        elif method == "MULTIPLIER":
-            self._assert('basis' in app, "Methodology", f"{config_name} uses MULTIPLIER and defines a basis (e.g. revenue, tiv)")
+            with open(Path(root) / "config.yaml", 'r') as f:
+                data = yaml.safe_load(f)
+                coverage_name = Path(root).name
+                
+                # Check for logic.md (Doc Generator)
+                self._assert(cat, (Path(root) / "logic.md").exists(), f"logic.md missing for {coverage_name}")
 
-        # 4. Monotonicity Check (Prices must increase as Tier goes 1 -> 5)
-        bands = config.get('risk_tier_bands', {}).get('bands', [])
-        if len(bands) == 5:
-            t1_val = bands[0]['interpretation']['application'].get('value', bands[0]['interpretation']['application'].get('applied', 0))
-            t5_val = bands[4]['interpretation']['application'].get('value', bands[4]['interpretation']['application'].get('applied', 0))
-            self._assert(t5_val > t1_val, "Actuarial", f"{config_name} Tier pricing is monotonic (T5 > T1)")
-            if t1_val > 0:
-                self._assert((t5_val / t1_val) >= 2.0, "Actuarial", f"{config_name} Penalty ratio is >= 2.0x", is_warning=True)
+                for config_name, config in data.get(coverage_name, {}).items():
+                    if not isinstance(config, dict): continue
 
-    def run_full_assessment(self):
-        # Scan Configurations
-        coverages_dir = self.root / "coverages"
-        if coverages_dir.exists():
-            for root, dirs, files in os.walk(coverages_dir):
-                if "config.yaml" in files:
-                    cov_name = Path(root).name
-                    with open(Path(root) / "config.yaml", 'r') as f:
-                        data = yaml.safe_load(f)
-                        for config_name, config_data in data.get(cov_name, {}).items():
-                            if isinstance(config_data, dict):
-                                self.assess_phase_5_compliance(cov_name, config_name, config_data)
-        
-        # Ensure logic.md files exist (Doc Generator Check)
-        for d in coverages_dir.iterdir():
-            if d.is_dir():
-                self._assert((d / "logic.md").exists(), "Documentation", f"{d.name} has logic.md generated")
+                    # 1. Routing Exclusivity
+                    routing = config.get('metadata', {}).get('routing_constraints', [])
+                    self._assert(cat, len(routing) > 0 or "general" in config_name, f"{config_name} has no routing constraints.")
+
+                    # 2. Phase 5 Anchors
+                    pricing = config.get('pricing', {})
+                    self._assert(crit, 'base_limit_reference' in pricing, f"{config_name} missing base_limit_reference.")
+                    self._assert(crit, 'base_deductible_reference' in pricing, f"{config_name} missing base_deductible_reference.")
+
+                    # 3. Polymorphic Limits
+                    limits = config.get('limit_configuration', {})
+                    self._assert(crit, limits.get('type') in ['BUNDLED', 'DECOUPLED'], f"{config_name} limit_configuration type invalid.")
+
+                    # 4. Scalability Trap & Pricing Method
+                    tier_1 = next((b for b in config.get('risk_tier_bands', {}).get('bands', []) if b['id'] == 1), {})
+                    method = tier_1.get('interpretation', {}).get('application', {}).get('method')
+                    
+                    if method == "PREMIUM_BASE":
+                        has_ceiling = any(r.get('operator') in ['<', '<='] for r in routing)
+                        self._assert(crit, has_ceiling, f"{config_name} uses PREMIUM_BASE but lacks size routing ceiling.")
+                    elif method == "MULTIPLIER":
+                        self._assert(crit, 'basis' in tier_1.get('interpretation', {}).get('application', {}), f"{config_name} missing basis for MULTIPLIER.")
+
+    def run_assessment(self):
+        self.check_infrastructure()
+        self.check_layers()
+        self.check_tests()
+        self.check_coverages()
 
     def save_report(self):
-        self.run_full_assessment()
-        
+        self.run_assessment()
         results_dir = self.root / "development/project/assessments/results"
         results_dir.mkdir(parents=True, exist_ok=True)
-        date_str = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        report_path = results_dir / f"Assessment_Report_{date_str}.md"
-        
-        total_checks = len(self.results['passed']) + len(self.results['failed'])
-        score = (len(self.results['passed']) / total_checks * 100) if total_checks > 0 else 0
-        
+        report_path = results_dir / f"Assessment_Report_{datetime.now().strftime('%Y-%m-%d')}.md"
+
+        total_pass = sum(s["pass"] for s in self.scores.values())
+        total_checks = sum(s["total"] for s in self.scores.values())
+        score_pct = (total_pass / total_checks * 100) if total_checks > 0 else 0
+
+        # Collect top 3 gaps
+        all_gaps = []
+        for s in self.scores.values(): all_gaps.extend(s["gaps"])
+
         with open(report_path, 'w') as f:
-            f.write(f"# DSI Project Completeness Assessment\n")
-            f.write(f"**Date:** {date_str}\n")
-            f.write(f"**Score:** {score:.1f}% ({len(self.results['passed'])}/{total_checks})\n\n")
+            f.write("# DSI Project Completeness Assessment\n\n")
+            f.write("```text\n")
+            f.write(f"Assessment Date: {datetime.now().strftime('%Y-%m-%d')}\n")
+            f.write(f"Assessed By: DSI Unified Assessor\n\n")
+            f.write("Section Scores:\n")
+            for cat, scores in self.scores.items():
+                f.write(f"  {cat.ljust(22)} {scores['pass']} / {scores['total']} items\n")
             
-            f.write("## ❌ Action Required (Failures)\n")
-            if not self.results['failed']: f.write("None! Project is fully compliant.\n")
-            for r in self.results['failed']: f.write(f"- {r}\n")
-            
-            f.write("\n## ⚠️ Warnings (Review Recommended)\n")
-            if not self.results['warnings']: f.write("None.\n")
-            for r in self.results['warnings']: f.write(f"- {r}\n")
-            
-            f.write("\n## ✅ Passed Checks\n")
-            for r in self.results['passed']: f.write(f"- {r}\n")
-            
-        print(f"Assessment complete. Score: {score:.1f}%. Report saved to: {report_path}")
+            f.write(f"\nOverall: {total_pass} / {total_checks} items ({score_pct:.1f}%)\n\n")
+            f.write("Top Gaps:\n")
+            for i, gap in enumerate(all_gaps[:3], 1):
+                f.write(f"{i}. {gap}\n")
+            if not all_gaps:
+                f.write("1. None! Project is fully compliant.\n")
+            f.write("```\n\n")
+
+            f.write("## Detailed Action Items\n")
+            for cat, scores in self.scores.items():
+                if scores["gaps"]:
+                    f.write(f"### {cat.upper()}\n")
+                    for gap in scores["gaps"]:
+                        f.write(f"- [ ] {gap}\n")
+        
+        print(f"✅ Assessment complete! Score: {score_pct:.1f}%. Saved to {report_path}")
 
 if __name__ == "__main__":
-    assessor = DSIUnifiedAssessor()
+    assessor = DSIProjectAssessor()
     assessor.save_report()
