@@ -16,8 +16,8 @@ coverages/
 │   ├── config.yaml
 │   └── logic.md
 ├── {coverage}/
-│   ├── config.yaml
-│   └── logic.md
+    ├── config.yaml
+    └── logic.md
 ```
 
 ## Documentation Generator
