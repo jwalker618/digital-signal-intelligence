@@ -48,7 +48,12 @@ marine:
       min_premium: 50000
       default_currency: USD
       model_specificity: 1
-      routing_constraints: []
+      routing_constraints:
+      - field: hull_value
+        operator: ">"
+        value: 50000000
+        required_in_input: true
+
     direct_queries:
     - id: psc_detentions
       question: Any vessels detained by port state control in past 36 months?
@@ -1298,247 +1303,158 @@ marine:
         - 250000
         - 500000
         - 1000000
+ 
+    # =========================================================================
+    # PRICING PARAMETERS (MARINE GENERAL)
+    # =========================================================================
     pricing:
       base_limit_reference: 10000000
       base_deductible_reference: 50000
       
       by_product_type:
+
+        # 1. FIRST-PARTY HULL: ILF must be FLAT because premium scales with hull_value
         hull_machinery:
           ilf_curve:
             base_limit: 10000000
             factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 2.1
-            - limit: 50000000
-              factor: 3.8
-            - limit: 100000000
-              factor: 6.5
-            - limit: 250000000
-              factor: 13.0
-            - limit: 500000000
-              factor: 22.0
-            - limit: 1000000000
-              factor: 38.0
-
+            - {limit: 10000000, factor: 1.0}
+            - {limit: 25000000, factor: 1.0}
+            - {limit: 50000000, factor: 1.0}
+            - {limit: 100000000, factor: 1.0}
+            - {limit: 250000000, factor: 1.0}
+            - {limit: 500000000, factor: 1.0}
+            - {limit: 1000000000, factor: 1.0}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}   # Anchor
+          - {deductible: 100000, factor: 0.95}
+          - {deductible: 250000, factor: 0.9}
+          - {deductible: 500000, factor: 0.7}
+          - {deductible: 1000000, factor: 0.7}
+
         total_loss:
           ilf_curve:
             base_limit: 10000000
             factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 1.9
-            - limit: 50000000
-              factor: 3.3
-            - limit: 100000000
-              factor: 5.5
-            - limit: 250000000
-              factor: 10.5
-            - limit: 500000000
-              factor: 17.5
-            - limit: 1000000000
-              factor: 30.0
-
+            - {limit: 10000000, factor: 1.0}
+            - {limit: 25000000, factor: 1.0}
+            - {limit: 50000000, factor: 1.0}
+            - {limit: 100000000, factor: 1.0}
+            - {limit: 250000000, factor: 1.0}
+            - {limit: 500000000, factor: 1.0}
+            - {limit: 1000000000, factor: 1.0}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.96
-          - deductible: 250000
-            factor: 0.92
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}   # Anchor
+          - {deductible: 100000, factor: 0.97}
+          - {deductible: 250000, factor: 0.94}
+          - {deductible: 500000, factor: 0.7}
+          - {deductible: 1000000, factor: 0.7}
+
         increased_value:
-          ilf_curve:
-            base_limit: 5000000
-            factors:
-            - limit: 5000000
-              factor: 1.0
-            - limit: 10000000
-              factor: 1.8
-            - limit: 25000000
-              factor: 3.6
-            - limit: 50000000
-              factor: 6.0
-            - limit: 100000000
-              factor: 10.5
-            - limit: 250000000
-              factor: 21.0
-            - limit: 500000000
-              factor: 36.0
-
-          deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
-        loss_of_hire:
-          ilf_curve:
-            base_limit: 5000000
-            factors:
-            - limit: 5000000
-              factor: 1.0
-            - limit: 10000000
-              factor: 1.95
-            - limit: 25000000
-              factor: 4.2
-            - limit: 50000000
-              factor: 7.2
-            - limit: 100000000
-              factor: 12.8
-            - limit: 250000000
-              factor: 26.0
-            - limit: 500000000
-              factor: 45.0
-
-          deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.96
-          - deductible: 250000
-            factor: 0.92
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
-        war_risks:
           ilf_curve:
             base_limit: 10000000
             factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 2.3
-            - limit: 50000000
-              factor: 4.4
-            - limit: 100000000
-              factor: 7.8
-            - limit: 250000000
-              factor: 16.0
-            - limit: 500000000
-              factor: 28.0
-            - limit: 1000000000
-              factor: 50.0
-
+            - {limit: 10000000, factor: 1.0}
+            - {limit: 25000000, factor: 1.0}
+            - {limit: 50000000, factor: 1.0}
+            - {limit: 100000000, factor: 1.0}
+            - {limit: 250000000, factor: 1.0}
+            - {limit: 500000000, factor: 1.0}
+            - {limit: 1000000000, factor: 1.0}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.97
-          - deductible: 250000
-            factor: 0.94
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}   # Anchor
+          - {deductible: 100000, factor: 0.95}
+          - {deductible: 250000, factor: 0.9}
+          - {deductible: 500000, factor: 0.7}
+          - {deductible: 1000000, factor: 0.7}
+
+        # 2. LIABILITY/CONSEQUENTIAL: Steep curves maintained
+        loss_of_hire:
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+            - {limit: 10000000, factor: 1.0}
+            - {limit: 25000000, factor: 2.2}
+            - {limit: 50000000, factor: 4.0}
+            - {limit: 100000000, factor: 7.0}
+            - {limit: 250000000, factor: 14.5}
+            - {limit: 500000000, factor: 25.0}
+            - {limit: 1000000000, factor: 45.0}
+          deductible_factors:
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}   # Anchor
+          - {deductible: 100000, factor: 0.96}
+          - {deductible: 250000, factor: 0.92}
+          - {deductible: 500000, factor: 0.7}
+          - {deductible: 1000000, factor: 0.7}
+
         pi_liability:
           ilf_curve:
             base_limit: 10000000
             factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 2.2
-            - limit: 50000000
-              factor: 4.1
-            - limit: 100000000
-              factor: 7.2
-            - limit: 250000000
-              factor: 15.0
-            - limit: 500000000
-              factor: 26.0
-            - limit: 1000000000
-              factor: 46.0
-
+            - {limit: 10000000, factor: 1.0}
+            - {limit: 25000000, factor: 2.0}
+            - {limit: 50000000, factor: 3.6}
+            - {limit: 100000000, factor: 6.2}
+            - {limit: 250000000, factor: 13.0}
+            - {limit: 500000000, factor: 22.0}
+            - {limit: 1000000000, factor: 38.0}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.96
-          - deductible: 250000
-            factor: 0.92
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}   # Anchor
+          - {deductible: 100000, factor: 0.95}
+          - {deductible: 250000, factor: 0.9}
+          - {deductible: 500000, factor: 0.7}
+          - {deductible: 1000000, factor: 0.7}
+
+        # FIXED ANCHOR: Rescaled so 10M = 1.00
+        war_risks:
+          ilf_curve:
+            base_limit: 10000000               # FIXED
+            factors:
+            - {limit: 5000000, factor: 0.56}   # Back-calculated
+            - {limit: 10000000, factor: 1.00}  # New Anchor = 1.0
+            - {limit: 25000000, factor: 2.11}  # Rescaled
+            - {limit: 50000000, factor: 3.61}
+            - {limit: 100000000, factor: 6.39}
+            - {limit: 250000000, factor: 13.33}
+            - {limit: 500000000, factor: 23.33}
+          deductible_factors:
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}   # Anchor
+          - {deductible: 100000, factor: 0.97}
+          - {deductible: 250000, factor: 0.94}
+          - {deductible: 500000, factor: 0.7}
+          - {deductible: 1000000, factor: 0.7}
+
+        # FIXED ANCHOR: Rescaled so 10M = 1.00
         cargo:
           ilf_curve:
-            base_limit: 5000000
+            base_limit: 10000000               # FIXED
             factors:
-            - limit: 5000000
-              factor: 1.0
-            - limit: 10000000
-              factor: 1.75
-            - limit: 25000000
-              factor: 3.5
-            - limit: 50000000
-              factor: 5.8
-            - limit: 100000000
-              factor: 10.0
-            - limit: 250000000
-              factor: 20.0
-            - limit: 500000000
-              factor: 34.0
-
+            - {limit: 5000000, factor: 0.57}   # Back-calculated
+            - {limit: 10000000, factor: 1.00}  # New Anchor = 1.0
+            - {limit: 25000000, factor: 2.00}  # Rescaled
+            - {limit: 50000000, factor: 3.31}
+            - {limit: 100000000, factor: 5.71}
+            - {limit: 250000000, factor: 11.43}
+            - {limit: 500000000, factor: 20.00}
           deductible_factors:
-          - deductible: 10000
-            factor: 1.5
-          - deductible: 25000
-            factor: 1.15
-          - deductible: 50000
-            factor: 1.0
-          - deductible: 100000
-            factor: 0.95
-          - deductible: 250000
-            factor: 0.9
-          - deductible: 500000
-            factor: 0.7
-          - deductible: 1000000
-            factor: 0.7
-      taxes_fees_rate: 0.03
+          - {deductible: 10000, factor: 1.5}
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.0}   # Anchor
+          - {deductible: 100000, factor: 0.95}
+          - {deductible: 250000, factor: 0.9}
+          - {deductible: 500000, factor: 0.7}
+          - {deductible: 1000000, factor: 0.7}
+
+      taxes_fees_rate: 0.05
