@@ -1325,6 +1325,9 @@ energy:
         - 500000
         - 1000000
     pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      
       by_product_type:
         property_damage:
           ilf_curve:
@@ -1344,8 +1347,7 @@ energy:
               factor: 20.0
             - limit: 1000000000
               factor: 35.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1379,8 +1381,6 @@ energy:
               factor: 25.0
             - limit: 1000000000
               factor: 45.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1414,8 +1414,6 @@ energy:
               factor: 32.0
             - limit: 1000000000
               factor: 58.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1449,8 +1447,6 @@ energy:
               factor: 24.0
             - limit: 500000000
               factor: 42.0
-          base_limit_reference: 5000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1484,8 +1480,6 @@ energy:
               factor: 22.0
             - limit: 1000000000
               factor: 38.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1519,8 +1513,6 @@ energy:
               factor: 34.0
             - limit: 1000000000
               factor: 62.0
-          base_limit_reference: 10000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1554,8 +1546,6 @@ energy:
               factor: 20.0
             - limit: 500000000
               factor: 35.0
-          base_limit_reference: 5000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
