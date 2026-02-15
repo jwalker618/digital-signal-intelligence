@@ -1205,6 +1205,10 @@ cyber:
         - 500000    
     
     pricing:
+      
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      
       by_product_type:
         cyber_liability:
           ilf_curve:
@@ -1224,8 +1228,7 @@ cyber:
               factor: 16.0
             - limit: 100000000
               factor: 25.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1259,8 +1262,6 @@ cyber:
               factor: 12.5
             - limit: 100000000
               factor: 19.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1294,8 +1295,6 @@ cyber:
               factor: 11.5
             - limit: 100000000
               factor: 17.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1329,8 +1328,6 @@ cyber:
               factor: 20.0
             - limit: 100000000
               factor: 32.0
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1830,6 +1827,9 @@ cyber:
           limit: 5000000
           deductible: 250000
     pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      
       by_product_type:
         cyber_liability:
           ilf_curve:
@@ -1845,8 +1845,7 @@ cyber:
               factor: 1.65
             - limit: 5000000
               factor: 2.8
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
+
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1876,8 +1875,6 @@ cyber:
               factor: 1.7
             - limit: 5000000
               factor: 2.9
-          base_limit_reference: 1000000
-          base_deductible_reference: 50000
           deductible_factors:
           - deductible: 10000
             factor: 1.5
