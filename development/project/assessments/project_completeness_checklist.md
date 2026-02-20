@@ -57,18 +57,17 @@ Items annotated with **(Test)** can and should be verified programmatically. Ite
   - Does this explain the rationale for signal selection and weighting for this coverage?
   - Does this document which signal groups are most important for this coverage and why? **(Test)**
 
-## Premium Methodology
+## Premium Methodology (Aligned to `Premium_Calculation_Methodology.md`)
 
+- Does the pricing logic strictly adhere to the defined DSI formula: $P_{final} = (B \times R) \times ILF \times D_{fac} \times Mods$? **(Test)**
+- Are all modifiers explicitly multiplicative (e.g., `applied: 1.15`), strictly avoiding subjective flat-dollar additions/subtractions? **(Test)**
 - Is the premium methodology contextually valid against routing constraints? **(Test)**
-  - **Scalability Trap Check:** If `PREMIUM_BASE` is used, the validator MUST confirm a `routing_constraint` exists that caps the maximum size of the entity (e.g., `revenue <= 50M` or `hull_value <= 50M`).
+  - **Scalability Trap Check:** If `PREMIUM_BASE` is used, the validator MUST confirm a `routing_constraint` exists that caps the maximum size of the entity.
   - **Enterprise Enforcement:** If the config lacks size constraints or explicitly targets large limits/revenues, the validator MUST enforce the use of `MULTIPLIER` (Rate × Basis).
-- When MULTIPLIER is used, is the `basis` field listed in `minimum_viable_input`? **(Test)**
-- Are the tier rate progressions actuarially monotonic? **(Test)**
-  - Validator must assert that Tier 1 < Tier 2 < Tier 3 < Tier 4 < Tier 5 (prices strictly increase as risk score drops).
-  - Validator must assert the penalty ratio (Tier 5 price / Tier 1 price) is >= 2.0.
+- Are the tier rate progressions actuarially monotonic (e.g., Tier 5 rate > Tier 1 rate) with a minimum 2.0x penalty spread? **(Test)**
 - Does the Pricing block contain valid Anchors (`base_limit_reference` and `base_deductible_reference`)? **(Test)**
-- Does the ILF Curve explicitly contain the `base_limit_reference` with a factor of exactly 1.00? **(Test)**
-- Do the Deductible Factors explicitly contain the `base_deductible_reference` with a factor of exactly 1.00? **(Test)**
+- Does the ILF Curve explicitly contain the `base_limit_reference` with a factor of exactly `1.00`? **(Test)**
+- Do the Deductible Factors explicitly contain the `base_deductible_reference` with a factor of exactly `1.00`? **(Test)**
 
 ## Schema Compliance
 
@@ -190,26 +189,16 @@ Repeat for each coverage within coverages/
 
 # docs (`docs/`)
 
-## Whitepaper Compliance
+## Foundational Principles & Whitepaper Adherence
 
 Reference: `docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf`
 
-- Is the project correctly reflective of the whitepaper? **(Manual)**
-
-### 10 Foundational Principles
-
-| # | Principle | Check |
-|-|-|-|
-| 1 | External Observability | Is signal architecture designed for external-only data collection? |
-| 2 | Machine Readability | Are all signals machine-extractable and algorithmically scored? |
-| 3 | Network Authority | Is the organisational graph with PageRank implemented? |
-| 4 | Behavioural Inference | Does proxy tier weighting prefer observable over self-reported? |
-| 5 | Absence as Signal | Do inference functions measure absence of expected signals? |
-| 6 | Structured Data Utilisation | Are authoritative third-party data feeds integrated? |
-| 7 | Minimal Direct Inquiry | Are direct queries constrained to max 10 binary questions? |
-| 8 | Organisational Assessment | Is entity-level (not asset-level) scoring the primary unit? |
-| 9 | Simplicity in Scoring | Is the flow Signal->Score->Tier->Price clear and auditable? |
-| 10 | Agentic Readiness | Can every component execute without human interpretation? |
+- **Absence as a Signal:** Do the inference functions actively penalize or flag missing data (treating absence as an observable attribute) rather than failing gracefully or defaulting to an "average" score? **(Manual)**
+- **Zero Subjectivity (Phase 8):** Are underwriter overrides strictly limited to "Signal Auditing" (correcting factual inputs with an audit trail) rather than subjective price/premium haggling? **(Test)**
+- **The PageRank Insight:** Does the platform look beyond self-reported data to analyze the entity's network graph (e.g., vendor relationships, third-party footprint) to derive risk? **(Manual)**
+- **Continuous/Dynamic Assessment:** Is the architecture capable of receiving a new signal payload and completely recalculating the risk profile without human intervention? **(Test)**
+- **Three-Layer Architecture:** Does every configuration map its signals cleanly into Risk, Loss, and Exposure dimensions, enforcing weights that sum to 1.0? **(Test)**
+- **Model Versioning & Auditability:** Does every quote and referral decision lock to a specific immutable `Model Version`? **(Test)**
 
 ### Signal Architecture Promises
 
@@ -399,6 +388,18 @@ Reference: `docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf`
 - Does the document generation module exist? **(Test)**
 - Does the webhook handler exist? **(Test)**
 - Are integrations functional or stub-only? **(Manual)**
+
+## Multiplexer & Routing (Phase V4)
+- Are the routing constraints within a single coverage mutually exclusive (e.g., `revenue <= 50M` vs `revenue > 50M`) to prevent the Arbiter from dropping risks in the middle? **(Test)**
+- Does the Arbiter factor in `signal_completeness` to prioritize models with more rich data over models that only "passed" due to missing data? **(Test)**
+
+## LLM AI Builder (Phase 13)
+- Does the `CoverageBuilder` dynamically apply weights based on the `IndustryProfile` rather than hardcoding them? **(Test)**
+- Is the LLM strictly constrained to output only `signal_id`s that pre-exist in the `SignalLibrary` to prevent hallucinations? **(Test)**
+
+## Deterministic Referrals (Phase 8)
+- Do signal payloads contain both an `inferred_value` (permanent) and an `audited_value` (mutable) to preserve data provider accuracy metrics? **(Test)**
+- Does overriding a factual signal immediately trigger a new Model Cycle and generate a new immutable Model Version? **(Test)**
 
 ---
 
@@ -858,39 +859,56 @@ Reference: Phase P7
 
 # Assessment Summary Template
 
-Use this template when recording assessment results:
+Use this template when recording assessment results from `dsi_assessor.py`:
 
-```
+```text
+=============================================================================
+DSI PROJECT COMPLETENESS ASSESSMENT
+=============================================================================
 Assessment Date: YYYY-MM-DD
-Assessed By: [Name / System]
+Assessed By: DSI Unified Assessor
 Codebase Stats: [X] Python files, [Y] lines, [Z] coverages
 
-Section Scores:
-  coverages:              ___ / ___ items
-  demo:                   ___ / ___ items
-  deploy:                 ___ / ___ items
-  docs (whitepaper):      ___ / ___ items
-  docs (vision paper):    ___ / ___ items
-  infrastructure:         ___ / ___ items
-  layers:                 ___ / ___ items
-  rust:                   ___ / ___ items
-  schemas:                ___ / ___ items
-  signal_architecture:    ___ / ___ items
-  tests:                  ___ / ___ items
-  phase completion:       ___ / ___ phases
-  critical rules:         ___ / ___ items
-  performance:            ___ / ___ items
-  security & governance:  ___ / ___ items
+-----------------------------------------------------------------------------
+1. HIGH-LEVEL SCORECARD
+-----------------------------------------------------------------------------
+  Coverages:              ___ / ___ items
+  Infrastructure:         ___ / ___ items
+  Layers (Three-Layer):   ___ / ___ items
+  Actuarial Math:         ___ / ___ items
+  Testing & QA:           ___ / ___ items
+  Foundational Rules:     ___ / ___ items
 
-Overall: ___ / ___ items (___%)
+  OVERALL SCORE: ___ / ___ items (___%)
+  STATUS: [PASS / ACTION REQUIRED]
 
-Top Gaps:
-1.
-2.
-3.
+-----------------------------------------------------------------------------
+2. COVERAGE COMPLIANCE MATRIX (PHASE 5)
+-----------------------------------------------------------------------------
+| Coverage | Config Model | Schema | Anchors | Monotonic | Routing |
+|----------|--------------|--------|---------|-----------|---------|
+| Cyber    | general      | v2.3.0 | PASS    | PASS      | PASS    |
+| Cyber    | sme          | v2.3.0 | PASS    | PASS      | PASS    |
+| [Auto-populated by Assessor...]                                  |
 
-Recommended Next Steps:
-1.
-2.
-3.
+-----------------------------------------------------------------------------
+3. CRITICAL GAPS & ACTION ITEMS
+-----------------------------------------------------------------------------
+1. [INFRASTRUCTURE] Missing `audit_trail` schema for Phase 8 overrides.
+2. [COVERAGES] Aerospace SME lacks logic.md documentation.
+3. [MATH] Energy General double-scales property damage ILF curves.
+
+-----------------------------------------------------------------------------
+4. DETAILED ASSERTION LOG (FAILURES)
+-----------------------------------------------------------------------------
+- [FAIL] layers/risk/scorer.py: Does not utilize `audited_value` over `inferred_value`.
+- [FAIL] coverages/marine/config.yaml: Tier 5 penalty ratio is < 2.0x.
+
+-----------------------------------------------------------------------------
+5. DETAILED ASSERTION LOG (PASSES)
+-----------------------------------------------------------------------------
+- [PASS] infrastructure/multiplexer/arbiter.py exists and handles tie-breaking.
+- [PASS] coverages/cyber/config.yaml: BUNDLED limits properly formatted.
+- [PASS] coverages/do/config.yaml: Weights correctly sum to 1.0.
+[Truncated for brevity...]
 ```
