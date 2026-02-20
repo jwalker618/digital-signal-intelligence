@@ -254,11 +254,7 @@ class CoverageBuilder:
             "exposure": self._build_exposure(),
         }
 
-        # V5: BUNDLED mode uses limit_bandings, DECOUPLED uses limit_configuration
-        if spec.pricing_mode == "DECOUPLED":
-            inner_config["limit_configuration"] = self._build_limit_configuration(spec)
-        else:
-            inner_config["limit_bandings"] = self._build_limit_bandings(spec)
+        inner_config["limit_configuration"] = self._build_limit_configuration(spec)
 
         inner_config["pricing"] = self._build_pricing(spec)
 
@@ -812,25 +808,45 @@ class CoverageBuilder:
         ]
 
     def _build_limit_configuration(self, spec: CoverageSpec) -> Dict[str, Any]:
-        """Build limit configuration for DECOUPLED mode (independent limits/deductibles)."""
-        return {
-            "type": "DECOUPLED",
-            "valid_limits": spec.valid_limits or [1000000, 5000000, 10000000, 25000000, 50000000],
-            "valid_deductibles": spec.valid_deductibles or [25000, 50000, 100000, 250000, 500000],
-        }
-
+        """Build polymorphic limit configuration for V5 (BUNDLED or DECOUPLED)."""
+        if spec.pricing_mode == "DECOUPLED":
+            return {
+                "type": "DECOUPLED",
+                "valid_limits": spec.valid_limits or [1000000, 5000000, 10000000, 25000000, 50000000],
+                "valid_deductibles": spec.valid_deductibles or [25000, 50000, 100000, 250000, 500000],
+            }
+        else:
+            # BUNDLED Mode (SME Menu Pricing)
+            base_ded = spec.base_deductible_reference
+            return {
+                "type": "BUNDLED",
+                "packages": [
+                    {"id": 1, "label": "STARTER", "limit": 1000000, "deductible": int(base_ded * 0.5)},
+                    {"id": 2, "label": "STANDARD", "limit": 5000000, "deductible": base_ded}, # Anchor
+                    {"id": 3, "label": "ENHANCED", "limit": 10000000, "deductible": int(base_ded * 2)},
+                    {"id": 4, "label": "PREMIUM", "limit": 25000000, "deductible": int(base_ded * 5)},
+                ]
+            }
+    
     def _build_pricing(self, spec: CoverageSpec) -> Dict[str, Any]:
         """Build pricing section with V5 anchors, ILF curve, and deductible factors."""
-        return {
-            # V5 Pricing Anchors - define what the base price buys
+        pricing = {
             "base_limit_reference": spec.base_limit_reference,
             "base_deductible_reference": spec.base_deductible_reference,
-            "ilf_curve": self._build_ilf_curve(spec),
-            # V5 Deductible Factors (replaces deductible_credits)
-            "deductible_factors": self._build_deductible_factors(spec),
+            "by_product_type": {},
             "taxes_fees_rate": 0.05,
         }
-
+        
+        # Phase 5: Curves must be nested by product type
+        products = spec.product_types if spec.product_types else [spec.name.lower().replace(" ", "_")]
+        for product in products:
+            pricing["by_product_type"][product] = {
+                "ilf_curve": self._build_ilf_curve(spec),
+                "deductible_factors": self._build_deductible_factors(spec)
+            }
+            
+        return pricing
+  
     def _build_ilf_curve(self, spec: CoverageSpec) -> Dict[str, Any]:
         """Build ILF curve with anchor limit included."""
         base_limit = spec.base_limit_reference
