@@ -26,8 +26,7 @@ To prevent "Phantom Approvals" (where a risk looks pristine simply because no da
 Update infrastructure/multiplexer/arbiter.py to calculate a Completeness Ratio for every quote
 
 Completeness= 
-Total Expected Signals for this Size Tier
-Signals Successfully Extracted
+Total Expected Signals for this Size Tier / Signals Successfully Extracted
 ​
 
 If Completeness < 0.50: The risk is automatically moved to REFER, regardless of the composite score. The underwriter must use the Phase 8 Factual Override system to manually input enough signals to cross the threshold.
