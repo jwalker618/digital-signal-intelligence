@@ -13,7 +13,7 @@ based on the entity's jurisdiction.
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from signal_architecture.signals.routing import (
     JurisdictionRouter,

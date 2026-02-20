@@ -1,7 +1,13 @@
 """
-DSI Coverage Builder Types (Phase 13 → v2.0 Overhaul)
+DSI Coverage Builder Types (Phase 13 → v2.2 Overhaul)
 
-Data structures for coverage building aligned with v2.0 config schema.
+Data structures for coverage building aligned with v2.2 config schema.
+
+Version History:
+- v2.0: Original schema with signal_registry, groups, tier_bands
+- v2.1: Added V4 multiplexer support (model_specificity, routing_constraints)
+- v2.2: Added V5 pricing anchors (base_limit_reference, base_deductible_reference,
+        deductible_factors, BUNDLED/DECOUPLED modes)
 """
 
 from dataclasses import dataclass, field
@@ -34,6 +40,21 @@ class ProxyTier(str, Enum):
     COHORT_INFERENCE = "COHORT_INFERENCE"
 
 
+class PricingMode(str, Enum):
+    """Pricing mode for limit/deductible selection."""
+    BUNDLED = "BUNDLED"      # Menu pricing - SME/Micro (fixed packages)
+    DECOUPLED = "DECOUPLED"  # Tower pricing - Corporate/Enterprise (independent)
+
+
+@dataclass
+class RoutingConstraint:
+    """Hard constraint for multiplexer routing."""
+    field: str
+    operator: str  # <, >, <=, >=, ==, !=
+    value: Any
+    required_in_input: bool = False
+
+
 @dataclass
 class CoverageSpec:
     """Input specification for new coverage."""
@@ -57,6 +78,18 @@ class CoverageSpec:
     tier_strategy: str = "standard"  # standard, conservative, aggressive
     min_signals: int = 15
     max_signals: int = 40
+
+    # V4 Multiplexer support (Phase V4)
+    model_specificity: int = 1  # 1=General, 2=Segment, 3=Niche, 4=Bespoke, 5=Custom
+    routing_constraints: List[Dict[str, Any]] = field(default_factory=list)
+
+    # V5 Pricing Anchors support (Phase V5)
+    base_limit_reference: int = 1000000      # The base price buys this limit
+    base_deductible_reference: int = 50000   # The base price assumes this deductible
+    pricing_mode: str = "BUNDLED"            # BUNDLED or DECOUPLED
+    valid_limits: Optional[List[int]] = None        # For DECOUPLED mode
+    valid_deductibles: Optional[List[int]] = None   # For DECOUPLED mode
+    coverage_type: str = ""  # e.g., "cyber", "do", "pi"
 
 
 @dataclass

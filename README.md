@@ -210,11 +210,20 @@ digital-signal-intelligence/
 │   └── loss/                    # Loss Correlation Layer (Phase 16)
 │
 ├── coverages/                   # YAML configurations (7 coverages)
+│   ├── doc_generator.py         # Generate logic.md documentation
+│   ├── master_config_layout.yaml # Master schema template
+│   └── {coverage}/              # Each has config.yaml + logic.md
+│
 ├── tests/                       # 380+ tests
 ├── demo/                        # Interactive demonstrations
 ├── deploy/                      # Docker, K8s, monitoring configs
 ├── docs/                        # Documentation
+│
 ├── development/                 # Phase development plans
+│   └── project/assessments/     # Assessment tooling
+│       ├── scripts/             # assess_project.py, assess_config_compliance.py
+│       └── results/             # Timestamped assessment reports
+│
 ├── SKILL.md                     # Architecture guide
 └── README.md
 ```
@@ -445,6 +454,22 @@ pytest tests/ -v
 
 # Run with coverage
 pytest tests/ --cov=signals --cov=layers --cov=coverages --cov-report=html
+```
+
+#### Development Tools
+
+```bash
+# Generate coverage documentation (after config.yaml changes)
+python coverages/doc_generator.py
+
+# Run project assessment (before commits)
+python development/project/assessments/scripts/assess_project.py
+
+# Validate single config file
+python development/project/assessments/scripts/assess_config_compliance.py coverages/cyber/config.yaml
+
+# Save assessment report
+python development/project/assessments/scripts/assess_project.py --save-report
 ```
 
 #### Interactive Demos

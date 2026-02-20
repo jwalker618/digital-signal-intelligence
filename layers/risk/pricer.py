@@ -438,6 +438,82 @@ class ModelPricer:
         # Above highest bracket
         return factors[-1].get("factor", 1.0) if factors else 1.0
 
+    def _get_deductible_factor(
+        self,
+        deductible: float,
+        submission_data: Dict[str, Any],
+        pricing_config
+    ) -> float:
+        """
+        Get deductible factor for premium adjustment.
+
+        V2.2+ uses deductible_factors (fixed amounts with factors).
+        Legacy uses deductible_credits (percentage-based credits).
+
+        Args:
+            deductible: Deductible amount
+            submission_data: Submission data (for basis value in legacy mode)
+            pricing_config: Pricing configuration
+
+        Returns:
+            Factor to multiply premium by (1.0 = anchor, <1.0 = credit, >1.0 = load)
+        """
+        # V2.2: Use deductible_factors if available
+        factors = getattr(pricing_config, 'deductible_factors', [])
+        if factors:
+            # Find exact match or interpolate
+            for factor_def in factors:
+                if factor_def.get("deductible") == deductible:
+                    return factor_def.get("factor", 1.0)
+
+            # If no exact match, find nearest factor
+            sorted_factors = sorted(factors, key=lambda x: x.get("deductible", 0))
+            for i, factor_def in enumerate(sorted_factors):
+                if factor_def.get("deductible", 0) > deductible:
+                    if i == 0:
+                        return factor_def.get("factor", 1.0)
+                    # Linear interpolation between adjacent factors
+                    prev = sorted_factors[i - 1]
+                    curr = factor_def
+                    prev_ded = prev.get("deductible", 0)
+                    curr_ded = curr.get("deductible", 0)
+                    prev_fac = prev.get("factor", 1.0)
+                    curr_fac = curr.get("factor", 1.0)
+                    ratio = (deductible - prev_ded) / (curr_ded - prev_ded)
+                    return prev_fac + ratio * (curr_fac - prev_fac)
+
+            # Use highest factor if deductible exceeds all entries
+            if sorted_factors:
+                return sorted_factors[-1].get("factor", 1.0)
+            return 1.0
+
+        # Legacy: Use deductible_credits (percentage-based)
+        credits = pricing_config.deductible_credits
+        if not credits:
+            return 1.0  # No adjustment
+
+        # Calculate deductible as percentage of basis (e.g., TIV)
+        tiv = submission_data.get("tiv", 0)
+        if tiv <= 0:
+            return 1.0
+
+        deductible_pct = deductible / tiv
+
+        # Find matching credit band and convert to factor
+        for credit_def in credits:
+            min_pct = credit_def.get("min_pct", 0)
+            max_pct = credit_def.get("max_pct")
+
+            if max_pct is None:
+                max_pct = float('inf')
+
+            if min_pct <= deductible_pct < max_pct:
+                # Convert credit (0-1) to factor: credit of 0.10 = factor of 0.90
+                credit = credit_def.get("credit", 0)
+                return 1.0 - credit
+
+        return 1.0
+
     def _get_deductible_credit(
         self,
         deductible: float,
@@ -445,7 +521,9 @@ class ModelPricer:
         pricing_config
     ) -> float:
         """
-        Get deductible credit factor.
+        Legacy method - returns credit as 0-1 value.
+
+        Use _get_deductible_factor instead for V2.2+ pricing.
 
         Args:
             deductible: Deductible amount
@@ -455,29 +533,9 @@ class ModelPricer:
         Returns:
             Credit factor (0-1)
         """
-        credits = pricing_config.deductible_credits
-        if not credits:
-            return 0.0
-
-        # Calculate deductible as percentage of basis (e.g., TIV)
-        tiv = submission_data.get("tiv", 0)
-        if tiv <= 0:
-            return 0.0
-
-        deductible_pct = deductible / tiv
-
-        # Find matching credit band
-        for credit_def in credits:
-            min_pct = credit_def.get("min_pct", 0)
-            max_pct = credit_def.get("max_pct")
-
-            if max_pct is None:
-                max_pct = float('inf')
-
-            if min_pct <= deductible_pct < max_pct:
-                return credit_def.get("credit", 0)
-
-        return 0.0
+        factor = self._get_deductible_factor(deductible, submission_data, pricing_config)
+        # Convert factor back to credit: factor 0.90 = credit 0.10
+        return 1.0 - factor
 
     def calculate_hull_premium(
         self,

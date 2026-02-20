@@ -824,18 +824,34 @@ class ConfigValidator:
         issues = []
         if not isinstance(pricing, dict):
             return [ValidationIssue(
-                severity=ValidationSeverity.WARNING,
+                severity=ValidationSeverity.ERROR,
                 category="pricing",
-                message="pricing should be a dictionary",
+                message="pricing must be a dictionary",
             )]
 
-        if "ilf_curve" not in pricing:
+        # Phase 5 Strict Anchor Enforcement
+        if "base_limit_reference" not in pricing or "base_deductible_reference" not in pricing:
             issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
+                severity=ValidationSeverity.ERROR,
                 category="pricing",
-                message="pricing missing 'ilf_curve'",
+                message="pricing is missing required Phase 5 anchors (base_limit_reference, base_deductible_reference)",
             ))
 
+        if "by_product_type" not in pricing:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="pricing",
+                message="pricing missing 'by_product_type' mapping",
+            ))
+        else:
+            for prod, data in pricing.get("by_product_type", {}).items():
+                if "ilf_curve" not in data or "deductible_factors" not in data:
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.ERROR,
+                        category="pricing",
+                        message=f"Product '{prod}' missing 'ilf_curve' or 'deductible_factors'",
+                        path=f"pricing.by_product_type.{prod}"
+                    ))
         return issues
 
     def _validate_cross_references(self, inner: Dict[str, Any]) -> List[ValidationIssue]:

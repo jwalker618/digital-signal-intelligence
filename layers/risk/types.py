@@ -445,12 +445,18 @@ class LimitBandConfig:
 
 @dataclass
 class PricingConfig:
-    """Pricing parameters from YAML."""
+    """Pricing parameters from YAML (supports v2.0 and v2.2 schema)."""
     hull_ilf_base: float = 10_000_000
     hull_ilf_factors: List[Dict[str, float]] = field(default_factory=list)
     liability_ilf_base: float = 100_000_000
     liability_ilf_factors: List[Dict[str, float]] = field(default_factory=list)
+    # Legacy v2.0: percentage-based deductible credits
     deductible_credits: List[Dict[str, Any]] = field(default_factory=list)
+    # V2.2: fixed deductible amounts with factors (anchor = 1.00)
+    deductible_factors: List[Dict[str, Any]] = field(default_factory=list)
+    # V2.2 Pricing Anchors
+    base_limit_reference: int = 1000000
+    base_deductible_reference: int = 50000
     experience_modifiers: Dict[str, float] = field(default_factory=dict)
 
     @classmethod
@@ -464,7 +470,11 @@ class PricingConfig:
             hull_ilf_factors=hull_ilf.get("factors", []),
             liability_ilf_base=liability_ilf.get("base_limit", 100_000_000),
             liability_ilf_factors=liability_ilf.get("factors", []),
+            # Support both legacy and V2.2 structures
             deductible_credits=data.get("deductible_credits", []),
+            deductible_factors=data.get("deductible_factors", []),
+            base_limit_reference=data.get("base_limit_reference", 1000000),
+            base_deductible_reference=data.get("base_deductible_reference", 50000),
             experience_modifiers=data.get("experience_modifiers", {}),
         )
 
@@ -1013,6 +1023,12 @@ class WorkflowResult:
     tier_label: str = "STANDARD"
     confidence: float = 1.0
 
+    # Signal completeness (Phase V4 - Multiplexer support)
+    # Ratio of signals returned non-null to signals defined in registry
+    signal_completeness: float = 1.0
+    signals_returned: int = 0
+    signals_defined: int = 0
+
     # Discovery summary (Step 0)
     discovered_domain: Optional[str] = None
     discovery_confidence: Optional[str] = None
@@ -1021,3 +1037,7 @@ class WorkflowResult:
     # Missing inputs (if Step 3 fails)
     missing_inputs: List[str] = field(default_factory=list)
     is_valid: bool = True
+
+
+# Backward compatibility aliases
+LimitBand = LimitBandConfig

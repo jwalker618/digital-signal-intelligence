@@ -342,6 +342,43 @@ class SignalCacheRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_valid_cached(
+        self,
+        entity_id: str,
+        signal_id: str,
+        source_name: Optional[str] = None,
+    ) -> Optional[SignalCache]:
+        """
+        Get valid (non-expired) cached signal data.
+        TTL-aware retrieval that only returns data within validity window.
+        """
+        query = select(SignalCache).where(
+            and_(
+                SignalCache.entity_id == entity_id,
+                SignalCache.signal_id == signal_id,
+                SignalCache.expires_at > datetime.utcnow(),
+            )
+        )
+        if source_name:
+            query = query.where(SignalCache.source_name == source_name)
+
+        result = await self.db.execute(query.order_by(SignalCache.extracted_at.desc()))
+        return result.scalar_one_or_none()
+
+    async def get_entity_signals(
+        self,
+        entity_id: str,
+        include_expired: bool = False,
+    ) -> List[SignalCache]:
+        """Get all cached signals for an entity (for continuous monitoring)."""
+        query = select(SignalCache).where(SignalCache.entity_id == entity_id)
+
+        if not include_expired:
+            query = query.where(SignalCache.expires_at > datetime.utcnow())
+
+        result = await self.db.execute(query.order_by(SignalCache.signal_id, SignalCache.extracted_at.desc()))
+        return list(result.scalars().all())
+
     async def set(
         self,
         entity_id: str,

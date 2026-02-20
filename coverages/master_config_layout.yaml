@@ -5,7 +5,8 @@
 # This file defines the complete structure for a coverage configuration.
 # All field names, types, and relationships are annotated.
 #
-# VERSION: 2.0 - Updated with banded score_conditions and MULTIPLIER method
+# VERSION: 2.1 - Added multiplexer support (model_specificity, routing_constraints) (Phase V4)
+# VERSION: 2.2 - Added Pricing Anchors & Decoupled Limits (Phase V5)
 #
 # STRUCTURAL PRINCIPLES:
 # 1. Signals are defined once in signal_registry
@@ -55,6 +56,34 @@
           #   description: "Annual revenue (required if MULTIPLIER method uses revenue basis)"
       min_premium: {integer}               # Minimum premium floor
       default_currency: "{currency}"       # ISO 4217 currency code
+
+      # -----------------------------------------------------------------------
+      # MULTIPLEXER SUPPORT (Phase V4)
+      # Enables multi-configuration racing and optimal selection
+      # -----------------------------------------------------------------------
+      model_specificity: {integer}         # 1-5 scale for arbiter ranking
+                                           # 1 = General/Base (broad applicability)
+                                           # 2 = Segment-Specific (e.g., Tech, Healthcare)
+                                           # 3 = Niche/Bespoke (specialized product)
+                                           # 4 = Highly Specialized
+                                           # 5 = Custom/Bespoke
+                                           # Higher specificity wins when confidence is equal
+
+      routing_constraints:                 # OPTIONAL - Hard filters before signal execution
+        - field: "{input_field}"           # Field from submission input (e.g., "revenue", "employee_count")
+          operator: "{op}"                 # Comparison: <, >, <=, >=, ==, !=
+          value: {number|string}           # Threshold value
+          required_in_input: {boolean}     # If true, constraint fails when field is missing
+                                           # If false (default), missing field passes constraint
+        # Examples:
+        # - field: "revenue"
+        #   operator: "<"
+        #   value: 50000000
+        #   required_in_input: false       # SME config - revenue under $50M
+        # - field: "employee_count"
+        #   operator: ">="
+        #   value: 1000
+        #   required_in_input: true        # Enterprise config - 1000+ employees required
 
     # =========================================================================
     # DIRECT QUERIES
@@ -478,13 +507,40 @@
                 applied: {float}           # Complexity modifier (e.g., 1.10)
 
     # =========================================================================
-    # LIMIT BANDINGS
-    # Standard limit/deductible combinations offered
+    # LIMIT & DEDUCTIBLE CONFIGURATION (Phase V5)
+    # Two modes supported: BUNDLED (menu pricing) and DECOUPLED (tower pricing)
     # =========================================================================
-    limit_bandings:
-      - id: {integer}
-        limit: {integer}                   # Policy limit
-        deductible: {integer}              # Standard deductible for limit
+    limit_configuration:
+      # -----------------------------------------------------------------------
+      # OPTION A: BUNDLED (Menu Pricing)
+      # Fixed packages with coupled limit/deductible - appropriate for SME risks
+      # Simpler selection process, pre-defined combinations
+      # -----------------------------------------------------------------------
+      # type: "BUNDLED"
+      # packages:                            # Pre-defined limit/deductible combinations
+      #   - id: 1                            # Unique package identifier
+      #     label: "STARTER"                 # Human-readable package name
+      #     limit: 250000                    # Fixed limit for this package
+      #     deductible: 10000                # Fixed deductible for this package
+      #   - id: 2
+      #     label: "STANDARD"
+      #     limit: 500000
+      #     deductible: 25000
+      #   - id: 3
+      #     label: "PREMIUM"
+      #     limit: 1000000
+      #     deductible: 50000
+
+      # -----------------------------------------------------------------------
+      # OPTION B: DECOUPLED (Tower Pricing)
+      # Independent limit/deductible selection - appropriate for corporate risks
+      # Maximum flexibility, ILF/deductible factor scaling applies
+      # -----------------------------------------------------------------------
+      type: "DECOUPLED"                    # Limits and deductibles are independent
+      valid_limits:                        # Allowed limit options (in default_currency)
+        - {integer}                        # e.g., 1000000, 2000000, 5000000
+      valid_deductibles:                   # Allowed deductible options (in default_currency)
+        - {integer}                        # e.g., 10000, 25000, 50000, 100000
 
     # =========================================================================
     # PRICING PARAMETERS
@@ -494,33 +550,51 @@
     # =========================================================================
     pricing:
 
+      # -----------------------------------------------------------------------
+      # ANCHOR POINTS (Phase V5)
+      # Essential for normalization. Defines what coverage the "Base Price" buys.
+      # -----------------------------------------------------------------------
+      base_limit_reference: {integer}      # e.g., 1000000 ($1M)
+                                           # The Risk Tier Rate (0.10%) buys THIS limit.
+      
+      base_deductible_reference: {integer} # e.g., 25000 ($25k)
+                                           # The Risk Tier Rate assumes THIS deductible.
+
+      # -----------------------------------------------------------------------
+      # CURVES & FACTORS
       # Product-type-specific pricing (REQUIRED for each product_type)
+      # -----------------------------------------------------------------------
       by_product_type:
         "{product_type_1}":                # Must match entry in metadata.product_types
+          # Increased Limit Factors (ILF)
           ilf_curve:
-            base_limit: {integer}          # Base limit for ILF = 1.00
+            base_limit: {integer}          # Should match base_limit_reference
             factors:
               - limit: {integer}
-                factor: {float}            # ILF multiplier
-          deductible_credits:
-            - min_pct: {float}             # Minimum deductible as % of limit
-              max_pct: {float|null}        # Maximum (null = no upper bound)
-              credit: {float}              # Premium credit
+                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+
+          # Deductible Adjustments
+          # Can use credits (SME) or factors (Corp)
+          deductible_factors:
+            - deductible: {integer}
+              factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
 
         "{product_type_2}":                # Different product type
+          # Increased Limit Factors (ILF)
           ilf_curve:
-            base_limit: {integer}
+            base_limit: {integer}          # Should match base_limit_reference
             factors:
               - limit: {integer}
-                factor: {float}
-          deductible_credits:
-            - min_pct: {float}
-              max_pct: {float|null}
-              credit: {float}
+                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+
+          # Deductible Adjustments
+          # Can use credits (SME) or factors (Corp)
+          deductible_factors:
+            - deductible: {integer}
+              factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
 
       # Shared parameters (apply to all product types)
       taxes_fees_rate: {float}             # e.g., 0.05 = 5%
-
 
 # =============================================================================
 # SCORE_CONDITIONS EVALUATION LOGIC
@@ -585,5 +659,60 @@
 #    - "hull_value" - Hull Value (marine/aerospace)
 #    - "aum" - Assets Under Management (FI)
      - "categorical" - value has been set within signal registry, categories.
+#
+# =============================================================================
+
+
+# =============================================================================
+# MULTIPLEXER ARCHITECTURE (Phase V4)
+# =============================================================================
+#
+# The DSI Multiplexer enables "Race-Track" execution where multiple
+# configurations are evaluated simultaneously using shared signal data.
+#
+# FLOW:
+# 1. DISCOVERY: User submits minimal input (entity, product_type, market)
+# 2. CANDIDATE SELECTION: Filter configs by product_type, market, routing_constraints
+# 3. SIGNAL BROKER: Union all signal_ids from candidates, deduplicate, execute once
+# 4. FAN-OUT: Inject shared signals into each candidate's Logic Engine
+# 5. ARBITRATION: Select winner based on validity → confidence → specificity → margin
+#
+# METADATA FIELDS:
+#
+# model_specificity (1-5):
+#   Used by ConfigArbiter when multiple configs approve with equal confidence.
+#   Higher specificity wins (niche product preferred over general).
+#   - 1 = General/Base (e.g., "Cyber General")
+#   - 2 = Segment-Specific (e.g., "Cyber Tech", "Cyber Healthcare")
+#   - 3 = Niche/Bespoke (e.g., "Cyber FinTech Startup")
+#   - 4-5 = Highly Specialized / Custom
+#
+# routing_constraints:
+#   Hard filters evaluated BEFORE signal execution to reduce wasted computation.
+#   Configs failing constraints are excluded from the race.
+#
+#   Example - SME Config:
+#     routing_constraints:
+#       - field: "revenue"
+#         operator: "<"
+#         value: 50000000
+#         required_in_input: false
+#
+#   Example - Enterprise Config:
+#     routing_constraints:
+#       - field: "employee_count"
+#         operator: ">="
+#         value: 1000
+#         required_in_input: true
+#
+# SIGNAL COMPLETENESS:
+#   The Multiplexer calculates signal_completeness for each config:
+#     completeness = signals_returned_non_null / signals_defined_in_registry
+#
+#   This prevents "phantom approvals" where a config approves simply
+#   because it lacked data to trigger referral flags.
+#
+#   Arbiter prefers high-confidence (>70% completeness) results over
+#   low-confidence results, even if the latter has higher specificity.
 #
 # =============================================================================
