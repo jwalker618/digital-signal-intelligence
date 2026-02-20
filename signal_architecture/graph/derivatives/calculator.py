@@ -9,11 +9,22 @@ schemas/organisational_graph.yaml:
 3. Drift - Peer divergence (Mahalanobis distance from cohort)
 4. Concentration - Single-point-of-failure (Herfindahl index)
 5. Fragility - Composite resilience (weighted combination)
+
+Time-Series Support:
+-------------------
+All derivatives support historical/temporal analysis through:
+- time_series parameter for historical signal values
+- window_days specification for sliding window calculations
+- temporal_derivatives() method for tracking changes over time
+
+The Vision Paper requirement for continuous monitoring is supported
+by maintaining signal histories and computing derivative trends.
 """
 
 import logging
 import math
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..types import (
     DerivativeResult,
@@ -25,6 +36,10 @@ from ..types import (
 )
 
 logger = logging.getLogger("dsi.graph.derivatives")
+
+
+# Type alias for time series data: {signal_id: [(timestamp, value), ...]}
+TimeSeriesData = Dict[str, List[Tuple[datetime, float]]]
 
 
 class DerivativeCalculator:
@@ -383,5 +398,188 @@ class DerivativeCalculator:
                 "velocity_raw": velocity.value if velocity else 0.0,
                 "concentration_raw": concentration.value if concentration else 0.0,
                 "infra_health": 1.0 - infra_fragility,
+            },
+        )
+
+    def temporal_derivatives(
+        self,
+        graph: Graph,
+        time_series: TimeSeriesData,
+        window_days: int = 90,
+    ) -> Dict[str, DerivativeResult]:
+        """
+        Calculate derivatives using historical time series data.
+
+        This method supports continuous monitoring by computing
+        derivatives based on actual temporal signal changes rather
+        than point-in-time snapshots.
+
+        Args:
+            graph: Current organisational graph
+            time_series: Historical signal values by signal_id
+            window_days: Lookback window for calculations
+
+        Returns:
+            Dict of derivative results with temporal context
+        """
+        results = {}
+
+        # Filter time series to window
+        cutoff = datetime.utcnow() - timedelta(days=window_days)
+        windowed_series: TimeSeriesData = {}
+        for sig_id, values in time_series.items():
+            windowed_series[sig_id] = [
+                (ts, val) for ts, val in values if ts >= cutoff
+            ]
+
+        # Compute temporal entropy from actual deltas over time
+        results["entropy"] = self._temporal_entropy(graph, windowed_series)
+
+        # Compute velocity from growth rates over time
+        results["velocity"] = self._temporal_velocity(graph, windowed_series)
+
+        # Compute drift from trend analysis
+        results["drift"] = self._temporal_drift(graph, windowed_series)
+
+        # Concentration doesn't change with time series (structural metric)
+        results["concentration"] = self.compute_concentration(graph)
+
+        # Fragility uses temporal components
+        results["fragility"] = self.compute_fragility(graph, results)
+
+        return results
+
+    def _temporal_entropy(
+        self,
+        graph: Graph,
+        time_series: TimeSeriesData,
+    ) -> DerivativeResult:
+        """Compute entropy from actual temporal signal changes."""
+        all_deltas = []
+
+        for sig_id, values in time_series.items():
+            if len(values) < 2:
+                continue
+            # Sort by timestamp
+            sorted_vals = sorted(values, key=lambda x: x[0])
+            # Compute deltas between consecutive observations
+            for i in range(1, len(sorted_vals)):
+                delta = abs(sorted_vals[i][1] - sorted_vals[i-1][1])
+                all_deltas.append(delta)
+
+        if len(all_deltas) < 2:
+            return self.compute_entropy(graph)  # Fall back to snapshot
+
+        mean_delta = sum(all_deltas) / len(all_deltas)
+        variance = sum((d - mean_delta) ** 2 for d in all_deltas) / len(all_deltas)
+        stddev = math.sqrt(variance)
+        entropy_value = stddev / 100.0  # Normalize
+
+        return DerivativeResult(
+            name="entropy",
+            value=entropy_value,
+            warning_threshold=0.15,
+            critical_threshold=0.30,
+            window_days=90,
+            components={
+                "temporal_mode": True,
+                "observation_count": len(all_deltas),
+                "mean_delta": mean_delta,
+                "stddev": stddev,
+            },
+        )
+
+    def _temporal_velocity(
+        self,
+        graph: Graph,
+        time_series: TimeSeriesData,
+    ) -> DerivativeResult:
+        """Compute velocity from growth rates over time."""
+        growth_rates = []
+        governance_rates = []
+
+        for sig_id, values in time_series.items():
+            if len(values) < 2:
+                continue
+
+            sorted_vals = sorted(values, key=lambda x: x[0])
+            first_val = sorted_vals[0][1]
+            last_val = sorted_vals[-1][1]
+            days = (sorted_vals[-1][0] - sorted_vals[0][0]).days or 1
+
+            # Annualized rate of change
+            rate = ((last_val - first_val) / max(first_val, 1.0)) * (365 / days)
+
+            # Classify as growth or governance signal
+            sid = sig_id.lower()
+            if any(kw in sid for kw in ("growth", "expansion", "revenue", "exposure")):
+                growth_rates.append(rate)
+            elif any(kw in sid for kw in ("governance", "compliance", "security")):
+                governance_rates.append(rate)
+
+        if not growth_rates and not governance_rates:
+            return self.compute_velocity(graph)  # Fall back
+
+        avg_growth = sum(growth_rates) / len(growth_rates) if growth_rates else 0.0
+        avg_governance = sum(governance_rates) / len(governance_rates) if governance_rates else 0.0
+
+        # Velocity: how much faster is growth vs governance capacity
+        velocity = avg_growth / max(avg_governance, 0.1) if avg_governance > 0 else avg_growth
+
+        return DerivativeResult(
+            name="velocity",
+            value=abs(velocity),
+            warning_threshold=1.5,
+            critical_threshold=2.5,
+            window_days=90,
+            components={
+                "temporal_mode": True,
+                "avg_growth_rate": avg_growth,
+                "avg_governance_rate": avg_governance,
+                "growth_signal_count": len(growth_rates),
+                "governance_signal_count": len(governance_rates),
+            },
+        )
+
+    def _temporal_drift(
+        self,
+        graph: Graph,
+        time_series: TimeSeriesData,
+    ) -> DerivativeResult:
+        """Compute drift from trend divergence analysis."""
+        # Calculate trend direction for each signal
+        trends = []
+
+        for sig_id, values in time_series.items():
+            if len(values) < 3:
+                continue
+
+            sorted_vals = sorted(values, key=lambda x: x[0])
+            # Simple linear trend: (last - first) / first
+            first = sorted_vals[0][1]
+            last = sorted_vals[-1][1]
+            if first != 0:
+                trend = (last - first) / abs(first)
+                trends.append(trend)
+
+        if not trends:
+            return self.compute_drift(graph)  # Fall back
+
+        # Drift = variance in trend directions (divergent signals = high drift)
+        mean_trend = sum(trends) / len(trends)
+        variance = sum((t - mean_trend) ** 2 for t in trends) / len(trends)
+        drift = math.sqrt(variance)
+
+        return DerivativeResult(
+            name="drift",
+            value=drift,
+            warning_threshold=2.0,
+            critical_threshold=3.0,
+            window_days=180,
+            components={
+                "temporal_mode": True,
+                "mean_trend": mean_trend,
+                "trend_variance": variance,
+                "signal_count": len(trends),
             },
         )

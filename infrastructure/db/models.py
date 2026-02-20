@@ -346,9 +346,58 @@ class SignalCache(Base):
     extraction_time_ms = Column(Float)
     from_external_cache = Column(Boolean, default=False)
 
+    # Phase 8: Audit trail support
+    inferred_value = Column(JSONB)  # Machine-inferred permanent value
+    audited_value = Column(JSONB)   # Human-audited mutable override
+    is_overridden = Column(Boolean, default=False)
+    audit_trail = Column(JSONB, default=list)  # History of overrides
+
     __table_args__ = (
         Index("ix_signal_cache_lookup", "entity_id", "signal_id", "source_name"),
         Index("ix_signal_cache_entity", "entity_id"),
+    )
+
+
+class SignalAuditRecord(Base):
+    """
+    Phase 8: Signal audit record for deterministic referral management.
+
+    Tracks signal overrides by underwriters, maintaining the immutable
+    inferred_value while allowing audited_value corrections.
+    """
+    __tablename__ = "signal_audit_records"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Reference to original signal
+    signal_cache_id = Column(UUID(as_uuid=True), ForeignKey("signal_cache.id"))
+    model_version_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id"))
+
+    # Signal identification
+    signal_id = Column(String(100), nullable=False, index=True)
+    entity_id = Column(String(255), nullable=False)
+
+    # Values (Phase 8 core)
+    inferred_value = Column(JSONB, nullable=False)  # Permanent machine view
+    audited_value = Column(JSONB)  # Mutable human override
+    is_overridden = Column(Boolean, default=False)
+
+    # Override metadata (when audited_value differs from inferred_value)
+    overridden_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    overridden_at = Column(DateTime(timezone=True))
+    override_rationale = Column(Text)
+    evidence_reference = Column(String(500))
+
+    # Impact tracking
+    score_impact = Column(Float)  # Delta to composite score
+    tier_impact = Column(Integer)  # Change in tier (if any)
+
+    # Audit
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_signal_audit_entity_signal", "entity_id", "signal_id"),
+        Index("ix_signal_audit_model_version", "model_version_id"),
     )
 
 
