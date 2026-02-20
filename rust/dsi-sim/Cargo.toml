@@ -1,0 +1,39 @@
+[package]
+name = "dsi-sim"
+version = "0.1.0"
+edition = "2021"
+description = "DSI Monte Carlo portfolio simulation engine (Phase 11: Vision Paper)"
+license = "Proprietary"
+
+[lib]
+name = "dsi_sim"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Rust ecosystem
+rayon = "1.10"              # Parallel iteration for Monte Carlo
+rand = "0.8"                # Random number generation
+rand_distr = "0.4"          # Statistical distributions
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+
+# Python bindings
+pyo3 = { version = "0.22", features = ["extension-module"] }
+
+# Local dependency for graph operations
+dsi-core = { path = "../dsi-core" }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "simulation_bench"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
