@@ -198,29 +198,33 @@ class CoverageBuilder:
         )
 
     async def select_signals(
-        self,
-        analysis: IndustryAnalysis,
-        spec: CoverageSpec,
+        self, 
+        analysis: IndustryAnalysis, 
+        spec: CoverageSpec
     ) -> List[SignalSelection]:
-        """Select signals based on industry analysis."""
+        """LLM-assisted signal selection strictly bounded by the SignalLibrary."""
         logger.info(f"Selecting signals for {analysis.industry}")
 
-        selections: List[SignalSelection] = []
-        recommendations = self.signal_library.get_signals_for_industry(analysis.industry)
+        # 1. Fetch the absolute truth from the library
+        available_signals = self.signal_library.get_signals_for_industry(analysis.industry)
+        
+        # 2. If no LLM, fallback to static top N (Your current logic)
+        if not self.llm_client:
+            selections = [SignalSelection(...) for rec in available_signals[:spec.max_signals]]
+            return self._normalize_signal_weights(selections)
 
-        for rec in recommendations[:spec.max_signals]:
-            selections.append(SignalSelection(
-                signal_id=rec.signal_id,
-                signal_name=rec.signal_name,
-                group_id=rec.group_id,
-                weight=rec.suggested_weight,
-                direction="positive",
-                proxy_tier=rec.proxy_tier,
-                inference_function=f"{rec.signal_id}_basefunction",
-                enabled=True,
-            ))
-
-        # Normalize weights within each group
+        # 3. The LLM Hook: Bound the LLM strictly to the available signals
+        prompt = f"""
+        You are an elite Actuarial AI for DSI. Select between {spec.min_signals} and {spec.max_signals} signals 
+        for a '{spec.name}' coverage in the '{spec.industry}' sector.
+        
+        CRITICAL RULE: You may ONLY select signals from this exact approved list:
+        {[s.signal_id for s in available_signals]}
+        
+        Return a JSON array of selected signal IDs and their relative importance.
+        """
+        
+        # Normalize weights so they equal 1.0 within their group.
         groups: Dict[str, List[SignalSelection]] = {}
         for s in selections:
             groups.setdefault(s.group_id, []).append(s)
@@ -232,7 +236,7 @@ class CoverageBuilder:
                     s.weight = round(s.weight / total, 4)
 
         return selections
-
+    
     async def generate_config(
         self,
         spec: CoverageSpec,
@@ -248,7 +252,7 @@ class CoverageBuilder:
             "metadata": self._build_metadata(spec),
             "direct_queries": self._build_direct_queries(spec),
             "signal_registry": self._build_signal_registry(selections),
-            "groups": self._build_groups(selections),
+            "groups": self._build_groups(selections, spec.industry),
             "risk_tier_bands": self._build_risk_tier_bands(spec.tier_strategy),
             "loss_tier_bands": self._build_loss_tier_bands(),
             "exposure": self._build_exposure(),
@@ -475,26 +479,21 @@ class CoverageBuilder:
 
         return registry
 
-    def _build_groups(self, selections: List[SignalSelection]) -> Dict[str, Any]:
-        """
-        Build v2.0 groups section with:
-        - categories: categorical modifier groups
-        - three_layer_assessment: scoring dimension groups
-        """
-        # Collect unique groups
+    def _build_groups(self, selections: List[SignalSelection], industry: str) -> Dict[str, Any]:
+        """Build v2.0 groups section using strict SignalLibrary weighting."""
         tla_groups: Dict[str, Dict[str, Any]] = {}
         categorical_groups: List[Dict[str, Any]] = []
 
+        # Get the source of truth for weighting
+        profile = self.signal_library.get_industry_profile(industry)
+        
         for sel in selections:
-            if not sel.enabled:
-                continue
-
+            if not sel.enabled: continue
             if sel.is_categorical:
                 if not any(c["id"] == sel.group_id for c in categorical_groups):
                     categorical_groups.append({
                         "id": sel.group_id,
                         "label": sel.group_id.replace("_", " ").title(),
-                        "description": f"{sel.group_id.replace('_', ' ').title()} classification",
                         "impact": "MODIFIER",
                         "default_cat": "OTHER",
                     })
@@ -502,33 +501,33 @@ class CoverageBuilder:
                 if sel.group_id not in tla_groups:
                     tla_groups[sel.group_id] = {
                         "id": sel.group_id,
-                        "label": sel.group_id.replace("_", " ").title(),
-                        "description": f"Signal group: {sel.group_id.replace('_', ' ')}",
                         "risk": {"weight": 0.0},
                         "loss": {"weight": 0.0},
                         "exposure": {"weight": 0.0},
                     }
 
-        # Assign group-level weights based on number of groups
+        # Dynamically apply weights from the IndustryProfile
         group_count = len(tla_groups)
         if group_count > 0:
-            # Distribute weights with technical_infrastructure and public_record weighted higher
-            high_weight_groups = {"technical_infrastructure", "public_record", "cyber_security"}
-            high_count = sum(1 for g in tla_groups if g in high_weight_groups)
-            normal_count = group_count - high_count
-
-            # Allocate: high-weight groups get ~0.30, others get remainder split evenly
-            remaining = 1.0
-            for gid in tla_groups:
-                if gid in high_weight_groups:
-                    w = min(0.30, remaining / max(1, high_count))
-                    high_count -= 1
-                else:
-                    w = remaining / max(1, normal_count + high_count)
-                tla_groups[gid]["risk"]["weight"] = round(w, 2)
-                tla_groups[gid]["loss"]["weight"] = round(w, 2)
-                tla_groups[gid]["exposure"]["weight"] = round(w, 2)
-                remaining -= w
+            remaining_weight = 1.0
+            
+            # 1. Apply library-defined explicit adjustments first
+            if profile and profile.weight_adjustments:
+                for gid, custom_weight in profile.weight_adjustments.items():
+                    if gid in tla_groups:
+                        tla_groups[gid]["risk"]["weight"] = custom_weight
+                        tla_groups[gid]["loss"]["weight"] = custom_weight
+                        tla_groups[gid]["exposure"]["weight"] = custom_weight
+                        remaining_weight -= custom_weight
+            
+            # 2. Distribute remaining weight evenly to unspecified groups
+            unweighted_groups = [g for g, d in tla_groups.items() if d["risk"]["weight"] == 0.0]
+            if unweighted_groups and remaining_weight > 0:
+                even_split = round(remaining_weight / len(unweighted_groups), 4)
+                for gid in unweighted_groups:
+                    tla_groups[gid]["risk"]["weight"] = even_split
+                    tla_groups[gid]["loss"]["weight"] = even_split
+                    tla_groups[gid]["exposure"]["weight"] = even_split
 
             # Add score_conditions at group level for key groups
             for gid, group in tla_groups.items():
@@ -558,7 +557,7 @@ class CoverageBuilder:
                             "note": f"Poor {gid.replace('_', ' ')} - loss loading",
                         },
                     ]
-
+        
         # If no categorical signals were selected, add defaults
         if not categorical_groups:
             categorical_groups = [
@@ -589,7 +588,7 @@ class CoverageBuilder:
             "categories": categorical_groups,
             "three_layer_assessment": list(tla_groups.values()),
         }
-
+ 
     def _build_risk_tier_bands(self, strategy: str) -> Dict[str, Any]:
         """
         Build v2.0 risk_tier_bands with interpretation blocks.
