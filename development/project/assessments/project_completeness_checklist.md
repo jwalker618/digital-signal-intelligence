@@ -12,7 +12,7 @@
 
 ## Purpose
 
-A repeatable, comprehensive checklist for assessing the completeness of the DSI framework against its defining specifications: the Whitepaper, Vision Paper, Foundational Principles, Configuration Schema (v2.2.0), and implementation architecture. Run this periodically to identify gaps, track progress, and ensure nothing is missed.
+A repeatable, comprehensive checklist for assessing the completeness of the DSI framework against its defining specifications: the Whitepaper, Vision Paper, Foundational Principles, Configuration Schema (v2.3.0), and implementation architecture. Run this periodically to identify gaps, track progress, and ensure nothing is missed.
 
 ## Automated Assessment Tools
 
@@ -20,18 +20,17 @@ The following automated tools should be used to verify checklist items marked **
 
 | Tool | Purpose | Command |
 |-|-|-|
-| **Project Assessor** | Full project assessment | `python development/project/assessments/scripts/assess_project.py` |
-| **Config Compliance Assessor** | Per-coverage config validation | `python development/project/assessments/scripts/assess_config_compliance.py coverages/{coverage}/config.yaml` |
-| **Config Validator** | Schema validation | `python -m infrastructure.builder.cli validate` |
+| **Project Assessor** | Full project assessment | `python development/project/assessments/scripts/dsi_assessor.py` |
+
 
 **Recommended Assessment Workflow:**
 
-1. Run `python development/project/assessments/scripts/assess_project.py` for full project status
+1. Run `python development/project/assessments/scripts/dsi_assessor.py` for full project status
 2. Review failures and warnings
 3. Fix critical failures before proceeding
 4. Document any accepted warnings with rationale
 
-See `ASSESSMENT_METHODOLOGY.md` in this directory for detailed assessment methodology.
+See `README.md` in this directory for detailed assessment methodology.
 
 ## How to Use
 
@@ -53,10 +52,10 @@ Items annotated with **(Test)** can and should be verified programmatically. Ite
 ## Configuration Documentation
 
 - Is there a `logic.md` file for every `config.yaml` file which explains the logic / decision making used? **(Test)**
-  - Does this include each configuration under the config (e.g., `cyber_general` and `cyber_sme` under `cyber`)?
+  - Does this include each configuration under the config (e.g., `cyber_general` and `cyber_sme` under `cyber`)? **(Test)**
   - Does this show risk, loss, and exposure weights that add to 1? **(Test)**
   - Does this explain the rationale for signal selection and weighting for this coverage?
-  - Does this document which signal groups are most important for this coverage and why?
+  - Does this document which signal groups are most important for this coverage and why? **(Test)**
 
 ## Premium Methodology
 
