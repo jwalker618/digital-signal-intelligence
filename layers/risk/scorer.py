@@ -1,10 +1,20 @@
 """
-DSI Model Layer - Model Scorer (Phase 4)
+DSI Model Layer - Model Scorer (Phase 4 + Phase 8 + Phase 10)
 
 Executes Steps 4-6 of the workflow:
 - Step 4: Signal Extraction (run all inference functions)
 - Step 5: Pure Composite Score Calculation (weighted sum)
 - Step 6: Signal Conditions Evaluation (check triggered conditions)
+
+Phase 8 Enhancement:
+- Supports audited_value override for signals
+- When audited_value is present, uses it instead of inferred_value
+- Preserves inferred_value for audit trail
+
+Phase 10 Enhancement:
+- Adaptive signal absence handling based on entity size
+- expectation_level determines penalty for missing signals
+- Small entities not penalized for missing enterprise-level signals
 
 Connects the model layer to the signal architecture via the inference registry.
 """
@@ -50,6 +60,20 @@ class ModelScorer:
     orchestrating extraction and scoring for all signals defined in config.
     """
 
+    # Phase 10: Expectation level to size band mapping
+    # Each level specifies which size bands (1-5) expect the signal
+    EXPECTATION_BANDS = {
+        "UNIVERSAL": {1, 2, 3, 4, 5},   # Expected by all entities
+        "ENTERPRISE": {4, 5},            # Expected by Large/Complex only
+        "CORPORATE": {3, 4, 5},          # Expected by Medium+
+        "SME": {2, 3, 4, 5},             # Expected by Small+
+        "MICRO": {1},                    # Expected only by Micro
+    }
+
+    # Phase 10: Default scores for missing signals
+    PENALIZED_SCORE = 10.0     # 10th percentile (heavily penalized)
+    NEUTRAL_SCORE = 50.0       # 50th percentile (median/neutral)
+
     def __init__(
         self,
         max_workers: int = 10,
@@ -73,7 +97,8 @@ class ModelScorer:
         entity_id: str,
         config: CoverageConfig,
         parallel: bool = True,
-        context: Optional[InferenceContext] = None
+        context: Optional[InferenceContext] = None,
+        audited_values: Optional[Dict[str, float]] = None,
     ) -> ScoringResult:
         """
         Execute Steps 4-6 for an entity.
@@ -83,6 +108,7 @@ class ModelScorer:
             config: Coverage configuration
             parallel: Whether to run extractions in parallel
             context: Optional inference context (created if not provided)
+            audited_values: Phase 8 - Dict of {signal_id: audited_value} overrides
 
         Returns:
             ScoringResult with signal outputs, composite score, and conditions
@@ -105,6 +131,10 @@ class ModelScorer:
             parallel=parallel,
         )
 
+        # Phase 8: Apply audited_value overrides
+        if audited_values:
+            signal_outputs = self._apply_audited_values(signal_outputs, audited_values)
+
         # Step 5: Calculate pure composite score
         pure_composite_score, group_scores, confidence, coverage = self.calculate_composite(
             signal_outputs=signal_outputs,
@@ -123,7 +153,8 @@ class ModelScorer:
             f"Scored entity {entity_id} in {elapsed_ms:.0f}ms: "
             f"composite={pure_composite_score:.0f}, "
             f"signals={len(signal_outputs)}, "
-            f"conditions={len(conditions)}"
+            f"conditions={len(conditions)}, "
+            f"overrides={len(audited_values) if audited_values else 0}"
         )
 
         return ScoringResult(
@@ -138,6 +169,48 @@ class ModelScorer:
             referrals=referrals,
             notes=notes,
         )
+
+    def _apply_audited_values(
+        self,
+        signal_outputs: List[SignalOutput],
+        audited_values: Dict[str, float],
+    ) -> List[SignalOutput]:
+        """
+        Phase 8: Apply audited_value overrides to signal outputs.
+
+        The inferred_value (raw_score) is preserved; we update the
+        weighted_score calculation to use the audited value.
+
+        Args:
+            signal_outputs: Original signal outputs with inferred values
+            audited_values: Dict of {signal_id: audited_value}
+
+        Returns:
+            Updated signal outputs with audited values applied
+        """
+        for output in signal_outputs:
+            if output.signal_id in audited_values:
+                audited_value = audited_values[output.signal_id]
+
+                # Store original inferred value (preserved for audit trail)
+                # The raw_score field holds the inferred_value
+                # We update the weighted_score to use audited_value
+
+                # Recalculate weighted score using audited value
+                output.weighted_score = audited_value * output.weight
+
+                # Mark as overridden (store audited value in a way that's visible)
+                # We use the existing error field to note the override
+                # In production, SignalOutput would have inferred_value/audited_value fields
+                if not output.error:
+                    output.error = f"AUDITED:{output.raw_score:.1f}->{audited_value:.1f}"
+
+                logger.debug(
+                    f"Applied audited_value for {output.signal_id}: "
+                    f"inferred={output.raw_score:.1f}, audited={audited_value:.1f}"
+                )
+
+        return signal_outputs
 
     def extract_signals(
         self,
@@ -354,20 +427,63 @@ class ModelScorer:
         except Exception as e:
             return self._create_default_categorical_output(cat_group, str(e))
 
+    def _get_absence_score(
+        self,
+        feature: SignalFeatureConfig,
+        exposure_size_band: int = 3,
+    ) -> float:
+        """
+        Phase 10: Determine appropriate score for missing signal.
+
+        Applies the "Expected vs. Unexpected" Null Protocol:
+        - If signal is expected for entity's size band: penalize (10th percentile)
+        - If signal is NOT expected: neutral score (50th percentile)
+
+        Args:
+            feature: Signal feature configuration (with expectation_level)
+            exposure_size_band: Entity's exposure size band (1-5)
+
+        Returns:
+            Appropriate default score (10 or 50)
+        """
+        # Get expectation level from feature config (default to UNIVERSAL)
+        expectation_level = getattr(feature, 'expectation_level', 'UNIVERSAL')
+        if expectation_level is None:
+            expectation_level = 'UNIVERSAL'
+
+        # Get expected bands for this level
+        expected_bands = self.EXPECTATION_BANDS.get(expectation_level, {1, 2, 3, 4, 5})
+
+        # Check if signal is expected for this entity's size
+        if exposure_size_band in expected_bands:
+            # Signal is expected but missing - penalize
+            return self.PENALIZED_SCORE
+        else:
+            # Signal not expected for this size - neutral
+            return self.NEUTRAL_SCORE
+
     def _create_default_signal_output(
         self,
         group: SignalGroupConfig,
         feature: SignalFeatureConfig,
-        error: str
+        error: str,
+        exposure_size_band: int = 3,
     ) -> SignalOutput:
-        """Create a default signal output when extraction fails."""
+        """
+        Create a default signal output when extraction fails.
+
+        Phase 10: Uses adaptive scoring based on entity size and signal expectation.
+        """
+        # Phase 10: Get appropriate absence score
+        absence_score = self._get_absence_score(feature, exposure_size_band)
+
         return SignalOutput(
             signal_id=feature.id,
             signal_name=feature.name,
             group_id=group.id,
-            raw_score=self.default_score,
+            raw_score=absence_score,
             confidence=self.default_confidence,
-            weighted_score=self.default_score * feature.weight,
+            weighted_score=absence_score * feature.weight,
             weight=feature.weight,
             extracted_at=utcnow(),
             error=error,

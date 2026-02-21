@@ -414,3 +414,146 @@ class ListFilters(BaseModel):
     end_date: Optional[datetime] = None
     page: int = 1
     page_size: int = 20
+
+
+# =============================================================================
+# PHASE 8: SIGNAL OVERRIDE MODELS (Deterministic Referral Management)
+# =============================================================================
+
+class SignalValue(BaseModel):
+    """
+    Signal value container for Phase 8 audit trail.
+
+    Contains both the machine-inferred value (permanent) and
+    optionally a human-audited override (mutable).
+    """
+    signal_id: str
+    inferred_value: float = Field(..., description="Machine-inferred score (permanent)")
+    audited_value: Optional[float] = Field(None, description="Human-audited override (mutable)")
+    is_overridden: bool = False
+    confidence: float = 1.0
+
+    @property
+    def effective_value(self) -> float:
+        """Return audited_value if overridden, else inferred_value."""
+        return self.audited_value if self.is_overridden and self.audited_value is not None else self.inferred_value
+
+
+class SignalOverrideRequest(BaseModel):
+    """
+    Request to override a signal value during referral review.
+
+    Per Phase 8: Underwriters audit inputs (signals), not outputs (premiums).
+    This creates an audit trail with rationale and evidence.
+    """
+    signal_id: str = Field(..., description="ID of the signal to override")
+    audited_value: float = Field(..., ge=0, le=100, description="Corrected signal value (0-100)")
+    rationale: str = Field(..., min_length=10, description="Explanation for the override")
+    evidence_reference: Optional[str] = Field(None, description="Reference to supporting evidence (URL, doc ID)")
+    underwriter_id: Optional[str] = Field(None, description="ID of underwriter making the override")
+
+
+class SignalOverrideResponse(BaseModel):
+    """Response after applying a signal override."""
+    signal_id: str
+    entity_id: str
+    model_version_id: str
+
+    # Values
+    inferred_value: float = Field(..., description="Original machine value (preserved)")
+    audited_value: float = Field(..., description="New audited value")
+
+    # Impact
+    score_impact: float = Field(..., description="Change to composite score")
+    tier_impact: int = Field(..., description="Change to tier (0 if unchanged)")
+    new_composite_score: float
+    new_tier: int
+    new_tier_label: str
+
+    # Audit
+    overridden_by: str
+    overridden_at: datetime
+    rationale: str
+    evidence_reference: Optional[str] = None
+
+    # Model versioning
+    previous_model_version: str
+    new_model_version: str
+
+
+class ModelVersionResponse(BaseModel):
+    """
+    Model version snapshot for Phase 8 audit trail.
+
+    v1 = machine view (inferred_value only)
+    v2+ = human-audited view (with audited_value overrides)
+    """
+    version_id: str
+    version_number: int
+    version_type: str  # "initial", "signal_override", "referral_review"
+
+    # Scoring
+    composite_score: float
+    tier: int
+    tier_label: str
+    confidence: float
+
+    # Signals
+    signal_count: int
+    overridden_signals: List[str] = Field(default_factory=list)
+
+    # Audit
+    created_by: str
+    created_at: datetime
+    notes: List[str] = Field(default_factory=list)
+
+
+class ReferralSignalsRequest(BaseModel):
+    """Request to get signals for a referral (for underwriter review)."""
+    include_all: bool = Field(False, description="Include all signals, not just flagged ones")
+    include_raw_data: bool = Field(False, description="Include raw extraction data")
+
+
+class ReferralSignalDetail(BaseModel):
+    """Detailed signal information for referral review."""
+    signal_id: str
+    signal_name: str
+    group_id: str
+    group_name: str
+
+    # Values
+    inferred_value: float
+    audited_value: Optional[float] = None
+    is_overridden: bool = False
+
+    # Impact
+    weight: float
+    contribution_to_score: float
+
+    # Status
+    is_flagged: bool = False
+    flag_reason: Optional[str] = None
+
+    # Metadata
+    confidence: float
+    data_sources: List[str] = Field(default_factory=list)
+    extracted_at: datetime
+
+    # Raw data (if requested)
+    raw_data: Optional[Dict[str, Any]] = None
+
+
+class ReferralSignalsResponse(BaseModel):
+    """Response containing signals for referral review."""
+    referral_id: str
+    model_version_id: str
+
+    # Signals
+    signals: List[ReferralSignalDetail]
+    flagged_count: int
+    overridden_count: int
+
+    # Summary
+    total_signals: int
+    signal_coverage: float
+    average_confidence: float

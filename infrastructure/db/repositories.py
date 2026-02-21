@@ -437,6 +437,112 @@ class SignalCacheRepository:
         return result.rowcount
 
 
+class SignalAuditRepository:
+    """
+    Repository for SignalAuditRecord operations (Phase 8).
+
+    Manages signal override audit trail for deterministic referral management.
+    """
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create_override(
+        self,
+        signal_cache_id: uuid.UUID,
+        model_version_id: uuid.UUID,
+        signal_id: str,
+        entity_id: str,
+        inferred_value: Dict[str, Any],
+        audited_value: Dict[str, Any],
+        overridden_by: uuid.UUID,
+        rationale: str,
+        evidence_reference: Optional[str] = None,
+        score_impact: Optional[float] = None,
+        tier_impact: Optional[int] = None,
+    ):
+        """Create a signal audit record for an override."""
+        from .models import SignalAuditRecord
+
+        record = SignalAuditRecord(
+            signal_cache_id=signal_cache_id,
+            model_version_id=model_version_id,
+            signal_id=signal_id,
+            entity_id=entity_id,
+            inferred_value=inferred_value,
+            audited_value=audited_value,
+            is_overridden=True,
+            overridden_by=overridden_by,
+            overridden_at=datetime.utcnow(),
+            override_rationale=rationale,
+            evidence_reference=evidence_reference,
+            score_impact=score_impact,
+            tier_impact=tier_impact,
+        )
+        self.db.add(record)
+        await self.db.flush()
+        return record
+
+    async def get_by_model_version(
+        self,
+        model_version_id: uuid.UUID,
+    ) -> List:
+        """Get all signal audit records for a model version."""
+        from .models import SignalAuditRecord
+
+        result = await self.db.execute(
+            select(SignalAuditRecord)
+            .where(SignalAuditRecord.model_version_id == model_version_id)
+            .order_by(SignalAuditRecord.created_at)
+        )
+        return list(result.scalars().all())
+
+    async def get_entity_overrides(
+        self,
+        entity_id: str,
+        signal_id: Optional[str] = None,
+    ) -> List:
+        """Get all signal overrides for an entity."""
+        from .models import SignalAuditRecord
+
+        query = select(SignalAuditRecord).where(
+            SignalAuditRecord.entity_id == entity_id
+        )
+        if signal_id:
+            query = query.where(SignalAuditRecord.signal_id == signal_id)
+
+        query = query.order_by(SignalAuditRecord.created_at.desc())
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
+    async def get_latest_audited_value(
+        self,
+        entity_id: str,
+        signal_id: str,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get the latest audited value for a signal (Phase 8).
+
+        Returns None if no override exists, meaning inferred_value should be used.
+        """
+        from .models import SignalAuditRecord
+
+        result = await self.db.execute(
+            select(SignalAuditRecord)
+            .where(
+                and_(
+                    SignalAuditRecord.entity_id == entity_id,
+                    SignalAuditRecord.signal_id == signal_id,
+                    SignalAuditRecord.is_overridden == True,
+                )
+            )
+            .order_by(SignalAuditRecord.created_at.desc())
+            .limit(1)
+        )
+        record = result.scalar_one_or_none()
+        return record.audited_value if record else None
+
+
 class AuditLogRepository:
     """Repository for AuditLog operations."""
 

@@ -1,10 +1,11 @@
 """
-DSI Signal Broker / Multiplexer (Phase V4 + V4.1)
+DSI Signal Broker / Multiplexer (Phase V4 + V4.1 + Cycle 3)
 
 Implements the "Race-Track" model for multi-configuration evaluation.
 Identifies candidates, deduplicates signals, executes once, fans out results.
 
 Phase V4.1 adds robust routing constraint evaluation with type safety.
+Cycle 3 adds robust ExtractionError logging for signal failures.
 """
 
 import asyncio
@@ -18,6 +19,8 @@ import yaml
 from .types import (
     ConfigCandidate,
     ConstraintOperator,
+    ExtractionError,
+    ExtractionErrorType,
     MultiplexerConfig,
     MultiplexerResult,
     CandidateResult,
@@ -229,13 +232,19 @@ class DSIMultiplexer:
         self,
         signal_map: Dict[str, str],
         user_input: Dict[str, Any],
+        entity_id: str = "",
     ) -> SignalPool:
         """
         Execute all signals in parallel.
 
+        Cycle 3 Enhancement: Robust error logging with ExtractionError classification.
+        All failures are logged with exact reasons (Timeout, Rate Limit, Parsing Error)
+        before passing None to the scoring engine.
+
         Args:
             signal_map: {signal_id: function_name}
             user_input: Submission input data
+            entity_id: Entity identifier for audit logging
 
         Returns:
             SignalPool with results
@@ -246,11 +255,10 @@ class DSIMultiplexer:
             logger.warning("No signal executor configured, returning empty pool")
             return pool
 
-        # Execute signals
-        # In production, this would use asyncio.gather with the signal executor
-        # For now, we provide the interface
         import time
         start = time.time()
+
+        entity_id = entity_id or user_input.get("client_name", "unknown")
 
         for signal_id, function_name in signal_map.items():
             try:
@@ -258,9 +266,22 @@ class DSIMultiplexer:
                     signal_id, function_name, user_input
                 )
                 pool.signals[signal_id] = result
-            except Exception as e:
-                logger.error(f"Signal {signal_id} failed: {e}")
+
+            except ExtractionError as e:
+                # Cycle 3: Structured error with full context
+                self._log_extraction_error(e)
                 pool.errors[signal_id] = str(e)
+
+            except Exception as e:
+                # Cycle 3: Convert raw exceptions to structured ExtractionError
+                extraction_error = ExtractionError.from_exception(
+                    signal_id=signal_id,
+                    exc=e,
+                    entity_id=entity_id,
+                    source=function_name,
+                )
+                self._log_extraction_error(extraction_error)
+                pool.errors[signal_id] = str(extraction_error)
 
         pool.execution_time_ms = (time.time() - start) * 1000
 
@@ -270,6 +291,34 @@ class DSIMultiplexer:
         )
 
         return pool
+
+    def _log_extraction_error(self, error: ExtractionError) -> None:
+        """
+        Log extraction error to audit system.
+
+        Cycle 3 Requirement: Log exact failure reasons before passing None
+        to the scoring engine for adaptive absence handling.
+        """
+        # Log to standard logger with appropriate level
+        log_level = logging.WARNING
+        if error.error_type in (ExtractionErrorType.AUTH_ERROR, ExtractionErrorType.UNKNOWN):
+            log_level = logging.ERROR
+
+        logger.log(
+            log_level,
+            f"Signal extraction failed: {error.signal_id} | "
+            f"Type: {error.error_type.value} | "
+            f"Source: {error.source} | "
+            f"Entity: {error.entity_id} | "
+            f"Message: {error.message}"
+        )
+
+        # Prepare audit log entry
+        audit_entry = error.to_audit_dict()
+
+        # In production, this would write to the audit_logs table
+        # For now, we log it in structured format
+        logger.debug(f"Audit log entry: {audit_entry}")
 
     async def evaluate_candidate(
         self,
@@ -373,8 +422,8 @@ class DSIMultiplexer:
         # 2. Optimize signals (deduplicate)
         signal_map = self.optimize_signals(candidates)
 
-        # 3. Execute signals
-        signal_pool = await self.execute_signals(signal_map, user_input)
+        # 3. Execute signals (with entity_id for Cycle 3 audit logging)
+        signal_pool = await self.execute_signals(signal_map, user_input, entity_id)
 
         # 4. Fan-out: Evaluate each candidate
         candidate_results: List[CandidateResult] = []

@@ -1,13 +1,106 @@
 """
-DSI Multiplexer Types (Phase V4)
+DSI Multiplexer Types (Phase V4 + Cycle 3 Error Handling)
 
 Data structures for multi-configuration racing and optimal selection.
+Includes robust ExtractionError logging as per Cycle 3 requirements.
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
+
+# =============================================================================
+# Cycle 3 Extraction Error Handling
+# =============================================================================
+
+class ExtractionErrorType(str, Enum):
+    """Types of extraction failures for granular error logging."""
+    TIMEOUT = "timeout"
+    RATE_LIMIT = "rate_limit"
+    PARSING_ERROR = "parsing_error"
+    NETWORK_ERROR = "network_error"
+    AUTH_ERROR = "auth_error"
+    NOT_FOUND = "not_found"
+    VALIDATION_ERROR = "validation_error"
+    UNKNOWN = "unknown"
+
+
+@dataclass
+class ExtractionError(Exception):
+    """
+    Structured exception for signal extraction failures.
+
+    Cycle 3 Requirement: Log exact failure reasons (Timeout, Rate Limit,
+    Parsing Error) to audit_logs before passing None to scoring engine.
+    """
+    signal_id: str
+    error_type: ExtractionErrorType
+    message: str
+    source: str = ""  # API/service that failed
+    entity_id: str = ""
+    retry_after: Optional[int] = None  # Seconds until retry (for rate limits)
+    raw_error: Optional[str] = None  # Original exception string
+
+    def __str__(self) -> str:
+        return f"ExtractionError({self.error_type.value}): {self.message}"
+
+    def to_audit_dict(self) -> Dict[str, Any]:
+        """Convert to dict for audit_logs table insertion."""
+        return {
+            "signal_id": self.signal_id,
+            "error_type": self.error_type.value,
+            "message": self.message,
+            "source": self.source,
+            "entity_id": self.entity_id,
+            "retry_after": self.retry_after,
+            "raw_error": self.raw_error,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+    @classmethod
+    def from_exception(
+        cls,
+        signal_id: str,
+        exc: Exception,
+        entity_id: str = "",
+        source: str = "",
+    ) -> "ExtractionError":
+        """
+        Create ExtractionError from a raw exception.
+
+        Classifies common exception types into appropriate error types.
+        """
+        exc_name = type(exc).__name__.lower()
+        exc_str = str(exc).lower()
+
+        # Classify the error type
+        if "timeout" in exc_name or "timeout" in exc_str:
+            error_type = ExtractionErrorType.TIMEOUT
+        elif "ratelimit" in exc_name or "rate limit" in exc_str or "429" in exc_str:
+            error_type = ExtractionErrorType.RATE_LIMIT
+        elif "parse" in exc_name or "json" in exc_name or "decode" in exc_str:
+            error_type = ExtractionErrorType.PARSING_ERROR
+        elif "connection" in exc_name or "network" in exc_str:
+            error_type = ExtractionErrorType.NETWORK_ERROR
+        elif "auth" in exc_name or "401" in exc_str or "403" in exc_str:
+            error_type = ExtractionErrorType.AUTH_ERROR
+        elif "notfound" in exc_name or "404" in exc_str:
+            error_type = ExtractionErrorType.NOT_FOUND
+        elif "validation" in exc_name:
+            error_type = ExtractionErrorType.VALIDATION_ERROR
+        else:
+            error_type = ExtractionErrorType.UNKNOWN
+
+        return cls(
+            signal_id=signal_id,
+            error_type=error_type,
+            message=str(exc),
+            source=source,
+            entity_id=entity_id,
+            raw_error=f"{type(exc).__name__}: {exc}",
+        )
 
 
 class ConstraintOperator(str, Enum):

@@ -894,6 +894,182 @@ class ConfigValidator:
         return issues
 
 
+# =============================================================================
+# Phase 8 Audit Trail Validation (Cycle 3 Requirement)
+# =============================================================================
+
+AUDIT_TRAIL_REQUIRED_FIELDS = ["user_id", "timestamp", "rationale"]
+AUDIT_TRAIL_OPTIONAL_FIELDS = ["evidence_reference", "previous_value", "new_value"]
+
+
+def validate_audit_trail_entry(entry: Dict[str, Any]) -> List[ValidationIssue]:
+    """
+    Validate a single audit trail entry.
+
+    When is_overridden == True, the audit_trail must contain entries with:
+    - user_id: Non-null identifier of the underwriter
+    - timestamp: Non-null ISO 8601 timestamp
+    - rationale: Non-null explanation for the override
+    - evidence_reference: Optional reference to supporting documentation
+
+    Args:
+        entry: Single audit trail entry dict
+
+    Returns:
+        List of validation issues found
+    """
+    issues = []
+
+    if not isinstance(entry, dict):
+        return [ValidationIssue(
+            severity=ValidationSeverity.ERROR,
+            category="audit_trail",
+            message="Audit trail entry must be a dictionary",
+        )]
+
+    # Check required fields
+    for field in AUDIT_TRAIL_REQUIRED_FIELDS:
+        if field not in entry or entry[field] is None:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="audit_trail",
+                message=f"Missing required audit trail field: '{field}'",
+                suggestion=f"Ensure '{field}' is provided and non-null",
+            ))
+
+    # Validate timestamp format
+    if "timestamp" in entry and entry["timestamp"]:
+        timestamp = entry["timestamp"]
+        if isinstance(timestamp, str):
+            # Basic ISO 8601 validation
+            import re
+            iso_pattern = r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$"
+            if not re.match(iso_pattern, timestamp):
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="audit_trail",
+                    message=f"Timestamp '{timestamp}' may not be valid ISO 8601 format",
+                    suggestion="Use format: YYYY-MM-DDTHH:MM:SSZ",
+                ))
+
+    # Validate rationale is not empty
+    if "rationale" in entry and entry["rationale"] is not None:
+        rationale = entry["rationale"]
+        if isinstance(rationale, str) and len(rationale.strip()) < 10:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.WARNING,
+                category="audit_trail",
+                message="Rationale is too short (minimum 10 characters recommended)",
+                suggestion="Provide a meaningful explanation for the override",
+            ))
+
+    return issues
+
+
+def validate_audit_trail(
+    audit_trail: List[Dict[str, Any]],
+    is_overridden: bool = False,
+) -> List[ValidationIssue]:
+    """
+    Validate the complete audit_trail JSONB field.
+
+    Enforces Cycle 3 requirement: strict schema validation when is_overridden == True.
+
+    Args:
+        audit_trail: List of audit trail entries
+        is_overridden: Whether the signal value has been overridden
+
+    Returns:
+        List of validation issues found
+    """
+    issues = []
+
+    if not isinstance(audit_trail, list):
+        return [ValidationIssue(
+            severity=ValidationSeverity.ERROR,
+            category="audit_trail",
+            message="audit_trail must be a list (array)",
+        )]
+
+    # If overridden, must have at least one audit entry
+    if is_overridden and len(audit_trail) == 0:
+        issues.append(ValidationIssue(
+            severity=ValidationSeverity.ERROR,
+            category="audit_trail",
+            message="is_overridden is True but audit_trail is empty",
+            suggestion="Add an audit entry explaining the override",
+        ))
+
+    # Validate each entry
+    for i, entry in enumerate(audit_trail):
+        entry_issues = validate_audit_trail_entry(entry)
+        for issue in entry_issues:
+            issue.path = f"audit_trail[{i}].{issue.path or ''}"
+            issues.append(issue)
+
+    return issues
+
+
+def validate_signal_override_payload(payload: Dict[str, Any]) -> ValidationResult:
+    """
+    Validate a signal override API request payload.
+
+    Used by Phase 8 API endpoints to ensure override requests are complete.
+
+    Args:
+        payload: Signal override request body
+
+    Returns:
+        ValidationResult with any issues found
+    """
+    issues = []
+
+    required_fields = ["signal_id", "audited_value", "rationale"]
+    for field in required_fields:
+        if field not in payload or payload[field] is None:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="api_validation",
+                message=f"Missing required field: '{field}'",
+                path=field,
+            ))
+
+    # Validate audited_value is numeric
+    if "audited_value" in payload:
+        val = payload["audited_value"]
+        if not isinstance(val, (int, float)):
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="api_validation",
+                message="audited_value must be numeric",
+                path="audited_value",
+            ))
+        elif not (0 <= val <= 100):
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.WARNING,
+                category="api_validation",
+                message=f"audited_value {val} is outside normal range (0-100)",
+                path="audited_value",
+            ))
+
+    # Validate rationale length
+    if "rationale" in payload and payload["rationale"]:
+        if len(payload["rationale"].strip()) < 10:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.WARNING,
+                category="api_validation",
+                message="Rationale should be at least 10 characters",
+                path="rationale",
+            ))
+
+    has_errors = any(i.severity == ValidationSeverity.ERROR for i in issues)
+    return ValidationResult(
+        valid=not has_errors,
+        issues=issues,
+        warnings=[i.message for i in issues if i.severity == ValidationSeverity.WARNING],
+    )
+
+
 def validate_coverage_config(yaml_content: str) -> ValidationResult:
     """Convenience function to validate coverage config."""
     validator = ConfigValidator()

@@ -7,6 +7,7 @@
 #
 # VERSION: 2.1 - Added multiplexer support (model_specificity, routing_constraints) (Phase V4)
 # VERSION: 2.2 - Added Pricing Anchors & Decoupled Limits (Phase V5)
+# VERSION: 2.3 - Added expectation_level for adaptive signal absence (Phase 10)
 #
 # STRUCTURAL PRINCIPLES:
 # 1. Signals are defined once in signal_registry
@@ -134,6 +135,22 @@
       - id: "{signal_id}"
         inference_utility_function: "{function_name}"
         proxy_tier: "{tier}"
+
+        # -----------------------------------------------------------------------
+        # EXPECTATION LEVEL (Phase 10)
+        # Controls how missing/null signals are penalized based on entity size
+        # -----------------------------------------------------------------------
+        expectation_level: "{level}"          # UNIVERSAL | ENTERPRISE | CORPORATE | SME | MICRO
+                                              # UNIVERSAL  = Expected for ALL entities (missing = always penalize)
+                                              # ENTERPRISE = Expected for Large/Complex (Exposure bands 4-5)
+                                              # CORPORATE  = Expected for Medium+ (Exposure bands 3-5)
+                                              # SME        = Expected for Small+ (Exposure bands 2-5)
+                                              # MICRO      = Expected only for Micro (Exposure band 1)
+                                              #
+                                              # When a signal is missing:
+                                              #   - If expected for entity's size band: penalize (10th percentile)
+                                              #   - If NOT expected: neutral score (50th percentile)
+
         three_layer_assessment:
           group_id: "{group_id}"           # Links to groups.three_layer_assessment
 
