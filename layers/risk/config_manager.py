@@ -545,6 +545,7 @@ class ConfigManager:
 
 # Singleton instance for convenience
 _default_manager: Optional[ConfigManager] = None
+_startup_initialized: bool = False
 
 
 def get_config_manager() -> ConfigManager:
@@ -553,6 +554,79 @@ def get_config_manager() -> ConfigManager:
     if _default_manager is None:
         _default_manager = ConfigManager()
     return _default_manager
+
+
+def initialize_at_startup(coverages_dir: Optional[Path] = None) -> ConfigManager:
+    """
+    Initialize ConfigManager at application startup with all configs cached.
+
+    This addresses the Cycle 3 requirement for eliminating scattershot YAML parsing.
+    All configurations are loaded once into memory at boot time.
+
+    Args:
+        coverages_dir: Path to coverages directory. Defaults to project root.
+
+    Returns:
+        Initialized ConfigManager with all configs cached
+    """
+    global _default_manager, _startup_initialized
+
+    if _startup_initialized and _default_manager is not None:
+        logger.debug("ConfigManager already initialized at startup")
+        return _default_manager
+
+    manager = get_config_manager()
+
+    # Determine coverages directory
+    if coverages_dir is None:
+        # Try multiple possible locations
+        possible_paths = [
+            Path(__file__).parent.parent.parent / "coverages",
+            Path(__file__).parent.parent / "coverages",
+            Path("coverages"),
+        ]
+        for p in possible_paths:
+            if p.exists() and p.is_dir():
+                coverages_dir = p
+                break
+
+    if coverages_dir is None or not coverages_dir.exists():
+        logger.warning("Coverages directory not found, skipping startup preload")
+        _startup_initialized = True
+        return manager
+
+    # Load all coverage configs
+    loaded_count = 0
+    for coverage_path in coverages_dir.iterdir():
+        if not coverage_path.is_dir():
+            continue
+
+        config_file = coverage_path / "config.yaml"
+        if not config_file.exists():
+            continue
+
+        try:
+            version = manager.store_config_from_file(
+                file_path=config_file,
+                user="system_startup",
+                set_active=True,
+            )
+            loaded_count += 1
+            logger.info(
+                f"Startup loaded: {version.coverage}:{version.configuration} "
+                f"(hash={version.config_hash[:12]}...)"
+            )
+        except Exception as e:
+            logger.error(f"Failed to load config from {config_file}: {e}")
+
+    logger.info(f"ConfigManager startup complete: {loaded_count} configs cached")
+    _startup_initialized = True
+    return manager
+
+
+def is_startup_initialized() -> bool:
+    """Check if ConfigManager has been initialized at startup."""
+    return _startup_initialized
 
 
 def load_coverage_config(
