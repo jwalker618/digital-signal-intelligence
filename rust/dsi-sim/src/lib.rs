@@ -32,6 +32,7 @@
 
 pub mod config;
 pub mod formula;
+pub mod models;
 pub mod portfolio;
 pub mod simulation;
 pub mod shock;
@@ -41,6 +42,7 @@ use pyo3::prelude::*;
 // Re-exports
 pub use config::{CoverageConfig, TierBand, PricingConfig};
 pub use formula::{PricingFormula, PricingResult};
+pub use models::{RiskProfile, SimulationEngine, ShockAnalysis};
 pub use portfolio::{Entity, PortfolioSnapshot, Signal};
 pub use simulation::{Simulator, SimulationResult, SimulationStats};
 pub use shock::{ShockParameter, ShockType};
@@ -48,9 +50,16 @@ pub use shock::{ShockParameter, ShockType};
 /// Python module initialization
 #[pymodule]
 fn dsi_sim(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Original bindings
     m.add_class::<PySimulator>()?;
     m.add_class::<PyShockParameter>()?;
     m.add_class::<PySimulationResult>()?;
+
+    // Version 4 Phase 3: RiskProfile and SimulationEngine
+    m.add_class::<RiskProfile>()?;
+    m.add_class::<SimulationEngine>()?;
+    m.add_class::<ShockAnalysis>()?;
+
     Ok(())
 }
 
