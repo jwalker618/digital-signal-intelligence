@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.1.0|
-|Date|January 2025|
+|Version|0.3.0|
+|Date|February 2026|
 |Classification|overview|
 
 ---
@@ -17,12 +17,17 @@
 | **Core Workflow** | ✅ Complete | 14-step workflow fully implemented |
 | **Coverage Configs** | ✅ Complete | 7 coverages (Aerospace, Cyber, D&O, Energy, FI, Marine, PI) |
 | **Signal Architecture** | ✅ Complete | 50 production extractors, routing module, multi-source aggregation |
+| **Three-Layer Assessment** | ✅ Complete | Risk, Exposure Shadow, Loss Correlation layers |
 | **Routing Module** | ✅ Complete | Jurisdiction-aware routing, extractor tiers, caching |
-| **API Layer** | ✅ Functional | FastAPI with actual workflow integration |
-| **Database Layer** | ✅ Schema Ready | SQLAlchemy models, awaiting deployment |
-| **Authentication** | ✅ Implemented | JWT + API key modules ready |
-| **Tests** | ✅ 380+ tests | Good coverage of core logic |
-| **Production Infra** | 🔲 Pending | Requires K8s/Helm, monitoring setup |
+| **Multiplexer** | ✅ Complete | Intra-coverage config selection (race-track model) |
+| **Organisational Graph** | ✅ Complete | 6 node types, PageRank propagation, derivatives |
+| **API Layer** | ✅ Complete | FastAPI with 32 endpoints, structured logging, Prometheus metrics |
+| **Database Layer** | ✅ Complete | SQLAlchemy models, Alembic migrations, dual storage (DB + in-memory fallback) |
+| **Authentication** | ✅ Complete | JWT + API key auth, rate limiting (in-memory + Redis) |
+| **CI/CD Pipeline** | ✅ Complete | GitHub Actions: lint, test, Rust build, Docker build+push, staging/prod deploy |
+| **Deployment Configs** | ✅ Complete | Dockerfile, Docker Compose (prod), Kubernetes manifests, Prometheus/Grafana |
+| **Rust Performance** | ✅ Complete | PyO3 crate: PageRank, derivatives, config validation |
+| **Tests** | ✅ 380+ tests | Unit, integration, API, performance benchmarks |
 
 > **Note**: 50 free production extractors implemented (sanctions, corporate, regulatory, DNS, network, security).
 > Paid extractors (Shodan, VirusTotal, D&B) pending API key configuration. Hybrid mode supports gradual migration.
@@ -375,41 +380,13 @@ cp .env.example .env
 
 ```bash
 # Development mode
-uvicorn api.main:app --reload --port 8000
+uvicorn infrastructure.api.main:app --reload --port 8000
 
 # Production mode
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn infrastructure.api.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 API documentation available at: `http://localhost:8000/api/docs`
-
-#### Project Structure
-
-```
-digital-signal-intelligence/
-├── signals/                     # Signal extraction framework
-│   ├── extractors/              # Data extraction (stubs + production)
-│   ├── aggregators/             # Signal aggregation
-│   ├── categorisers/            # Score categorization
-│   └── inference/               # Inference functions
-├── layers/                      # Assessment layers
-│   ├── risk/                    # 14-step workflow implementation
-│   │   ├── config_manager.py    # Config loading & validation
-│   │   ├── scorer.py            # Signal scoring (Steps 4-6)
-│   │   ├── query_evaluator.py   # Direct queries (Step 7)
-│   │   ├── pricer.py            # Premium calculation (Steps 8-12)
-│   │   └── workflow.py          # Complete workflow orchestration
-│   ├── exposure/                # Exposure Shadow Layer (Phase 17)
-│   └── loss/                    # Loss Correlation Layer (Phase 16)
-├── coverages/                   # Coverage configurations (YAML)
-│   ├── aerospace/
-│   ├── cyber/
-│   └── ...
-├── discovery/                   # Entity identification
-├── tests/                       # Unit & integration tests
-├── SKILL.md                     # Detailed architecture documentation
-└── docs/                        # Documentation & case studies
-```
 
 #### Quick Start
 
@@ -453,7 +430,7 @@ print(f"Confidence: {version.confidence:.0%}")
 pytest tests/ -v
 
 # Run with coverage
-pytest tests/ --cov=signals --cov=layers --cov=coverages --cov-report=html
+pytest tests/ --cov=signal_architecture --cov=infrastructure --cov=layers --cov=coverages --cov-report=html
 ```
 
 #### Development Tools
@@ -474,50 +451,80 @@ python development/project/assessments/scripts/assess_project.py --save-report
 
 #### Interactive Demos
 
-**Standalone HTML Demos** (no installation required):
-Open any file in `demo/standalone/` directly in your browser:
-- `signal-scoring.html` - Interactive signal weight exploration
-- `tier-visualization.html` - Score-to-tier mapping
-- `pricing-calculator.html` - Premium calculation with ILF curves
-- `workflow-animation.html` - Animated 14-step workflow
-- `coverage-comparison.html` - Compare all 7 coverage types
+**Interactive Demo** (no installation required):
+Open `demo/index.html` directly in your browser for a full interactive demonstration.
 
 **Live Demo Server** (requires Python):
 ```bash
-pip install fastapi uvicorn
 python -m demo.server
 # Open http://localhost:8080
 ```
 
-**Legacy Dashboards** in `demo/legacy/`:
-- `dsi_demo_dashboard.html` - Signal-level analysis
-- `dsi_demo_workflow.html` - Workflow visualization
-- `dsi_portfolio_dashboard.html` - Portfolio management interface
+**Coverage Examples** in `demo/examples/`:
+- `run_cyber.py`, `run_energy.py`, `run_fi.py`, `run_marine.py`, etc. - Individual coverage demos
+- `run_hybrid.py` - Multi-extractor hybrid routing demo
+- `run_multi.py` - Multi-coverage orchestration demo
 
 ---
 
-### Implementation Roadmap
+### Deployment
 
-#### Phase 1: Proof of Concept (6 months)
-- D&O validation with 5,000+ company retrospective
-- Statistical validation of signal-loss correlation
-- API infrastructure build-out
-- **Investment**: $0.8-1.2M
+DSI ships with production-ready deployment infrastructure. See the [Deployment Guide](deploy/deployment_guide.md) for full details.
 
-#### Phase 2: Multi-Coverage Expansion (6 months)
-- Extend to Cyber, E&O, Credit
-- Real-time monitoring capabilities
-- System integration with underwriting platforms
-- **Investment**: $1.5-2.2M
+#### Option 1: Docker Compose (Simplest)
 
-#### Phase 3: Full Automation (12 months)
-- Zero-touch workflow for Tier 1-2 risks
-- Global deployment across all regions
-- ML optimization of signal weights
-- **Investment**: $2.5-3.5M
+```bash
+# From repository root
+cp .env.example .env
+# Edit .env with your settings (DATABASE_URL, REDIS_URL, JWT_SECRET_KEY)
 
-**Total 24-Month Investment**: $4.8-6.9M  
-**Expected 36-Month ROI**: 300-500%
+cd deploy/docker
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+This starts the DSI API, PostgreSQL, and Redis. The API is available at `http://localhost:8000`.
+
+#### Option 2: Kubernetes
+
+```bash
+cd deploy/kubernetes
+
+# Edit secrets-template.yaml with real values
+kubectl apply -k .
+
+# Verify
+kubectl get pods -n dsi
+```
+
+Includes: Deployment, Service, Ingress, HPA (2-10 replicas), ConfigMap, and Secrets template.
+
+#### Option 3: CI/CD Pipeline
+
+The GitHub Actions pipeline (`.github/workflows/ci.yml`) automates the full path from code to production:
+
+1. **Lint** - Black, isort, Flake8, MyPy
+2. **Test** - pytest across Python 3.10/3.11/3.12 with coverage
+3. **Rust Build** - Compile dsi-core crate
+4. **Docker Build** - Multi-platform image, pushed to GHCR (on main/develop)
+5. **Deploy Staging** - Automatic on `develop` branch
+6. **Deploy Production** - Automatic on `main` branch
+
+#### Monitoring
+
+- **Health checks**: `/api/v1/health/live`, `/api/v1/health/ready`
+- **Prometheus metrics**: `/api/v1/metrics` (request latency, error rates, workflow duration)
+- **Grafana dashboard**: `deploy/monitoring/grafana-dashboard.json`
+- **Alert rules**: `deploy/monitoring/prometheus-config.yaml`
+
+#### Database Migrations
+
+```bash
+# Apply migrations
+alembic upgrade head
+
+# Rollback
+alembic downgrade -1
+```
 
 ---
 
@@ -525,14 +532,17 @@ python -m demo.server
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [Executive One-Pagers](docs/overview/Executive%20summary.pdf ) | Board-level summary | C-Suite, Board |
-| [PageRank Precedent](docs/overview/The%20PageRank%20precedent.pdf) | Board-level summary | C-Suite, Board |
-| [White Paper](docs/overview/An%20Agentic%20Future%20-%20Global%20Technical%20Pricing.pdf) | Detailed Explanation | Technical leadership |
+| [Pitch Deck](docs/overview/Pitch_deck.pdf) | Board-level summary | C-Suite, Board |
+| [PageRank Precedent](docs/overview/The_PageRank_Precedent.pdf) | Board-level summary | C-Suite, Board |
+| [White Paper](docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf) | Detailed technical explanation | Technical leadership |
+| [Vision Paper](docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf) | World Model vision | Technical leadership |
 | [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
-| [Deployment Guide](docs/deployment/deployment_guide.md) | Production deployment | DevOps, Engineering |
-| [Methodology Defense](development_docs/dsi_retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
+| [Deployment Guide](deploy/deployment_guide.md) | Production deployment | DevOps, Engineering |
+| [Configuration Architecture](docs/overview/Configuration_Architecture.md) | Config layer design | Engineering |
+| [Methodology Defense](development/retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
 | [Case Studies](docs/case_studies/) | Worked examples | Underwriters |
-| [Interactive Demos](demo/standalone/) | Hands-on exploration | All stakeholders |
+| [Interactive Demo](demo/index.html) | Hands-on exploration | All stakeholders |
+| [SKILL.md](SKILL.md) | Architecture & development guide | Engineering |
 
 ---
 

@@ -1,55 +1,67 @@
 version: '3.8'
 
-# Digital Signal Intelligence - Docker Compose Configuration
-# Note: API functionality is being reimplemented.
-# This configuration is a placeholder for future deployment.
+# Digital Signal Intelligence - Docker Compose (Development)
+# For production deployment, use: deploy/docker/docker-compose.prod.yml
 
 services:
-  # DSI Development Container
-  dsi-dev:
+  # DSI API (Development)
+  dsi-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: dsi-dev
+    container_name: dsi-api
+    ports:
+      - "8000:8000"
     volumes:
-      - ./technical_pricing:/app/technical_pricing
+      - ./signal_architecture:/app/signal_architecture
+      - ./infrastructure:/app/infrastructure
+      - ./layers:/app/layers
+      - ./coverages:/app/coverages
+    environment:
+      - DSI_ENV=development
+      - DSI_DEBUG=true
+      - DATABASE_URL=postgresql+asyncpg://dsi_user:dsi_password@postgres:5432/dsi_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
     networks:
       - dsi-network
-    command: python -c "print('DSI development container ready')"
+    command: uvicorn infrastructure.api.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # PostgreSQL Database (for future use)
-  # postgres:
-  #   image: postgres:15-alpine
-  #   container_name: dsi-postgres
-  #   environment:
-  #     - POSTGRES_USER=dsi_user
-  #     - POSTGRES_PASSWORD=dsi_password
-  #     - POSTGRES_DB=dsi_db
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - dsi-network
-  #   restart: unless-stopped
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: dsi-postgres
+    environment:
+      - POSTGRES_USER=dsi_user
+      - POSTGRES_PASSWORD=dsi_password
+      - POSTGRES_DB=dsi_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dsi-network
+    restart: unless-stopped
 
-  # Redis Cache (for future use)
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: dsi-redis
-  #   ports:
-  #     - "6379:6379"
-  #   networks:
-  #     - dsi-network
-  #   restart: unless-stopped
-  #   command: redis-server --appendonly yes
-  #   volumes:
-  #     - redis_data:/data
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: dsi-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - dsi-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
 
 networks:
   dsi-network:
     driver: bridge
 
-# volumes:
-#   postgres_data:
-#   redis_data:
+volumes:
+  postgres_data:
+  redis_data:
