@@ -100,16 +100,16 @@ We will transition away from the static HTML files in demo/ to a modern React + 
 
 View A: The Underwriter Workbench (Daily Execution)
 * Layout: Split screen.
-  Left: Submission details, final Tier, Recommended Premium, and Auto-Approve/Referral decision.
-  Right: The "Signal Cascade". A collapsible tree showing exactly how the Three-Layer Assessment (Risk, Loss, Exposure) was calculated.
-  Interaction: Underwriters can click on any flagged signal (e.g., MFA not enabled) to see the raw extractor evidence. They can input an override, which immediately triggers the telemetry capture defined in Pillar 1.
+  * Left: Submission details, final Tier, Recommended Premium, and Auto-Approve/Referral decision.
+  * Right: The "Signal Cascade". A collapsible tree showing exactly how the Three-Layer Assessment (Risk, Loss, Exposure) was calculated.
+  * Interaction: Underwriters can click on any flagged signal (e.g., MFA not enabled) to see the raw extractor evidence. They can input an override, which immediately triggers the telemetry capture defined in Pillar 1.
 
 View B: The Causal World Model Explorer (Deep Risk Analysis)
 * Layout: Full-screen 3D/2D force-directed graph.
-  Interaction: Focuses on a target entity node. Visually maps first, second, and third-degree connections (supply chain, shared technology, common investors).
-  Use Case: An underwriter sees that a prospective client shares an IT provider with three other companies that recently filed claims. The graph visualises this "blast radius" dynamically.
+  * Interaction: Focuses on a target entity node. Visually maps first, second, and third-degree connections (supply chain, shared technology, common investors).
+  * Use Case: An underwriter sees that a prospective client shares an IT provider with three other companies that recently filed claims. The graph visualises this "blast radius" dynamically.
 
 View C: Actuarial Retuning Dashboard (The ML Interface)
 * Layout: Analytics dashboard.
-  Interaction: Actuaries view the ACOE tuning proposals. The UI shows two ILF/Pricing curves: the Current Config and the ML-Proposed Config.
-  Action: Actuaries can hit "Accept Proposal," which automatically updates the underlying YAML file via the Builder CLI logic, hashes it (content-addressable storage), and versions the model without requiring a developer.
+  * Interaction: Actuaries view the ACOE tuning proposals. The UI shows two ILF/Pricing curves: the Current Config and the ML-Proposed Config.
+  * Action: Actuaries can hit "Accept Proposal," which automatically updates the underlying YAML file via the Builder CLI logic, hashes it (content-addressable storage), and versions the model without requiring a developer.
