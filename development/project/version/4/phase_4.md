@@ -47,9 +47,10 @@ We will not use "black box" ML. Instead, ML will act as a co-pilot that suggests
 Expand the existing analytics.signal_analytics.SignalPerformance module.
 
 The Process:
-1/. The ACOE continuously runs a Gradient Boosting model (like XGBoost) in the background, treating the 50+ signals as features and actual loss_ratio as the target.
-2/. It calculates feature importance and partial dependence.
-3/. It compares its findings against the current config.yaml weights (e.g., if the YAML weights network_authority at 0.15, but ACOE finds it holds 0.30 of the predictive power).
+
+1. The ACOE continuously runs a Gradient Boosting model (like XGBoost) in the background, treating the 50+ signals as features and actual loss_ratio as the target.
+2. It calculates feature importance and partial dependence.
+3. It compares its findings against the current config.yaml weights (e.g., if the YAML weights network_authority at 0.15, but ACOE finds it holds 0.30 of the predictive power).
 
 **The Output: The engine generates a proposed patch to the config.yaml.**
 
