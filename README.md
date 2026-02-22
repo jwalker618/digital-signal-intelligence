@@ -12,31 +12,9 @@
 
 ## Project Status
 
-| Component | Status | Completeness |
-|-----------|--------|--------------|
-| **Core Workflow** | ✅ Complete | 14-step workflow fully implemented |
-| **Coverage Configs** | ✅ Complete | 7 coverages (Aerospace, Cyber, D&O, Energy, FI, Marine, PI) |
-| **Signal Architecture** | ✅ Complete | 50 production extractors, routing module, multi-source aggregation |
-| **Three-Layer Assessment** | ✅ Complete | Risk, Exposure Shadow, Loss Correlation layers |
-| **Routing Module** | ✅ Complete | Jurisdiction-aware routing, extractor tiers, caching |
-| **Multiplexer** | ✅ Complete | Intra-coverage config selection (race-track model) |
-| **Organisational Graph** | ✅ Complete | 6 node types, PageRank propagation, derivatives |
-| **API Layer** | ✅ Complete | FastAPI with 32 endpoints, structured logging, Prometheus metrics |
-| **Database Layer** | ✅ Complete | SQLAlchemy models, Alembic migrations, dual storage (DB + in-memory fallback) |
-| **Authentication** | ✅ Complete | JWT + API key auth, rate limiting (in-memory + Redis) |
-| **CI/CD Pipeline** | ✅ Complete | GitHub Actions: lint, test, Rust build, Docker build+push, staging/prod deploy |
-| **Deployment Configs** | ✅ Complete | Dockerfile, Docker Compose (prod), Kubernetes manifests, Prometheus/Grafana |
-| **Rust Performance** | ✅ Complete | PyO3 crate: PageRank, derivatives, config validation |
-| **Tests** | ✅ 380+ tests | Unit, integration, API, performance benchmarks |
-
-> **Note**: 50 free production extractors implemented (sanctions, corporate, regulatory, DNS, network, security).
-> Paid extractors (Shodan, VirusTotal, D&B) pending API key configuration. Hybrid mode supports gradual migration.
-
----
-
 **A framework for automated underwriting using digital footprint analysis and network intelligence.**
 
-DSI applies the principles that made Google's PageRank revolutionary—inferring quality from observable network relationships—to insurance underwriting. A company's digital presence serves as a powerful proxy for operational maturity, governance quality, and risk management capability.
+Digital Signal Intelligence (DSI) applies the principles that made Google's PageRank revolutionary, inferring quality from observable network relationships, to insurance underwriting. A company's digital presence serves as a powerful proxy for operational maturity, governance quality, and risk management capability.
 
 ---
 
@@ -52,12 +30,28 @@ DSI systematically harvests these signals, scores them consistently, and convert
 
 ---
 
+### Key Documents
+
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [Pitch Deck](docs/overview/Pitch_deck.pdf) | Board-level summary | C-Suite, Board |
+| [PageRank Precedent](docs/overview/The_PageRank_Precedent.pdf) | Board-level summary | C-Suite, Board |
+| [White Paper](docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf) | Detailed technical explanation | Technical leadership |
+| [Vision Paper](docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf) | World Model vision | Technical leadership |
+| [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
+| [Deployment Guide](deploy/deployment_guide.md) | Production deployment | DevOps, Engineering |
+| [Configuration Architecture](docs/overview/Configuration_Architecture.md) | Config layer design | Engineering |
+| [Methodology Defense](development/retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
+| [Case Studies](docs/case_studies/) | Worked examples | Underwriters |
+| [Interactive Demo](demo/index.html) | Hands-on exploration | All stakeholders |
+| [SKILL.md](SKILL.md) | Architecture & development guide | Engineering |
+
 ### Why This Matters
 
 #### The Problem with Traditional Underwriting
 
 | Challenge | Traditional Approach | DSI Approach |
-|-----------|---------------------|--------------|
+|-|-|-|
 | **Information asymmetry** | Rely on broker submissions | Verify independently from public sources |
 | **Inconsistent assessment** | Varies by underwriter | Algorithmic consistency |
 | **Costly per-risk analysis** | $650+ per submission | $72 per submission |
@@ -65,15 +59,29 @@ DSI systematically harvests these signals, scores them consistently, and convert
 | **Limited scalability** | Constrained by headcount | Infinitely scalable |
 | **Adverse selection** | Often invisible | Detected via signal patterns |
 
-#### The Business Case
+---
 
-| Metric | Impact |
-|--------|--------|
-| Combined Ratio Improvement | 26-34 points |
-| 5-Year Cumulative Profit | $275-350M |
-| Return on Investment | 1,800%+ |
-| Straight-Through Processing | 75-85% of submissions |
-| Cost per Submission | $72 (vs $650 traditional) |
+### Validation Evidence
+
+DSI has been validated through retrospective analysis demonstrating predictive power:
+
+#### Petrobras vs PEMEX Comparison
+
+| Dimension | Petrobras (742) | PEMEX (542) | DSI Correctly Predicted |
+|-----------|-----------------|-------------|------------------------|
+| Digital transformation | Major 2022-2023 overhaul | Stagnant since 2018 | ✓ Operational trajectory |
+| Governance transparency | 847/1000 | 423/1000 | ✓ D&O risk differential |
+| Network quality | Blue-chip partners | Intermediated relationships | ✓ Counterparty risk |
+| Security posture | Modern, maintained | Legacy, patchy | ✓ Cyber exposure |
+
+**Outcome**: Petrobras has had no material governance incidents since 2016. PEMEX has faced ongoing regulatory scrutiny, credit downgrades, and operational challenges. DSI scores from 2020 would have correctly differentiated these risks.
+
+#### Statistical Validation
+
+Retrospective analysis across multiple sectors shows:
+- **Tier 1-2 companies**: 67% lower loss frequency than Tier 4-5
+- **Score correlation with loss ratio**: r = -0.42 (statistically significant)
+- **Red flag accuracy**: 78% of companies with 3+ red flags experienced material events within 24 months
 
 ---
 
@@ -138,10 +146,10 @@ Breach History: 1     →      60/100
                                                         Auto-approve
 ```
 
-#### Tier Definitions
+#### Example Tier Definitions
 
 | Tier | Score Range | Risk Level | Recommended Action |
-|------|-------------|------------|-------------------|
+|-|-|-|-|
 | **1** | 800-1000 | Preferred | Auto-approve, potential discount |
 | **2** | 650-799 | Standard | Auto-approve at standard pricing |
 | **3** | 500-649 | Elevated | Manual review, +15-30% loading |
@@ -153,18 +161,6 @@ Breach History: 1     →      60/100
 ### Coverage Lines Supported
 
 DSI is designed as a multi-line platform. Each coverage type has tailored signal weights and sector adjustments:
-
-#### Currently Implemented
-
-| Coverage | Key Signal Focus | Primary Use Case |
-|----------|-----------------|------------------|
-| **Cyber** | Technical infrastructure, breach history, security posture | Tech, Healthcare, Retail |
-| **Financial Institutions** | Regulatory standing, network authority, governance | Banks, Asset Managers, FinTech |
-| **Energy** | OT/IT convergence, safety culture, operational discipline | Upstream, Midstream, Downstream |
-| **Marine** | Classification society, flag state, operator quality | Hull, Cargo, P&I |
-| **Directors & Officers** | Governance transparency, litigation patterns, ESG | Public companies, PE-backed |
-| **Professional Indemnity** | TBC | TBC |
-| **Aerospace** | TBC | TBC |
 
 #### Extensible Architecture
 
@@ -183,8 +179,6 @@ CoverageLineRegistry.register(
     }
 )
 ```
-
----
 
 ### Repository Structure
 
@@ -232,8 +226,6 @@ digital-signal-intelligence/
 ├── SKILL.md                     # Architecture guide
 └── README.md
 ```
-
----
 
 ### Core Modules
 
@@ -323,30 +315,6 @@ def infer_security_headers(entity_id: str, context: InferenceContext) -> SignalR
 - Discovery data passed to all inference functions
 - Standardized result types for audit trail
 - Confidence scoring per signal
-
----
-
-### Validation Evidence
-
-DSI has been validated through retrospective analysis demonstrating predictive power:
-
-#### Petrobras vs PEMEX Comparison
-
-| Dimension | Petrobras (742) | PEMEX (542) | DSI Correctly Predicted |
-|-----------|-----------------|-------------|------------------------|
-| Digital transformation | Major 2022-2023 overhaul | Stagnant since 2018 | ✓ Operational trajectory |
-| Governance transparency | 847/1000 | 423/1000 | ✓ D&O risk differential |
-| Network quality | Blue-chip partners | Intermediated relationships | ✓ Counterparty risk |
-| Security posture | Modern, maintained | Legacy, patchy | ✓ Cyber exposure |
-
-**Outcome**: Petrobras has had no material governance incidents since 2016. PEMEX has faced ongoing regulatory scrutiny, credit downgrades, and operational challenges. DSI scores from 2020 would have correctly differentiated these risks.
-
-#### Statistical Validation
-
-Retrospective analysis across multiple sectors shows:
-- **Tier 1-2 companies**: 67% lower loss frequency than Tier 4-5
-- **Score correlation with loss ratio**: r = -0.42 (statistically significant)
-- **Red flag accuracy**: 78% of companies with 3+ red flags experienced material events within 24 months
 
 ---
 
@@ -525,24 +493,6 @@ alembic upgrade head
 # Rollback
 alembic downgrade -1
 ```
-
----
-
-### Key Documents
-
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| [Pitch Deck](docs/overview/Pitch_deck.pdf) | Board-level summary | C-Suite, Board |
-| [PageRank Precedent](docs/overview/The_PageRank_Precedent.pdf) | Board-level summary | C-Suite, Board |
-| [White Paper](docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf) | Detailed technical explanation | Technical leadership |
-| [Vision Paper](docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf) | World Model vision | Technical leadership |
-| [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
-| [Deployment Guide](deploy/deployment_guide.md) | Production deployment | DevOps, Engineering |
-| [Configuration Architecture](docs/overview/Configuration_Architecture.md) | Config layer design | Engineering |
-| [Methodology Defense](development/retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
-| [Case Studies](docs/case_studies/) | Worked examples | Underwriters |
-| [Interactive Demo](demo/index.html) | Hands-on exploration | All stakeholders |
-| [SKILL.md](SKILL.md) | Architecture & development guide | Engineering |
 
 ---
 
