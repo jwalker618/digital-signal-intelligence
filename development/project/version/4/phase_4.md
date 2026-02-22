@@ -82,7 +82,7 @@ Add the following routers to infrastructure/api/routes/:
 * GET /api/v2/signals/gap-analysis
   Exposes the anomaly detection results, listing clusters of unexpected losses to guide product development.
 
-### 3.2 GraphQL Integration (Optional but Recommended)
+### 3.2 GraphQL Integration 
 Given the highly relational nature of the Causal World Model (Entities -> Edges -> Risks -> Pricing -> Quotes), introducing a GraphQL layer (via Strawberry in FastAPI) will allow the new frontend to seamlessly query deep relationships without over-fetching.
 
 ## Pillar 4: Frontend Build-out
