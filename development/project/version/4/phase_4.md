@@ -1,7 +1,7 @@
 # Phase 4: Adaptive Intelligence, Causal World Model Integration, and Production UI
 
 ## Context & Objectives
-With the foundational architecture, Rust-based Organisational Graph, and Multiplexer natively executing, Version 4 transitions DSI from a static pricing engine to an adaptive, learning system with a fully realized user interface.
+With the foundational architecture, Rust-based Organisational Graph, and Multiplexer natively executing, Version 4 transitions DSI from a static pricing engine to an adaptive, learning system with a fully realised user interface.
 
 This phase focuses on four pillars:
 1. **Telemetry & Causal Capture**: Storing temporal graph snapshots and interaction metadata for downstream AI use.
