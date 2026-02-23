@@ -328,6 +328,10 @@ class WorkflowEngine:
             locale_source=locale_source,
         )
 
+        # Phase 2: Pre-check signal cache freshness.
+        # If cached signals are stale, trigger a synchronous refresh before scoring.
+        self._ensure_signal_freshness(entity_id, config)
+
         # Steps 4-6: Score Entity (Signal Extraction + Composite + Conditions)
         scoring_result = self.scorer.score_entity(
             entity_id=entity_id,
@@ -759,6 +763,44 @@ class WorkflowEngine:
                 execution_time_ms=execution_time_ms,
                 error=str(e),
             )
+
+    def _ensure_signal_freshness(
+        self,
+        entity_id: str,
+        config,
+    ) -> None:
+        """
+        Phase 2: Check SignalCache freshness and trigger sync refresh if stale.
+
+        Queries the telemetry layer to verify that cached signals are
+        within their volatility-based TTL. If any signals are stale and
+        the database is available, triggers a synchronous refresh so the
+        subsequent scoring step gets up-to-date data.
+        """
+        try:
+            from infrastructure.workers.telemetry import (
+                check_signal_freshness,
+                synchronous_refresh,
+            )
+
+            # Get signal IDs from compiled config
+            signal_ids = [sig.id for sig in config.signal_registry
+                          if sig.three_layer_assessment]
+            if not signal_ids:
+                return
+
+            freshness = check_signal_freshness(entity_id, signal_ids)
+            stale_ids = [sid for sid, is_fresh in freshness.items() if not is_fresh]
+
+            if stale_ids:
+                logger.info(
+                    f"Entity {entity_id}: {len(stale_ids)}/{len(signal_ids)} "
+                    f"signals stale, triggering sync refresh"
+                )
+                synchronous_refresh(entity_id, stale_ids, timeout_seconds=20)
+        except Exception as e:
+            # Non-fatal: scoring will still run with inference functions
+            logger.debug(f"Signal freshness check skipped: {e}")
 
     def _determine_locale(
         self,

@@ -29,6 +29,7 @@ from .celery_app import (
     celery_app,
     get_signal_volatility,
     get_refresh_interval_hours,
+    get_registry_signal_ids,
     SIGNAL_VOLATILITY,
 )
 
@@ -108,11 +109,31 @@ def refresh_entity_signal(
                 "signal_id": signal_id,
             }
 
-        # Execute extraction
+        # Execute extraction with coverage context if available
+        coverage = ""
+        config_name = ""
+        try:
+            from infrastructure.models.compiler import get_compiled_configs
+            configs = get_compiled_configs()
+            # Find which coverage this signal belongs to
+            for cov_id, cov in configs.items():
+                for cfg_id, cfg in cov.configurations.items():
+                    for sig in cfg.signal_registry:
+                        if sig.id == signal_id:
+                            coverage = cov_id
+                            config_name = cfg_id
+                            break
+                    if coverage:
+                        break
+                if coverage:
+                    break
+        except Exception:
+            pass
+
         context = InferenceContext(
             configuration={},
-            coverage="",
-            config_name="",
+            coverage=coverage,
+            config_name=config_name,
         )
 
         result = inference_func(entity_id, context)
@@ -169,6 +190,7 @@ def refresh_entity_all_signals(
     self,
     entity_id: str,
     signal_ids: Optional[List[str]] = None,
+    coverage_id: Optional[str] = None,
     force: bool = False,
 ) -> Dict[str, Any]:
     """
@@ -177,16 +199,19 @@ def refresh_entity_all_signals(
     Args:
         entity_id: Entity identifier
         signal_ids: Optional list of signals to refresh (all if None)
+        coverage_id: Optional coverage ID to discover signals from config
         force: Force refresh even if not stale
 
     Returns:
         Dict with summary of refresh results
     """
-    # If no signal IDs provided, get all configured signals
+    # If no signal IDs provided, discover from compiled config or fallback to static
     if signal_ids is None:
-        signal_ids = []
-        for volatility_signals in SIGNAL_VOLATILITY.values():
-            signal_ids.extend(volatility_signals)
+        signal_ids = get_registry_signal_ids(coverage_id)
+        if not signal_ids:
+            signal_ids = []
+            for volatility_signals in SIGNAL_VOLATILITY.values():
+                signal_ids.extend(volatility_signals)
 
     results = {
         "entity_id": entity_id,

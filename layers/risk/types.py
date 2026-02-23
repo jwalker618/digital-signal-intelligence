@@ -1041,3 +1041,5 @@ class WorkflowResult:
 
 # Backward compatibility aliases
 LimitBand = LimitBandConfig
+ModifierApplication = AppliedModifier
+SignalConfig = SignalFeatureConfig
