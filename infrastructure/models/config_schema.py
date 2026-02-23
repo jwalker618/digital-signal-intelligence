@@ -534,6 +534,10 @@ class CoverageConfig(BaseModel):
     This is the top-level model representing a single configuration
     within a coverage (e.g., cyber_general within cyber).
     """
+    # Identity fields (set by compiler during loading)
+    coverage_id: str = ""
+    config_id: str = ""
+
     metadata: ConfigMetadata
     direct_queries: List[DirectQuery] = Field(default_factory=list)
     signal_registry: List[SignalDefinition] = Field(default_factory=list)
