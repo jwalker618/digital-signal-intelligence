@@ -613,6 +613,25 @@ class CoverageConfig(BaseModel):
         return self
 
     # -------------------------------------------------------------------------
+    # Backward-compatibility properties
+    # -------------------------------------------------------------------------
+
+    @property
+    def coverage(self) -> str:
+        """Backward compat: alias for coverage_id."""
+        return self.coverage_id
+
+    @property
+    def configuration(self) -> str:
+        """Backward compat: alias for config_id."""
+        return self.config_id
+
+    @property
+    def config_hash(self) -> str:
+        """Backward compat: no hash in compiled configs."""
+        return ""
+
+    # -------------------------------------------------------------------------
     # Convenience methods
     # -------------------------------------------------------------------------
 

@@ -84,9 +84,9 @@ class ModelDataManager:
         self._models[model_id] = {
             "model_id": model_id,
             "entity_id": entity_id,
-            "coverage": config.coverage,
-            "configuration": config.configuration,
-            "config_hash": config.config_hash,
+            "coverage": config.coverage_id,
+            "configuration": config.config_id,
+            "config_hash": getattr(config, 'config_hash', ''),
             "submission_data": submission_data or {},
             "created_at": utcnow(),
             "created_by": user,

@@ -976,7 +976,7 @@ class PricingResult:
     score_based_tier: int = 3
     final_tier: int = 3
     tier_label: str = "STANDARD"
-    tier_config: Optional[TierConfig] = None
+    tier_config: Optional[Any] = None  # RiskTierBand from config_schema (or legacy TierConfig)
 
     # Step 10: Base premium
     base_premium: float = 0.0

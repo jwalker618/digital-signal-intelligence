@@ -12,9 +12,14 @@ without them. They provide additional risk signals when available.
 import logging
 from typing import Dict, List, Optional, Any
 
-from .types import (
+from infrastructure.models.config_schema import (
     CoverageConfig,
-    DirectQueryConfig,
+    DirectQuery,
+    QueryCondition,
+    ScoreConditionAction,
+)
+
+from .types import (
     QueryEvaluationResult,
     TriggeredCondition,
     ConditionAction,
@@ -45,7 +50,7 @@ class QueryEvaluator:
 
         Args:
             responses: Map of query_id -> boolean response
-            config: Coverage configuration with query definitions
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
             QueryEvaluationResult with all triggered impacts
@@ -56,8 +61,8 @@ class QueryEvaluator:
         notes: List[str] = []
         modifiers: List[Dict[str, Any]] = []
 
-        for query_config in config.direct_queries:
-            query_id = query_config.id
+        for query in config.direct_queries:
+            query_id = query.id
             response = responses.get(query_id)
 
             # Skip if no response provided (queries are optional)
@@ -65,41 +70,38 @@ class QueryEvaluator:
                 logger.debug(f"Query '{query_id}' not answered, skipping")
                 continue
 
-            # Evaluate each impact band for this query
-            for impact in query_config.impacts:
-                # Check if the response triggers this impact
-                if response == impact.trigger_value:
+            # Evaluate each condition for this query
+            for qc in query.query_condition:
+                # Check if the response triggers this condition
+                if response == qc.return_value:
                     triggered_condition = self._create_triggered_condition(
-                        query_config, impact, response
+                        query, qc, response
                     )
                     conditions.append(triggered_condition)
 
-                    # Collect the specific impact
-                    if impact.action == "DECLINE":
-                        tier_overrides.append(impact.tier_override or 5)
-                        notes.append(impact.note or f"Query {query_id} triggered decline")
+                    # Collect the specific impact based on action type
+                    if qc.action == ScoreConditionAction.REFER:
+                        if qc.override is not None:
+                            tier_overrides.append(qc.override)
+                        referrals.append(
+                            qc.note or f"Query {query_id} requires referral"
+                        )
 
-                    elif impact.action == "REFER":
-                        referrals.append(impact.note or f"Query {query_id} requires referral")
-
-                    elif impact.action == "MODIFIER":
-                        if impact.modifier is not None:
+                    elif qc.action == ScoreConditionAction.MODIFIER:
+                        if qc.applied is not None:
                             modifiers.append({
                                 "source": "direct_query",
                                 "source_id": query_id,
-                                "name": query_config.question[:50],
-                                "factor": impact.modifier,
+                                "name": query.question[:50],
+                                "factor": qc.applied,
                             })
-                        if impact.note:
-                            notes.append(impact.note)
+                        if qc.note:
+                            notes.append(qc.note)
 
-                    elif impact.tier_override is not None:
-                        tier_overrides.append(impact.tier_override)
-                        if impact.note:
-                            notes.append(impact.note)
-
-                    elif impact.note:
-                        notes.append(impact.note)
+                    elif qc.action == ScoreConditionAction.FLAG:
+                        notes.append(
+                            qc.note or f"Query {query_id} flagged"
+                        )
 
         logger.debug(
             f"Evaluated {len(responses)} query responses: "
@@ -119,54 +121,54 @@ class QueryEvaluator:
 
     def _create_triggered_condition(
         self,
-        query_config: DirectQueryConfig,
-        impact,  # DirectQueryImpact
-        response: bool
+        query: DirectQuery,
+        qc: QueryCondition,
+        response: bool,
     ) -> TriggeredCondition:
         """
-        Create a TriggeredCondition from a query impact.
+        Create a TriggeredCondition from a query condition.
 
         Args:
-            query_config: The query configuration
-            impact: The triggered impact
+            query: The DirectQuery definition
+            qc: The triggered QueryCondition
             response: The response that triggered it
 
         Returns:
             TriggeredCondition record
         """
-        # Determine the action type
-        if impact.action == "DECLINE":
-            action = ConditionAction.TIER_OVERRIDE
-            action_value = impact.tier_override or 5
-        elif impact.action == "REFER":
-            action = ConditionAction.REFERRAL
-            action_value = impact.note or "Referral required"
-        elif impact.action == "MODIFIER":
-            action = ConditionAction.MODIFIER
-            action_value = impact.modifier
-        elif impact.tier_override is not None:
-            action = ConditionAction.TIER_OVERRIDE
-            action_value = impact.tier_override
+        # Map ScoreConditionAction to internal ConditionAction
+        action_map = {
+            ScoreConditionAction.REFER: ConditionAction.REFER,
+            ScoreConditionAction.MODIFIER: ConditionAction.MODIFIER,
+            ScoreConditionAction.FLAG: ConditionAction.FLAG,
+        }
+        action = action_map.get(qc.action, ConditionAction.NOTE)
+
+        if qc.action == ScoreConditionAction.REFER:
+            action_value = qc.override or qc.note or "Referral required"
+        elif qc.action == ScoreConditionAction.MODIFIER:
+            action_value = qc.applied
+        elif qc.action == ScoreConditionAction.FLAG:
+            action_value = qc.note or ""
         else:
-            action = ConditionAction.NOTE
-            action_value = impact.note or ""
+            action_value = qc.note or ""
 
         return TriggeredCondition(
             source_type="direct_query",
-            source_id=query_config.id,
-            source_name=query_config.question,
+            source_id=query.id,
+            source_name=query.question,
             score=None,
             response=response,
             action=action,
             action_value=action_value,
-            note=impact.note or "",
+            note=qc.note or "",
         )
 
     def get_unanswered_queries(
         self,
         responses: Dict[str, bool],
         config: CoverageConfig
-    ) -> List[DirectQueryConfig]:
+    ) -> List[DirectQuery]:
         """
         Get list of queries that haven't been answered.
 
@@ -174,10 +176,10 @@ class QueryEvaluator:
 
         Args:
             responses: Map of query_id -> response
-            config: Coverage configuration
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
-            List of unanswered DirectQueryConfig
+            List of unanswered DirectQuery
         """
         answered_ids = set(responses.keys())
 
@@ -189,27 +191,26 @@ class QueryEvaluator:
     def get_critical_queries(
         self,
         config: CoverageConfig
-    ) -> List[DirectQueryConfig]:
+    ) -> List[DirectQuery]:
         """
-        Get queries that can trigger decline or severe tier override.
+        Get queries that can trigger severe tier override (REFER with override >= 4).
 
         These are the most impactful queries that should be prioritized.
 
         Args:
-            config: Coverage configuration
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
-            List of critical DirectQueryConfig
+            List of critical DirectQuery
         """
         critical_queries = []
 
         for query in config.direct_queries:
             is_critical = False
-            for impact in query.impacts:
-                if impact.action == "DECLINE":
-                    is_critical = True
-                elif impact.tier_override is not None and impact.tier_override >= 4:
-                    is_critical = True
+            for qc in query.query_condition:
+                if qc.action == ScoreConditionAction.REFER:
+                    if qc.override is not None and qc.override >= 4:
+                        is_critical = True
 
             if is_critical:
                 critical_queries.append(query)

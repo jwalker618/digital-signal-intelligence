@@ -75,7 +75,16 @@ from .types import (
     WorkflowResult,
 )
 
-# Config Manager
+# Compiled Configuration (preferred)
+from infrastructure.models.compiler import (
+    get_config,
+    get_compiled_configs,
+    get_coverage,
+    list_coverages,
+    clear_config_cache,
+)
+
+# Config Manager (deprecated - use compiler instead)
 from .config_manager import (
     ConfigManager,
     ConfigParseError,
@@ -164,7 +173,13 @@ __all__ = [
     "QueryEvaluationResult",
     "PricingResult",
     "WorkflowResult",
-    # Config Manager
+    # Compiled Configuration (preferred)
+    "get_config",
+    "get_compiled_configs",
+    "get_coverage",
+    "list_coverages",
+    "clear_config_cache",
+    # Config Manager (deprecated)
     "ConfigManager",
     "ConfigParseError",
     "ConfigNotFoundError",
