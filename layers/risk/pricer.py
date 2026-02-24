@@ -14,13 +14,18 @@ Calculates premium from score, tier, and modifiers.
 import logging
 from typing import Dict, List, Optional, Any, Tuple
 
-from .types import (
+from infrastructure.models.config_schema import (
     CoverageConfig,
-    TierConfig,
+    RiskTierBand,
+    TierAction,
+    PricingMethod,
+    LimitConfigType,
+)
+
+from .types import (
     PricingResult,
     AppliedModifier,
     CategoricalOutput,
-    PremiumMethod,
 )
 
 
@@ -63,26 +68,26 @@ class ModelPricer:
             query_modifiers: Modifiers from Step 7
             categorical_outputs: Inferred categorical values
             submission_data: Submission data (for rate basis values)
-            config: Coverage configuration
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
             PricingResult with complete pricing breakdown
         """
         # Step 8: Combine and resolve tier overrides
         all_overrides = signal_tier_overrides + query_tier_overrides
-        score_based_tier = self.get_tier_for_score(pure_composite_score, config)
+        score_based_band = self.get_tier_for_score(pure_composite_score, config)
         final_tier, max_override = self.resolve_tier_overrides(
-            score_based_tier.tier,
+            score_based_band.id,
             all_overrides
         )
 
-        # Step 9: Get final tier configuration
-        final_tier_config = self.get_tier_config(final_tier, config)
+        # Step 9: Get final tier band
+        final_tier_band = config.get_tier_band(final_tier)
 
         # Step 10: Calculate base premium
         base_premium, method = self.calculate_base_premium(
             tier=final_tier,
-            tier_config=final_tier_config,
+            tier_band=final_tier_band,
             submission_data=submission_data,
             config=config,
         )
@@ -109,22 +114,20 @@ class ModelPricer:
         # Determine final premium (use first limit band if available)
         final_premium = premium_after_modifiers
         if limit_premiums:
-            # Use the premium for the selected limit or first available
             requested_limit = submission_data.get("limit")
             if requested_limit and str(int(requested_limit)) in limit_premiums:
                 final_premium = limit_premiums[str(int(requested_limit))]
             else:
-                # Use first limit band
                 first_limit = min(limit_premiums.keys(), key=lambda x: float(x))
                 final_premium = limit_premiums[first_limit]
 
         return PricingResult(
             tier_overrides_considered=all_overrides,
             max_tier_override=max_override,
-            score_based_tier=score_based_tier.tier,
+            score_based_tier=score_based_band.id,
             final_tier=final_tier,
-            tier_label=final_tier_config.label if final_tier_config else f"TIER_{final_tier}",
-            tier_config=final_tier_config,
+            tier_label=final_tier_band.label if final_tier_band else f"TIER_{final_tier}",
+            tier_config=None,  # Deprecated: use config.get_tier_band() directly
             base_premium=base_premium,
             base_premium_method=method,
             modifiers_applied=modifiers_applied,
@@ -138,38 +141,39 @@ class ModelPricer:
         self,
         score: float,
         config: CoverageConfig
-    ) -> TierConfig:
+    ) -> RiskTierBand:
         """
-        Get tier configuration for a composite score.
+        Get tier band for a composite score.
 
         Args:
             score: Composite score (0-1000)
-            config: Coverage configuration
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
-            Matching TierConfig
+            Matching RiskTierBand
         """
-        return config.get_tier_for_score(score)
+        for band in config.risk_tier_bands.bands:
+            if band.interpretation.bands.min <= score <= band.interpretation.bands.max:
+                return band
+        # Default to last tier
+        return config.risk_tier_bands.bands[-1]
 
-    def get_tier_config(
+    def get_tier_band(
         self,
         tier: int,
         config: CoverageConfig
-    ) -> Optional[TierConfig]:
+    ) -> Optional[RiskTierBand]:
         """
-        Get tier configuration by tier number.
+        Get tier band by tier number.
 
         Args:
             tier: Tier number (1-5)
-            config: Coverage configuration
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
-            TierConfig or None
+            RiskTierBand or None
         """
-        for t in config.tiers:
-            if t.tier == tier:
-                return t
-        return None
+        return config.get_tier_band(tier)
 
     def resolve_tier_overrides(
         self,
@@ -211,68 +215,54 @@ class ModelPricer:
     def calculate_base_premium(
         self,
         tier: int,
-        tier_config: Optional[TierConfig],
+        tier_band: Optional[RiskTierBand],
         submission_data: Dict[str, Any],
         config: CoverageConfig
     ) -> Tuple[float, str]:
         """
         Step 10: Generate base premium from tier.
 
-        Two methods:
-        - PURE: Direct premium amount from tier config
-        - RATE_BASED: Rate applied to metric (TIV, revenue, etc.)
+        Uses the Pydantic RiskTierBand.interpretation.application block:
+        - PREMIUM_BASE: Direct premium amount from tier (application.value)
+        - MULTIPLIER: Rate (application.applied) × basis value
 
         Args:
             tier: Final tier number
-            tier_config: Tier configuration
+            tier_band: Risk tier band from compiled config
             submission_data: Submission data with metrics
-            config: Coverage configuration
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
             Tuple of (base_premium, method)
         """
-        if tier_config is None:
+        if tier_band is None:
             logger.warning(f"No config for tier {tier}, using default")
             return config.metadata.min_premium or 25000, "default"
 
-        # v2.0: MULTIPLIER method - rate × basis value
-        if tier_config.premium_method == PremiumMethod.MULTIPLIER:
-            rate_basis = tier_config.rate_basis or "tiv"
+        app = tier_band.interpretation.application
+
+        # MULTIPLIER: rate × basis value
+        if app.method == PricingMethod.MULTIPLIER:
+            rate_basis = app.basis or "tiv"
             basis_value = submission_data.get(rate_basis, 0)
 
             if basis_value <= 0:
                 logger.debug(f"No {rate_basis} value for MULTIPLIER, using PREMIUM_BASE fallback")
-                return tier_config.base_premium or config.metadata.min_premium or 25000, "default"
+                return app.value or config.metadata.min_premium or 25000, "default"
 
-            rate = tier_config.rate or tier_config.base_premium or 0
+            rate = app.applied or 0
             base_premium = basis_value * rate
             return base_premium, "multiplier"
 
-        # v2.0: PREMIUM_BASE - direct premium from tier
-        if tier_config.premium_method == PremiumMethod.PREMIUM_BASE:
-            if tier_config.base_premium is not None:
-                return tier_config.base_premium, "premium_base"
+        # PREMIUM_BASE: direct premium from tier
+        if app.method == PricingMethod.PREMIUM_BASE:
+            if app.value is not None:
+                return float(app.value), "premium_base"
             return config.metadata.min_premium or 25000, "default"
 
-        # v1.0: RATE_BASED - rate applied to metric
-        if tier_config.premium_method == PremiumMethod.RATE_BASED:
-            if tier_config.rate is None:
-                logger.warning("Rate-based tier missing rate, falling back to pure")
-                return tier_config.base_premium or config.metadata.min_premium, "pure"
-
-            rate_basis = tier_config.rate_basis or "tiv"
-            basis_value = submission_data.get(rate_basis, 0)
-
-            if basis_value <= 0:
-                logger.debug(f"No {rate_basis} value, using pure premium")
-                return tier_config.base_premium or config.metadata.min_premium, "pure"
-
-            base_premium = basis_value * tier_config.rate
-            return base_premium, "rate"
-
-        # v1.0: PURE / default
-        if tier_config.base_premium is not None:
-            return tier_config.base_premium, "pure"
+        # MODIFIER or unknown: use value if available
+        if app.value is not None:
+            return float(app.value), "pure"
         return config.metadata.min_premium or 25000, "default"
 
     def apply_modifiers(
@@ -354,194 +344,65 @@ class ModelPricer:
         """
         Step 12: Scale premium across limit bands.
 
-        Uses ILF (Increased Limit Factor) tables to calculate
-        premium for each available limit option.
+        Uses ILF (Increased Limit Factor) curves from Pydantic pricing config
+        to calculate premium for each available limit option.
 
         Args:
             premium: Premium after modifiers
             submission_data: Submission data
-            config: Coverage configuration
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
             Dictionary of limit -> premium
         """
-        if not config.limit_bands:
-            # No limit bands defined, return single option
+        limit_config = config.limit_configuration
+        if limit_config is None:
             return {}
 
+        product_type = self._resolve_product_type(submission_data, config)
         limit_premiums: Dict[str, float] = {}
-        base_ilf = 1.0
 
-        # Calculate for each limit band
-        for band in config.limit_bands:
-            limit = band.limit
+        if limit_config.type == LimitConfigType.BUNDLED and limit_config.packages:
+            # BUNDLED: fixed limit/deductible packages
+            for pkg in limit_config.packages:
+                ilf = config.get_ilf(product_type, pkg.limit)
+                ded_factor = config.get_deductible_factor(product_type, pkg.deductible)
+                limit_premium = premium * ilf * ded_factor
+                limit_premiums[str(pkg.limit)] = round(limit_premium, 2)
 
-            # Get ILF for this limit
-            ilf = self._get_ilf_for_limit(limit, config.pricing)
+        elif limit_config.type == LimitConfigType.DECOUPLED and limit_config.valid_limits:
+            # DECOUPLED: independent limit/deductible selection
+            base_deductible = int(
+                submission_data.get("deductible", config.pricing.base_deductible_reference)
+            )
+            ded_factor = config.get_deductible_factor(product_type, base_deductible)
 
-            # Calculate premium
-            limit_premium = premium * (ilf / base_ilf)
-
-            # Apply deductible credit if applicable
-            deductible = band.deductible
-            if deductible > 0:
-                credit = self._get_deductible_credit(
-                    deductible,
-                    submission_data,
-                    config.pricing
-                )
-                limit_premium *= (1 - credit)
-
-            limit_premiums[str(int(limit))] = round(limit_premium, 2)
+            for limit in limit_config.valid_limits:
+                ilf = config.get_ilf(product_type, limit)
+                limit_premium = premium * ilf * ded_factor
+                limit_premiums[str(limit)] = round(limit_premium, 2)
 
         return limit_premiums
 
-    def _get_ilf_for_limit(
+    def _resolve_product_type(
         self,
-        limit: float,
-        pricing_config
-    ) -> float:
-        """
-        Get Increased Limit Factor for a liability limit.
-
-        Args:
-            limit: The limit value
-            pricing_config: Pricing configuration
-
-        Returns:
-            ILF factor
-        """
-        factors = pricing_config.liability_ilf_factors
-        if not factors:
-            return 1.0
-
-        # Find appropriate factor or interpolate
-        prev_factor = {"limit": 0, "factor": 1.0}
-
-        for factor_def in factors:
-            factor_limit = factor_def.get("limit", 0)
-            factor_value = factor_def.get("factor", 1.0)
-
-            if limit <= factor_limit:
-                if limit == factor_limit:
-                    return factor_value
-
-                # Interpolate
-                if prev_factor["limit"] < limit < factor_limit:
-                    ratio = (limit - prev_factor["limit"]) / (factor_limit - prev_factor["limit"])
-                    return prev_factor["factor"] + ratio * (factor_value - prev_factor["factor"])
-
-                return factor_value
-
-            prev_factor = {"limit": factor_limit, "factor": factor_value}
-
-        # Above highest bracket
-        return factors[-1].get("factor", 1.0) if factors else 1.0
-
-    def _get_deductible_factor(
-        self,
-        deductible: float,
         submission_data: Dict[str, Any],
-        pricing_config
-    ) -> float:
-        """
-        Get deductible factor for premium adjustment.
-
-        V2.2+ uses deductible_factors (fixed amounts with factors).
-        Legacy uses deductible_credits (percentage-based credits).
-
-        Args:
-            deductible: Deductible amount
-            submission_data: Submission data (for basis value in legacy mode)
-            pricing_config: Pricing configuration
-
-        Returns:
-            Factor to multiply premium by (1.0 = anchor, <1.0 = credit, >1.0 = load)
-        """
-        # V2.2: Use deductible_factors if available
-        factors = getattr(pricing_config, 'deductible_factors', [])
-        if factors:
-            # Find exact match or interpolate
-            for factor_def in factors:
-                if factor_def.get("deductible") == deductible:
-                    return factor_def.get("factor", 1.0)
-
-            # If no exact match, find nearest factor
-            sorted_factors = sorted(factors, key=lambda x: x.get("deductible", 0))
-            for i, factor_def in enumerate(sorted_factors):
-                if factor_def.get("deductible", 0) > deductible:
-                    if i == 0:
-                        return factor_def.get("factor", 1.0)
-                    # Linear interpolation between adjacent factors
-                    prev = sorted_factors[i - 1]
-                    curr = factor_def
-                    prev_ded = prev.get("deductible", 0)
-                    curr_ded = curr.get("deductible", 0)
-                    prev_fac = prev.get("factor", 1.0)
-                    curr_fac = curr.get("factor", 1.0)
-                    ratio = (deductible - prev_ded) / (curr_ded - prev_ded)
-                    return prev_fac + ratio * (curr_fac - prev_fac)
-
-            # Use highest factor if deductible exceeds all entries
-            if sorted_factors:
-                return sorted_factors[-1].get("factor", 1.0)
-            return 1.0
-
-        # Legacy: Use deductible_credits (percentage-based)
-        credits = pricing_config.deductible_credits
-        if not credits:
-            return 1.0  # No adjustment
-
-        # Calculate deductible as percentage of basis (e.g., TIV)
-        tiv = submission_data.get("tiv", 0)
-        if tiv <= 0:
-            return 1.0
-
-        deductible_pct = deductible / tiv
-
-        # Find matching credit band and convert to factor
-        for credit_def in credits:
-            min_pct = credit_def.get("min_pct", 0)
-            max_pct = credit_def.get("max_pct")
-
-            if max_pct is None:
-                max_pct = float('inf')
-
-            if min_pct <= deductible_pct < max_pct:
-                # Convert credit (0-1) to factor: credit of 0.10 = factor of 0.90
-                credit = credit_def.get("credit", 0)
-                return 1.0 - credit
-
-        return 1.0
-
-    def _get_deductible_credit(
-        self,
-        deductible: float,
-        submission_data: Dict[str, Any],
-        pricing_config
-    ) -> float:
-        """
-        Legacy method - returns credit as 0-1 value.
-
-        Use _get_deductible_factor instead for V2.2+ pricing.
-
-        Args:
-            deductible: Deductible amount
-            submission_data: Submission data (for basis value)
-            pricing_config: Pricing configuration
-
-        Returns:
-            Credit factor (0-1)
-        """
-        factor = self._get_deductible_factor(deductible, submission_data, pricing_config)
-        # Convert factor back to credit: factor 0.90 = credit 0.10
-        return 1.0 - factor
+        config: CoverageConfig,
+    ) -> str:
+        """Resolve product type from submission data or config defaults."""
+        product_type = submission_data.get("product_type")
+        if product_type and product_type in config.pricing.by_product_type:
+            return product_type
+        # Default to first available product type
+        if config.pricing.by_product_type:
+            return next(iter(config.pricing.by_product_type))
+        return "standard"
 
     def calculate_hull_premium(
         self,
         hull_value: float,
         tier: int,
-        tier_config: Optional[TierConfig],
+        tier_band: Optional[RiskTierBand],
         config: CoverageConfig
     ) -> float:
         """
@@ -550,8 +411,8 @@ class ModelPricer:
         Args:
             hull_value: Insured hull value
             tier: Final tier
-            tier_config: Tier configuration
-            config: Coverage configuration
+            tier_band: Risk tier band
+            config: Coverage configuration (Pydantic compiled)
 
         Returns:
             Hull premium
@@ -560,44 +421,12 @@ class ModelPricer:
             return 0.0
 
         # Get base rate per million from tier
-        base_rate = tier_config.base_premium if tier_config else 2000
+        base_rate = 2000
+        if tier_band and tier_band.interpretation.application.value:
+            base_rate = tier_band.interpretation.application.value
         hull_factor = hull_value / 1_000_000
 
-        # Apply hull ILF
-        hull_ilf = self._get_hull_ilf(hull_value, config.pricing)
-
-        return base_rate * hull_factor * hull_ilf
-
-    def _get_hull_ilf(
-        self,
-        hull_value: float,
-        pricing_config
-    ) -> float:
-        """Get hull value ILF."""
-        factors = pricing_config.hull_ilf_factors
-        if not factors:
-            return 1.0
-
-        base_value = pricing_config.hull_ilf_base
-
-        # Find appropriate factor
-        prev_factor = {"value": 0, "factor": 1.0}
-
-        for factor_def in factors:
-            factor_value = factor_def.get("value", 0)
-            factor = factor_def.get("factor", 1.0)
-
-            if hull_value <= factor_value:
-                if prev_factor["value"] < hull_value < factor_value:
-                    # Interpolate
-                    ratio = (hull_value - prev_factor["value"]) / (factor_value - prev_factor["value"])
-                    return prev_factor["factor"] + ratio * (factor - prev_factor["factor"])
-                return factor
-
-            prev_factor = {"value": factor_value, "factor": factor}
-
-        # Above highest bracket
-        return factors[-1].get("factor", 1.0) if factors else 1.0
+        return base_rate * hull_factor
 
 
 # Singleton instance for convenience

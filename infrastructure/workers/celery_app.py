@@ -193,3 +193,66 @@ def get_refresh_interval_hours(volatility: str) -> int:
         "STATIC": 720,  # 30 days (on-demand preferred)
     }
     return intervals.get(volatility, 24)
+
+
+# =============================================================================
+# CONFIG-DRIVEN SIGNAL DISCOVERY (Phase 2)
+# =============================================================================
+
+def get_registry_signal_ids(coverage_id: str = None) -> list:
+    """
+    Discover signal IDs from compiled Pydantic configs.
+
+    If a coverage_id is given, returns signals for that coverage only.
+    Otherwise returns the union of all signals across all coverages.
+
+    Args:
+        coverage_id: Optional coverage to filter by
+
+    Returns:
+        List of signal IDs found in signal_registry
+    """
+    try:
+        from infrastructure.models.compiler import get_compiled_configs, get_config
+
+        if coverage_id:
+            config = get_config(coverage_id)
+            return [sig.id for sig in config.signal_registry]
+
+        # Union across all coverages
+        configs = get_compiled_configs()
+        signal_ids = set()
+        for coverage in configs.values():
+            for config in coverage.configurations.values():
+                for sig in config.signal_registry:
+                    signal_ids.add(sig.id)
+        return sorted(signal_ids)
+
+    except Exception:
+        # Fallback to static list if configs not available
+        all_signals = []
+        for signals in SIGNAL_VOLATILITY.values():
+            all_signals.extend(signals)
+        return all_signals
+
+
+def get_inference_function_map(coverage_id: str) -> dict:
+    """
+    Build a map of signal_id -> inference_utility_function from compiled config.
+
+    Args:
+        coverage_id: Coverage to load
+
+    Returns:
+        Dict mapping signal_id to its inference function name
+    """
+    try:
+        from infrastructure.models.compiler import get_config
+
+        config = get_config(coverage_id)
+        return {
+            sig.id: sig.inference_utility_function
+            for sig in config.signal_registry
+        }
+    except Exception:
+        return {}

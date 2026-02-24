@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.1.0|
-|Date|January 2025|
+|Version|0.3.0|
+|Date|February 2026|
 |Classification|deployment|
 
 ---
@@ -164,7 +164,7 @@ cp .env.example .env
 # Edit .env as needed
 
 # Run API
-uvicorn technical_pricing.api.main:app --reload --port 8000
+uvicorn infrastructure.api.main:app --reload --port 8000
 ```
 
 ### With Docker Compose (Recommended)
@@ -184,13 +184,13 @@ docker-compose down
 
 ```bash
 # All tests
-pytest technical_pricing/tests/ -v
+pytest tests/ -v
 
 # With coverage
-pytest technical_pricing/tests/ --cov=technical_pricing --cov-report=html
+pytest tests/ --cov=signal_architecture --cov=infrastructure --cov=layers --cov=coverages --cov-report=html
 
 # Specific test file
-pytest technical_pricing/tests/unit/test_workflow.py -v
+pytest tests/unit/test_workflow.py -v
 ```
 
 ---
@@ -254,20 +254,16 @@ kubectl create namespace dsi-prod
 kubectl config set-context --current --namespace=dsi-prod
 ```
 
-### Deploy with Helm
+### Deploy with Kustomize (Recommended)
 
 ```bash
 cd deploy/kubernetes
 
-# Install/upgrade
-helm upgrade --install dsi-api ./helm/dsi-api \
-  --namespace dsi-prod \
-  --values ./helm/dsi-api/values-prod.yaml \
-  --set image.tag=v0.2.0
+# Deploy all resources at once
+kubectl apply -k .
 
 # Check status
-helm status dsi-api -n dsi-prod
-kubectl get pods -n dsi-prod
+kubectl get pods -n dsi
 ```
 
 ### Manual Deployment
@@ -276,7 +272,7 @@ kubectl get pods -n dsi-prod
 cd deploy/kubernetes
 
 # Create secrets first
-kubectl apply -f secrets.yaml
+kubectl apply -f secrets-template.yaml  # Edit with real values first!
 
 # Deploy components
 kubectl apply -f configmap.yaml
@@ -559,7 +555,7 @@ kubectl logs -l app=dsi-api -n dsi-prod --tail=100
 
 # Verify database connectivity
 kubectl exec -it dsi-api-xxx -n dsi-prod -- python -c "
-from technical_pricing.db.config import engine
+from infrastructure.db.config import engine
 from sqlalchemy import text
 with engine.connect() as conn:
     result = conn.execute(text('SELECT 1'))
@@ -658,17 +654,13 @@ docker build -t dsi-api:v0.2.1 .
 docker push your-registry/dsi-api:v0.2.1
 
 # 3. Deploy to staging
-helm upgrade dsi-api ./helm/dsi-api \
-  --namespace dsi-staging \
-  --set image.tag=v0.2.1
+kubectl set image deployment/dsi-api dsi-api=your-registry/dsi-api:v0.2.1 -n dsi-staging
 
 # 4. Run smoke tests
-./scripts/smoke-test.sh staging
+curl -sf https://staging.dsi.internal/api/v1/health/live || exit 1
 
 # 5. Deploy to production
-helm upgrade dsi-api ./helm/dsi-api \
-  --namespace dsi-prod \
-  --set image.tag=v0.2.1
+kubectl set image deployment/dsi-api dsi-api=your-registry/dsi-api:v0.2.1 -n dsi-prod
 
 # 6. Verify
 kubectl rollout status deployment/dsi-api -n dsi-prod
@@ -683,9 +675,6 @@ kubectl rollout undo deployment/dsi-api -n dsi-prod
 # Rollback to specific revision
 kubectl rollout history deployment/dsi-api -n dsi-prod
 kubectl rollout undo deployment/dsi-api --to-revision=3 -n dsi-prod
-
-# Helm rollback
-helm rollback dsi-api 1 -n dsi-prod
 ```
 
 ### Incident Response

@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.1.0|
-|Date|January 2025|
+|Version|0.3.0|
+|Date|February 2026|
 |Classification|deployment|
 
 ---
@@ -26,7 +26,7 @@ deploy/
 ├── kubernetes/                # Kubernetes manifests
 │   ├── namespace.yaml           # DSI namespace
 │   ├── configmap.yaml           # Configuration
-│   ├── secrets.yaml             # Secrets template
+│   ├── secrets-template.yaml    # Secrets template
 │   ├── deployment.yaml          # API deployment
 │   ├── service.yaml             # ClusterIP service
 │   ├── ingress.yaml             # Ingress rules
@@ -45,7 +45,7 @@ deploy/
 # From repository root
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn technical_pricing.api.main:app --reload --port 8000
+uvicorn infrastructure.api.main:app --reload --port 8000
 ```
 
 ### Docker Compose (Simplest)
@@ -81,7 +81,7 @@ kubectl apply -k .
 # Or apply individually
 kubectl apply -f namespace.yaml
 kubectl apply -f configmap.yaml
-kubectl apply -f secrets.yaml  # Edit with real values first!
+kubectl apply -f secrets-template.yaml  # Edit with real values first!
 kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml
 kubectl apply -f ingress.yaml
@@ -120,7 +120,7 @@ Key variables (see `.env.example` for full list):
 
 ### Secrets
 
-Before deploying, update `kubernetes/secrets.yaml` with real values:
+Before deploying, update `kubernetes/secrets-template.yaml` with real values:
 
 ```bash
 # Generate secrets

@@ -21,6 +21,9 @@ from .observability.logging_config import configure_logging
 from .observability.metrics import metrics, get_metrics_response
 from .observability.rate_limiter import RateLimitMiddleware, set_redis_limiter
 
+from sqlalchemy import text
+from infrastructure.db.config import get_sync_engine
+
 # Configure structured logging before anything else
 configure_logging()
 logger = logging.getLogger("dsi.api")
@@ -373,12 +376,13 @@ async def api_info():
 # =============================================================================
 
 # Import routers after app is created to avoid circular imports
-from .routes import submissions, quotes, referrals, analytics
+from .routes import submissions, quotes, referrals, analytics, simulate
 
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
 app.include_router(referrals.router, prefix="/api/v1", tags=["Referrals"])
 app.include_router(analytics.router, prefix="/api/v1", tags=["Analytics"])
+app.include_router(simulate.router, prefix="/api/v1", tags=["Simulate"])
 
 
 # =============================================================================
@@ -404,3 +408,38 @@ async def get_metrics_json():
         "database_connected": app_state.db_connected,
         "cache_connected": app_state.cache_connected,
     }
+
+@app.get("/api/v1/workbench-data")
+def get_workbench_data():
+    engine = get_sync_engine()
+    with engine.connect() as conn:
+        # Join all three tables to get the complete picture
+        query = text("""
+            SELECT 
+                s.id, s.entity_name, s.status,
+                q.tier, q.decision, q.recommended_premium,
+                m.signal_conditions
+            FROM submissions s
+            LEFT JOIN quotes q ON s.id = q.submission_id
+            LEFT JOIN model_versions m ON s.id = m.submission_id
+        """)
+        
+        data = []
+        # .mappings() ensures this works perfectly in SQLAlchemy 2.0
+        for row in conn.execute(query).mappings():
+            data.append({
+                "id": str(row["id"]),
+                "entity_name": row["entity_name"],
+                "status": row["status"],
+                "quotes": [{
+                    "tier": row["tier"],
+                    "decision": row["decision"],
+                    "recommended_premium": row["recommended_premium"]
+                }],
+                "model_versions": [{
+                    "signal_conditions": row["signal_conditions"],
+                    "decision": row["decision"],
+                    "final_tier": row["tier"]
+                }]
+            })
+        return data

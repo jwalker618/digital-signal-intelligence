@@ -157,8 +157,8 @@ class Submission(Base):
     # Relationships
     created_by_user = relationship("User", back_populates="submissions")
     quotes = relationship("Quote", back_populates="submission", cascade="all, delete-orphan")
-    model_versions = relationship("ModelVersion", back_populates="submission", cascade="all, delete-orphan")
-
+    model_versions = relationship("ModelVersionRecord", back_populates="submission", cascade="all, delete-orphan")
+    
     __table_args__ = (
         Index("ix_submissions_entity_coverage", "entity_name", "coverage"),
         Index("ix_submissions_created_at", "created_at"),
@@ -209,7 +209,7 @@ class Quote(Base):
 
     # Relationships
     submission = relationship("Submission", back_populates="quotes")
-    model_version = relationship("ModelVersion", back_populates="quote")
+    model_version = relationship("ModelVersionRecord", back_populates="quote")
     referrals = relationship("Referral", back_populates="quote", cascade="all, delete-orphan")
 
     __table_args__ = (

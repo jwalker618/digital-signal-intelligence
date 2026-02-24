@@ -5,6 +5,67 @@ All notable changes to the Digital Signal Intelligence project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-02-21
+
+### Added
+- **Architecture Restructuring** (Phase 18)
+  - Extracted signals to `signal_architecture/` as shared infrastructure
+  - Created `layers/` directory for risk, exposure, and loss assessment layers
+  - Updated all imports from `technical_pricing/` to new package structure
+
+- **Three-Layer Assessment Architecture** (Phases 20-22)
+  - Unified signal definitions with `risk:`, `loss:`, `exposure:` subsections in all 7 coverage configs
+  - Loss Correlation Layer: loss config adapter, tier band mapping, frequency/severity propensity
+  - Exposure Shadow Layer: exposure scorer, magnitude/band assessment, complexity categories
+  - All 7 coverage configs updated with proxy_tier, correlation_direction, loss/exposure dimensions
+
+- **Organisational Graph Runtime** (Phase 23/R8)
+  - 6 node types, 6 edge types, 5 derivatives (entropy, velocity, drift, concentration, fragility)
+  - PageRank propagation, risk propagation, exposure aggregation algorithms
+  - Graph builder pipeline: node factory, edge inferencer, storage
+
+- **Multi-Configuration Multiplexer** (Phase V4)
+  - DSIMultiplexer signal broker with deduplication and parallel execution
+  - ConfigArbiter ranking: validity, confidence, specificity, margin
+  - Schema additions: model_specificity, routing_constraints
+  - 16 unit tests covering broker, arbiter, constraints, integration
+
+- **Rust Performance Modules** (R9)
+  - `rust/dsi-core/`: PyO3 crate with PageRank, derivatives, config validation
+  - `rust/dsi-sim/`: Simulation engine with portfolio, shock, formula modules
+  - Release builds with LTO optimisation
+
+- **Production Readiness** (P1-P7)
+  - Lazy imports in `infrastructure/__init__.py` (no hard FastAPI dependency)
+  - Alembic migrations with 8-table initial schema, lazy DB engine singletons
+  - Dual storage: DB persistence with in-memory fallback
+  - Unified extractor resolver: stub/production/hybrid modes via `FEATURE_USE_STUBS`
+  - 21 E2E integration tests (full pipeline: submission, scoring, tier, decision)
+  - Structured JSON logging with correlation IDs, Prometheus metrics instrumentation
+  - Rate limiting middleware (in-memory + Redis backends, per-API-key tiers)
+  - CI/CD pipeline: Rust build, integration tests, Docker build+push, staging/prod deploy
+  - Performance benchmarks: workflow ~80ms, scoring ~12ms, graph build <1ms
+
+- **Coverage Builder v2.0 Overhaul**
+  - Builder generates v2.0 compliant configs (signal_registry, three_layer_assessment, groups, tiers)
+  - Validator aligned with v2.0 schema (rejects v1.x flat structure)
+  - Signal library integrated with metadata registry
+  - CLI tool: `python -m infrastructure.builder.cli build|validate|list-industries|list-signals`
+  - 24 builder tests passing
+
+- **Deployment Infrastructure**
+  - Dockerfile with multi-stage build, non-root user, health checks
+  - Production Docker Compose (API + PostgreSQL + Redis + optional Nginx)
+  - Kubernetes manifests: namespace, deployment, service, ingress, HPA, configmap, secrets
+  - Prometheus config with alert rules, Grafana dashboard
+  - GitHub Actions CI/CD: lint, test (Python 3.10-3.12), Rust build, Docker push, deploy
+
+### Changed
+- Restructured from `technical_pricing/` to `signal_architecture/`, `infrastructure/`, `layers/`
+- Coverage configs upgraded from v1.x to v2.0 structure (banded score_conditions, loss/exposure tier bands)
+- All 7 coverage configs rebuilt with consistent structure
+- Updated documentation (README.md, SKILL.md, CONTRIBUTING.md, deploy guides)
+
 ## [0.2.0] - 2025-12-28
 
 ### Added
@@ -69,6 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.3.0 | 2026-02-21 | Three-layer assessment, production readiness, deployment infrastructure |
 | 0.2.0 | 2025-12-28 | Architecture refactor with technical_pricing |
 | 0.1.0 | 2025-11-22 | Initial release with 3 pricing models |
 

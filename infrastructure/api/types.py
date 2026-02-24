@@ -557,3 +557,87 @@ class ReferralSignalsResponse(BaseModel):
     total_signals: int
     signal_coverage: float
     average_confidence: float
+
+
+# =============================================================================
+# SIMULATION TYPES (Phase 3)
+# =============================================================================
+
+class ShockParameterRequest(BaseModel):
+    """Shock parameter for portfolio simulation."""
+    signal_id: str = Field(..., description="Signal to shock")
+    shock_type: str = Field(
+        "multiplier",
+        description="Shock type: override, multiplier, additive, percentile",
+    )
+    value: float = Field(..., description="Shock value (e.g., 0.5 for 50% multiplier)")
+    industry_filter: Optional[str] = Field(None, description="Filter by industry")
+    tier_filter: Optional[int] = Field(None, description="Filter by tier")
+    coverage_filter: Optional[str] = Field(None, description="Filter by coverage")
+
+
+class SimulateRequest(BaseModel):
+    """Request to run a portfolio stress-test simulation."""
+    portfolio_json: str = Field(
+        ...,
+        description="JSON string of portfolio snapshot (entities with signals)",
+    )
+    shocks: List[ShockParameterRequest] = Field(
+        ...,
+        min_length=1,
+        description="One or more shock parameters to apply",
+    )
+    config_path: Optional[str] = Field(
+        None, description="Path to coverage YAML config for the simulator"
+    )
+    iterations: int = Field(
+        1, ge=1, le=100_000,
+        description="Number of simulation iterations (1 = deterministic)",
+    )
+
+
+class TierMigration(BaseModel):
+    """Tier migration summary for a single entity."""
+    entity_id: str
+    old_tier: int
+    new_tier: int
+
+
+class SimulationStats(BaseModel):
+    """Statistical summary of simulation results."""
+    mean_score_delta: float
+    std_score_delta: float
+    entities_upgraded: int
+    entities_downgraded: int
+    max_premium_increase_pct: float = 0.0
+    max_premium_decrease_pct: float = 0.0
+
+
+class SimulateResponse(BaseModel):
+    """Response from portfolio simulation."""
+    simulation_id: str
+    status: str = "completed"
+
+    # Headline metrics
+    premium_adequacy: float = Field(
+        description="Post-shock / pre-shock total premium ratio"
+    )
+    total_premium_impact: float = Field(
+        description="Absolute change in total portfolio premium"
+    )
+    entities_affected: int = Field(
+        description="Number of entities whose premium changed"
+    )
+    total_entities: int = Field(
+        description="Total entities in portfolio"
+    )
+
+    # Tier migration
+    tier_migrations: List[TierMigration] = Field(default_factory=list)
+
+    # Statistics
+    stats: SimulationStats
+
+    # Metadata
+    execution_time_ms: float
+    created_at: datetime

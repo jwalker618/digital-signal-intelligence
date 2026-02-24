@@ -53,6 +53,7 @@ When starting any DSI work:
 | 21 | Loss Correlation Implementation | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
 | 22 | Exposure Shadow Implementation | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
 | 23 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` (R8) |
+| V4 | Multi-Configuration Multiplexer | ✅ Complete | `development/project/version/active/phase_v4.md` |
 
 ### DSI Comprehensive Restructure (Complete)
 
@@ -424,7 +425,7 @@ digital-signal-intelligence/
 ├── setup.py                         # Package setup
 ├── Dockerfile                       # Container definition
 ├── docker-compose.yml               # Multi-container orchestration
-├── alembic.init                     #
+├── alembic.ini                      # Alembic migration config
 ├── LICENSE                          # License for use of DSI
 │
 ├── docs/                            # Documentation
@@ -906,64 +907,15 @@ The current development plan is defined in `development/project/version/active/`
 - Phase V4: Intra-coverage (Cyber General vs Cyber Tech vs Cyber SME)
 - These are complementary layers that can be composed via `create_multiplexed_workflow_factory()`
 
-### Mandatory Pending Items
+### Pending Items
 
 | Item | Phase | Priority | Notes |
 |-|-|-|-|
-| ~~Restructure: Extract signals to root level~~ | 18 | ~~Critical~~ ✅ | **COMPLETE** - See `development/project/phase_18.md` |
-| ~~Config architecture unification~~ | 20 | ~~Critical~~ ✅ | **COMPLETE** - Unified signal definitions for risk/loss/exposure |
-| ~~Complete DSI Demo Production Build~~ | 19 | ~~High~~ ✅ | **COMPLETE** (P1-P7) - Production readiness plan executed |
-| ~~Implement Loss Correlation Runtime~~ | 21 | ~~High~~ ✅ | **COMPLETE** (R6) - Loss config adapter, tier band mapping |
-| ~~Implement Exposure Shadow Runtime~~ | 22 | ~~High~~ ✅ | **COMPLETE** (R6) - Exposure scorer, magnitude/band assessment |
-| ~~Implement Organisational Graph Runtime~~ | 23 | ~~Medium~~ ✅ | **COMPLETE** (R8) - Full graph runtime with PageRank + derivatives |
-| ~~Three-Layer Assessment Corrections~~ | - | ~~Critical~~ ✅ | **COMPLETE** (Feb 2026) - All 7 configs with proxy_tier, loss/exposure dims |
 | Fix test import paths | V3-1 | Critical | 10 test files with wrong import paths |
 | Increase unit test coverage | V3-1 | High | Target 80%, currently ~17% |
 | Compile Rust dsi_core wheel | P7 | Medium | Run `maturin develop` to activate Rust speedups |
 | Implement paid extractors (Shodan, VirusTotal, D&B) | V3-4 | Low | See `development/extractor_implementation_plan.md` |
 | Tag v1.0.0 release | V3-6 | Medium | After V3-1 test fixes complete |
-
-### Architecture & Configuration Status
-
-#### Phase 18 (Architecture Restructuring) - COMPLETE ✅
-
-Signals are now a **shared infrastructure** at repository root:
-- ✅ Extracted `signals/` to repository root
-- ✅ Created `layers/` directory for assessment layer implementations
-- ✅ Updated all imports and references
-
-#### Phase 20 (Configuration Architecture) - COMPLETE ✅
-
-Configuration now supports unified signal architecture:
-- ✅ Signals defined once with `risk:`, `loss:`, `exposure:` subsections
-- ✅ 27 new exposure signals with inference functions
-- ✅ Banding-based pricing integration (loss and exposure consistent)
-- ✅ Organisational Graph schema created (`schemas/organisational_graph.yaml`)
-- ✅ Configuration Architecture documentation (`docs/Configuration Architecture.md`)
-- ✅ Analysis layer separation (empirical parameters external to config)
-
-**Key Files**:
-- `coverages/cyber/config.yaml` - Unified signal architecture (renamed from config_rework_v2.yaml)
-- `coverages/master_config_layout.yaml` - Master configuration template (VERSION 2.0)
-- `schemas/organisational_graph.yaml` - Graph schema for World Model
-- `docs/Configuration Architecture.md` - Documentation
-- `development/project/dsi_restructure_plan.md` - Comprehensive restructure plan
-
-### Implementation Roadmap (Phases 21-23)
-
-```
-Phase 20 (Config) ──► Phase 21 (Loss Runtime) ──► Phase 23 (Graph Runtime)
-        │                                                    ▲
-        └──────────► Phase 22 (Exposure Runtime) ────────────┘
-```
-
-| Phase | Objective | Prerequisites | Key Components |
-|-|-|-|-|
-| 21 | Loss Correlation Runtime | Phase 20 config | LossCorrelationScorer, LossMonitoringEngine, pricing integration |
-| 22 | Exposure Shadow Runtime | Phase 20 config | ExposureMagnitudeCalculator, ComplexityCalculator, pricing integration |
-| 23 | Organisational Graph Runtime | Phase 20 schema, 21, 22 | NodeFactory, EdgeInferencer, DerivativeCalculator, AuthorityPropagation |
-
-**Phases 21 and 22 are now unblocked** by Phase 20 configuration work.
 
 ### Optional Enhancements
 
@@ -973,10 +925,7 @@ Phase 20 (Config) ──► Phase 21 (Loss Runtime) ──► Phase 23 (Graph Ru
 | Performance dashboards | 8 | Visualization of model performance |
 | Natural language search | 9 | Query portfolio with natural language |
 | Visualization components | 9 | Interactive charts and dashboards |
-| ~~SignalLibrary~~ | 13 | ~~Reusable signal component library~~ ✅ Integrated with metadata registry |
-| ~~CodeGenerator~~ | 13 | ~~Automated code generation for new signals~~ ✅ Stub generator in builder |
 | LLM prompts | 13 | Prompt templates for LLM-assisted coverage building |
-| ~~Builder CLI~~ | 13 | ~~Command-line interface for builder~~ ✅ `cli.py` (build/validate/list) |
 
 ### Signal Enhancement Recommendations
 

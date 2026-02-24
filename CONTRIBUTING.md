@@ -25,7 +25,7 @@ This project adheres to professional standards of conduct. All contributors are 
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher
 - Git
 - Docker (optional, for containerised development)
 
@@ -77,10 +77,10 @@ This will automatically run code quality checks before each commit.
 
 ```bash
 # Run tests
-pytest
+pytest tests/ -v
 
 # Start API server
-python -m api.server
+uvicorn infrastructure.api.main:app --reload --port 8000
 ```
 
 ## Development Workflow
@@ -115,19 +115,19 @@ Before committing, ensure all tests pass:
 
 ```bash
 # Run all tests
-pytest
+pytest tests/ -v
 
 # Run with coverage
-pytest --cov=models --cov-report=html
+pytest tests/ --cov=signal_architecture --cov=infrastructure --cov=layers --cov=coverages --cov-report=html
 
 # Run specific test file
-pytest models/cyber/tests/test_dsi_cyber_pricing.py
+pytest tests/unit/test_workflow.py -v
 
 # Run linting
-flake8 models/ api/
-black --check .
-isort --check-only .
-mypy models/ api/
+flake8 signal_architecture/ infrastructure/ layers/ coverages/
+black --check signal_architecture/ infrastructure/ layers/ coverages/
+isort --check-only signal_architecture/ infrastructure/ layers/ coverages/
+mypy signal_architecture/ infrastructure/ layers/
 ```
 
 ### 4. Commit Changes
@@ -215,17 +215,17 @@ def test_feature_description():
 ### Running Specific Tests
 
 ```bash
-# Run tests for specific model
-pytest models/cyber/tests/
+# Run tests for specific area
+pytest tests/unit/ -v
 
 # Run tests matching pattern
 pytest -k "test_pricing"
 
 # Run with verbose output
-pytest -v
+pytest tests/ -v
 
 # Run with coverage
-pytest --cov=models --cov-report=term-missing
+pytest tests/ --cov=signal_architecture --cov=infrastructure --cov=layers --cov=coverages --cov-report=term-missing
 ```
 
 ## Submitting Changes
@@ -271,34 +271,36 @@ git push origin your-branch-name
 
 ```
 digital-signal-intelligence/
-├── models/              # Pricing models
-│   ├── cyber/          # Cyber insurance
-│   ├── energy/         # Energy sector
-│   ├── financial_institutions/  # Financial institutions
-│   └── portfolio/      # Portfolio analytics
-├── api/                # REST API
-├── tests/              # Test files
-├── examples/           # Usage examples
-├── docs/               # Documentation
-└── .github/            # GitHub workflows
+├── signal_architecture/    # Signal processing (signals, discovery, orchestration, graph, multiplexer)
+├── infrastructure/         # Support systems (api, db, analytics, builder, integrations)
+├── layers/                 # Assessment layers (risk, exposure, loss)
+├── coverages/              # YAML coverage configurations (7 coverages)
+├── tests/                  # Test suite (unit, integration, api, performance)
+├── deploy/                 # Deployment configs (Docker, Kubernetes, monitoring)
+├── demo/                   # Interactive demos and examples
+├── rust/                   # Rust performance modules (dsi-core, dsi-sim)
+├── docs/                   # Documentation and case studies
+├── development/            # Phase development plans and assessments
+└── .github/                # CI/CD workflows
 ```
 
 ## Adding New Features
 
-### New Pricing Model
+### New Coverage Configuration
 
-1. Create new directory under `models/`
-2. Implement model following existing patterns
-3. Add comprehensive tests
-4. Update API to include new endpoints
-5. Add usage examples
-6. Update documentation
+1. Create new directory under `coverages/` (e.g. `coverages/new_coverage/`)
+2. Add `config.yaml` following `coverages/master_config_layout.yaml` schema
+3. Add inference functions in `signal_architecture/signals/inference/functions/`
+4. Add stub extractors in `signal_architecture/signals/extractors/stubs/`
+5. Run `python coverages/doc_generator.py` to generate `logic.md`
+6. Add comprehensive tests
+7. Update documentation
 
 ### New API Endpoint
 
-1. Add route in `api/server.py`
-2. Define request/response models
-3. Add API tests
+1. Add route in `infrastructure/api/routes/`
+2. Define request/response models in `infrastructure/api/types.py`
+3. Add API tests in `tests/api/`
 4. Update OpenAPI documentation
 5. Add usage example
 

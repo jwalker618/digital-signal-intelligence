@@ -27,8 +27,10 @@ import time
 import uuid
 from typing import Dict, List, Optional, Any, Tuple
 
+from infrastructure.models.compiler import get_config
+from infrastructure.models.config_schema import CoverageConfig, TierAction
+
 from .types import (
-    CoverageConfig,
     WorkflowResult,
     ModelVersion,
     DecisionType,
@@ -37,7 +39,6 @@ from .types import (
     AppliedModifier,
     utcnow,
 )
-from .config_manager import ConfigManager, load_coverage_config
 from .model_data import ModelDataManager, get_model_data_manager
 from .scorer import ModelScorer, get_scorer
 from .query_evaluator import QueryEvaluator, get_query_evaluator
@@ -93,7 +94,7 @@ class WorkflowEngine:
 
     This engine coordinates all components:
     - WebsiteDiscoveryEngine: Entity website discovery (Step 0)
-    - ConfigManager: Configuration loading and versioning
+    - Compiled Pydantic configs: Configuration via compiler
     - ModelDataManager: Model data tracking
     - ModelScorer: Signal extraction and scoring
     - QueryEvaluator: Direct query evaluation
@@ -103,7 +104,6 @@ class WorkflowEngine:
 
     def __init__(
         self,
-        config_manager: Optional[ConfigManager] = None,
         data_manager: Optional[ModelDataManager] = None,
         scorer: Optional[ModelScorer] = None,
         query_evaluator: Optional[QueryEvaluator] = None,
@@ -118,7 +118,6 @@ class WorkflowEngine:
         Initialize WorkflowEngine with dependencies.
 
         Args:
-            config_manager: Configuration manager (uses default if None)
             data_manager: Model data manager (uses default if None)
             scorer: Model scorer (uses default if None)
             query_evaluator: Query evaluator (uses default if None)
@@ -127,7 +126,6 @@ class WorkflowEngine:
             traditional_modifiers: Optional list of traditional modifiers
             enable_default_modifiers: If True and no modifiers provided, use defaults
         """
-        self.config_manager = config_manager or ConfigManager()
         self.data_manager = data_manager or get_model_data_manager()
         self.scorer = scorer or get_scorer()
         self.query_evaluator = query_evaluator or get_query_evaluator()
@@ -272,10 +270,10 @@ class WorkflowEngine:
             skip_discovery=skip_discovery
         )
 
-        # Step 1: Load Configuration
+        # Step 1: Load Configuration (compiled Pydantic models)
         if config is None:
-            config = load_coverage_config(coverage)
-            logger.debug(f"Loaded config: {config.configuration} v{config.metadata.version}")
+            config = get_config(coverage)
+            logger.debug(f"Loaded config: {config.config_id} v{config.metadata.version}")
 
         # Step 2: Create Model Data File
         model_id = self.data_manager.create_model(
@@ -312,8 +310,8 @@ class WorkflowEngine:
         # Include discovery data so extractors can use the discovered website
         context = InferenceContext(
             configuration={},
-            coverage=config.coverage,
-            config_name=config.configuration,
+            coverage=config.coverage_id,
+            config_name=config.config_id,
             discovered_website=discovery_output.discovered_website if discovery_output else None,
             discovered_domain=discovery_output.discovered_domain if discovery_output else None,
             corporate_identity={
@@ -329,6 +327,10 @@ class WorkflowEngine:
             entity_country=submission_data.get('country') or submission_data.get('country_name'),
             locale_source=locale_source,
         )
+
+        # Phase 2: Pre-check signal cache freshness.
+        # If cached signals are stale, trigger a synchronous refresh before scoring.
+        self._ensure_signal_freshness(entity_id, config)
 
         # Steps 4-6: Score Entity (Signal Extraction + Composite + Conditions)
         scoring_result = self.scorer.score_entity(
@@ -524,8 +526,11 @@ class WorkflowEngine:
         missing = []
 
         # Check required inputs from config metadata
-        required = config.metadata.minimum_viable_input
-        if not required:
+        mvi = config.metadata.minimum_viable_input
+        if mvi:
+            # Pydantic schema: list of MinimumViableInputField objects
+            required = [item.field for item in mvi]
+        else:
             # Default required fields
             required = ["entity_id", "limit"]
 
@@ -568,19 +573,15 @@ class WorkflowEngine:
         Returns:
             Tuple of (decision, auto_approve)
         """
-        # Get tier configuration
-        tier_config = None
-        for t in config.tiers:
-            if t.tier == final_tier:
-                tier_config = t
-                break
+        # Get tier band from compiled config
+        tier_band = config.get_tier_band(final_tier)
 
-        if tier_config is None:
+        if tier_band is None:
             # Default to refer if no tier config
             return DecisionType.REFER, False
 
         # Check for auto-decline
-        if tier_config.auto_decline:
+        if tier_band.interpretation.action == TierAction.DECLINE:
             return DecisionType.DECLINE, False
 
         # Check for referral reasons
@@ -588,7 +589,7 @@ class WorkflowEngine:
             return DecisionType.REFER, False
 
         # Check for auto-approve
-        if tier_config.auto_approve:
+        if tier_band.interpretation.action == TierAction.APPROVE:
             return DecisionType.APPROVE, True
 
         # Default to refer
@@ -762,6 +763,44 @@ class WorkflowEngine:
                 execution_time_ms=execution_time_ms,
                 error=str(e),
             )
+
+    def _ensure_signal_freshness(
+        self,
+        entity_id: str,
+        config,
+    ) -> None:
+        """
+        Phase 2: Check SignalCache freshness and trigger sync refresh if stale.
+
+        Queries the telemetry layer to verify that cached signals are
+        within their volatility-based TTL. If any signals are stale and
+        the database is available, triggers a synchronous refresh so the
+        subsequent scoring step gets up-to-date data.
+        """
+        try:
+            from infrastructure.workers.telemetry import (
+                check_signal_freshness,
+                synchronous_refresh,
+            )
+
+            # Get signal IDs from compiled config
+            signal_ids = [sig.id for sig in config.signal_registry
+                          if sig.three_layer_assessment]
+            if not signal_ids:
+                return
+
+            freshness = check_signal_freshness(entity_id, signal_ids)
+            stale_ids = [sid for sid, is_fresh in freshness.items() if not is_fresh]
+
+            if stale_ids:
+                logger.info(
+                    f"Entity {entity_id}: {len(stale_ids)}/{len(signal_ids)} "
+                    f"signals stale, triggering sync refresh"
+                )
+                synchronous_refresh(entity_id, stale_ids, timeout_seconds=20)
+        except Exception as e:
+            # Non-fatal: scoring will still run with inference functions
+            logger.debug(f"Signal freshness check skipped: {e}")
 
     def _determine_locale(
         self,

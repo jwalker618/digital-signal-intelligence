@@ -534,6 +534,10 @@ class CoverageConfig(BaseModel):
     This is the top-level model representing a single configuration
     within a coverage (e.g., cyber_general within cyber).
     """
+    # Identity fields (set by compiler during loading)
+    coverage_id: str = ""
+    config_id: str = ""
+
     metadata: ConfigMetadata
     direct_queries: List[DirectQuery] = Field(default_factory=list)
     signal_registry: List[SignalDefinition] = Field(default_factory=list)
@@ -607,6 +611,25 @@ class CoverageConfig(BaseModel):
             raise ValueError("Configuration validation errors: " + "; ".join(errors))
 
         return self
+
+    # -------------------------------------------------------------------------
+    # Backward-compatibility properties
+    # -------------------------------------------------------------------------
+
+    @property
+    def coverage(self) -> str:
+        """Backward compat: alias for coverage_id."""
+        return self.coverage_id
+
+    @property
+    def configuration(self) -> str:
+        """Backward compat: alias for config_id."""
+        return self.config_id
+
+    @property
+    def config_hash(self) -> str:
+        """Backward compat: no hash in compiled configs."""
+        return ""
 
     # -------------------------------------------------------------------------
     # Convenience methods

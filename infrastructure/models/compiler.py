@@ -119,7 +119,11 @@ def get_compiled_configs(
                     continue
 
                 try:
-                    compiled_config = CoverageConfig(**config_data)
+                    compiled_config = CoverageConfig(
+                        coverage_id=coverage_id,
+                        config_id=config_id,
+                        **config_data,
+                    )
                     configurations[config_id] = compiled_config
                     logger.info(f"Compiled: {coverage_id}/{config_id}")
                 except ValidationError as e:
