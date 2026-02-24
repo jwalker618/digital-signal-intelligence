@@ -1,9 +1,18 @@
 import uuid
-import json
-from datetime import datetime
-# Import 'text' to fix the error you received
-from sqlalchemy import text
-from infrastructure.db.config import session_scope
+from datetime import datetime, timezone, timedelta
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+# Import the actual Base and Models from your codebase
+from infrastructure.db.config import Base, DATABASE_URL_SYNC
+from infrastructure.db.models import (
+    Submission, 
+    Quote, 
+    ModelVersionRecord,
+    SubmissionStatus, 
+    QuoteStatus, 
+    DecisionType
+)
 
 # --- DATASET ---
 COMPANIES = [
@@ -11,69 +20,80 @@ COMPANIES = [
     {"name": "CrowdStrike", "ticker": "CRWD", "domain": "crowdstrike.com", "tier": 1, "premium": 98000, "status": "approve"},
     {"name": "Boeing", "ticker": "BA", "domain": "boeing.com", "tier": 3, "premium": 450000, "status": "refer"},
     {"name": "Petrobras", "ticker": "PBR", "domain": "petrobras.com.br", "tier": 4, "premium": 820000, "status": "refer"},
-    {"name": "Klarna", "ticker": "KLAR", "domain": "klarna.com", "tier": 2, "premium": 210000, "status": "approve"},
-    {"name": "Shopify", "ticker": "SHOP", "domain": "shopify.com", "tier": 1, "premium": 115000, "status": "approve"},
-    {"name": "Pemex", "ticker": "PMX", "domain": "pemex.com", "tier": 5, "premium": 0, "status": "decline"},
-    {"name": "Beazley", "ticker": "BEZ", "domain": "beazley.com", "tier": 2, "premium": 185000, "status": "approve"},
-    {"name": "Markel", "ticker": "MKL", "domain": "markel.com", "tier": 2, "premium": 195000, "status": "approve"},
-    {"name": "Palo Alto Networks", "ticker": "PANW", "domain": "paloaltonetworks.com", "tier": 1, "premium": 105000, "status": "approve"},
-    {"name": "Rolls-Royce", "ticker": "RR", "domain": "rolls-royce.com", "tier": 3, "premium": 310000, "status": "refer"},
-    {"name": "Caterpillar", "ticker": "CAT", "domain": "caterpillar.com", "tier": 2, "premium": 240000, "status": "approve"},
-    {"name": "Atlassian", "ticker": "TEAM", "domain": "atlassian.com", "tier": 1, "premium": 88000, "status": "approve"}
+    {"name": "Pemex", "ticker": "PMX", "domain": "pemex.com", "tier": 5, "premium": 0, "status": "decline"}
 ]
 
 def seed_data():
     print("--- Initializing DSI Hall of Fame Seeding ---")
     
-    with session_scope() as session:
-        # 1. Clear existing data using explicit text() wrappers
-        print("Cleaning old records...")
-        session.execute(text("DELETE FROM model_versions"))
-        session.execute(text("DELETE FROM submissions"))
-        
+    engine = create_engine(DATABASE_URL_SYNC)
+    SessionLocal = sessionmaker(bind=engine)
+
+    print("Rebuilding perfect database schema from ORM models...")
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
         for co in COMPANIES:
-            sub_id = f"sub_{co['ticker'].lower()}_{uuid.uuid4().hex[:6]}"
-            print(f"Injecting: {co['name']} -> {sub_id}")
+            decision_enum = DecisionType(co['status'])
+            print(f"Injecting: {co['name']}")
 
-            # 2. Insert Submission
-            sub_query = text("""
-                INSERT INTO submissions (id, entity_name, discovered_domain, coverage, status, created_at) 
-                VALUES (:id, :name, :domain, :cov, :status, :now)
-            """)
-            session.execute(sub_query, {
-                "id": sub_id, 
-                "name": co['name'], 
-                "domain": co['domain'], 
-                "cov": "cyber", 
-                "status": co['status'], 
-                "now": datetime.utcnow()
-            })
+            # 1. Create Submission WITH configuration string to pass Pydantic validation
+            sub = Submission(
+                id=uuid.uuid4(),
+                submission_id=f"sub_{co['ticker'].lower()}_{uuid.uuid4().hex[:6]}",
+                entity_name=co['name'],
+                discovered_domain=co['domain'],
+                coverage="cyber",
+                configuration="cyber_general",  # <--- THE MAGIC FIX
+                status=SubmissionStatus.READY
+            )
+            db.add(sub)
+            db.flush() 
 
-            # 3. Insert Model Version (The linked pricing result)
-            signals = [
-                {"note": "Strong Tech hygiene signal", "action": "modifier", "applied_modifier": -0.05},
-                {"note": f"DSI Primary Analysis: {co['name']}", "action": "flag", "applied_modifier": 0.0}
-            ]
-            
-            mv_query = text("""
-                INSERT INTO model_versions (id, submission_id, final_tier, tier_label, final_premium, decision, signal_conditions, created_at) 
-                VALUES (:id, :sub_id, :tier, :label, :prem, :dec, :sigs, :now)
-            """)
-            session.execute(mv_query, {
-                "id": f"mv_{uuid.uuid4().hex[:8]}",
-                "sub_id": sub_id,
-                "tier": co['tier'],
-                "label": f"Tier {co['tier']}",
-                "prem": co['premium'],
-                "dec": co['status'],
-                "sigs": json.dumps(signals),
-                "now": datetime.utcnow()
-            })
-        
+            # 2. Create ModelVersionRecord
+            mv = ModelVersionRecord(
+                id=uuid.uuid4(),
+                version_id=f"mv_{uuid.uuid4().hex[:8]}",
+                submission_id=sub.id,
+                version_number=1,
+                final_tier=co['tier'],
+                tier_label=f"Tier {co['tier']}",
+                decision=decision_enum,
+                final_premium=co['premium'],
+                signal_conditions=[
+                    {"note": "Strong Tech hygiene signal", "action": "modifier", "applied_modifier": -0.05},
+                    {"note": f"DSI Primary Analysis: {co['name']}", "action": "flag", "applied_modifier": 0.0}
+                ]
+            )
+            db.add(mv)
+            db.flush()
+
+            # 3. Create Final Quote
+            quote = Quote(
+                id=uuid.uuid4(),
+                quote_id=f"Q-{co['ticker']}-001",
+                submission_id=sub.id,
+                model_version_id=mv.id,
+                status=QuoteStatus.READY,
+                decision=decision_enum,
+                tier=co['tier'],
+                tier_label=f"Tier {co['tier']}",
+                recommended_premium=co['premium'],
+                valid_until=datetime.now(timezone.utc) + timedelta(days=30) # <--- TIMEZONE FIX
+            )
+            db.add(quote)
+
+        db.commit()
         print("--- All companies seeded successfully ---")
+        
+    except Exception as e:
+        db.rollback()
+        print(f"ERROR: {e}")
+        raise
+    finally:
+        db.close()
 
 if __name__ == "__main__":
-    try:
-        seed_data()
-    except Exception as e:
-        print(f"ERROR: {e}")
+    seed_data()
