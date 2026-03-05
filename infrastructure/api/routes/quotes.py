@@ -2,14 +2,18 @@
 DSI Quote Endpoints (Phase 11)
 
 Endpoints for retrieving and managing quotes.
+Wired to database repositories (Phase 8).
 """
 
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ..types import (
     QuoteResponse,
@@ -20,6 +24,14 @@ from ..types import (
     LossPropensitySummary,
     ExposureSummary,
 )
+from ...db.config import get_async_db
+from ...db.models import (
+    Quote,
+    Submission,
+    ModelVersionRecord,
+    QuoteStatus as DBQuoteStatus,
+)
+from ...db.repositories import QuoteRepository, AuditLogRepository
 
 
 logger = logging.getLogger("dsi.api.quotes")
@@ -28,88 +40,104 @@ router = APIRouter()
 
 
 # =============================================================================
-# IN-MEMORY STORAGE (Replace with database)
+# HELPERS
 # =============================================================================
 
-_quotes: dict = {}
+_DB_TO_API_STATUS = {
+    DBQuoteStatus.DRAFT: QuoteStatus.PENDING,
+    DBQuoteStatus.READY: QuoteStatus.READY,
+    DBQuoteStatus.BOUND: QuoteStatus.BOUND,
+    DBQuoteStatus.EXPIRED: QuoteStatus.EXPIRED,
+    DBQuoteStatus.DECLINED: QuoteStatus.DECLINED,
+}
 
 
-# =============================================================================
-# HELPER FUNCTIONS
-# =============================================================================
-
-def generate_id(prefix: str) -> str:
-    """Generate a unique ID."""
-    return f"{prefix}_{uuid.uuid4().hex[:12]}"
+def _map_quote_status(db_status: DBQuoteStatus) -> QuoteStatus:
+    """Map DB QuoteStatus to API QuoteStatus."""
+    return _DB_TO_API_STATUS.get(db_status, QuoteStatus.PENDING)
 
 
-def create_mock_quote(quote_id: str, submission_id: str, entity_name: str, coverage: str) -> dict:
-    """Create a mock quote for demonstration."""
-    now = datetime.utcnow()
+def _build_quote_response(
+    quote: Quote,
+    mv: ModelVersionRecord,
+    submission: Submission,
+) -> QuoteResponse:
+    """Build a QuoteResponse from DB models."""
+    # Discovery summary
+    discovery = None
+    if mv.discovery_output and isinstance(mv.discovery_output, dict):
+        discovery = DiscoverySummary(
+            domain=mv.discovery_output.get("domain", "unknown"),
+            confidence=mv.discovery_output.get("confidence", "low"),
+            industry=mv.discovery_output.get("industry"),
+            employee_count=mv.discovery_output.get("employee_count"),
+        )
 
-    return {
-        "quote_id": quote_id,
-        "submission_id": submission_id,
-        "entity_name": entity_name,
-        "coverage": coverage,
-        "status": QuoteStatus.READY,
-        # Scoring (sourced from model_version in production)
-        "composite_score": 742,
-        "tier": 2,
-        "tier_label": "STANDARD",
-        "decision": "approve",
-        # Premium
-        "premium_options": {
-            "1000000": 12500,
-            "2000000": 18750,
-            "5000000": 31250,
-        },
-        "recommended_premium": 18750,
-        "recommended_limit": 2000000,
-        # Pricing breakdown (sourced from model_version in production)
-        "base_premium": 15000,
-        "premium_after_modifiers": 18750,
-        "modifiers_applied": [
-            {"source": "categorical", "name": "Industry: Technology", "factor": 1.25}
-        ],
-        # Three-pillar summaries
-        "loss_propensity": {
-            "loss_propensity_score": 32.5,
-            "severity_propensity_score": 28.0,
-            "loss_propensity_band": "low",
-            "severity_propensity_band": "moderate",
-            "loss_confidence": 0.85,
-            "loss_combined_modifier": 0.95,
-            "loss_cohort_name": "Tech Mid-Cap",
-            "loss_trend_direction": "stable",
-        },
-        "exposure": {
-            "exposure_value": 50000000,
-            "exposure_band_label": "Mid-Market",
-            "exposure_magnitude_score": 45.0,
-            "exposure_modifier": 1.0,
-        },
-        # Details
-        "discovery": {
-            "domain": "example.com",
-            "confidence": "high",
-            "industry": "Technology",
-            "employee_count": 500,
-        },
-        "signal_summary": {
-            "total_signals": 25,
-            "signals_extracted": 23,
-            "top_factors": [
-                {"signal": "financial_health", "impact": "positive", "score": 85},
-                {"signal": "security_posture", "impact": "positive", "score": 78},
-                {"signal": "regulatory_compliance", "impact": "neutral", "score": 65},
-            ],
-        },
-        "referral_reasons": [],
-        "referral_id": None,
-        "valid_until": now + timedelta(days=30),
-        "created_at": now,
-    }
+    # Signal summary
+    signal_summary = None
+    if mv.signal_outputs:
+        sig_list = mv.signal_outputs if isinstance(mv.signal_outputs, list) else []
+        signal_summary = SignalSummary(
+            total_signals=len(sig_list),
+            signals_extracted=len(sig_list),
+            top_factors=sig_list[:3] if sig_list else [],
+        )
+
+    # Loss propensity
+    loss_propensity = None
+    if mv.loss_propensity_score is not None:
+        loss_propensity = LossPropensitySummary(
+            loss_propensity_score=mv.loss_propensity_score,
+            severity_propensity_score=mv.severity_propensity_score,
+            loss_propensity_band=mv.loss_propensity_band,
+            severity_propensity_band=mv.severity_propensity_band,
+            loss_confidence=mv.loss_confidence,
+            loss_combined_modifier=mv.loss_combined_modifier,
+            loss_cohort_name=mv.loss_cohort_name,
+            loss_trend_direction=mv.loss_trend_direction,
+        )
+
+    # Exposure
+    exposure = None
+    if mv.exposure_value is not None:
+        exposure = ExposureSummary(
+            exposure_value=mv.exposure_value,
+            exposure_band_label=mv.exposure_band_label,
+            exposure_magnitude_score=mv.exposure_magnitude_score,
+            exposure_modifier=mv.exposure_modifier,
+        )
+
+    # Determine referral_id if any active referral exists
+    referral_id = None
+    if hasattr(quote, "referrals") and quote.referrals:
+        for ref in quote.referrals:
+            if ref.status.value in ("pending", "in_review"):
+                referral_id = ref.referral_id
+                break
+
+    return QuoteResponse(
+        quote_id=quote.quote_id,
+        submission_id=submission.submission_id,
+        status=_map_quote_status(quote.status),
+        composite_score=int(mv.pure_composite_score or 0),
+        tier=mv.final_tier or 0,
+        tier_label=mv.tier_label or "UNKNOWN",
+        decision=mv.decision.value if mv.decision else "refer",
+        premium_options=quote.premium_options or {},
+        recommended_premium=quote.recommended_premium,
+        recommended_limit=quote.recommended_limit,
+        base_premium=mv.base_premium,
+        premium_after_modifiers=mv.premium_after_modifiers,
+        modifiers_applied=mv.modifiers_applied or [],
+        loss_propensity=loss_propensity,
+        exposure=exposure,
+        discovery=discovery,
+        signal_summary=signal_summary,
+        referral_reasons=mv.referral_reasons or [],
+        referral_id=referral_id,
+        valid_until=quote.valid_until,
+        created_at=quote.created_at,
+    )
 
 
 # =============================================================================
@@ -122,235 +150,240 @@ async def list_quotes(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(20, le=100, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     List quotes with optional filtering.
     """
-    results = list(_quotes.values())
+    query = (
+        select(Quote)
+        .join(Quote.submission)
+        .join(Quote.model_version)
+        .options(
+            selectinload(Quote.submission),
+            selectinload(Quote.model_version),
+        )
+    )
 
-    # Apply filters
     if coverage:
-        results = [q for q in results if q["coverage"] == coverage]
+        query = query.where(Submission.coverage == coverage)
 
     if status:
-        results = [q for q in results if q["status"].value == status]
+        api_to_db = {
+            "pending": DBQuoteStatus.DRAFT,
+            "ready": DBQuoteStatus.READY,
+            "bound": DBQuoteStatus.BOUND,
+            "expired": DBQuoteStatus.EXPIRED,
+            "declined": DBQuoteStatus.DECLINED,
+        }
+        db_status = api_to_db.get(status)
+        if db_status:
+            query = query.where(Quote.status == db_status)
 
-    # Sort by created_at descending
-    results.sort(key=lambda q: q["created_at"], reverse=True)
+    query = query.order_by(Quote.created_at.desc()).limit(limit).offset(offset)
 
-    # Paginate
-    results = results[offset:offset + limit]
+    result = await db.execute(query)
+    quotes = list(result.scalars().all())
 
     return [
         QuoteListItem(
-            quote_id=q["quote_id"],
-            submission_id=q["submission_id"],
-            entity_name=q["entity_name"],
-            coverage=q["coverage"],
-            status=q["status"],
-            tier=q["tier"],
-            premium=q["recommended_premium"] or 0,
-            decision=q.get("decision", "refer"),
-            created_at=q["created_at"],
+            quote_id=q.quote_id,
+            submission_id=q.submission.submission_id,
+            entity_name=q.submission.entity_name,
+            coverage=q.submission.coverage,
+            status=_map_quote_status(q.status),
+            tier=q.model_version.final_tier or 0,
+            premium=q.recommended_premium or 0,
+            decision=q.model_version.decision.value if q.model_version.decision else "refer",
+            created_at=q.created_at,
         )
-        for q in results
+        for q in quotes
     ]
 
 
 @router.get("/quotes/{quote_id}", response_model=QuoteResponse)
-async def get_quote(quote_id: str):
+async def get_quote(
+    quote_id: str,
+    db: AsyncSession = Depends(get_async_db),
+):
     """
     Get quote details by ID.
     """
-    if quote_id not in _quotes:
-        # Create mock quote for demonstration
-        _quotes[quote_id] = create_mock_quote(
-            quote_id=quote_id,
-            submission_id=generate_id("sub"),
-            entity_name="Demo Company",
-            coverage="cyber",
+    result = await db.execute(
+        select(Quote)
+        .where(Quote.quote_id == quote_id)
+        .options(
+            selectinload(Quote.submission),
+            selectinload(Quote.model_version),
         )
-
-    q = _quotes[quote_id]
-
-    discovery = None
-    if q.get("discovery"):
-        discovery = DiscoverySummary(
-            domain=q["discovery"]["domain"],
-            confidence=q["discovery"]["confidence"],
-            industry=q["discovery"].get("industry"),
-            employee_count=q["discovery"].get("employee_count"),
-        )
-
-    signal_summary = None
-    if q.get("signal_summary"):
-        signal_summary = SignalSummary(
-            total_signals=q["signal_summary"]["total_signals"],
-            signals_extracted=q["signal_summary"]["signals_extracted"],
-            top_factors=q["signal_summary"]["top_factors"],
-        )
-
-    loss_propensity = None
-    if q.get("loss_propensity"):
-        loss_propensity = LossPropensitySummary(**q["loss_propensity"])
-
-    exposure = None
-    if q.get("exposure"):
-        exposure = ExposureSummary(**q["exposure"])
-
-    return QuoteResponse(
-        quote_id=q["quote_id"],
-        submission_id=q["submission_id"],
-        status=q["status"],
-        composite_score=q["composite_score"],
-        tier=q["tier"],
-        tier_label=q["tier_label"],
-        decision=q["decision"],
-        premium_options=q["premium_options"],
-        recommended_premium=q["recommended_premium"],
-        recommended_limit=q.get("recommended_limit"),
-        base_premium=q.get("base_premium"),
-        premium_after_modifiers=q.get("premium_after_modifiers"),
-        modifiers_applied=q.get("modifiers_applied", []),
-        loss_propensity=loss_propensity,
-        exposure=exposure,
-        discovery=discovery,
-        signal_summary=signal_summary,
-        referral_reasons=q.get("referral_reasons", []),
-        referral_id=q.get("referral_id"),
-        valid_until=q["valid_until"],
-        created_at=q["created_at"],
     )
+    quote = result.scalar_one_or_none()
+
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    return _build_quote_response(quote, quote.model_version, quote.submission)
 
 
 @router.post("/quotes/{quote_id}/bind")
-async def bind_quote(quote_id: str):
+async def bind_quote(
+    quote_id: str,
+    db: AsyncSession = Depends(get_async_db),
+):
     """
     Bind a quote (convert to policy).
     """
-    if quote_id not in _quotes:
+    repo = QuoteRepository(db)
+    quote = await repo.get_by_id(quote_id)
+
+    if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    q = _quotes[quote_id]
-
-    if q["status"] != QuoteStatus.READY:
+    if quote.status != DBQuoteStatus.READY:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot bind quote in status {q['status'].value}"
+            detail=f"Cannot bind quote in status {quote.status.value}",
         )
 
-    # Check if expired
-    if q["valid_until"] < datetime.utcnow():
-        q["status"] = QuoteStatus.EXPIRED
+    if quote.valid_until and quote.valid_until < datetime.utcnow():
+        await repo.update_status(quote_id, DBQuoteStatus.EXPIRED)
         raise HTTPException(status_code=400, detail="Quote has expired")
 
-    # Bind
-    q["status"] = QuoteStatus.BOUND
-    q["bound_at"] = datetime.utcnow()
+    policy_number = f"POL-{uuid.uuid4().hex[:8].upper()}"
+    bound_quote = await repo.bind(
+        quote_id=quote_id,
+        bound_by=uuid.uuid4(),  # placeholder — real user from auth context
+        policy_number=policy_number,
+    )
+
+    audit_repo = AuditLogRepository(db)
+    await audit_repo.log(
+        event_type="quote",
+        event_action="bind",
+        resource_type="quote",
+        resource_id=quote_id,
+        details={"policy_number": policy_number},
+    )
 
     return {
         "message": "Quote bound successfully",
         "quote_id": quote_id,
-        "policy_id": generate_id("pol"),
-        "bound_at": q["bound_at"],
+        "policy_id": policy_number,
+        "bound_at": bound_quote.bound_at,
     }
 
 
 @router.post("/quotes/{quote_id}/decline")
-async def decline_quote(quote_id: str, reason: Optional[str] = None):
+async def decline_quote(
+    quote_id: str,
+    reason: Optional[str] = None,
+    db: AsyncSession = Depends(get_async_db),
+):
     """
     Decline a quote.
     """
-    if quote_id not in _quotes:
+    repo = QuoteRepository(db)
+    quote = await repo.get_by_id(quote_id)
+
+    if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    q = _quotes[quote_id]
-
-    if q["status"] not in [QuoteStatus.READY, QuoteStatus.DRAFT]:
+    if quote.status not in (DBQuoteStatus.READY, DBQuoteStatus.DRAFT):
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot decline quote in status {q['status'].value}"
+            detail=f"Cannot decline quote in status {quote.status.value}",
         )
 
-    q["status"] = QuoteStatus.DECLINED
-    q["declined_at"] = datetime.utcnow()
-    q["decline_reason"] = reason
+    await repo.update_status(quote_id, DBQuoteStatus.DECLINED)
+
+    audit_repo = AuditLogRepository(db)
+    await audit_repo.log(
+        event_type="quote",
+        event_action="decline",
+        resource_type="quote",
+        resource_id=quote_id,
+        details={"reason": reason},
+    )
 
     return {
         "message": "Quote declined",
         "quote_id": quote_id,
-        "declined_at": q["declined_at"],
+        "declined_at": datetime.utcnow(),
     }
 
 
 @router.get("/quotes/{quote_id}/signals")
-async def get_quote_signals(quote_id: str):
+async def get_quote_signals(
+    quote_id: str,
+    db: AsyncSession = Depends(get_async_db),
+):
     """
     Get detailed signal breakdown for a quote.
     """
-    if quote_id not in _quotes:
+    result = await db.execute(
+        select(Quote)
+        .where(Quote.quote_id == quote_id)
+        .options(selectinload(Quote.model_version))
+    )
+    quote = result.scalar_one_or_none()
+
+    if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    # Return mock signal details
-    return {
-        "quote_id": quote_id,
-        "signal_groups": {
-            "financial": {
-                "weight": 0.25,
-                "signals": [
-                    {"id": "revenue_growth", "score": 78, "contribution": 0.05},
-                    {"id": "profitability", "score": 82, "contribution": 0.06},
-                    {"id": "liquidity", "score": 71, "contribution": 0.04},
-                ],
-            },
-            "security": {
-                "weight": 0.30,
-                "signals": [
-                    {"id": "email_security", "score": 85, "contribution": 0.08},
-                    {"id": "web_security", "score": 72, "contribution": 0.06},
-                    {"id": "vulnerability_mgmt", "score": 68, "contribution": 0.05},
-                ],
-            },
-            "governance": {
-                "weight": 0.20,
-                "signals": [
-                    {"id": "leadership_stability", "score": 90, "contribution": 0.06},
-                    {"id": "regulatory_compliance", "score": 65, "contribution": 0.04},
-                ],
-            },
-        },
-    }
+    mv = quote.model_version
+    signal_groups: dict = {}
+
+    if mv and mv.signal_outputs:
+        for sig in (mv.signal_outputs if isinstance(mv.signal_outputs, list) else []):
+            group = sig.get("group_id", "other")
+            if group not in signal_groups:
+                signal_groups[group] = {
+                    "weight": sig.get("group_weight", 0.20),
+                    "signals": [],
+                }
+            signal_groups[group]["signals"].append({
+                "id": sig.get("signal_id", "unknown"),
+                "score": sig.get("score", 0),
+                "contribution": sig.get("contribution", 0),
+            })
+
+    return {"quote_id": quote_id, "signal_groups": signal_groups}
 
 
 @router.get("/quotes/{quote_id}/premium-options")
 async def get_premium_options(
     quote_id: str,
     limits: Optional[List[int]] = Query(None, description="Specific limits to price"),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Get premium options for various limits.
     """
-    if quote_id not in _quotes:
+    result = await db.execute(
+        select(Quote)
+        .where(Quote.quote_id == quote_id)
+        .options(selectinload(Quote.model_version))
+    )
+    quote = result.scalar_one_or_none()
+
+    if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    q = _quotes[quote_id]
-
-    # Use stored options or calculate new ones
     if limits:
-        # Calculate for requested limits
-        base_rate = 0.00625  # Simplified rate
-        tier_factor = {1: 0.8, 2: 1.0, 3: 1.2, 4: 1.5, 5: 2.0}.get(q["tier"], 1.0)
+        tier = quote.model_version.final_tier if quote.model_version else 3
+        base_rate = 0.00625
+        tier_factor = {1: 0.8, 2: 1.0, 3: 1.2, 4: 1.5, 5: 2.0}.get(tier, 1.0)
 
         options = {}
-        for limit in limits:
-            premium = limit * base_rate * tier_factor
-            options[str(limit)] = round(premium, 2)
+        for limit_val in limits:
+            premium = limit_val * base_rate * tier_factor
+            options[str(limit_val)] = round(premium, 2)
 
         return {"quote_id": quote_id, "premium_options": options}
 
     return {
         "quote_id": quote_id,
-        "premium_options": q["premium_options"],
-        "recommended_limit": q["recommended_limit"],
-        "recommended_premium": q["recommended_premium"],
+        "premium_options": quote.premium_options or {},
+        "recommended_limit": quote.recommended_limit,
+        "recommended_premium": quote.recommended_premium,
     }
