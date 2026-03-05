@@ -88,7 +88,12 @@ def workflow_result_to_quote(
     submission_id: str,
     quote_id: str,
 ) -> Dict[str, Any]:
-    """Convert WorkflowResult to quote dict."""
+    """Convert WorkflowResult to quote dict.
+
+    Scoring / tier / decision data is stored once on the model_version.
+    The quote dict keeps these fields for in-memory and API responses
+    (populated from model_version at read time in production).
+    """
     now = datetime.utcnow()
 
     decision_map = {
@@ -101,6 +106,7 @@ def workflow_result_to_quote(
         "quote_id": quote_id,
         "submission_id": submission_id,
         "status": QuoteStatus.READY,
+        # These come from model_version (kept here for in-memory fallback)
         "composite_score": result.composite_score,
         "confidence": result.confidence,
         "tier": result.tier,
@@ -108,6 +114,7 @@ def workflow_result_to_quote(
         "decision": decision_map.get(result.decision, "refer"),
         "auto_approve": result.auto_approve,
         "referral_reasons": result.referral_reasons,
+        # Quote-owned fields
         "premium_options": result.premium_options,
         "recommended_premium": result.recommended_premium,
         "recommended_limit": result.recommended_limit,
@@ -231,37 +238,33 @@ async def _update_submission_status(
 
 
 async def _persist_quote(quote_id: str, quote_data: Dict[str, Any]) -> None:
-    """Persist a quote to the active storage backend."""
+    """Persist a quote to the active storage backend.
+
+    Scoring / decision data is NOT written to the quote row -- it
+    lives on the linked model_version.  The quote stores only
+    recommended_premium, recommended_limit, and premium_options.
+    """
     if _db_available():
         try:
-            from ...db.repositories import QuoteRepository, SubmissionRepository
-            from ...db.models import DecisionType as DBDecisionType
+            from ...db.repositories import QuoteRepository, SubmissionRepository, ModelVersionRepository
             session = await _get_db_session()
             if session:
                 sub_repo = SubmissionRepository(session)
                 sub = await sub_repo.get_by_id(quote_data["submission_id"])
                 if sub:
-                    decision_map = {
-                        "approve": DBDecisionType.APPROVE,
-                        "refer": DBDecisionType.REFER,
-                        "decline": DBDecisionType.DECLINE,
-                    }
-                    repo = QuoteRepository(session)
-                    await repo.create(
-                        submission_id=sub.id,
-                        composite_score=quote_data.get("composite_score", 0),
-                        tier=quote_data.get("tier", 3),
-                        tier_label=quote_data.get("tier_label", ""),
-                        decision=decision_map.get(
-                            quote_data.get("decision", "refer"),
-                            DBDecisionType.REFER,
-                        ),
-                        recommended_premium=quote_data.get("recommended_premium", 0),
-                        premium_options=quote_data.get("premium_options", {}),
-                        confidence=quote_data.get("confidence", 1.0),
-                        referral_reasons=quote_data.get("referral_reasons", []),
-                    )
-                    await session.commit()
+                    # Get latest model version to link
+                    mv_repo = ModelVersionRepository(session)
+                    mv = await mv_repo.get_latest(sub.id)
+                    if mv:
+                        repo = QuoteRepository(session)
+                        await repo.create(
+                            submission_id=sub.id,
+                            model_version_id=mv.id,
+                            recommended_premium=quote_data.get("recommended_premium", 0),
+                            recommended_limit=quote_data.get("recommended_limit"),
+                            premium_options=quote_data.get("premium_options", {}),
+                        )
+                        await session.commit()
                     await session.close()
                     return
         except Exception as e:

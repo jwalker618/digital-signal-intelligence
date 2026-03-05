@@ -129,13 +129,39 @@ class DiscoverySummary(BaseModel):
     employee_count: Optional[int] = None
 
 
+class LossPropensitySummary(BaseModel):
+    """Loss propensity assessment summary (three-pillar: loss)."""
+    loss_propensity_score: Optional[float] = None
+    severity_propensity_score: Optional[float] = None
+    loss_propensity_band: Optional[str] = None
+    severity_propensity_band: Optional[str] = None
+    loss_confidence: Optional[float] = None
+    loss_combined_modifier: Optional[float] = None
+    loss_cohort_name: Optional[str] = None
+    loss_trend_direction: Optional[str] = None
+
+
+class ExposureSummary(BaseModel):
+    """Exposure assessment summary (three-pillar: exposure)."""
+    exposure_value: Optional[float] = None
+    exposure_band_label: Optional[str] = None
+    exposure_magnitude_score: Optional[float] = None
+    exposure_modifier: Optional[float] = None
+
+
 class QuoteResponse(BaseModel):
-    """Quote response with pricing details."""
+    """Quote response with pricing details.
+
+    Scoring, tier, decision, and pricing breakdown come from the linked
+    model version (single source of truth).  The quote itself holds only
+    lifecycle fields (status, validity, binding) plus the recommended
+    premium/limit for convenience.
+    """
     quote_id: str
     submission_id: str
     status: QuoteStatus
 
-    # Scoring
+    # Scoring (sourced from model_version)
     composite_score: int
     tier: int
     tier_label: str
@@ -149,11 +175,20 @@ class QuoteResponse(BaseModel):
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
 
+    # Pricing breakdown (sourced from model_version)
+    base_premium: Optional[float] = None
+    premium_after_modifiers: Optional[float] = None
+    modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
+
+    # Three-pillar assessment summaries
+    loss_propensity: Optional[LossPropensitySummary] = None
+    exposure: Optional[ExposureSummary] = None
+
     # Details
     discovery: Optional[DiscoverySummary] = None
     signal_summary: Optional[SignalSummary] = None
 
-    # Referral info
+    # Referral info (sourced from model_version)
     referral_reasons: List[str] = Field(default_factory=list)
     referral_id: Optional[str] = None
 
@@ -163,7 +198,7 @@ class QuoteResponse(BaseModel):
 
 
 class QuoteListItem(BaseModel):
-    """Quote in a list."""
+    """Quote in a list (uses model_version join for tier/premium)."""
     quote_id: str
     submission_id: str
     entity_name: str
@@ -171,6 +206,7 @@ class QuoteListItem(BaseModel):
     status: QuoteStatus
     tier: int
     premium: float
+    decision: str = "refer"
     created_at: datetime
 
 

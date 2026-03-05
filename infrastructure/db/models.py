@@ -166,30 +166,25 @@ class Submission(Base):
 
 
 class Quote(Base):
-    """Generated quote from pricing workflow."""
+    """
+    Generated quote from pricing workflow.
+
+    De-duplicated: scoring, tier, decision, and pricing details live on
+    the linked ModelVersionRecord. Quote holds only quote-lifecycle fields
+    (status, validity, binding) plus the recommended premium/limit for
+    quick list queries.
+    """
     __tablename__ = "quotes"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     quote_id = Column(String(50), unique=True, nullable=False, index=True)
     submission_id = Column(UUID(as_uuid=True), ForeignKey("submissions.id"), nullable=False)
-    model_version_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id"))
+    model_version_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id"), nullable=False)
 
     # Status
     status = Column(SQLEnum(QuoteStatus), default=QuoteStatus.DRAFT, index=True)
 
-    # Scoring
-    composite_score = Column(Float)
-    confidence = Column(Float)
-    tier = Column(Integer)
-    tier_label = Column(String(50))
-
-    # Decision
-    decision = Column(SQLEnum(DecisionType))
-    auto_approve = Column(Boolean, default=False)
-    referral_reasons = Column(JSONB, default=list)
-
-    # Pricing
-    base_premium = Column(Float)
+    # Pricing summary (denormalised for fast list queries)
     recommended_premium = Column(Float)
     recommended_limit = Column(Float)
     premium_options = Column(JSONB, default=dict)  # {limit: premium}
@@ -256,7 +251,12 @@ class Referral(Base):
 
 
 class ModelVersionRecord(Base):
-    """Complete workflow execution snapshot for audit trail (database record)."""
+    """
+    Complete workflow execution snapshot for audit trail (database record).
+
+    This is the single source of truth for all scoring, pricing, and
+    assessment data.  Quotes reference this via model_version_id.
+    """
     __tablename__ = "model_versions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -266,6 +266,7 @@ class ModelVersionRecord(Base):
     # Version info
     version_number = Column(Integer, default=1)
     version_type = Column(String(50))  # initial, referral_review, amendment
+    is_latest = Column(Boolean, default=True, nullable=False)
 
     # Configuration
     config_hash = Column(String(64))
@@ -309,6 +310,36 @@ class ModelVersionRecord(Base):
     referral_reasons = Column(JSONB, default=list)
     notes = Column(JSONB, default=list)
 
+    # =========================================================================
+    # LOSS PROPENSITY (Phase 16 - three-pillar: loss)
+    # =========================================================================
+    loss_propensity_score = Column(Float)            # 0-100 composite
+    severity_propensity_score = Column(Float)        # 0-100 composite
+    loss_propensity_band = Column(String(50))        # very_low .. high
+    severity_propensity_band = Column(String(50))    # minimal .. catastrophic
+    loss_confidence = Column(Float)
+    loss_cohort_id = Column(String(100))
+    loss_cohort_name = Column(String(255))
+    loss_cohort_confidence = Column(Float)
+    loss_frequency_multiplier = Column(Float)
+    loss_severity_multiplier = Column(Float)
+    loss_combined_modifier = Column(Float)
+    loss_trend_direction = Column(String(50))        # improving / stable / deteriorating
+    loss_previous_score = Column(Float)
+    loss_score_velocity = Column(Float)
+    loss_last_refresh = Column(DateTime(timezone=True))
+    correlation_matrix_version = Column(String(100))
+
+    # =========================================================================
+    # EXPOSURE ASSESSMENT (three-pillar: exposure)
+    # =========================================================================
+    exposure_value = Column(Float)                   # Primary exposure metric (TIV, revenue, etc.)
+    exposure_band_id = Column(Integer)
+    exposure_band_label = Column(String(100))
+    exposure_magnitude_score = Column(Float)          # 0-100 normalised
+    exposure_modifier = Column(Float)                 # Multiplier applied to premium
+    exposure_assessment_method = Column(String(50))   # config_band_lookup, signal_composite, etc.
+
     # Audit
     created_by = Column(String(100))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -319,6 +350,12 @@ class ModelVersionRecord(Base):
 
     __table_args__ = (
         Index("ix_model_versions_submission", "submission_id", "version_number"),
+        Index(
+            "ix_model_versions_latest",
+            "submission_id",
+            unique=True,
+            postgresql_where=Column("is_latest").is_(True),
+        ),
     )
 
 

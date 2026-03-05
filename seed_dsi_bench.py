@@ -1127,17 +1127,59 @@ def build_modifiers_applied(co):
     return modifiers
 
 
-def build_premium_options(co):
-    """Build premium_options dict for different limit/deductible combos."""
-    base = co["premium"]
-    if base <= 0:
+def calculate_base_premium(co):
+    """Derive base premium from tier, approximating the real pricing engine.
+
+    Uses a MULTIPLIER method when revenue is available; falls back to
+    a fixed PREMIUM_BASE per tier.
+    """
+    tier = co["tier"]
+    revenue = co.get("revenue", 0)
+
+    # Tier rate tables (rate per $1M revenue) – mirrors real config
+    tier_rates = {1: 0.0004, 2: 0.0006, 3: 0.0009, 4: 0.0014, 5: 0.0020}
+    # Flat premium fallbacks when no revenue
+    tier_flat = {1: 5000, 2: 10000, 3: 20000, 4: 40000, 5: 0}
+
+    if revenue > 0:
+        rate = tier_rates.get(tier, 0.001)
+        return round(revenue * rate, 2), "multiplier"
+    else:
+        return tier_flat.get(tier, 20000), "premium_base"
+
+
+def apply_modifiers_to_premium(base_premium, modifiers):
+    """Apply modifiers multiplicatively to base premium, returning
+    (premium_after_modifiers, enriched_modifiers_list).
+
+    Each modifier dict gets premium_before / premium_after fields
+    added so the audit trail is complete.
+    """
+    current = base_premium
+    enriched = []
+    for mod in modifiers:
+        factor = mod["applied"]
+        before = current
+        current = round(current * factor, 2)
+        enriched.append({
+            **mod,
+            "premium_before": before,
+            "premium_after": current,
+        })
+    return current, enriched
+
+
+def build_premium_options_from_base(premium_after_modifiers):
+    """Build premium_options dict using ILF-style scaling from premium_after_modifiers."""
+    if premium_after_modifiers <= 0:
         return {}
+    p = premium_after_modifiers
     return {
-        "1000000": int(base * 0.3),
-        "5000000": int(base * 0.8),
-        "10000000": int(base * 1.0),
-        "25000000": int(base * 1.8),
-        "50000000": int(base * 3.0),
+        "1000000": int(p * 0.30),
+        "5000000": int(p * 0.80),
+        "10000000": int(p * 1.00),
+        "25000000": int(p * 1.80),
+        "50000000": int(p * 3.00),
     }
 
 
@@ -1220,6 +1262,70 @@ def build_discovery_output(co):
         "country": co.get("geography", "US"),
         "industry_inferred": co.get("industry", "OTHER"),
         "employee_estimate": random.choice([50, 200, 500, 1000, 5000, 10000, 50000, 100000]),
+    }
+
+
+def build_loss_propensity(co):
+    """Build loss propensity columns keyed for ModelVersionRecord kwargs."""
+    tier = co["tier"]
+    # Higher tier = higher loss propensity
+    base_score = {1: 15, 2: 30, 3: 50, 4: 70, 5: 90}.get(tier, 50)
+    loss_score = _score(base_score, 8)
+    sev_score = _score(base_score + 5, 10)
+
+    bands_loss = {1: "very_low", 2: "low", 3: "moderate", 4: "elevated", 5: "high"}
+    bands_sev = {1: "minimal", 2: "moderate", 3: "significant", 4: "severe", 5: "catastrophic"}
+
+    freq_mult = {1: 0.60, 2: 0.80, 3: 1.00, 4: 1.25, 5: 1.50}.get(tier, 1.0)
+    sev_mult = {1: 0.70, 2: 0.90, 3: 1.10, 4: 1.30, 5: 1.50}.get(tier, 1.0)
+    combined = round(freq_mult * 0.6 + sev_mult * 0.4, 3)
+
+    return {
+        "loss_propensity_score": loss_score,
+        "severity_propensity_score": sev_score,
+        "loss_propensity_band": bands_loss.get(tier, "moderate"),
+        "severity_propensity_band": bands_sev.get(tier, "significant"),
+        "loss_confidence": round(random.uniform(0.65, 0.95), 2),
+        "loss_cohort_id": f"cohort_{co.get('industry', 'general').lower()}",
+        "loss_cohort_name": f"{co.get('industry', 'General')} Cohort",
+        "loss_cohort_confidence": round(random.uniform(0.5, 0.9), 2),
+        "loss_frequency_multiplier": freq_mult,
+        "loss_severity_multiplier": sev_mult,
+        "loss_combined_modifier": combined,
+        "loss_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
+        "loss_previous_score": _score(base_score, 12) if random.random() > 0.3 else None,
+        "loss_score_velocity": round(random.uniform(-3, 3), 2) if random.random() > 0.3 else None,
+        "loss_last_refresh": NOW - timedelta(days=random.randint(1, 30)) if random.random() > 0.3 else None,
+        "correlation_matrix_version": "v1.0.0",
+    }
+
+
+def build_exposure_assessment(co):
+    """Build exposure assessment columns keyed for ModelVersionRecord kwargs."""
+    # Use revenue or hull_value as the primary exposure metric
+    exposure_value = co.get("revenue", 0) or co.get("hull_value", 0) or co.get("tiv", 0) or 0
+
+    # Map to bands based on value ranges (simplified)
+    if exposure_value <= 0:
+        band_id, band_label, magnitude, modifier = 1, "Minimal", 10.0, 0.80
+    elif exposure_value < 50_000_000:
+        band_id, band_label, magnitude, modifier = 1, "Small", 20.0, 0.85
+    elif exposure_value < 500_000_000:
+        band_id, band_label, magnitude, modifier = 2, "Mid-Market", 40.0, 0.95
+    elif exposure_value < 5_000_000_000:
+        band_id, band_label, magnitude, modifier = 3, "Large", 60.0, 1.05
+    elif exposure_value < 50_000_000_000:
+        band_id, band_label, magnitude, modifier = 4, "Major", 80.0, 1.15
+    else:
+        band_id, band_label, magnitude, modifier = 5, "Mega", 95.0, 1.30
+
+    return {
+        "exposure_value": float(exposure_value),
+        "exposure_band_id": band_id,
+        "exposure_band_label": band_label,
+        "exposure_magnitude_score": round(magnitude + random.uniform(-5, 5), 1),
+        "exposure_modifier": modifier,
+        "exposure_assessment_method": "config_band_lookup",
     }
 
 
@@ -1335,11 +1441,28 @@ def seed_data():
             signal_outputs = build_signal_outputs(co.get("signal_profile", ""))
             group_scores = build_group_scores(co.get("signal_profile", ""))
             signal_conditions = build_signal_conditions(co)
-            modifiers = build_modifiers_applied(co)
+            raw_modifiers = build_modifiers_applied(co)
             discovery = build_discovery_output(co)
 
-            base_premium = co["premium"] if co["premium"] > 0 else None
-            premium_after_mods = co["premium"]
+            # --- PREMIUM CALCULATION (mirrors real engine) ---
+            base_premium, base_premium_method = calculate_base_premium(co)
+            if co["decision"] == "decline":
+                # Decline = no premium
+                base_premium = 0
+                premium_after_mods = 0
+                enriched_modifiers = raw_modifiers
+            else:
+                premium_after_mods, enriched_modifiers = apply_modifiers_to_premium(
+                    base_premium, raw_modifiers
+                )
+            limit_premiums = build_premium_options_from_base(premium_after_mods)
+
+            # Determine final_premium: use the limit closest to requested limit
+            requested_limit = co.get("limit", 10_000_000)
+            final_premium = premium_after_mods
+            if limit_premiums:
+                closest_key = min(limit_premiums.keys(), key=lambda k: abs(int(k) - requested_limit))
+                final_premium = limit_premiums[closest_key]
 
             # Build categorical outputs from submission data
             categorical_outputs = []
@@ -1352,12 +1475,17 @@ def seed_data():
                         "source": f"metadata.{cat_field}",
                     })
 
+            # Build loss propensity + exposure assessment
+            loss_kwargs = build_loss_propensity(co)
+            exposure_kwargs = build_exposure_assessment(co)
+
             mv = ModelVersionRecord(
                 id=mv_id,
                 version_id=f"mv_{_hex(8)}",
                 submission_id=sub_id,
                 version_number=1,
                 version_type="initial",
+                is_latest=True,
                 coverage=co["coverage"],
                 configuration_name=co["configuration"],
                 config_hash=_hex(16),
@@ -1378,21 +1506,25 @@ def seed_data():
                 final_tier=tier,
                 tier_label=TIER_LABELS.get(tier, "UNKNOWN"),
                 base_premium=base_premium,
-                base_premium_method="MULTIPLIER" if co.get("revenue", 0) > 50_000_000 else "PREMIUM_BASE",
-                modifiers_applied=modifiers,
+                base_premium_method=base_premium_method,
+                modifiers_applied=enriched_modifiers,
                 premium_after_modifiers=premium_after_mods,
-                limit_premiums=build_premium_options(co),
-                final_premium=co["premium"],
+                limit_premiums=limit_premiums,
+                final_premium=final_premium,
                 decision=decision_enum,
                 auto_approve=co["decision"] == "approve",
                 referral_reasons=co.get("referral_reasons", []),
                 notes=[{"note": co.get("description", ""), "source": "seed_script"}],
                 created_by="seed_dsi_bench",
+                # Loss propensity columns
+                **loss_kwargs,
+                # Exposure assessment columns
+                **exposure_kwargs,
             )
             db.add(mv)
             db.flush()
 
-            # === 3. QUOTE ===
+            # === 3. QUOTE (de-duplicated: scoring lives on model_version) ===
             quote_id = _uid()
             quote_status = {
                 "approve": QuoteStatus.READY,
@@ -1406,17 +1538,9 @@ def seed_data():
                 submission_id=sub_id,
                 model_version_id=mv_id,
                 status=quote_status,
-                composite_score=composite,
-                confidence=confidence,
-                tier=tier,
-                tier_label=TIER_LABELS.get(tier, "UNKNOWN"),
-                decision=decision_enum,
-                auto_approve=co["decision"] == "approve",
-                referral_reasons=co.get("referral_reasons", []),
-                base_premium=base_premium,
-                recommended_premium=co["premium"],
+                recommended_premium=final_premium,
                 recommended_limit=co.get("limit", 1_000_000),
-                premium_options=build_premium_options(co),
+                premium_options=limit_premiums,
                 valid_from=NOW,
                 valid_until=NOW + timedelta(days=30),
             )
@@ -1454,7 +1578,7 @@ def seed_data():
                     review_decision=review_decision,
                     review_notes=review_notes,
                     tier_override=tier - 1 if review_decision == "approve" and tier > 1 else None,
-                    premium_adjustment=co["premium"] * 0.1 if review_decision == "approve" else None,
+                    premium_adjustment=final_premium * 0.1 if review_decision == "approve" else None,
                 )
                 db.add(referral)
                 db.flush()
