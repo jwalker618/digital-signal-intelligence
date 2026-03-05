@@ -17,6 +17,8 @@ from ..types import (
     QuoteStatus,
     DiscoverySummary,
     SignalSummary,
+    LossPropensitySummary,
+    ExposureSummary,
 )
 
 
@@ -51,10 +53,12 @@ def create_mock_quote(quote_id: str, submission_id: str, entity_name: str, cover
         "entity_name": entity_name,
         "coverage": coverage,
         "status": QuoteStatus.READY,
+        # Scoring (sourced from model_version in production)
         "composite_score": 742,
         "tier": 2,
         "tier_label": "STANDARD",
         "decision": "approve",
+        # Premium
         "premium_options": {
             "1000000": 12500,
             "2000000": 18750,
@@ -62,6 +66,30 @@ def create_mock_quote(quote_id: str, submission_id: str, entity_name: str, cover
         },
         "recommended_premium": 18750,
         "recommended_limit": 2000000,
+        # Pricing breakdown (sourced from model_version in production)
+        "base_premium": 15000,
+        "premium_after_modifiers": 18750,
+        "modifiers_applied": [
+            {"source": "categorical", "name": "Industry: Technology", "factor": 1.25}
+        ],
+        # Three-pillar summaries
+        "loss_propensity": {
+            "loss_propensity_score": 32.5,
+            "severity_propensity_score": 28.0,
+            "loss_propensity_band": "low",
+            "severity_propensity_band": "moderate",
+            "loss_confidence": 0.85,
+            "loss_combined_modifier": 0.95,
+            "loss_cohort_name": "Tech Mid-Cap",
+            "loss_trend_direction": "stable",
+        },
+        "exposure": {
+            "exposure_value": 50000000,
+            "exposure_band_label": "Mid-Market",
+            "exposure_magnitude_score": 45.0,
+            "exposure_modifier": 1.0,
+        },
+        # Details
         "discovery": {
             "domain": "example.com",
             "confidence": "high",
@@ -122,6 +150,7 @@ async def list_quotes(
             status=q["status"],
             tier=q["tier"],
             premium=q["recommended_premium"] or 0,
+            decision=q.get("decision", "refer"),
             created_at=q["created_at"],
         )
         for q in results
@@ -161,6 +190,14 @@ async def get_quote(quote_id: str):
             top_factors=q["signal_summary"]["top_factors"],
         )
 
+    loss_propensity = None
+    if q.get("loss_propensity"):
+        loss_propensity = LossPropensitySummary(**q["loss_propensity"])
+
+    exposure = None
+    if q.get("exposure"):
+        exposure = ExposureSummary(**q["exposure"])
+
     return QuoteResponse(
         quote_id=q["quote_id"],
         submission_id=q["submission_id"],
@@ -171,10 +208,15 @@ async def get_quote(quote_id: str):
         decision=q["decision"],
         premium_options=q["premium_options"],
         recommended_premium=q["recommended_premium"],
-        recommended_limit=q["recommended_limit"],
+        recommended_limit=q.get("recommended_limit"),
+        base_premium=q.get("base_premium"),
+        premium_after_modifiers=q.get("premium_after_modifiers"),
+        modifiers_applied=q.get("modifiers_applied", []),
+        loss_propensity=loss_propensity,
+        exposure=exposure,
         discovery=discovery,
         signal_summary=signal_summary,
-        referral_reasons=q["referral_reasons"],
+        referral_reasons=q.get("referral_reasons", []),
         referral_id=q.get("referral_id"),
         valid_until=q["valid_until"],
         created_at=q["created_at"],
@@ -224,7 +266,7 @@ async def decline_quote(quote_id: str, reason: Optional[str] = None):
 
     q = _quotes[quote_id]
 
-    if q["status"] not in [QuoteStatus.READY, QuoteStatus.REFERRED]:
+    if q["status"] not in [QuoteStatus.READY, QuoteStatus.DRAFT]:
         raise HTTPException(
             status_code=400,
             detail=f"Cannot decline quote in status {q['status'].value}"

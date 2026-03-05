@@ -17,6 +17,7 @@ from .models import (
     Referral,
     ModelVersionRecord,
     SignalCache,
+    SignalAuditRecord,
     AuditLog,
     SubmissionStatus,
     QuoteStatus,
@@ -136,31 +137,24 @@ class QuoteRepository:
     async def create(
         self,
         submission_id: uuid.UUID,
-        composite_score: float,
-        tier: int,
-        tier_label: str,
-        decision: DecisionType,
+        model_version_id: uuid.UUID,
         recommended_premium: float,
         premium_options: Dict[str, float],
-        model_version_id: Optional[uuid.UUID] = None,
-        confidence: float = 1.0,
-        referral_reasons: Optional[List[str]] = None,
+        recommended_limit: Optional[float] = None,
         valid_days: int = 30,
+        status: Optional[QuoteStatus] = None,
     ) -> Quote:
-        """Create a new quote."""
+        """Create a new quote.
+
+        Scoring / tier / decision data lives on the linked ModelVersionRecord.
+        """
         quote = Quote(
             quote_id=generate_id("quo"),
             submission_id=submission_id,
             model_version_id=model_version_id,
-            status=QuoteStatus.READY,
-            composite_score=composite_score,
-            confidence=confidence,
-            tier=tier,
-            tier_label=tier_label,
-            decision=decision,
-            auto_approve=decision == DecisionType.APPROVE,
-            referral_reasons=referral_reasons or [],
+            status=status or QuoteStatus.READY,
             recommended_premium=recommended_premium,
+            recommended_limit=recommended_limit,
             premium_options=premium_options,
             valid_until=datetime.utcnow() + timedelta(days=valid_days),
         )
@@ -541,6 +535,95 @@ class SignalAuditRepository:
         )
         record = result.scalar_one_or_none()
         return record.audited_value if record else None
+
+
+class ModelVersionRepository:
+    """Repository for ModelVersionRecord operations with is_latest management."""
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create(
+        self,
+        submission_id: uuid.UUID,
+        version_type: str = "initial",
+        **kwargs,
+    ) -> ModelVersionRecord:
+        """Create a new model version, marking it as latest.
+
+        Automatically clears is_latest on any previous version for the
+        same submission.
+        """
+        # Clear is_latest on existing versions for this submission
+        await self.db.execute(
+            update(ModelVersionRecord)
+            .where(
+                and_(
+                    ModelVersionRecord.submission_id == submission_id,
+                    ModelVersionRecord.is_latest == True,
+                )
+            )
+            .values(is_latest=False)
+        )
+
+        # Determine version number
+        result = await self.db.execute(
+            select(ModelVersionRecord.version_number)
+            .where(ModelVersionRecord.submission_id == submission_id)
+            .order_by(ModelVersionRecord.version_number.desc())
+            .limit(1)
+        )
+        last_number = result.scalar_one_or_none()
+        next_number = (last_number or 0) + 1
+
+        mv = ModelVersionRecord(
+            version_id=generate_id("mv"),
+            submission_id=submission_id,
+            version_number=next_number,
+            version_type=version_type,
+            is_latest=True,
+            **kwargs,
+        )
+        self.db.add(mv)
+        await self.db.flush()
+        return mv
+
+    async def get_latest(self, submission_id: uuid.UUID) -> Optional[ModelVersionRecord]:
+        """Get the latest model version for a submission (O(1) via partial index)."""
+        result = await self.db.execute(
+            select(ModelVersionRecord).where(
+                and_(
+                    ModelVersionRecord.submission_id == submission_id,
+                    ModelVersionRecord.is_latest == True,
+                )
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_id(self, version_id: str) -> Optional[ModelVersionRecord]:
+        """Get model version by version_id."""
+        result = await self.db.execute(
+            select(ModelVersionRecord).where(ModelVersionRecord.version_id == version_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_uuid(self, id: uuid.UUID) -> Optional[ModelVersionRecord]:
+        """Get model version by UUID."""
+        result = await self.db.execute(
+            select(ModelVersionRecord).where(ModelVersionRecord.id == id)
+        )
+        return result.scalar_one_or_none()
+
+    async def list_for_submission(
+        self, submission_id: uuid.UUID
+    ) -> List[ModelVersionRecord]:
+        """List all model versions for a submission, ordered by version number."""
+        result = await self.db.execute(
+            select(ModelVersionRecord)
+            .where(ModelVersionRecord.submission_id == submission_id)
+            .order_by(ModelVersionRecord.version_number)
+        )
+        return list(result.scalars().all())
 
 
 class AuditLogRepository:

@@ -260,6 +260,8 @@ async def get_referral_quote(referral_id: str):
             str(int(premium * 2)): premium * 2,
         },
         recommended_premium=premium,
+        base_premium=r["original_premium"],
+        premium_after_modifiers=premium,
         referral_reasons=r["reasons"] if r["status"] != "approved" else [],
         referral_id=referral_id if r["status"] == "pending" else None,
         valid_until=now + timedelta(days=30),
