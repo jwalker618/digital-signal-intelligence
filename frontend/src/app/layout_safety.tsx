@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { useTheme } from "next-themes";
-import { useDsiStore } from "@/store/dsiStore";
 import { 
-  Menu, UserCircle, Bug, Search, Filter, 
-  Sun, Moon, ChevronRight, ChevronLeft, Inbox, List, BarChart3, ShieldAlert
+  PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound,  
+  Menu, Search, Filter, Inbox, List, BarChart3, ShieldAlert, Calendar
 } from "lucide-react";
-import "./globals.css";
-import Image from "development/assets/Standard_Generate_logo_and_DSI.svg"; // You will use this for your SVGs
 
+import { useDsiStore } from "@/store/dsiStore";
+import "./globals.css";
+
+// 1. Font Configuration
 const ibmPlex = IBM_Plex_Sans({ 
   weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
@@ -23,73 +22,117 @@ const inter = Inter({
   variable: '--font-inter'
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
-  // Navigation State
-  const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
-  const { activeMenu, setActiveMenu } = useDsiStore();
+// Helper component to stop repeating button code
+const SidebarIconBtn = ({ icon: Icon, onClick, className, style }: { icon: any, onClick?: () => void, className: string, style?: any }) => (
+  <button onClick={onClick} className={`absolute p-dsi-pad text-dsi-background hover:text-dsi-selected ${className}`} style={style}>
+    <Icon className="icon" />
+  </button>
+);
 
-  const ThemeToggle = () => {
-    const { theme, setTheme } = useTheme();
-    return (
-      <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="p-2 hover:bg-dsi-sub-bg/20 rounded-full transition-colors text-dsi-main-text">
-        {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-      </button>
-    );
-  };
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(true);
+  const [isDark, setIsDark] = useState(false);
+  
+  const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
+  const { activeMenu, setActiveMenu, daysFilter, setDaysFilter } = useDsiStore();
+
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [collapsedWidthPx, setCollapsedWidthPx] = useState<number | null>(null);
+
+  // Measure sidebar width perfectly based on the parent DOM
+  useEffect(() => {
+    if (!sidebarRef.current || !sidebarRef.current.parentElement) return;
+
+    const measure = () => {
+      // Get the true pixel width of the whole screen/parent container
+      const parentWidth = sidebarRef.current?.parentElement?.getBoundingClientRect().width;
+      
+      // Mathematically lock the collapsed width to exactly 5% of the usable screen.
+      // This stays completely stable during open/close animations!
+      if (parentWidth) {
+        setCollapsedWidthPx(parentWidth * 0.05);
+      }
+    };
+
+    // Observe the parent container instead of the sidebar. 
+    // It will only fire when the user physically resizes the browser window.
+    const observer = new ResizeObserver(measure);
+    if (sidebarRef.current?.parentElement) {
+      observer.observe(sidebarRef.current.parentElement);
+    }
+
+    measure();
+
+    return () => observer.disconnect();
+  }, []); // Removed [isOpen] so it doesn't recalculate during the click transition
+
+  useEffect(() => {
+    const html = document.documentElement;
+    if (isDark) html.classList.add("dark");
+    else html.classList.remove("dark");
+  }, [isDark]);
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${ibmPlex.variable} ${inter.variable} font-sans bg-dsi-main-bg flex h-screen overflow-hidden transition-colors duration-300`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          
-          {/* ================= SIDEBAR ================= */}
-          {/* Background is mapped to #0B3954 (Dark) / #7A766F (Light) */}
-          {/* Right border is mapped to #39D3BA (Dark) / #FFFFFF (Light) */}
-          <aside className={`bg-dsi-sidebar-bg flex flex-col transition-all duration-300 ease-in-out border-r border-dsi-outline relative ${isSidebarOpen ? 'w-1/3 max-w-[320px] min-w-[280px]' : 'w-16'}`}>
-            
-            {/* TOP ROW: Logo and Collapse/Expand Button */}
-            <div className="h-20 flex items-center justify-between px-4">
-              
-              {/* LOGO PLACEHOLDER (Only visible when expanded) */}
-              <div className={`overflow-hidden transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
-                {/* TO UPDATE THE LOGO:
-                  1. Place your standard and black/white SVGs in the `frontend/public` folder.
-                  2. Use the next-themes `useTheme()` hook to check if theme === 'dark'.
-                  3. Render: <Image src={theme === 'dark' ? '/Standard_Generate_Logo_and_DSI.svg' : '/BlackWhite_Generate_Logo_and_DSI.svg'} alt="DSI Logo" width={140} height={40} />
-                */}
-                <div className="h-8 w-32 border border-dashed border-dsi-sidebar-text/50 flex items-center justify-center text-xs text-dsi-sidebar-text rounded">
-                  [ SVG Logo ]
-                </div>
-              </div>
+    <html lang="en" suppressHydrationWarning> 
+      <body className={`${ibmPlex.variable} ${inter.variable} font-ibm h-screen w-screen overflow-hidden`}>
 
-              {/* COLLAPSE / EXPAND BUTTON */}
-              {/* Aligned to the far right of the padding container */}
-              <button 
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-                className="text-dsi-sidebar-text hover:text-dsi-sidebar-active transition-colors p-1 flex-shrink-0"
+        <div className="flex h-full w-full">
+
+          {/* SIDEBAR */}
+          <aside
+            ref={sidebarRef}
+            className={`
+              relative h-full shrink-0 transition-all duration-300
+              bg-dsi-contrast-background 
+              text-dsi-background
+              border-r-3 border-dsi-outline
+              ${isOpen ? "w-[50%]" : "w-[5%]"}
+            `}
+          >
+            {isOpen && (
+              <img
+                src={isDark ? "/Standard_Generate_Logo_and_DSI.svg" : "/BlackWhite_Generate_Logo_and_DSI.svg"}
+                className="
+                  absolute top-dsi-pad left-dsi-pad 
+                  h-12 w-auto 
+                  object-contain"
+                alt="DSI Logo"
+              />
+            )}
+
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="
+                absolute top-dsi-pad right-dsi-pad p-dsi-pad 
+                text-dsi-background 
+                hover:text-dsi-selected"
+            >
+              {isOpen ? <PanelRightOpen className="icon" /> : <PanelRightClose className="icon" />}
+            </button>
+
+            {/* NAVIGATION */}
+            {isOpen && collapsedWidthPx && (
+              <nav 
+                className="
+                  absolute left-10 right-0 
+                  flex-grow py-dsi-pad 
+                  overflow-y-auto 
+                  overflow-x-hidden"
+                style={{ top: collapsedWidthPx }}
               >
-                {isSidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-              </button>
-            </div>
-
-            {/* MIDDLE ROW: Navigation Hierarchy */}
-            {/* Only visible when expanded */}
-            <nav className={`flex-grow py-4 overflow-y-auto overflow-x-hidden transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
-              {isSidebarOpen && (
-                <div className="px-4">
-                  {/* Parent Item */}
+                <div className="px-dsi-pad">
                   <button 
                     onClick={() => setIsSubmissionsExpanded(!isSubmissionsExpanded)}
-                    className="w-full flex items-center justify-between py-2 text-dsi-sidebar-text hover:text-dsi-sidebar-active transition-colors"
+                    className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
                   >
-                    <span className="font-semibold uppercase tracking-wider text-sm">Submissions</span>
+                    <div className="flex items-center gap-3">
+                      <Inbox className="icon" />
+                      <span className="text-sm tracking-wider">Submissions</span>
+                    </div>
                   </button>
                   
-                  {/* Children Items (Indented) */}
                   {isSubmissionsExpanded && (
-                    <ul className="ml-2 pl-4 border-l-2 border-dsi-sidebar-text/20 mt-2 flex flex-col gap-2">
+                    <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
                       {[
                         { name: "Referral Pipeline", icon: ShieldAlert },
                         { name: "Full Pipeline", icon: List },
@@ -98,13 +141,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         <li key={item.name}>
                           <button
                             onClick={() => setActiveMenu(item.name)}
-                            className={`flex items-center gap-3 w-full text-left py-1.5 transition-colors text-sm ${
+                            className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
                               activeMenu === item.name 
-                                ? "text-dsi-sidebar-active font-medium" 
-                                : "text-dsi-sidebar-text hover:text-dsi-sidebar-active"
+                                ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
+                                : "text-dsi-background hover:text-dsi-selected"
                             }`}
                           >
-                            <item.icon className="w-4 h-4" />
+                            <item.icon className="icon" />
                             {item.name}
                           </button>
                         </li>
@@ -112,70 +155,108 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </ul>
                   )}
                 </div>
-              )}
-            </nav>
+              </nav>
+            )}
 
-            {/* BOTTOM ROW: User, Bug, and Separator Line */}
-            {/* Only visible when expanded to satisfy "only an expand button visible" when minimized */}
-            <div className={`px-4 pb-6 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              {/* Separator Line */}
-              {/* Because it is inside a px-4 container, w-full perfectly aligns its edges with the icons below */}
-              <div className="h-[1px] w-full bg-dsi-sidebar-text mb-4 opacity-50" />
-              
-              {/* Icons Container */}
-              <div className="flex items-center justify-between text-dsi-sidebar-text">
-                <button className="hover:text-dsi-sidebar-active transition-colors outline-none">
-                  <UserCircle className="w-7 h-7" />
-                </button>
-                <button className="hover:text-dsi-sidebar-active transition-colors outline-none">
-                  <Bug className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
+            {/* BOTTOM ICONS */}
+            {isOpen && collapsedWidthPx && (
+              <>
+                <div
+                  className="absolute left-dsi-pad right-dsi-pad border-t-3 border-dsi-outline"
+                  style={{ bottom: collapsedWidthPx }}
+                />
+                <SidebarIconBtn icon={CircleUserRound} className="left-dsi-pad" style={{ bottom: collapsedWidthPx / 2 - 20 }} />
+                <SidebarIconBtn icon={Bug} className="right-dsi-pad" style={{ bottom: collapsedWidthPx / 2 - 20 }} />
+              </>
+            )}
           </aside>
 
+          {/* CONTENT AREA */}
+          <main className="
+            flex-1 h-full 
+            bg-dsi-background 
+            text-dsi-contrast-background 
+            overflow-hidden flex flex-col"
+          >
 
+            {/* TITLE BAR */}
+            <div
+              className="
+                border-b-3 border-dsi-outline shrink-0
+                flex items-center justify-between px-dsi-main "
+              style={{
+                height: collapsedWidthPx ? `${collapsedWidthPx}px` : "auto",
+                minHeight: collapsedWidthPx ? `${collapsedWidthPx}px` : "auto",
+                maxHeight: collapsedWidthPx ? `${collapsedWidthPx}px` : "auto",
+              }}
+            >
+              <h1 className="font-inter text-2xl tracking-wide">
+                Submissions <span>/</span> {activeMenu}
+              </h1>
 
+              <button onClick={() => setIsDark(!isDark)} className="p-dsi-pad text-dsi-contrast-background hover:text-dsi-selected">
+                {isDark ? <LightbulbOff className="icon" /> : <Lightbulb className="icon" />}
+              </button>
+            </div>
 
+            {/* ANALYSIS SECTION */}
+            <div className="relative flex-1 overflow-hidden">
 
-
-
-          {/* ================= MAIN CONTENT AREA ================= */}
-          <main className="flex-grow flex flex-col h-full overflow-hidden">
-            
-            {/* Top Bar */}
-            <header className="h-20 flex items-center justify-between px-8 text-dsi-main-text shrink-0">
-              
-              <div className="flex items-center gap-4">
-                {/* Main Section Title (Inter Font) */}
-                <h1 className="font-inter text-2xl font-semibold text-dsi-outline">
-                  Submissions <span className="text-dsi-main-text font-normal opacity-50 px-2">/</span> {activeMenu}
-                </h1>
-              </div>
-
-              {/* Top Bar Actions */}
-              <div className="flex items-center gap-6">
-                <div className="text-sm font-medium opacity-80 hidden md:block">
-                  Including all submissions from 25th February 2026
+              <div
+                className="
+                  absolute left-dsi-gap right-dsi-gap 
+                  overflow-auto"
+                style={{
+                  top: collapsedWidthPx ? `${collapsedWidthPx}px` : "0px",
+                  bottom: collapsedWidthPx ? `${collapsedWidthPx}px` : "0px",
+                }}
+              >
+                <div className="
+                  bg-dsi-analysis 
+                  text-dsi-contrast-analysis 
+                  min-h-full 
+                  p-dsi-pad">
+                   {children}
                 </div>
-                <div className="flex gap-2">
-                  <button className="p-2 hover:bg-dsi-sub-bg/20 rounded-full transition-colors"><Filter className="w-5 h-5" /></button>
-                  <button className="p-2 hover:bg-dsi-sub-bg/20 rounded-full transition-colors"><Search className="w-5 h-5" /></button>
-                  <ThemeToggle />
+              </div>
+
+              {/* Bottom context area */}
+              <div
+                className="
+                  absolute bottom-0 left-dsi-gap right-dsi-gap
+                  overflow-auto 
+                  text-dsi-contrast-background"
+                style={{ 
+                  height: collapsedWidthPx ? `${collapsedWidthPx}px` : "0px" 
+                }}
+              >
+
+                {/* Interactive Date Filter */}
+                <div className="pt-dsi-pad flex items-center gap-2 relative">
+                  <Calendar className="icon" />
+                  <select 
+                    value={daysFilter} 
+                    onChange={(e) => setDaysFilter(Number(e.target.value))}
+                    className="icon"
+                  >
+                    <option value={7}>Last 7 Days</option>
+                    <option value={30}>Last 30 Days</option>
+                    <option value={90}>Last 90 Days</option>
+                    <option value={365}>Last 1 Year</option>
+                  </select>
+                  
+                  {/* Dynamic Description */}
+                  <p className="font-medium text-sm tracking-wide">
+                    Showing submissions updated within the last <span className="font-bold">{daysFilter} days</span> (or status = DRAFT).
+                  </p>
+
                 </div>
               </div>
-            </header>
 
-            {/* Main Sub-section (The Canvas) */}
-            <div className="flex-grow px-8 pb-8 overflow-auto bg-dsi-main-bg">
-              <div className="bg-dsi-sub-bg text-dsi-sub-text min-h-full rounded-xl border border-dsi-outline/30 shadow-xl p-6">
-                {children}
-              </div>
             </div>
 
           </main>
-
-        </ThemeProvider>
+        </div>
       </body>
     </html>
   );

@@ -1,87 +1,139 @@
 "use client";
 
+import { Check, X, Loader2, Calendar } from "lucide-react";
+
+import ViewCanvas from "@/components/ViewCanvas"; 
 import { useDsiStore } from "@/store/dsiStore";
-import { Check, X, Loader2 } from "lucide-react";
+import "@/app/globals.css";
 
 export default function PipelineTable({ type }: { type: "full" | "referral" }) {
-  const { submissions, isLoading, setActiveMenu, setActiveSubmission } = useDsiStore();
+  const { 
+    submissions, 
+    isLoading, 
+    daysFilter,
+    setDaysFilter,
+    fetchSubmissionDetail,
+    updateDecision } = useDsiStore();
 
   if (isLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-dsi-selected w-8 h-8" /></div>;
   }
 
-  // Filter for Referral Pipeline if needed
+  // Filter for Referral Pipeline using the new flat 'decision' field
   const displayData = type === "referral" 
-    ? submissions.filter(s => s.status === "refer" || s.quotes?.[0]?.decision === "refer")
+    ? submissions.filter(s => s.status === "REFER" || s.decision === "REFER")
     : submissions;
 
+  // DEFINE BOTTOM CONTEXT UI FOR THIS SPECIFIC VIEW
+  const PipelineBottomContext = (
+    <div className="w-full h-full flex">
+      <div className="pt-dsi-pad flex relative">
+        <Calendar className="icon" />
+        <select 
+          value={daysFilter} 
+          onChange={(e) => setDaysFilter(Number(e.target.value))}
+          className="icon"
+        >
+          <option value={7}>Last 7 Days</option>
+          <option value={30}>Last 30 Days</option>
+          <option value={90}>Last 90 Days</option>
+          <option value={365}>Last 1 Year</option>
+        </select>
+        
+        {/* Dynamic Description */}
+        <p className="">
+          Showing submissions updated within the last <span className="font-bold">{daysFilter} days</span> (or status = DRAFT).
+        </p>
+
+      </div>
+    </div>
+  );
+
   const handleRowClick = (submissionId: string) => {
-    setActiveSubmission(submissionId);
-    setActiveMenu("Workbench"); // Routes to the specific analysis screen
+    // Triggers the deep fetch for the Workbench using the new submission_id
+    fetchSubmissionDetail(submissionId); 
   };
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="w-full text-left border-collapse whitespace-nowrap">
-        <thead>
-          <tr className="border-b-2 border-dsi-selected text-dsi-selected font-semibold text-sm tracking-wider uppercase">
-            <th className="py-3 px-4">Client</th>
-            <th className="py-3 px-4">Coverage</th>
-            <th className="py-3 px-4">Renewal</th>
-            <th className="py-3 px-4">Tier (Of)</th>
-            <th className="py-3 px-4 text-right">Gross Premium $</th>
-            <th className="py-3 px-4 text-right">Limit $</th>
-            <th className="py-3 px-4 text-center">
-              {type === "full" ? "Decision" : "Quick Actions"}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {displayData.map((sub: any, index: number) => {
-            const quote = sub.quotes?.[0] || {};
-            const tier = quote.tier || "?";
-            const decision = quote.decision || sub.status || "pending";
-            const premium = quote.recommended_premium || 0;
-            const limit = sub.limit_amount || 0
-            const coverage = sub.coverage ? sub.coverage.replace("_", " ") : "Unknown";
+    <ViewCanvas bottomContext={PipelineBottomContext}>
+      <div className="w-full no-scrollbar">
+        <table className="w-full text-left border-collapse whitespace-nowrap">
+          <thead className="sticky top-0 z-10 bg-dsi-analysis">
+            <tr className="border-b-2 border-dsi-selected text-dsi-selected font-semibold text-sm tracking-wider uppercase">
+              <th className="py-3 px-4">Client</th>
+              <th className="py-3 px-4">Coverage</th>
+              <th className="py-3 px-4 text-wrap">Pure Composite Score</th>
+              <th className="py-3 px-4">Tier</th>
+              <th className="py-3 px-4 text-right">Gross Premium $</th>
+              <th className="py-3 px-4 text-right">Limit $</th>
+              <th className="py-3 px-4 text-center">
+                {type === "full" ? "Decision" : "Quick Actions"}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayData.map((sub: any, index: number) => {
+              // Using the new flat properties from your SQL query
+              const premium = sub.recommended_premium || 0;
+              const limit = sub.recommended_limit || 0;
 
-            return (
-              <tr 
-                key={sub.id || index}
-                onClick={() => handleRowClick(sub.id)}
-                className="cursor-pointer transition-colors border-b border-dsi-outline/10 text-dsi-selected hover:bg-dsi-selected hover:text-dsi-background even:bg-dsi-contrast-analysis/20"
-              >
-                <td className="py-3 px-4 font-medium">{sub.entity_name}</td>
-                <td className="py-3 px-4 capitalize">{coverage}</td>
-                <td className="py-3 px-4">No</td>
-                <td className="py-3 px-4">{tier} (5)</td>
-                <td className="py-3 px-4 text-right font-mono">${premium.toLocaleString()}</td>
-                <td className="py-3 px-4 text-right font-mono">${limit.toLocaleString()}</td>
-                <td className="py-3 px-4 text-center">
-                  {type === "full" ? (
-                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
-                      decision === 'approve' ? 'text-green-600 dark:text-green-400' : 
-                      decision === 'refer' ? 'text-yellow-600 dark:text-yellow-400' : 
-                      'text-red-600 dark:text-red-400'
-                    }`}>
-                      {decision}
-                    </span>
-                  ) : (
-                    <div className="flex items-center justify-center gap-4">
-                      <button className="text-green-600 dark:text-green-400 hover:scale-125 transition-transform" onClick={(e) => e.stopPropagation()}><Check className="w-5 h-5" /></button>
-                      <span className="opacity-50 text-dsi-selected font-light">/</span>
-                      <button className="text-red-600 dark:text-red-400 hover:scale-125 transition-transform" onClick={(e) => e.stopPropagation()}><X className="w-5 h-5" /></button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {displayData.length === 0 && (
-        <div className="text-center py-8 text-dsi-selected opacity-70 italic">No submissions found.</div>
-      )}
-    </div>
+              return (
+                <tr 
+                  key={sub.submission_id || index}
+                  onClick={() => handleRowClick(sub.submission_id)}
+                  className="
+                    cursor-pointer
+                    even:bg-dsi-contrast-analysis
+                    text-dsi-selected
+                    hover:text-dsi-contrast-background"
+                >
+                  <td className="py-3 px-4">{sub.entity_name}</td>
+                  <td className="py-3 px-4">{sub.coverage_configuration}</td>
+                  <td className="py-3 px-4 text-right">{sub.pure_composite_score}</td>
+                  <td className="py-3 px-4 text-right">{sub.final_tier}</td>
+                  <td className="py-3 px-4 text-right">${premium.toLocaleString()}</td>
+                  <td className="py-3 px-4 text-right">${limit.toLocaleString()}</td>
+
+                  <td className="py-3 px-4">
+                    {type === "full" ? 
+                    (
+                      <span className={`lowercase`}>{sub.decision}</span>
+                    ) : (
+                      <div className="flex items-center justify-center gap-4">
+                        <button 
+                          className="text-green-600 dark:text-green-400 hover:scale-125" 
+                          onClick={(e) => { 
+                            e.stopPropagation(); // Stops the row click from firing!
+                            updateDecision(sub.submission_id, "APPROVE"); 
+                          }}
+                        >
+                          <Check className="icon" />
+                        </button>
+
+                        <span className="opacity-50 text-dsi-selected font-light">/</span>
+
+                        <button 
+                          className="text-red-600 dark:text-red-400 hover:scale-125" 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            updateDecision(sub.submission_id, "DECLINE"); 
+                          }}
+                        >
+                          <X className="icon" />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {displayData.length === 0 && (
+          <div className="text-center py-8 text-dsi-selected opacity-70 italic">No submissions found.</div>
+        )}
+      </div>
+    </ViewCanvas>
   );
 }

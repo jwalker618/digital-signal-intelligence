@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 import { 
   PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound,  
-  Menu, Search, Filter, Inbox, List, BarChart3, ShieldAlert
+  Menu, Search, Filter, Inbox, List, BarChart3, ShieldAlert, Calendar
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
@@ -34,9 +34,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [isDark, setIsDark] = useState(false);
   
   const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
-  const { activeMenu, setActiveMenu, dateFilter } = useDsiStore();
+  const { activeMenu, setActiveMenu, daysFilter, setDaysFilter, previousMenu, activeSubmission } = useDsiStore();
 
-  // YOUR EXACT MATH LOGIC RESTORED
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [collapsedWidthPx, setCollapsedWidthPx] = useState<number | null>(null);
 
@@ -173,67 +172,47 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </aside>
 
           {/* CONTENT AREA */}
-          <main className="
-            flex-1 h-full 
-            bg-dsi-background 
-            text-dsi-contrast-background 
-            overflow-hidden flex flex-col"
+          <main 
+            className="flex-1 h-full bg-dsi-background text-dsi-contrast-background overflow-hidden flex flex-col"
+            style={{ 
+              // Broadcasts your exact math globally to all child components!
+              '--cw': collapsedWidthPx ? `${collapsedWidthPx}px` : '80px' 
+            } as React.CSSProperties}
           >
 
             {/* TITLE BAR */}
             <div
-              className="
-                border-b-3 border-dsi-outline shrink-0
-                flex items-center justify-between px-dsi-main "
-              style={{
-                height: collapsedWidthPx ? `${collapsedWidthPx}px` : "auto",
-                minHeight: collapsedWidthPx ? `${collapsedWidthPx}px` : "auto",
-                maxHeight: collapsedWidthPx ? `${collapsedWidthPx}px` : "auto",
-              }}
+              className="border-b-3 border-dsi-outline flex items-center justify-between px-dsi-main shrink-0"
+              style={{ height: 'var(--cw)' }}
             >
               <h1 className="font-inter text-2xl tracking-wide">
-                Submissions <span>/</span> {activeMenu}
+                Submissions 
+                <span className="opacity-50">/</span> 
+                {/* Show previous menu if in Workbench, otherwise show active menu */}
+                {activeMenu === "Workbench" ? previousMenu : activeMenu}
+                
+                {/* Dynamically inject the Bold Entity Name if we are in the Workbench! */}
+                {activeMenu === "Workbench" && activeSubmission && (
+                  <>
+                    <span className="opacity-50">/</span>
+                    <span className="font-bold">{activeSubmission.entity_name}</span>
+                  </>
+                )}
               </h1>
 
-              <button onClick={() => setIsDark(!isDark)} className="p-dsi-pad text-dsi-contrast-background hover:text-dsi-selected">
+              <button onClick={() => setIsDark(!isDark)} className="p-dsi-pad text-dsi-contrast-background hover:text-dsi-selected transition-colors">
                 {isDark ? <LightbulbOff className="icon" /> : <Lightbulb className="icon" />}
               </button>
             </div>
 
-            {/* ANALYSIS SECTION */}
+            {/* THE DYNAMIC CANVAS AREA */}
+            {/* We hand this entire space over to page.tsx to render whatever it wants */}
             <div className="relative flex-1 overflow-hidden">
-
-              <div
-                className="
-                  absolute left-dsi-gap right-dsi-gap 
-                  overflow-auto"
-                style={{
-                  top: collapsedWidthPx ? `${collapsedWidthPx}px` : "0px",
-                  bottom: collapsedWidthPx ? `${collapsedWidthPx}px` : "0px",
-                }}
-              >
-                <div className="
-                  bg-dsi-analysis 
-                  text-dsi-contrast-analysis 
-                  min-h-full 
-                  p-dsi-pad">
-                   {children}
-                </div>
-              </div>
-
-              <div
-                className="
-                  absolute bottom-0 left-dsi-gap right-dsi-gap 
-                  overflow-auto 
-                  text-dsi-contrast-background"
-                style={{ height: collapsedWidthPx ? `${collapsedWidthPx}px` : "0px" }}
-              >
-                <p className="pt-dsi-pad text-sm tracking-wide">{dateFilter}</p>
-              </div>
-
+              {children}
             </div>
 
           </main>
+
         </div>
       </body>
     </html>

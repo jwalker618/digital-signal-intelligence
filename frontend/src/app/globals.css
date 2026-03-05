@@ -38,6 +38,14 @@
   --dsi-contrast-analysis: #06859B;
 }
 
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 @utility icon {
   width: 20px;
   height: 20px;

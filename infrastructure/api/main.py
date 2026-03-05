@@ -8,8 +8,10 @@ import logging
 import os
 import time
 import uuid
+
+from pydantic import BaseModel
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -67,6 +69,8 @@ class Settings:
 
 settings = Settings()
 
+class DecisionPayload(BaseModel):
+    decision: str
 
 # =============================================================================
 # APPLICATION STATE
@@ -82,7 +86,6 @@ class AppState:
 
 
 app_state = AppState()
-
 
 # =============================================================================
 # LIFESPAN MANAGEMENT
@@ -410,40 +413,87 @@ async def get_metrics_json():
     }
 
 @app.get("/api/v1/workbench-data")
-def get_workbench_data():
+def get_workbench_data(created_after: datetime | None = None):
     engine = get_sync_engine()
+
+    if created_after is None:
+        created_after = datetime.utcnow() - timedelta(days=30)
+
     with engine.connect() as conn:
-        # Join all three tables to get the complete picture
         query = text("""
             SELECT 
-                s.id, s.entity_name, s.status, s.coverage, s.limit_amount,
-                q.tier, q.decision, q.recommended_premium,
-                m.signal_conditions
+                s.id AS submission_id,
+                q.id AS quote_id,
+                mv.id AS model_version_id,
+                s.submission_id AS submission_code,
+                q.quote_id AS quote_code,
+                mv.version_id AS version_code,
+                s.entity_name,
+                COALESCE(s.coverage, '') || ' / ' || COALESCE(s.configuration, '') AS coverage_configuration,
+                s.created_at,
+                q.status,
+                q.recommended_premium,
+                q.recommended_limit,
+                mv.pure_composite_score,
+                mv.confidence AS pure_composite_score_confidence,
+                mv.signal_coverage,
+                mv.final_tier,
+                mv.tier_label,
+                mv.decision
             FROM submissions s
             LEFT JOIN quotes q ON s.id = q.submission_id
-            LEFT JOIN model_versions m ON s.id = m.submission_id
+            LEFT JOIN model_versions mv ON mv.submission_id = s.id AND mv.id = q.model_version_id
+            WHERE mv.is_latest = true
+              AND (
+                    CAST(s.status AS TEXT) ILIKE 'draft'
+                    OR s.created_at >= :created_after
+                  )
         """)
-        
-        data = []
-        for row in conn.execute(query).mappings():
-            data.append({
-                "id": str(row["id"]),
+
+        rows = conn.execute(query, {"created_after": created_after}).mappings().all()
+
+        return [
+            {
+                "submission_id": row["submission_id"],
+                "quote_id": row["quote_id"],
+                "model_version_id": row["model_version_id"],
+                "submission_code": row["submission_code"],
+                "quote_code": row["quote_code"],
+                "version_code": row["version_code"],
                 "entity_name": row["entity_name"],
+                "coverage_configuration": row["coverage_configuration"],
+                "created_at": row["created_at"],
                 "status": row["status"],
-                "coverage": row["coverage"],
-                "limit_amount": row["limit_amount"],
-                "quotes": [{
-                    "tier": row["tier"],
-                    "decision": row["decision"],
-                    "recommended_premium": row["recommended_premium"]
-                }],
-                "model_versions": [{
-                    "signal_conditions": row["signal_conditions"],
-                    "decision": row["decision"],
-                    "final_tier": row["tier"]
-                }]
-            })
-        return data
+                "recommended_premium": row["recommended_premium"],
+                "recommended_limit": row["recommended_limit"],
+                "pure_composite_score": row["pure_composite_score"],
+                "pure_composite_score_confidence": row["pure_composite_score_confidence"],
+                "signal_coverage": row["signal_coverage"],
+                "final_tier": row["final_tier"],
+                "tier_label": row["tier_label"],
+                "decision": row["decision"]
+            }
+            for row in rows
+        ]
+
+@app.post("/api/v1/submissions/{submission_id}/decision")
+def update_submission_decision(submission_id: str, payload: DecisionPayload):
+    engine = get_sync_engine()
+    # .begin() automatically commits the transaction if it succeeds!
+    with engine.begin() as conn:
+        # 1. Update the Quotes table
+        conn.execute(text("""
+            UPDATE quotes SET decision = :decision 
+            WHERE submission_id = :sub_id
+        """), {"decision": payload.decision, "sub_id": submission_id})
+        
+        # 2. Update the Submissions table status
+        conn.execute(text("""
+            UPDATE submissions SET status = :decision
+            WHERE id = :sub_id
+        """), {"decision": payload.decision, "sub_id": submission_id})
+        
+    return {"status": "success", "decision": payload.decision}
 
 @app.get("/api/v1/referral-queue")
 def get_referral_queue():

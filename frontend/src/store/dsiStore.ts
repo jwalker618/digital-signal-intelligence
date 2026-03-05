@@ -4,8 +4,12 @@ export interface DsiState {
   // Navigation & Context State
   activeMenu: string;
   setActiveMenu: (menu: string) => void;
-  dateFilter: string;
-  setDateFilter: (filter: string) => void;
+  previousMenu: string;
+  updateDecision: (id: string, decision: string) => Promise<void>;
+  
+  // NEW: Date Filter State
+  daysFilter: number;
+  setDaysFilter: (days: number) => void;
 
   // Data State
   submissions: any[];
@@ -14,32 +18,40 @@ export interface DsiState {
   error: string | null;
   
   // Actions
-  setActiveSubmission: (id: string | null) => void;
   fetchSubmissions: () => Promise<void>;
+  fetchSubmissionDetail: (id: string) => Promise<void>;
 }
 
-export const useDsiStore = create<DsiState>((set) => ({
-  // Navigation Defaults
+export const useDsiStore = create<DsiState>((set, get) => ({
   activeMenu: "Referral Pipeline",
   setActiveMenu: (menu) => set({ activeMenu: menu }),
-  dateFilter: "Including all submissions from 25th February 2026",
-  setDateFilter: (filter) => set({ dateFilter: filter }),
+  previousMenu: "Referral Pipeline",
+  
+  // Default to 30 days, just like the backend
+  daysFilter: 30,
+  setDaysFilter: (days) => {
+    set({ daysFilter: days });
+    // Automatically re-fetch the data from the backend when the filter changes!
+    get().fetchSubmissions(); 
+  },
 
-  // Data Defaults
   submissions: [],
   activeSubmission: null,
   isLoading: false,
   error: null,
 
-  setActiveSubmission: (id) => set({ activeSubmission: id }),
-
-// 1. Fetch the lightweight list for the tables
   fetchSubmissions: async () => {
     set({ isLoading: true, error: null });
     
     try {
-      // Pointing to your custom raw SQL endpoint!
-      const res = await fetch("http://localhost:8000/api/v1/workbench-data");
+      // Calculate the date based on the current filter
+      const days = get().daysFilter;
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() - days);
+      const isoDateString = targetDate.toISOString(); // e.g., 2026-02-03T11:53:00.000Z
+      
+      // Pass the date to your backend!
+      const res = await fetch(`http://localhost:8000/api/v1/workbench-data?created_after=${isoDateString}`);
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       
       const data = await res.json();
@@ -49,23 +61,36 @@ export const useDsiStore = create<DsiState>((set) => ({
     }
   },
 
-  // 2. Fetch the MASSIVE payload when a row is clicked
   fetchSubmissionDetail: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Pointing to the FastAPI router endpoint that returns the deep detail
       const res = await fetch(`http://localhost:8000/api/v1/submissions/${id}`);
-      if (!res.ok) throw new Error("Failed to fetch deep submission details");
-      
+      if (!res.ok) throw new Error("Failed to fetch deep details");
       const deepData = await res.json();
       
-      set({ 
+      set((state) => ({ 
         activeSubmission: deepData, 
-        activeMenu: "Workbench", // Automatically switches the screen!
+        previousMenu: state.activeMenu, // Remembers Full vs Referral!
+        activeMenu: "Workbench", 
         isLoading: false 
-      });
+      }));
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
     }
-  }
+  },
+
+  updateDecision: async (id: string, decision: string) => {
+    try {
+      await fetch(`http://localhost:8000/api/v1/submissions/${id}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision })
+      });
+      // Automatically refresh the table data so the row vanishes from the Referral list!
+      get().fetchSubmissions(); 
+    } catch (err) {
+      console.error("Failed to update decision", err);
+    }
+  }  
+
 }));
