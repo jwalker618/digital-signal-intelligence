@@ -73,7 +73,7 @@ def _parse_string_list(val) -> List[str]:
 
 
 # =============================================================================
-# ENDPOINTS
+# REFERRAL CRUD
 # =============================================================================
 
 @router.get("/referrals", response_model=List[ReferralListItem])
@@ -371,6 +371,7 @@ async def override_signal(
 
     await db.commit()
 
+    # 9. Return response
     return SignalOverrideResponse(
         signal_id=override.signal_id,
         entity_id=sub.submission_id,

@@ -76,6 +76,7 @@ async def list_quotes(
 
     if coverage:
         query = query.where(Submission.coverage == coverage)
+        query = query.where(Submission.coverage == coverage)
 
     if status:
         try:
@@ -284,9 +285,9 @@ async def get_premium_options(
         tier_factor = {1: 0.8, 2: 1.0, 3: 1.2, 4: 1.5, 5: 2.0}.get(mv.final_tier, 1.0)
 
         options = {}
-        for limit in limits:
-            premium = limit * base_rate * tier_factor
-            options[str(limit)] = round(premium, 2)
+        for limit_val in limits:
+            premium = limit_val * base_rate * tier_factor
+            options[str(limit_val)] = round(premium, 2)
 
         return {"quote_id": quote_id, "premium_options": options}
 

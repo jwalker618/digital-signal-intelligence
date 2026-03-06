@@ -197,6 +197,41 @@ class QuoteRepository:
         )
         return await self.get_by_id(quote_id)
 
+    async def update_model_version_id(
+        self,
+        quote_id: str,
+        model_version_id: uuid.UUID,
+    ) -> Optional[Quote]:
+        """Update the model version linked to a quote (Phase 8).
+
+        Every signal override or manual tier/premium adjustment creates a new
+        ModelVersionRecord.  The quote's FK must track the latest version so
+        that GET /quotes/{id} returns current scoring data.
+        """
+        await self.db.execute(
+            update(Quote)
+            .where(Quote.quote_id == quote_id)
+            .values(model_version_id=model_version_id, updated_at=datetime.utcnow())
+        )
+        return await self.get_by_id(quote_id)
+
+    async def update_status(
+        self,
+        quote_id: str,
+        status: QuoteStatus,
+    ) -> Optional[Quote]:
+        """Update quote status (Phase 8).
+
+        Used when a referral is approved (→ READY) or declined (→ DECLINED)
+        so the quote record in the DB reflects the underwriter's decision.
+        """
+        await self.db.execute(
+            update(Quote)
+            .where(Quote.quote_id == quote_id)
+            .values(status=status, updated_at=datetime.utcnow())
+        )
+        return await self.get_by_id(quote_id)
+
     async def expire_old_quotes(self) -> int:
         """Mark expired quotes."""
         result = await self.db.execute(
