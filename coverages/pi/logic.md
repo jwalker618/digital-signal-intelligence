@@ -1,5 +1,5 @@
 # DSI Logic Document: `PI`
-*Generated: 2026-02-15*
+*Generated: 2026-03-06*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -75,12 +75,12 @@ This configuration contains **44 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.18%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$50,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `revenue` = $10,000,000
-  - Base Premium = $10,000,000 Ã— 0.0018 = **$18,000**
+  - Base Premium = $10,000,000 × 0.0018 = **$18,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$18,000**.
 
 ---
@@ -123,11 +123,11 @@ This configuration contains **1 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `130.0%` on `categorical` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `categorical` = $10,000,000
-  - Base Premium = $10,000,000 Ã— 1.3 = **$13,000,000**
+  - Base Premium = $10,000,000 × 1.3 = **$13,000,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$13,000,000**.
 

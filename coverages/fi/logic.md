@@ -1,5 +1,5 @@
 # DSI Logic Document: `FI`
-*Generated: 2026-02-15*
+*Generated: 2026-03-06*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -78,12 +78,12 @@ This configuration contains **51 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.002%` on `total_assets` purchases exactly a `$1,000,000` Limit with a `$50,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `total_assets` = $10,000,000
-  - Base Premium = $10,000,000 Ã— 2e-05 = **$200**
+  - Base Premium = $10,000,000 × 2e-05 = **$200**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$200**.
 
 ---
@@ -141,7 +141,7 @@ This configuration contains **8 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$12,000` purchases exactly the `$1,000,000` Limit / `$10,000` Deductible Base Package.
 **2. Theoretical Execution:**
