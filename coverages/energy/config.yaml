@@ -55,7 +55,7 @@ energy:
       routing_constraints:
       - field: tiv
         operator: ">"
-        value: 50000000          # Prevents small risks from hitting the 100k min premium floor
+        value: 25000000          # Lowered from 50M (Phase 5) — closes routing gap for medium companies with low TIV
         required_in_input: true
    
     direct_queries:
