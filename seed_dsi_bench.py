@@ -21,6 +21,7 @@ Each company entry creates:
   3. Quote (with premium_options, composite_score, confidence)
   4. Referral (for refer/decline decisions)
   5. SignalCache entries (per-signal cached data)
+  5b. ModelVersionSignal entries (config-to-signal binding — which signals each model used)
   6. SignalAuditRecord (override examples for referred cases)
 
 Run:
@@ -38,6 +39,7 @@ from infrastructure.db.models import (
     Submission,
     Quote,
     ModelVersionRecord,
+    ModelVersionSignal,
     Referral,
     SignalCache,
     SignalAuditRecord,
@@ -2379,6 +2381,37 @@ def seed_data():
                         inferred_value={"score": score},
                     )
                     db.add(cache)
+            db.flush()
+
+            # === 5b. MODEL VERSION SIGNALS (Layer 2 — config-to-signal binding) ===
+            # Links each model version to the specific signals it consumed.
+            # This bridges signal_cache (all entity signals) and model_versions
+            # (what a specific configuration actually used).
+            signal_output_lookup = {s["signal_id"]: s for s in signal_outputs}
+            for group_id, signals_in_group in profile.items():
+                for signal_id, score in signals_in_group.items():
+                    cache_ref = cache_id_map.get((group_id, signal_id))
+                    if not cache_ref:
+                        continue
+                    so = signal_output_lookup.get(signal_id, {})
+                    total_signals = sum(len(sigs) for sigs in profile.values())
+                    weight = round(1.0 / max(total_signals, 1), 4)
+                    mvs = ModelVersionSignal(
+                        id=_uid(),
+                        model_version_id=mv_id,
+                        signal_cache_id=cache_ref,
+                        signal_id=signal_id,
+                        entity_id=co["domain"],
+                        score=_score(score, 3),
+                        weight=weight,
+                        contribution=round(_score(score, 3) * weight, 2),
+                        group_id=group_id,
+                        proxy_tier=so.get("proxy_tier", "INFERRED_PROXY"),
+                        expectation_level=random.choice(["UNIVERSAL", "ENTERPRISE", "CORPORATE"]),
+                        was_absent=False,
+                        used_audited_value=False,
+                    )
+                    db.add(mvs)
             db.flush()
 
             # === 6. SIGNAL AUDIT RECORDS (for overridden signals) ===

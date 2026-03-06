@@ -80,10 +80,10 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     }
   }, 
 
-  fetchReferralSignals: async (referralId: string) => {
+  fetchReferralSignals: async (modelVersionId: string) => {
     set({ isFetchingSignals: true });
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/referrals/${referralId}/signals?include_all=true`);
+      const res = await fetch(`http://localhost:8000/api/v1/model_versions/${modelVersionId}/signals`);
       if (!res.ok) throw new Error("Failed to fetch signals");
       const data = await res.json();
       set({ referralSignals: data.signals || [], isFetchingSignals: false });
@@ -93,23 +93,24 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     }
   },
 
-  submitSignalOverride: async (referralId: string, signalId: string, auditedValue: number, rationale: string) => {
+  submitSignalOverride: async (modelVersionId: string, signalCacheId: string, signalId: string, auditedValue: number, rationale: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/referrals/${referralId}/signals/override`, {
+      const res = await fetch(`http://localhost:8000/api/v1/model_versions/${modelVersionId}/signals/override`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          signal_cache_id: signalCacheId, // Included UUID
           signal_id: signalId, 
           audited_value: auditedValue, 
           rationale: rationale,
-          underwriter_id: "system" // Replace with real auth ID later
+          underwriter_id: "system"
         })
       });
       
       if (!res.ok) throw new Error("Failed to override signal");
       
       // 1. Refresh the signals to show the new audited value
-      await get().fetchReferralSignals(referralId);
+      await get().fetchReferralSignals(modelVersionId);
       
       // 2. Refresh the whole submission to pull the NEW Score and Premium (v2+ Model Version)!
       const currentRow = get().activeSubmission;

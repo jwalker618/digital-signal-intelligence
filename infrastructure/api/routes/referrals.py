@@ -215,138 +215,155 @@ async def process_referral(
 # PHASE 8: DETERMINISTIC SIGNAL MANAGEMENT
 # =============================================================================
 
-@router.get("/referrals/{referral_id}/signals", response_model=ReferralSignalsResponse)
-async def get_referral_signals(
-    referral_id: str,
-    include_all: bool = Query(False, description="Include all signals, not just flagged"),
+@router.get("/model_versions/{model_version_id}/signals", response_model=ReferralSignalsResponse)
+async def get_model_version_signals(
+    model_version_id: str,
     db: AsyncSession = Depends(get_async_db)
 ):
     """
-    Get signals for a referral. 
-    Cross-references SignalCache (inferred) with SignalAuditRecord (audited).
+    Get signals for a specific model version using the ModelVersionSignal bridge.
+    Executes an exact join from Bridge -> Cache -> Audit.
     """
-    # 1. Fetch Referral Hierarchy
-    hierarchy_q = select(Referral, Quote, ModelVersionRecord, Submission).join(
-        Quote, Referral.quote_id == Quote.id
-    ).join(
-        ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id
-    ).join(
-        Submission, Quote.submission_id == Submission.id
-    ).where(Referral.referral_id == referral_id)
-    
-    row = (await db.execute(hierarchy_q)).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Referral not found")
-    ref, quote, mv, sub = row
+    # 1. Fetch Model Version Record
+    mv_q = select(ModelVersionRecord).where(ModelVersionRecord.version_id == model_version_id)
+    mv = (await db.execute(mv_q)).scalar_one_or_none()
+    if not mv:
+        raise HTTPException(status_code=404, detail="Model version not found")
 
-    # 2. Fetch the model version's signal manifest (Layer 2 — what this config actually used)
-    mvs_q = select(ModelVersionSignal).where(ModelVersionSignal.model_version_id == mv.id)
-    mvs_records = (await db.execute(mvs_q)).scalars().all()
-    mvs_by_signal_id = {m.signal_id: m for m in mvs_records}
-    has_manifest = len(mvs_records) > 0
+    # 2. Execute your exact DB join: MVS -> SC -> SAR
+    query = select(ModelVersionSignal, SignalCache, SignalAuditRecord).join(
+        SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id
+    ).outerjoin(
+        SignalAuditRecord, and_(
+            SignalAuditRecord.signal_cache_id == ModelVersionSignal.signal_cache_id,
+            SignalAuditRecord.model_version_id == ModelVersionSignal.model_version_id
+        )
+    ).where(
+        ModelVersionSignal.model_version_id == mv.id
+    )
 
-    # 3. Fetch Cached Signals (Layer 1 — full entity repository)
-    cache_q = select(SignalCache).where(SignalCache.entity_id == sub.id)
-    cache_records = (await db.execute(cache_q)).scalars().all()
-
-    # 4. Fetch Existing Audits for this Model Version (Layer 3 — user overrides)
-    audit_q = select(SignalAuditRecord).where(SignalAuditRecord.model_version_id == mv.id)
-    audit_records = {a.signal_id: a for a in (await db.execute(audit_q)).scalars().all()}
+    results = (await db.execute(query)).all()
 
     signals = []
-    for cache in cache_records:
-        audit = audit_records.get(cache.signal_id)
-        mvs = mvs_by_signal_id.get(cache.signal_id)
-        data = cache.data or {}
+    
+    # --- NEW: Bulletproof JSONB Number Extractor ---
+    def _extract_val(field, default=0.0):
+        if field is None:
+            return default
+        if isinstance(field, dict):
+            # Try common keys just in case it's a dictionary
+            for k in ["value", "audited_value", "inferred_value"]:
+                if k in field:
+                    return float(field[k])
+            return default
+        # If it was saved as a raw float/int inside JSONB
+        try:
+            return float(field)
+        except (ValueError, TypeError):
+            return default
 
-        # Determine if this signal is part of the model's configuration
-        in_model = mvs is not None if has_manifest else True  # backward compat: assume all if no manifest
-
-        is_flagged = data.get("is_flagged", False)
-        if not include_all and not is_flagged and not audit:
-            continue
-
-        inferred = float(cache.inferred_value if cache.inferred_value is not None else data.get("value", 0))
-        audited = float(audit.audited_value) if audit and audit.audited_value is not None else None
+    for mvs, sc, sar in results:
+        data = sc.data or {}
+        
+        # Safely extract the values using the helper
+        inferred = _extract_val(sc.inferred_value, _extract_val(data, 0.0))
+        audited = _extract_val(sar.audited_value) if sar and sar.is_overridden else None
 
         signals.append(ReferralSignalDetail(
-            signal_id=cache.signal_id,
-            signal_name=data.get("name", cache.signal_id),
-            group_id=mvs.group_id if mvs else data.get("group_id", "general"),
+            signal_cache_id=str(sc.id),
+            signal_id=mvs.signal_id,
+            signal_name=data.get("name", mvs.signal_id),
+            group_id=mvs.group_id or data.get("group_id", "general"),
             group_name=data.get("group_name", "General"),
+            
+            score=float(mvs.score) if mvs.score is not None else inferred, # <--- NEW MAPPING
+            
             inferred_value=inferred,
             audited_value=audited,
-            is_overridden=bool(audit and audit.is_overridden),
-            weight=float(mvs.weight) if mvs and mvs.weight is not None else float(data.get("weight", 0.1)),
-            contribution_to_score=float(mvs.contribution) if mvs and mvs.contribution is not None else float(data.get("contribution", 0.0)),
-            is_flagged=is_flagged,
+            is_overridden=bool(sar and sar.is_overridden),
+            weight=float(mvs.weight) if mvs.weight is not None else float(data.get("weight", 0.1)),
+            contribution_to_score=float(mvs.contribution) if mvs.contribution is not None else float(data.get("contribution", 0.0)),
+            is_flagged=data.get("is_flagged", False),
             flag_reason=data.get("flag_reason"),
-            confidence=cache.confidence or 1.0,
+            confidence=sc.confidence or 1.0,
             data_sources=data.get("sources", []),
-            extracted_at=cache.extracted_at,
-            in_model=in_model,
-            proxy_tier=mvs.proxy_tier if mvs else None,
-            expectation_level=mvs.expectation_level if mvs else None,
-            was_absent=mvs.was_absent if mvs else False,
-            used_audited_value=mvs.used_audited_value if mvs else False,
+            extracted_at=sc.extracted_at,
+            in_model=True,
+            proxy_tier=mvs.proxy_tier,
+            expectation_level=mvs.expectation_level,
+            was_absent=mvs.was_absent,
+            used_audited_value=mvs.used_audited_value,
+            override_rationale=sar.override_rationale if sar else None,
+            evidence_reference=sar.evidence_reference if sar else None,
+            score_impact=sar.score_impact if sar else None,
+            tier_impact=sar.tier_impact if sar else None,
         ))
 
-    # Sort: model signals first (grouped), then non-model signals
-    signals.sort(key=lambda s: (not s.in_model, s.group_id, s.signal_id))
+    # Sort logically
+    signals.sort(key=lambda s: (s.group_id, s.signal_id))
 
     return ReferralSignalsResponse(
-        referral_id=referral_id,
+        referral_id=None, # Dropped dependency on referral_id
         model_version_id=mv.version_id,
         configuration_name=mv.configuration_name,
         coverage=mv.coverage,
         signals=signals,
         flagged_count=sum(1 for s in signals if s.is_flagged),
         overridden_count=sum(1 for s in signals if s.is_overridden),
-        total_signals=len(cache_records),
-        model_signal_count=len(mvs_records),
-        signal_coverage=len(mvs_records) / len(cache_records) if cache_records else 1.0,
+        total_signals=len(signals),
+        model_signal_count=len(signals),
+        signal_coverage=1.0,
         average_confidence=sum(s.confidence for s in signals)/len(signals) if signals else 1.0
     )
 
 
-@router.post("/referrals/{referral_id}/signals/override", response_model=SignalOverrideResponse)
+@router.post("/model_versions/{model_version_id}/signals/override", response_model=SignalOverrideResponse)
 async def override_signal(
-    referral_id: str,
+    model_version_id: str,
     override: SignalOverrideRequest,
     db: AsyncSession = Depends(get_async_db)
 ):
     """
     Execute a Phase 8 Signal Override.
-    Underwriters audit inputs, not outputs. Creates a v2+ Model Version.
+    Strictly validates the intersection of model_version_id and signal_cache_id.
     """
-    # 1. Fetch Hierarchy
-    hierarchy_q = select(Referral, Quote, ModelVersionRecord, Submission).join(
-        Quote, Referral.quote_id == Quote.id
-    ).join(
-        ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id
-    ).join(
-        Submission, Quote.submission_id == Submission.id
-    ).where(Referral.referral_id == referral_id)
+    # 1. Fetch Model Version and Quote
+    mv_q = select(ModelVersionRecord, Submission, Quote).join(
+        Submission, ModelVersionRecord.submission_id == Submission.id
+    ).outerjoin(
+        Quote, Quote.model_version_id == ModelVersionRecord.id
+    ).where(ModelVersionRecord.version_id == model_version_id)
     
-    row = (await db.execute(hierarchy_q)).first()
+    row = (await db.execute(mv_q)).first()
     if not row:
-        raise HTTPException(status_code=404, detail="Referral not found")
-    ref, quote, mv, sub = row
+        raise HTTPException(status_code=404, detail="Model version not found")
+    mv, sub, quote = row
 
-    # 2. Fetch the specific Signal
-    cache_q = select(SignalCache).where(
-        and_(SignalCache.entity_id == sub.submission_id, SignalCache.signal_id == override.signal_id)
-    ).order_by(SignalCache.extracted_at.desc()).limit(1)
+    # 2. STRICT VALIDATION: Prove this signal cache UUID was actually consumed by this model version UUID!
+    # This uses BOTH ids to query the bridge table.
+    mvs_q = select(ModelVersionSignal).where(
+        and_(
+            ModelVersionSignal.model_version_id == mv.id,
+            ModelVersionSignal.signal_cache_id == safe_uuid(override.signal_cache_id)
+        )
+    )
+    target_mvs = (await db.execute(mvs_q)).scalar_one_or_none()
     
-    cache = (await db.execute(cache_q)).scalar_one_or_none()
-    if not cache:
-        raise HTTPException(status_code=404, detail=f"Signal '{override.signal_id}' not found")
+    if not target_mvs:
+        raise HTTPException(
+            status_code=400, 
+            detail="Security violation: The provided signal_cache_id is not associated with this model_version_id."
+        )
 
-    inferred = float(cache.inferred_value if cache.inferred_value is not None else (cache.data or {}).get("value", 0))
+    # 3. Fetch the actual immutable Cache record
+    cache_q = select(SignalCache).where(SignalCache.id == safe_uuid(override.signal_cache_id))
+    cache = (await db.execute(cache_q)).scalar_one()
 
-    # 3. Create the NEW Model Version (v2+)
-    new_score = (mv.pure_composite_score or 500) + ((override.audited_value - inferred) * 0.5) # Simplified proxy score impact
-    new_tier = max(1, min(5, int(5 - (new_score / 200)))) # Simplified tier formula
+    inferred = float(cache.inferred_value.get("value", 0) if cache.inferred_value else (cache.data or {}).get("value", 0))
+
+    # 4. Create the NEW Model Version (v2+)
+    new_score = (mv.pure_composite_score or 500) + ((override.audited_value - inferred) * 0.5) 
+    new_tier = max(1, min(5, int(5 - (new_score / 200)))) 
     tier_labels = {1: "PREFERRED", 2: "STANDARD", 3: "STANDARD_PLUS", 4: "ELEVATED", 5: "HIGH_RISK"}
     
     new_mv = ModelVersionRecord(
@@ -365,35 +382,37 @@ async def override_signal(
         created_at=datetime.utcnow()
     )
     
-    # Deprecate the old one
     mv.is_latest = False
     db.add(new_mv)
-    await db.flush() # Yields new_mv.id
+    await db.flush() # Flush to get new_mv.id
 
-    # 3b. Copy signal manifest from old model version to new one
-    #     This preserves the "which signals did this config use" binding
+    # 5. Copy the signal manifest forward, updating the overridden score
     old_mvs_q = select(ModelVersionSignal).where(ModelVersionSignal.model_version_id == mv.id)
     old_mvs = (await db.execute(old_mvs_q)).scalars().all()
+    
     for src in old_mvs:
+        # Check if this row in the manifest is the one being overridden
+        is_target = str(src.signal_cache_id) == override.signal_cache_id
+        
         new_mvs = ModelVersionSignal(
             model_version_id=new_mv.id,
             signal_cache_id=src.signal_cache_id,
             signal_id=src.signal_id,
             entity_id=src.entity_id,
-            score=override.audited_value if src.signal_id == override.signal_id else src.score,
+            score=override.audited_value if is_target else src.score,
             weight=src.weight,
             contribution=src.contribution,
             group_id=src.group_id,
             proxy_tier=src.proxy_tier,
             expectation_level=src.expectation_level,
             was_absent=src.was_absent,
-            used_audited_value=True if src.signal_id == override.signal_id else src.used_audited_value,
+            used_audited_value=True if is_target else src.used_audited_value,
         )
         db.add(new_mvs)
 
-    # 4. Create the Audit Record
+    # 6. Create the Audit Record (Locks the override to the specific Model Version & Cache UUID)
     audit = SignalAuditRecord(
-        signal_cache_id=cache.id,
+        signal_cache_id=safe_uuid(override.signal_cache_id),
         model_version_id=new_mv.id,
         signal_id=override.signal_id,
         entity_id=sub.submission_id,
@@ -409,12 +428,12 @@ async def override_signal(
     )
     db.add(audit)
 
-    # 5. Point the Quote to the new, corrected Model Version
-    quote.model_version_id = new_mv.id
+    # 7. Point Quote to new model version
+    if quote:
+        quote.model_version_id = new_mv.id
 
     await db.commit()
 
-    # 9. Return response
     return SignalOverrideResponse(
         signal_id=override.signal_id,
         entity_id=sub.submission_id,
@@ -426,14 +445,13 @@ async def override_signal(
         new_composite_score=new_score,
         new_tier=new_tier,
         new_tier_label=new_mv.tier_label,
-        overridden_by=override.underwriter_id or "system",
+        overridden_by="system",
         overridden_at=audit.overridden_at,
         override_rationale=override.rationale,
         evidence_reference=override.evidence_reference,
         previous_model_version=mv.version_id,
         new_model_version=new_mv.version_id,
     )
-
 
 # =============================================================================
 # STATS & UTILITIES

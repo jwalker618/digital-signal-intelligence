@@ -4,8 +4,8 @@ import { useDsiStore } from "@/store/dsiStore";
 import ViewCanvas from "@/components/ViewCanvas";
 import { Download, FileText } from "lucide-react";
 
-import SummaryTab from "@/components/submissions/Workbench/SummaryTab";
-import ReferralTab from "@/components/submissions/Workbench/ReferralTab";
+import SummaryTab from "@/components/submissions/workbench/SummaryTab";
+import ReferralTab from "@/components/submissions/workbench/ReferralTab";
 
 export default function WorkbenchView() {
   const { activeMenu, activeSubmission } = useDsiStore();

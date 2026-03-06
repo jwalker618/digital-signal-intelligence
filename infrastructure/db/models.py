@@ -101,7 +101,7 @@ class APIKey(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     key_hash = Column(String(255), nullable=False, unique=True)
-    key_prefix = Column(String(20), nullable=False)  # For identification
+    key_prefix = Column(String(50), nullable=False)  # For identification
     name = Column(String(255), nullable=False)
     permissions = Column(JSONB, default=list)
     is_active = Column(Boolean, default=True)
@@ -129,12 +129,12 @@ class Submission(Base):
     entity_name = Column(String(500), nullable=False)
     domain_hint = Column(String(255))
     discovered_domain = Column(String(255))
-    country_hint = Column(String(10))
+    country_hint = Column(String(50))
 
     # Coverage
     coverage = Column(String(50), nullable=False, index=True)
     configuration = Column(String(100))
-    locale = Column(String(10), default="US")
+    locale = Column(String(50), default="US")
 
     # Status
     status = Column(SQLEnum(SubmissionStatus), default=SubmissionStatus.PENDING, index=True)

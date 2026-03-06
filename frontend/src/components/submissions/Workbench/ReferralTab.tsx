@@ -21,17 +21,18 @@ export default function ReferralTab() {
 
   // Fetch signals when the tab mounts
   useEffect(() => {
-    if (activeSubmission?.referral_id) {
-      fetchReferralSignals(activeSubmission.referral_id);
+    if (activeSubmission?.model_version_id) {
+      fetchReferralSignals(activeSubmission.model_version_id);
     }
   }, [activeSubmission, fetchReferralSignals]);
 
   if (!activeSubmission) return null;
 
   const handleOverrideSubmit = async () => {
-    if (!overrideModal || !activeSubmission.referral_id) return;
+    if (!overrideModal || !activeSubmission.model_version_id) return;
     await submitSignalOverride(
-      activeSubmission.referral_id,
+      activeSubmission.model_version_id,
+      overrideModal.signal.signal_cache_id,
       overrideModal.signal.signal_id,
       parseFloat(auditedValue),
       rationale
@@ -101,79 +102,102 @@ export default function ReferralTab() {
 
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
+            {/* TIER 1: GROUPINGS */}
             <thead>
-              <tr className="border-b border-dsi-outline/20 text-dsi-selected font-semibold uppercase tracking-wider text-xs bg-dsi-background/50">
+              <tr className="border-b-2 border-dsi-outline/20 bg-dsi-background/80">
+                <th colSpan={3} className="py-2 px-4 text-center border-r border-dsi-outline/10 text-xs tracking-wider text-dsi-selected opacity-60 uppercase font-semibold">Signal Identification</th>
+                <th colSpan={4} className="py-2 px-4 text-center border-r border-dsi-outline/10 text-xs tracking-wider text-dsi-selected opacity-60 uppercase font-semibold">Machine Inferred (Cache)</th>
+                <th colSpan={4} className="py-2 px-4 text-center text-xs tracking-wider text-dsi-selected opacity-60 uppercase font-semibold bg-dsi-selected/5">Underwriter Audit (Phase 8)</th>
+              </tr>
+            {/* TIER 2: SPECIFIC COLUMNS */}
+              <tr className="border-b border-dsi-outline/20 text-dsi-selected font-semibold uppercase tracking-wider text-[10px] bg-dsi-background/50">
+                {/* ID Group */}
                 <th className="py-3 px-4">Signal Name</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4 text-center">Source</th>
-                <th className="py-3 px-4 text-right">Inferred Value</th>
-                <th className="py-3 px-4 text-right">Audited Value</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Action</th>
+                <th className="py-3 px-4 text-center">Proxy Tier</th>
+                <th className="py-3 px-4 text-center border-r border-dsi-outline/10">Absent</th>
+                
+                {/* Machine Group */}
+                <th className="py-3 px-4 text-right">Inferred Val</th>
+                <th className="py-3 px-4 text-right">Conf</th>
+                <th className="py-3 px-4 text-right">Weight</th>
+                <th className="py-3 px-4 text-right border-r border-dsi-outline/10">Contrib</th>
+
+                {/* Audit Group */}
+                <th className="py-3 px-4 text-right bg-dsi-selected/5">Audited Val</th>
+                <th className="py-3 px-4 bg-dsi-selected/5">Rationale</th>
+                <th className="py-3 px-4 text-center bg-dsi-selected/5">Impact</th>
+                <th className="py-3 px-4 text-center bg-dsi-selected/5">Action</th>
               </tr>
             </thead>
+            
             <tbody>
-              {displayedSignals.map((sig: any, idx: number) => {
-                const isInModel = sig.in_model !== false;
-                return (
-                  <tr
-                    key={idx}
-                    className={`border-b border-dsi-outline/10 hover:bg-dsi-selected/5 transition-colors ${
-                      sig.is_flagged ? 'bg-yellow-500/5' : ''
-                    } ${!isInModel ? 'opacity-40' : ''}`}
-                  >
-                    <td className="py-3 px-4 font-mono">
+              {referralSignals.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-8 text-center text-dsi-selected opacity-50 font-mono text-sm border-b border-dsi-outline/10">
+                    No signal data found in the database for this model version.
+                  </td>
+                </tr>
+              ) : (
+                referralSignals.map((sig: any, idx: number) => (
+                  <tr key={idx} className={`border-b border-dsi-outline/10 hover:bg-dsi-selected/5 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'bg-yellow-500/5' : ''} ${sig.is_overridden ? 'bg-green-500/5' : ''}`}>
+                    
+                    {/* ID GROUP */}
+                    <td className="py-3 px-4 font-mono text-xs">
                       <div className="flex items-center gap-2">
-                        {sig.is_flagged && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
-                        {!isInModel && (
-                          <span className="text-[10px] bg-dsi-outline/20 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">
-                            cache
-                          </span>
-                        )}
-                        {sig.signal_name.replace(/_/g, ' ')}
+                        {sig.is_flagged && !sig.is_overridden && <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />}
+                        {sig.is_overridden && <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />}
+                        <span className="truncate max-w-[180px]" title={sig.signal_name}>{sig.signal_name.replace(/_/g, ' ')}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 opacity-70">{sig.group_name}</td>
-                    <td className="py-3 px-4 text-center">
-                      {sig.proxy_tier && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold ${
-                          sig.proxy_tier === 'DIRECT_OBSERVABLE'
-                            ? 'bg-green-500/10 text-green-500'
-                            : sig.proxy_tier === 'INFERRED_PROXY'
-                            ? 'bg-blue-500/10 text-blue-500'
-                            : 'bg-orange-500/10 text-orange-500'
-                        }`}>
-                          {sig.proxy_tier === 'DIRECT_OBSERVABLE' ? 'Direct' : sig.proxy_tier === 'INFERRED_PROXY' ? 'Proxy' : 'Cohort'}
+                    <td className="py-3 px-4 text-center text-xs opacity-70">{sig.proxy_tier || "—"}</td>
+                    <td className="py-3 px-4 text-center border-r border-dsi-outline/10">
+                      {sig.was_absent ? <span className="text-red-400 font-bold">YES</span> : <span className="opacity-30">NO</span>}
+                    </td>
+
+                    {/* MACHINE GROUP */}
+                    <td className="py-3 px-4 text-right font-mono flex flex-col items-end">
+                      {/* Show the ACTUAL score the model used */}
+                      <span className={`font-bold ${sig.is_overridden ? 'text-green-500' : 'text-dsi-selected'}`}>
+                        {sig.score?.toFixed(2)}
+                      </span>
+                      {/* If overridden, show the original inferred value crossed out below it */}
+                      {sig.is_overridden && (
+                        <span className="text-[10px] line-through opacity-50">
+                          {sig.inferred_value?.toFixed(2)}
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-dsi-selected">{sig.inferred_value}</td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-green-500">
-                      {sig.is_overridden ? sig.audited_value : "—"}
+                    
+                    <td className={`py-3 px-4 text-right font-mono text-xs ${sig.confidence < 0.7 ? 'text-yellow-500 font-bold' : 'opacity-70'}`}>
+                      {(sig.confidence * 100).toFixed(0)}%
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      {sig.was_absent
-                        ? <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded uppercase font-bold">Absent</span>
-                        : sig.is_overridden
-                        ? <span className="text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded uppercase font-bold">Overridden</span>
-                        : sig.is_flagged
-                        ? <span className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded uppercase font-bold">Flagged</span>
-                        : <span className="text-xs opacity-50 uppercase tracking-wider">Accepted</span>
-                      }
+
+                    {/* AUDIT GROUP */}
+                    <td className="py-3 px-4 text-right font-mono font-bold text-green-500 bg-dsi-selected/5">
+                      {sig.is_overridden ? sig.audited_value?.toFixed(2) : "—"}
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      {isInModel && (
-                        <button
-                          onClick={() => { setOverrideModal({ isOpen: true, signal: sig }); setAuditedValue(sig.inferred_value); }}
-                          className="p-1.5 hover:bg-dsi-selected/10 rounded text-dsi-selected transition-colors"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                      )}
+                    <td className="py-3 px-4 text-xs font-mono opacity-80 truncate max-w-[150px] bg-dsi-selected/5" title={sig.override_rationale}>
+                      {sig.override_rationale || "—"}
+                    </td>
+                    <td className="py-3 px-4 text-center bg-dsi-selected/5 font-mono text-xs">
+                      {sig.score_impact ? (
+                         <span className={`px-1.5 py-0.5 rounded font-bold ${sig.score_impact > 0 ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                           {sig.score_impact > 0 ? '+' : ''}{sig.score_impact.toFixed(1)}
+                         </span>
+                      ) : "—"}
+                    </td>
+                    <td className="py-3 px-4 text-center bg-dsi-selected/5">
+                      <button 
+                        onClick={() => { setOverrideModal({ isOpen: true, signal: sig }); setAuditedValue(sig.inferred_value); }}
+                        className="p-1 hover:bg-dsi-selected/20 rounded text-dsi-selected transition-colors"
+                        title="Audit Signal"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>

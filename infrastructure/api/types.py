@@ -412,6 +412,7 @@ class SignalValue(BaseModel):
 
 
 class SignalOverrideRequest(BaseModel):
+    signal_cache_id: str  
     signal_id: str
     audited_value: float
     rationale: str
@@ -459,10 +460,12 @@ class ReferralSignalsRequest(BaseModel):
 
 
 class ReferralSignalDetail(BaseModel):
+    signal_cache_id: str
     signal_id: str
     signal_name: str
     group_id: str
     group_name: str
+    score: float
     inferred_value: float
     audited_value: Optional[float] = None
     is_overridden: bool = False
@@ -482,9 +485,14 @@ class ReferralSignalDetail(BaseModel):
     was_absent: bool = False                    # Signal expected by config but not found
     used_audited_value: bool = False            # True if model used audited rather than inferred
 
+    override_rationale: Optional[str] = None
+    evidence_reference: Optional[str] = None
+    score_impact: Optional[float] = None
+    tier_impact: Optional[int] = None
+
 
 class ReferralSignalsResponse(BaseModel):
-    referral_id: str
+    referral_id: Optional[str] = None
     model_version_id: str
     configuration_name: Optional[str] = None    # Which config produced this model version
     coverage: Optional[str] = None              # Coverage type
