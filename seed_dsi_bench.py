@@ -1760,13 +1760,28 @@ SIGNAL_PROFILES = {
 }
 
 
-def build_signal_outputs(profile_name):
-    """Build signal_outputs list from a signal profile."""
+def resolve_signal_scores(profile_name):
+    """Roll each signal's score ONCE from the profile.
+
+    Returns a dict keyed by (group_id, signal_id) -> resolved_score.
+    All downstream tables (signal_cache, signal_outputs, model_version_signals,
+    signal_audit_records) must use these values to stay consistent.
+    """
+    profile = SIGNAL_PROFILES.get(profile_name, {})
+    resolved = {}
+    for group_id, signals in profile.items():
+        for signal_id, base_score in signals.items():
+            resolved[(group_id, signal_id)] = _score(base_score, 5)
+    return resolved
+
+
+def build_signal_outputs(profile_name, resolved_scores):
+    """Build signal_outputs list using pre-resolved scores."""
     profile = SIGNAL_PROFILES.get(profile_name, {})
     outputs = []
     for group_id, signals in profile.items():
-        for signal_id, base_score in signals.items():
-            score = _score(base_score, 5)
+        for signal_id in signals:
+            score = resolved_scores.get((group_id, signal_id), 50)
             outputs.append({
                 "signal_id": signal_id,
                 "group_id": group_id,
@@ -1778,12 +1793,12 @@ def build_signal_outputs(profile_name):
     return outputs
 
 
-def build_group_scores(profile_name):
-    """Build group-level scores from signal profile."""
+def build_group_scores(profile_name, resolved_scores):
+    """Build group-level scores using pre-resolved scores."""
     profile = SIGNAL_PROFILES.get(profile_name, {})
     group_scores = {}
     for group_id, signals in profile.items():
-        scores = list(signals.values())
+        scores = [resolved_scores.get((group_id, sid), 50) for sid in signals]
         avg = sum(scores) / len(scores) if scores else 50
         group_scores[group_id] = {
             "risk_score": round(avg + random.uniform(-3, 3), 1),
@@ -1795,15 +1810,16 @@ def build_group_scores(profile_name):
     return group_scores
 
 
-def build_signal_conditions(co):
+def build_signal_conditions(co, resolved_scores):
     """Build signal_conditions from company data - these drive the UI's condition display."""
     conditions = []
     tier = co["tier"]
     profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
 
-    # Add conditions based on low scores
+    # Add conditions based on resolved scores (not raw profile values)
     for group_id, signals in profile.items():
-        for signal_id, score in signals.items():
+        for signal_id in signals:
+            score = resolved_scores.get((group_id, signal_id), 50)
             if score <= 30:
                 conditions.append({
                     "signal_id": signal_id,
@@ -1879,10 +1895,12 @@ def build_modifiers_applied(co):
             "note": f"Size: {size}",
         })
 
-    # Signal-derived modifiers
+    # Signal-derived modifiers (use resolved scores if available)
     profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
+    _resolved = co.get("_resolved_scores", {})
     for group_id, signals in profile.items():
-        avg = sum(signals.values()) / len(signals) if signals else 50
+        scores = [_resolved.get((group_id, sid), base) for sid, base in signals.items()]
+        avg = sum(scores) / len(scores) if scores else 50
         if avg >= 85:
             modifiers.append({
                 "type": "score_condition",
@@ -1902,45 +1920,67 @@ def build_modifiers_applied(co):
 
 
 def calculate_base_premium(co):
-    """Derive base premium from tier, approximating the real pricing engine.
+    """Derive base premium from the intended final premium.
 
-    Uses a MULTIPLIER method when revenue is available; falls back to
-    a fixed PREMIUM_BASE per tier.
+    Works backward from co["premium"] to produce a realistic base_premium
+    that, when modifiers and ILF are applied, lands near the intended value.
+    Uses MULTIPLIER method when revenue is available; PREMIUM_BASE otherwise.
     """
     tier = co["tier"]
     revenue = co.get("revenue", 0)
+    intended = co.get("premium", 0)
 
-    # Tier rate tables (rate per $1M revenue) – mirrors real config
-    tier_rates = {1: 0.0004, 2: 0.0006, 3: 0.0009, 4: 0.0014, 5: 0.0020}
-    # Flat premium fallbacks when no revenue
-    tier_flat = {1: 5000, 2: 10000, 3: 20000, 4: 40000, 5: 0}
+    if intended <= 0:
+        return 0, "premium_base"
 
     if revenue > 0:
-        rate = tier_rates.get(tier, 0.001)
-        return round(revenue * rate, 2), "multiplier"
+        # Derive an implied rate so the audit trail shows a sensible calculation
+        # base = intended / (product of modifiers × ILF) — but we approximate
+        # by simply scaling the intended premium down by a tier factor
+        tier_divisors = {1: 1.0, 2: 1.2, 3: 1.5, 4: 2.0, 5: 2.5}
+        divisor = tier_divisors.get(tier, 1.5)
+        return round(intended / divisor, 2), "multiplier"
     else:
-        return tier_flat.get(tier, 20000), "premium_base"
+        return intended, "premium_base"
 
 
-def apply_modifiers_to_premium(base_premium, modifiers):
-    """Apply modifiers multiplicatively to base premium, returning
-    (premium_after_modifiers, enriched_modifiers_list).
+def apply_modifiers_to_premium(base_premium, modifiers, target_premium):
+    """Apply modifiers to base premium, scaling so the result lands at target_premium.
 
     Each modifier dict gets premium_before / premium_after fields
-    added so the audit trail is complete.
+    added so the audit trail is complete.  The modifiers are applied
+    as a narrative (showing their individual effects) but the final
+    value is anchored to the intended premium to avoid runaway values.
     """
+    if target_premium <= 0 or not modifiers:
+        return target_premium, modifiers
+
+    # Calculate the raw product of all modifier factors
+    raw_product = 1.0
+    for mod in modifiers:
+        raw_product *= mod["applied"]
+
+    # Scale factor so base × scaled_modifiers ≈ target
+    # This keeps relative modifier proportions but prevents explosion
+    scale = target_premium / (base_premium * raw_product) if (base_premium * raw_product) > 0 else 1.0
+
     current = base_premium
     enriched = []
     for mod in modifiers:
-        factor = mod["applied"]
+        factor = mod["applied"] * (scale ** (1.0 / len(modifiers)))  # distribute scale evenly
         before = current
         current = round(current * factor, 2)
         enriched.append({
             **mod,
+            "applied": round(factor, 4),
             "premium_before": before,
             "premium_after": current,
         })
-    return current, enriched
+
+    # Snap to target to avoid floating-point drift
+    if enriched:
+        enriched[-1]["premium_after"] = target_premium
+    return target_premium, enriched
 
 
 def build_premium_options_from_base(premium_after_modifiers):
@@ -2212,31 +2252,31 @@ def seed_data():
 
             # === 2. MODEL VERSION RECORD ===
             mv_id = _uid()
-            signal_outputs = build_signal_outputs(co.get("signal_profile", ""))
-            group_scores = build_group_scores(co.get("signal_profile", ""))
-            signal_conditions = build_signal_conditions(co)
+            # Roll all signal scores ONCE — every table uses these same values
+            resolved_scores = resolve_signal_scores(co.get("signal_profile", ""))
+            signal_outputs = build_signal_outputs(co.get("signal_profile", ""), resolved_scores)
+            group_scores = build_group_scores(co.get("signal_profile", ""), resolved_scores)
+            signal_conditions = build_signal_conditions(co, resolved_scores)
+            co["_resolved_scores"] = resolved_scores  # pass to build_modifiers_applied
             raw_modifiers = build_modifiers_applied(co)
             discovery = build_discovery_output(co)
 
-            # --- PREMIUM CALCULATION (mirrors real engine) ---
+            # --- PREMIUM CALCULATION ---
+            # Use co["premium"] as the intended final premium (realistic values)
+            # and derive intermediate values backward for audit trail consistency.
+            intended_premium = co.get("premium", 0)
             base_premium, base_premium_method = calculate_base_premium(co)
             if co["decision"] == "decline":
-                # Decline = no premium
                 base_premium = 0
                 premium_after_mods = 0
+                final_premium = 0
                 enriched_modifiers = raw_modifiers
             else:
                 premium_after_mods, enriched_modifiers = apply_modifiers_to_premium(
-                    base_premium, raw_modifiers
+                    base_premium, raw_modifiers, intended_premium
                 )
-            limit_premiums = build_premium_options_from_base(premium_after_mods)
-
-            # Determine final_premium: use the limit closest to requested limit
-            requested_limit = co.get("limit", 10_000_000)
-            final_premium = premium_after_mods
-            if limit_premiums:
-                closest_key = min(limit_premiums.keys(), key=lambda k: abs(int(k) - requested_limit))
-                final_premium = limit_premiums[closest_key]
+                final_premium = intended_premium
+            limit_premiums = build_premium_options_from_base(final_premium)
 
             # Build categorical outputs from submission data
             categorical_outputs = []
@@ -2361,7 +2401,8 @@ def seed_data():
             profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
             cache_id_map = {}  # (group_id, signal_id) -> cache UUID
             for group_id, signals in profile.items():
-                for signal_id, score in signals.items():
+                for signal_id in signals:
+                    resolved = resolved_scores.get((group_id, signal_id), 50)
                     cache_uuid = _uid()
                     cache_id_map[(group_id, signal_id)] = cache_uuid
                     cache = SignalCache(
@@ -2370,7 +2411,7 @@ def seed_data():
                         signal_id=signal_id,
                         source_name=f"{signal_id}_extractor",
                         data={
-                            "score": _score(score, 3),
+                            "score": resolved,
                             "raw_data": {"source": "seed", "entity": co["entity_name"]},
                             "metadata": {"group_id": group_id},
                         },
@@ -2378,7 +2419,7 @@ def seed_data():
                         ttl_seconds=86400,
                         expires_at=NOW + timedelta(days=1),
                         extraction_time_ms=round(random.uniform(30, 500), 1),
-                        inferred_value={"score": score},
+                        inferred_value={"score": resolved},
                     )
                     db.add(cache)
             db.flush()
@@ -2388,23 +2429,30 @@ def seed_data():
             # This bridges signal_cache (all entity signals) and model_versions
             # (what a specific configuration actually used).
             signal_output_lookup = {s["signal_id"]: s for s in signal_outputs}
+            num_groups = len(profile)
             for group_id, signals_in_group in profile.items():
-                for signal_id, score in signals_in_group.items():
+                # Group-proportional weights: each group gets equal share,
+                # then signals within a group split that share evenly
+                group_weight = 1.0 / max(num_groups, 1)
+                num_in_group = len(signals_in_group)
+                signal_weight = round(group_weight / max(num_in_group, 1), 4)
+
+                for signal_id in signals_in_group:
                     cache_ref = cache_id_map.get((group_id, signal_id))
                     if not cache_ref:
                         continue
                     so = signal_output_lookup.get(signal_id, {})
-                    total_signals = sum(len(sigs) for sigs in profile.values())
-                    weight = round(1.0 / max(total_signals, 1), 4)
+                    resolved = resolved_scores.get((group_id, signal_id), 50)
+                    contribution = round(resolved * signal_weight, 2)
                     mvs = ModelVersionSignal(
                         id=_uid(),
                         model_version_id=mv_id,
                         signal_cache_id=cache_ref,
                         signal_id=signal_id,
                         entity_id=co["domain"],
-                        score=_score(score, 3),
-                        weight=weight,
-                        contribution=round(_score(score, 3) * weight, 2),
+                        score=resolved,
+                        weight=signal_weight,
+                        contribution=contribution,
                         group_id=group_id,
                         proxy_tier=so.get("proxy_tier", "INFERRED_PROXY"),
                         expectation_level=random.choice(["UNIVERSAL", "ENTERPRISE", "CORPORATE"]),
@@ -2418,28 +2466,29 @@ def seed_data():
             if co["decision"] == "refer" and profile:
                 # Create 1-2 override examples per referred company
                 overridable_signals = [
-                    (gid, sid, sc)
+                    (gid, sid, resolved_scores.get((gid, sid), 50))
                     for gid, sigs in profile.items()
-                    for sid, sc in sigs.items()
-                    if sc <= 50
+                    for sid in sigs
+                    if resolved_scores.get((gid, sid), 50) <= 50
                 ]
-                for gid, sid, original_score in overridable_signals[:2]:
+                for gid, sid, resolved in overridable_signals[:2]:
                     cache_ref = cache_id_map.get((gid, sid))
+                    audited = min(100, resolved + 15)
                     audit_record = SignalAuditRecord(
                         id=_uid(),
                         signal_cache_id=cache_ref,
                         model_version_id=mv_id,
                         signal_id=sid,
                         entity_id=co["domain"],
-                        inferred_value={"score": original_score},
-                        audited_value={"score": min(100, original_score + 15)},
+                        inferred_value={"score": resolved},
+                        audited_value={"score": audited},
                         is_overridden=True,
                         overridden_by=uw_user_id,
                         overridden_at=NOW - timedelta(hours=random.randint(1, 24)),
                         override_rationale=f"Underwriter adjustment: {sid.replace('_', ' ').title()} "
                                            f"score revised after manual review of {co['entity_name']}",
                         evidence_reference=f"UW-NOTE-{_hex(6)}",
-                        score_impact=round(random.uniform(5, 25), 1),
+                        score_impact=round((audited - resolved) * 0.5, 1),
                         tier_impact=0,
                     )
                     db.add(audit_record)
