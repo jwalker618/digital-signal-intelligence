@@ -2,44 +2,36 @@
 
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import PipelineTable from "@/components/referrals/PipelineTable";
+import PipelineTable from "@/components/submissions/PipelineTable";
+import WorkbenchView from "@/components/submissions/WorkbenchView"; 
 
-export default function DSIDashboard() {
-  const { activeMenu, fetchSubmissions, error } = useDsiStore();
+export default function Home() {
+  const { 
+    activeMenu, 
+    activeSubmission, 
+    fetchSubmissions,
+    isLoading 
+  } = useDsiStore();
 
-  // Fetch the data on load
+  // CRITICAL: Fetch the pipeline data when the app loads
   useEffect(() => {
     fetchSubmissions();
   }, [fetchSubmissions]);
 
-  if (error) {
-    return <div className="text-red-500 font-semibold p-4">Error loading data: {error}</div>;
+  // If we have an active submission, ALWAYS show the Workbench wrapper
+  if (activeSubmission) {
+    return <WorkbenchView />;
   }
 
-  // ==========================================
-  // VIEW ROUTER
-  // ==========================================
-  
-  if (activeMenu === "Referral Pipeline") {
-    return <PipelineTable type="referral" />;
+  // Otherwise, route the top-level menus
+  switch (activeMenu) {
+    case "Referral Pipeline":
+      return <PipelineTable type="referral" />;
+    case "Full Pipeline":
+      return <PipelineTable type="full" />;
+    case "Performance Metrics":
+      return <div className="p-8 text-dsi-selected">Analytics Dashboard Under Construction</div>;
+    default:
+      return <PipelineTable type="referral" />;
   }
-
-  if (activeMenu === "Full Pipeline") {
-    return <PipelineTable type="full" />;
-  }
-
-  if (activeMenu === "Workbench") {
-    return (
-      <div className="text-dsi-selected">
-        <h2 className="text-xl font-bold mb-4">Submission Specific Analysis Screen</h2>
-        <p>This is where the individual submission details, world model, and retuning engine will go!</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-dsi-selected flex h-full items-center justify-center italic opacity-70">
-      Select a view from the sidebar.
-    </div>
-  );
 }

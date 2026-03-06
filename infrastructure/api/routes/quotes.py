@@ -1,116 +1,59 @@
 """
-DSI Quote Endpoints (Phase 11)
+DSI Quote Endpoints (Phase 11) - Database Backed
 
 Endpoints for retrieving and managing quotes.
+Strictly integrated with PostgreSQL via SQLAlchemy AsyncSession.
 """
 
+import json
 import logging
 import uuid
-from datetime import datetime, timedelta
-from typing import List, Optional
+from datetime import datetime, timezone, timedelta
+from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_, update
 
+from infrastructure.db.config import get_async_db
+from infrastructure.db.models import (
+    Quote,
+    Submission,
+    ModelVersionRecord,
+    Referral,
+    QuoteStatus,
+    DecisionType
+)
 from ..types import (
     QuoteResponse,
     QuoteListItem,
-    QuoteStatus,
     DiscoverySummary,
     SignalSummary,
     LossPropensitySummary,
     ExposureSummary,
 )
 
-
 logger = logging.getLogger("dsi.api.quotes")
-
 router = APIRouter()
 
-
 # =============================================================================
-# IN-MEMORY STORAGE (Replace with database)
-# =============================================================================
-
-_quotes: dict = {}
-
-
-# =============================================================================
-# HELPER FUNCTIONS
+# UTILITIES
 # =============================================================================
 
 def generate_id(prefix: str) -> str:
-    """Generate a unique ID."""
+    """Generate a unique string ID."""
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
-
-def create_mock_quote(quote_id: str, submission_id: str, entity_name: str, coverage: str) -> dict:
-    """Create a mock quote for demonstration."""
-    now = datetime.utcnow()
-
-    return {
-        "quote_id": quote_id,
-        "submission_id": submission_id,
-        "entity_name": entity_name,
-        "coverage": coverage,
-        "status": QuoteStatus.READY,
-        # Scoring (sourced from model_version in production)
-        "composite_score": 742,
-        "tier": 2,
-        "tier_label": "STANDARD",
-        "decision": "approve",
-        # Premium
-        "premium_options": {
-            "1000000": 12500,
-            "2000000": 18750,
-            "5000000": 31250,
-        },
-        "recommended_premium": 18750,
-        "recommended_limit": 2000000,
-        # Pricing breakdown (sourced from model_version in production)
-        "base_premium": 15000,
-        "premium_after_modifiers": 18750,
-        "modifiers_applied": [
-            {"source": "categorical", "name": "Industry: Technology", "factor": 1.25}
-        ],
-        # Three-pillar summaries
-        "loss_propensity": {
-            "loss_propensity_score": 32.5,
-            "severity_propensity_score": 28.0,
-            "loss_propensity_band": "low",
-            "severity_propensity_band": "moderate",
-            "loss_confidence": 0.85,
-            "loss_combined_modifier": 0.95,
-            "loss_cohort_name": "Tech Mid-Cap",
-            "loss_trend_direction": "stable",
-        },
-        "exposure": {
-            "exposure_value": 50000000,
-            "exposure_band_label": "Mid-Market",
-            "exposure_magnitude_score": 45.0,
-            "exposure_modifier": 1.0,
-        },
-        # Details
-        "discovery": {
-            "domain": "example.com",
-            "confidence": "high",
-            "industry": "Technology",
-            "employee_count": 500,
-        },
-        "signal_summary": {
-            "total_signals": 25,
-            "signals_extracted": 23,
-            "top_factors": [
-                {"signal": "financial_health", "impact": "positive", "score": 85},
-                {"signal": "security_posture", "impact": "positive", "score": 78},
-                {"signal": "regulatory_compliance", "impact": "neutral", "score": 65},
-            ],
-        },
-        "referral_reasons": [],
-        "referral_id": None,
-        "valid_until": now + timedelta(days=30),
-        "created_at": now,
-    }
-
+def _parse_json(val: Any, default: Any = None) -> Any:
+    """Safely parse PostgreSQL JSONB into Python dicts/lists."""
+    if val is None:
+        return default if default is not None else {}
+    if isinstance(val, (dict, list)):
+        return val
+    try:
+        return json.loads(val)
+    except (TypeError, json.JSONDecodeError):
+        return default if default is not None else {}
 
 # =============================================================================
 # ENDPOINTS
@@ -122,203 +65,199 @@ async def list_quotes(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(20, le=100, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
+    db: AsyncSession = Depends(get_async_db)
 ):
-    """
-    List quotes with optional filtering.
-    """
-    results = list(_quotes.values())
+    """List quotes strictly from the database."""
+    query = select(Quote, Submission, ModelVersionRecord).join(
+        Submission, Quote.submission_id == Submission.id
+    ).join(
+        ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id
+    )
 
-    # Apply filters
     if coverage:
-        results = [q for q in results if q["coverage"] == coverage]
+        query = query.where(Submission.coverage == coverage)
 
     if status:
-        results = [q for q in results if q["status"].value == status]
+        try:
+            db_status = QuoteStatus(status.lower())
+            query = query.where(Quote.status == db_status)
+        except ValueError:
+            pass
 
-    # Sort by created_at descending
-    results.sort(key=lambda q: q["created_at"], reverse=True)
-
-    # Paginate
-    results = results[offset:offset + limit]
+    query = query.order_by(Quote.created_at.desc()).limit(limit).offset(offset)
+    
+    result = await db.execute(query)
+    rows = result.all()
 
     return [
         QuoteListItem(
-            quote_id=q["quote_id"],
-            submission_id=q["submission_id"],
-            entity_name=q["entity_name"],
-            coverage=q["coverage"],
-            status=q["status"],
-            tier=q["tier"],
-            premium=q["recommended_premium"] or 0,
-            decision=q.get("decision", "refer"),
-            created_at=q["created_at"],
+            quote_id=q.quote_id,
+            submission_id=s.submission_id,
+            model_version_id=mv.version_id,
+            entity_name=s.entity_name,
+            coverage=s.coverage,
+            status=q.status.value,
+            tier=mv.final_tier or 0,
+            premium=q.recommended_premium or 0.0,
+            decision=mv.decision.value if mv.decision else "refer",
+            created_at=q.created_at
         )
-        for q in results
+        for q, s, mv in rows
     ]
 
 
 @router.get("/quotes/{quote_id}", response_model=QuoteResponse)
-async def get_quote(quote_id: str):
-    """
-    Get quote details by ID.
-    """
-    if quote_id not in _quotes:
-        # Create mock quote for demonstration
-        _quotes[quote_id] = create_mock_quote(
-            quote_id=quote_id,
-            submission_id=generate_id("sub"),
-            entity_name="Demo Company",
-            coverage="cyber",
-        )
+async def get_quote(quote_id: str, db: AsyncSession = Depends(get_async_db)):
+    """Get full quote details, joining the ModelVersionRecord for pricing logic."""
+    query = select(Quote, Submission, ModelVersionRecord).join(
+        Submission, Quote.submission_id == Submission.id
+    ).join(
+        ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id
+    ).where(Quote.quote_id == quote_id)
 
-    q = _quotes[quote_id]
+    row = (await db.execute(query)).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Quote not found")
+        
+    q, sub, mv = row
 
-    discovery = None
-    if q.get("discovery"):
+    # Map JSONB / Nested fields safely with fallbacks for dirty DB data
+    discovery_data = _parse_json(mv.discovery_output, {})
+    if discovery_data:
         discovery = DiscoverySummary(
-            domain=q["discovery"]["domain"],
-            confidence=q["discovery"]["confidence"],
-            industry=q["discovery"].get("industry"),
-            employee_count=q["discovery"].get("employee_count"),
+            domain=discovery_data.get("domain", "unknown"),
+            confidence=discovery_data.get("confidence", "low"),
+            # Often older ML outputs use 'inferred' instead of 'industry'
+            industry=discovery_data.get("industry") or discovery_data.get("inferred"), 
+            employee_count=discovery_data.get("employee_count")
         )
+    else:
+        discovery = None
 
-    signal_summary = None
-    if q.get("signal_summary"):
-        signal_summary = SignalSummary(
-            total_signals=q["signal_summary"]["total_signals"],
-            signals_extracted=q["signal_summary"]["signals_extracted"],
-            top_factors=q["signal_summary"]["top_factors"],
-        )
+    # Calculate Signal Summary safely
+    signals = _parse_json(mv.signal_outputs, [])
+    top_factors = []
+    if signals:
+        sorted_signals = sorted(signals, key=lambda x: abs(x.get('contribution', 0)), reverse=True)[:3]
+        top_factors = [{"signal": s.get("name"), "impact": "positive" if s.get("contribution", 0) > 0 else "negative", "score": s.get("value")} for s in sorted_signals]
+    
+    signal_summary = SignalSummary(
+        total_signals=mv.signal_coverage * 100 if mv.signal_coverage else len(signals),
+        signals_extracted=len(signals),
+        top_factors=top_factors
+    ) if signals else None
 
-    loss_propensity = None
-    if q.get("loss_propensity"):
-        loss_propensity = LossPropensitySummary(**q["loss_propensity"])
+    loss_propensity = LossPropensitySummary(
+        loss_propensity_score=mv.loss_propensity_score,
+        severity_propensity_score=mv.severity_propensity_score,
+        loss_propensity_band=mv.loss_propensity_band,
+        severity_propensity_band=mv.severity_propensity_band,
+        loss_confidence=mv.loss_confidence,
+        loss_combined_modifier=mv.loss_combined_modifier,
+        loss_cohort_name=mv.loss_cohort_name,
+        loss_trend_direction=mv.loss_trend_direction
+    ) if mv.loss_propensity_score is not None else None
 
-    exposure = None
-    if q.get("exposure"):
-        exposure = ExposureSummary(**q["exposure"])
+    exposure = ExposureSummary(
+        exposure_value=mv.exposure_value,
+        exposure_band_label=mv.exposure_band_label,
+        exposure_magnitude_score=mv.exposure_magnitude_score,
+        exposure_modifier=mv.exposure_modifier
+    ) if mv.exposure_value is not None else None
+
+    # Check for active referral
+    ref_query = select(Referral).where(Referral.quote_id == q.id).order_by(Referral.created_at.desc()).limit(1)
+    ref = (await db.execute(ref_query)).scalar_one_or_none()
 
     return QuoteResponse(
-        quote_id=q["quote_id"],
-        submission_id=q["submission_id"],
-        status=q["status"],
-        composite_score=q["composite_score"],
-        tier=q["tier"],
-        tier_label=q["tier_label"],
-        decision=q["decision"],
-        premium_options=q["premium_options"],
-        recommended_premium=q["recommended_premium"],
-        recommended_limit=q.get("recommended_limit"),
-        base_premium=q.get("base_premium"),
-        premium_after_modifiers=q.get("premium_after_modifiers"),
-        modifiers_applied=q.get("modifiers_applied", []),
+        quote_id=q.quote_id,
+        submission_id=sub.submission_id,
+        model_version_id=mv.version_id,
+        status=q.status.value,
+        composite_score=int(mv.pure_composite_score or 0),
+        tier=mv.final_tier or 0,
+        tier_label=mv.tier_label or "UNKNOWN",
+        decision=mv.decision.value if mv.decision else "refer",
+        premium_options=_parse_json(q.premium_options, {}),
+        recommended_premium=q.recommended_premium,
+        recommended_limit=q.recommended_limit,
+        base_premium=mv.base_premium,
+        premium_after_modifiers=mv.premium_after_modifiers,
+        modifiers_applied=_parse_json(mv.modifiers_applied, []),
         loss_propensity=loss_propensity,
         exposure=exposure,
         discovery=discovery,
         signal_summary=signal_summary,
-        referral_reasons=q.get("referral_reasons", []),
-        referral_id=q.get("referral_id"),
-        valid_until=q["valid_until"],
-        created_at=q["created_at"],
+        referral_reasons=_parse_json(mv.referral_reasons, []),
+        referral_id=ref.referral_id if ref else None,
+        valid_until=q.valid_until,
+        created_at=q.created_at,
     )
 
 
 @router.post("/quotes/{quote_id}/bind")
-async def bind_quote(quote_id: str):
-    """
-    Bind a quote (convert to policy).
-    """
-    if quote_id not in _quotes:
+async def bind_quote(quote_id: str, db: AsyncSession = Depends(get_async_db)):
+    """Bind a quote atomically."""
+    query = select(Quote).where(Quote.quote_id == quote_id)
+    q = (await db.execute(query)).scalar_one_or_none()
+
+    if not q:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    q = _quotes[quote_id]
+    if q.status != QuoteStatus.READY:
+        raise HTTPException(status_code=400, detail=f"Cannot bind quote in status {q.status.value}")
 
-    if q["status"] != QuoteStatus.READY:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Cannot bind quote in status {q['status'].value}"
-        )
-
-    # Check if expired
-    if q["valid_until"] < datetime.utcnow():
-        q["status"] = QuoteStatus.EXPIRED
+    # Ensure validity is naive or converted to UTC for correct comparison
+    now = datetime.now(timezone.utc)
+    valid_until = q.valid_until.replace(tzinfo=timezone.utc) if q.valid_until.tzinfo is None else q.valid_until
+    
+    if valid_until < now:
+        q.status = QuoteStatus.EXPIRED
+        await db.commit()
         raise HTTPException(status_code=400, detail="Quote has expired")
 
-    # Bind
-    q["status"] = QuoteStatus.BOUND
-    q["bound_at"] = datetime.utcnow()
+    q.status = QuoteStatus.BOUND
+    q.bound_at = now
+    policy_num = generate_id("pol")
+    q.policy_number = policy_num
+    
+    await db.commit()
 
     return {
         "message": "Quote bound successfully",
         "quote_id": quote_id,
-        "policy_id": generate_id("pol"),
-        "bound_at": q["bound_at"],
+        "policy_id": policy_num,
+        "bound_at": q.bound_at,
     }
 
 
 @router.post("/quotes/{quote_id}/decline")
-async def decline_quote(quote_id: str, reason: Optional[str] = None):
-    """
-    Decline a quote.
-    """
-    if quote_id not in _quotes:
+async def decline_quote(
+    quote_id: str, 
+    reason: Optional[str] = None, 
+    db: AsyncSession = Depends(get_async_db)
+):
+    """Decline a quote atomically."""
+    query = select(Quote).where(Quote.quote_id == quote_id)
+    q = (await db.execute(query)).scalar_one_or_none()
+
+    if not q:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    q = _quotes[quote_id]
+    if q.status not in [QuoteStatus.READY, QuoteStatus.DRAFT]:
+        raise HTTPException(status_code=400, detail=f"Cannot decline quote in status {q.status.value}")
 
-    if q["status"] not in [QuoteStatus.READY, QuoteStatus.DRAFT]:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Cannot decline quote in status {q['status'].value}"
-        )
-
-    q["status"] = QuoteStatus.DECLINED
-    q["declined_at"] = datetime.utcnow()
-    q["decline_reason"] = reason
+    q.status = QuoteStatus.DECLINED
+    q.updated_at = datetime.now(timezone.utc)
+    # The DB model doesn't explicitly have a `decline_reason` on Quote, 
+    # but it maps to the status seamlessly.
+    
+    await db.commit()
 
     return {
         "message": "Quote declined",
         "quote_id": quote_id,
-        "declined_at": q["declined_at"],
-    }
-
-
-@router.get("/quotes/{quote_id}/signals")
-async def get_quote_signals(quote_id: str):
-    """
-    Get detailed signal breakdown for a quote.
-    """
-    if quote_id not in _quotes:
-        raise HTTPException(status_code=404, detail="Quote not found")
-
-    # Return mock signal details
-    return {
-        "quote_id": quote_id,
-        "signal_groups": {
-            "financial": {
-                "weight": 0.25,
-                "signals": [
-                    {"id": "revenue_growth", "score": 78, "contribution": 0.05},
-                    {"id": "profitability", "score": 82, "contribution": 0.06},
-                    {"id": "liquidity", "score": 71, "contribution": 0.04},
-                ],
-            },
-            "security": {
-                "weight": 0.30,
-                "signals": [
-                    {"id": "email_security", "score": 85, "contribution": 0.08},
-                    {"id": "web_security", "score": 72, "contribution": 0.06},
-                    {"id": "vulnerability_mgmt", "score": 68, "contribution": 0.05},
-                ],
-            },
-            "governance": {
-                "weight": 0.20,
-                "signals": [
-                    {"id": "leadership_stability", "score": 90, "contribution": 0.06},
-                    {"id": "regulatory_compliance", "score": 65, "contribution": 0.04},
-                ],
-            },
-        },
+        "declined_at": q.updated_at,
     }
 
 
@@ -326,20 +265,23 @@ async def get_quote_signals(quote_id: str):
 async def get_premium_options(
     quote_id: str,
     limits: Optional[List[int]] = Query(None, description="Specific limits to price"),
+    db: AsyncSession = Depends(get_async_db)
 ):
-    """
-    Get premium options for various limits.
-    """
-    if quote_id not in _quotes:
+    """Get or calculate premium options based on the underlying tier."""
+    query = select(Quote, ModelVersionRecord).join(
+        ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id
+    ).where(Quote.quote_id == quote_id)
+    
+    row = (await db.execute(query)).first()
+    if not row:
         raise HTTPException(status_code=404, detail="Quote not found")
-
-    q = _quotes[quote_id]
-
-    # Use stored options or calculate new ones
+        
+    q, mv = row
+    
     if limits:
-        # Calculate for requested limits
-        base_rate = 0.00625  # Simplified rate
-        tier_factor = {1: 0.8, 2: 1.0, 3: 1.2, 4: 1.5, 5: 2.0}.get(q["tier"], 1.0)
+        # Dynamic recalculation using DB Tier
+        base_rate = 0.00625
+        tier_factor = {1: 0.8, 2: 1.0, 3: 1.2, 4: 1.5, 5: 2.0}.get(mv.final_tier, 1.0)
 
         options = {}
         for limit in limits:
@@ -350,7 +292,7 @@ async def get_premium_options(
 
     return {
         "quote_id": quote_id,
-        "premium_options": q["premium_options"],
-        "recommended_limit": q["recommended_limit"],
-        "recommended_premium": q["recommended_premium"],
+        "premium_options": _parse_json(q.premium_options, {}),
+        "recommended_limit": q.recommended_limit,
+        "recommended_premium": q.recommended_premium,
     }

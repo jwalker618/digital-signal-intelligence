@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 import { 
-  PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound,  
-  Menu, Search, Filter, Inbox, List, BarChart3, ShieldAlert, Calendar
+  PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine,
+  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
@@ -30,11 +30,11 @@ const SidebarIconBtn = ({ icon: Icon, onClick, className, style }: { icon: any, 
 );
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   
   const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
-  const { activeMenu, setActiveMenu, daysFilter, setDaysFilter, previousMenu, activeSubmission } = useDsiStore();
+  const { activeMenu, setActiveMenu, daysFilter, setDaysFilter, previousMenu, activeSubmission, navigateBack } = useDsiStore();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [collapsedWidthPx, setCollapsedWidthPx] = useState<number | null>(null);
@@ -117,42 +117,87 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   absolute left-10 right-0 
                   flex-grow py-dsi-pad 
                   overflow-y-auto 
-                  overflow-x-hidden"
+                  overflow-x-hidden no-scrollbar"
                 style={{ top: collapsedWidthPx }}
               >
                 <div className="px-dsi-pad">
-                  <button 
-                    onClick={() => setIsSubmissionsExpanded(!isSubmissionsExpanded)}
-                    className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Inbox className="icon" />
-                      <span className="text-sm tracking-wider">Submissions</span>
-                    </div>
-                  </button>
                   
-                  {isSubmissionsExpanded && (
-                    <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
-                      {[
-                        { name: "Referral Pipeline", icon: ShieldAlert },
-                        { name: "Full Pipeline", icon: List },
-                        { name: "Performance Metrics", icon: BarChart3 }
-                      ].map((item) => (
-                        <li key={item.name}>
-                          <button
-                            onClick={() => setActiveMenu(item.name)}
-                            className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
-                              activeMenu === item.name 
-                                ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
-                                : "text-dsi-background hover:text-dsi-selected"
-                            }`}
-                          >
-                            <item.icon className="icon" />
-                            {item.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                  {/* --- CONDITIONAL RENDERING --- */}
+                  {activeSubmission ? (
+                    
+                    /* === DRILL-DOWN MODE === */
+                    <>
+                      <button 
+                        onClick={navigateBack}
+                        className="w-full flex items-center gap-3 py-2 text-dsi-background hover:text-dsi-selected mb-2 border-b-3 border-dsi-outline/20 pb-4"
+                      >
+                        <ArrowLeftToLine className="icon shrink-0" />
+                        <span className="text-sm tracking-wider font-bold truncate">Back to {previousMenu}</span>
+                      </button>
+                      
+                      <ul className="ml-3 pl-dsi-pad flex flex-col gap-1">
+                        {[
+                          { name: "Summary", icon: FolderKanban },
+                          { name: "Referral Actions", icon: UserStar },
+                          { name: "Model Versions", icon: FileStack },
+                          { name: "Audit Log", icon: Shield }
+                        ].map((item) => (
+                          <li key={item.name}>
+                            <button
+                              onClick={() => setActiveMenu(item.name)}
+                              className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
+                                activeMenu === item.name 
+                                  ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
+                                  : "text-dsi-background hover:text-dsi-selected"
+                              }`}
+                            >
+                              <item.icon className="icon shrink-0" />
+                              <span className="truncate">{item.name}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+
+                  ) : (
+
+                    /* === TOP LEVEL MODE */
+                    <>
+                      <button 
+                        onClick={() => setIsSubmissionsExpanded(!isSubmissionsExpanded)}
+                        className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Inbox className="icon shrink-0" />
+                          <span className="text-sm tracking-wider">Submissions</span>
+                        </div>
+                      </button>
+                      
+                      {isSubmissionsExpanded && (
+                        <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
+                          {[
+                            { name: "Referral Pipeline", icon: UserStar },
+                            { name: "Full Pipeline", icon: Rows4 },
+                            { name: "Performance Metrics", icon: Bot }
+                          ].map((item) => (
+                            <li key={item.name}>
+                              <button
+                                onClick={() => setActiveMenu(item.name)}
+                                className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
+                                  activeMenu === item.name 
+                                    ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
+                                    : "text-dsi-background hover:text-dsi-selected"
+                                }`}
+                              >
+                                <item.icon className="icon shrink-0" />
+                                <span className="truncate">{item.name}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+
                   )}
                 </div>
               </nav>
@@ -185,18 +230,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               className="border-b-3 border-dsi-outline flex items-center justify-between px-dsi-main shrink-0"
               style={{ height: 'var(--cw)' }}
             >
-              <h1 className="font-inter text-2xl tracking-wide">
-                Submissions 
-                <span className="opacity-50">/</span> 
-                {/* Show previous menu if in Workbench, otherwise show active menu */}
-                {activeMenu === "Workbench" ? previousMenu : activeMenu}
+ 
+              <h1 className="font-inter text-2xl tracking-wide flex items-center gap-4">
+                <span className="flex items-center gap-4">
+                  Submissions 
+                  <span className="opacity-50 font-light">/</span> 
+                  
+                  {/* Base Menu (or Previous Menu if drilled down) */}
+                  {activeSubmission ? previousMenu : activeMenu}
+                </span>
                 
-                {/* Dynamically inject the Bold Entity Name if we are in the Workbench! */}
-                {activeMenu === "Workbench" && activeSubmission && (
-                  <>
-                    <span className="opacity-50">/</span>
+                {/* Deep Dive Breadcrumbs - STOPS AT ENTITY NAME NOW */}
+                {activeSubmission && (
+                  <span className="flex items-center gap-4">
+                    <span className="opacity-50 font-light">/</span>
                     <span className="font-bold">{activeSubmission.entity_name}</span>
-                  </>
+                  </span>
                 )}
               </h1>
 

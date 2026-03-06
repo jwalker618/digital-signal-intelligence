@@ -23,9 +23,6 @@ from .observability.logging_config import configure_logging
 from .observability.metrics import metrics, get_metrics_response
 from .observability.rate_limiter import RateLimitMiddleware, set_redis_limiter
 
-from sqlalchemy import text
-from infrastructure.db.config import get_sync_engine
-
 # Configure structured logging before anything else
 configure_logging()
 logger = logging.getLogger("dsi.api")
@@ -379,14 +376,14 @@ async def api_info():
 # =============================================================================
 
 # Import routers after app is created to avoid circular imports
-from .routes import submissions, quotes, referrals, analytics, simulate
+from .routes import submissions, quotes, referrals, analytics, simulate, workbench
 
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
 app.include_router(referrals.router, prefix="/api/v1", tags=["Referrals"])
 app.include_router(analytics.router, prefix="/api/v1", tags=["Analytics"])
 app.include_router(simulate.router, prefix="/api/v1", tags=["Simulate"])
-
+app.include_router(workbench.router, prefix="/api/v1", tags=["Workbench"])
 
 # =============================================================================
 # METRICS ENDPOINT
@@ -411,227 +408,3 @@ async def get_metrics_json():
         "database_connected": app_state.db_connected,
         "cache_connected": app_state.cache_connected,
     }
-
-@app.get("/api/v1/workbench-data")
-def get_workbench_data(created_after: datetime | None = None):
-    engine = get_sync_engine()
-
-    if created_after is None:
-        created_after = datetime.utcnow() - timedelta(days=30)
-
-    with engine.connect() as conn:
-        query = text("""
-            SELECT 
-                s.id AS submission_id,
-                q.id AS quote_id,
-                mv.id AS model_version_id,
-                s.submission_id AS submission_code,
-                q.quote_id AS quote_code,
-                mv.version_id AS version_code,
-                s.entity_name,
-                COALESCE(s.coverage, '') || ' / ' || COALESCE(s.configuration, '') AS coverage_configuration,
-                s.created_at,
-                q.status,
-                q.recommended_premium,
-                q.recommended_limit,
-                mv.pure_composite_score,
-                mv.confidence AS pure_composite_score_confidence,
-                mv.signal_coverage,
-                mv.final_tier,
-                mv.tier_label,
-                mv.decision
-            FROM submissions s
-            LEFT JOIN quotes q ON s.id = q.submission_id
-            LEFT JOIN model_versions mv ON mv.submission_id = s.id AND mv.id = q.model_version_id
-            WHERE mv.is_latest = true
-              AND (
-                    CAST(s.status AS TEXT) ILIKE 'draft'
-                    OR s.created_at >= :created_after
-                  )
-        """)
-
-        rows = conn.execute(query, {"created_after": created_after}).mappings().all()
-
-        return [
-            {
-                "submission_id": row["submission_id"],
-                "quote_id": row["quote_id"],
-                "model_version_id": row["model_version_id"],
-                "submission_code": row["submission_code"],
-                "quote_code": row["quote_code"],
-                "version_code": row["version_code"],
-                "entity_name": row["entity_name"],
-                "coverage_configuration": row["coverage_configuration"],
-                "created_at": row["created_at"],
-                "status": row["status"],
-                "recommended_premium": row["recommended_premium"],
-                "recommended_limit": row["recommended_limit"],
-                "pure_composite_score": row["pure_composite_score"],
-                "pure_composite_score_confidence": row["pure_composite_score_confidence"],
-                "signal_coverage": row["signal_coverage"],
-                "final_tier": row["final_tier"],
-                "tier_label": row["tier_label"],
-                "decision": row["decision"]
-            }
-            for row in rows
-        ]
-
-@app.post("/api/v1/submissions/{submission_id}/decision")
-def update_submission_decision(submission_id: str, payload: DecisionPayload):
-    engine = get_sync_engine()
-    # .begin() automatically commits the transaction if it succeeds!
-    with engine.begin() as conn:
-        # 1. Update the Quotes table
-        conn.execute(text("""
-            UPDATE quotes SET decision = :decision 
-            WHERE submission_id = :sub_id
-        """), {"decision": payload.decision, "sub_id": submission_id})
-        
-        # 2. Update the Submissions table status
-        conn.execute(text("""
-            UPDATE submissions SET status = :decision
-            WHERE id = :sub_id
-        """), {"decision": payload.decision, "sub_id": submission_id})
-        
-    return {"status": "success", "decision": payload.decision}
-
-@app.get("/api/v1/referral-queue")
-def get_referral_queue():
-    engine = get_sync_engine()
-    with engine.connect() as conn:
-        # Join Referrals, Quotes, and Submissions to get the full context
-        query = text("""
-            SELECT 
-                r.referral_id, r.status as ref_status, r.priority, r.reasons, r.created_at,
-                q.recommended_premium, q.tier, q.decision,
-                s.entity_name, s.coverage
-            FROM referrals r
-            JOIN quotes q ON r.quote_id = q.id
-            JOIN submissions s ON q.submission_id = s.id
-            WHERE r.status IN ('pending', 'in_review')
-            ORDER BY r.priority ASC, r.created_at DESC
-        """)
-        
-        data = []
-        for row in conn.execute(query).mappings():
-            data.append({
-                "id": str(row["referral_id"]),
-                "status": row["ref_status"],
-                "priority": row["priority"],
-                "reasons": row["reasons"],
-                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-                "entity_name": row["entity_name"],
-                "coverage": row["coverage"],
-                "premium": row["recommended_premium"],
-                "tier": row["tier"],
-                "decision": row["decision"]
-            })
-        return data
-
-@app.get("/api/v1/audit-trail")
-def get_audit_trail():
-    engine = get_sync_engine()
-    with engine.connect() as conn:
-        events = []
-        
-        # 1. Fetch Underwriter Signal Overrides
-        override_query = text("""
-            SELECT 
-                sar.id, sar.created_at, sar.entity_id, sar.signal_id, 
-                sar.override_rationale, u.email as user_email
-            FROM signal_audit_records sar
-            LEFT JOIN users u ON sar.overridden_by = u.id
-        """)
-        for row in conn.execute(override_query).mappings():
-            events.append({
-                "id": str(row["id"]),
-                "timestamp": row["created_at"].isoformat() if row["created_at"] else None,
-                "type": "Manual Override",
-                "entity": row["entity_id"],
-                "action": f"Modified Signal: {row['signal_id']}",
-                "details": row["override_rationale"] or "No rationale provided.",
-                "actor": row["user_email"] or "Underwriter"
-            })
-            
-        # 2. Fetch Automated System Logs
-        log_query = text("""
-            SELECT 
-                al.id, al.created_at, al.event_type, al.event_action, 
-                al.resource_id, al.details, u.email as user_email
-            FROM audit_logs al
-            LEFT JOIN users u ON al.user_id = u.id
-        """)
-        for row in conn.execute(log_query).mappings():
-            # Clean up the JSON details for display
-            details_str = str(row["details"])
-            if len(details_str) > 100:
-                details_str = details_str[:97] + "..."
-                
-            events.append({
-                "id": str(row["id"]),
-                "timestamp": row["created_at"].isoformat() if row["created_at"] else None,
-                "type": "System Event",
-                "entity": row["resource_id"] or "System",
-                "action": f"{row['event_type']} ({row['event_action']})",
-                "details": details_str,
-                "actor": row["user_email"] or "Automated Engine"
-            })
-            
-        # Sort all events chronologically (newest first)
-        events.sort(key=lambda x: x["timestamp"] or "", reverse=True)
-        return events
-
-@app.get("/api/v1/portfolio-analytics")
-def get_portfolio_analytics():
-    engine = get_sync_engine()
-    with engine.connect() as conn:
-        # 1. Top-Level KPIs
-        kpi_query = text("""
-            SELECT 
-                COUNT(s.id) as total_submissions,
-                SUM(q.recommended_premium) as total_premium,
-                SUM(CASE WHEN q.decision = 'approve' THEN 1 ELSE 0 END) as approved_count
-            FROM submissions s
-            JOIN quotes q ON s.id = q.submission_id
-        """)
-        kpis = dict(conn.execute(kpi_query).mappings().fetchone())
-
-        # 2. Tier Distribution
-        tier_query = text("""
-            SELECT tier, COUNT(*) as count
-            FROM quotes
-            WHERE tier IS NOT NULL
-            GROUP BY tier
-            ORDER BY tier
-        """)
-        tiers = [{"name": f"Tier {row['tier']}", "count": row['count']} for row in conn.execute(tier_query).mappings()]
-
-        # 3. Decision Breakdown
-        decision_query = text("""
-            SELECT decision, COUNT(*) as count
-            FROM quotes
-            WHERE decision IS NOT NULL
-            GROUP BY decision
-        """)
-        decisions = [{"name": str(row['decision']).upper(), "value": row['count']} for row in conn.execute(decision_query).mappings()]
-
-        # 4. Coverage Premium Distribution
-        coverage_query = text("""
-            SELECT s.coverage, SUM(q.recommended_premium) as premium
-            FROM submissions s
-            JOIN quotes q ON s.id = q.submission_id
-            GROUP BY s.coverage
-            ORDER BY premium DESC
-        """)
-        coverages = [{"name": str(row['coverage']).replace('_', ' ').title(), "premium": row['premium']} for row in conn.execute(coverage_query).mappings()]
-
-        return {
-            "kpis": {
-                "total_submissions": kpis["total_submissions"],
-                "total_premium": kpis["total_premium"] or 0,
-                "approval_rate": (kpis["approved_count"] / kpis["total_submissions"] * 100) if kpis["total_submissions"] > 0 else 0
-            },
-            "tiers": tiers,
-            "decisions": decisions,
-            "coverages": coverages
-        }

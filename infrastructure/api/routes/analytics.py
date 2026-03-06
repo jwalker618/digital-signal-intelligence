@@ -8,7 +8,11 @@ import logging
 from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Query
+from sqlalchemy import text
+from infrastructure.db.config import get_async_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from fastapi import APIRouter, Query, Depends
 
 from ..types import (
     PortfolioSummaryResponse,
@@ -135,6 +139,60 @@ async def get_signal_health(
         ],
     )
 
+@router.get("/analytics/portfolio-stats")
+async def get_portfolio_analytics(db: AsyncSession = Depends(get_async_db)):
+    """Database-backed portfolio analytics."""
+    # 1. Top-Level KPIs
+    kpi_query = text("""
+        SELECT 
+            COUNT(s.id) as total_submissions,
+            SUM(q.recommended_premium) as total_premium,
+            SUM(CASE WHEN q.decision = 'approve' THEN 1 ELSE 0 END) as approved_count
+        FROM submissions s
+        JOIN quotes q ON s.id = q.submission_id
+    """)
+    kpis = (await db.execute(kpi_query)).mappings().fetchone()
+
+    # 2. Tier Distribution
+    tier_query = text("""
+        SELECT tier, COUNT(*) as count
+        FROM quotes
+        WHERE tier IS NOT NULL
+        GROUP BY tier
+        ORDER BY tier
+    """)
+    tiers = [{"name": f"Tier {row['tier']}", "count": row['count']} for row in (await db.execute(tier_query)).mappings().all()]
+
+    # 3. Decision Breakdown
+    decision_query = text("""
+        SELECT decision, COUNT(*) as count
+        FROM quotes
+        WHERE decision IS NOT NULL
+        GROUP BY decision
+    """)
+    decisions = [{"name": str(row['decision']).upper(), "value": row['count']} for row in (await db.execute(decision_query)).mappings().all()]
+
+    # 4. Coverage Premium Distribution
+    coverage_query = text("""
+        SELECT s.coverage, SUM(q.recommended_premium) as premium
+        FROM submissions s
+        JOIN quotes q ON s.id = q.submission_id
+        GROUP BY s.coverage
+        ORDER BY premium DESC
+    """)
+    coverages = [{"name": str(row['coverage']).replace('_', ' ').title(), "premium": row['premium']} for row in (await db.execute(coverage_query)).mappings().all()]
+
+    total_subs = kpis["total_submissions"] or 0
+    return {
+        "kpis": {
+            "total_submissions": total_subs,
+            "total_premium": kpis["total_premium"] or 0,
+            "approval_rate": (kpis["approved_count"] / total_subs * 100) if total_subs > 0 else 0
+        },
+        "tiers": tiers,
+        "decisions": decisions,
+        "coverages": coverages
+    }
 
 # =============================================================================
 # TIER DISTRIBUTION

@@ -15,11 +15,11 @@ export default function ViewCanvas({ children, topContext, bottomContext }: View
       {/*Top Context Window */}
       <div 
         className="
-          absolute left-dsi-gap right-dsi-gap 
+          absolute top-0 left-dsi-gap right-dsi-gap 
           overflow-auto
           text-dsi-contrast-background"
         style={{ 
-          bottom: 'var(--cw)',
+          height: 'var(--cw)'
         }}
       >
         {topContext}

@@ -11,6 +11,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
     submissions, 
     isLoading, 
     daysFilter,
+    activeMenu,
     setDaysFilter,
     fetchSubmissionDetail,
     updateDecision } = useDsiStore();
@@ -25,7 +26,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
     : submissions;
 
   // DEFINE BOTTOM CONTEXT UI FOR THIS SPECIFIC VIEW
-  const PipelineBottomContext = (
+  const BottomContext = (
     <div className="w-full h-full flex">
       <div className="pt-dsi-pad flex relative">
         <Calendar className="icon" />
@@ -49,13 +50,13 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
     </div>
   );
 
-  const handleRowClick = (submissionId: string) => {
-    // Triggers the deep fetch for the Workbench using the new submission_id
-    fetchSubmissionDetail(submissionId); 
+  const handleRowClick = (sub: any) => {
+    // Pass the entire row object so the store has the quote_id and entity_name
+    fetchSubmissionDetail(sub); 
   };
 
   return (
-    <ViewCanvas bottomContext={PipelineBottomContext}>
+    <ViewCanvas bottomContext={BottomContext}>
       <div className="w-full no-scrollbar">
         <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead className="sticky top-0 z-10 bg-dsi-analysis">
@@ -80,7 +81,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
               return (
                 <tr 
                   key={sub.submission_id || index}
-                  onClick={() => handleRowClick(sub.submission_id)}
+                  onClick={() => handleRowClick(sub)}
                   className="
                     cursor-pointer
                     even:bg-dsi-contrast-analysis
@@ -104,7 +105,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                           className="text-green-600 dark:text-green-400 hover:scale-125" 
                           onClick={(e) => { 
                             e.stopPropagation(); // Stops the row click from firing!
-                            updateDecision(sub.submission_id, "APPROVE"); 
+                            if (sub.referral_id) updateDecision(sub.referral_id, "approve"); 
                           }}
                         >
                           <Check className="icon" />
@@ -116,7 +117,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                           className="text-red-600 dark:text-red-400 hover:scale-125" 
                           onClick={(e) => { 
                             e.stopPropagation(); 
-                            updateDecision(sub.submission_id, "DECLINE"); 
+                            if (sub.referral_id) updateDecision(sub.referral_id, "decline"); 
                           }}
                         >
                           <X className="icon" />

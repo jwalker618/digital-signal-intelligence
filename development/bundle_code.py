@@ -8,7 +8,7 @@ from pathlib import Path
 #   "frontend"       → walk only frontend/
 #   "frontend/src"   → walk only that subtree
 # ---------------------------------------------------------
-BASE_PATH = "infrastructure/models"   # <--- change this as needed
+BASE_PATH = "infrastructure/db"   # <--- change this as needed
 # ---------------------------------------------------------
 
 def resolve_base_path():
