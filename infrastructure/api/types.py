@@ -475,14 +475,24 @@ class ReferralSignalDetail(BaseModel):
     extracted_at: datetime
     raw_data: Optional[Dict[str, Any]] = None
 
+    # Configuration context: was this signal actually used by the model?
+    in_model: bool = True                       # True if signal was used by this model version
+    proxy_tier: Optional[str] = None            # DIRECT_OBSERVABLE / INFERRED_PROXY / COHORT_INFERENCE
+    expectation_level: Optional[str] = None     # UNIVERSAL / ENTERPRISE / etc.
+    was_absent: bool = False                    # Signal expected by config but not found
+    used_audited_value: bool = False            # True if model used audited rather than inferred
+
 
 class ReferralSignalsResponse(BaseModel):
     referral_id: str
     model_version_id: str
+    configuration_name: Optional[str] = None    # Which config produced this model version
+    coverage: Optional[str] = None              # Coverage type
     signals: List[ReferralSignalDetail]
     flagged_count: int
     overridden_count: int
-    total_signals: int
+    total_signals: int                          # Total signals in signal_cache for entity
+    model_signal_count: int = 0                 # Signals actually used by this model version
     signal_coverage: float
     average_confidence: float
 

@@ -16,6 +16,7 @@ from .models import (
     Quote,
     Referral,
     ModelVersionRecord,
+    ModelVersionSignal,
     SignalCache,
     SignalAuditRecord,
     AuditLog,
@@ -464,6 +465,144 @@ class SignalCacheRepository:
             delete(SignalCache).where(SignalCache.expires_at < datetime.utcnow())
         )
         return result.rowcount
+
+
+class ModelVersionSignalRepository:
+    """
+    Repository for ModelVersionSignal operations.
+
+    Manages the association between model versions and the specific
+    signal_cache entries they consumed during scoring.
+    """
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def record_signal_usage(
+        self,
+        model_version_id: uuid.UUID,
+        signal_cache_id: uuid.UUID,
+        signal_id: str,
+        entity_id: str,
+        score: Optional[float] = None,
+        weight: Optional[float] = None,
+        contribution: Optional[float] = None,
+        group_id: Optional[str] = None,
+        proxy_tier: Optional[str] = None,
+        expectation_level: Optional[str] = None,
+        was_absent: bool = False,
+        used_audited_value: bool = False,
+    ) -> ModelVersionSignal:
+        """Record that a model version consumed a specific signal."""
+        record = ModelVersionSignal(
+            model_version_id=model_version_id,
+            signal_cache_id=signal_cache_id,
+            signal_id=signal_id,
+            entity_id=entity_id,
+            score=score,
+            weight=weight,
+            contribution=contribution,
+            group_id=group_id,
+            proxy_tier=proxy_tier,
+            expectation_level=expectation_level,
+            was_absent=was_absent,
+            used_audited_value=used_audited_value,
+        )
+        self.db.add(record)
+        await self.db.flush()
+        return record
+
+    async def bulk_record(
+        self,
+        model_version_id: uuid.UUID,
+        signals: List[Dict[str, Any]],
+    ) -> List[ModelVersionSignal]:
+        """Record multiple signal usages in one call."""
+        records = []
+        for sig in signals:
+            record = ModelVersionSignal(
+                model_version_id=model_version_id,
+                signal_cache_id=sig["signal_cache_id"],
+                signal_id=sig["signal_id"],
+                entity_id=sig["entity_id"],
+                score=sig.get("score"),
+                weight=sig.get("weight"),
+                contribution=sig.get("contribution"),
+                group_id=sig.get("group_id"),
+                proxy_tier=sig.get("proxy_tier"),
+                expectation_level=sig.get("expectation_level"),
+                was_absent=sig.get("was_absent", False),
+                used_audited_value=sig.get("used_audited_value", False),
+            )
+            records.append(record)
+        self.db.add_all(records)
+        await self.db.flush()
+        return records
+
+    async def get_by_model_version(
+        self,
+        model_version_id: uuid.UUID,
+    ) -> List[ModelVersionSignal]:
+        """Get all signal usages for a model version — the configuration manifest."""
+        result = await self.db.execute(
+            select(ModelVersionSignal)
+            .where(ModelVersionSignal.model_version_id == model_version_id)
+            .order_by(ModelVersionSignal.group_id, ModelVersionSignal.signal_id)
+        )
+        return list(result.scalars().all())
+
+    async def get_signal_ids_for_version(
+        self,
+        model_version_id: uuid.UUID,
+    ) -> List[str]:
+        """Get just the signal IDs used by a model version (lightweight query)."""
+        result = await self.db.execute(
+            select(ModelVersionSignal.signal_id)
+            .where(ModelVersionSignal.model_version_id == model_version_id)
+        )
+        return [row[0] for row in result.all()]
+
+    async def copy_to_new_version(
+        self,
+        source_model_version_id: uuid.UUID,
+        target_model_version_id: uuid.UUID,
+        override_signal_id: Optional[str] = None,
+        override_values: Optional[Dict[str, Any]] = None,
+    ) -> List[ModelVersionSignal]:
+        """
+        Copy signal associations from one model version to another.
+
+        Used during signal overrides: the new v2+ model version inherits
+        all signal bindings from v1, with optional overrides for the
+        signal being audited.
+        """
+        source_records = await self.get_by_model_version(source_model_version_id)
+        new_records = []
+        for src in source_records:
+            values = {
+                "model_version_id": target_model_version_id,
+                "signal_cache_id": src.signal_cache_id,
+                "signal_id": src.signal_id,
+                "entity_id": src.entity_id,
+                "score": src.score,
+                "weight": src.weight,
+                "contribution": src.contribution,
+                "group_id": src.group_id,
+                "proxy_tier": src.proxy_tier,
+                "expectation_level": src.expectation_level,
+                "was_absent": src.was_absent,
+                "used_audited_value": src.used_audited_value,
+            }
+            # Apply override for the audited signal
+            if override_signal_id and src.signal_id == override_signal_id and override_values:
+                values.update(override_values)
+                values["used_audited_value"] = True
+
+            new_records.append(ModelVersionSignal(**values))
+
+        self.db.add_all(new_records)
+        await self.db.flush()
+        return new_records
 
 
 class SignalAuditRepository:
