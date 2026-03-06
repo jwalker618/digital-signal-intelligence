@@ -395,6 +395,60 @@ class SignalCache(Base):
     )
 
 
+class ModelVersionSignal(Base):
+    """
+    Association table linking a ModelVersionRecord to the specific SignalCache
+    entries it consumed during scoring.
+
+    This is the missing "Layer 2" — the bridge between the full signal
+    repository (signal_cache) and what each individual model actually used.
+    Without this, the UI can only show ALL cached signals for an entity,
+    not the subset that a specific configuration scored against.
+
+    Populated at workflow execution time when the scorer iterates through
+    config.signal_registry and extracts each signal.
+    """
+    __tablename__ = "model_version_signals"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # The model version that consumed this signal
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id"),
+        nullable=False,
+    )
+
+    # The cached signal that was consumed
+    signal_cache_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("signal_cache.id"),
+        nullable=False,
+    )
+
+    # Denormalised for fast queries without joining signal_cache
+    signal_id = Column(String(100), nullable=False)
+    entity_id = Column(String(255), nullable=False)
+
+    # Snapshot of what the signal contributed at scoring time
+    score = Column(Float)                          # The score used (inferred or audited)
+    weight = Column(Float)                         # Weight from config at execution time
+    contribution = Column(Float)                   # Weighted contribution to composite
+    group_id = Column(String(100))                 # Which group this signal belonged to
+    proxy_tier = Column(String(50))                # DIRECT_OBSERVABLE / INFERRED_PROXY / COHORT_INFERENCE
+    expectation_level = Column(String(50))         # UNIVERSAL / ENTERPRISE / etc.
+    was_absent = Column(Boolean, default=False)    # Signal expected but not found
+    used_audited_value = Column(Boolean, default=False)  # True if audited_value was used instead of inferred
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_mvs_model_version", "model_version_id"),
+        Index("ix_mvs_signal_cache", "signal_cache_id"),
+        Index("ix_mvs_lookup", "model_version_id", "signal_id", unique=True),
+    )
+
+
 class SignalAuditRecord(Base):
     """
     Phase 8: Signal audit record for deterministic referral management.
