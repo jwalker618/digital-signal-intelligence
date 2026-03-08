@@ -41,6 +41,8 @@ from infrastructure.db.models import (
     ModelVersionRecord,
     ModelVersionSignal,
     Referral,
+    Signal,
+    SignalSource,
     SignalCache,
     SignalAuditRecord,
     User,
@@ -2208,6 +2210,10 @@ def seed_data():
         # -----------------------------------------------------------------
         print(f"\n[2/2] Seeding {len(COMPANIES)} companies across all coverages...\n")
 
+        # Caches for signal/source reference table IDs (populated on first encounter)
+        _signal_id_cache = {}   # signal_code -> signals.id
+        _source_id_cache = {}   # source_name -> signal_sources.id
+
         stats = {"approve": 0, "refer": 0, "decline": 0}
         coverage_counts = {}
 
@@ -2401,54 +2407,69 @@ def seed_data():
             profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
             cache_id_map = {}  # (group_id, signal_id) -> cache UUID
             for group_id, signals in profile.items():
-                for signal_id in signals:
-                    resolved = resolved_scores.get((group_id, signal_id), 50)
+                for sig_code in signals:
+                    resolved = resolved_scores.get((group_id, sig_code), 50)
                     cache_uuid = _uid()
-                    cache_id_map[(group_id, signal_id)] = cache_uuid
+                    cache_id_map[(group_id, sig_code)] = cache_uuid
+
+                    sig_ref_id = _signal_id_cache.get(sig_code)
+                    if sig_ref_id is None:
+                        sig_ref = Signal(code=sig_code)
+                        db.add(sig_ref)
+                        db.flush()
+                        sig_ref_id = sig_ref.id
+                        _signal_id_cache[sig_code] = sig_ref_id
+
+                    src_name = f"{sig_code}_extractor"
+                    src_ref_id = _source_id_cache.get(src_name)
+                    if src_ref_id is None:
+                        src_ref = SignalSource(name=src_name)
+                        db.add(src_ref)
+                        db.flush()
+                        src_ref_id = src_ref.id
+                        _source_id_cache[src_name] = src_ref_id
+
                     cache = SignalCache(
                         id=cache_uuid,
                         entity_code=co["domain"],
-                        signal_code=signal_id,
-                        source_name=f"{signal_id}_extractor",
+                        signal_id=sig_ref_id,
+                        source_id=src_ref_id,
                         data={
                             "score": resolved,
                             "raw_data": {"source": "seed", "entity": co["entity_name"]},
-                            "metadata": {"group_id": group_id},
+                            "metadata": {"group_code": group_id},
                         },
                         confidence=round(random.uniform(0.7, 0.99), 2),
                         ttl_seconds=86400,
                         expires_at=NOW + timedelta(days=1),
                         extraction_time_ms=round(random.uniform(30, 500), 1),
-                        inferred_value={"score": resolved},
                     )
                     db.add(cache)
             db.flush()
 
             # === 5b. MODEL VERSION SIGNALS (Layer 2 — config-to-signal binding) ===
-            # Links each model version to the specific signals it consumed.
-            # This bridges signal_cache (all entity signals) and model_versions
-            # (what a specific configuration actually used).
             signal_output_lookup = {s["signal_id"]: s for s in signal_outputs}
+            mvs_id_map = {}  # (group_id, sig_code) -> mvs UUID
             num_groups = len(profile)
             for group_id, signals_in_group in profile.items():
-                # Group-proportional weights: each group gets equal share,
-                # then signals within a group split that share evenly
                 group_weight = 1.0 / max(num_groups, 1)
                 num_in_group = len(signals_in_group)
                 signal_weight = round(group_weight / max(num_in_group, 1), 4)
 
-                for signal_id in signals_in_group:
-                    cache_ref = cache_id_map.get((group_id, signal_id))
+                for sig_code in signals_in_group:
+                    cache_ref = cache_id_map.get((group_id, sig_code))
                     if not cache_ref:
                         continue
-                    so = signal_output_lookup.get(signal_id, {})
-                    resolved = resolved_scores.get((group_id, signal_id), 50)
+                    so = signal_output_lookup.get(sig_code, {})
+                    resolved = resolved_scores.get((group_id, sig_code), 50)
                     contribution = round(resolved * signal_weight, 2)
+                    mvs_uuid = _uid()
+                    mvs_id_map[(group_id, sig_code)] = mvs_uuid
                     mvs = ModelVersionSignal(
-                        id=_uid(),
+                        id=mvs_uuid,
                         model_version_id=mv_id,
                         signal_cache_id=cache_ref,
-                        signal_code=signal_id,
+                        signal_id=_signal_id_cache[sig_code],
                         entity_code=co["domain"],
                         score=resolved,
                         weight=signal_weight,
@@ -2457,14 +2478,12 @@ def seed_data():
                         proxy_tier=so.get("proxy_tier", "INFERRED_PROXY"),
                         expectation_level=random.choice(["UNIVERSAL", "ENTERPRISE", "CORPORATE"]),
                         was_absent=False,
-                        used_audited_value=False,
                     )
                     db.add(mvs)
             db.flush()
 
             # === 6. SIGNAL AUDIT RECORDS (for overridden signals) ===
             if co["decision"] == "refer" and profile:
-                # Create 1-2 override examples per referred company
                 overridable_signals = [
                     (gid, sid, resolved_scores.get((gid, sid), 50))
                     for gid, sigs in profile.items()
@@ -2472,17 +2491,14 @@ def seed_data():
                     if resolved_scores.get((gid, sid), 50) <= 50
                 ]
                 for gid, sid, resolved in overridable_signals[:2]:
-                    cache_ref = cache_id_map.get((gid, sid))
-                    audited = min(100, resolved + 15)
+                    mvs_ref = mvs_id_map.get((gid, sid))
+                    if not mvs_ref:
+                        continue
+                    audited = min(100.0, resolved + 15.0)
                     audit_record = SignalAuditRecord(
                         id=_uid(),
-                        signal_cache_id=cache_ref,
-                        model_version_id=mv_id,
-                        signal_code=sid,
-                        entity_code=co["domain"],
-                        inferred_value={"score": resolved},
-                        audited_value={"score": audited},
-                        is_overridden=True,
+                        model_version_signal_id=mvs_ref,
+                        audited_value=audited,
                         overridden_by=uw_user_id,
                         overridden_at=NOW - timedelta(hours=random.randint(1, 24)),
                         override_rationale=f"Underwriter adjustment: {sid.replace('_', ' ').title()} "

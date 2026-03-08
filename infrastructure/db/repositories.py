@@ -17,6 +17,8 @@ from .models import (
     Referral,
     ModelVersionRecord,
     ModelVersionSignal,
+    Signal,
+    SignalSource,
     SignalCache,
     SignalAuditRecord,
     AuditLog,
@@ -353,6 +355,32 @@ class SignalCacheRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def _resolve_signal_id(self, signal_code: str) -> int:
+        """Get or create a Signal reference row, returning its integer id."""
+        result = await self.db.execute(
+            select(Signal.id).where(Signal.code == signal_code)
+        )
+        row = result.scalar_one_or_none()
+        if row is not None:
+            return row
+        sig = Signal(code=signal_code)
+        self.db.add(sig)
+        await self.db.flush()
+        return sig.id
+
+    async def _resolve_source_id(self, source_name: str) -> int:
+        """Get or create a SignalSource reference row, returning its integer id."""
+        result = await self.db.execute(
+            select(SignalSource.id).where(SignalSource.name == source_name)
+        )
+        row = result.scalar_one_or_none()
+        if row is not None:
+            return row
+        src = SignalSource(name=source_name)
+        self.db.add(src)
+        await self.db.flush()
+        return src.id
+
     async def get(
         self,
         entity_code: str,
@@ -361,11 +389,14 @@ class SignalCacheRepository:
     ) -> Optional[SignalCache]:
         """Get cached signal data if valid."""
         result = await self.db.execute(
-            select(SignalCache).where(
+            select(SignalCache)
+            .join(Signal, SignalCache.signal_id == Signal.id)
+            .join(SignalSource, SignalCache.source_id == SignalSource.id)
+            .where(
                 and_(
                     SignalCache.entity_code == entity_code,
-                    SignalCache.signal_code == signal_code,
-                    SignalCache.source_name == source_name,
+                    Signal.code == signal_code,
+                    SignalSource.name == source_name,
                     SignalCache.expires_at > datetime.utcnow(),
                 )
             )
@@ -382,15 +413,21 @@ class SignalCacheRepository:
         Get valid (non-expired) cached signal data.
         TTL-aware retrieval that only returns data within validity window.
         """
-        query = select(SignalCache).where(
-            and_(
-                SignalCache.entity_code == entity_code,
-                SignalCache.signal_code == signal_code,
-                SignalCache.expires_at > datetime.utcnow(),
+        query = (
+            select(SignalCache)
+            .join(Signal, SignalCache.signal_id == Signal.id)
+            .where(
+                and_(
+                    SignalCache.entity_code == entity_code,
+                    Signal.code == signal_code,
+                    SignalCache.expires_at > datetime.utcnow(),
+                )
             )
         )
         if source_name:
-            query = query.where(SignalCache.source_name == source_name)
+            query = query.join(SignalSource, SignalCache.source_id == SignalSource.id).where(
+                SignalSource.name == source_name
+            )
 
         result = await self.db.execute(query.order_by(SignalCache.extracted_at.desc()))
         return result.scalar_one_or_none()
@@ -406,7 +443,7 @@ class SignalCacheRepository:
         if not include_expired:
             query = query.where(SignalCache.expires_at > datetime.utcnow())
 
-        result = await self.db.execute(query.order_by(SignalCache.signal_code, SignalCache.extracted_at.desc()))
+        result = await self.db.execute(query.order_by(SignalCache.signal_id, SignalCache.extracted_at.desc()))
         return list(result.scalars().all())
 
     async def set(
@@ -420,21 +457,24 @@ class SignalCacheRepository:
         extraction_time_ms: float = 0.0,
     ) -> SignalCache:
         """Cache signal data."""
+        signal_id = await self._resolve_signal_id(signal_code)
+        source_id = await self._resolve_source_id(source_name)
+
         # Delete existing cache entry
         await self.db.execute(
             delete(SignalCache).where(
                 and_(
                     SignalCache.entity_code == entity_code,
-                    SignalCache.signal_code == signal_code,
-                    SignalCache.source_name == source_name,
+                    SignalCache.signal_id == signal_id,
+                    SignalCache.source_id == source_id,
                 )
             )
         )
 
         cache = SignalCache(
             entity_code=entity_code,
-            signal_code=signal_code,
-            source_name=source_name,
+            signal_id=signal_id,
+            source_id=source_id,
             data=data,
             confidence=confidence,
             ttl_seconds=ttl_seconds,
@@ -454,7 +494,8 @@ class SignalCacheRepository:
         query = delete(SignalCache).where(SignalCache.entity_code == entity_code)
 
         if signal_code:
-            query = query.where(SignalCache.signal_code == signal_code)
+            sig_id_subq = select(Signal.id).where(Signal.code == signal_code).scalar_subquery()
+            query = query.where(SignalCache.signal_id == sig_id_subq)
 
         result = await self.db.execute(query)
         return result.rowcount
@@ -478,6 +519,19 @@ class ModelVersionSignalRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def _resolve_signal_id(self, signal_code: str) -> int:
+        """Get or create a Signal reference row, returning its integer id."""
+        result = await self.db.execute(
+            select(Signal.id).where(Signal.code == signal_code)
+        )
+        row = result.scalar_one_or_none()
+        if row is not None:
+            return row
+        sig = Signal(code=signal_code)
+        self.db.add(sig)
+        await self.db.flush()
+        return sig.id
+
     async def record_signal_usage(
         self,
         model_version_id: uuid.UUID,
@@ -491,13 +545,13 @@ class ModelVersionSignalRepository:
         proxy_tier: Optional[str] = None,
         expectation_level: Optional[str] = None,
         was_absent: bool = False,
-        used_audited_value: bool = False,
     ) -> ModelVersionSignal:
         """Record that a model version consumed a specific signal."""
+        signal_id = await self._resolve_signal_id(signal_code)
         record = ModelVersionSignal(
             model_version_id=model_version_id,
             signal_cache_id=signal_cache_id,
-            signal_code=signal_code,
+            signal_id=signal_id,
             entity_code=entity_code,
             score=score,
             weight=weight,
@@ -506,7 +560,6 @@ class ModelVersionSignalRepository:
             proxy_tier=proxy_tier,
             expectation_level=expectation_level,
             was_absent=was_absent,
-            used_audited_value=used_audited_value,
         )
         self.db.add(record)
         await self.db.flush()
@@ -520,10 +573,11 @@ class ModelVersionSignalRepository:
         """Record multiple signal usages in one call."""
         records = []
         for sig in signals:
+            signal_id = await self._resolve_signal_id(sig["signal_code"])
             record = ModelVersionSignal(
                 model_version_id=model_version_id,
                 signal_cache_id=sig["signal_cache_id"],
-                signal_code=sig["signal_code"],
+                signal_id=signal_id,
                 entity_code=sig["entity_code"],
                 score=sig.get("score"),
                 weight=sig.get("weight"),
@@ -532,7 +586,6 @@ class ModelVersionSignalRepository:
                 proxy_tier=sig.get("proxy_tier"),
                 expectation_level=sig.get("expectation_level"),
                 was_absent=sig.get("was_absent", False),
-                used_audited_value=sig.get("used_audited_value", False),
             )
             records.append(record)
         self.db.add_all(records)
@@ -547,7 +600,7 @@ class ModelVersionSignalRepository:
         result = await self.db.execute(
             select(ModelVersionSignal)
             .where(ModelVersionSignal.model_version_id == model_version_id)
-            .order_by(ModelVersionSignal.group_code, ModelVersionSignal.signal_code)
+            .order_by(ModelVersionSignal.group_code, ModelVersionSignal.signal_id)
         )
         return list(result.scalars().all())
 
@@ -557,7 +610,8 @@ class ModelVersionSignalRepository:
     ) -> List[str]:
         """Get just the signal codes used by a model version (lightweight query)."""
         result = await self.db.execute(
-            select(ModelVersionSignal.signal_code)
+            select(Signal.code)
+            .join(ModelVersionSignal, ModelVersionSignal.signal_id == Signal.id)
             .where(ModelVersionSignal.model_version_id == model_version_id)
         )
         return [row[0] for row in result.all()]
@@ -566,7 +620,7 @@ class ModelVersionSignalRepository:
         self,
         source_model_version_id: uuid.UUID,
         target_model_version_id: uuid.UUID,
-        override_signal_code: Optional[str] = None,
+        override_signal_id: Optional[int] = None,
         override_values: Optional[Dict[str, Any]] = None,
     ) -> List[ModelVersionSignal]:
         """
@@ -582,7 +636,7 @@ class ModelVersionSignalRepository:
             values = {
                 "model_version_id": target_model_version_id,
                 "signal_cache_id": src.signal_cache_id,
-                "signal_code": src.signal_code,
+                "signal_id": src.signal_id,
                 "entity_code": src.entity_code,
                 "score": src.score,
                 "weight": src.weight,
@@ -591,12 +645,10 @@ class ModelVersionSignalRepository:
                 "proxy_tier": src.proxy_tier,
                 "expectation_level": src.expectation_level,
                 "was_absent": src.was_absent,
-                "used_audited_value": src.used_audited_value,
             }
             # Apply override for the audited signal
-            if override_signal_code and src.signal_code == override_signal_code and override_values:
+            if override_signal_id and src.signal_id == override_signal_id and override_values:
                 values.update(override_values)
-                values["used_audited_value"] = True
 
             new_records.append(ModelVersionSignal(**values))
 
@@ -607,7 +659,7 @@ class ModelVersionSignalRepository:
 
 class SignalAuditRepository:
     """
-    Repository for SignalAuditRecord operations (Phase 8).
+    Repository for SignalAuditRecord operations.
 
     Manages signal override audit trail for deterministic referral management.
     """
@@ -617,12 +669,8 @@ class SignalAuditRepository:
 
     async def create_override(
         self,
-        signal_cache_id: uuid.UUID,
-        model_version_id: uuid.UUID,
-        signal_code: str,
-        entity_code: str,
-        inferred_value: Dict[str, Any],
-        audited_value: Dict[str, Any],
+        model_version_signal_id: uuid.UUID,
+        audited_value: float,
         overridden_by: uuid.UUID,
         rationale: str,
         evidence_reference: Optional[str] = None,
@@ -630,16 +678,9 @@ class SignalAuditRepository:
         tier_impact: Optional[int] = None,
     ):
         """Create a signal audit record for an override."""
-        from .models import SignalAuditRecord
-
         record = SignalAuditRecord(
-            signal_cache_id=signal_cache_id,
-            model_version_id=model_version_id,
-            signal_code=signal_code,
-            entity_code=entity_code,
-            inferred_value=inferred_value,
+            model_version_signal_id=model_version_signal_id,
             audited_value=audited_value,
-            is_overridden=True,
             overridden_by=overridden_by,
             overridden_at=datetime.utcnow(),
             override_rationale=rationale,
@@ -656,11 +697,10 @@ class SignalAuditRepository:
         model_version_id: uuid.UUID,
     ) -> List:
         """Get all signal audit records for a model version."""
-        from .models import SignalAuditRecord
-
         result = await self.db.execute(
             select(SignalAuditRecord)
-            .where(SignalAuditRecord.model_version_id == model_version_id)
+            .join(ModelVersionSignal, SignalAuditRecord.model_version_signal_id == ModelVersionSignal.id)
+            .where(ModelVersionSignal.model_version_id == model_version_id)
             .order_by(SignalAuditRecord.created_at)
         )
         return list(result.scalars().all())
@@ -671,13 +711,15 @@ class SignalAuditRepository:
         signal_code: Optional[str] = None,
     ) -> List:
         """Get all signal overrides for an entity."""
-        from .models import SignalAuditRecord
-
-        query = select(SignalAuditRecord).where(
-            SignalAuditRecord.entity_code == entity_code
+        query = (
+            select(SignalAuditRecord)
+            .join(ModelVersionSignal, SignalAuditRecord.model_version_signal_id == ModelVersionSignal.id)
+            .where(ModelVersionSignal.entity_code == entity_code)
         )
         if signal_code:
-            query = query.where(SignalAuditRecord.signal_code == signal_code)
+            query = query.join(Signal, ModelVersionSignal.signal_id == Signal.id).where(
+                Signal.code == signal_code
+            )
 
         query = query.order_by(SignalAuditRecord.created_at.desc())
         result = await self.db.execute(query)
@@ -687,21 +729,20 @@ class SignalAuditRepository:
         self,
         entity_code: str,
         signal_code: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[float]:
         """
-        Get the latest audited value for a signal (Phase 8).
+        Get the latest audited value for a signal.
 
-        Returns None if no override exists, meaning inferred_value should be used.
+        Returns None if no override exists, meaning inferred score should be used.
         """
-        from .models import SignalAuditRecord
-
         result = await self.db.execute(
             select(SignalAuditRecord)
+            .join(ModelVersionSignal, SignalAuditRecord.model_version_signal_id == ModelVersionSignal.id)
+            .join(Signal, ModelVersionSignal.signal_id == Signal.id)
             .where(
                 and_(
-                    SignalAuditRecord.entity_code == entity_code,
-                    SignalAuditRecord.signal_code == signal_code,
-                    SignalAuditRecord.is_overridden == True,
+                    ModelVersionSignal.entity_code == entity_code,
+                    Signal.code == signal_code,
                 )
             )
             .order_by(SignalAuditRecord.created_at.desc())

@@ -22,6 +22,8 @@ from infrastructure.db.models import (
     Submission,
     ModelVersionRecord,
     ModelVersionSignal,
+    Signal,
+    SignalSource,
     SignalCache,
     SignalAuditRecord,
     ReferralStatus as DBReferralStatus,
@@ -171,14 +173,12 @@ async def get_referral_signals(
     ref, q, mv = row
 
     sig_query = (
-        select(ModelVersionSignal, SignalCache, SignalAuditRecord)
+        select(ModelVersionSignal, SignalCache, Signal, SignalAuditRecord)
         .join(SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id)
+        .join(Signal, ModelVersionSignal.signal_id == Signal.id)
         .outerjoin(
             SignalAuditRecord,
-            and_(
-                ModelVersionSignal.signal_code == SignalAuditRecord.signal_code,
-                ModelVersionSignal.entity_code == SignalAuditRecord.entity_code,
-            ),
+            SignalAuditRecord.model_version_signal_id == ModelVersionSignal.id,
         )
         .where(ModelVersionSignal.model_version_id == mv.id)
     )
@@ -186,36 +186,22 @@ async def get_referral_signals(
     sig_rows = (await db.execute(sig_query)).all()
 
     signals = []
-    
-    def _extract_val(field, default=0.0):
-        if field is None:
-            return default
-        if isinstance(field, dict):
-            for k in ["value", "audited_value", "inferred_value"]:
-                if k in field:
-                    return float(field[k])
-            return default
-        try:
-            return float(field)
-        except (ValueError, TypeError):
-            return default
 
-    for mvs, sc, sar in sig_rows:
+    for mvs, sc, sig_ref, sar in sig_rows:
         data = _parse_json(sc.data, {})
-        inferred = _extract_val(sc.inferred_value, _extract_val(data, 0.0))
-        audited = _extract_val(sar.audited_value) if sar and sar.is_overridden else None
+        score = float(mvs.score) if mvs.score is not None else 0.0
+        audited = float(sar.audited_value) if sar else None
 
         signals.append(
             ReferralSignalDetail(
                 signal_cache_id=str(sc.id),
-                signal_code=mvs.signal_code,
-                signal_name=data.get("name", mvs.signal_code),
-                group_code=mvs.group_code or data.get("group_id", "general"),
+                signal_code=sig_ref.code,
+                signal_name=data.get("name", sig_ref.code),
+                group_code=mvs.group_code or data.get("group_code", "general"),
                 group_name=data.get("group_name", "General"),
-                score=float(mvs.score) if mvs.score is not None else inferred,
-                inferred_value=inferred,
+                score=score,
                 audited_value=audited,
-                is_overridden=bool(sar and sar.is_overridden),
+                is_overridden=sar is not None,
                 weight=float(mvs.weight) if mvs.weight is not None else float(data.get("weight", 0.1)),
                 contribution_to_score=float(mvs.contribution) if mvs.contribution is not None else float(data.get("contribution", 0.0)),
                 is_flagged=data.get("is_flagged", False),
@@ -228,7 +214,6 @@ async def get_referral_signals(
                 proxy_tier=mvs.proxy_tier,
                 expectation_level=mvs.expectation_level,
                 was_absent=mvs.was_absent,
-                used_audited_value=mvs.used_audited_value,
                 override_rationale=sar.override_rationale if sar else None,
                 evidence_reference=sar.evidence_reference if sar else None,
                 score_impact=sar.score_impact if sar else None,

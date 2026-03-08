@@ -13,8 +13,8 @@ from pydantic import BaseModel, Field
 
 # Import ORM models for alignment mapping
 from infrastructure.db.models import (
-    User, APIKey, Submission, Quote, Referral, ModelVersionRecord, 
-    SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog
+    User, APIKey, Submission, Quote, Referral, ModelVersionRecord,
+    Signal, SignalSource, SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog
 )
 
 def maps_to(orm_model: Type, exclude: List[str] = None):
@@ -150,14 +150,13 @@ class ExposureSummary(BaseModel):
 
 class SignalValue(BaseModel):
     signal_code: str
-    inferred_value: float
+    score: float
     audited_value: Optional[float] = None
-    is_overridden: bool = False
     confidence: float = 1.0
 
     @property
     def effective_value(self) -> float:
-        return self.audited_value if self.is_overridden and self.audited_value is not None else self.inferred_value
+        return self.audited_value if self.audited_value is not None else self.score
 
 
 # --- C. Composite Read Models (Aggregated Responses) ---
@@ -235,7 +234,6 @@ class ReferralSignalDetail(BaseModel):
     group_code: str
     group_name: str
     score: float
-    inferred_value: float
     audited_value: Optional[float] = None
     is_overridden: bool = False
     weight: float
@@ -246,11 +244,10 @@ class ReferralSignalDetail(BaseModel):
     data_sources: List[str] = Field(default_factory=list)
     extracted_at: datetime
     raw_data: Optional[Dict[str, Any]] = None
-    in_model: bool = True                       
-    proxy_tier: Optional[str] = None            
-    expectation_level: Optional[str] = None     
-    was_absent: bool = False                    
-    used_audited_value: bool = False            
+    in_model: bool = True
+    proxy_tier: Optional[str] = None
+    expectation_level: Optional[str] = None
+    was_absent: bool = False
     override_rationale: Optional[str] = None
     evidence_reference: Optional[str] = None
     score_impact: Optional[float] = None
@@ -273,7 +270,7 @@ class SignalOverrideResponse(BaseModel):
     signal_code: str
     entity_code: str
     version_code: str
-    inferred_value: float
+    original_score: float
     audited_value: float
     score_impact: float
     tier_impact: int
@@ -594,8 +591,8 @@ class ModelVersionDBRecord(BaseModel):
 @maps_to(SignalCache, exclude=["id"])
 class SignalCacheRecord(BaseModel):
     entity_code: str
-    signal_code: str
-    source_name: str
+    signal_id: int
+    source_id: int
     data: Dict[str, Any]
     confidence: Optional[float] = None
     extracted_at: datetime
@@ -603,16 +600,12 @@ class SignalCacheRecord(BaseModel):
     ttl_seconds: Optional[int] = None
     extraction_time_ms: Optional[float] = None
     from_external_cache: bool = False
-    inferred_value: Optional[Dict[str, Any]] = None
-    audited_value: Optional[Dict[str, Any]] = None
-    is_overridden: bool = False
-    audit_trail: List[Dict[str, Any]] = Field(default_factory=list)
 
 @maps_to(ModelVersionSignal, exclude=["id"])
 class ModelVersionSignalRecord(BaseModel):
     model_version_id: str
     signal_cache_id: str
-    signal_code: str
+    signal_id: int
     entity_code: str
     score: Optional[float] = None
     weight: Optional[float] = None
@@ -621,18 +614,12 @@ class ModelVersionSignalRecord(BaseModel):
     proxy_tier: Optional[str] = None
     expectation_level: Optional[str] = None
     was_absent: bool = False
-    used_audited_value: bool = False
     created_at: datetime
 
 @maps_to(SignalAuditRecord, exclude=["id"])
 class SignalAuditDBRecord(BaseModel):
-    signal_cache_id: str
-    model_version_id: str
-    signal_code: str
-    entity_code: str
-    inferred_value: Dict[str, Any]
-    audited_value: Optional[Dict[str, Any]] = None
-    is_overridden: bool = False
+    model_version_signal_id: str
+    audited_value: float
     overridden_by: Optional[str] = None
     overridden_at: Optional[datetime] = None
     override_rationale: Optional[str] = None
