@@ -383,7 +383,7 @@ async def get_submission(
     record = result.scalar_one_or_none()
 
     if not record:
-        raise HTTPException(status_code=404, detail="Referral not found")
+        raise HTTPException(status_code=404, detail="Submission not found")
 
     return record
 

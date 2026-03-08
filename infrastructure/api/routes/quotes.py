@@ -43,7 +43,7 @@ async def get_quote(
     db: AsyncSession = Depends(get_async_db),
 ) -> QuoteRecord:
     """Get quote details by code."""
-    query = select(Quote).where(Quote.quote_id == quote_code)
+    query = select(Quote).where(Quote.quote_code == quote_code)
     
     result = await db.execute(query)
     record = result.scalar_one_or_none()
