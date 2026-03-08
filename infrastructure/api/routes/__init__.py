@@ -11,6 +11,7 @@ from . import analytics
 from . import frontend
 from . import simulate
 from . import modelversion
+from . import signals
 
 __all__ = [
     "submissions",
@@ -20,4 +21,5 @@ __all__ = [
     "frontend",
     "simulate",
     "modelversion",
+    "signals",
 ]

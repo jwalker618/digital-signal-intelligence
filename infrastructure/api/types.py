@@ -123,7 +123,6 @@ class ReferralDecision(BaseModel):
     underwriter_id: Optional[str] = None
 
 class SignalOverrideRequest(BaseModel):
-    signal_cache_id: str
     signal_code: str
     audited_value: float
     rationale: str
