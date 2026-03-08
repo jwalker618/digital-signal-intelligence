@@ -333,8 +333,8 @@ class WebhookManager:
 
 async def notify_quote_ready(
     manager: WebhookManager,
-    quote_id: str,
-    submission_id: str,
+    quote_code: str,
+    submission_code: str,
     entity_name: str,
     tier: int,
     premium: float,
@@ -343,8 +343,8 @@ async def notify_quote_ready(
     return await manager.trigger_event(
         WebhookEvent.QUOTE_READY,
         {
-            "quote_id": quote_id,
-            "submission_id": submission_id,
+            "quote_code": quote_code,
+            "submission_code": submission_code,
             "entity_name": entity_name,
             "tier": tier,
             "premium": premium,
@@ -354,8 +354,8 @@ async def notify_quote_ready(
 
 async def notify_referral_created(
     manager: WebhookManager,
-    referral_id: str,
-    quote_id: str,
+    referral_code: str,
+    quote_code: str,
     entity_name: str,
     reasons: List[str],
 ) -> List[WebhookDelivery]:
@@ -363,8 +363,8 @@ async def notify_referral_created(
     return await manager.trigger_event(
         WebhookEvent.REFERRAL_CREATED,
         {
-            "referral_id": referral_id,
-            "quote_id": quote_id,
+            "referral_code": referral_code,
+            "quote_code": quote_code,
             "entity_name": entity_name,
             "reasons": reasons,
         },
@@ -373,8 +373,8 @@ async def notify_referral_created(
 
 async def notify_bind_confirmed(
     manager: WebhookManager,
-    policy_id: str,
-    quote_id: str,
+    policy_code: str,
+    quote_code: str,
     entity_name: str,
     premium: float,
     effective_date: str,
@@ -383,8 +383,8 @@ async def notify_bind_confirmed(
     return await manager.trigger_event(
         WebhookEvent.BIND_CONFIRMED,
         {
-            "policy_id": policy_id,
-            "quote_id": quote_id,
+            "policy_code": policy_code,
+            "quote_code": quote_code,
             "entity_name": entity_name,
             "premium": premium,
             "effective_date": effective_date,

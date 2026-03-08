@@ -61,14 +61,14 @@ async def get_workbench_data(
 
                     query = text("""
                         SELECT
-                            s.id AS submission_id,
-                            q.id AS quote_id,
-                            r.referral_id AS referral_id,
-                            mv.id AS model_version_id,
-                            s.submission_id AS submission_code,
-                            q.quote_id AS quote_code,
-                            r.referral_id AS referral_code,
-                            mv.version_id AS version_code,
+                            s.id AS submission_uuid,
+                            q.id AS quote_uuid,
+                            r.id AS referral_uuid,
+                            mv.id AS model_version_uuid,
+                            s.submission_code AS submission_code,
+                            q.quote_code AS quote_code,
+                            r.referral_code AS referral_code,
+                            mv.version_code AS version_code,
                             s.entity_name,
                             COALESCE(s.coverage, '') || ' / ' || COALESCE(s.configuration, '') AS coverage_configuration,
                             s.created_at,
@@ -102,8 +102,8 @@ async def get_workbench_data(
             logger.warning("DB get workbench data failed: %s", e)
     return []
 
-@router.get("/submissions/{submission_id}/model_versions")
-async def get_model_versions(submission_id: str) -> Dict[str, Any]:
+@router.get("/submissions/{submission_code}/model_versions")
+async def get_model_versions(submission_code: str) -> Dict[str, Any]:
     """Fetch the lineage of model versions for a submission."""
     if _db_available():
         try:
@@ -111,7 +111,7 @@ async def get_model_versions(submission_id: str) -> Dict[str, Any]:
             if session:
                 try:
                     sub_q = select(Submission).where(
-                        Submission.submission_id == submission_id
+                        Submission.submission_code == submission_code
                     )
                     sub = (await session.execute(sub_q)).scalar_one_or_none()
 
@@ -129,7 +129,7 @@ async def get_model_versions(submission_id: str) -> Dict[str, Any]:
                     return {
                         "versions": [
                             {
-                                "version_id": v.version_id,
+                                "version_code": v.version_code,
                                 "version_number": v.version_number,
                                 "version_type": v.version_type,
                                 "is_latest": v.is_latest,
@@ -154,8 +154,8 @@ async def get_model_versions(submission_id: str) -> Dict[str, Any]:
     return {"versions": []}
 
 
-@router.get("/submissions/{submission_id}/audit_logs")
-async def get_audit_logs(submission_id: str) -> Dict[str, Any]:
+@router.get("/submissions/{submission_code}/audit_logs")
+async def get_audit_logs(submission_code: str) -> Dict[str, Any]:
     """Fetch the chronological ledger of events for this submission."""
     if _db_available():
         try:
@@ -164,7 +164,7 @@ async def get_audit_logs(submission_id: str) -> Dict[str, Any]:
                 try:
                     log_q = (
                         select(AuditLog)
-                        .where(AuditLog.resource_id == submission_id)
+                        .where(AuditLog.resource_code == submission_code)
                         .order_by(AuditLog.created_at.desc())
                     )
 

@@ -51,7 +51,7 @@ class SubmissionRepository:
     ) -> Submission:
         """Create a new submission."""
         submission = Submission(
-            submission_id=generate_id("sub"),
+            submission_code=generate_id("sub"),
             entity_name=entity_name,
             domain_hint=domain_hint,
             country_hint=country_hint,
@@ -66,10 +66,10 @@ class SubmissionRepository:
         await self.db.flush()
         return submission
 
-    async def get_by_id(self, submission_id: str) -> Optional[Submission]:
-        """Get submission by submission_id."""
+    async def get_by_code(self, submission_code: str) -> Optional[Submission]:
+        """Get submission by submission_code."""
         result = await self.db.execute(
-            select(Submission).where(Submission.submission_id == submission_id)
+            select(Submission).where(Submission.submission_code == submission_code)
         )
         return result.scalar_one_or_none()
 
@@ -103,14 +103,14 @@ class SubmissionRepository:
 
     async def update_status(
         self,
-        submission_id: str,
+        submission_code: str,
         status: SubmissionStatus,
         error_message: Optional[str] = None,
     ) -> Optional[Submission]:
         """Update submission status."""
         await self.db.execute(
             update(Submission)
-            .where(Submission.submission_id == submission_id)
+            .where(Submission.submission_code == submission_code)
             .values(
                 status=status,
                 error_message=error_message,
@@ -119,12 +119,12 @@ class SubmissionRepository:
                 ] else None,
             )
         )
-        return await self.get_by_id(submission_id)
+        return await self.get_by_code(submission_code)
 
-    async def delete(self, submission_id: str) -> bool:
+    async def delete(self, submission_code: str) -> bool:
         """Delete a submission."""
         result = await self.db.execute(
-            delete(Submission).where(Submission.submission_id == submission_id)
+            delete(Submission).where(Submission.submission_code == submission_code)
         )
         return result.rowcount > 0
 
@@ -150,7 +150,7 @@ class QuoteRepository:
         Scoring / tier / decision data lives on the linked ModelVersionRecord.
         """
         quote = Quote(
-            quote_id=generate_id("quo"),
+            quote_code=generate_id("quo"),
             submission_id=submission_id,
             model_version_id=model_version_id,
             status=status or QuoteStatus.READY,
@@ -163,10 +163,10 @@ class QuoteRepository:
         await self.db.flush()
         return quote
 
-    async def get_by_id(self, quote_id: str) -> Optional[Quote]:
-        """Get quote by quote_id."""
+    async def get_by_code(self, quote_code: str) -> Optional[Quote]:
+        """Get quote by quote_code."""
         result = await self.db.execute(
-            select(Quote).where(Quote.quote_id == quote_id)
+            select(Quote).where(Quote.quote_code == quote_code)
         )
         return result.scalar_one_or_none()
 
@@ -181,14 +181,14 @@ class QuoteRepository:
 
     async def bind(
         self,
-        quote_id: str,
+        quote_code: str,
         bound_by: uuid.UUID,
         policy_number: str,
     ) -> Optional[Quote]:
         """Bind a quote."""
         await self.db.execute(
             update(Quote)
-            .where(Quote.quote_id == quote_id)
+            .where(Quote.quote_code == quote_code)
             .values(
                 status=QuoteStatus.BOUND,
                 bound_at=datetime.utcnow(),
@@ -196,29 +196,29 @@ class QuoteRepository:
                 policy_number=policy_number,
             )
         )
-        return await self.get_by_id(quote_id)
+        return await self.get_by_code(quote_code)
 
     async def update_model_version_id(
         self,
-        quote_id: str,
+        quote_code: str,
         model_version_id: uuid.UUID,
     ) -> Optional[Quote]:
         """Update the model version linked to a quote (Phase 8).
 
         Every signal override or manual tier/premium adjustment creates a new
         ModelVersionRecord.  The quote's FK must track the latest version so
-        that GET /quotes/{id} returns current scoring data.
+        that GET /quotes/{code} returns current scoring data.
         """
         await self.db.execute(
             update(Quote)
-            .where(Quote.quote_id == quote_id)
+            .where(Quote.quote_code == quote_code)
             .values(model_version_id=model_version_id, updated_at=datetime.utcnow())
         )
-        return await self.get_by_id(quote_id)
+        return await self.get_by_code(quote_code)
 
     async def update_status(
         self,
-        quote_id: str,
+        quote_code: str,
         status: QuoteStatus,
     ) -> Optional[Quote]:
         """Update quote status (Phase 8).
@@ -228,10 +228,10 @@ class QuoteRepository:
         """
         await self.db.execute(
             update(Quote)
-            .where(Quote.quote_id == quote_id)
+            .where(Quote.quote_code == quote_code)
             .values(status=status, updated_at=datetime.utcnow())
         )
-        return await self.get_by_id(quote_id)
+        return await self.get_by_code(quote_code)
 
     async def expire_old_quotes(self) -> int:
         """Mark expired quotes."""
@@ -262,7 +262,7 @@ class ReferralRepository:
     ) -> Referral:
         """Create a new referral."""
         referral = Referral(
-            referral_id=generate_id("ref"),
+            referral_code=generate_id("ref"),
             quote_id=quote_id,
             reasons=reasons,
             priority=priority,
@@ -272,10 +272,10 @@ class ReferralRepository:
         await self.db.flush()
         return referral
 
-    async def get_by_id(self, referral_id: str) -> Optional[Referral]:
-        """Get referral by referral_id."""
+    async def get_by_code(self, referral_code: str) -> Optional[Referral]:
+        """Get referral by referral_code."""
         result = await self.db.execute(
-            select(Referral).where(Referral.referral_id == referral_id)
+            select(Referral).where(Referral.referral_code == referral_code)
         )
         return result.scalar_one_or_none()
 
@@ -300,24 +300,24 @@ class ReferralRepository:
 
     async def assign(
         self,
-        referral_id: str,
+        referral_code: str,
         assigned_to: uuid.UUID,
     ) -> Optional[Referral]:
         """Assign a referral to an underwriter."""
         await self.db.execute(
             update(Referral)
-            .where(Referral.referral_id == referral_id)
+            .where(Referral.referral_code == referral_code)
             .values(
                 assigned_to=assigned_to,
                 assigned_at=datetime.utcnow(),
                 status=ReferralStatus.IN_REVIEW,
             )
         )
-        return await self.get_by_id(referral_id)
+        return await self.get_by_code(referral_code)
 
     async def review(
         self,
-        referral_id: str,
+        referral_code: str,
         reviewed_by: uuid.UUID,
         decision: str,
         notes: Optional[str] = None,
@@ -333,7 +333,7 @@ class ReferralRepository:
 
         await self.db.execute(
             update(Referral)
-            .where(Referral.referral_id == referral_id)
+            .where(Referral.referral_code == referral_code)
             .values(
                 status=status_map.get(decision, ReferralStatus.APPROVED),
                 reviewed_by=reviewed_by,
@@ -344,7 +344,7 @@ class ReferralRepository:
                 premium_adjustment=premium_adjustment,
             )
         )
-        return await self.get_by_id(referral_id)
+        return await self.get_by_code(referral_code)
 
 
 class SignalCacheRepository:
@@ -355,16 +355,16 @@ class SignalCacheRepository:
 
     async def get(
         self,
-        entity_id: str,
-        signal_id: str,
+        entity_code: str,
+        signal_code: str,
         source_name: str,
     ) -> Optional[SignalCache]:
         """Get cached signal data if valid."""
         result = await self.db.execute(
             select(SignalCache).where(
                 and_(
-                    SignalCache.entity_id == entity_id,
-                    SignalCache.signal_id == signal_id,
+                    SignalCache.entity_code == entity_code,
+                    SignalCache.signal_code == signal_code,
                     SignalCache.source_name == source_name,
                     SignalCache.expires_at > datetime.utcnow(),
                 )
@@ -374,8 +374,8 @@ class SignalCacheRepository:
 
     async def get_valid_cached(
         self,
-        entity_id: str,
-        signal_id: str,
+        entity_code: str,
+        signal_code: str,
         source_name: Optional[str] = None,
     ) -> Optional[SignalCache]:
         """
@@ -384,8 +384,8 @@ class SignalCacheRepository:
         """
         query = select(SignalCache).where(
             and_(
-                SignalCache.entity_id == entity_id,
-                SignalCache.signal_id == signal_id,
+                SignalCache.entity_code == entity_code,
+                SignalCache.signal_code == signal_code,
                 SignalCache.expires_at > datetime.utcnow(),
             )
         )
@@ -397,22 +397,22 @@ class SignalCacheRepository:
 
     async def get_entity_signals(
         self,
-        entity_id: str,
+        entity_code: str,
         include_expired: bool = False,
     ) -> List[SignalCache]:
         """Get all cached signals for an entity (for continuous monitoring)."""
-        query = select(SignalCache).where(SignalCache.entity_id == entity_id)
+        query = select(SignalCache).where(SignalCache.entity_code == entity_code)
 
         if not include_expired:
             query = query.where(SignalCache.expires_at > datetime.utcnow())
 
-        result = await self.db.execute(query.order_by(SignalCache.signal_id, SignalCache.extracted_at.desc()))
+        result = await self.db.execute(query.order_by(SignalCache.signal_code, SignalCache.extracted_at.desc()))
         return list(result.scalars().all())
 
     async def set(
         self,
-        entity_id: str,
-        signal_id: str,
+        entity_code: str,
+        signal_code: str,
         source_name: str,
         data: Dict[str, Any],
         ttl_seconds: int,
@@ -424,16 +424,16 @@ class SignalCacheRepository:
         await self.db.execute(
             delete(SignalCache).where(
                 and_(
-                    SignalCache.entity_id == entity_id,
-                    SignalCache.signal_id == signal_id,
+                    SignalCache.entity_code == entity_code,
+                    SignalCache.signal_code == signal_code,
                     SignalCache.source_name == source_name,
                 )
             )
         )
 
         cache = SignalCache(
-            entity_id=entity_id,
-            signal_id=signal_id,
+            entity_code=entity_code,
+            signal_code=signal_code,
             source_name=source_name,
             data=data,
             confidence=confidence,
@@ -447,14 +447,14 @@ class SignalCacheRepository:
 
     async def invalidate(
         self,
-        entity_id: str,
-        signal_id: Optional[str] = None,
+        entity_code: str,
+        signal_code: Optional[str] = None,
     ) -> int:
         """Invalidate cache entries."""
-        query = delete(SignalCache).where(SignalCache.entity_id == entity_id)
+        query = delete(SignalCache).where(SignalCache.entity_code == entity_code)
 
-        if signal_id:
-            query = query.where(SignalCache.signal_id == signal_id)
+        if signal_code:
+            query = query.where(SignalCache.signal_code == signal_code)
 
         result = await self.db.execute(query)
         return result.rowcount
@@ -482,12 +482,12 @@ class ModelVersionSignalRepository:
         self,
         model_version_id: uuid.UUID,
         signal_cache_id: uuid.UUID,
-        signal_id: str,
-        entity_id: str,
+        signal_code: str,
+        entity_code: str,
         score: Optional[float] = None,
         weight: Optional[float] = None,
         contribution: Optional[float] = None,
-        group_id: Optional[str] = None,
+        group_code: Optional[str] = None,
         proxy_tier: Optional[str] = None,
         expectation_level: Optional[str] = None,
         was_absent: bool = False,
@@ -497,12 +497,12 @@ class ModelVersionSignalRepository:
         record = ModelVersionSignal(
             model_version_id=model_version_id,
             signal_cache_id=signal_cache_id,
-            signal_id=signal_id,
-            entity_id=entity_id,
+            signal_code=signal_code,
+            entity_code=entity_code,
             score=score,
             weight=weight,
             contribution=contribution,
-            group_id=group_id,
+            group_code=group_code,
             proxy_tier=proxy_tier,
             expectation_level=expectation_level,
             was_absent=was_absent,
@@ -523,12 +523,12 @@ class ModelVersionSignalRepository:
             record = ModelVersionSignal(
                 model_version_id=model_version_id,
                 signal_cache_id=sig["signal_cache_id"],
-                signal_id=sig["signal_id"],
-                entity_id=sig["entity_id"],
+                signal_code=sig["signal_code"],
+                entity_code=sig["entity_code"],
                 score=sig.get("score"),
                 weight=sig.get("weight"),
                 contribution=sig.get("contribution"),
-                group_id=sig.get("group_id"),
+                group_code=sig.get("group_code"),
                 proxy_tier=sig.get("proxy_tier"),
                 expectation_level=sig.get("expectation_level"),
                 was_absent=sig.get("was_absent", False),
@@ -547,17 +547,17 @@ class ModelVersionSignalRepository:
         result = await self.db.execute(
             select(ModelVersionSignal)
             .where(ModelVersionSignal.model_version_id == model_version_id)
-            .order_by(ModelVersionSignal.group_id, ModelVersionSignal.signal_id)
+            .order_by(ModelVersionSignal.group_code, ModelVersionSignal.signal_code)
         )
         return list(result.scalars().all())
 
-    async def get_signal_ids_for_version(
+    async def get_signal_codes_for_version(
         self,
         model_version_id: uuid.UUID,
     ) -> List[str]:
-        """Get just the signal IDs used by a model version (lightweight query)."""
+        """Get just the signal codes used by a model version (lightweight query)."""
         result = await self.db.execute(
-            select(ModelVersionSignal.signal_id)
+            select(ModelVersionSignal.signal_code)
             .where(ModelVersionSignal.model_version_id == model_version_id)
         )
         return [row[0] for row in result.all()]
@@ -566,7 +566,7 @@ class ModelVersionSignalRepository:
         self,
         source_model_version_id: uuid.UUID,
         target_model_version_id: uuid.UUID,
-        override_signal_id: Optional[str] = None,
+        override_signal_code: Optional[str] = None,
         override_values: Optional[Dict[str, Any]] = None,
     ) -> List[ModelVersionSignal]:
         """
@@ -582,19 +582,19 @@ class ModelVersionSignalRepository:
             values = {
                 "model_version_id": target_model_version_id,
                 "signal_cache_id": src.signal_cache_id,
-                "signal_id": src.signal_id,
-                "entity_id": src.entity_id,
+                "signal_code": src.signal_code,
+                "entity_code": src.entity_code,
                 "score": src.score,
                 "weight": src.weight,
                 "contribution": src.contribution,
-                "group_id": src.group_id,
+                "group_code": src.group_code,
                 "proxy_tier": src.proxy_tier,
                 "expectation_level": src.expectation_level,
                 "was_absent": src.was_absent,
                 "used_audited_value": src.used_audited_value,
             }
             # Apply override for the audited signal
-            if override_signal_id and src.signal_id == override_signal_id and override_values:
+            if override_signal_code and src.signal_code == override_signal_code and override_values:
                 values.update(override_values)
                 values["used_audited_value"] = True
 
@@ -619,8 +619,8 @@ class SignalAuditRepository:
         self,
         signal_cache_id: uuid.UUID,
         model_version_id: uuid.UUID,
-        signal_id: str,
-        entity_id: str,
+        signal_code: str,
+        entity_code: str,
         inferred_value: Dict[str, Any],
         audited_value: Dict[str, Any],
         overridden_by: uuid.UUID,
@@ -635,8 +635,8 @@ class SignalAuditRepository:
         record = SignalAuditRecord(
             signal_cache_id=signal_cache_id,
             model_version_id=model_version_id,
-            signal_id=signal_id,
-            entity_id=entity_id,
+            signal_code=signal_code,
+            entity_code=entity_code,
             inferred_value=inferred_value,
             audited_value=audited_value,
             is_overridden=True,
@@ -667,17 +667,17 @@ class SignalAuditRepository:
 
     async def get_entity_overrides(
         self,
-        entity_id: str,
-        signal_id: Optional[str] = None,
+        entity_code: str,
+        signal_code: Optional[str] = None,
     ) -> List:
         """Get all signal overrides for an entity."""
         from .models import SignalAuditRecord
 
         query = select(SignalAuditRecord).where(
-            SignalAuditRecord.entity_id == entity_id
+            SignalAuditRecord.entity_code == entity_code
         )
-        if signal_id:
-            query = query.where(SignalAuditRecord.signal_id == signal_id)
+        if signal_code:
+            query = query.where(SignalAuditRecord.signal_code == signal_code)
 
         query = query.order_by(SignalAuditRecord.created_at.desc())
         result = await self.db.execute(query)
@@ -685,8 +685,8 @@ class SignalAuditRepository:
 
     async def get_latest_audited_value(
         self,
-        entity_id: str,
-        signal_id: str,
+        entity_code: str,
+        signal_code: str,
     ) -> Optional[Dict[str, Any]]:
         """
         Get the latest audited value for a signal (Phase 8).
@@ -699,8 +699,8 @@ class SignalAuditRepository:
             select(SignalAuditRecord)
             .where(
                 and_(
-                    SignalAuditRecord.entity_id == entity_id,
-                    SignalAuditRecord.signal_id == signal_id,
+                    SignalAuditRecord.entity_code == entity_code,
+                    SignalAuditRecord.signal_code == signal_code,
                     SignalAuditRecord.is_overridden == True,
                 )
             )
@@ -751,7 +751,7 @@ class ModelVersionRepository:
         next_number = (last_number or 0) + 1
 
         mv = ModelVersionRecord(
-            version_id=generate_id("mv"),
+            version_code=generate_id("mv"),
             submission_id=submission_id,
             version_number=next_number,
             version_type=version_type,
@@ -774,10 +774,10 @@ class ModelVersionRepository:
         )
         return result.scalar_one_or_none()
 
-    async def get_by_id(self, version_id: str) -> Optional[ModelVersionRecord]:
-        """Get model version by version_id."""
+    async def get_by_code(self, version_code: str) -> Optional[ModelVersionRecord]:
+        """Get model version by version_code."""
         result = await self.db.execute(
-            select(ModelVersionRecord).where(ModelVersionRecord.version_id == version_id)
+            select(ModelVersionRecord).where(ModelVersionRecord.version_code == version_code)
         )
         return result.scalar_one_or_none()
 
@@ -811,7 +811,7 @@ class AuditLogRepository:
         event_type: str,
         event_action: str,
         resource_type: Optional[str] = None,
-        resource_id: Optional[str] = None,
+        resource_code: Optional[str] = None,
         user_id: Optional[uuid.UUID] = None,
         api_key_id: Optional[uuid.UUID] = None,
         ip_address: Optional[str] = None,
@@ -823,7 +823,7 @@ class AuditLogRepository:
             event_type=event_type,
             event_action=event_action,
             resource_type=resource_type,
-            resource_id=resource_id,
+            resource_code=resource_code,
             user_id=user_id,
             api_key_id=api_key_id,
             ip_address=ip_address,
@@ -837,7 +837,7 @@ class AuditLogRepository:
     async def get_for_resource(
         self,
         resource_type: str,
-        resource_id: str,
+        resource_code: str,
         limit: int = 100,
     ) -> List[AuditLog]:
         """Get audit logs for a resource."""
@@ -846,7 +846,7 @@ class AuditLogRepository:
             .where(
                 and_(
                     AuditLog.resource_type == resource_type,
-                    AuditLog.resource_id == resource_id,
+                    AuditLog.resource_code == resource_code,
                 )
             )
             .order_by(AuditLog.created_at.desc())

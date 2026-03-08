@@ -474,7 +474,7 @@ class WorkflowEngine:
             model_version.loss_propensity_band = loss_propensity_result.loss_propensity_band.value
             model_version.severity_propensity_band = loss_propensity_result.severity_propensity_band.value
             model_version.loss_confidence = loss_propensity_result.loss_confidence
-            model_version.loss_cohort_id = loss_propensity_result.cohort_id
+            model_version.loss_cohort_code = loss_propensity_result.cohort_id
             model_version.loss_cohort_name = loss_propensity_result.cohort_name
             model_version.loss_cohort_confidence = loss_propensity_result.cohort_confidence
             model_version.loss_frequency_multiplier = loss_propensity_result.frequency_multiplier

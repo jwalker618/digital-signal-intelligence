@@ -108,8 +108,8 @@ class ReferralDecision(BaseModel):
     underwriter_id: Optional[str] = None
 
 class SignalOverrideRequest(BaseModel):
-    signal_cache_id: str  
-    signal_id: str
+    signal_cache_id: str
+    signal_code: str
     audited_value: float
     rationale: str
     evidence_reference: Optional[str] = None
@@ -149,7 +149,7 @@ class ExposureSummary(BaseModel):
     exposure_modifier: Optional[float] = None
 
 class SignalValue(BaseModel):
-    signal_id: str
+    signal_code: str
     inferred_value: float
     audited_value: Optional[float] = None
     is_overridden: bool = False
@@ -162,21 +162,21 @@ class SignalValue(BaseModel):
 
 # --- C. Composite Read Models (Aggregated Responses) ---
 class SubmissionResponse(BaseModel):
-    submission_id: str
+    submission_code: str
     status: SubmissionStatus
     estimated_completion: Optional[datetime] = None
     job_id: Optional[str] = None
 
 class QuoteResponse(BaseModel):
     """Heavy projection combining Quote + ModelVersionRecord + JSONB components."""
-    quote_id: str
-    submission_id: str
-    model_version_id: Optional[str] = None
+    quote_code: str
+    submission_code: str
+    version_code: Optional[str] = None
     status: QuoteStatus
     composite_score: int
     tier: int
     tier_label: str
-    decision: DecisionType 
+    decision: DecisionType
     premium_options: Dict[str, float] = Field(default_factory=dict)
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
@@ -188,14 +188,14 @@ class QuoteResponse(BaseModel):
     discovery: Optional[DiscoverySummary] = None
     signal_summary: Optional[SignalSummary] = None
     referral_reasons: List[str] = Field(default_factory=list)
-    referral_id: Optional[str] = None
+    referral_code: Optional[str] = None
     valid_until: Optional[datetime] = None
     created_at: datetime
 
 class QuoteListItem(BaseModel):
-    quote_id: str
-    submission_id: str
-    model_version_id: Optional[str] = None
+    quote_code: str
+    submission_code: str
+    version_code: Optional[str] = None
     entity_name: str
     coverage: str
     status: QuoteStatus
@@ -205,7 +205,7 @@ class QuoteListItem(BaseModel):
     created_at: datetime
 
 class ReferralListItem(BaseModel):
-    referral_id: str
+    referral_code: str
     entity_name: str
     coverage: str
     status: ReferralStatus
@@ -214,7 +214,7 @@ class ReferralListItem(BaseModel):
     created_at: datetime
 
 class ModelVersionResponse(BaseModel):
-    version_id: str
+    version_code: str
     version_number: int
     version_type: str
     composite_score: float
@@ -230,9 +230,9 @@ class ModelVersionResponse(BaseModel):
 class ReferralSignalDetail(BaseModel):
     """Projection joining Bridge -> Cache -> Audit tables."""
     signal_cache_id: str
-    signal_id: str
+    signal_code: str
     signal_name: str
-    group_id: str
+    group_code: str
     group_name: str
     score: float
     inferred_value: float
@@ -257,8 +257,8 @@ class ReferralSignalDetail(BaseModel):
     tier_impact: Optional[int] = None
 
 class ReferralSignalsResponse(BaseModel):
-    referral_id: Optional[str] = None
-    model_version_id: str
+    referral_code: Optional[str] = None
+    version_code: str
     configuration_name: Optional[str] = None
     coverage: Optional[str] = None
     signals: List[ReferralSignalDetail]
@@ -270,9 +270,9 @@ class ReferralSignalsResponse(BaseModel):
     average_confidence: float
 
 class SignalOverrideResponse(BaseModel):
-    signal_id: str
-    entity_id: str
-    model_version_id: str
+    signal_code: str
+    entity_code: str
+    version_code: str
     inferred_value: float
     audited_value: float
     score_impact: float
@@ -284,8 +284,8 @@ class SignalOverrideResponse(BaseModel):
     overridden_at: datetime
     override_rationale: str
     evidence_reference: Optional[str] = None
-    previous_model_version: str
-    new_model_version: str
+    previous_version_code: str
+    new_version_code: str
 
 
 # --- D. Multi-Coverage (Phase 11) ---
@@ -355,7 +355,7 @@ class SignalHealthResponse(BaseModel):
 
 # --- F. Simulation Engine (Phase 3) ---
 class ShockParameterRequest(BaseModel):
-    signal_id: str
+    signal_code: str
     shock_type: str = "multiplier"
     value: float
     industry_filter: Optional[str] = None
@@ -369,7 +369,7 @@ class SimulateRequest(BaseModel):
     iterations: int = 1
 
 class TierMigration(BaseModel):
-    entity_id: str
+    entity_code: str
     old_tier: int
     new_tier: int
 

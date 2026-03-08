@@ -390,8 +390,8 @@ class SignalCache(Base):
     audit_trail = Column(JSONB, default=list)  # History of overrides
 
     __table_args__ = (
-        Index("ix_signal_cache_lookup", "entity_id", "signal_id", "source_name"),
-        Index("ix_signal_cache_entity", "entity_id"),
+        Index("ix_signal_cache_lookup", "entity_code", "signal_code", "source_name"),
+        Index("ix_signal_cache_entity", "entity_code"),
     )
 
 
@@ -445,7 +445,7 @@ class ModelVersionSignal(Base):
     __table_args__ = (
         Index("ix_mvs_model_version", "model_version_id"),
         Index("ix_mvs_signal_cache", "signal_cache_id"),
-        Index("ix_mvs_lookup", "model_version_id", "signal_id", unique=True),
+        Index("ix_mvs_lookup", "model_version_id", "signal_code", unique=True),
     )
 
 
@@ -487,7 +487,7 @@ class SignalAuditRecord(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        Index("ix_signal_audit_entity_signal", "entity_id", "signal_id"),
+        Index("ix_signal_audit_entity_signal", "entity_code", "signal_code"),
         Index("ix_signal_audit_model_version", "model_version_id"),
     )
 
@@ -519,6 +519,6 @@ class AuditLog(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     __table_args__ = (
-        Index("ix_audit_logs_resource", "resource_type", "resource_id"),
+        Index("ix_audit_logs_resource", "resource_type", "resource_code"),
         Index("ix_audit_logs_user", "user_id", "created_at"),
     )

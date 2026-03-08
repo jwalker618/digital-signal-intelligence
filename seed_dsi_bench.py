@@ -2100,7 +2100,7 @@ def build_loss_propensity(co):
         "loss_propensity_band": bands_loss.get(tier, "moderate"),
         "severity_propensity_band": bands_sev.get(tier, "significant"),
         "loss_confidence": round(random.uniform(0.65, 0.95), 2),
-        "loss_cohort_id": f"cohort_{co.get('industry', 'general').lower()}",
+        "loss_cohort_code": f"cohort_{co.get('industry', 'general').lower()}",
         "loss_cohort_name": f"{co.get('industry', 'General')} Cohort",
         "loss_cohort_confidence": round(random.uniform(0.5, 0.9), 2),
         "loss_frequency_multiplier": freq_mult,
@@ -2231,7 +2231,7 @@ def seed_data():
 
             sub = Submission(
                 id=sub_id,
-                submission_id=f"sub_{(co['ticker'] or co['entity_name'][:4]).lower().replace(' ', '_')}_{_hex(6)}",
+                submission_code=f"sub_{(co['ticker'] or co['entity_name'][:4]).lower().replace(' ', '_')}_{_hex(6)}",
                 entity_name=co["entity_name"],
                 domain_hint=co["domain"],
                 discovered_domain=co["domain"],
@@ -2295,7 +2295,7 @@ def seed_data():
 
             mv = ModelVersionRecord(
                 id=mv_id,
-                version_id=f"mv_{_hex(8)}",
+                version_code=f"mv_{_hex(8)}",
                 submission_id=sub_id,
                 version_number=1,
                 version_type="initial",
@@ -2348,7 +2348,7 @@ def seed_data():
 
             quote = Quote(
                 id=quote_id,
-                quote_id=f"Q-{(co['ticker'] or co['entity_name'][:4]).upper().replace(' ', '')}-{_hex(4)}",
+                quote_code=f"Q-{(co['ticker'] or co['entity_name'][:4]).upper().replace(' ', '')}-{_hex(4)}",
                 submission_id=sub_id,
                 model_version_id=mv_id,
                 status=quote_status,
@@ -2380,7 +2380,7 @@ def seed_data():
 
                 referral = Referral(
                     id=_uid(),
-                    referral_id=f"ref_{_hex(8)}",
+                    referral_code=f"ref_{_hex(8)}",
                     quote_id=quote_id,
                     status=ref_status,
                     reasons=co.get("referral_reasons", ["Tier-based referral"]),
@@ -2407,8 +2407,8 @@ def seed_data():
                     cache_id_map[(group_id, signal_id)] = cache_uuid
                     cache = SignalCache(
                         id=cache_uuid,
-                        entity_id=co["domain"],
-                        signal_id=signal_id,
+                        entity_code=co["domain"],
+                        signal_code=signal_id,
                         source_name=f"{signal_id}_extractor",
                         data={
                             "score": resolved,
@@ -2448,12 +2448,12 @@ def seed_data():
                         id=_uid(),
                         model_version_id=mv_id,
                         signal_cache_id=cache_ref,
-                        signal_id=signal_id,
-                        entity_id=co["domain"],
+                        signal_code=signal_id,
+                        entity_code=co["domain"],
                         score=resolved,
                         weight=signal_weight,
                         contribution=contribution,
-                        group_id=group_id,
+                        group_code=group_id,
                         proxy_tier=so.get("proxy_tier", "INFERRED_PROXY"),
                         expectation_level=random.choice(["UNIVERSAL", "ENTERPRISE", "CORPORATE"]),
                         was_absent=False,
@@ -2478,8 +2478,8 @@ def seed_data():
                         id=_uid(),
                         signal_cache_id=cache_ref,
                         model_version_id=mv_id,
-                        signal_id=sid,
-                        entity_id=co["domain"],
+                        signal_code=sid,
+                        entity_code=co["domain"],
                         inferred_value={"score": resolved},
                         audited_value={"score": audited},
                         is_overridden=True,
@@ -2499,7 +2499,7 @@ def seed_data():
                 event_type="submission",
                 event_action="create",
                 resource_type="submission",
-                resource_id=str(sub_id),
+                resource_code=str(sub_id),
                 user_id=system_user_id,
                 details={
                     "entity_name": co["entity_name"],
