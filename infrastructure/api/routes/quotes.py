@@ -91,9 +91,9 @@ async def list_quotes(
     for q, s, mv in rows:
         results.append(
             QuoteListItem(
-                quote_id=q.quote_id,
-                submission_id=s.submission_id,
-                model_version_id=mv.version_id if mv else None,
+                quote_code=q.quote_code,
+                submission_code=s.submission_code,
+                version_code=mv.version_code if mv else None,
                 entity_name=s.entity_name,
                 coverage=s.coverage,
                 status=QuoteStatus(q.status.value),
@@ -107,9 +107,9 @@ async def list_quotes(
     return results
 
 
-@router.get("/quotes/{quote_id}", response_model=QuoteResponse)
+@router.get("/quotes/{quote_code}", response_model=QuoteResponse)
 async def get_quote(
-    quote_id: str,
+    quote_code: str,
     db: AsyncSession = Depends(get_async_db),
 ) -> QuoteResponse:
     """Get detailed quote information combining Model outputs and DB rows."""
@@ -118,7 +118,7 @@ async def get_quote(
         .join(Submission, Quote.submission_id == Submission.id)
         .outerjoin(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
         .outerjoin(Referral, Referral.quote_id == Quote.id)
-        .where(Quote.quote_id == quote_id)
+        .where(Quote.quote_code == quote_code)
     )
 
     row = (await db.execute(query)).first()
@@ -163,13 +163,13 @@ async def get_quote(
         signal_summary = SignalSummary(
             total_signals=mv.signal_coverage,
             signals_extracted=mv.signal_coverage,
-            top_factors=[],  
+            top_factors=[],
         )
 
     return QuoteResponse(
-        quote_id=q.quote_id,
-        submission_id=s.submission_id,
-        model_version_id=mv.version_id if mv else None,
+        quote_code=q.quote_code,
+        submission_code=s.submission_code,
+        version_code=mv.version_code if mv else None,
         status=QuoteStatus(q.status.value),
         composite_score=int(mv.pure_composite_score) if mv and mv.pure_composite_score else 0,
         tier=mv.final_tier if mv else 0,
@@ -186,19 +186,19 @@ async def get_quote(
         discovery=discovery,
         signal_summary=signal_summary,
         referral_reasons=_parse_json(mv.referral_reasons, []) if mv else [],
-        referral_id=ref.referral_id if ref else None,
+        referral_code=ref.referral_code if ref else None,
         valid_until=q.valid_until,
         created_at=q.created_at,
     )
 
 
-@router.post("/quotes/{quote_id}/bind")
+@router.post("/quotes/{quote_code}/bind")
 async def bind_quote(
-    quote_id: str,
+    quote_code: str,
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, Any]:
     """Bind a quote (convert to policy)."""
-    query = select(Quote).where(Quote.quote_id == quote_id)
+    query = select(Quote).where(Quote.quote_code == quote_code)
     q = (await db.execute(query)).scalar_one_or_none()
 
     if not q:
@@ -223,19 +223,19 @@ async def bind_quote(
     return {
         "status": "success",
         "message": "Quote successfully bound",
-        "quote_id": quote_id,
+        "quote_code": quote_code,
         "policy_number": q.policy_number,
         "bound_at": q.bound_at,
     }
 
 
-@router.post("/quotes/{quote_id}/decline")
+@router.post("/quotes/{quote_code}/decline")
 async def decline_quote(
-    quote_id: str,
+    quote_code: str,
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, Any]:
     """Decline a quote (customer rejection)."""
-    query = select(Quote).where(Quote.quote_id == quote_id)
+    query = select(Quote).where(Quote.quote_code == quote_code)
     q = (await db.execute(query)).scalar_one_or_none()
 
     if not q:
@@ -253,14 +253,14 @@ async def decline_quote(
     return {
         "status": "success",
         "message": "Quote declined",
-        "quote_id": quote_id,
+        "quote_code": quote_code,
         "declined_at": q.updated_at,
     }
 
 
-@router.get("/quotes/{quote_id}/premium-options")
+@router.get("/quotes/{quote_code}/premium-options")
 async def get_premium_options(
-    quote_id: str,
+    quote_code: str,
     limits: Optional[List[int]] = Query(
         None,
         description="Specific limits to price",
@@ -271,7 +271,7 @@ async def get_premium_options(
     query = (
         select(Quote, ModelVersionRecord)
         .join(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
-        .where(Quote.quote_id == quote_id)
+        .where(Quote.quote_code == quote_code)
     )
 
     row = (await db.execute(query)).first()
@@ -295,9 +295,9 @@ async def get_premium_options(
             pure_premium = limit * base_rate * tier_factor
             options[str(limit)] = round(pure_premium, 2)
 
-        return {"quote_id": quote_id, "options": options}
+        return {"quote_code": quote_code, "options": options}
 
     return {
-        "quote_id": quote_id,
+        "quote_code": quote_code,
         "options": _parse_json(q.premium_options, {}),
     }

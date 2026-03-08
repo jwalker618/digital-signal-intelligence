@@ -254,7 +254,7 @@ class TestModelVersionLossFields:
         assert hasattr(mv, 'severity_propensity_score')
         assert hasattr(mv, 'loss_propensity_band')
         assert hasattr(mv, 'loss_confidence')
-        assert hasattr(mv, 'loss_cohort_id')
+        assert hasattr(mv, 'loss_cohort_code')
         assert hasattr(mv, 'loss_frequency_multiplier')
         assert hasattr(mv, 'loss_severity_multiplier')
         assert hasattr(mv, 'loss_combined_modifier')
@@ -279,7 +279,7 @@ class TestModelVersionLossFields:
         assert mv.loss_propensity_score is None
         assert mv.loss_propensity_band is None
         assert mv.loss_confidence is None
-        assert mv.loss_cohort_id is None
+        assert mv.loss_cohort_code is None
 
     def test_model_version_loss_fields_can_be_set(self):
         """Test that loss fields can be populated."""

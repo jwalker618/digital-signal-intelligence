@@ -359,16 +359,32 @@ class ModelVersionRecord(Base):
     )
 
 
+class Signal(Base):
+    """Reference table for signal codes. Auto-populated on first encounter."""
+    __tablename__ = "signals"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String(100), unique=True, nullable=False, index=True)
+
+
+class SignalSource(Base):
+    """Reference table for signal source names. Auto-populated on first encounter."""
+    __tablename__ = "signal_sources"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), unique=True, nullable=False, index=True)
+
+
 class SignalCache(Base):
-    """Cache for extracted signal data."""
+    """Cache for extracted signal data — pure, unadulterated signal extract."""
     __tablename__ = "signal_cache"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Cache key components
     entity_code = Column(String(255), nullable=False)
-    signal_code = Column(String(100), nullable=False)
-    source_name = Column(String(100), nullable=False)
+    signal_id = Column(Integer, ForeignKey("signals.id"), nullable=False)
+    source_id = Column(Integer, ForeignKey("signal_sources.id"), nullable=False)
 
     # Cached data
     data = Column(JSONB, nullable=False)
@@ -383,15 +399,9 @@ class SignalCache(Base):
     extraction_time_ms = Column(Float)
     from_external_cache = Column(Boolean, default=False)
 
-    # Phase 8: Audit trail support
-    inferred_value = Column(JSONB)  # Machine-inferred permanent value
-    audited_value = Column(JSONB)   # Human-audited mutable override
-    is_overridden = Column(Boolean, default=False)
-    audit_trail = Column(JSONB, default=list)  # History of overrides
-
     __table_args__ = (
-        Index("ix_signal_cache_lookup", "entity_id", "signal_id", "source_name"),
-        Index("ix_signal_cache_entity", "entity_id"),
+        Index("ix_signal_cache_lookup", "entity_code", "signal_id", "source_id"),
+        Index("ix_signal_cache_entity", "entity_code"),
     )
 
 
@@ -400,13 +410,9 @@ class ModelVersionSignal(Base):
     Association table linking a ModelVersionRecord to the specific SignalCache
     entries it consumed during scoring.
 
-    This is the missing "Layer 2" — the bridge between the full signal
-    repository (signal_cache) and what each individual model actually used.
-    Without this, the UI can only show ALL cached signals for an entity,
-    not the subset that a specific configuration scored against.
-
-    Populated at workflow execution time when the scorer iterates through
-    config.signal_registry and extracts each signal.
+    The bridge between the full signal repository (signal_cache) and what
+    each individual model actually used. Populated at workflow execution time
+    when the scorer iterates through config.signal_registry.
     """
     __tablename__ = "model_version_signals"
 
@@ -426,19 +432,20 @@ class ModelVersionSignal(Base):
         nullable=False,
     )
 
+    # Signal reference (integer FK for efficiency)
+    signal_id = Column(Integer, ForeignKey("signals.id"), nullable=False)
+
     # Denormalised for fast queries without joining signal_cache
-    signal_code = Column(String(100), nullable=False)
     entity_code = Column(String(255), nullable=False)
 
     # Snapshot of what the signal contributed at scoring time
     score = Column(Float)                          # The score used (inferred or audited)
     weight = Column(Float)                         # Weight from config at execution time
     contribution = Column(Float)                   # Weighted contribution to composite
-    group_code = Column(String(100))                 # Which group this signal belonged to
+    group_code = Column(String(100))               # Which group this signal belonged to
     proxy_tier = Column(String(50))                # DIRECT_OBSERVABLE / INFERRED_PROXY / COHORT_INFERENCE
     expectation_level = Column(String(50))         # UNIVERSAL / ENTERPRISE / etc.
     was_absent = Column(Boolean, default=False)    # Signal expected but not found
-    used_audited_value = Column(Boolean, default=False)  # True if audited_value was used instead of inferred
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -451,29 +458,27 @@ class ModelVersionSignal(Base):
 
 class SignalAuditRecord(Base):
     """
-    Phase 8: Signal audit record for deterministic referral management.
+    Signal audit record for underwriter overrides.
 
-    Tracks signal overrides by underwriters, maintaining the immutable
-    inferred_value while allowing audited_value corrections.
+    The existence of a record implies the signal was overridden.
+    All signal/entity/model context is derived via the model_version_signal FK.
     """
     __tablename__ = "signal_audit_records"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    # Reference to original signal
-    signal_cache_id = Column(UUID(as_uuid=True), ForeignKey("signal_cache.id"))
-    model_version_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id"))
+    # Single FK — all context (signal, entity, model version, cache) derivable from here
+    model_version_signal_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_version_signals.id"),
+        nullable=False,
+        index=True,
+    )
 
-    # Signal identification
-    signal_code = Column(String(100), nullable=False, index=True)
-    entity_code = Column(String(255), nullable=False)
+    # The audited value (float score set by underwriter)
+    audited_value = Column(Float, nullable=False)
 
-    # Values (Phase 8 core)
-    inferred_value = Column(JSONB, nullable=False)  # Permanent machine view
-    audited_value = Column(JSONB)  # Mutable human override
-    is_overridden = Column(Boolean, default=False)
-
-    # Override metadata (when audited_value differs from inferred_value)
+    # Override metadata
     overridden_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     overridden_at = Column(DateTime(timezone=True))
     override_rationale = Column(Text)
@@ -485,11 +490,6 @@ class SignalAuditRecord(Base):
 
     # Audit
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    __table_args__ = (
-        Index("ix_signal_audit_entity_signal", "entity_id", "signal_id"),
-        Index("ix_signal_audit_model_version", "model_version_id"),
-    )
 
 
 class AuditLog(Base):
@@ -519,6 +519,6 @@ class AuditLog(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     __table_args__ = (
-        Index("ix_audit_logs_resource", "resource_type", "resource_id"),
+        Index("ix_audit_logs_resource", "resource_type", "resource_code"),
         Index("ix_audit_logs_user", "user_id", "created_at"),
     )

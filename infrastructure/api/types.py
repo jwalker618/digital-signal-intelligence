@@ -13,8 +13,8 @@ from pydantic import BaseModel, Field
 
 # Import ORM models for alignment mapping
 from infrastructure.db.models import (
-    User, APIKey, Submission, Quote, Referral, ModelVersionRecord, 
-    SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog
+    User, APIKey, Submission, Quote, Referral, ModelVersionRecord,
+    Signal, SignalSource, SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog
 )
 
 def maps_to(orm_model: Type, exclude: List[str] = None):
@@ -108,8 +108,8 @@ class ReferralDecision(BaseModel):
     underwriter_id: Optional[str] = None
 
 class SignalOverrideRequest(BaseModel):
-    signal_cache_id: str  
-    signal_id: str
+    signal_cache_id: str
+    signal_code: str
     audited_value: float
     rationale: str
     evidence_reference: Optional[str] = None
@@ -149,34 +149,33 @@ class ExposureSummary(BaseModel):
     exposure_modifier: Optional[float] = None
 
 class SignalValue(BaseModel):
-    signal_id: str
-    inferred_value: float
+    signal_code: str
+    score: float
     audited_value: Optional[float] = None
-    is_overridden: bool = False
     confidence: float = 1.0
 
     @property
     def effective_value(self) -> float:
-        return self.audited_value if self.is_overridden and self.audited_value is not None else self.inferred_value
+        return self.audited_value if self.audited_value is not None else self.score
 
 
 # --- C. Composite Read Models (Aggregated Responses) ---
 class SubmissionResponse(BaseModel):
-    submission_id: str
+    submission_code: str
     status: SubmissionStatus
     estimated_completion: Optional[datetime] = None
     job_id: Optional[str] = None
 
 class QuoteResponse(BaseModel):
     """Heavy projection combining Quote + ModelVersionRecord + JSONB components."""
-    quote_id: str
-    submission_id: str
-    model_version_id: Optional[str] = None
+    quote_code: str
+    submission_code: str
+    version_code: Optional[str] = None
     status: QuoteStatus
     composite_score: int
     tier: int
     tier_label: str
-    decision: DecisionType 
+    decision: DecisionType
     premium_options: Dict[str, float] = Field(default_factory=dict)
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
@@ -188,14 +187,14 @@ class QuoteResponse(BaseModel):
     discovery: Optional[DiscoverySummary] = None
     signal_summary: Optional[SignalSummary] = None
     referral_reasons: List[str] = Field(default_factory=list)
-    referral_id: Optional[str] = None
+    referral_code: Optional[str] = None
     valid_until: Optional[datetime] = None
     created_at: datetime
 
 class QuoteListItem(BaseModel):
-    quote_id: str
-    submission_id: str
-    model_version_id: Optional[str] = None
+    quote_code: str
+    submission_code: str
+    version_code: Optional[str] = None
     entity_name: str
     coverage: str
     status: QuoteStatus
@@ -205,7 +204,7 @@ class QuoteListItem(BaseModel):
     created_at: datetime
 
 class ReferralListItem(BaseModel):
-    referral_id: str
+    referral_code: str
     entity_name: str
     coverage: str
     status: ReferralStatus
@@ -214,7 +213,7 @@ class ReferralListItem(BaseModel):
     created_at: datetime
 
 class ModelVersionResponse(BaseModel):
-    version_id: str
+    version_code: str
     version_number: int
     version_type: str
     composite_score: float
@@ -230,12 +229,11 @@ class ModelVersionResponse(BaseModel):
 class ReferralSignalDetail(BaseModel):
     """Projection joining Bridge -> Cache -> Audit tables."""
     signal_cache_id: str
-    signal_id: str
+    signal_code: str
     signal_name: str
-    group_id: str
+    group_code: str
     group_name: str
     score: float
-    inferred_value: float
     audited_value: Optional[float] = None
     is_overridden: bool = False
     weight: float
@@ -246,19 +244,18 @@ class ReferralSignalDetail(BaseModel):
     data_sources: List[str] = Field(default_factory=list)
     extracted_at: datetime
     raw_data: Optional[Dict[str, Any]] = None
-    in_model: bool = True                       
-    proxy_tier: Optional[str] = None            
-    expectation_level: Optional[str] = None     
-    was_absent: bool = False                    
-    used_audited_value: bool = False            
+    in_model: bool = True
+    proxy_tier: Optional[str] = None
+    expectation_level: Optional[str] = None
+    was_absent: bool = False
     override_rationale: Optional[str] = None
     evidence_reference: Optional[str] = None
     score_impact: Optional[float] = None
     tier_impact: Optional[int] = None
 
 class ReferralSignalsResponse(BaseModel):
-    referral_id: Optional[str] = None
-    model_version_id: str
+    referral_code: Optional[str] = None
+    version_code: str
     configuration_name: Optional[str] = None
     coverage: Optional[str] = None
     signals: List[ReferralSignalDetail]
@@ -270,10 +267,10 @@ class ReferralSignalsResponse(BaseModel):
     average_confidence: float
 
 class SignalOverrideResponse(BaseModel):
-    signal_id: str
-    entity_id: str
-    model_version_id: str
-    inferred_value: float
+    signal_code: str
+    entity_code: str
+    version_code: str
+    original_score: float
     audited_value: float
     score_impact: float
     tier_impact: int
@@ -284,8 +281,8 @@ class SignalOverrideResponse(BaseModel):
     overridden_at: datetime
     override_rationale: str
     evidence_reference: Optional[str] = None
-    previous_model_version: str
-    new_model_version: str
+    previous_version_code: str
+    new_version_code: str
 
 
 # --- D. Multi-Coverage (Phase 11) ---
@@ -355,7 +352,7 @@ class SignalHealthResponse(BaseModel):
 
 # --- F. Simulation Engine (Phase 3) ---
 class ShockParameterRequest(BaseModel):
-    signal_id: str
+    signal_code: str
     shock_type: str = "multiplier"
     value: float
     industry_filter: Optional[str] = None
@@ -369,7 +366,7 @@ class SimulateRequest(BaseModel):
     iterations: int = 1
 
 class TierMigration(BaseModel):
-    entity_id: str
+    entity_code: str
     old_tier: int
     new_tier: int
 
@@ -594,8 +591,8 @@ class ModelVersionDBRecord(BaseModel):
 @maps_to(SignalCache, exclude=["id"])
 class SignalCacheRecord(BaseModel):
     entity_code: str
-    signal_code: str
-    source_name: str
+    signal_id: int
+    source_id: int
     data: Dict[str, Any]
     confidence: Optional[float] = None
     extracted_at: datetime
@@ -603,16 +600,12 @@ class SignalCacheRecord(BaseModel):
     ttl_seconds: Optional[int] = None
     extraction_time_ms: Optional[float] = None
     from_external_cache: bool = False
-    inferred_value: Optional[Dict[str, Any]] = None
-    audited_value: Optional[Dict[str, Any]] = None
-    is_overridden: bool = False
-    audit_trail: List[Dict[str, Any]] = Field(default_factory=list)
 
 @maps_to(ModelVersionSignal, exclude=["id"])
 class ModelVersionSignalRecord(BaseModel):
     model_version_id: str
     signal_cache_id: str
-    signal_code: str
+    signal_id: int
     entity_code: str
     score: Optional[float] = None
     weight: Optional[float] = None
@@ -621,18 +614,12 @@ class ModelVersionSignalRecord(BaseModel):
     proxy_tier: Optional[str] = None
     expectation_level: Optional[str] = None
     was_absent: bool = False
-    used_audited_value: bool = False
     created_at: datetime
 
 @maps_to(SignalAuditRecord, exclude=["id"])
 class SignalAuditDBRecord(BaseModel):
-    signal_cache_id: str
-    model_version_id: str
-    signal_code: str
-    entity_code: str
-    inferred_value: Dict[str, Any]
-    audited_value: Optional[Dict[str, Any]] = None
-    is_overridden: bool = False
+    model_version_signal_id: str
+    audited_value: float
     overridden_by: Optional[str] = None
     overridden_at: Optional[datetime] = None
     override_rationale: Optional[str] = None

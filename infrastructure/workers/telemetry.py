@@ -67,17 +67,23 @@ def refresh_entity_signal(
     try:
         # Import here to avoid circular dependencies
         from infrastructure.db.session import get_db
-        from infrastructure.db.models import SignalCache
+        from infrastructure.db.models import SignalCache, Signal, SignalSource
         from signal_architecture.signals.inference.registry import get_inference_function
         from signal_architecture.signals.types import InferenceContext
 
         db = next(get_db())
 
+        # Resolve signal reference
+        sig_row = db.query(Signal).filter_by(code=signal_id).first()
+        sig_ref_id = sig_row.id if sig_row else None
+
         # Check if signal exists and is fresh
-        existing = db.query(SignalCache).filter_by(
-            entity_id=entity_id,
-            signal_id=signal_id,
-        ).first()
+        existing = None
+        if sig_ref_id is not None:
+            existing = db.query(SignalCache).filter_by(
+                entity_code=entity_id,
+                signal_id=sig_ref_id,
+            ).first()
 
         if existing and not force:
             volatility = get_signal_volatility(signal_id)
@@ -139,24 +145,36 @@ def refresh_entity_signal(
         result = inference_func(entity_id, context)
         extracted_at = datetime.now(timezone.utc)
 
+        # Ensure signal and source references exist
+        if sig_ref_id is None:
+            sig_row = Signal(code=signal_id)
+            db.add(sig_row)
+            db.flush()
+            sig_ref_id = sig_row.id
+
+        source_name = result.metadata.get("extractor", signal_id) if result.metadata else signal_id
+        src_row = db.query(SignalSource).filter_by(name=source_name).first()
+        if not src_row:
+            src_row = SignalSource(name=source_name)
+            db.add(src_row)
+            db.flush()
+
         # Update or create signal record
         if existing:
-            existing.inferred_value = result.score
-            existing.raw_data = result.metadata or {}
+            existing.data = {"score": result.score, **(result.metadata or {})}
             existing.confidence = result.confidence or 0.8
             existing.extracted_at = extracted_at
-            existing.source_name = result.metadata.get("extractor", signal_id) if result.metadata else signal_id
-            existing.error = result.error
+            existing.source_id = src_row.id
         else:
             new_signal = SignalCache(
-                entity_id=entity_id,
-                signal_id=signal_id,
-                source_name=result.metadata.get("extractor", signal_id) if result.metadata else signal_id,
-                inferred_value=result.score,
-                raw_data=result.metadata or {},
+                entity_code=entity_id,
+                signal_id=sig_ref_id,
+                source_id=src_row.id,
+                data={"score": result.score, **(result.metadata or {})},
                 confidence=result.confidence or 0.8,
                 extracted_at=extracted_at,
-                error=result.error,
+                expires_at=extracted_at + timedelta(hours=24),
+                ttl_seconds=86400,
             )
             db.add(new_signal)
 
@@ -296,7 +314,7 @@ def batch_refresh_by_volatility(
         Dict with batch processing summary
     """
     from infrastructure.db.session import get_db
-    from infrastructure.db.models import SignalCache
+    from infrastructure.db.models import SignalCache, Signal
     from sqlalchemy import func
 
     signal_ids = SIGNAL_VOLATILITY.get(volatility, [])
@@ -310,12 +328,14 @@ def batch_refresh_by_volatility(
 
     # Find entities with stale signals
     stale_entities = db.query(
-        SignalCache.entity_id
+        SignalCache.entity_code
+    ).join(
+        Signal, SignalCache.signal_id == Signal.id
     ).filter(
-        SignalCache.signal_id.in_(signal_ids),
+        Signal.code.in_(signal_ids),
         SignalCache.extracted_at < staleness_threshold,
     ).group_by(
-        SignalCache.entity_id
+        SignalCache.entity_code
     ).limit(limit).all()
 
     entity_ids = [e[0] for e in stale_entities]
@@ -458,24 +478,29 @@ def check_signal_freshness(
         Dict mapping signal_id to freshness status (True = fresh)
     """
     from infrastructure.db.session import get_db
-    from infrastructure.db.models import SignalCache
+    from infrastructure.db.models import SignalCache, Signal
 
     db = next(get_db())
 
     results = {sid: False for sid in signal_ids}
 
-    signals = db.query(SignalCache).filter(
-        SignalCache.entity_id == entity_id,
-        SignalCache.signal_id.in_(signal_ids),
-    ).all()
+    rows = (
+        db.query(SignalCache, Signal.code)
+        .join(Signal, SignalCache.signal_id == Signal.id)
+        .filter(
+            SignalCache.entity_code == entity_id,
+            Signal.code.in_(signal_ids),
+        )
+        .all()
+    )
 
     now = datetime.now(timezone.utc)
 
-    for signal in signals:
-        volatility = get_signal_volatility(signal.signal_id)
+    for signal, signal_code in rows:
+        volatility = get_signal_volatility(signal_code)
         refresh_hours = get_refresh_interval_hours(volatility)
         staleness_threshold = now - timedelta(hours=refresh_hours)
 
-        results[signal.signal_id] = signal.extracted_at > staleness_threshold
+        results[signal_code] = signal.extracted_at > staleness_threshold
 
     return results

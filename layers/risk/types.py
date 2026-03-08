@@ -877,7 +877,7 @@ class ModelVersion:
     loss_confidence: Optional[float] = None
 
     # Loss Cohort Assignment
-    loss_cohort_id: Optional[str] = None
+    loss_cohort_code: Optional[str] = None
     loss_cohort_name: Optional[str] = None
     loss_cohort_confidence: Optional[float] = None
 

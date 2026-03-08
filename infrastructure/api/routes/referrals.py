@@ -22,6 +22,8 @@ from infrastructure.db.models import (
     Submission,
     ModelVersionRecord,
     ModelVersionSignal,
+    Signal,
+    SignalSource,
     SignalCache,
     SignalAuditRecord,
     ReferralStatus as DBReferralStatus,
@@ -83,7 +85,8 @@ async def list_referrals(
     """List referrals for underwriter review."""
     query = (
         select(Referral, Submission)
-        .join(Submission, Referral.submission_id == Submission.id)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .join(Submission, Quote.submission_id == Submission.id)
         .order_by(Referral.priority.asc(), Referral.created_at.desc())
     )
 
@@ -101,7 +104,7 @@ async def list_referrals(
 
         results.append(
             ReferralListItem(
-                referral_id=ref.referral_id,
+                referral_code=ref.referral_code,
                 entity_name=sub.entity_name,
                 coverage=sub.coverage,
                 status=ReferralStatus(ref.status.value),
@@ -114,30 +117,28 @@ async def list_referrals(
     return results
 
 
-@router.get("/referrals/{referral_id}", response_model=ReferralRecord)
+@router.get("/referrals/{referral_code}", response_model=ReferralRecord)
 async def get_referral(
-    referral_id: str,
+    referral_code: str,
     db: AsyncSession = Depends(get_async_db),
 ) -> ReferralRecord:
     """Get referral details."""
     query = (
-        select(Referral, Submission)
-        .join(Submission, Referral.submission_id == Submission.id)
-        .where(Referral.referral_id == referral_id)
+        select(Referral, Quote, Submission)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .join(Submission, Quote.submission_id == Submission.id)
+        .where(Referral.referral_code == referral_code)
     )
 
     row = (await db.execute(query)).first()
     if not row:
         raise HTTPException(status_code=404, detail="Referral not found")
 
-    ref, sub = row
+    ref, q, sub = row
 
     return ReferralRecord(
-        referral_id=ref.referral_id,
+        referral_code=ref.referral_code,
         quote_id=ref.quote_id,
-        submission_id=sub.submission_id,
-        entity_name=sub.entity_name,
-        coverage=sub.coverage,
         status=ReferralStatus(ref.status.value),
         reasons=_parse_json(ref.reasons, []),
         original_tier=ref.original_tier,
@@ -151,9 +152,9 @@ async def get_referral(
     )
 
 
-@router.get("/referrals/{referral_id}/signals", response_model=ReferralSignalsResponse)
+@router.get("/referrals/{referral_code}/signals", response_model=ReferralSignalsResponse)
 async def get_referral_signals(
-    referral_id: str,
+    referral_code: str,
     include_raw: bool = Query(False),
     db: AsyncSession = Depends(get_async_db),
 ) -> ReferralSignalsResponse:
@@ -162,7 +163,7 @@ async def get_referral_signals(
         select(Referral, Quote, ModelVersionRecord)
         .join(Quote, Referral.quote_id == Quote.id)
         .join(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
-        .where(Referral.referral_id == referral_id)
+        .where(Referral.referral_code == referral_code)
     )
     
     row = (await db.execute(query)).first()
@@ -172,14 +173,12 @@ async def get_referral_signals(
     ref, q, mv = row
 
     sig_query = (
-        select(ModelVersionSignal, SignalCache, SignalAuditRecord)
+        select(ModelVersionSignal, SignalCache, Signal, SignalAuditRecord)
         .join(SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id)
+        .join(Signal, ModelVersionSignal.signal_id == Signal.id)
         .outerjoin(
             SignalAuditRecord,
-            and_(
-                ModelVersionSignal.signal_id == SignalAuditRecord.signal_id,
-                ModelVersionSignal.entity_id == SignalAuditRecord.entity_id,
-            ),
+            SignalAuditRecord.model_version_signal_id == ModelVersionSignal.id,
         )
         .where(ModelVersionSignal.model_version_id == mv.id)
     )
@@ -187,36 +186,22 @@ async def get_referral_signals(
     sig_rows = (await db.execute(sig_query)).all()
 
     signals = []
-    
-    def _extract_val(field, default=0.0):
-        if field is None:
-            return default
-        if isinstance(field, dict):
-            for k in ["value", "audited_value", "inferred_value"]:
-                if k in field:
-                    return float(field[k])
-            return default
-        try:
-            return float(field)
-        except (ValueError, TypeError):
-            return default
 
-    for mvs, sc, sar in sig_rows:
+    for mvs, sc, sig_ref, sar in sig_rows:
         data = _parse_json(sc.data, {})
-        inferred = _extract_val(sc.inferred_value, _extract_val(data, 0.0))
-        audited = _extract_val(sar.audited_value) if sar and sar.is_overridden else None
+        score = float(mvs.score) if mvs.score is not None else 0.0
+        audited = float(sar.audited_value) if sar else None
 
         signals.append(
             ReferralSignalDetail(
                 signal_cache_id=str(sc.id),
-                signal_id=mvs.signal_id,
-                signal_name=data.get("name", mvs.signal_id),
-                group_id=mvs.group_id or data.get("group_id", "general"),
+                signal_code=sig_ref.code,
+                signal_name=data.get("name", sig_ref.code),
+                group_code=mvs.group_code or data.get("group_code", "general"),
                 group_name=data.get("group_name", "General"),
-                score=float(mvs.score) if mvs.score is not None else inferred,
-                inferred_value=inferred,
+                score=score,
                 audited_value=audited,
-                is_overridden=bool(sar and sar.is_overridden),
+                is_overridden=sar is not None,
                 weight=float(mvs.weight) if mvs.weight is not None else float(data.get("weight", 0.1)),
                 contribution_to_score=float(mvs.contribution) if mvs.contribution is not None else float(data.get("contribution", 0.0)),
                 is_flagged=data.get("is_flagged", False),
@@ -229,7 +214,6 @@ async def get_referral_signals(
                 proxy_tier=mvs.proxy_tier,
                 expectation_level=mvs.expectation_level,
                 was_absent=mvs.was_absent,
-                used_audited_value=mvs.used_audited_value,
                 override_rationale=sar.override_rationale if sar else None,
                 evidence_reference=sar.evidence_reference if sar else None,
                 score_impact=sar.score_impact if sar else None,
@@ -242,8 +226,8 @@ async def get_referral_signals(
     avg_conf = sum(s.confidence for s in signals) / len(signals) if signals else 1.0
 
     return ReferralSignalsResponse(
-        referral_id=ref.referral_id,
-        model_version_id=mv.version_id,
+        referral_code=ref.referral_code,
+        version_code=mv.version_code,
         configuration_name=mv.configuration_name,
         coverage=mv.coverage,
         signals=signals,
