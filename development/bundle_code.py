@@ -8,7 +8,7 @@ from pathlib import Path
 #   "frontend"       → walk only frontend/
 #   "frontend/src"   → walk only that subtree
 # ---------------------------------------------------------
-BASE_PATH = "infrastructure/api"   # <--- change this as needed
+BASE_PATH = "frontend/src"   # <--- change this as needed
 # ---------------------------------------------------------
 
 def resolve_base_path():
@@ -28,9 +28,9 @@ def sanitize_filename(path: str) -> str:
 
 def bundle_code():
     # Directories to ignore
-    ignore_dirs = {'.git', '__pycache__', 'venv', 'env', 'node_modules', '.pytest_cache', 'results'}
+    ignore_dirs = {'.git', '__pycache__', 'venv', 'env', 'node_modules', '.pytest_cache', 'results',}
     # File extensions to include
-    valid_exts = {'.py', '.yaml', '.yml', '.md', '.json'}
+    valid_exts = {'.py', '.yaml', '.yml', '.md', '.json', '.tsx', '.css', '.ts'}
 
     base_path = resolve_base_path()
 

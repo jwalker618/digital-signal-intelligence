@@ -48,91 +48,104 @@ def _build_shock(params):
 
         shock_type = params.shock_type.lower()
         if shock_type == "override":
-            shock = ShockParameter.signal_override(params.signal_id, params.value)
+            shock = ShockParameter.signal_override(
+                params.signal_id,
+                params.value,
+            )
         elif shock_type == "multiplier":
-            shock = ShockParameter.signal_multiplier(params.signal_id, params.value)
+            shock = ShockParameter.signal_multiplier(
+                params.signal_id,
+                params.value,
+            )
+        elif shock_type == "macro":
+            shock = ShockParameter.macro_shock(
+                params.signal_id,
+                params.value,
+            )
         else:
-            shock = ShockParameter.signal_multiplier(params.signal_id, params.value)
+            shock = ShockParameter.signal_multiplier(
+                params.signal_id,
+                params.value,
+            )
 
+        # Apply filters
         if params.industry_filter:
-            shock.filter_industry(params.industry_filter)
-        if params.tier_filter:
-            shock.filter_tier(params.tier_filter)
-        if params.coverage_filter:
-            shock.filter_coverage(params.coverage_filter)
-
+            shock = shock.with_industry(params.industry_filter)
+        if params.tier_filter is not None:
+            shock = shock.with_tier(params.tier_filter)
+            
         return shock
 
     except ImportError:
-        # Stub mode: return dict representation
+        # Stub mode: return dictionary representation
         return {
             "signal_id": params.signal_id,
             "shock_type": params.shock_type,
             "value": params.value,
-            "industry_filter": params.industry_filter,
-            "tier_filter": params.tier_filter,
-            "coverage_filter": params.coverage_filter,
+            "filters": {
+                "industry": params.industry_filter,
+                "tier": params.tier_filter,
+                "coverage": params.coverage_filter
+            }
         }
 
 
 @router.post("/simulate", response_model=SimulateResponse)
-async def run_simulation(request: SimulateRequest):
+async def run_simulation(request: SimulateRequest) -> SimulateResponse:
     """
-    Run a portfolio stress-test simulation.
+    Execute a portfolio simulation run.
 
-    Sends the portfolio and shock parameters to the Rust dsi-sim engine
-    for high-performance parallel computation. Returns premium adequacy
-    metrics, tier migration details, and statistical summary.
+    Passes the portfolio snapshot to the high-performance Rust engine,
+    applies the requested shocks, and returns the aggregated impact.
     """
-    simulation_id = str(uuid.uuid4())[:12]
     start_time = time.time()
+    simulation_id = f"sim_{uuid.uuid4().hex[:12]}"
 
-    # Validate JSON
+    logger.info(
+        "Starting simulation %s with %d shocks (%d iterations)",
+        simulation_id,
+        len(request.shocks),
+        request.iterations,
+    )
+
     try:
-        json.loads(request.portfolio_json)
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=422, detail=f"Invalid portfolio_json: {e}")
+        import dsi_sim
 
-    try:
-        # Attempt to use Rust dsi-sim engine
-        from dsi_sim import Simulator
+        # Parse portfolio and initialize Rust engine
+        portfolio_data = json.loads(request.portfolio_json)
+        engine = dsi_sim.SimulationEngine(portfolio_data)
 
-        sim = Simulator()
-
-        # Load config if provided
-        if request.config_path:
-            sim.load_config(request.config_path)
-
-        # Load portfolio
-        sim.load_portfolio_json(request.portfolio_json)
-
-        # Build shocks and run
-        for shock_params in request.shocks:
-            shock = _build_shock(shock_params)
-            result = sim.run_simulation(shock, request.iterations)
-
+        # Build and apply shocks
+        rust_shocks = [_build_shock(s) for s in request.shocks]
+        
+        # Execute (releases GIL for heavy parallel processing)
+        result = engine.run_simulation(rust_shocks, request.iterations)
+        
         elapsed_ms = (time.time() - start_time) * 1000
 
-        # Parse results from Rust
-        tier_migrations = []
-        if hasattr(result, "tier_migration"):
-            for tm in result.tier_migration:
-                tier_migrations.append(TierMigration(
-                    entity_id=tm.get("entity_id", ""),
-                    old_tier=tm.get("old_tier", 0),
-                    new_tier=tm.get("new_tier", 0),
-                ))
+        # Map TierMigrations 
+        migrations = []
+        if hasattr(result, "tier_migrations"):
+            for m in result.tier_migrations:
+                migrations.append(
+                    TierMigration(
+                        entity_id=m.entity_id,
+                        old_tier=m.old_tier,
+                        new_tier=m.new_tier,
+                    )
+                )
 
-        stats_data = result.stats if hasattr(result, "stats") else {}
+        # Map Stats
+        stats_data = getattr(result, "stats", None)
 
         return SimulateResponse(
             simulation_id=simulation_id,
             status="completed",
-            premium_adequacy=result.premium_adequacy,
-            total_premium_impact=result.total_premium_impact,
-            entities_affected=result.entities_affected,
-            total_entities=sim.entity_count(),
-            tier_migrations=tier_migrations,
+            premium_adequacy=getattr(result, "premium_adequacy", 1.0),
+            total_premium_impact=getattr(result, "total_premium_impact", 0.0),
+            entities_affected=getattr(result, "entities_affected", 0),
+            total_entities=getattr(result, "total_entities", 0),
+            tier_migrations=migrations,
             stats=SimulationStats(
                 mean_score_delta=getattr(stats_data, "mean_score_delta", 0.0),
                 std_score_delta=getattr(stats_data, "std_score_delta", 0.0),
@@ -166,7 +179,3 @@ async def run_simulation(request: SimulateRequest):
             execution_time_ms=elapsed_ms,
             created_at=datetime.now(timezone.utc),
         )
-
-    except Exception as e:
-        logger.error(f"Simulation failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Simulation failed: {e}")

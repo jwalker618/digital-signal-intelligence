@@ -123,7 +123,7 @@ class Submission(Base):
     __tablename__ = "submissions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    submission_id = Column(String(50), unique=True, nullable=False, index=True)
+    submission_code = Column(String(50), unique=True, nullable=False, index=True)
 
     # Entity information
     entity_name = Column(String(500), nullable=False)
@@ -177,7 +177,7 @@ class Quote(Base):
     __tablename__ = "quotes"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    quote_id = Column(String(50), unique=True, nullable=False, index=True)
+    quote_code = Column(String(50), unique=True, nullable=False, index=True)
     submission_id = Column(UUID(as_uuid=True), ForeignKey("submissions.id"), nullable=False)
     model_version_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id"), nullable=False)
 
@@ -217,7 +217,7 @@ class Referral(Base):
     __tablename__ = "referrals"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    referral_id = Column(String(50), unique=True, nullable=False, index=True)
+    referral_code = Column(String(50), unique=True, nullable=False, index=True)
     quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id"), nullable=False)
 
     # Status
@@ -260,7 +260,7 @@ class ModelVersionRecord(Base):
     __tablename__ = "model_versions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    version_id = Column(String(50), unique=True, nullable=False, index=True)
+    version_code = Column(String(50), unique=True, nullable=False, index=True)
     submission_id = Column(UUID(as_uuid=True), ForeignKey("submissions.id"), nullable=False)
 
     # Version info
@@ -366,8 +366,8 @@ class SignalCache(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Cache key components
-    entity_id = Column(String(255), nullable=False)
-    signal_id = Column(String(100), nullable=False)
+    entity_code = Column(String(255), nullable=False)
+    signal_code = Column(String(100), nullable=False)
     source_name = Column(String(100), nullable=False)
 
     # Cached data
@@ -427,14 +427,14 @@ class ModelVersionSignal(Base):
     )
 
     # Denormalised for fast queries without joining signal_cache
-    signal_id = Column(String(100), nullable=False)
-    entity_id = Column(String(255), nullable=False)
+    signal_code = Column(String(100), nullable=False)
+    entity_code = Column(String(255), nullable=False)
 
     # Snapshot of what the signal contributed at scoring time
     score = Column(Float)                          # The score used (inferred or audited)
     weight = Column(Float)                         # Weight from config at execution time
     contribution = Column(Float)                   # Weighted contribution to composite
-    group_id = Column(String(100))                 # Which group this signal belonged to
+    group_code = Column(String(100))                 # Which group this signal belonged to
     proxy_tier = Column(String(50))                # DIRECT_OBSERVABLE / INFERRED_PROXY / COHORT_INFERENCE
     expectation_level = Column(String(50))         # UNIVERSAL / ENTERPRISE / etc.
     was_absent = Column(Boolean, default=False)    # Signal expected but not found
@@ -465,8 +465,8 @@ class SignalAuditRecord(Base):
     model_version_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id"))
 
     # Signal identification
-    signal_id = Column(String(100), nullable=False, index=True)
-    entity_id = Column(String(255), nullable=False)
+    signal_code = Column(String(100), nullable=False, index=True)
+    entity_code = Column(String(255), nullable=False)
 
     # Values (Phase 8 core)
     inferred_value = Column(JSONB, nullable=False)  # Permanent machine view
@@ -504,7 +504,7 @@ class AuditLog(Base):
 
     # Resource
     resource_type = Column(String(100))
-    resource_id = Column(String(100))
+    resource_code = Column(String(100))
 
     # Actor
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))

@@ -13,7 +13,7 @@ from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func, update
+from sqlalchemy import select, and_, func
 
 from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
@@ -24,14 +24,14 @@ from infrastructure.db.models import (
     ModelVersionSignal,
     SignalCache,
     SignalAuditRecord,
-    ReferralStatus,
-    DecisionType,
-    QuoteStatus
+    ReferralStatus as DBReferralStatus,
+    DecisionType as DBDecisionType,
+    QuoteStatus as DBQuoteStatus,
 )
 from ..types import (
     ReferralDecision,
     ReferralDecisionType,
-    ReferralDetail,
+    ReferralRecord,
     ReferralListItem,
     QuoteResponse,
     SignalOverrideRequest,
@@ -39,10 +39,14 @@ from ..types import (
     ReferralSignalDetail,
     ReferralSignalsResponse,
     ModelVersionResponse,
+    ReferralStatus,
+    DecisionType,
+    QuoteStatus,
 )
 
 logger = logging.getLogger("dsi.api.referrals")
 router = APIRouter()
+
 
 # =============================================================================
 # UTILITIES
@@ -52,206 +56,143 @@ def generate_id(prefix: str) -> str:
     """Generate a unique string ID."""
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
-def safe_uuid(val: Optional[str]) -> Optional[uuid.UUID]:
-    """Safely convert a string to UUID for foreign keys."""
-    if not val or val == "unknown":
-        return None
-    try:
-        return uuid.UUID(val)
-    except ValueError:
-        return None
 
-def _parse_string_list(val) -> List[str]:
-    """Safely parse DB JSONB/Text arrays into Python Lists."""
-    if not val:
-        return []
-    if isinstance(val, list):
+def _parse_json(val: Any, default: Any = None) -> Any:
+    """Safely parse PostgreSQL JSONB into Python dicts/lists."""
+    if val is None:
+        return default
+    if isinstance(val, (dict, list)):
         return val
     try:
         return json.loads(val)
-    except (TypeError, json.JSONDecodeError):
-        return [str(val)]
+    except (TypeError, ValueError):
+        return default
 
 
 # =============================================================================
-# REFERRAL CRUD
+# ENDPOINTS
 # =============================================================================
 
 @router.get("/referrals", response_model=List[ReferralListItem])
 async def list_referrals(
-    status: Optional[str] = Query(None, description="Filter by status (pending, approved, declined)"),
-    coverage: Optional[str] = Query(None, description="Filter by coverage"),
-    limit: int = Query(20, le=100, description="Maximum results"),
-    offset: int = Query(0, ge=0, description="Offset for pagination"),
-    db: AsyncSession = Depends(get_async_db)
-):
-    """List referrals strictly from the database."""
-
-    query = select(Referral, Submission).join(
-        Quote, Referral.quote_id == Quote.id
-    ).join(
-        Submission, Quote.submission_id == Submission.id
+    status: Optional[str] = Query(None, description="Filter by status"),
+    limit: int = Query(50, le=100),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_async_db),
+) -> List[ReferralListItem]:
+    """List referrals for underwriter review."""
+    query = (
+        select(Referral, Submission)
+        .join(Submission, Referral.submission_id == Submission.id)
+        .order_by(Referral.priority.asc(), Referral.created_at.desc())
     )
 
     if status:
-        # Map string to Enum safely
-        try:
-            db_status = ReferralStatus(status.lower())
-            query = query.where(Referral.status == db_status)
-        except ValueError:
-            pass
+        query = query.where(Referral.status == DBReferralStatus(status))
 
-    if coverage:
-        query = query.where(Submission.coverage == coverage)
+    query = query.offset(offset).limit(limit)
+    rows = (await db.execute(query)).all()
 
-    query = query.order_by(Referral.created_at.desc()).limit(limit).offset(offset)
-
-    result = await db.execute(query)
-    rows = result.all()
-
-    items = []
+    results = []
+    now = datetime.now(timezone.utc)
     for ref, sub in rows:
-        age = (datetime.now(timezone.utc) - ref.created_at.replace(tzinfo=timezone.utc)).total_seconds() / 3600
-        items.append(ReferralListItem(
-            referral_id=ref.referral_id,
-            entity_name=sub.entity_name,
-            coverage=sub.coverage,
-            status=ref.status.value,
-            reasons=_parse_string_list(ref.reasons),
-            age_hours=round(age, 1),
-            created_at=ref.created_at
-        ))
+        created_utc = ref.created_at.replace(tzinfo=timezone.utc) if ref.created_at else now
+        age_hours = (now - created_utc).total_seconds() / 3600
 
-    return items
+        results.append(
+            ReferralListItem(
+                referral_id=ref.referral_id,
+                entity_name=sub.entity_name,
+                coverage=sub.coverage,
+                status=ReferralStatus(ref.status.value),
+                reasons=_parse_json(ref.reasons, []),
+                age_hours=round(age_hours, 1),
+                created_at=ref.created_at,
+            )
+        )
 
-@router.get("/referrals/{referral_id}", response_model=ReferralDetail)
-async def get_referral(referral_id: str, db: AsyncSession = Depends(get_async_db)):
-    """Get full referral details, spanning Submission, Quote, and Model Version."""
+    return results
 
-    query = select(Referral, Quote, Submission, ModelVersionRecord).join(
-        Quote, Referral.quote_id == Quote.id
-    ).join(
-        Submission, Quote.submission_id == Submission.id
-    ).outerjoin(
-        ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id
-    ).where(Referral.referral_id == referral_id)
+
+@router.get("/referrals/{referral_id}", response_model=ReferralRecord)
+async def get_referral(
+    referral_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> ReferralRecord:
+    """Get referral details."""
+    query = (
+        select(Referral, Submission)
+        .join(Submission, Referral.submission_id == Submission.id)
+        .where(Referral.referral_id == referral_id)
+    )
 
     row = (await db.execute(query)).first()
     if not row:
         raise HTTPException(status_code=404, detail="Referral not found")
 
-    ref, quote, sub, mv = row
+    ref, sub = row
 
-    return ReferralDetail(
+    return ReferralRecord(
         referral_id=ref.referral_id,
-        quote_id=quote.quote_id,
+        quote_id=ref.quote_id,
         submission_id=sub.submission_id,
         entity_name=sub.entity_name,
         coverage=sub.coverage,
-        status=ref.status.value,
-        reasons=_parse_string_list(ref.reasons),
-        original_tier=mv.final_tier if mv else 0,
-        original_score=int(mv.pure_composite_score) if mv and mv.pure_composite_score else 0,
-        original_premium=quote.recommended_premium or 0.0,
+        status=ReferralStatus(ref.status.value),
+        reasons=_parse_json(ref.reasons, []),
+        original_tier=ref.original_tier,
+        original_score=ref.original_score,
+        original_premium=ref.original_premium,
         reviewed_at=ref.reviewed_at,
-        reviewed_by=str(ref.reviewed_by) if ref.reviewed_by else None,
-        review_notes=_parse_string_list(ref.review_notes),
+        review_notes=_parse_json(ref.review_notes, []),
         tier_override=ref.tier_override,
         premium_adjustment=ref.premium_adjustment,
-        created_at=ref.created_at
+        created_at=ref.created_at,
     )
 
 
-@router.patch("/referrals/{referral_id}", response_model=ReferralDetail)
-async def process_referral(
+@router.get("/referrals/{referral_id}/signals", response_model=ReferralSignalsResponse)
+async def get_referral_signals(
     referral_id: str,
-    decision: ReferralDecision,
-    db: AsyncSession = Depends(get_async_db)
-):
-    """
-    Process a referral decision.
-    Updates the Referral record and the core ModelVersionRecord atomically.
-    """
-    query = select(Referral, Quote, ModelVersionRecord).join(
-        Quote, Referral.quote_id == Quote.id
-    ).join(
-        ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id
-    ).where(Referral.referral_id == referral_id)
-
+    include_raw: bool = Query(False),
+    db: AsyncSession = Depends(get_async_db),
+) -> ReferralSignalsResponse:
+    """Get detailed signal inputs for a referral's active model version."""
+    query = (
+        select(Referral, Quote, ModelVersionRecord)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .join(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
+        .where(Referral.referral_id == referral_id)
+    )
+    
     row = (await db.execute(query)).first()
     if not row:
-        raise HTTPException(status_code=404, detail="Referral not found")
+        raise HTTPException(status_code=404, detail="Referral or Model not found")
 
-    ref, quote, mv = row
+    ref, q, mv = row
 
-    if ref.status != ReferralStatus.PENDING:
-        raise HTTPException(status_code=400, detail=f"Referral already resolved with status: {ref.status.value}")
-
-    # 1. Map adjustments & status
-    new_status = ReferralStatus.APPROVED if decision.decision in [ReferralDecisionType.APPROVE, ReferralDecisionType.MODIFY] else ReferralStatus.DECLINED
-
-    ref.status = new_status
-    ref.reviewed_at = datetime.utcnow()
-    ref.reviewed_by = safe_uuid(decision.underwriter_id)
-    ref.review_notes = json.dumps(decision.notes) if decision.notes else '[]'
-
-    if decision.adjustments:
-        ref.tier_override = decision.adjustments.get("tier_override")
-        ref.premium_adjustment = decision.adjustments.get("premium_adjustment")
-
-    # 2. Update Model Version (The single source of truth)
-    mv.decision = DecisionType(decision.decision.value)
-
-    # 3. Update Quote Status
-    quote.status = QuoteStatus.READY if new_status == ReferralStatus.APPROVED else QuoteStatus.DECLINED
-
-    await db.commit()
-
-    # Re-fetch via the existing endpoint logic to guarantee Pydantic validation
-    return await get_referral(referral_id, db)
-
-
-# =============================================================================
-# PHASE 8: DETERMINISTIC SIGNAL MANAGEMENT
-# =============================================================================
-
-@router.get("/model_versions/{model_version_id}/signals", response_model=ReferralSignalsResponse)
-async def get_model_version_signals(
-    model_version_id: str,
-    db: AsyncSession = Depends(get_async_db)
-):
-    """
-    Get signals for a specific model version using the ModelVersionSignal bridge.
-    Executes an exact join from Bridge -> Cache -> Audit.
-    """
-    # 1. Fetch Model Version Record
-    mv_q = select(ModelVersionRecord).where(ModelVersionRecord.version_id == model_version_id)
-    mv = (await db.execute(mv_q)).scalar_one_or_none()
-    if not mv:
-        raise HTTPException(status_code=404, detail="Model version not found")
-
-    # 2. Execute the exact DB join: MVS -> SC -> SAR
-    query = select(ModelVersionSignal, SignalCache, SignalAuditRecord).join(
-        SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id
-    ).outerjoin(
-        SignalAuditRecord, and_(
-            SignalAuditRecord.signal_cache_id == ModelVersionSignal.signal_cache_id,
-            SignalAuditRecord.model_version_id == ModelVersionSignal.model_version_id
+    sig_query = (
+        select(ModelVersionSignal, SignalCache, SignalAuditRecord)
+        .join(SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id)
+        .outerjoin(
+            SignalAuditRecord,
+            and_(
+                ModelVersionSignal.signal_id == SignalAuditRecord.signal_id,
+                ModelVersionSignal.entity_id == SignalAuditRecord.entity_id,
+            ),
         )
-    ).where(
-        ModelVersionSignal.model_version_id == mv.id
+        .where(ModelVersionSignal.model_version_id == mv.id)
     )
 
-    results = (await db.execute(query)).all()
+    sig_rows = (await db.execute(sig_query)).all()
 
     signals = []
-
-    # Bulletproof JSONB Number Extractor
+    
     def _extract_val(field, default=0.0):
         if field is None:
             return default
         if isinstance(field, dict):
-            for k in ["value", "score", "audited_value", "inferred_value"]:
+            for k in ["value", "audited_value", "inferred_value"]:
                 if k in field:
                     return float(field[k])
             return default
@@ -260,223 +201,104 @@ async def get_model_version_signals(
         except (ValueError, TypeError):
             return default
 
-    for mvs, sc, sar in results:
-        data = sc.data or {}
-
-        # Safely extract the values using the helper
+    for mvs, sc, sar in sig_rows:
+        data = _parse_json(sc.data, {})
         inferred = _extract_val(sc.inferred_value, _extract_val(data, 0.0))
         audited = _extract_val(sar.audited_value) if sar and sar.is_overridden else None
 
-        signals.append(ReferralSignalDetail(
-            signal_cache_id=str(sc.id),
-            signal_id=mvs.signal_id,
-            signal_name=data.get("name", mvs.signal_id),
-            group_id=mvs.group_id or data.get("group_id", "general"),
-            group_name=data.get("group_name", "General"),
+        signals.append(
+            ReferralSignalDetail(
+                signal_cache_id=str(sc.id),
+                signal_id=mvs.signal_id,
+                signal_name=data.get("name", mvs.signal_id),
+                group_id=mvs.group_id or data.get("group_id", "general"),
+                group_name=data.get("group_name", "General"),
+                score=float(mvs.score) if mvs.score is not None else inferred,
+                inferred_value=inferred,
+                audited_value=audited,
+                is_overridden=bool(sar and sar.is_overridden),
+                weight=float(mvs.weight) if mvs.weight is not None else float(data.get("weight", 0.1)),
+                contribution_to_score=float(mvs.contribution) if mvs.contribution is not None else float(data.get("contribution", 0.0)),
+                is_flagged=data.get("is_flagged", False),
+                flag_reason=data.get("flag_reason"),
+                confidence=sc.confidence or 1.0,
+                data_sources=data.get("sources", []),
+                extracted_at=sc.extracted_at,
+                raw_data=data if include_raw else None,
+                in_model=True,
+                proxy_tier=mvs.proxy_tier,
+                expectation_level=mvs.expectation_level,
+                was_absent=mvs.was_absent,
+                used_audited_value=mvs.used_audited_value,
+                override_rationale=sar.override_rationale if sar else None,
+                evidence_reference=sar.evidence_reference if sar else None,
+                score_impact=sar.score_impact if sar else None,
+                tier_impact=sar.tier_impact if sar else None,
+            )
+        )
 
-            score=float(mvs.score) if mvs.score is not None else inferred,
-
-            inferred_value=inferred,
-            audited_value=audited,
-            is_overridden=bool(sar and sar.is_overridden),
-            weight=float(mvs.weight) if mvs.weight is not None else float(data.get("weight", 0.1)),
-            contribution_to_score=float(mvs.contribution) if mvs.contribution is not None else float(data.get("contribution", 0.0)),
-            is_flagged=data.get("is_flagged", False),
-            flag_reason=data.get("flag_reason"),
-            confidence=sc.confidence or 1.0,
-            data_sources=data.get("sources", []),
-            extracted_at=sc.extracted_at,
-            in_model=True,
-            proxy_tier=mvs.proxy_tier,
-            expectation_level=mvs.expectation_level,
-            was_absent=mvs.was_absent,
-            used_audited_value=mvs.used_audited_value,
-            override_rationale=sar.override_rationale if sar else None,
-            evidence_reference=sar.evidence_reference if sar else None,
-            score_impact=sar.score_impact if sar else None,
-            tier_impact=sar.tier_impact if sar else None,
-        ))
-
-    # Sort logically
-    signals.sort(key=lambda s: (s.group_id, s.signal_id))
+    overridden_count = sum(1 for s in signals if s.is_overridden)
+    flagged_count = sum(1 for s in signals if s.is_flagged)
+    avg_conf = sum(s.confidence for s in signals) / len(signals) if signals else 1.0
 
     return ReferralSignalsResponse(
-        referral_id=None,
+        referral_id=ref.referral_id,
         model_version_id=mv.version_id,
         configuration_name=mv.configuration_name,
         coverage=mv.coverage,
         signals=signals,
-        flagged_count=sum(1 for s in signals if s.is_flagged),
-        overridden_count=sum(1 for s in signals if s.is_overridden),
+        flagged_count=flagged_count,
+        overridden_count=overridden_count,
         total_signals=len(signals),
         model_signal_count=len(signals),
-        signal_coverage=1.0,
-        average_confidence=sum(s.confidence for s in signals)/len(signals) if signals else 1.0
+        signal_coverage=mv.signal_coverage or 1.0,
+        average_confidence=avg_conf,
     )
 
 
-@router.post("/model_versions/{model_version_id}/signals/override", response_model=SignalOverrideResponse)
-async def override_signal(
-    model_version_id: str,
-    override: SignalOverrideRequest,
-    db: AsyncSession = Depends(get_async_db)
-):
-    """
-    Execute a Phase 8 Signal Override.
-    Strictly validates the intersection of model_version_id and signal_cache_id.
-    """
-    # 1. Fetch Model Version and Quote
-    mv_q = select(ModelVersionRecord, Submission, Quote).join(
-        Submission, ModelVersionRecord.submission_id == Submission.id
-    ).outerjoin(
-        Quote, Quote.model_version_id == ModelVersionRecord.id
-    ).where(ModelVersionRecord.version_id == model_version_id)
-
-    row = (await db.execute(mv_q)).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Model version not found")
-    mv, sub, quote = row
-
-    # 2. STRICT VALIDATION: Prove this signal cache UUID was actually consumed by this model version UUID!
-    mvs_q = select(ModelVersionSignal).where(
-        and_(
-            ModelVersionSignal.model_version_id == mv.id,
-            ModelVersionSignal.signal_cache_id == safe_uuid(override.signal_cache_id)
-        )
-    )
-    target_mvs = (await db.execute(mvs_q)).scalar_one_or_none()
-
-    if not target_mvs:
-        raise HTTPException(
-            status_code=400,
-            detail="Security violation: The provided signal_cache_id is not associated with this model_version_id."
-        )
-
-    # 3. Fetch the actual immutable Cache record
-    cache_q = select(SignalCache).where(SignalCache.id == safe_uuid(override.signal_cache_id))
-    cache = (await db.execute(cache_q)).scalar_one()
-
-    inferred = float(cache.inferred_value.get("value", cache.inferred_value.get("score", 0)) if isinstance(cache.inferred_value, dict) else (cache.data or {}).get("score", 0))
-
-    # 4. Create the NEW Model Version (v2+)
-    new_score = (mv.pure_composite_score or 500) + ((override.audited_value - inferred) * 0.5)
-    new_tier = max(1, min(5, int(5 - (new_score / 200))))
-    tier_labels = {1: "PREFERRED", 2: "STANDARD", 3: "STANDARD_PLUS", 4: "ELEVATED", 5: "HIGH_RISK"}
-
-    new_mv = ModelVersionRecord(
-        version_id=generate_id("mv"),
-        submission_id=sub.id,
-        version_number=(mv.version_number or 1) + 1,
-        version_type="signal_override",
-        is_latest=True,
-        config_hash=mv.config_hash,
-        coverage=mv.coverage,
-        pure_composite_score=new_score,
-        final_tier=new_tier,
-        tier_label=tier_labels.get(new_tier, "STANDARD"),
-        decision=mv.decision,
-        created_by=override.underwriter_id or "system",
-        created_at=datetime.utcnow()
-    )
-
-    mv.is_latest = False
-    db.add(new_mv)
-    await db.flush()
-
-    # 5. Copy the signal manifest forward, updating the overridden score
-    old_mvs_q = select(ModelVersionSignal).where(ModelVersionSignal.model_version_id == mv.id)
-    old_mvs = (await db.execute(old_mvs_q)).scalars().all()
-
-    for src in old_mvs:
-        is_target = str(src.signal_cache_id) == override.signal_cache_id
-
-        new_mvs = ModelVersionSignal(
-            model_version_id=new_mv.id,
-            signal_cache_id=src.signal_cache_id,
-            signal_id=src.signal_id,
-            entity_id=src.entity_id,
-            score=override.audited_value if is_target else src.score,
-            weight=src.weight,
-            contribution=src.contribution,
-            group_id=src.group_id,
-            proxy_tier=src.proxy_tier,
-            expectation_level=src.expectation_level,
-            was_absent=src.was_absent,
-            used_audited_value=True if is_target else src.used_audited_value,
-        )
-        db.add(new_mvs)
-
-    # 6. Create the Audit Record
-    audit = SignalAuditRecord(
-        signal_cache_id=safe_uuid(override.signal_cache_id),
-        model_version_id=new_mv.id,
-        signal_id=override.signal_id,
-        entity_id=sub.discovered_domain,
-        inferred_value={"value": inferred},
-        audited_value={"value": override.audited_value},
-        is_overridden=True,
-        overridden_by=safe_uuid(override.underwriter_id),
-        overridden_at=datetime.utcnow(),
-        override_rationale=override.rationale,
-        evidence_reference=override.evidence_reference,
-        score_impact=new_score - (mv.pure_composite_score or 0),
-        tier_impact=new_tier - (mv.final_tier or 0)
-    )
-    db.add(audit)
-
-    # 7. Point Quote to new model version
-    if quote:
-        quote.model_version_id = new_mv.id
-
-    await db.commit()
-
-    return SignalOverrideResponse(
-        signal_id=override.signal_id,
-        entity_id=sub.discovered_domain,
-        model_version_id=new_mv.version_id,
-        inferred_value=inferred,
-        audited_value=override.audited_value,
-        score_impact=audit.score_impact,
-        tier_impact=audit.tier_impact,
-        new_composite_score=new_score,
-        new_tier=new_tier,
-        new_tier_label=new_mv.tier_label,
-        overridden_by="system",
-        overridden_at=audit.overridden_at,
-        override_rationale=override.rationale,
-        evidence_reference=override.evidence_reference,
-        previous_model_version=mv.version_id,
-        new_model_version=new_mv.version_id,
-    )
-
-# =============================================================================
-# STATS & UTILITIES
-# =============================================================================
-
-@router.get("/referrals/pending/count")
-async def get_pending_count(db: AsyncSession = Depends(get_async_db)):
-    """Get real-time count of pending referrals from DB."""
-    query = select(func.count(Referral.id), func.min(Referral.created_at)).where(
-        Referral.status == ReferralStatus.PENDING
+@router.get("/referrals/summary/queue")
+async def get_queue_summary(
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """Get a quick summary of the pending referral queue."""
+    query = (
+        select(func.count(Referral.id), func.min(Referral.created_at))
+        .where(Referral.status == DBReferralStatus.PENDING)
     )
     result = (await db.execute(query)).first()
-
     count = result[0] or 0
     oldest = result[1]
-    oldest_hours = (datetime.now(timezone.utc) - oldest.replace(tzinfo=timezone.utc)).total_seconds() / 3600 if oldest else 0
+
+    if oldest:
+        oldest_hours = (
+            datetime.now(timezone.utc) - oldest.replace(tzinfo=timezone.utc)
+        ).total_seconds() / 3600
+    else:
+        oldest_hours = 0.0
 
     return {
         "pending_count": count,
-        "oldest_hours": round(oldest_hours, 1)
+        "oldest_hours": round(oldest_hours, 1),
     }
 
+
 @router.get("/referrals/stats")
-async def get_referral_stats(db: AsyncSession = Depends(get_async_db)):
+async def get_referral_stats(
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
     """Aggregate referral DB statistics."""
-    query = select(Referral.status, func.count(Referral.id)).group_by(Referral.status)
+    query = select(Referral.status, func.count(Referral.id)).group_by(
+        Referral.status
+    )
     rows = (await db.execute(query)).all()
 
-    stats = {"pending": 0, "approved": 0, "declined": 0, "modified": 0, "in_review": 0}
+    stats: Dict[str, int] = {
+        "pending": 0,
+        "approved": 0,
+        "declined": 0,
+        "modified": 0,
+        "in_review": 0,
+    }
     total = 0
 
     for status_enum, count in rows:
@@ -484,12 +306,10 @@ async def get_referral_stats(db: AsyncSession = Depends(get_async_db)):
         total += count
 
     resolved = stats["approved"] + stats["declined"] + stats["modified"]
-
+    
     return {
+        "statuses": stats,
         "total": total,
-        "pending": stats["pending"] + stats["in_review"],
-        "approved": stats["approved"] + stats["modified"],
-        "declined": stats["declined"],
-        "approval_rate": round((stats["approved"] + stats["modified"]) / resolved, 2) if resolved > 0 else 0.0,
-        "avg_resolution_hours": 0.0
+        "resolved": resolved,
+        "resolution_rate": resolved / total if total > 0 else 0,
     }

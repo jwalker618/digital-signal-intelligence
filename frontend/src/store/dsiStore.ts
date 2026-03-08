@@ -18,6 +18,11 @@ export interface DsiState {
   isLoading: boolean;
   error: string | null;
   
+  // Submission Review State
+  modelVersions: any[];
+  auditLogs: any[];
+  fetchHistory: (submissionCode: string) => Promise<void>;
+
   // Actions
   fetchSubmissions: () => Promise<void>;
   fetchSubmissionDetail: (row: any) => Promise<void>;
@@ -79,6 +84,30 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       console.error("Failed to update decision", err);
     }
   }, 
+
+  modelVersions: [],
+  auditLogs: [],
+
+  fetchHistory: async (submissionCode: string) => {
+    try {
+      // Fetch both simultaneously
+      const [versionsRes, logsRes] = await Promise.all([
+        fetch(`http://localhost:8000/api/v1/submissions/${submissionCode}/model_versions`),
+        fetch(`http://localhost:8000/api/v1/submissions/${submissionCode}/audit_logs`)
+      ]);
+
+      if (versionsRes.ok && logsRes.ok) {
+        const versionsData = await versionsRes.json();
+        const logsData = await logsRes.json();
+        set({ 
+          modelVersions: versionsData.versions || [], 
+          auditLogs: logsData.logs || [] 
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch history", err);
+    }
+  },
 
   fetchReferralSignals: async (modelVersionId: string) => {
     set({ isFetchingSignals: true });

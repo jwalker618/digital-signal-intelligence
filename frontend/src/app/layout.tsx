@@ -144,7 +144,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         ].map((item) => (
                           <li key={item.name}>
                             <button
-                              onClick={() => setActiveMenu(item.name)}
+                              onClick={() => {
+                                setActiveMenu(item.name) 
+                              }
+                              }
                               className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
                                 activeMenu === item.name 
                                   ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
@@ -182,7 +185,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           ].map((item) => (
                             <li key={item.name}>
                               <button
-                                onClick={() => setActiveMenu(item.name)}
+                                onClick={() => {
+                                  setActiveMenu(item.name)
+                                  setIsOpen(false)}
+                                }
                                 className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
                                   activeMenu === item.name 
                                     ? "text-dsi-contrast-background bg-dsi-background font-semibold" 

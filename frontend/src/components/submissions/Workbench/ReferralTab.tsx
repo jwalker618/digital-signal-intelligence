@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { ShieldAlert, Edit3, Check, X, AlertTriangle, ArrowRight, Layers, Eye } from "lucide-react";
+import { ShieldAlert, Edit3, Check, X, AlertTriangle, ArrowRight, Layers, Eye, Flame } from "lucide-react";
 
 export default function ReferralTab() {
   const {
@@ -138,65 +138,82 @@ export default function ReferralTab() {
                   </td>
                 </tr>
               ) : (
-                referralSignals.map((sig: any, idx: number) => (
-                  <tr key={idx} className={`border-b border-dsi-outline/10 hover:bg-dsi-selected/5 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'bg-yellow-500/5' : ''} ${sig.is_overridden ? 'bg-green-500/5' : ''}`}>
-                    
-                    {/* ID GROUP */}
-                    <td className="py-3 px-4 font-mono text-xs">
-                      <div className="flex items-center gap-2">
-                        {sig.is_flagged && !sig.is_overridden && <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />}
-                        {sig.is_overridden && <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />}
-                        <span className="truncate max-w-[180px]" title={sig.signal_name}>{sig.signal_name.replace(/_/g, ' ')}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-center text-xs opacity-70">{sig.proxy_tier || "—"}</td>
-                    <td className="py-3 px-4 text-center border-r border-dsi-outline/10">
-                      {sig.was_absent ? <span className="text-red-400 font-bold">YES</span> : <span className="opacity-30">NO</span>}
-                    </td>
+                // --- NEW: Sort by absolute contribution to highlight high impact ---
+                [...referralSignals]
+                  .sort((a, b) => Math.abs(b.contribution_to_score || 0) - Math.abs(a.contribution_to_score || 0))
+                  .map((sig: any, idx: number) => {
+                    // Highlight the top 3 biggest movers
+                    const isHighImpact = idx < 3 && Math.abs(sig.contribution_to_score) > 10;
 
-                    {/* MACHINE GROUP */}
-                    <td className="py-3 px-4 text-right font-mono flex flex-col items-end">
-                      {/* Show the ACTUAL score the model used */}
-                      <span className={`font-bold ${sig.is_overridden ? 'text-green-500' : 'text-dsi-selected'}`}>
-                        {sig.score?.toFixed(2)}
-                      </span>
-                      {/* If overridden, show the original inferred value crossed out below it */}
-                      {sig.is_overridden && (
-                        <span className="text-[10px] line-through opacity-50">
-                          {sig.inferred_value?.toFixed(2)}
-                        </span>
-                      )}
-                    </td>
-                    
-                    <td className={`py-3 px-4 text-right font-mono text-xs ${sig.confidence < 0.7 ? 'text-yellow-500 font-bold' : 'opacity-70'}`}>
-                      {(sig.confidence * 100).toFixed(0)}%
-                    </td>
+                    return (
+                      <tr key={idx} className={`border-b border-dsi-outline/10 hover:bg-dsi-selected/5 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'bg-yellow-500/5' : ''} ${sig.is_overridden ? 'bg-green-500/5' : ''}`}>
+                        
+                        {/* ID GROUP */}
+                        <td className="py-3 px-4 font-mono text-xs">
+                          <div className="flex items-center gap-2">
+                            {isHighImpact && <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" title="High Impact Signal" />}
+                            {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />}
+                            {sig.is_overridden && <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />}
+                            <span className={`truncate max-w-[180px] ${isHighImpact ? 'text-orange-400 font-bold' : ''}`} title={sig.signal_name}>
+                              {sig.signal_name.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center text-xs opacity-70">{sig.proxy_tier || "—"}</td>
+                        <td className="py-3 px-4 text-center border-r border-dsi-outline/10">
+                          {sig.was_absent ? <span className="text-red-400 font-bold">YES</span> : <span className="opacity-30">NO</span>}
+                        </td>
 
-                    {/* AUDIT GROUP */}
-                    <td className="py-3 px-4 text-right font-mono font-bold text-green-500 bg-dsi-selected/5">
-                      {sig.is_overridden ? sig.audited_value?.toFixed(2) : "—"}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-mono opacity-80 truncate max-w-[150px] bg-dsi-selected/5" title={sig.override_rationale}>
-                      {sig.override_rationale || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-center bg-dsi-selected/5 font-mono text-xs">
-                      {sig.score_impact ? (
-                         <span className={`px-1.5 py-0.5 rounded font-bold ${sig.score_impact > 0 ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                           {sig.score_impact > 0 ? '+' : ''}{sig.score_impact.toFixed(1)}
-                         </span>
-                      ) : "—"}
-                    </td>
-                    <td className="py-3 px-4 text-center bg-dsi-selected/5">
-                      <button 
-                        onClick={() => { setOverrideModal({ isOpen: true, signal: sig }); setAuditedValue(sig.inferred_value); }}
-                        className="p-1 hover:bg-dsi-selected/20 rounded text-dsi-selected transition-colors"
-                        title="Audit Signal"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        {/* MACHINE GROUP */}
+                        <td className="py-3 px-4 text-right font-mono flex flex-col items-end">
+                          <span className={`font-bold ${sig.is_overridden ? 'text-green-500' : 'text-dsi-selected'}`}>
+                            {sig.score?.toFixed(2)}
+                          </span>
+                          {sig.is_overridden && (
+                            <span className="text-[10px] line-through opacity-50">
+                              {sig.inferred_value?.toFixed(2)}
+                            </span>
+                          )}
+                        </td>
+                        <td className={`py-3 px-4 text-right font-mono text-xs ${sig.confidence < 0.7 ? 'text-yellow-500 font-bold' : 'opacity-70'}`}>
+                          {(sig.confidence * 100).toFixed(0)}%
+                        </td>
+                        
+                        {/* Highlight Weight and Contribution if high impact */}
+                        <td className={`py-3 px-4 text-right font-mono text-xs ${isHighImpact ? 'font-bold text-dsi-selected' : 'opacity-70'}`}>
+                          {sig.weight?.toFixed(2)}
+                        </td>
+                        <td className={`py-3 px-4 text-right font-mono text-xs border-r border-dsi-outline/10 ${isHighImpact ? 'font-bold text-orange-400' : 'opacity-70'}`}>
+                          {sig.contribution_to_score > 0 ? '+' : ''}{sig.contribution_to_score?.toFixed(1)}
+                        </td>
+
+                        {/* AUDIT GROUP */}
+                        {/* ... (Keep your existing audit group cells exactly the same) ... */}
+                        <td className="py-3 px-4 text-right font-mono font-bold text-green-500 bg-dsi-selected/5">
+                          {sig.is_overridden ? sig.audited_value?.toFixed(2) : "—"}
+                        </td>
+                        <td className="py-3 px-4 text-xs font-mono opacity-80 truncate max-w-[150px] bg-dsi-selected/5" title={sig.override_rationale}>
+                          {sig.override_rationale || "—"}
+                        </td>
+                        <td className="py-3 px-4 text-center bg-dsi-selected/5 font-mono text-xs">
+                          {sig.score_impact ? (
+                            <span className={`px-1.5 py-0.5 rounded font-bold ${sig.score_impact > 0 ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                              {sig.score_impact > 0 ? '+' : ''}{sig.score_impact.toFixed(1)}
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td className="py-3 px-4 text-center bg-dsi-selected/5">
+                          <button 
+                            onClick={() => { setOverrideModal({ isOpen: true, signal: sig }); setAuditedValue(sig.inferred_value); }}
+                            className="p-1 hover:bg-dsi-selected/20 rounded text-dsi-selected transition-colors"
+                            title="Audit Signal"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
               )}
             </tbody>
           </table>

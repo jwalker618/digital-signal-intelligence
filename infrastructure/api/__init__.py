@@ -27,10 +27,10 @@ from .types import (
     TokenRequest,
     # Response models
     SubmissionResponse,
-    SubmissionDetail,
+    SubmissionRecord,
     QuoteResponse,
     QuoteListItem,
-    ReferralDetail,
+    ReferralRecord,
     MultiCoverageResponse,
     PortfolioSummaryResponse,
     HealthResponse,

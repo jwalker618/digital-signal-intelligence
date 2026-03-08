@@ -1,297 +1,189 @@
 "use client";
 
-import { useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { 
-  DollarSign, Target, Activity, ShieldCheck, ShieldAlert, 
-  Globe, Users, Building, TrendingUp, AlertTriangle, BarChart, Scale, Network,
-  Calculator, X, CheckCircle2, XCircle, MinusCircle, Info
-} from "lucide-react";
+import { Activity, Shield, Calculator, BarChart3, TrendingUp, AlertTriangle } from "lucide-react";
 
 export default function SummaryTab() {
   const { activeSubmission } = useDsiStore();
-  const [showPremiumCalc, setShowPremiumCalc] = useState(false);
 
   if (!activeSubmission) return null;
 
-  // Helpers for formatting
-  const formatCurrency = (val?: number) => {
-    if (val === undefined || val === null) return "N/A";
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
-  };
-
-  const formatNumber = (val?: number) => {
-    if (val === undefined || val === null) return "N/A";
-    return new Intl.NumberFormat('en-US').format(val);
-  };
-
-  // Determine decision styling
-  const isApproved = activeSubmission.decision === "approve";
-  const isReferred = activeSubmission.decision === "refer";
-  const decisionColor = isApproved ? "text-green-500" : isReferred ? "text-yellow-500" : "text-red-500";
-  const DecisionIcon = isApproved ? ShieldCheck : ShieldAlert;
-
-  // Extract sections
-  const { discovery, exposure, loss_propensity, signal_summary, modifiers_applied, base_premium } = activeSubmission;
-
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
+    <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12 pt-4">
       
-      {/* 1. TOP LINE KPI GRID */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      {/* SECTION 1: TRUST & MODEL CONTEXT */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-1 border border-dsi-outline/20 rounded-xl p-4 bg-dsi-background/30 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-1">Model Confidence</div>
+            <div className="text-2xl font-mono font-bold text-dsi-selected">
+              {((activeSubmission.confidence || 0) * 100).toFixed(0)}%
+            </div>
+          </div>
+          <Shield className={`w-8 h-8 ${activeSubmission.confidence > 0.8 ? 'text-green-500' : 'text-yellow-500'} opacity-80`} />
+        </div>
         
-        {/* RECOMMENDED PREMIUM (Now Clickable!) */}
-        <div 
-          onClick={() => setShowPremiumCalc(true)}
-          className="p-4 border border-dsi-outline/20 rounded-xl bg-dsi-background/30 flex flex-col gap-2 relative overflow-hidden cursor-pointer hover:bg-dsi-selected/5 hover:border-dsi-selected/30 transition-all group"
-        >
-          <div className="text-xs font-semibold tracking-wider text-dsi-selected opacity-70 uppercase flex items-center justify-between z-10">
-            Recommended Premium
-            <Calculator className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="col-span-1 border border-dsi-outline/20 rounded-xl p-4 bg-dsi-background/30 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-1">Signal Coverage</div>
+            <div className="text-2xl font-mono font-bold text-dsi-selected">
+              {((activeSubmission.signal_coverage || 0) * 100).toFixed(0)}%
+            </div>
           </div>
-          <div className="text-2xl font-bold font-inter tracking-tight z-10">
-            {formatCurrency(activeSubmission.recommended_premium)}
-          </div>
-          <DollarSign className="absolute right-[-10px] bottom-[-10px] w-16 h-16 text-dsi-outline/10 group-hover:scale-110 transition-transform" />
+          <Activity className="w-8 h-8 text-dsi-selected opacity-80" />
         </div>
 
-        {/* ... (Other KPI Cards remain exactly the same) ... */}
-        <div className="p-4 border border-dsi-outline/20 rounded-xl bg-dsi-background/30 flex flex-col gap-2 relative overflow-hidden">
-          <div className="text-xs font-semibold tracking-wider text-dsi-selected opacity-70 uppercase">Limit</div>
-          <div className="text-2xl font-bold font-inter tracking-tight">{formatCurrency(activeSubmission.recommended_limit)}</div>
-          <Target className="absolute right-[-10px] bottom-[-10px] w-16 h-16 text-dsi-outline/10" />
-        </div>
-
-        <div className="p-4 border border-dsi-outline/20 rounded-xl bg-dsi-background/30 flex flex-col gap-2 relative overflow-hidden">
-          <div className="text-xs font-semibold tracking-wider text-dsi-selected opacity-70 uppercase">Composite Score</div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-inter tracking-tight">{activeSubmission.composite_score || activeSubmission.pure_composite_score || "N/A"}</span>
-            <span className="text-xs opacity-50">/ 1000</span>
+        <div className="col-span-1 border border-dsi-outline/20 rounded-xl p-4 bg-dsi-background/30 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-1">Composite Score</div>
+            <div className="text-2xl font-mono font-bold text-dsi-selected">
+              {activeSubmission.composite_score || "N/A"}
+            </div>
           </div>
-          <Activity className="absolute right-[-10px] bottom-[-10px] w-16 h-16 text-dsi-outline/10" />
-        </div>
-
-        <div className="p-4 border border-dsi-outline/20 rounded-xl bg-dsi-background/30 flex flex-col gap-2 relative overflow-hidden">
-          <div className="text-xs font-semibold tracking-wider text-dsi-selected opacity-70 uppercase">Risk Tier</div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-inter tracking-tight">{activeSubmission.tier || activeSubmission.final_tier || "N/A"}</span>
-            <span className="text-xs font-mono opacity-60">{activeSubmission.tier_label?.replace('_', ' ')}</span>
+          <div className="text-right">
+            <span className="bg-dsi-selected/10 text-dsi-selected px-2 py-1 rounded text-xs font-bold font-mono">
+              Tier {activeSubmission.tier}
+            </span>
           </div>
-        </div>
-
-        <div className={`p-4 border rounded-xl bg-dsi-background/30 flex flex-col gap-2 relative overflow-hidden transition-colors ${
-          isApproved ? 'border-green-500/30' : isReferred ? 'border-yellow-500/30' : 'border-red-500/30'
-        }`}>
-          <div className="text-xs font-semibold tracking-wider text-dsi-selected opacity-70 uppercase">System Decision</div>
-          <div className={`text-2xl font-bold font-inter tracking-tight capitalize ${decisionColor}`}>{activeSubmission.decision}</div>
-          <DecisionIcon className={`absolute right-[-10px] bottom-[-10px] w-16 h-16 opacity-10 ${decisionColor}`} />
         </div>
       </div>
 
-      {/* 2. THREE PILLAR ASSESSMENT (Remains exactly the same) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* SECTION 2: 3-PILLAR BREAKDOWN (Loss, Exposure, Signals) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        <div className="border border-dsi-outline/20 rounded-xl bg-dsi-background/10 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-dsi-outline/20 bg-dsi-selected/5 flex items-center gap-2">
-            <Network className="w-4 h-4 text-dsi-selected opacity-70" />
-            <h3 className="font-semibold tracking-wide text-sm uppercase">1. Discovery & Firmographics</h3>
-          </div>
-          <div className="p-4 flex-1 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70 flex items-center gap-2"><Globe className="w-4 h-4" /> Domain</span>
-              <span className="font-mono text-sm">{discovery?.domain || "N/A"}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70 flex items-center gap-2"><Building className="w-4 h-4" /> Industry</span>
-              <span className="font-medium text-sm text-right max-w-[150px] truncate">{discovery?.industry || "N/A"}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70 flex items-center gap-2"><Users className="w-4 h-4" /> Employees</span>
-              <span className="font-mono text-sm">{formatNumber(discovery?.employee_count)}</span>
-            </div>
-            <div className="mt-auto pt-4 border-t border-dsi-outline/10 flex items-center justify-between">
-              <span className="text-xs opacity-50 uppercase tracking-wider">Discovery Confidence</span>
-              <span className="text-xs font-bold text-dsi-selected uppercase bg-dsi-selected/10 px-2 py-1 rounded">
-                {discovery?.confidence || "N/A"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="border border-dsi-outline/20 rounded-xl bg-dsi-background/10 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-dsi-outline/20 bg-dsi-selected/5 flex items-center gap-2">
-            <Scale className="w-4 h-4 text-dsi-selected opacity-70" />
-            <h3 className="font-semibold tracking-wide text-sm uppercase">2. Exposure Base</h3>
-          </div>
-          <div className="p-4 flex-1 flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm opacity-70">Primary Exposure Value</span>
-              <span className="text-xl font-bold font-mono text-dsi-selected">{formatCurrency(exposure?.exposure_value)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70">Exposure Band</span>
-              <span className="font-medium text-sm bg-dsi-contrast-background/5 px-2 py-0.5 rounded border border-dsi-outline/10">
-                {exposure?.exposure_band_label || "N/A"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70">Magnitude Score</span>
-              <span className="font-mono text-sm">{exposure?.exposure_magnitude_score?.toFixed(1) || "N/A"}</span>
-            </div>
-            <div className="mt-auto pt-4 border-t border-dsi-outline/10 flex items-center justify-between">
-              <span className="text-xs opacity-50 uppercase tracking-wider">Exposure Modifier</span>
-              <span className={`text-sm font-bold font-mono ${exposure?.exposure_modifier && exposure.exposure_modifier > 1 ? 'text-red-400' : 'text-green-400'}`}>
-                {exposure?.exposure_modifier ? `${exposure.exposure_modifier.toFixed(2)}x` : "1.00x"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="border border-dsi-outline/20 rounded-xl bg-dsi-background/10 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-dsi-outline/20 bg-dsi-selected/5 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-dsi-selected opacity-70" />
-            <h3 className="font-semibold tracking-wide text-sm uppercase">3. Loss Propensity</h3>
-          </div>
-          <div className="p-4 flex-1 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70 flex items-center gap-2"><BarChart className="w-4 h-4" /> Freq / Sev Score</span>
-              <div className="flex items-center gap-1 font-mono text-sm">
-                <span className="text-blue-400">{loss_propensity?.loss_propensity_score?.toFixed(1) || "N/A"}</span>
-                <span className="opacity-50">/</span>
-                <span className="text-orange-400">{loss_propensity?.severity_propensity_score?.toFixed(1) || "N/A"}</span>
+        {/* Loss & Exposure */}
+        <div className="space-y-6">
+          <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-background/30">
+            <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
+              <TrendingUp className="w-4 h-4 text-dsi-selected" /> Loss Propensity
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="opacity-50 block text-xs">Cohort ID</span>
+                <span className="font-mono font-semibold">{activeSubmission.loss_propensity?.loss_cohort_name || "Unknown"}</span>
+              </div>
+              <div>
+                <span className="opacity-50 block text-xs">Propensity Band</span>
+                <span className="font-mono font-semibold text-dsi-selected">{activeSubmission.loss_propensity?.loss_propensity_band || "N/A"}</span>
+              </div>
+              <div>
+                <span className="opacity-50 block text-xs">Cohort Confidence</span>
+                <span className="font-mono font-semibold">
+                  {((activeSubmission.loss_propensity?.loss_confidence || 0) * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div>
+                <span className="opacity-50 block text-xs">Score Velocity</span>
+                <span className={`font-mono font-bold ${activeSubmission.loss_score_velocity > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {activeSubmission.loss_score_velocity > 0 ? '+' : ''}{activeSubmission.loss_score_velocity || 0}
+                </span>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70">Risk Cohort</span>
-              <span className="font-medium text-sm truncate max-w-[160px] text-right">{loss_propensity?.loss_cohort_name || "N/A"}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm opacity-70 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Trend</span>
-              <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${
-                loss_propensity?.loss_trend_direction === 'improving' ? 'bg-green-500/10 text-green-500' :
-                loss_propensity?.loss_trend_direction === 'deteriorating' ? 'bg-red-500/10 text-red-500' :
-                'bg-yellow-500/10 text-yellow-500'
-              }`}>
-                {loss_propensity?.loss_trend_direction || "Stable"}
-              </span>
-            </div>
-            <div className="mt-auto pt-4 border-t border-dsi-outline/10 flex items-center justify-between">
-              <span className="text-xs opacity-50 uppercase tracking-wider">Combined Modifier</span>
-              <span className={`text-sm font-bold font-mono ${loss_propensity?.loss_combined_modifier && loss_propensity.loss_combined_modifier > 1 ? 'text-red-400' : 'text-green-400'}`}>
-                {loss_propensity?.loss_combined_modifier ? `${loss_propensity.loss_combined_modifier.toFixed(2)}x` : "1.00x"}
-              </span>
+          </div>
+
+          <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-background/30">
+            <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
+              <BarChart3 className="w-4 h-4 text-dsi-selected" /> Exposure Assessment
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="opacity-50 block text-xs">Exposure Value (TIV/Rev)</span>
+                <span className="font-mono font-semibold">${(activeSubmission.exposure?.exposure_value || 0).toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="opacity-50 block text-xs">Band Label</span>
+                <span className="font-mono font-semibold text-dsi-selected">{activeSubmission.exposure?.exposure_band_label || "N/A"}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="opacity-50 block text-xs">Calculated Modifier</span>
+                <span className="font-mono font-semibold">{activeSubmission.exposure?.exposure_modifier?.toFixed(3) || "1.000"}x</span>
+              </div>
             </div>
           </div>
         </div>
 
-      </div>
-
-      {/* 3. TOP SIGNAL FACTORS */}
-      {signal_summary && signal_summary.top_factors && signal_summary.top_factors.length > 0 && (
-        <div className="pt-4 space-y-4">
-          <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-dsi-selected opacity-70" />
-            <h3 className="font-semibold tracking-wide text-sm uppercase text-dsi-selected">Key Influencing Signals</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {signal_summary.top_factors.map((factor: any, i: number) => {
-              const isPositive = factor.impact === "positive";
-              const isNegative = factor.impact === "negative";
-              const FactorIcon = isPositive ? CheckCircle2 : isNegative ? XCircle : MinusCircle;
-              const colorClass = isPositive ? "text-green-500 border-green-500/30 bg-green-500/5" : 
-                                 isNegative ? "text-red-500 border-red-500/30 bg-red-500/5" : 
-                                 "text-yellow-500 border-yellow-500/30 bg-yellow-500/5";
-
-              return (
-                <div key={i} className={`p-4 border rounded-xl flex flex-col gap-2 ${colorClass}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-mono uppercase tracking-wider opacity-70 truncate pr-2">
-                      {factor.signal?.replace(/_/g, ' ')}
-                    </span>
-                    <FactorIcon className="w-5 h-5 opacity-80 shrink-0" />
+        {/* Group Scores (Signal Summaries) */}
+        <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-background/30 h-full flex flex-col">
+          <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
+            <Activity className="w-4 h-4 text-dsi-selected" /> Signal Group Breakdown
+          </h3>
+          <div className="flex-1 space-y-4">
+            {Object.entries(activeSubmission.group_scores || {}).length === 0 ? (
+              <div className="text-xs opacity-50 italic">No group score data available.</div>
+            ) : (
+              Object.entries(activeSubmission.group_scores).map(([group, score]: any) => (
+                <div key={group}>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="uppercase tracking-wider">{group.replace(/_/g, ' ')}</span>
+                    <span className="font-mono">{score.toFixed(1)}</span>
                   </div>
-                  <div className="flex items-end justify-between mt-2">
-                    <span className="text-2xl font-bold font-inter tracking-tight">{factor.score}</span>
-                    <span className="text-xs uppercase tracking-wider opacity-70 font-semibold">{factor.impact} impact</span>
+                  <div className="w-full bg-dsi-outline/10 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-dsi-selected h-1.5 rounded-full" 
+                      style={{ width: `${Math.min(100, (score / 1000) * 100)}%` }}
+                    ></div>
                   </div>
                 </div>
-              );
-            })}
+              ))
+            )}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* 4. PREMIUM CALCULATION MODAL */}
-      {showPremiumCalc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dsi-contrast-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-dsi-background border border-dsi-outline rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-dsi-outline/20 flex items-center justify-between bg-dsi-selected/5">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-dsi-selected" /> Premium Calculation
-              </h2>
-              <button 
-                onClick={() => setShowPremiumCalc(false)}
-                className="p-1 hover:bg-dsi-selected/10 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* SECTION 3: PRICING ANATOMY */}
+      <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-background/30">
+        <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
+          <Calculator className="w-4 h-4 text-dsi-selected" /> Pricing Anatomy
+        </h3>
+        
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Modifiers Table */}
+          <div className="flex-1">
+            <h4 className="text-xs uppercase tracking-wider opacity-50 mb-2">Applied Modifiers</h4>
+            {activeSubmission.modifiers_applied?.length > 0 ? (
+              <table className="w-full text-sm font-mono text-left">
+                <tbody>
+                  {activeSubmission.modifiers_applied.map((mod: any, idx: number) => (
+                    <tr key={idx} className="border-b border-dsi-outline/5">
+                      <td className="py-2 opacity-80">{mod.name}</td>
+                      <td className="py-2 text-right">
+                        {Number(mod.value ?? mod.modifier ?? 1.0).toFixed(3)}x
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-dsi-selected/5 font-bold">
+                    <td className="py-2 px-2">Base Premium</td>
+                    <td className="py-2 px-2 text-right">${activeSubmission.base_premium?.toLocaleString()}</td>
+                  </tr>
+                  <tr className="bg-dsi-selected/10 font-bold text-dsi-selected">
+                    <td className="py-2 px-2">Final Premium</td>
+                    <td className="py-2 px-2 text-right">${activeSubmission.premium_after_modifiers?.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-xs opacity-50 italic">No modifiers applied.</div>
+            )}
+          </div>
 
-            {/* Receipt Content */}
-            <div className="p-6 font-mono text-sm space-y-4">
-              
-              {/* Base Premium */}
-              <div className="flex justify-between items-center pb-4 border-b border-dsi-outline/10 text-dsi-selected opacity-80">
-                <span>Base Premium (Tier {activeSubmission.tier})</span>
-                <span>{formatCurrency(base_premium)}</span>
-              </div>
-
-              {/* Modifiers List */}
-              <div className="space-y-3 py-2">
-                <div className="text-xs uppercase tracking-wider opacity-50 font-sans font-semibold">Applied Modifiers</div>
-                
-                {modifiers_applied?.map((mod: any, i: number) => (
-                  <div key={i} className="flex justify-between items-center">
-                    <span className="truncate pr-4">{mod.name}</span>
-                    <span className={mod.factor > 1 ? 'text-red-400' : 'text-green-400'}>
-                      x {mod.factor?.toFixed(2)}
-                    </span>
+          {/* Premium Options */}
+          <div className="flex-1 border-t md:border-t-0 md:border-l border-dsi-outline/10 pt-4 md:pt-0 md:pl-8">
+            <h4 className="text-xs uppercase tracking-wider opacity-50 mb-2">Limit Options</h4>
+            {Object.keys(activeSubmission.premium_options || {}).length > 0 ? (
+              <div className="space-y-2 font-mono text-sm">
+                {Object.entries(activeSubmission.premium_options).map(([limit, premium]: any) => (
+                  <div key={limit} className="flex justify-between p-2 rounded hover:bg-dsi-selected/5">
+                    <span>${parseInt(limit).toLocaleString()} Limit</span>
+                    <span className="font-bold text-dsi-selected">${premium.toLocaleString()}</span>
                   </div>
                 ))}
-
-                {/* Always show 3-pillar modifiers if they exist and aren't in the list already */}
-                {exposure?.exposure_modifier && (
-                  <div className="flex justify-between items-center">
-                    <span className="truncate pr-4">Exposure Base: {exposure.exposure_band_label}</span>
-                    <span className={exposure.exposure_modifier > 1 ? 'text-red-400' : 'text-green-400'}>
-                      x {exposure.exposure_modifier.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                
-                {loss_propensity?.loss_combined_modifier && (
-                  <div className="flex justify-between items-center">
-                    <span className="truncate pr-4">Loss Propensity: {loss_propensity.loss_cohort_name}</span>
-                    <span className={loss_propensity.loss_combined_modifier > 1 ? 'text-red-400' : 'text-green-400'}>
-                      x {loss_propensity.loss_combined_modifier.toFixed(2)}
-                    </span>
-                  </div>
-                )}
               </div>
-
-              {/* Final Math */}
-              <div className="pt-4 border-t-2 border-dashed border-dsi-outline/20 flex justify-between items-center text-lg">
-                <span className="font-bold font-sans tracking-wide">Final Premium</span>
-                <span className="font-bold text-dsi-selected">{formatCurrency(activeSubmission.recommended_premium)}</span>
-              </div>
-
-            </div>
+            ) : (
+              <div className="text-xs opacity-50 italic">No alternative limit options generated.</div>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
     </div>
   );

@@ -1,0 +1,4897 @@
+# FULL PROJECT CODEBASE (root: C:\Users\johne\Documents\Projects\digital-signal-intelligence\infrastructure\api)
+
+
+================================================================================
+FILE: main.py
+================================================================================
+
+"""
+DSI Production API (Phase 11)
+
+FastAPI application for the DSI pricing platform.
+"""
+
+import logging
+import os
+import time
+import uuid
+
+from pydantic import BaseModel
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from .types import HealthResponse
+from .observability.logging_config import configure_logging
+from .observability.metrics import metrics, get_metrics_response
+from .observability.rate_limiter import RateLimitMiddleware, set_redis_limiter
+
+# Configure structured logging before anything else
+configure_logging()
+logger = logging.getLogger("dsi.api")
+
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+class Settings:
+    """Application settings from environment."""
+
+    # Environment
+    env: str = os.getenv("DSI_ENV", "development")
+    debug: bool = os.getenv("DSI_DEBUG", "false").lower() == "true"
+
+    # Server
+    host: str = os.getenv("DSI_HOST", "0.0.0.0")
+    port: int = int(os.getenv("DSI_PORT", "8000"))
+
+    # CORS - parse comma-separated origins
+    cors_origins: List[str] = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:3000,http://localhost:8080" if os.getenv("DSI_ENV") != "production" else ""
+        ).split(",")
+        if origin.strip()
+    ]
+    cors_allow_credentials: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
+
+    # Feature flags
+    use_stubs: bool = os.getenv("FEATURE_USE_STUBS", "true").lower() == "true"
+    enable_discovery: bool = os.getenv("FEATURE_DISCOVERY", "true").lower() == "true"
+    enable_multi_coverage: bool = os.getenv("FEATURE_MULTI_COVERAGE", "true").lower() == "true"
+
+    @property
+    def is_production(self) -> bool:
+        return self.env == "production"
+
+
+settings = Settings()
+
+class DecisionPayload(BaseModel):
+    decision: str
+
+# =============================================================================
+# APPLICATION STATE
+# =============================================================================
+
+class AppState:
+    """Application state container."""
+    start_time: datetime = datetime.utcnow()
+    version: str = "1.0.0"
+    request_count: int = 0
+    db_connected: bool = False
+    cache_connected: bool = False
+
+
+app_state = AppState()
+
+# =============================================================================
+# LIFESPAN MANAGEMENT
+# =============================================================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan management."""
+    # Startup
+    logger.info(f"Starting DSI API (env={settings.env}, debug={settings.debug})...")
+    app_state.start_time = datetime.utcnow()
+    metrics.set_info(version=app_state.version, environment=settings.env)
+
+    # Initialize database (if available)
+    try:
+        from ..db.config import init_db
+        await init_db()
+        app_state.db_connected = True
+        metrics.db_connected.set(1)
+        logger.info("Database connected")
+    except Exception as e:
+        logger.warning(f"Database not available: {e}")
+        app_state.db_connected = False
+        metrics.db_connected.set(0)
+
+    # Initialize Redis cache (if available)
+    try:
+        import redis.asyncio as redis
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        redis_client = redis.from_url(redis_url)
+        await redis_client.ping()
+        app.state.redis = redis_client
+        app_state.cache_connected = True
+        metrics.cache_connected.set(1)
+        # Upgrade rate limiter to Redis backend
+        set_redis_limiter(redis_client)
+        logger.info("Redis cache connected (rate limiter upgraded to Redis)")
+    except Exception as e:
+        logger.warning(f"Redis not available: {e}")
+        app_state.cache_connected = False
+        metrics.cache_connected.set(0)
+
+    # Initialize extractor factory mode from feature flag
+    try:
+        from signal_architecture.signals.extractors.resolver import register_stubs_with_factory
+        from signal_architecture.signals.extractors.production.factory import set_default_mode
+        from signal_architecture.signals.extractors.production import register_all_extractors
+
+        # Register production extractors (available via factory)
+        register_all_extractors()
+
+        # Register stubs as fallbacks
+        register_stubs_with_factory()
+
+        # Set mode based on feature flag
+        if settings.use_stubs:
+            set_default_mode("stub")
+            logger.info("Extractor mode: stub (FEATURE_USE_STUBS=true)")
+        else:
+            set_default_mode("hybrid")
+            logger.info("Extractor mode: hybrid (FEATURE_USE_STUBS=false)")
+    except Exception as e:
+        logger.warning(f"Extractor factory init skipped: {e}")
+
+    yield
+
+    # Shutdown
+    logger.info("Shutting down DSI API...")
+
+    # Close database
+    try:
+        from ..db.config import close_db
+        await close_db()
+    except Exception:
+        pass
+
+    # Close Redis
+    if hasattr(app.state, 'redis'):
+        await app.state.redis.close()
+
+
+# =============================================================================
+# APPLICATION
+# =============================================================================
+
+app = FastAPI(
+    title="DSI Pricing API",
+    description="Digital Signal Intelligence - Insurance Pricing Platform",
+    version=app_state.version,
+    lifespan=lifespan,
+    docs_url="/api/docs" if not settings.is_production else None,
+    redoc_url="/api/redoc" if not settings.is_production else None,
+    openapi_url="/api/openapi.json" if not settings.is_production else None,
+)
+
+
+# =============================================================================
+# MIDDLEWARE
+# =============================================================================
+
+# CORS - configured from environment
+if settings.cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=settings.cors_allow_credentials,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-API-Key"],
+        expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
+    )
+elif not settings.is_production:
+    # Development: allow all origins
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+@app.middleware("http")
+async def request_logging(request: Request, call_next):
+    """Log all requests with timing and Prometheus instrumentation."""
+    request_id = str(uuid.uuid4())[:8]
+    start_time = time.time()
+
+    # Add request ID to request state
+    request.state.request_id = request_id
+    app_state.request_count += 1
+
+    # Log request (skip health checks in production)
+    is_health = "/health" in request.url.path
+    if not (settings.is_production and is_health):
+        logger.info(f"[{request_id}] {request.method} {request.url.path}")
+
+    try:
+        response = await call_next(request)
+
+        # Record metrics
+        duration = time.time() - start_time
+        if not is_health:
+            metrics.observe_request(
+                request.method, request.url.path,
+                response.status_code, duration,
+            )
+
+        if not (settings.is_production and is_health):
+            logger.info(
+                f"[{request_id}] {request.method} {request.url.path} "
+                f"-> {response.status_code} ({duration:.3f}s)"
+            )
+
+        # Add headers
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Response-Time"] = f"{duration:.3f}s"
+        return response
+
+    except Exception as e:
+        duration = time.time() - start_time
+        metrics.observe_request(
+            request.method, request.url.path, 500, duration,
+        )
+        metrics.record_error(type(e).__name__)
+        logger.error(
+            f"[{request_id}] {request.method} {request.url.path} "
+            f"-> ERROR ({duration:.3f}s): {e}"
+        )
+        raise
+
+
+# Rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
+
+
+# =============================================================================
+# EXCEPTION HANDLERS
+# =============================================================================
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions with consistent format."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.detail,
+            "status_code": exc.status_code,
+            "request_id": getattr(request.state, 'request_id', None),
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle unexpected exceptions."""
+    logger.exception(f"Unhandled exception: {exc}")
+
+    # Don't expose internal errors in production
+    detail = str(exc) if settings.debug else "Internal server error"
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": detail,
+            "status_code": 500,
+            "request_id": getattr(request.state, 'request_id', None),
+        },
+    )
+
+
+# =============================================================================
+# HEALTH ENDPOINTS
+# =============================================================================
+
+@app.get("/api/v1/health", response_model=HealthResponse, tags=["Health"])
+async def health_check():
+    """
+    Health check endpoint.
+
+    Returns API status and component health.
+    """
+    uptime = (datetime.utcnow() - app_state.start_time).total_seconds()
+
+    components = {
+        "api": "healthy",
+        "database": "healthy" if app_state.db_connected else "unavailable",
+        "cache": "healthy" if app_state.cache_connected else "unavailable",
+    }
+
+    # Overall status
+    status = "healthy" if all(v == "healthy" for v in components.values()) else "degraded"
+
+    return HealthResponse(
+        status=status,
+        version=app_state.version,
+        uptime_seconds=uptime,
+        components=components,
+    )
+
+
+@app.get("/api/v1/health/ready", tags=["Health"])
+async def readiness_check():
+    """Kubernetes readiness probe."""
+    # Ready if we can process requests (even without DB)
+    return {"ready": True}
+
+
+@app.get("/api/v1/health/live", tags=["Health"])
+async def liveness_check():
+    """Kubernetes liveness probe."""
+    return {"alive": True}
+
+
+# =============================================================================
+# ROOT ENDPOINTS
+# =============================================================================
+
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint."""
+    return {
+        "name": "DSI Pricing API",
+        "version": app_state.version,
+        "environment": settings.env,
+        "docs": "/api/docs" if not settings.is_production else None,
+    }
+
+
+@app.get("/api/v1", tags=["Root"])
+async def api_info():
+    """API information."""
+    return {
+        "version": "v1",
+        "endpoints": {
+            "submissions": "/api/v1/submissions",
+            "quotes": "/api/v1/quotes",
+            "referrals": "/api/v1/referrals",
+            "analytics": "/api/v1/analytics",
+            "health": "/api/v1/health",
+        },
+        "features": {
+            "discovery": settings.enable_discovery,
+            "multi_coverage": settings.enable_multi_coverage,
+            "using_stubs": settings.use_stubs,
+        },
+    }
+
+
+# =============================================================================
+# INCLUDE ROUTERS
+# =============================================================================
+
+# Import routers after app is created to avoid circular imports
+from .routes import submissions, quotes, referrals, analytics, simulate, workbench
+
+app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
+app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
+app.include_router(referrals.router, prefix="/api/v1", tags=["Referrals"])
+app.include_router(analytics.router, prefix="/api/v1", tags=["Analytics"])
+app.include_router(simulate.router, prefix="/api/v1", tags=["Simulate"])
+app.include_router(workbench.router, prefix="/api/v1", tags=["Workbench"])
+
+# =============================================================================
+# METRICS ENDPOINT
+# =============================================================================
+
+@app.get("/metrics", tags=["Monitoring"], include_in_schema=False)
+async def prometheus_metrics():
+    """Prometheus scrape endpoint (text format)."""
+    return get_metrics_response()
+
+
+@app.get("/api/v1/metrics", tags=["Monitoring"])
+async def get_metrics_json():
+    """Get API metrics (JSON summary for dashboards)."""
+    uptime = (datetime.utcnow() - app_state.start_time).total_seconds()
+
+    return {
+        "uptime_seconds": uptime,
+        "request_count": app_state.request_count,
+        "version": app_state.version,
+        "environment": settings.env,
+        "database_connected": app_state.db_connected,
+        "cache_connected": app_state.cache_connected,
+    }
+================================================================================
+FILE: types.py
+================================================================================
+
+"""
+DSI Production API Types (Phase 11)
+
+Request and response models for the REST API.
+Divided strictly into Bespoke API Projections and Aligned ORM DTOs.
+"""
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union, Type
+from pydantic import BaseModel, Field
+
+# Import ORM models for alignment mapping
+from infrastructure.db.models import (
+    User, APIKey, Submission, Quote, Referral, ModelVersionRecord, 
+    SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog
+)
+
+def maps_to(orm_model: Type, exclude: List[str] = None):
+    """
+    Decorator to explicitly link a Pydantic DTO to an ORM model.
+    'exclude' documents fields intentionally hidden from the API payload (e.g. raw UUIDs, passwords).
+    """
+    def decorator(cls):
+        cls.__orm_model__ = orm_model
+        cls.__orm_exclude__ = exclude or []
+        
+        if hasattr(cls, "model_config"):
+            cls.model_config["from_attributes"] = True  # Pydantic v2
+        else:
+            cls.Config.orm_mode = True  # Pydantic v1 fallback
+        return cls
+    return decorator
+
+
+# =============================================================================
+# SHARED ENUMERATIONS
+# =============================================================================
+
+class SubmissionStatus(str, Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    READY = "ready"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+class QuoteStatus(str, Enum):
+    DRAFT = "draft"
+    READY = "ready"
+    BOUND = "bound"
+    EXPIRED = "expired"
+    DECLINED = "declined"
+
+class DecisionType(str, Enum):
+    APPROVE = "approve"
+    REFER = "refer"
+    DECLINE = "decline"
+
+class ReferralStatus(str, Enum):
+    PENDING = "pending"
+    IN_REVIEW = "in_review"
+    APPROVED = "approved"
+    DECLINED = "declined"
+    MODIFIED = "modified"
+
+class ReferralDecisionType(str, Enum):
+    APPROVE = "approve"
+    DECLINE = "decline"
+    MODIFY = "modify"
+
+class Permission(str, Enum):
+    SUBMIT = "submit"
+    QUOTE = "quote"
+    REFERRAL = "referral"
+    ANALYTICS = "analytics"
+    ADMIN = "admin"
+
+class JobStatus(str, Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+# =============================================================================
+# PART 1: BESPOKE API MODELS & PROJECTIONS
+# These models do NOT map 1:1 to a database table. They are aggregated read 
+# models, JSONB nested structures, or specific request payloads.
+# =============================================================================
+
+# --- A. API Requests & Action Payloads ---
+class SubmissionRequest(BaseModel):
+    entity_name: str
+    domain_hint: Optional[str] = None
+    country_hint: Optional[str] = None
+    coverage: str
+    configuration: Optional[str] = None
+    submission_data: Dict[str, Any] = Field(default_factory=dict)
+    direct_query_responses: Dict[str, Any] = Field(default_factory=dict)
+    async_mode: bool = False
+    callback_url: Optional[str] = None
+
+class ReferralDecision(BaseModel):
+    decision: ReferralDecisionType
+    adjustments: Optional[Dict[str, Any]] = None
+    notes: List[str] = Field(default_factory=list)
+    underwriter_id: Optional[str] = None
+
+class SignalOverrideRequest(BaseModel):
+    signal_cache_id: str  
+    signal_id: str
+    audited_value: float
+    rationale: str
+    evidence_reference: Optional[str] = None
+    underwriter_id: Optional[str] = None
+
+class ReferralSignalsRequest(BaseModel):
+    include_all: bool = False
+    include_raw_data: bool = False
+
+
+# --- B. Pricing & 3-Pillar Component Blocks (JSONB structures) ---
+class PremiumOption(BaseModel):
+    limit: float
+    premium: float
+    rate: float
+
+class SignalSummary(BaseModel):
+    total_signals: int
+    signals_extracted: int
+    top_factors: List[Dict[str, Any]]
+
+class DiscoverySummary(BaseModel):
+    domain: str
+    confidence: str
+    industry: Optional[str] = None
+    employee_count: Optional[int] = None
+
+class LossPropensitySummary(BaseModel):
+    loss_propensity_score: Optional[float] = None
+    severity_propensity_score: Optional[float] = None
+    loss_propensity_band: Optional[str] = None
+    severity_propensity_band: Optional[str] = None
+    loss_confidence: Optional[float] = None
+    loss_combined_modifier: Optional[float] = None
+    loss_cohort_name: Optional[str] = None
+    loss_trend_direction: Optional[str] = None
+
+class ExposureSummary(BaseModel):
+    exposure_value: Optional[float] = None
+    exposure_band_label: Optional[str] = None
+    exposure_magnitude_score: Optional[float] = None
+    exposure_modifier: Optional[float] = None
+
+class SignalValue(BaseModel):
+    signal_id: str
+    inferred_value: float
+    audited_value: Optional[float] = None
+    is_overridden: bool = False
+    confidence: float = 1.0
+
+    @property
+    def effective_value(self) -> float:
+        return self.audited_value if self.is_overridden and self.audited_value is not None else self.inferred_value
+
+
+# --- C. Composite Read Models (Aggregated Responses) ---
+class SubmissionResponse(BaseModel):
+    submission_id: str
+    status: SubmissionStatus
+    estimated_completion: Optional[datetime] = None
+    job_id: Optional[str] = None
+
+class QuoteResponse(BaseModel):
+    """Heavy projection combining Quote + ModelVersionRecord + JSONB components."""
+    quote_id: str
+    submission_id: str
+    model_version_id: Optional[str] = None
+    status: QuoteStatus
+    composite_score: int
+    tier: int
+    tier_label: str
+    decision: DecisionType 
+    premium_options: Dict[str, float] = Field(default_factory=dict)
+    recommended_premium: Optional[float] = None
+    recommended_limit: Optional[float] = None
+    base_premium: Optional[float] = None
+    premium_after_modifiers: Optional[float] = None
+    modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
+    loss_propensity: Optional[LossPropensitySummary] = None
+    exposure: Optional[ExposureSummary] = None
+    discovery: Optional[DiscoverySummary] = None
+    signal_summary: Optional[SignalSummary] = None
+    referral_reasons: List[str] = Field(default_factory=list)
+    referral_id: Optional[str] = None
+    valid_until: Optional[datetime] = None
+    created_at: datetime
+
+class QuoteListItem(BaseModel):
+    quote_id: str
+    submission_id: str
+    model_version_id: Optional[str] = None
+    entity_name: str
+    coverage: str
+    status: QuoteStatus
+    tier: int
+    premium: float
+    decision: DecisionType
+    created_at: datetime
+
+class ReferralListItem(BaseModel):
+    referral_id: str
+    entity_name: str
+    coverage: str
+    status: ReferralStatus
+    reasons: List[str]
+    age_hours: float
+    created_at: datetime
+
+class ModelVersionResponse(BaseModel):
+    version_id: str
+    version_number: int
+    version_type: str
+    composite_score: float
+    tier: int
+    tier_label: str
+    confidence: float
+    signal_count: int
+    overridden_signals: List[str] = Field(default_factory=list)
+    created_by: str
+    created_at: datetime
+    notes: List[str] = Field(default_factory=list)
+
+class ReferralSignalDetail(BaseModel):
+    """Projection joining Bridge -> Cache -> Audit tables."""
+    signal_cache_id: str
+    signal_id: str
+    signal_name: str
+    group_id: str
+    group_name: str
+    score: float
+    inferred_value: float
+    audited_value: Optional[float] = None
+    is_overridden: bool = False
+    weight: float
+    contribution_to_score: float
+    is_flagged: bool = False
+    flag_reason: Optional[str] = None
+    confidence: float
+    data_sources: List[str] = Field(default_factory=list)
+    extracted_at: datetime
+    raw_data: Optional[Dict[str, Any]] = None
+    in_model: bool = True                       
+    proxy_tier: Optional[str] = None            
+    expectation_level: Optional[str] = None     
+    was_absent: bool = False                    
+    used_audited_value: bool = False            
+    override_rationale: Optional[str] = None
+    evidence_reference: Optional[str] = None
+    score_impact: Optional[float] = None
+    tier_impact: Optional[int] = None
+
+class ReferralSignalsResponse(BaseModel):
+    referral_id: Optional[str] = None
+    model_version_id: str
+    configuration_name: Optional[str] = None
+    coverage: Optional[str] = None
+    signals: List[ReferralSignalDetail]
+    flagged_count: int
+    overridden_count: int
+    total_signals: int
+    model_signal_count: int = 0
+    signal_coverage: float
+    average_confidence: float
+
+class SignalOverrideResponse(BaseModel):
+    signal_id: str
+    entity_id: str
+    model_version_id: str
+    inferred_value: float
+    audited_value: float
+    score_impact: float
+    tier_impact: int
+    new_composite_score: float
+    new_tier: int
+    new_tier_label: str
+    overridden_by: str
+    overridden_at: datetime
+    override_rationale: str
+    evidence_reference: Optional[str] = None
+    previous_model_version: str
+    new_model_version: str
+
+
+# --- D. Multi-Coverage (Phase 11) ---
+class MultiCoverageRequest(BaseModel):
+    entity_name: str
+    domain_hint: Optional[str] = None
+    country_hint: Optional[str] = None
+    coverages: Optional[List[str]] = None
+    locales: Optional[List[str]] = None
+    submission_data: Dict[str, Any] = Field(default_factory=dict)
+    parallel: bool = True
+    require_approval_above: int = 50
+
+class MultiCoverageResponse(BaseModel):
+    result_id: str
+    entity_name: str
+    detected_locale: Optional[str] = None
+    coverage_quotes: Dict[str, QuoteResponse] = Field(default_factory=dict)
+    failed_coverages: List[str] = Field(default_factory=list)
+    recommended_package: List[str] = Field(default_factory=list)
+    package_discount: float = 0.0
+    combined_premium: float = 0.0
+    total_savings: float = 0.0
+    duration_seconds: float = 0.0
+    cache_hit_rate: float = 0.0
+
+
+# --- E. Analytics & Dashboards ---
+class PortfolioSummaryResponse(BaseModel):
+    as_of_date: datetime
+    coverage: Optional[str] = None
+    period: str
+    total_submissions: int
+    total_quotes: int
+    total_binds: int
+    total_declines: int
+    gross_written_premium: float
+    quoted_premium: float
+    average_premium: float
+    average_score: float
+    average_tier: float
+    tier_distribution: Dict[int, int]
+    quote_rate: float
+    bind_rate: float
+    decline_rate: float
+
+class TurnaroundMetricsResponse(BaseModel):
+    period: str
+    sample_size: int
+    avg_time_to_quote: float
+    avg_time_to_decision: float
+    p50_time_to_quote: float
+    p90_time_to_quote: float
+    p95_time_to_quote: float
+    sla_target_hours: float
+    sla_compliance_rate: float
+    time_by_tier: Dict[int, float]
+
+class SignalHealthResponse(BaseModel):
+    coverage: str
+    period: str
+    overall_coverage: float
+    group_coverage: Dict[str, float]
+    signal_coverage: Dict[str, float]
+    issues: List[Dict[str, Any]]
+
+
+# --- F. Simulation Engine (Phase 3) ---
+class ShockParameterRequest(BaseModel):
+    signal_id: str
+    shock_type: str = "multiplier"
+    value: float
+    industry_filter: Optional[str] = None
+    tier_filter: Optional[int] = None
+    coverage_filter: Optional[str] = None
+
+class SimulateRequest(BaseModel):
+    portfolio_json: str
+    shocks: List[ShockParameterRequest]
+    config_path: Optional[str] = None
+    iterations: int = 1
+
+class TierMigration(BaseModel):
+    entity_id: str
+    old_tier: int
+    new_tier: int
+
+class SimulationStats(BaseModel):
+    mean_score_delta: float
+    std_score_delta: float
+    entities_upgraded: int
+    entities_downgraded: int
+    max_premium_increase_pct: float = 0.0
+    max_premium_decrease_pct: float = 0.0
+
+class SimulateResponse(BaseModel):
+    simulation_id: str
+    status: str = "completed"
+    premium_adequacy: float
+    total_premium_impact: float
+    entities_affected: int
+    total_entities: int
+    tier_migrations: List[TierMigration] = Field(default_factory=list)
+    stats: SimulationStats
+    execution_time_ms: float
+    created_at: datetime
+
+
+# --- G. System, Auth & Jobs ---
+class TokenRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    permissions: List[str]
+
+class APIKeyValidation(BaseModel):
+    valid: bool
+    client_id: Optional[str] = None
+    permissions: List[str] = Field(default_factory=list)
+    rate_limit_tier: str = "standard"
+
+class HealthResponse(BaseModel):
+    status: str
+    version: str
+    uptime_seconds: float
+    components: Dict[str, str] = Field(default_factory=dict)
+
+class ConfigResponse(BaseModel):
+    coverages: List[str]
+    locales: List[str]
+    rate_limits: Dict[str, int]
+    features: Dict[str, bool]
+
+class PaginatedResponse(BaseModel):
+    items: List[Any]
+    total: int
+    page: int
+    page_size: int
+    pages: int
+
+class ListFilters(BaseModel):
+    coverage: Optional[str] = None
+    status: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    page: int = 1
+    page_size: int = 20
+
+class JobResponse(BaseModel):
+    job_id: str
+    status: JobStatus
+    progress: float = 0.0
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+
+# =============================================================================
+# PART 2: ALIGNED ORM DTOs
+# These models strictly map 1:1 to their underlying database tables. 
+# Internal Postgres UUIDs (id) and sensitive raw foreign keys are excluded 
+# by design to prevent data leaks.
+# =============================================================================
+
+@maps_to(User, exclude=["id", "hashed_password"])
+class UserRecord(BaseModel):
+    email: str
+    full_name: Optional[str] = None
+    is_active: bool = True
+    is_superuser: bool = False
+    permissions: List[str] = Field(default_factory=list)
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+
+@maps_to(APIKey, exclude=["id", "user_id", "key_hash"])
+class APIKeyRecord(BaseModel):
+    key_prefix: str
+    name: str
+    permissions: List[str] = Field(default_factory=list)
+    is_active: bool = True
+    created_at: datetime
+    expires_at: Optional[datetime] = None
+    last_used_at: Optional[datetime] = None
+
+@maps_to(Submission, exclude=["id"])
+class SubmissionRecord(BaseModel):
+    submission_id: str
+    entity_name: str
+    domain_hint: Optional[str] = None
+    discovered_domain: Optional[str] = None
+    country_hint: Optional[str] = None
+    coverage: str
+    configuration: Optional[str] = None
+    locale: str = "US"
+    status: SubmissionStatus
+    submission_data: Dict[str, Any] = Field(default_factory=dict)
+    direct_query_responses: Dict[str, Any] = Field(default_factory=dict)
+    processing_started_at: Optional[datetime] = None
+    processing_completed_at: Optional[datetime] = None
+    processing_duration_ms: Optional[float] = None
+    error_message: Optional[str] = None
+    created_by: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+@maps_to(Quote, exclude=["id"])
+class QuoteRecord(BaseModel):
+    quote_id: str
+    submission_id: str
+    model_version_id: str
+    status: QuoteStatus
+    recommended_premium: Optional[float] = None
+    recommended_limit: Optional[float] = None
+    premium_options: Dict[str, Any] = Field(default_factory=dict)
+    valid_from: datetime
+    valid_until: Optional[datetime] = None
+    bound_at: Optional[datetime] = None
+    bound_by: Optional[str] = None
+    policy_number: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+@maps_to(Referral, exclude=["id"])
+class ReferralRecord(BaseModel):
+    referral_id: str
+    quote_id: str
+    status: ReferralStatus
+    reasons: List[str] = Field(default_factory=list)
+    priority: int = 5
+    assigned_to: Optional[str] = None
+    assigned_at: Optional[datetime] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    review_decision: Optional[str] = None
+    review_notes: Optional[str] = None
+    tier_override: Optional[int] = None
+    premium_adjustment: Optional[float] = None
+    adjustments: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+@maps_to(ModelVersionRecord, exclude=["id"])
+class ModelVersionDBRecord(BaseModel):
+    version_id: str
+    submission_id: str
+    version_number: int
+    version_type: Optional[str] = None
+    is_latest: bool
+    config_hash: Optional[str] = None
+    coverage: Optional[str] = None
+    configuration_name: Optional[str] = None
+    discovery_output: Optional[Dict[str, Any]] = None
+    signal_outputs: List[Dict[str, Any]] = Field(default_factory=list)
+    categorical_outputs: List[Dict[str, Any]] = Field(default_factory=list)
+    group_scores: Dict[str, Any] = Field(default_factory=dict)
+    pure_composite_score: Optional[float] = None
+    confidence: Optional[float] = None
+    signal_coverage: Optional[float] = None
+    signal_conditions: List[Dict[str, Any]] = Field(default_factory=list)
+    query_conditions: List[Dict[str, Any]] = Field(default_factory=list)
+    tier_overrides: List[Dict[str, Any]] = Field(default_factory=list)
+    score_based_tier: Optional[int] = None
+    final_tier: Optional[int] = None
+    tier_label: Optional[str] = None
+    base_premium: Optional[float] = None
+    base_premium_method: Optional[str] = None
+    modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
+    premium_after_modifiers: Optional[float] = None
+    limit_premiums: Dict[str, Any] = Field(default_factory=dict)
+    final_premium: Optional[float] = None
+    decision: Optional[DecisionType] = None
+    auto_approve: bool = False
+    referral_reasons: List[str] = Field(default_factory=list)
+    notes: List[str] = Field(default_factory=list)
+    loss_propensity_score: Optional[float] = None
+    severity_propensity_score: Optional[float] = None
+    loss_propensity_band: Optional[str] = None
+    severity_propensity_band: Optional[str] = None
+    loss_confidence: Optional[float] = None
+    loss_cohort_id: Optional[str] = None
+    loss_cohort_name: Optional[str] = None
+    loss_cohort_confidence: Optional[float] = None
+    loss_frequency_multiplier: Optional[float] = None
+    loss_severity_multiplier: Optional[float] = None
+    loss_combined_modifier: Optional[float] = None
+    loss_trend_direction: Optional[str] = None
+    loss_previous_score: Optional[float] = None
+    loss_score_velocity: Optional[float] = None
+    loss_last_refresh: Optional[datetime] = None
+    correlation_matrix_version: Optional[str] = None
+    exposure_value: Optional[float] = None
+    exposure_band_id: Optional[int] = None
+    exposure_band_label: Optional[str] = None
+    exposure_magnitude_score: Optional[float] = None
+    exposure_modifier: Optional[float] = None
+    exposure_assessment_method: Optional[str] = None
+    created_by: str
+    created_at: datetime
+
+@maps_to(SignalCache, exclude=["id"])
+class SignalCacheRecord(BaseModel):
+    entity_id: str
+    signal_id: str
+    source_name: str
+    data: Dict[str, Any]
+    confidence: Optional[float] = None
+    extracted_at: datetime
+    expires_at: datetime
+    ttl_seconds: Optional[int] = None
+    extraction_time_ms: Optional[float] = None
+    from_external_cache: bool = False
+    inferred_value: Optional[Dict[str, Any]] = None
+    audited_value: Optional[Dict[str, Any]] = None
+    is_overridden: bool = False
+    audit_trail: List[Dict[str, Any]] = Field(default_factory=list)
+
+@maps_to(ModelVersionSignal, exclude=["id"])
+class ModelVersionSignalRecord(BaseModel):
+    model_version_id: str
+    signal_cache_id: str
+    signal_id: str
+    entity_id: str
+    score: Optional[float] = None
+    weight: Optional[float] = None
+    contribution: Optional[float] = None
+    group_id: Optional[str] = None
+    proxy_tier: Optional[str] = None
+    expectation_level: Optional[str] = None
+    was_absent: bool = False
+    used_audited_value: bool = False
+    created_at: datetime
+
+@maps_to(SignalAuditRecord, exclude=["id"])
+class SignalAuditDBRecord(BaseModel):
+    signal_cache_id: str
+    model_version_id: str
+    signal_id: str
+    entity_id: str
+    inferred_value: Dict[str, Any]
+    audited_value: Optional[Dict[str, Any]] = None
+    is_overridden: bool = False
+    overridden_by: Optional[str] = None
+    overridden_at: Optional[datetime] = None
+    override_rationale: Optional[str] = None
+    evidence_reference: Optional[str] = None
+    score_impact: Optional[float] = None
+    tier_impact: Optional[int] = None
+    created_at: datetime
+
+@maps_to(AuditLog, exclude=["id", "user_id", "api_key_id"])
+class AuditLogRecord(BaseModel):
+    event_type: str
+    event_action: str
+    resource_type: Optional[str] = None
+    resource_id: Optional[str] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    details: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime
+================================================================================
+FILE: __init__.py
+================================================================================
+
+"""
+DSI Production API Module (Phase 11)
+
+FastAPI-based REST API for the DSI pricing platform.
+
+Usage:
+    # Run with uvicorn
+    uvicorn api.main:app --reload
+
+    # Or import the app
+    from api import app
+
+Components:
+- main: FastAPI application
+- types: Request/response models
+- routes: API endpoints
+- auth: Authentication handlers
+- middleware: Request processing middleware
+"""
+
+from .main import app
+from .types import (
+    # Request models
+    SubmissionRequest,
+    MultiCoverageRequest,
+    ReferralDecision,
+    TokenRequest,
+    # Response models
+    SubmissionResponse,
+    SubmissionRecord,
+    QuoteResponse,
+    QuoteListItem,
+    ReferralRecord,
+    MultiCoverageResponse,
+    PortfolioSummaryResponse,
+    HealthResponse,
+    JobResponse,
+    # Enums
+    SubmissionStatus,
+    QuoteStatus,
+    Permission,
+)
+
+
+__all__ = [
+    # Application
+    "app",
+    # Request models
+    "SubmissionRequest",
+    "MultiCoverageRequest",
+    "ReferralDecision",
+    "TokenRequest",
+    # Response models
+    "SubmissionResponse",
+    "SubmissionDetail",
+    "QuoteResponse",
+    "QuoteListItem",
+    "ReferralDetail",
+    "MultiCoverageResponse",
+    "PortfolioSummaryResponse",
+    "HealthResponse",
+    "JobResponse",
+    # Enums
+    "SubmissionStatus",
+    "QuoteStatus",
+    "Permission",
+]
+
+================================================================================
+FILE: auth\api_key.py
+================================================================================
+
+"""
+DSI API Key Authentication (Phase 11)
+
+API key-based authentication for system integrations.
+"""
+
+import hashlib
+import logging
+import secrets
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Dict, List, Optional
+
+from fastapi import Depends, HTTPException, Request, Security, status
+from fastapi.security import APIKeyHeader
+
+
+logger = logging.getLogger("dsi.api.auth.apikey")
+
+
+# =============================================================================
+# API KEY MODELS
+# =============================================================================
+
+@dataclass
+class APIKey:
+    """API key record."""
+    key_id: str
+    client_id: str
+    client_name: str
+    key_hash: str  # Store hash, not plaintext
+    permissions: List[str]
+    rate_limit_tier: str = "standard"
+    active: bool = True
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    last_used: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+
+
+@dataclass
+class APIKeyValidation:
+    """Result of API key validation."""
+    valid: bool
+    client_id: Optional[str] = None
+    client_name: Optional[str] = None
+    permissions: List[str] = field(default_factory=list)
+    rate_limit_tier: str = "standard"
+    error: Optional[str] = None
+
+
+# =============================================================================
+# API KEY STORAGE (Replace with database in production)
+# =============================================================================
+
+_api_keys: Dict[str, APIKey] = {}
+
+
+def _hash_key(key: str) -> str:
+    """Hash an API key for storage."""
+    return hashlib.sha256(key.encode()).hexdigest()
+
+
+def create_api_key(
+    client_id: str,
+    client_name: str,
+    permissions: List[str],
+    rate_limit_tier: str = "standard",
+) -> tuple[str, APIKey]:
+    """
+    Create a new API key.
+
+    Returns the raw key (show once) and the key record.
+    """
+    # Generate key
+    raw_key = f"dsi_{secrets.token_urlsafe(32)}"
+    key_id = f"key_{secrets.token_urlsafe(8)}"
+    key_hash = _hash_key(raw_key)
+
+    key_record = APIKey(
+        key_id=key_id,
+        client_id=client_id,
+        client_name=client_name,
+        key_hash=key_hash,
+        permissions=permissions,
+        rate_limit_tier=rate_limit_tier,
+    )
+
+    _api_keys[key_hash] = key_record
+
+    return raw_key, key_record
+
+
+def revoke_api_key(key_id: str) -> bool:
+    """Revoke an API key."""
+    for key_hash, key_record in _api_keys.items():
+        if key_record.key_id == key_id:
+            key_record.active = False
+            return True
+    return False
+
+
+# =============================================================================
+# VALIDATION
+# =============================================================================
+
+def validate_api_key(api_key: str) -> APIKeyValidation:
+    """
+    Validate an API key.
+
+    Returns validation result with client info if valid.
+    """
+    if not api_key:
+        return APIKeyValidation(valid=False, error="No API key provided")
+
+    # Handle demo key
+    if api_key == "demo_key":
+        return APIKeyValidation(
+            valid=True,
+            client_id="demo",
+            client_name="Demo Client",
+            permissions=["submit", "quote"],
+            rate_limit_tier="standard",
+        )
+
+    # Hash and lookup
+    key_hash = _hash_key(api_key)
+    key_record = _api_keys.get(key_hash)
+
+    if key_record is None:
+        return APIKeyValidation(valid=False, error="Invalid API key")
+
+    if not key_record.active:
+        return APIKeyValidation(valid=False, error="API key has been revoked")
+
+    if key_record.expires_at and key_record.expires_at < datetime.utcnow():
+        return APIKeyValidation(valid=False, error="API key has expired")
+
+    # Update last used
+    key_record.last_used = datetime.utcnow()
+
+    return APIKeyValidation(
+        valid=True,
+        client_id=key_record.client_id,
+        client_name=key_record.client_name,
+        permissions=key_record.permissions,
+        rate_limit_tier=key_record.rate_limit_tier,
+    )
+
+
+# =============================================================================
+# FASTAPI DEPENDENCIES
+# =============================================================================
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+class APIKeyAuth:
+    """API key authentication handler."""
+
+    def __init__(self, required: bool = True):
+        self.required = required
+
+    async def __call__(
+        self,
+        request: Request,
+        api_key: Optional[str] = Security(api_key_header),
+    ) -> Optional[APIKeyValidation]:
+        """Authenticate request via API key."""
+        if api_key is None:
+            if self.required:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="API key required",
+                    headers={"WWW-Authenticate": "X-API-Key"},
+                )
+            return None
+
+        validation = validate_api_key(api_key)
+
+        if not validation.valid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=validation.error or "Invalid API key",
+            )
+
+        # Store validation in request state
+        request.state.api_key_validation = validation
+
+        return validation
+
+
+async def get_api_key_client(
+    api_key: Optional[str] = Security(api_key_header),
+) -> Optional[APIKeyValidation]:
+    """Get API key client info."""
+    if api_key is None:
+        return None
+
+    return validate_api_key(api_key)
+
+
+# =============================================================================
+# INITIALIZATION (Create demo keys)
+# =============================================================================
+
+def init_demo_keys():
+    """Initialize demo API keys for testing."""
+    # Create a demo integration key
+    raw_key, _ = create_api_key(
+        client_id="integration_test",
+        client_name="Integration Test Client",
+        permissions=["submit", "quote", "referral", "analytics"],
+        rate_limit_tier="premium",
+    )
+    logger.info(f"Demo API key created: {raw_key[:20]}...")
+
+    return raw_key
+
+
+# Create demo keys on module load
+_demo_key = None
+try:
+    _demo_key = init_demo_keys()
+except Exception:
+    pass  # Ignore if already initialized
+
+================================================================================
+FILE: auth\jwt_auth.py
+================================================================================
+
+"""
+DSI JWT Authentication (Phase 11)
+
+JWT-based authentication for the API.
+"""
+
+import logging
+from datetime import datetime, timedelta
+from enum import Enum
+from functools import wraps
+from typing import Callable, List, Optional
+
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+# Note: In production, use python-jose or similar
+# For demonstration, using simplified token handling
+
+
+logger = logging.getLogger("dsi.api.auth")
+
+
+# =============================================================================
+# PERMISSIONS
+# =============================================================================
+
+class Permission(str, Enum):
+    """API permissions."""
+    SUBMIT = "submit"
+    QUOTE = "quote"
+    REFERRAL = "referral"
+    ANALYTICS = "analytics"
+    ADMIN = "admin"
+
+
+# =============================================================================
+# USER MODEL
+# =============================================================================
+
+class User:
+    """Authenticated user."""
+
+    def __init__(
+        self,
+        user_id: str,
+        username: str,
+        permissions: List[Permission],
+        roles: List[str] = None,
+    ):
+        self.user_id = user_id
+        self.username = username
+        self.permissions = permissions
+        self.roles = roles or []
+
+    def has_permission(self, permission: Permission) -> bool:
+        """Check if user has a permission."""
+        return permission in self.permissions or Permission.ADMIN in self.permissions
+
+
+# =============================================================================
+# JWT HANDLING
+# =============================================================================
+
+# Secret key (in production, use environment variable)
+SECRET_KEY = "dsi-secret-key-change-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+
+def create_access_token(
+    user_id: str,
+    username: str,
+    permissions: List[str],
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """
+    Create a JWT access token.
+
+    In production, use python-jose:
+    from jose import jwt
+    """
+    import base64
+    import json
+    import hashlib
+
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    payload = {
+        "sub": user_id,
+        "username": username,
+        "permissions": permissions,
+        "exp": expire.isoformat(),
+        "iat": datetime.utcnow().isoformat(),
+    }
+
+    # Simplified token encoding (use proper JWT library in production)
+    header = base64.urlsafe_b64encode(
+        json.dumps({"alg": ALGORITHM, "typ": "JWT"}).encode()
+    ).decode().rstrip("=")
+
+    payload_encoded = base64.urlsafe_b64encode(
+        json.dumps(payload).encode()
+    ).decode().rstrip("=")
+
+    signature = hashlib.sha256(
+        f"{header}.{payload_encoded}.{SECRET_KEY}".encode()
+    ).hexdigest()[:32]
+
+    return f"{header}.{payload_encoded}.{signature}"
+
+
+def decode_token(token: str) -> Optional[dict]:
+    """
+    Decode and validate a JWT token.
+
+    In production, use python-jose:
+    from jose import jwt, JWTError
+    """
+    import base64
+    import json
+    import hashlib
+
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return None
+
+        header, payload_encoded, signature = parts
+
+        # Verify signature
+        expected_sig = hashlib.sha256(
+            f"{header}.{payload_encoded}.{SECRET_KEY}".encode()
+        ).hexdigest()[:32]
+
+        if signature != expected_sig:
+            return None
+
+        # Decode payload
+        # Add padding if needed
+        padding = 4 - len(payload_encoded) % 4
+        if padding != 4:
+            payload_encoded += "=" * padding
+
+        payload = json.loads(base64.urlsafe_b64decode(payload_encoded))
+
+        # Check expiration
+        exp = datetime.fromisoformat(payload["exp"])
+        if exp < datetime.utcnow():
+            return None
+
+        return payload
+
+    except Exception as e:
+        logger.warning(f"Token decode error: {e}")
+        return None
+
+
+# =============================================================================
+# AUTHENTICATION DEPENDENCIES
+# =============================================================================
+
+security = HTTPBearer(auto_error=False)
+
+
+class JWTAuth:
+    """JWT authentication handler."""
+
+    def __init__(self, required: bool = True):
+        self.required = required
+
+    async def __call__(
+        self,
+        request: Request,
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    ) -> Optional[User]:
+        """Authenticate request."""
+        if credentials is None:
+            if self.required:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Authentication required",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            return None
+
+        token = credentials.credentials
+        payload = decode_token(token)
+
+        if payload is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        return User(
+            user_id=payload["sub"],
+            username=payload["username"],
+            permissions=[Permission(p) for p in payload.get("permissions", [])],
+        )
+
+
+async def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> Optional[User]:
+    """Get current authenticated user."""
+    if credentials is None:
+        return None
+
+    payload = decode_token(credentials.credentials)
+
+    if payload is None:
+        return None
+
+    return User(
+        user_id=payload["sub"],
+        username=payload["username"],
+        permissions=[Permission(p) for p in payload.get("permissions", [])],
+    )
+
+
+# =============================================================================
+# PERMISSION DECORATOR
+# =============================================================================
+
+def requires_permission(*permissions: Permission):
+    """
+    Decorator to require specific permissions.
+
+    Usage:
+        @requires_permission(Permission.REFERRAL)
+        async def process_referral(...):
+            pass
+    """
+    def decorator(func: Callable):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Get user from request
+            request = kwargs.get("request")
+            if request is None:
+                for arg in args:
+                    if isinstance(arg, Request):
+                        request = arg
+                        break
+
+            if request is None:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Request not found in handler",
+                )
+
+            # Get user from dependency injection or header
+            user = getattr(request.state, "user", None)
+
+            if user is None:
+                # Try to get from authorization header
+                auth_header = request.headers.get("Authorization")
+                if auth_header and auth_header.startswith("Bearer "):
+                    token = auth_header[7:]
+                    payload = decode_token(token)
+                    if payload:
+                        user = User(
+                            user_id=payload["sub"],
+                            username=payload["username"],
+                            permissions=[Permission(p) for p in payload.get("permissions", [])],
+                        )
+
+            if user is None:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Authentication required",
+                )
+
+            # Check permissions
+            for perm in permissions:
+                if not user.has_permission(perm):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Permission denied: {perm.value}",
+                    )
+
+            return await func(*args, **kwargs)
+
+        return wrapper
+    return decorator
+
+================================================================================
+FILE: auth\__init__.py
+================================================================================
+
+"""
+DSI API Authentication (Phase 11)
+
+Authentication and authorization for the API.
+"""
+
+from .jwt_auth import (
+    JWTAuth,
+    create_access_token,
+    decode_token,
+    get_current_user,
+    requires_permission,
+    Permission,
+)
+
+from .api_key import (
+    APIKeyAuth,
+    validate_api_key,
+)
+
+__all__ = [
+    "JWTAuth",
+    "create_access_token",
+    "decode_token",
+    "get_current_user",
+    "requires_permission",
+    "Permission",
+    "APIKeyAuth",
+    "validate_api_key",
+]
+
+================================================================================
+FILE: middleware\__init__.py
+================================================================================
+
+"""
+DSI API Middleware (Phase 11)
+
+Middleware components for the API.
+"""
+
+# Middleware is integrated directly in main.py
+# Additional middleware can be added here
+
+__all__ = []
+
+================================================================================
+FILE: observability\logging_config.py
+================================================================================
+
+"""
+DSI Structured Logging Configuration
+
+Provides JSON-formatted logs with correlation IDs for production
+and human-readable logs for development.
+"""
+
+import json
+import logging
+import os
+import sys
+from datetime import datetime, timezone
+from typing import Optional
+
+
+class JSONFormatter(logging.Formatter):
+    """JSON log formatter for structured log aggregation."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        log_entry = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+
+        # Add correlation ID if present
+        if hasattr(record, "request_id"):
+            log_entry["request_id"] = record.request_id
+
+        # Add extra fields
+        if hasattr(record, "entity_id"):
+            log_entry["entity_id"] = record.entity_id
+        if hasattr(record, "coverage"):
+            log_entry["coverage"] = record.coverage
+        if hasattr(record, "duration_ms"):
+            log_entry["duration_ms"] = record.duration_ms
+        if hasattr(record, "signal_id"):
+            log_entry["signal_id"] = record.signal_id
+
+        # Add exception info
+        if record.exc_info and record.exc_info[1]:
+            log_entry["exception"] = {
+                "type": record.exc_info[0].__name__,
+                "message": str(record.exc_info[1]),
+                "traceback": self.formatException(record.exc_info),
+            }
+
+        return json.dumps(log_entry, default=str)
+
+
+class DevFormatter(logging.Formatter):
+    """Human-readable formatter for development."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        request_id = getattr(record, "request_id", None)
+        prefix = f"[{request_id}] " if request_id else ""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        return (
+            f"{timestamp} {record.levelname:>7} "
+            f"{record.name}: {prefix}{record.getMessage()}"
+        )
+
+
+def configure_logging(
+    level: Optional[str] = None,
+    json_format: Optional[bool] = None,
+) -> None:
+    """
+    Configure application-wide logging.
+
+    Args:
+        level: Log level (DEBUG, INFO, WARNING, ERROR). Default from DSI_LOG_LEVEL env.
+        json_format: Use JSON format. Default: True in production, False otherwise.
+    """
+    log_level = level or os.getenv("DSI_LOG_LEVEL", "INFO")
+    env = os.getenv("DSI_ENV", "development")
+
+    if json_format is None:
+        json_format = env == "production"
+
+    # Create formatter
+    formatter = JSONFormatter() if json_format else DevFormatter()
+
+    # Configure root handler
+    root = logging.getLogger()
+    root.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+
+    # Remove existing handlers to avoid duplicates
+    for handler in root.handlers[:]:
+        root.removeHandler(handler)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
+
+    # Suppress noisy libraries
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.engine").setLevel(
+        logging.INFO if os.getenv("DSI_DEBUG", "false").lower() == "true"
+        else logging.WARNING
+    )
+
+
+class RequestLogger:
+    """Logger adapter that injects request context."""
+
+    def __init__(self, logger: logging.Logger, request_id: str):
+        self._logger = logger
+        self._request_id = request_id
+
+    def _log(self, level: int, msg: str, **kwargs):
+        extra = {"request_id": self._request_id}
+        extra.update(kwargs)
+        self._logger.log(level, msg, extra=extra)
+
+    def info(self, msg: str, **kwargs):
+        self._log(logging.INFO, msg, **kwargs)
+
+    def warning(self, msg: str, **kwargs):
+        self._log(logging.WARNING, msg, **kwargs)
+
+    def error(self, msg: str, **kwargs):
+        self._log(logging.ERROR, msg, **kwargs)
+
+    def debug(self, msg: str, **kwargs):
+        self._log(logging.DEBUG, msg, **kwargs)
+
+
+def get_request_logger(request_id: str, name: str = "dsi.api") -> RequestLogger:
+    """Get a logger that includes the request correlation ID."""
+    return RequestLogger(logging.getLogger(name), request_id)
+
+================================================================================
+FILE: observability\metrics.py
+================================================================================
+
+"""
+DSI Prometheus Metrics
+
+Instruments the API with Prometheus counters, histograms, and gauges
+for production monitoring.
+"""
+
+import time
+from typing import Optional
+
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    Info,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    REGISTRY,
+)
+
+
+class DSIMetrics:
+    """Central metrics registry for the DSI platform."""
+
+    def __init__(self, registry: Optional[CollectorRegistry] = None):
+        reg = registry or REGISTRY
+
+        # --- Request metrics ---
+        self.request_duration = Histogram(
+            "dsi_request_duration_seconds",
+            "HTTP request duration in seconds",
+            labelnames=["method", "endpoint", "status_code"],
+            buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
+            registry=reg,
+        )
+
+        self.request_total = Counter(
+            "dsi_requests_total",
+            "Total HTTP requests",
+            labelnames=["method", "endpoint", "status_code"],
+            registry=reg,
+        )
+
+        self.errors_total = Counter(
+            "dsi_errors_total",
+            "Total errors by type",
+            labelnames=["error_type"],
+            registry=reg,
+        )
+
+        # --- Business metrics ---
+        self.submissions_total = Counter(
+            "dsi_submissions_total",
+            "Total submissions processed",
+            labelnames=["coverage", "status"],
+            registry=reg,
+        )
+
+        self.quotes_total = Counter(
+            "dsi_quotes_total",
+            "Total quotes generated",
+            labelnames=["coverage", "decision"],
+            registry=reg,
+        )
+
+        self.referrals_total = Counter(
+            "dsi_referrals_total",
+            "Total referrals created",
+            labelnames=["coverage", "reason"],
+            registry=reg,
+        )
+
+        # --- Pipeline metrics ---
+        self.scoring_duration = Histogram(
+            "dsi_scoring_duration_seconds",
+            "Scoring pipeline duration in seconds",
+            labelnames=["coverage"],
+            buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0],
+            registry=reg,
+        )
+
+        self.signal_extraction_duration = Histogram(
+            "dsi_signal_extraction_seconds",
+            "Signal extraction duration in seconds",
+            labelnames=["signal_id", "source"],
+            buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
+            registry=reg,
+        )
+
+        self.workflow_duration = Histogram(
+            "dsi_workflow_duration_seconds",
+            "Full workflow duration (submission to decision)",
+            labelnames=["coverage"],
+            buckets=[0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0],
+            registry=reg,
+        )
+
+        # --- System metrics ---
+        self.active_workflows = Gauge(
+            "dsi_active_workflows",
+            "Number of currently running workflows",
+            registry=reg,
+        )
+
+        self.db_connected = Gauge(
+            "dsi_database_connected",
+            "Whether the database is connected (1=yes, 0=no)",
+            registry=reg,
+        )
+
+        self.cache_connected = Gauge(
+            "dsi_cache_connected",
+            "Whether Redis cache is connected (1=yes, 0=no)",
+            registry=reg,
+        )
+
+        self.info = Info(
+            "dsi",
+            "DSI platform information",
+            registry=reg,
+        )
+
+    def observe_request(self, method: str, endpoint: str, status_code: int, duration: float):
+        """Record an HTTP request."""
+        # Normalize endpoint to avoid cardinality explosion
+        normalized = self._normalize_endpoint(endpoint)
+        self.request_duration.labels(
+            method=method, endpoint=normalized, status_code=str(status_code)
+        ).observe(duration)
+        self.request_total.labels(
+            method=method, endpoint=normalized, status_code=str(status_code)
+        ).inc()
+
+    def observe_submission(self, coverage: str, status: str):
+        """Record a submission event."""
+        self.submissions_total.labels(coverage=coverage, status=status).inc()
+
+    def observe_quote(self, coverage: str, decision: str):
+        """Record a quote generation."""
+        self.quotes_total.labels(coverage=coverage, decision=decision).inc()
+
+    def observe_referral(self, coverage: str, reason: str):
+        """Record a referral."""
+        self.referrals_total.labels(coverage=coverage, reason=reason).inc()
+
+    def observe_scoring(self, coverage: str, duration: float):
+        """Record scoring pipeline duration."""
+        self.scoring_duration.labels(coverage=coverage).observe(duration)
+
+    def observe_signal_extraction(self, signal_id: str, source: str, duration: float):
+        """Record signal extraction duration."""
+        self.signal_extraction_duration.labels(
+            signal_id=signal_id, source=source
+        ).observe(duration)
+
+    def observe_workflow(self, coverage: str, duration: float):
+        """Record full workflow duration."""
+        self.workflow_duration.labels(coverage=coverage).observe(duration)
+
+    def record_error(self, error_type: str):
+        """Record an error."""
+        self.errors_total.labels(error_type=error_type).inc()
+
+    def set_info(self, version: str, environment: str):
+        """Set platform info."""
+        self.info.info({"version": version, "environment": environment})
+
+    @staticmethod
+    def _normalize_endpoint(path: str) -> str:
+        """Normalize endpoint paths to avoid high cardinality.
+
+        /api/v1/submissions/abc123 → /api/v1/submissions/{id}
+        """
+        parts = path.rstrip("/").split("/")
+        normalized = []
+        for i, part in enumerate(parts):
+            # Replace UUIDs and numeric IDs with {id}
+            if i > 0 and (
+                len(part) > 8
+                or (part.isdigit() and i > 2)
+                or ("-" in part and len(part) > 20)
+            ):
+                normalized.append("{id}")
+            else:
+                normalized.append(part)
+        return "/".join(normalized)
+
+
+# Singleton metrics instance
+metrics = DSIMetrics()
+
+
+def get_metrics_response():
+    """Generate Prometheus text format response."""
+    from fastapi.responses import Response
+    return Response(
+        content=generate_latest(REGISTRY),
+        media_type=CONTENT_TYPE_LATEST,
+    )
+
+================================================================================
+FILE: observability\rate_limiter.py
+================================================================================
+
+"""
+DSI Rate Limiting Middleware
+
+Sliding-window rate limiter per API key using in-memory storage
+with optional Redis backend for distributed deployments.
+"""
+
+import logging
+import os
+import time
+from collections import defaultdict
+from typing import Optional, Tuple
+
+from fastapi import Request, Response
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
+logger = logging.getLogger("dsi.rate_limiter")
+
+# Rate limit tiers: requests per minute
+RATE_LIMIT_TIERS = {
+    "unlimited": 0,       # No limit (internal)
+    "enterprise": 300,    # 300/min
+    "standard": 60,       # 60/min
+    "basic": 20,          # 20/min
+    "demo": 10,           # 10/min
+}
+
+# Default from env
+DEFAULT_LIMIT = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+WINDOW_SECONDS = 60
+
+
+class InMemoryRateLimiter:
+    """Sliding-window rate limiter using in-memory storage."""
+
+    def __init__(self):
+        # client_id -> list of request timestamps
+        self._windows: dict[str, list[float]] = defaultdict(list)
+
+    def check(self, client_id: str, limit: int) -> Tuple[bool, int, int]:
+        """
+        Check if request is allowed.
+
+        Returns:
+            (allowed, remaining, reset_seconds)
+        """
+        if limit <= 0:
+            return True, 999, 0
+
+        now = time.time()
+        window_start = now - WINDOW_SECONDS
+
+        # Prune old entries
+        timestamps = self._windows[client_id]
+        self._windows[client_id] = [t for t in timestamps if t > window_start]
+
+        count = len(self._windows[client_id])
+        remaining = max(0, limit - count)
+
+        if count >= limit:
+            # Calculate when oldest request in window expires
+            oldest = min(self._windows[client_id]) if self._windows[client_id] else now
+            reset = int(oldest + WINDOW_SECONDS - now) + 1
+            return False, 0, reset
+
+        # Allow and record
+        self._windows[client_id].append(now)
+        return True, remaining - 1, WINDOW_SECONDS
+
+
+class RedisRateLimiter:
+    """Sliding-window rate limiter using Redis for distributed state."""
+
+    def __init__(self, redis_client):
+        self._redis = redis_client
+
+    async def check(self, client_id: str, limit: int) -> Tuple[bool, int, int]:
+        """Check if request is allowed using Redis sorted sets."""
+        if limit <= 0:
+            return True, 999, 0
+
+        now = time.time()
+        window_start = now - WINDOW_SECONDS
+        key = f"dsi:ratelimit:{client_id}"
+
+        pipe = self._redis.pipeline()
+        # Remove expired entries
+        pipe.zremrangebyscore(key, 0, window_start)
+        # Count current window
+        pipe.zcard(key)
+        # Add current request (optimistic)
+        pipe.zadd(key, {str(now): now})
+        # Set expiry on key
+        pipe.expire(key, WINDOW_SECONDS + 1)
+        results = await pipe.execute()
+
+        count = results[1]  # zcard result
+        remaining = max(0, limit - count)
+
+        if count >= limit:
+            # Over limit - remove the optimistic add
+            await self._redis.zrem(key, str(now))
+            # Calculate reset
+            oldest_scores = await self._redis.zrange(key, 0, 0, withscores=True)
+            if oldest_scores:
+                reset = int(oldest_scores[0][1] + WINDOW_SECONDS - now) + 1
+            else:
+                reset = WINDOW_SECONDS
+            return False, 0, max(1, reset)
+
+        return True, remaining - 1, WINDOW_SECONDS
+
+
+# Module-level limiter instance
+_limiter: Optional[InMemoryRateLimiter] = None
+_redis_limiter: Optional[RedisRateLimiter] = None
+
+
+def get_limiter() -> InMemoryRateLimiter:
+    """Get or create the in-memory rate limiter."""
+    global _limiter
+    if _limiter is None:
+        _limiter = InMemoryRateLimiter()
+    return _limiter
+
+
+def set_redis_limiter(redis_client) -> None:
+    """Configure Redis-backed rate limiting."""
+    global _redis_limiter
+    _redis_limiter = RedisRateLimiter(redis_client)
+    logger.info("Rate limiter upgraded to Redis backend")
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """FastAPI middleware that enforces per-client rate limits."""
+
+    # Paths exempt from rate limiting
+    EXEMPT_PATHS = {
+        "/api/v1/health",
+        "/api/v1/health/live",
+        "/api/v1/health/ready",
+        "/metrics",
+        "/",
+        "/api/docs",
+        "/api/redoc",
+        "/api/openapi.json",
+    }
+
+    async def dispatch(self, request: Request, call_next):
+        # Skip rate limiting for exempt paths
+        if request.url.path in self.EXEMPT_PATHS:
+            return await call_next(request)
+
+        # Extract client identity
+        client_id, rate_tier = self._get_client_info(request)
+        limit = RATE_LIMIT_TIERS.get(rate_tier, DEFAULT_LIMIT)
+
+        # Check rate limit
+        if _redis_limiter is not None:
+            allowed, remaining, reset = await _redis_limiter.check(client_id, limit)
+        else:
+            allowed, remaining, reset = get_limiter().check(client_id, limit)
+
+        if not allowed:
+            logger.warning(
+                f"Rate limit exceeded for {client_id} (tier={rate_tier}, limit={limit}/min)"
+            )
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Rate limit exceeded",
+                    "retry_after": reset,
+                    "limit": limit,
+                },
+                headers={
+                    "X-RateLimit-Limit": str(limit),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": str(reset),
+                    "Retry-After": str(reset),
+                },
+            )
+
+        # Process request
+        response = await call_next(request)
+
+        # Add rate limit headers
+        response.headers["X-RateLimit-Limit"] = str(limit)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(reset)
+
+        return response
+
+    @staticmethod
+    def _get_client_info(request: Request) -> Tuple[str, str]:
+        """Extract client ID and rate limit tier from request."""
+        # Check if auth middleware has set client info
+        if hasattr(request.state, "client_id"):
+            client_id = request.state.client_id
+            rate_tier = getattr(request.state, "rate_limit_tier", "standard")
+            return client_id, rate_tier
+
+        # Fall back to API key header
+        api_key = request.headers.get("X-API-Key", "")
+        if api_key:
+            return f"key:{api_key[:8]}", "standard"
+
+        # Fall back to IP
+        client_host = request.client.host if request.client else "unknown"
+        return f"ip:{client_host}", "basic"
+
+================================================================================
+FILE: observability\__init__.py
+================================================================================
+
+"""
+DSI Observability Module
+
+Provides structured logging, Prometheus metrics, and rate limiting.
+"""
+
+from .logging_config import configure_logging, get_request_logger
+from .metrics import metrics, get_metrics_response
+from .rate_limiter import RateLimitMiddleware, set_redis_limiter
+
+__all__ = [
+    "configure_logging",
+    "get_request_logger",
+    "metrics",
+    "get_metrics_response",
+    "RateLimitMiddleware",
+    "set_redis_limiter",
+]
+
+================================================================================
+FILE: routes\analytics.py
+================================================================================
+
+"""
+DSI Analytics Endpoints (Phase 11)
+
+Endpoints for portfolio and workflow analytics.
+"""
+
+import logging
+from datetime import datetime, date, timedelta
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Query, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from infrastructure.db.config import get_async_db
+from ..types import (
+    PortfolioSummaryResponse,
+    TurnaroundMetricsResponse,
+    SignalHealthResponse,
+)
+
+logger = logging.getLogger("dsi.api.analytics")
+
+router = APIRouter()
+
+
+# =============================================================================
+# PORTFOLIO ANALYTICS
+# =============================================================================
+
+@router.get("/analytics/portfolio", response_model=PortfolioSummaryResponse)
+async def get_portfolio_summary(
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+    period: str = Query("mtd", description="Period: mtd, qtd, ytd, last30, last90"),
+) -> PortfolioSummaryResponse:
+    """
+    Get portfolio-level analytics.
+
+    Provides summary metrics for submissions, quotes, and binds.
+    """
+    now = datetime.utcnow()
+
+    if period == "mtd":
+        start = date(now.year, now.month, 1)
+    elif period == "qtd":
+        quarter_start_month = ((now.month - 1) // 3) * 3 + 1
+        start = date(now.year, quarter_start_month, 1)
+    elif period == "ytd":
+        start = date(now.year, 1, 1)
+    elif period == "last30":
+        start = (now - timedelta(days=30)).date()
+    elif period == "last90":
+        start = (now - timedelta(days=90)).date()
+    else:
+        # Default to MTD if unknown
+        start = date(now.year, now.month, 1)
+
+    return PortfolioSummaryResponse(
+        as_of_date=now,
+        coverage=coverage,
+        period=f"{start} to {now.date()}",
+        total_submissions=150,
+        total_quotes=135,
+        total_binds=45,
+        total_declines=15,
+        gross_written_premium=2_250_000,
+        quoted_premium=3_500_000,
+        average_premium=50_000,
+        average_score=725,
+        average_tier=2.3,
+        tier_distribution={1: 25, 2: 55, 3: 40, 4: 20, 5: 10},
+        quote_rate=0.90,
+        bind_rate=0.33,
+        decline_rate=0.10,
+    )
+
+
+@router.get("/analytics/turnaround", response_model=TurnaroundMetricsResponse)
+async def get_turnaround_metrics(
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+    period: str = Query("last30", description="Period for analysis"),
+) -> TurnaroundMetricsResponse:
+    """
+    Get workflow turnaround metrics.
+
+    Measures time-to-quote, time-to-decision, and SLA compliance.
+    """
+    # coverage is currently unused but reserved for future DB-backed filtering
+    return TurnaroundMetricsResponse(
+        period=period,
+        sample_size=150,
+        avg_time_to_quote=4.2,
+        avg_time_to_decision=6.8,
+        p50_time_to_quote=3.5,
+        p90_time_to_quote=8.2,
+        p95_time_to_quote=12.5,
+        sla_target_hours=24.0,
+        sla_compliance_rate=0.92,
+        time_by_tier={1: 2.5, 2: 3.8, 3: 5.2, 4: 8.5, 5: 15.0},
+    )
+
+
+@router.get("/analytics/signals", response_model=SignalHealthResponse)
+async def get_signal_health(
+    coverage: str = Query(..., description="Coverage type"),
+    period: str = Query("last30", description="Period for analysis"),
+) -> SignalHealthResponse:
+    """
+    Get signal extraction health metrics.
+
+    Monitors signal coverage, extraction rates, and quality issues.
+    """
+    return SignalHealthResponse(
+        coverage=coverage,
+        period=period,
+        overall_coverage=0.94,
+        group_coverage={
+            "financial": 0.96,
+            "security": 0.92,
+            "governance": 0.95,
+            "operational": 0.88,
+        },
+        signal_coverage={
+            "revenue_growth": 0.98,
+            "profitability": 0.95,
+            "email_security": 0.91,
+            "web_security": 0.89,
+            "leadership_stability": 0.97,
+        },
+        issues=[
+            {
+                "signal_id": "dnb_score",
+                "issue_type": "low_coverage",
+                "severity": "warning",
+                "description": "Signal extraction coverage is 72%",
+            },
+        ],
+    )
+
+
+@router.get("/analytics/portfolio-stats")
+async def get_portfolio_analytics(
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """Database-backed portfolio analytics."""
+    kpi_query = text(
+        """
+        SELECT 
+            COUNT(s.id) as total_submissions,
+            SUM(q.recommended_premium) as total_premium,
+            SUM(CASE WHEN q.decision = 'approve' THEN 1 ELSE 0 END) as approved_count
+        FROM submissions s
+        JOIN quotes q ON s.id = q.submission_id
+        """
+    )
+    kpis = (await db.execute(kpi_query)).mappings().fetchone()
+
+    tier_query = text(
+        """
+        SELECT tier, COUNT(*) as count
+        FROM quotes
+        WHERE tier IS NOT NULL
+        GROUP BY tier
+        ORDER BY tier
+        """
+    )
+    tiers = [
+        {"name": f"Tier {row['tier']}", "count": row["count"]}
+        for row in (await db.execute(tier_query)).mappings().all()
+    ]
+
+    decision_query = text(
+        """
+        SELECT decision, COUNT(*) as count
+        FROM quotes
+        WHERE decision IS NOT NULL
+        GROUP BY decision
+        """
+    )
+    decisions = [
+        {"name": str(row["decision"]).upper(), "value": row["count"]}
+        for row in (await db.execute(decision_query)).mappings().all()
+    ]
+
+    coverage_query = text(
+        """
+        SELECT s.coverage, SUM(q.recommended_premium) as premium
+        FROM submissions s
+        JOIN quotes q ON s.id = q.submission_id
+        GROUP BY s.coverage
+        ORDER BY premium DESC
+        """
+    )
+    coverages = [
+        {
+            "name": str(row["coverage"]).replace("_", " ").title(),
+            "premium": row["premium"],
+        }
+        for row in (await db.execute(coverage_query)).mappings().all()
+    ]
+
+    total_subs = kpis["total_submissions"] or 0
+    total_premium = kpis["total_premium"] or 0
+    approved_count = kpis["approved_count"] or 0
+
+    return {
+        "kpis": {
+            "total_submissions": total_subs,
+            "total_premium": total_premium,
+            "approval_rate": (approved_count / total_subs * 100) if total_subs > 0 else 0,
+        },
+        "tiers": tiers,
+        "decisions": decisions,
+        "coverages": coverages,
+    }
+
+
+# =============================================================================
+# TIER DISTRIBUTION
+# =============================================================================
+
+
+@router.get("/analytics/tiers")
+async def get_tier_distribution(
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+    period: str = Query("last30", description="Period for analysis"),
+) -> Dict[str, Any]:
+    """
+    Get detailed tier distribution analytics.
+    """
+    return {
+        "period": period,
+        "coverage": coverage or "all",
+        "distribution": {
+            "1": {"count": 25, "percentage": 0.17, "premium": 375_000},
+            "2": {"count": 55, "percentage": 0.37, "premium": 825_000},
+            "3": {"count": 40, "percentage": 0.27, "premium": 600_000},
+            "4": {"count": 20, "percentage": 0.13, "premium": 300_000},
+            "5": {"count": 10, "percentage": 0.07, "premium": 150_000},
+        },
+        "trend": {
+            "tier_1_change": 0.02,
+            "tier_5_change": -0.01,
+            "avg_tier_change": -0.05,
+        },
+    }
+
+
+# =============================================================================
+# FUNNEL ANALYTICS
+# =============================================================================
+
+
+@router.get("/analytics/funnel")
+async def get_submission_funnel(
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+    period: str = Query("last30", description="Period for analysis"),
+) -> Dict[str, Any]:
+    """
+    Get submission to bind conversion funnel.
+    """
+    return {
+        "period": period,
+        "coverage": coverage or "all",
+        "stages": {
+            "submissions": 150,
+            "processed": 148,
+            "quoted": 135,
+            "referred": 20,
+            "declined": 15,
+            "bound": 45,
+            "not_taken_up": 75,
+        },
+        "rates": {
+            "processing_rate": 0.99,
+            "quote_rate": 0.91,
+            "referral_rate": 0.13,
+            "decline_rate": 0.10,
+            "bind_rate": 0.33,
+            "ntu_rate": 0.56,
+        },
+        "avg_times": {
+            "time_to_quote_hours": 4.2,
+            "time_to_bind_hours": 72.5,
+            "time_to_decline_hours": 8.0,
+        },
+    }
+
+
+# =============================================================================
+# PERFORMANCE METRICS
+# =============================================================================
+
+
+@router.get("/analytics/performance")
+async def get_performance_metrics(
+    coverage: str = Query(..., description="Coverage type"),
+    period: str = Query("last90", description="Period for analysis"),
+) -> Dict[str, Any]:
+    """
+    Get model performance metrics.
+
+    Shows how well DSI predictions correlate with outcomes.
+    """
+    return {
+        "coverage": coverage,
+        "period": period,
+        "sample_size": 250,
+        "metrics": {
+            "tier_accuracy": 0.78,
+            "score_correlation": 0.65,
+            "gini_coefficient": 0.42,
+            "systematic_bias": -0.02,
+        },
+        "tier_performance": {
+            "1": {"expected_loss_ratio": 0.35, "actual_loss_ratio": 0.32, "sample": 40},
+            "2": {"expected_loss_ratio": 0.45, "actual_loss_ratio": 0.48, "sample": 80},
+            "3": {"expected_loss_ratio": 0.55, "actual_loss_ratio": 0.52, "sample": 70},
+            "4": {"expected_loss_ratio": 0.70, "actual_loss_ratio": 0.68, "sample": 40},
+            "5": {"expected_loss_ratio": 0.90, "actual_loss_ratio": 0.95, "sample": 20},
+        },
+    }
+
+
+# =============================================================================
+# UNDERWRITER METRICS
+# =============================================================================
+
+
+@router.get("/analytics/underwriters")
+async def get_underwriter_metrics(
+    underwriter_id: Optional[str] = Query(None, description="Specific underwriter"),
+    period: str = Query("last30", description="Period for analysis"),
+) -> Dict[str, Any]:
+    """
+    Get underwriter activity and performance metrics.
+    """
+    underwriters: List[Dict[str, Any]] = [
+        {
+            "underwriter_id": "UW_001",
+            "name": "John Smith",
+            "submissions_reviewed": 45,
+            "referrals_handled": 12,
+            "approval_rate": 0.83,
+            "avg_response_hours": 3.2,
+            "premium_written": 850_000,
+        },
+        {
+            "underwriter_id": "UW_002",
+            "name": "Jane Doe",
+            "submissions_reviewed": 52,
+            "referrals_handled": 15,
+            "approval_rate": 0.80,
+            "avg_response_hours": 4.1,
+            "premium_written": 920_000,
+        },
+        {
+            "underwriter_id": "UW_003",
+            "name": "Bob Johnson",
+            "submissions_reviewed": 38,
+            "referrals_handled": 8,
+            "approval_rate": 0.88,
+            "avg_response_hours": 2.8,
+            "premium_written": 650_000,
+        },
+    ]
+
+    if underwriter_id:
+        underwriters = [u for u in underwriters if u["underwriter_id"] == underwriter_id]
+
+    return {
+        "period": period,
+        "underwriters": underwriters,
+        "team_totals": {
+            "total_reviewed": sum(u["submissions_reviewed"] for u in underwriters),
+            "total_referrals": sum(u["referrals_handled"] for u in underwriters),
+            "avg_approval_rate": (
+                sum(u["approval_rate"] for u in underwriters) / len(underwriters)
+                if underwriters
+                else 0.0
+            ),
+            "total_premium": sum(u["premium_written"] for u in underwriters),
+        },
+    }
+
+
+# =============================================================================
+# DASHBOARD DATA
+# =============================================================================
+
+
+@router.get("/analytics/dashboard")
+async def get_dashboard_data(
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+) -> Dict[str, Any]:
+    """
+    Get complete dashboard data in a single call.
+    """
+    now = datetime.utcnow()
+
+    return {
+        "as_of": now,
+        "coverage": coverage or "all",
+        "kpis": [
+            {
+                "title": "Gross Written Premium",
+                "value": 2_250_000,
+                "format": "currency",
+                "trend": 0.12,
+                "trend_direction": "up",
+            },
+            {
+                "title": "Total Submissions",
+                "value": 150,
+                "format": "number",
+                "trend": 0.08,
+                "trend_direction": "up",
+            },
+            {
+                "title": "Bind Rate",
+                "value": 0.33,
+                "format": "percentage",
+                "trend": 0.02,
+                "trend_direction": "up",
+            },
+            {
+                "title": "Avg Quote Time",
+                "value": 4.2,
+                "format": "hours",
+                "trend": -0.5,
+                "trend_direction": "up",
+            },
+        ],
+        "tier_distribution": {
+            "labels": ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"],
+            "data": [25, 55, 40, 20, 10],
+        },
+        "funnel": {
+            "labels": ["Submissions", "Quoted", "Bound"],
+            "data": [150, 135, 45],
+        },
+        "premium_trend": {
+            "labels": ["Oct", "Nov", "Dec"],
+            "datasets": [
+                {"label": "GWP", "data": [650_000, 750_000, 850_000]},
+            ],
+        },
+        "pending_referrals": 5,
+        "sla_compliance": 0.92,
+    }
+
+================================================================================
+FILE: routes\quotes.py
+================================================================================
+
+"""
+DSI Quote Endpoints (Phase 11) - Database Backed
+
+Endpoints for retrieving and managing quotes.
+Strictly integrated with PostgreSQL via SQLAlchemy AsyncSession.
+"""
+
+import json
+import logging
+import uuid
+from datetime import datetime, timezone
+from typing import List, Optional, Dict, Any
+
+from fastapi import APIRouter, HTTPException, Query, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from infrastructure.db.config import get_async_db
+from infrastructure.db.models import (
+    Quote,
+    Submission,
+    ModelVersionRecord,
+    Referral,
+    QuoteStatus as DBQuoteStatus,
+    DecisionType as DBDecisionType,
+)
+from ..types import (
+    QuoteResponse,
+    QuoteListItem,
+    DiscoverySummary,
+    SignalSummary,
+    LossPropensitySummary,
+    ExposureSummary,
+    QuoteStatus,
+    DecisionType,
+)
+
+logger = logging.getLogger("dsi.api.quotes")
+router = APIRouter()
+
+
+# =============================================================================
+# UTILITIES
+# =============================================================================
+
+
+def generate_id(prefix: str) -> str:
+    """Generate a unique string ID."""
+    return f"{prefix}_{uuid.uuid4().hex[:12]}"
+
+
+def _parse_json(val: Any, default: Any = None) -> Any:
+    """Safely parse PostgreSQL JSONB into Python dicts/lists."""
+    if val is None:
+        return default if default is not None else {}
+    if isinstance(val, (dict, list)):
+        return val
+    try:
+        return json.loads(val)
+    except (TypeError, json.JSONDecodeError):
+        return default if default is not None else {}
+
+
+def _map_db_quote_status(status: DBQuoteStatus) -> QuoteStatus:
+    return QuoteStatus(status.value)
+
+
+def _map_db_decision(decision: Optional[DBDecisionType]) -> DecisionType:
+    if decision is None:
+        return DecisionType.REFER
+    return DecisionType(decision.value)
+
+
+# =============================================================================
+# ENDPOINTS
+# =============================================================================
+
+
+@router.get("/quotes", response_model=List[QuoteListItem])
+async def list_quotes(
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    limit: int = Query(20, le=100, description="Maximum results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    db: AsyncSession = Depends(get_async_db),
+) -> List[QuoteListItem]:
+    """List quotes strictly from the database."""
+    query = (
+        select(Quote, Submission, ModelVersionRecord)
+        .join(Submission, Quote.submission_id == Submission.id)
+        .join(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
+    )
+
+    if coverage:
+        query = query.where(Submission.coverage == coverage)
+
+    if status:
+        try:
+            db_status = DBQuoteStatus(status.lower())
+            query = query.where(Quote.status == db_status)
+        except ValueError:
+            # Ignore invalid status filter
+            pass
+
+    query = query.order_by(Quote.created_at.desc()).limit(limit).offset(offset)
+
+    result = await db.execute(query)
+    rows = result.all()
+
+    items: List[QuoteListItem] = []
+    for q, s, mv in rows:
+        items.append(
+            QuoteListItem(
+                quote_id=q.quote_id,
+                submission_id=s.submission_id,
+                model_version_id=mv.version_id,
+                entity_name=s.entity_name,
+                coverage=s.coverage,
+                status=_map_db_quote_status(q.status),
+                tier=mv.final_tier or 0,
+                premium=q.recommended_premium or 0.0,
+                decision=_map_db_decision(mv.decision),
+                created_at=q.created_at,
+            )
+        )
+
+    return items
+
+
+@router.get("/quotes/{quote_id}", response_model=QuoteResponse)
+async def get_quote(
+    quote_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> QuoteResponse:
+    """Get full quote details, joining the ModelVersionRecord for pricing logic."""
+    query = (
+        select(Quote, Submission, ModelVersionRecord)
+        .join(Submission, Quote.submission_id == Submission.id)
+        .join(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
+        .where(Quote.quote_id == quote_id)
+    )
+
+    row = (await db.execute(query)).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    q, sub, mv = row
+
+    discovery_data = _parse_json(mv.discovery_output, {})
+    if discovery_data:
+        discovery = DiscoverySummary(
+            domain=discovery_data.get("domain", "unknown"),
+            confidence=discovery_data.get("confidence", "low"),
+            industry=discovery_data.get("industry")
+            or discovery_data.get("inferred"),
+            employee_count=discovery_data.get("employee_count"),
+        )
+    else:
+        discovery = None
+
+    signals = _parse_json(mv.signal_outputs, [])
+    top_factors: List[Dict[str, Any]] = []
+    if signals:
+        sorted_signals = sorted(
+            signals,
+            key=lambda x: abs(x.get("contribution", 0)),
+            reverse=True,
+        )[:3]
+        top_factors = [
+            {
+                "signal": s.get("name"),
+                "impact": "positive"
+                if s.get("contribution", 0) > 0
+                else "negative",
+                "score": s.get("value"),
+            }
+            for s in sorted_signals
+        ]
+
+    signal_summary = (
+        SignalSummary(
+            total_signals=int(mv.signal_coverage * 100)
+            if mv.signal_coverage
+            else len(signals),
+            signals_extracted=len(signals),
+            top_factors=top_factors,
+        )
+        if signals
+        else None
+    )
+
+    loss_propensity = (
+        LossPropensitySummary(
+            loss_propensity_score=mv.loss_propensity_score,
+            severity_propensity_score=mv.severity_propensity_score,
+            loss_propensity_band=mv.loss_propensity_band,
+            severity_propensity_band=mv.severity_propensity_band,
+            loss_confidence=mv.loss_confidence,
+            loss_combined_modifier=mv.loss_combined_modifier,
+            loss_cohort_name=mv.loss_cohort_name,
+            loss_trend_direction=mv.loss_trend_direction,
+        )
+        if mv.loss_propensity_score is not None
+        else None
+    )
+
+    exposure = (
+        ExposureSummary(
+            exposure_value=mv.exposure_value,
+            exposure_band_label=mv.exposure_band_label,
+            exposure_magnitude_score=mv.exposure_magnitude_score,
+            exposure_modifier=mv.exposure_modifier,
+        )
+        if mv.exposure_value is not None
+        else None
+    )
+
+    ref_query = (
+        select(Referral)
+        .where(Referral.quote_id == q.id)
+        .order_by(Referral.created_at.desc())
+        .limit(1)
+    )
+    ref = (await db.execute(ref_query)).scalar_one_or_none()
+
+    return QuoteResponse(
+        quote_id=q.quote_id,
+        submission_id=sub.submission_id,
+        model_version_id=mv.version_id,
+        status=_map_db_quote_status(q.status),
+        composite_score=int(mv.pure_composite_score or 0),
+        tier=mv.final_tier or 0,
+        tier_label=mv.tier_label or "UNKNOWN",
+        decision=_map_db_decision(mv.decision),
+        premium_options=_parse_json(q.premium_options, {}),
+        recommended_premium=q.recommended_premium,
+        recommended_limit=q.recommended_limit,
+        base_premium=mv.base_premium,
+        premium_after_modifiers=mv.premium_after_modifiers,
+        modifiers_applied=_parse_json(mv.modifiers_applied, []),
+        loss_propensity=loss_propensity,
+        exposure=exposure,
+        discovery=discovery,
+        signal_summary=signal_summary,
+        referral_reasons=_parse_json(mv.referral_reasons, []),
+        referral_id=ref.referral_id if ref else None,
+        valid_until=q.valid_until,
+        created_at=q.created_at,
+    )
+
+
+@router.post("/quotes/{quote_id}/bind")
+async def bind_quote(
+    quote_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """Bind a quote atomically."""
+    query = select(Quote).where(Quote.quote_id == quote_id)
+    q = (await db.execute(query)).scalar_one_or_none()
+
+    if not q:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    if q.status != DBQuoteStatus.READY:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot bind quote in status {q.status.value}",
+        )
+
+    now = datetime.now(timezone.utc)
+    valid_until = (
+        q.valid_until.replace(tzinfo=timezone.utc)
+        if q.valid_until and q.valid_until.tzinfo is None
+        else q.valid_until
+    )
+
+    if not valid_until or valid_until < now:
+        q.status = DBQuoteStatus.EXPIRED
+        await db.commit()
+        raise HTTPException(status_code=400, detail="Quote has expired")
+
+    q.status = DBQuoteStatus.BOUND
+    q.bound_at = now
+    policy_num = generate_id("pol")
+    q.policy_number = policy_num
+
+    await db.commit()
+
+    return {
+        "message": "Quote bound successfully",
+        "quote_id": quote_id,
+        "policy_id": policy_num,
+        "bound_at": q.bound_at,
+    }
+
+
+@router.post("/quotes/{quote_id}/decline")
+async def decline_quote(
+    quote_id: str,
+    reason: Optional[str] = None,
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """Decline a quote atomically."""
+    query = select(Quote).where(Quote.quote_id == quote_id)
+    q = (await db.execute(query)).scalar_one_or_none()
+
+    if not q:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    if q.status not in [DBQuoteStatus.READY, DBQuoteStatus.DRAFT]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot decline quote in status {q.status.value}",
+        )
+
+    q.status = DBQuoteStatus.DECLINED
+    q.updated_at = datetime.now(timezone.utc)
+    # reason currently unused; could be persisted when schema supports it
+
+    await db.commit()
+
+    return {
+        "message": "Quote declined",
+        "quote_id": quote_id,
+        "declined_at": q.updated_at,
+    }
+
+
+@router.get("/quotes/{quote_id}/premium-options")
+async def get_premium_options(
+    quote_id: str,
+    limits: Optional[List[int]] = Query(
+        None,
+        description="Specific limits to price",
+    ),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """Get or calculate premium options based on the underlying tier."""
+    query = (
+        select(Quote, ModelVersionRecord)
+        .join(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
+        .where(Quote.quote_id == quote_id)
+    )
+
+    row = (await db.execute(query)).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    q, mv = row
+
+    if limits:
+        base_rate = 0.00625
+        tier_factor = {
+            1: 0.8,
+            2: 1.0,
+            3: 1.2,
+            4: 1.5,
+            5: 2.0,
+        }.get(mv.final_tier, 1.0)
+
+        options: Dict[str, float] = {}
+        for limit_val in limits:
+            premium = limit_val * base_rate * tier_factor
+            options[str(limit_val)] = round(premium, 2)
+
+        return {"quote_id": quote_id, "premium_options": options}
+
+    return {
+        "quote_id": quote_id,
+        "premium_options": _parse_json(q.premium_options, {}),
+        "recommended_limit": q.recommended_limit,
+        "recommended_premium": q.recommended_premium,
+    }
+
+================================================================================
+FILE: routes\referrals.py
+================================================================================
+
+"""
+DSI Referral Endpoints (Phase 8/11) - Database Backed
+
+Endpoints for managing underwriter referrals and signal overrides.
+Strictly integrated with PostgreSQL via SQLAlchemy AsyncSession.
+"""
+
+import json
+import logging
+import uuid
+from datetime import datetime, timezone
+from typing import List, Optional, Dict, Any
+
+from fastapi import APIRouter, HTTPException, Query, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_, func
+
+from infrastructure.db.config import get_async_db
+from infrastructure.db.models import (
+    Referral,
+    Quote,
+    Submission,
+    ModelVersionRecord,
+    ModelVersionSignal,
+    SignalCache,
+    SignalAuditRecord,
+    ReferralStatus as DBReferralStatus,
+    DecisionType as DBDecisionType,
+    QuoteStatus as DBQuoteStatus,
+)
+from ..types import (
+    ReferralDecision,
+    ReferralDecisionType,
+    ReferralRecord,
+    ReferralListItem,
+    QuoteResponse,
+    SignalOverrideRequest,
+    SignalOverrideResponse,
+    ReferralSignalDetail,
+    ReferralSignalsResponse,
+    ModelVersionResponse,
+    ReferralStatus,
+    DecisionType,
+    QuoteStatus,
+)
+
+logger = logging.getLogger("dsi.api.referrals")
+router = APIRouter()
+
+
+# =============================================================================
+# UTILITIES
+# =============================================================================
+
+
+def generate_id(prefix: str) -> str:
+    """Generate a unique string ID."""
+    return f"{prefix}_{uuid.uuid4().hex[:12]}"
+
+
+def safe_uuid(val: Optional[str]) -> Optional[uuid.UUID]:
+    """Safely convert a string to UUID for foreign keys."""
+    if not val or val == "unknown":
+        return None
+    try:
+        return uuid.UUID(val)
+    except ValueError:
+        return None
+
+
+def _parse_string_list(val: Any) -> List[str]:
+    """Safely parse DB JSONB/Text arrays into Python Lists."""
+    if not val:
+        return []
+    if isinstance(val, list):
+        return [str(v) for v in val]
+    try:
+        parsed = json.loads(val)
+        if isinstance(parsed, list):
+            return [str(v) for v in parsed]
+        return [str(parsed)]
+    except (TypeError, json.JSONDecodeError):
+        return [str(val)]
+
+
+def _map_db_referral_status(status: DBReferralStatus) -> ReferralStatus:
+    return ReferralStatus(status.value)
+
+
+def _map_db_quote_status(status: DBQuoteStatus) -> QuoteStatus:
+    return QuoteStatus(status.value)
+
+
+def _map_db_decision(decision: Optional[DBDecisionType]) -> DecisionType:
+    if decision is None:
+        return DecisionType.REFER
+    return DecisionType(decision.value)
+
+
+# =============================================================================
+# REFERRAL CRUD
+# =============================================================================
+
+
+@router.get("/referrals", response_model=List[ReferralListItem])
+async def list_referrals(
+    status: Optional[str] = Query(
+        None,
+        description="Filter by status (pending, approved, declined)",
+    ),
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+    limit: int = Query(20, le=100, description="Maximum results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    db: AsyncSession = Depends(get_async_db),
+) -> List[ReferralListItem]:
+    """List referrals strictly from the database."""
+    query = (
+        select(Referral, Submission)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .join(Submission, Quote.submission_id == Submission.id)
+    )
+
+    if status:
+        try:
+            db_status = DBReferralStatus(status.lower())
+            query = query.where(Referral.status == db_status)
+        except ValueError:
+            # Ignore invalid status filter
+            pass
+
+    if coverage:
+        query = query.where(Submission.coverage == coverage)
+
+    query = query.order_by(Referral.created_at.desc()).limit(limit).offset(offset)
+
+    result = await db.execute(query)
+    rows = result.all()
+
+    items: List[ReferralListItem] = []
+    now = datetime.now(timezone.utc)
+
+    for ref, sub in rows:
+        created_at = ref.created_at.replace(tzinfo=timezone.utc)
+        age_hours = (now - created_at).total_seconds() / 3600
+        items.append(
+            ReferralListItem(
+                referral_id=ref.referral_id,
+                entity_name=sub.entity_name,
+                coverage=sub.coverage,
+                status=_map_db_referral_status(ref.status),
+                reasons=_parse_string_list(ref.reasons),
+                age_hours=round(age_hours, 1),
+                created_at=ref.created_at,
+            )
+        )
+
+    return items
+
+
+@router.get("/referrals/{referral_id}", response_model=ReferralRecord)
+async def get_referral(
+    referral_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> ReferralRecord:
+    """Get full referral details, spanning Submission, Quote, and Model Version."""
+    query = (
+        select(Referral, Quote, Submission, ModelVersionRecord)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .join(Submission, Quote.submission_id == Submission.id)
+        .outerjoin(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
+        .where(Referral.referral_id == referral_id)
+    )
+
+    row = (await db.execute(query)).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Referral not found")
+
+    ref, quote, sub, mv = row
+
+    return ReferralRecord(
+        referral_id=ref.referral_id,
+        quote_id=quote.quote_id,
+        submission_id=sub.submission_id,
+        entity_name=sub.entity_name,
+        coverage=sub.coverage,
+        status=_map_db_referral_status(ref.status),
+        reasons=_parse_string_list(ref.reasons),
+        reviewed_at=ref.reviewed_at,
+        reviewed_by=str(ref.reviewed_by) if ref.reviewed_by else None,
+        review_notes=_parse_string_list(ref.review_notes),
+        tier_override=ref.tier_override,
+        premium_adjustment=ref.premium_adjustment,
+        created_at=ref.created_at,
+    )
+
+
+@router.patch("/referrals/{referral_id}", response_model=ReferralRecord)
+async def process_referral(
+    referral_id: str,
+    decision: ReferralDecision,
+    db: AsyncSession = Depends(get_async_db),
+) -> ReferralRecord:
+    """
+    Process a referral decision.
+    Updates the Referral record and the core ModelVersionRecord atomically.
+    """
+    query = (
+        select(Referral, Quote, ModelVersionRecord)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .join(ModelVersionRecord, Quote.model_version_id == ModelVersionRecord.id)
+        .where(Referral.referral_id == referral_id)
+    )
+
+    row = (await db.execute(query)).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Referral not found")
+
+    ref, quote, mv = row
+
+    if ref.status != DBReferralStatus.PENDING:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Referral already resolved with status: {ref.status.value}",
+        )
+
+    is_approval = decision.decision in [
+        ReferralDecisionType.APPROVE,
+        ReferralDecisionType.MODIFY,
+    ]
+    new_status = DBReferralStatus.APPROVED if is_approval else DBReferralStatus.DECLINED
+
+    ref.status = new_status
+    ref.reviewed_at = datetime.utcnow()
+    ref.reviewed_by = safe_uuid(decision.underwriter_id)
+    ref.review_notes = json.dumps(decision.notes) if decision.notes else "[]"
+
+    if decision.adjustments:
+        ref.tier_override = decision.adjustments.get("tier_override")
+        ref.premium_adjustment = decision.adjustments.get("premium_adjustment")
+
+    mv.decision = DBDecisionType(decision.decision.value)
+    quote.status = DBQuoteStatus.READY if new_status == DBReferralStatus.APPROVED else DBQuoteStatus.DECLINED
+
+    await db.commit()
+
+    return await get_referral(referral_id, db)
+
+
+# =============================================================================
+# PHASE 8: DETERMINISTIC SIGNAL MANAGEMENT
+# =============================================================================
+
+
+@router.get(
+    "/model_versions/{model_version_id}/signals",
+    response_model=ReferralSignalsResponse,
+)
+async def get_model_version_signals(
+    model_version_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> ReferralSignalsResponse:
+    """
+    Get signals for a specific model version using the ModelVersionSignal bridge.
+    Executes an exact join from Bridge -> Cache -> Audit.
+    """
+    mv_q = select(ModelVersionRecord).where(
+        ModelVersionRecord.version_id == model_version_id
+    )
+    mv = (await db.execute(mv_q)).scalar_one_or_none()
+    if not mv:
+        raise HTTPException(status_code=404, detail="Model version not found")
+
+    query = (
+        select(ModelVersionSignal, SignalCache, SignalAuditRecord)
+        .join(SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id)
+        .outerjoin(
+            SignalAuditRecord,
+            and_(
+                SignalAuditRecord.signal_cache_id
+                == ModelVersionSignal.signal_cache_id,
+                SignalAuditRecord.model_version_id
+                == ModelVersionSignal.model_version_id,
+            ),
+        )
+        .where(ModelVersionSignal.model_version_id == mv.id)
+    )
+
+    results = (await db.execute(query)).all()
+    signals: List[ReferralSignalDetail] = []
+
+    def _extract_val(field: Any, default: float = 0.0) -> float:
+        if field is None:
+            return default
+        if isinstance(field, dict):
+            for k in ("value", "score", "audited_value", "inferred_value"):
+                if k in field:
+                    try:
+                        return float(field[k])
+                    except (TypeError, ValueError):
+                        continue
+            return default
+        try:
+            return float(field)
+        except (ValueError, TypeError):
+            return default
+
+    for mvs, sc, sar in results:
+        data = sc.data or {}
+
+        inferred = _extract_val(sc.inferred_value, _extract_val(data, 0.0))
+        audited = _extract_val(sar.audited_value) if sar and sar.is_overridden else None
+
+        signals.append(
+            ReferralSignalDetail(
+                signal_cache_id=str(sc.id),
+                signal_id=mvs.signal_id,
+                signal_name=data.get("name", mvs.signal_id),
+                group_id=mvs.group_id or data.get("group_id", "general"),
+                group_name=data.get("group_name", "General"),
+                score=float(mvs.score) if mvs.score is not None else inferred,
+                inferred_value=inferred,
+                audited_value=audited,
+                is_overridden=bool(sar and sar.is_overridden),
+                weight=float(mvs.weight)
+                if mvs.weight is not None
+                else float(data.get("weight", 0.1)),
+                contribution_to_score=float(mvs.contribution)
+                if mvs.contribution is not None
+                else float(data.get("contribution", 0.0)),
+                is_flagged=data.get("is_flagged", False),
+                flag_reason=data.get("flag_reason"),
+                confidence=sc.confidence or 1.0,
+                data_sources=data.get("sources", []),
+                extracted_at=sc.extracted_at,
+                raw_data=None,
+                in_model=True,
+                proxy_tier=mvs.proxy_tier,
+                expectation_level=mvs.expectation_level,
+                was_absent=mvs.was_absent,
+                used_audited_value=mvs.used_audited_value,
+                override_rationale=sar.override_rationale if sar else None,
+                evidence_reference=sar.evidence_reference if sar else None,
+                score_impact=sar.score_impact if sar else None,
+                tier_impact=sar.tier_impact if sar else None,
+            )
+        )
+
+    signals.sort(key=lambda s: (s.group_id, s.signal_id))
+
+    total_signals = len(signals)
+    flagged_count = sum(1 for s in signals if s.is_flagged)
+    overridden_count = sum(1 for s in signals if s.is_overridden)
+    avg_conf = (
+        sum(s.confidence for s in signals) / total_signals if signals else 1.0
+    )
+
+    return ReferralSignalsResponse(
+        referral_id=None,
+        model_version_id=mv.version_id,
+        configuration_name=mv.configuration_name,
+        coverage=mv.coverage,
+        signals=signals,
+        flagged_count=flagged_count,
+        overridden_count=overridden_count,
+        total_signals=total_signals,
+        model_signal_count=total_signals,
+        signal_coverage=1.0,
+        average_confidence=avg_conf,
+    )
+
+
+@router.post(
+    "/model_versions/{model_version_id}/signals/override",
+    response_model=SignalOverrideResponse,
+)
+async def override_signal(
+    model_version_id: str,
+    override: SignalOverrideRequest,
+    db: AsyncSession = Depends(get_async_db),
+) -> SignalOverrideResponse:
+    """
+    Execute a Phase 8 Signal Override.
+    Strictly validates the intersection of model_version_id and signal_cache_id.
+    """
+    mv_q = (
+        select(ModelVersionRecord, Submission, Quote)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .outerjoin(Quote, Quote.model_version_id == ModelVersionRecord.id)
+        .where(ModelVersionRecord.version_id == model_version_id)
+    )
+
+    row = (await db.execute(mv_q)).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Model version not found")
+
+    mv, sub, quote = row
+
+    mvs_q = select(ModelVersionSignal).where(
+        and_(
+            ModelVersionSignal.model_version_id == mv.id,
+            ModelVersionSignal.signal_cache_id == safe_uuid(override.signal_cache_id),
+        )
+    )
+    target_mvs = (await db.execute(mvs_q)).scalar_one_or_none()
+
+    if not target_mvs:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Security violation: The provided signal_cache_id is not "
+                "associated with this model_version_id."
+            ),
+        )
+
+    cache_q = select(SignalCache).where(
+        SignalCache.id == safe_uuid(override.signal_cache_id)
+    )
+    cache = (await db.execute(cache_q)).scalar_one()
+
+    if isinstance(cache.inferred_value, dict):
+        inferred = float(
+            cache.inferred_value.get("value")
+            or cache.inferred_value.get("score")
+            or 0
+        )
+    else:
+        inferred = float((cache.data or {}).get("score", 0))
+
+    new_score = (mv.pure_composite_score or 500) + (
+        (override.audited_value - inferred) * 0.5
+    )
+    new_tier = max(1, min(5, int(5 - (new_score / 200))))
+    tier_labels = {
+        1: "PREFERRED",
+        2: "STANDARD",
+        3: "STANDARD_PLUS",
+        4: "ELEVATED",
+        5: "HIGH_RISK",
+    }
+
+    new_mv = ModelVersionRecord(
+        version_id=generate_id("mv"),
+        submission_id=sub.id,
+        version_number=(mv.version_number or 1) + 1,
+        version_type="signal_override",
+        is_latest=True,
+        config_hash=mv.config_hash,
+        coverage=mv.coverage,
+        pure_composite_score=new_score,
+        final_tier=new_tier,
+        tier_label=tier_labels.get(new_tier, "STANDARD"),
+        decision=mv.decision,
+        created_by=override.underwriter_id or "system",
+        created_at=datetime.utcnow(),
+    )
+
+    mv.is_latest = False
+    db.add(new_mv)
+    await db.flush()
+
+    old_mvs_q = select(ModelVersionSignal).where(
+        ModelVersionSignal.model_version_id == mv.id
+    )
+    old_mvs = (await db.execute(old_mvs_q)).scalars().all()
+
+    for src in old_mvs:
+        is_target = str(src.signal_cache_id) == override.signal_cache_id
+
+        new_mvs = ModelVersionSignal(
+            model_version_id=new_mv.id,
+            signal_cache_id=src.signal_cache_id,
+            signal_id=src.signal_id,
+            entity_id=src.entity_id,
+            score=override.audited_value if is_target else src.score,
+            weight=src.weight,
+            contribution=src.contribution,
+            group_id=src.group_id,
+            proxy_tier=src.proxy_tier,
+            expectation_level=src.expectation_level,
+            was_absent=src.was_absent,
+            used_audited_value=True if is_target else src.used_audited_value,
+        )
+        db.add(new_mvs)
+
+    audit = SignalAuditRecord(
+        signal_cache_id=safe_uuid(override.signal_cache_id),
+        model_version_id=new_mv.id,
+        signal_id=override.signal_id,
+        entity_id=sub.discovered_domain,
+        inferred_value={"value": inferred},
+        audited_value={"value": override.audited_value},
+        is_overridden=True,
+        overridden_by=safe_uuid(override.underwriter_id),
+        overridden_at=datetime.utcnow(),
+        override_rationale=override.rationale,
+        evidence_reference=override.evidence_reference,
+        score_impact=new_score - (mv.pure_composite_score or 0),
+        tier_impact=new_tier - (mv.final_tier or 0),
+    )
+    db.add(audit)
+
+    if quote:
+        quote.model_version_id = new_mv.id
+
+    await db.commit()
+
+    return SignalOverrideResponse(
+        signal_id=override.signal_id,
+        entity_id=sub.discovered_domain,
+        model_version_id=new_mv.version_id,
+        inferred_value=inferred,
+        audited_value=override.audited_value,
+        score_impact=audit.score_impact or 0.0,
+        tier_impact=audit.tier_impact or 0,
+        new_composite_score=new_score,
+        new_tier=new_tier,
+        new_tier_label=new_mv.tier_label,
+        overridden_by="system",
+        overridden_at=audit.overridden_at,
+        override_rationale=override.rationale,
+        evidence_reference=override.evidence_reference,
+        previous_model_version=mv.version_id,
+        new_model_version=new_mv.version_id,
+    )
+
+
+# =============================================================================
+# STATS & UTILITIES
+# =============================================================================
+
+
+@router.get("/referrals/pending/count")
+async def get_pending_count(
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """Get real-time count of pending referrals from DB."""
+    query = select(
+        func.count(Referral.id),
+        func.min(Referral.created_at),
+    ).where(Referral.status == DBReferralStatus.PENDING)
+
+    result = (await db.execute(query)).first()
+    count = result[0] or 0
+    oldest = result[1]
+
+    if oldest:
+        oldest_hours = (
+            datetime.now(timezone.utc) - oldest.replace(tzinfo=timezone.utc)
+        ).total_seconds() / 3600
+    else:
+        oldest_hours = 0.0
+
+    return {
+        "pending_count": count,
+        "oldest_hours": round(oldest_hours, 1),
+    }
+
+
+@router.get("/referrals/stats")
+async def get_referral_stats(
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """Aggregate referral DB statistics."""
+    query = select(Referral.status, func.count(Referral.id)).group_by(
+        Referral.status
+    )
+    rows = (await db.execute(query)).all()
+
+    stats: Dict[str, int] = {
+        "pending": 0,
+        "approved": 0,
+        "declined": 0,
+        "modified": 0,
+        "in_review": 0,
+    }
+    total = 0
+
+    for status_enum, count in rows:
+        stats[status_enum.value] = count
+        total += count
+
+    resolved = stats["approved"] + stats["declined"] + stats["modified"]
+    approved_total = stats["approved"] + stats["modified"]
+    pending_total = stats["pending"] + stats["in_review"]
+
+    approval_rate = round(approved_total / resolved, 2) if resolved > 0 else 0.0
+
+    return {
+        "total": total,
+        "pending": pending_total,
+        "approved": approved_total,
+        "declined": stats["declined"],
+        "approval_rate": approval_rate,
+        "avg_resolution_hours": 0.0,
+    }
+
+================================================================================
+FILE: routes\simulate.py
+================================================================================
+
+"""
+DSI Simulation API (Phase 3)
+
+Portfolio stress-testing endpoint backed by the Rust dsi-sim engine.
+Accepts a portfolio snapshot and one or more shock parameters,
+delegates to PyO3-compiled Rust for millisecond-scale parallel
+simulation, and returns premium-adequacy metrics.
+
+Usage:
+    POST /api/v1/simulate
+    {
+        "portfolio_json": "{ ... }",
+        "shocks": [{"signal_id": "active_cves", "shock_type": "multiplier", "value": 2.0}],
+        "iterations": 1
+    }
+"""
+
+import json
+import logging
+import time
+import uuid
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, HTTPException
+
+from ..types import (
+    SimulateRequest,
+    SimulateResponse,
+    SimulationStats,
+    TierMigration,
+)
+
+
+logger = logging.getLogger("dsi.api.simulate")
+
+router = APIRouter()
+
+
+def _build_shock(params):
+    """
+    Build a dsi_sim.ShockParameter from request parameters.
+
+    Falls back to a plain-dict representation when the Rust extension
+    is not available (stub mode).
+    """
+    try:
+        from dsi_sim import ShockParameter
+
+        shock_type = params.shock_type.lower()
+        if shock_type == "override":
+            shock = ShockParameter.signal_override(params.signal_id, params.value)
+        elif shock_type == "multiplier":
+            shock = ShockParameter.signal_multiplier(params.signal_id, params.value)
+        else:
+            shock = ShockParameter.signal_multiplier(params.signal_id, params.value)
+
+        if params.industry_filter:
+            shock.filter_industry(params.industry_filter)
+        if params.tier_filter:
+            shock.filter_tier(params.tier_filter)
+        if params.coverage_filter:
+            shock.filter_coverage(params.coverage_filter)
+
+        return shock
+
+    except ImportError:
+        # Stub mode: return dict representation
+        return {
+            "signal_id": params.signal_id,
+            "shock_type": params.shock_type,
+            "value": params.value,
+            "industry_filter": params.industry_filter,
+            "tier_filter": params.tier_filter,
+            "coverage_filter": params.coverage_filter,
+        }
+
+
+@router.post("/simulate", response_model=SimulateResponse)
+async def run_simulation(request: SimulateRequest):
+    """
+    Run a portfolio stress-test simulation.
+
+    Sends the portfolio and shock parameters to the Rust dsi-sim engine
+    for high-performance parallel computation. Returns premium adequacy
+    metrics, tier migration details, and statistical summary.
+    """
+    simulation_id = str(uuid.uuid4())[:12]
+    start_time = time.time()
+
+    # Validate JSON
+    try:
+        json.loads(request.portfolio_json)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid portfolio_json: {e}")
+
+    try:
+        # Attempt to use Rust dsi-sim engine
+        from dsi_sim import Simulator
+
+        sim = Simulator()
+
+        # Load config if provided
+        if request.config_path:
+            sim.load_config(request.config_path)
+
+        # Load portfolio
+        sim.load_portfolio_json(request.portfolio_json)
+
+        # Build shocks and run
+        for shock_params in request.shocks:
+            shock = _build_shock(shock_params)
+            result = sim.run_simulation(shock, request.iterations)
+
+        elapsed_ms = (time.time() - start_time) * 1000
+
+        # Parse results from Rust
+        tier_migrations = []
+        if hasattr(result, "tier_migration"):
+            for tm in result.tier_migration:
+                tier_migrations.append(TierMigration(
+                    entity_id=tm.get("entity_id", ""),
+                    old_tier=tm.get("old_tier", 0),
+                    new_tier=tm.get("new_tier", 0),
+                ))
+
+        stats_data = result.stats if hasattr(result, "stats") else {}
+
+        return SimulateResponse(
+            simulation_id=simulation_id,
+            status="completed",
+            premium_adequacy=result.premium_adequacy,
+            total_premium_impact=result.total_premium_impact,
+            entities_affected=result.entities_affected,
+            total_entities=sim.entity_count(),
+            tier_migrations=tier_migrations,
+            stats=SimulationStats(
+                mean_score_delta=getattr(stats_data, "mean_score_delta", 0.0),
+                std_score_delta=getattr(stats_data, "std_score_delta", 0.0),
+                entities_upgraded=getattr(stats_data, "entities_upgraded", 0),
+                entities_downgraded=getattr(stats_data, "entities_downgraded", 0),
+            ),
+            execution_time_ms=elapsed_ms,
+            created_at=datetime.now(timezone.utc),
+        )
+
+    except ImportError:
+        # Stub mode: dsi_sim not compiled, return synthetic response
+        logger.warning("dsi_sim Rust extension not available, using stub response")
+
+        elapsed_ms = (time.time() - start_time) * 1000
+
+        return SimulateResponse(
+            simulation_id=simulation_id,
+            status="completed_stub",
+            premium_adequacy=1.0,
+            total_premium_impact=0.0,
+            entities_affected=0,
+            total_entities=0,
+            tier_migrations=[],
+            stats=SimulationStats(
+                mean_score_delta=0.0,
+                std_score_delta=0.0,
+                entities_upgraded=0,
+                entities_downgraded=0,
+            ),
+            execution_time_ms=elapsed_ms,
+            created_at=datetime.now(timezone.utc),
+        )
+
+    except Exception as e:
+        logger.error(f"Simulation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Simulation failed: {e}")
+
+================================================================================
+FILE: routes\submissions.py
+================================================================================
+
+"""
+DSI Submission Endpoints
+
+Endpoints for creating and managing submissions.
+Supports both database-backed persistence and in-memory fallback.
+"""
+
+import logging
+import time
+import uuid
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from infrastructure.db.models import Submission, ModelVersionRecord, AuditLog
+from ..types import (
+    SubmissionRequest,
+    SubmissionResponse,
+    SubmissionRecord,
+    SubmissionStatus,
+    MultiCoverageRequest,
+    MultiCoverageResponse,
+    QuoteResponse,
+    QuoteStatus,
+    JobResponse,
+    JobStatus,
+    ListFilters,
+)
+from layers.risk.workflow import run_assessment
+from layers.risk.types import WorkflowResult, DecisionType as WorkflowDecisionType
+
+logger = logging.getLogger("dsi.api.submissions")
+
+router = APIRouter()
+
+
+# =============================================================================
+# STORAGE BACKEND
+# =============================================================================
+
+
+class InMemoryStore:
+    """In-memory storage fallback when database is unavailable."""
+
+    def __init__(self) -> None:
+        self.submissions: Dict[str, Dict[str, Any]] = {}
+        self.quotes: Dict[str, Dict[str, Any]] = {}
+        self.jobs: Dict[str, Dict[str, Any]] = {}
+
+
+_memory = InMemoryStore()
+
+
+def _db_available() -> bool:
+    """Check if database is available via app state."""
+    try:
+        from ..main import app_state
+
+        return app_state.db_connected
+    except Exception:
+        return False
+
+
+async def _get_db_session() -> Optional[AsyncSession]:
+    """Get a database session if DB is available, else None."""
+    if not _db_available():
+        return None
+    try:
+        from ...db.config import _get_async_session_factory
+
+        factory = _get_async_session_factory()
+        return factory()
+    except Exception:
+        return None
+
+
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+
+def generate_id(prefix: str) -> str:
+    """Generate a unique ID."""
+    return f"{prefix}_{uuid.uuid4().hex[:12]}"
+
+
+def workflow_result_to_quote(
+    result: WorkflowResult,
+    submission_id: str,
+    quote_id: str,
+) -> Dict[str, Any]:
+    """
+    Convert WorkflowResult to quote dict.
+
+    Scoring / tier / decision data is stored once on the model_version.
+    The quote dict keeps these fields for in-memory and API responses
+    (populated from model_version at read time in production).
+    """
+    now = datetime.utcnow()
+
+    decision_map = {
+        WorkflowDecisionType.APPROVE: "approve",
+        WorkflowDecisionType.REFER: "refer",
+        WorkflowDecisionType.DECLINE: "decline",
+    }
+
+    return {
+        "quote_id": quote_id,
+        "submission_id": submission_id,
+        "status": QuoteStatus.READY,
+        "composite_score": result.composite_score,
+        "confidence": result.confidence,
+        "tier": result.tier,
+        "tier_label": result.tier_label,
+        "decision": decision_map.get(result.decision, "refer"),
+        "auto_approve": result.auto_approve,
+        "referral_reasons": result.referral_reasons,
+        "premium_options": result.premium_options,
+        "recommended_premium": result.recommended_premium,
+        "recommended_limit": result.recommended_limit,
+        "discovery": (
+            {
+                "domain": result.discovered_domain,
+                "confidence": result.discovery_confidence,
+                "warnings": result.discovery_warnings,
+            }
+            if result.discovered_domain
+            else None
+        ),
+        "notes": result.notes,
+        "created_at": now,
+        "valid_until": now + timedelta(days=30),
+    }
+
+
+def execute_workflow(
+    submission_id: str,
+    request: SubmissionRequest,
+) -> WorkflowResult:
+    """Execute the pricing workflow."""
+    logger.info(f"Executing workflow for submission {submission_id}")
+    start_time = time.time()
+
+    try:
+        result = run_assessment(
+            entity_id=submission_id,
+            coverage=request.coverage,
+            submission_data=request.submission_data or {},
+            direct_query_responses=request.direct_query_responses or {},
+            entity_name=request.entity_name,
+            domain_hint=request.domain_hint,
+            country_hint=request.country_hint,
+            skip_discovery=True,
+        )
+
+        duration = time.time() - start_time
+        logger.info(
+            "Workflow complete for %s: score=%.0f, tier=%s, decision=%s, duration=%.2fs",
+            submission_id,
+            result.composite_score,
+            result.tier,
+            result.decision.value,
+            duration,
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Workflow failed for {submission_id}: {e}")
+        raise
+
+
+async def _persist_submission(submission_id: str, request: SubmissionRequest) -> None:
+    """Persist a submission to database if available, otherwise in-memory."""
+    now = datetime.utcnow()
+    data = {
+        "submission_id": submission_id,
+        "entity_name": request.entity_name,
+        "domain_hint": request.domain_hint,
+        "country_hint": request.country_hint,
+        "coverage": request.coverage,
+        "configuration": request.configuration or f"{request.coverage}_general",
+        "status": SubmissionStatus.PENDING,
+        "created_at": now,
+        "updated_at": now,
+        "quote_id": None,
+        "submission_data": request.submission_data,
+        "direct_query_responses": request.direct_query_responses,
+    }
+
+    if _db_available():
+        try:
+            from ...db.repositories import SubmissionRepository
+
+            session = await _get_db_session()
+            if session:
+                repo = SubmissionRepository(session)
+                await repo.create(
+                    entity_name=request.entity_name,
+                    coverage=request.coverage,
+                    domain_hint=request.domain_hint,
+                    country_hint=request.country_hint,
+                    configuration=request.configuration,
+                    submission_data=request.submission_data or {},
+                    direct_query_responses=request.direct_query_responses or {},
+                )
+                await session.commit()
+                await session.close()
+                logger.debug("Submission %s persisted to database", submission_id)
+                return
+        except Exception as e:
+            logger.warning("DB persist failed, using in-memory: %s", e)
+
+    _memory.submissions[submission_id] = data
+
+
+async def _update_submission_status(
+    submission_id: str,
+    status: SubmissionStatus,
+    quote_id: Optional[str] = None,
+    error: Optional[str] = None,
+    discovered_domain: Optional[str] = None,
+) -> None:
+    """Update submission status in the active storage backend."""
+    if _db_available():
+        try:
+            from ...db.repositories import SubmissionRepository
+
+            session = await _get_db_session()
+            if session:
+                repo = SubmissionRepository(session)
+                await repo.update_status(submission_id, status, error_message=error)
+                await session.commit()
+                await session.close()
+                return
+        except Exception as e:
+            logger.warning("DB status update failed: %s", e)
+
+    if submission_id in _memory.submissions:
+        sub = _memory.submissions[submission_id]
+        sub["status"] = status
+        if quote_id:
+            sub["quote_id"] = quote_id
+        if error:
+            sub["error"] = error
+        if discovered_domain:
+            sub["discovered_domain"] = discovered_domain
+
+
+async def _persist_quote(quote_id: str, quote_data: Dict[str, Any]) -> None:
+    """
+    Persist a quote to the active storage backend.
+
+    Scoring / decision data is NOT written to the quote row -- it
+    lives on the linked model_version. The quote stores only
+    recommended_premium, recommended_limit, and premium_options.
+    """
+    if _db_available():
+        try:
+            from ...db.repositories import (
+                QuoteRepository,
+                SubmissionRepository,
+                ModelVersionRepository,
+            )
+
+            session = await _get_db_session()
+            if session:
+                sub_repo = SubmissionRepository(session)
+                sub = await sub_repo.get_by_id(quote_data["submission_id"])
+                if sub:
+                    mv_repo = ModelVersionRepository(session)
+                    mv = await mv_repo.get_latest(sub.id)
+                    if mv:
+                        repo = QuoteRepository(session)
+                        await repo.create(
+                            submission_id=sub.id,
+                            model_version_id=mv.id,
+                            recommended_premium=quote_data.get(
+                                "recommended_premium", 0
+                            ),
+                            recommended_limit=quote_data.get("recommended_limit"),
+                            premium_options=quote_data.get("premium_options", {}),
+                        )
+                        await session.commit()
+                await session.close()
+                return
+        except Exception as e:
+            logger.warning("DB quote persist failed, using in-memory: %s", e)
+
+    _memory.quotes[quote_id] = quote_data
+
+
+async def process_submission_async(
+    submission_id: str,
+    request: SubmissionRequest,
+) -> None:
+    """Background task to process a submission."""
+    logger.info("Processing submission %s in background", submission_id)
+
+    await _update_submission_status(submission_id, SubmissionStatus.PROCESSING)
+
+    try:
+        result = execute_workflow(submission_id, request)
+
+        quote_id = generate_id("quo")
+        quote = workflow_result_to_quote(result, submission_id, quote_id)
+        await _persist_quote(quote_id, quote)
+        await _update_submission_status(
+            submission_id,
+            SubmissionStatus.READY,
+            quote_id=quote_id,
+            discovered_domain=result.discovered_domain,
+        )
+
+        for job in _memory.jobs.values():
+            if job.get("submission_id") == submission_id:
+                job["status"] = JobStatus.COMPLETED
+                job["result"] = {"quote_id": quote_id}
+                job["completed_at"] = datetime.utcnow()
+
+    except Exception as e:
+        logger.error("Failed to process submission %s: %s", submission_id, e)
+        await _update_submission_status(
+            submission_id, SubmissionStatus.FAILED, error=str(e)
+        )
+
+        for job in _memory.jobs.values():
+            if job.get("submission_id") == submission_id:
+                job["status"] = JobStatus.FAILED
+                job["error"] = str(e)
+
+
+# =============================================================================
+# ENDPOINTS
+# =============================================================================
+
+
+@router.post("/submissions", response_model=SubmissionResponse)
+async def create_submission(
+    request: SubmissionRequest,
+    background_tasks: BackgroundTasks,
+) -> SubmissionResponse:
+    """
+    Create a new submission and trigger pricing.
+
+    The submission will be processed asynchronously if async_mode is True,
+    otherwise it will block until complete.
+    """
+    submission_id = generate_id("sub")
+    now = datetime.utcnow()
+    estimated_completion = now + timedelta(seconds=30)
+
+    await _persist_submission(submission_id, request)
+
+    if request.async_mode:
+        job_id = generate_id("job")
+        _memory.jobs[job_id] = {
+            "job_id": job_id,
+            "status": JobStatus.PENDING,
+            "submission_id": submission_id,
+            "created_at": now,
+        }
+
+        background_tasks.add_task(process_submission_async, submission_id, request)
+
+        return SubmissionResponse(
+            submission_id=submission_id,
+            status=SubmissionStatus.PROCESSING,
+            estimated_completion=estimated_completion,
+            job_id=job_id,
+        )
+
+    try:
+        await _update_submission_status(submission_id, SubmissionStatus.PROCESSING)
+
+        result = execute_workflow(submission_id, request)
+
+        quote_id = generate_id("quo")
+        quote = workflow_result_to_quote(result, submission_id, quote_id)
+        await _persist_quote(quote_id, quote)
+        await _update_submission_status(
+            submission_id,
+            SubmissionStatus.READY,
+            quote_id=quote_id,
+            discovered_domain=result.discovered_domain,
+        )
+
+        return SubmissionResponse(
+            submission_id=submission_id,
+            status=SubmissionStatus.READY,
+            quote_id=quote_id,
+        )
+
+    except Exception as e:
+        await _update_submission_status(
+            submission_id, SubmissionStatus.FAILED, error=str(e)
+        )
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/submissions", response_model=List[SubmissionRecord])
+async def list_submissions(
+    coverage: Optional[str] = Query(None, description="Filter by coverage"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    limit: int = Query(20, le=100, description="Maximum results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+) -> List[SubmissionRecord]:
+    """List submissions with optional filtering."""
+    if _db_available():
+        try:
+            from ...db.repositories import SubmissionRepository
+            from ...db.models import SubmissionStatus as DBSubmissionStatus
+
+            session = await _get_db_session()
+            if session:
+                repo = SubmissionRepository(session)
+                db_status = None
+                if status:
+                    db_status = DBSubmissionStatus(status)
+                subs = await repo.list(
+                    coverage=coverage,
+                    status=db_status,
+                    limit=limit,
+                    offset=offset,
+                )
+                await session.close()
+                return [
+                    SubmissionRecord(
+                        submission_id=s.submission_id,
+                        entity_name=s.entity_name,
+                        domain_hint=s.domain_hint,
+                        coverage=s.coverage,
+                        configuration=s.configuration,
+                        status=SubmissionStatus(s.status.value),
+                        created_at=s.created_at,
+                        updated_at=s.updated_at or s.created_at,
+                    )
+                    for s in subs
+                ]
+        except Exception as e:
+            logger.warning("DB list failed, using in-memory: %s", e)
+
+    results = list(_memory.submissions.values())
+
+    if coverage:
+        results = [s for s in results if s["coverage"] == coverage]
+    if status:
+        results = [s for s in results if s["status"].value == status]
+
+    results.sort(key=lambda s: s["created_at"], reverse=True)
+    results = results[offset : offset + limit]
+
+    return [
+        SubmissionDetail(
+            submission_id=s["submission_id"],
+            entity_name=s["entity_name"],
+            domain=s.get("domain_hint"),
+            coverage=s["coverage"],
+            configuration=s["configuration"],
+            status=s["status"],
+            created_at=s["created_at"],
+            updated_at=s["updated_at"],
+            quote_id=s.get("quote_id"),
+        )
+        for s in results
+    ]
+
+
+@router.get("/submissions/{submission_id}", response_model=SubmissionRecord)
+async def get_submission(submission_id: str) -> SubmissionRecord:
+    """Get submission details by ID."""
+    if _db_available():
+        try:
+            from ...db.repositories import SubmissionRepository
+
+            session = await _get_db_session()
+            if session:
+                repo = SubmissionRepository(session)
+                s = await repo.get_by_id(submission_id)
+                await session.close()
+                if s:
+                    return SubmissionRecord(
+                        submission_id=s.submission_id,
+                        entity_name=s.entity_name,
+                        domain_hint=s.domain_hint,
+                        coverage=s.coverage,
+                        configuration=s.configuration,
+                        status=SubmissionStatus(s.status.value),
+                        created_at=s.created_at,
+                        updated_at=s.updated_at or s.created_at,
+                        error_message=s.error_message,
+                    )
+        except Exception as e:
+            logger.warning("DB get failed, using in-memory: %s", e)
+
+    if submission_id not in _memory.submissions:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    s = _memory.submissions[submission_id]
+
+    return SubmissionRecord(
+        submission_id=s["submission_id"],
+        entity_name=s["entity_name"],
+        domain_hint=s.get("domain_hint"),
+        coverage=s["coverage"],
+        configuration=s["configuration"],
+        status=s["status"],
+        created_at=s["created_at"],
+        updated_at=s["updated_at"],
+        quote_id=s.get("quote_id"),
+        error_message=s.get("error_message"),
+    )
+
+
+@router.delete("/submissions/{submission_id}")
+async def cancel_submission(submission_id: str) -> Dict[str, Any]:
+    """Cancel a pending submission."""
+    if _db_available():
+        try:
+            from ...db.repositories import SubmissionRepository
+
+            session = await _get_db_session()
+            if session:
+                repo = SubmissionRepository(session)
+                s = await repo.get_by_id(submission_id)
+                if s:
+                    if s.status.value not in ["pending", "processing"]:
+                        raise HTTPException(
+                            status_code=400,
+                            detail="Cannot cancel submission in current status",
+                        )
+                    await repo.delete(submission_id)
+                    await session.commit()
+                    await session.close()
+                    return {
+                        "message": "Submission cancelled",
+                        "submission_id": submission_id,
+                    }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning("DB cancel failed, using in-memory: %s", e)
+
+    if submission_id not in _memory.submissions:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    s = _memory.submissions[submission_id]
+
+    if s["status"] not in [SubmissionStatus.PENDING, SubmissionStatus.PROCESSING]:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot cancel submission in current status",
+        )
+
+    del _memory.submissions[submission_id]
+
+    return {"message": "Submission cancelled", "submission_id": submission_id}
+
+
+# =============================================================================
+# MULTI-COVERAGE ENDPOINTS
+# =============================================================================
+
+
+@router.post("/submissions/multi", response_model=MultiCoverageResponse)
+async def create_multi_coverage_submission(
+    request: MultiCoverageRequest,
+    background_tasks: BackgroundTasks,
+) -> MultiCoverageResponse:
+    """
+    Create a multi-coverage submission.
+
+    Prices multiple coverages from a single submission using the
+    actual workflow engine.
+    """
+    result_id = generate_id("mcs")
+    now = datetime.utcnow()
+    start_time = time.time()
+
+    coverages = request.coverages or ["cyber"]
+
+    coverage_quotes: Dict[str, QuoteResponse] = {}
+    failed_coverages: List[str] = []
+
+    for coverage in coverages:
+        try:
+            submission_id = generate_id("sub")
+            quote_id = generate_id("quo")
+
+            sub_data = {
+                "submission_id": submission_id,
+                "entity_name": request.entity_name,
+                "domain_hint": request.domain_hint,
+                "coverage": coverage,
+                "configuration": f"{coverage}_general",
+                "status": SubmissionStatus.PROCESSING,
+                "created_at": now,
+                "updated_at": now,
+                "quote_id": quote_id,
+            }
+            _memory.submissions[submission_id] = sub_data
+
+            result = run_assessment(
+                entity_id=submission_id,
+                coverage=coverage,
+                submission_data=request.submission_data or {},
+                direct_query_responses=request.direct_query_responses or {},
+                entity_name=request.entity_name,
+                domain_hint=request.domain_hint,
+                country_hint=request.country_hint,
+                skip_discovery=True,
+            )
+
+            decision_map = {
+                WorkflowDecisionType.APPROVE: "approve",
+                WorkflowDecisionType.REFER: "refer",
+                WorkflowDecisionType.DECLINE: "decline",
+            }
+
+            coverage_quotes[coverage] = QuoteResponse(
+                quote_id=quote_id,
+                submission_id=submission_id,
+                model_version_id=None,
+                status=QuoteStatus.READY,
+                composite_score=int(result.composite_score),
+                tier=result.tier,
+                tier_label=result.tier_label,
+                decision=decision_map.get(result.decision, "refer"),
+                premium_options=result.premium_options,
+                recommended_premium=result.recommended_premium,
+                recommended_limit=result.recommended_limit,
+                base_premium=None,
+                premium_after_modifiers=None,
+                modifiers_applied=[],
+                loss_propensity=None,
+                exposure=None,
+                discovery=None,
+                signal_summary=None,
+                referral_reasons=[],
+                referral_id=None,
+                created_at=now,
+                valid_until=now + timedelta(days=30),
+            )
+
+            _memory.submissions[submission_id]["status"] = SubmissionStatus.READY
+            _memory.submissions[submission_id]["quote_id"] = quote_id
+
+        except Exception as e:
+            logger.error("Failed to price %s: %s", coverage, e)
+            failed_coverages.append(coverage)
+
+    successful = list(coverage_quotes.keys())
+    discount = 0.0
+
+    if len(successful) >= 2:
+        discount = 0.05
+        if len(successful) >= 3:
+            discount = 0.10
+
+    total = sum(
+        q.recommended_premium or 0 for q in coverage_quotes.values()
+    )
+    savings = total * discount
+    combined = total - savings
+
+    duration = time.time() - start_time
+
+    return MultiCoverageResponse(
+        result_id=result_id,
+        entity_name=request.entity_name,
+        detected_locale=request.country_hint or "US",
+        coverage_quotes=coverage_quotes,
+        failed_coverages=failed_coverages,
+        recommended_package=successful,
+        package_discount=discount,
+        combined_premium=combined,
+        total_savings=savings,
+        duration_seconds=duration,
+        cache_hit_rate=0.0,
+    )
+
+
+# =============================================================================
+# JOB ENDPOINTS
+# =============================================================================
+
+
+@router.get("/jobs/{job_id}", response_model=JobResponse)
+async def get_job_status(job_id: str) -> JobResponse:
+    """Get async job status."""
+    if job_id not in _memory.jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job = _memory.jobs[job_id]
+
+    submission_id = job.get("submission_id")
+    if submission_id and submission_id in _memory.submissions:
+        sub = _memory.submissions[submission_id]
+        if sub["status"] == SubmissionStatus.READY:
+            job["status"] = JobStatus.COMPLETED
+            job["result"] = {"quote_id": sub.get("quote_id")}
+        elif sub["status"] == SubmissionStatus.FAILED:
+            job["status"] = JobStatus.FAILED
+            job["error"] = sub.get("error", "Processing failed")
+
+    return JobResponse(
+        job_id=job["job_id"],
+        status=job["status"],
+        progress=1.0 if job["status"] == JobStatus.COMPLETED else 0.5,
+        result=job.get("result"),
+        error=job.get("error"),
+        created_at=job["created_at"],
+        completed_at=job.get("completed_at"),
+    )
+
+
+# =============================================================================
+# QUOTE RETRIEVAL (convenience endpoint)
+# =============================================================================
+
+
+@router.get("/submissions/{submission_id}/quote", response_model=QuoteResponse)
+async def get_submission_quote(submission_id: str) -> QuoteResponse:
+    """Get the quote for a submission."""
+    if submission_id not in _memory.submissions:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    sub = _memory.submissions[submission_id]
+
+    if sub["status"] != SubmissionStatus.READY:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Submission not ready (status: {sub['status'].value})",
+        )
+
+    quote_id = sub.get("quote_id")
+    if not quote_id or quote_id not in _memory.quotes:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    q = _memory.quotes[quote_id]
+
+    return QuoteResponse(
+        quote_id=q["quote_id"],
+        submission_id=q["submission_id"],
+        model_version_id=q["model_version_id"],
+        status=q["status"],
+        composite_score=int(q["composite_score"]),
+        tier=q["tier"],
+        tier_label=q["tier_label"],
+        decision=q["decision"],
+        premium_options=q["premium_options"],
+        recommended_premium=q["recommended_premium"],
+        recommended_limit=q["recommended_limit"],
+        base_premium=q["base_premium"],
+        premium_after_modifiers=q["premium_after_modifiers"],
+        modifiers_applied=q.get("modifiers_applied", []),
+        loss_propensity=q.get("loss_propensity", []),
+        exposure=q.get("exposure",[]),
+        discovery=q.get("discovery",[]),
+        signal_summary=q.get("signal_summary", []),
+        referral_reasons=q.get("referral_reasons", []),
+        referral_id=q["referral_id"],
+        created_at=q["created_at"],
+        valid_until=q["valid_until"],
+    )
+
+================================================================================
+FILE: routes\workbench.py
+================================================================================
+
+"""
+DSI Workbench Endpoints (CQRS Read Models)
+
+Highly optimized, read-only SQL queries designed specifically to 
+flatten relational data and serve it directly to frontend data tables.
+"""
+
+import logging
+from datetime import datetime, timedelta
+from typing import Optional, List, Dict, Any
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from infrastructure.db.config import get_async_db
+from infrastructure.db.models import Submission, ModelVersionRecord, AuditLog
+
+logger = logging.getLogger("dsi.api.workbench")
+router = APIRouter()
+
+
+# Reuse the same DB-availability helpers as submissions.py, but localised here
+def _db_available() -> bool:
+    try:
+        from ..main import app_state
+
+        return app_state.db_connected
+    except Exception:
+        return False
+
+
+async def _get_db_session() -> Optional[AsyncSession]:
+    if not _db_available():
+        return None
+    try:
+        from ...db.config import _get_async_session_factory
+
+        factory = _get_async_session_factory()
+        return factory()
+    except Exception:
+        return None
+
+
+@router.get("/workbench-data")
+async def get_workbench_data(
+    created_after: Optional[datetime] = None,
+    db: AsyncSession = Depends(get_async_db),
+) -> List[Dict[str, Any]]:
+    """Primary Read Model for the Pipeline UI grids."""
+    if created_after is None:
+        created_after = datetime.utcnow() - timedelta(days=30)
+
+    query = text(
+        """
+        SELECT 
+            s.id AS submission_id,
+            q.id AS quote_id,
+            r.referral_id AS referral_id,
+            mv.id AS model_version_id,
+            s.submission_id AS submission_code,
+            q.quote_id AS quote_code,
+            r.referral_id AS referral_code,
+            mv.version_id AS version_code,
+            s.entity_name,
+            COALESCE(s.coverage, '') || ' / ' || COALESCE(s.configuration, '') AS coverage_configuration,
+            s.created_at,
+            q.status,
+            q.recommended_premium,
+            q.recommended_limit,
+            mv.pure_composite_score,
+            mv.confidence AS pure_composite_score_confidence,
+            mv.signal_coverage,
+            mv.final_tier,
+            mv.tier_label,
+            mv.decision
+        FROM submissions s
+        LEFT JOIN quotes q ON s.id = q.submission_id
+        LEFT JOIN referrals r on r.quote_id = q.id
+        LEFT JOIN model_versions mv ON mv.submission_id = s.id AND mv.id = q.model_version_id
+        WHERE mv.is_latest = true
+          AND (
+                CAST(s.status AS TEXT) ILIKE 'draft'
+                OR s.created_at >= :created_after
+              )
+        """
+    )
+
+    result = await db.execute(query, {"created_after": created_after})
+    rows = result.mappings().all()
+    return [dict(row) for row in rows]
+
+
+@router.get("/submissions/{submission_id}/model_versions")
+async def get_model_versions(submission_id: str) -> Dict[str, Any]:
+    """Fetch the lineage of model versions for a submission."""
+    if _db_available():
+        try:
+            session = await _get_db_session()
+            if session:
+                sub_q = select(Submission).where(
+                    Submission.submission_id == submission_id
+                )
+                sub = (await session.execute(sub_q)).scalar_one_or_none()
+
+                if not sub:
+                    await session.close()
+                    raise HTTPException(status_code=404, detail="Submission not found")
+
+                mv_q = (
+                    select(ModelVersionRecord)
+                    .where(ModelVersionRecord.submission_id == sub.id)
+                    .order_by(ModelVersionRecord.version_number.desc())
+                )
+
+                versions = (await session.execute(mv_q)).scalars().all()
+                await session.close()
+
+                return {
+                    "versions": [
+                        {
+                            "version_id": v.version_id,
+                            "version_number": v.version_number,
+                            "version_type": v.version_type,
+                            "is_latest": v.is_latest,
+                            "composite_score": v.pure_composite_score,
+                            "tier": v.final_tier,
+                            "tier_label": v.tier_label,
+                            "created_by": v.created_by,
+                            "created_at": v.created_at.isoformat()
+                            if v.created_at
+                            else None,
+                        }
+                        for v in versions
+                    ]
+                }
+        except Exception as e:
+            logger.warning("DB get model_versions failed: %s", e)
+
+    return {"versions": []}
+
+
+@router.get("/submissions/{submission_id}/audit_logs")
+async def get_audit_logs(submission_id: str) -> Dict[str, Any]:
+    """Fetch the chronological ledger of events for this submission."""
+    if _db_available():
+        try:
+            session = await _get_db_session()
+            if session:
+                log_q = (
+                    select(AuditLog)
+                    .where(AuditLog.resource_id == submission_id)
+                    .order_by(AuditLog.created_at.desc())
+                )
+
+                logs = (await session.execute(log_q)).scalars().all()
+                await session.close()
+
+                return {
+                    "logs": [
+                        {
+                            "id": str(log.id),
+                            "event_type": log.event_type,
+                            "event_action": log.event_action,
+                            "details": log.details,
+                            "ip_address": log.ip_address,
+                            "created_at": log.created_at.isoformat()
+                            if log.created_at
+                            else None,
+                        }
+                        for log in logs
+                    ]
+                }
+        except Exception as e:
+            logger.warning("DB get audit_logs failed: %s", e)
+
+    return {"logs": []}
+
+================================================================================
+FILE: routes\__init__.py
+================================================================================
+
+"""
+DSI API Routes (Phase 11)
+
+Route modules for the REST API.
+"""
+
+from . import submissions
+from . import quotes
+from . import referrals
+from . import analytics
+from . import workbench
+from . import simulate
+
+__all__ = [
+    "submissions",
+    "quotes",
+    "referrals",
+    "analytics",
+    "workbench",
+    "simulate"
+]
