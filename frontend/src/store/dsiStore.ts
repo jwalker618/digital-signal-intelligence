@@ -162,7 +162,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       const isoDateString = targetDate.toISOString(); // e.g., 2026-02-03T11:53:00.000Z
       
       // Pass the date to your backend!
-      const res = await fetch(`http://localhost:8000/api/v1/workbench-data?created_after=${isoDateString}`);
+      const res = await fetch(`http://localhost:8000/api/v1/frontend/pipeline?created_after=${isoDateString}`);
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       
       const data = await res.json();

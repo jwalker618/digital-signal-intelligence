@@ -8,14 +8,16 @@ from . import submissions
 from . import quotes
 from . import referrals
 from . import analytics
-from . import workbench
+from . import frontend
 from . import simulate
+from . import modelversion
 
 __all__ = [
     "submissions",
     "quotes",
     "referrals",
     "analytics",
-    "workbench",
-    "simulate"
+    "frontend",
+    "simulate",
+    "modelversion",
 ]

@@ -11,11 +11,10 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from infrastructure.db.models import Submission, ModelVersionRecord, AuditLog
 from ..types import (
     SubmissionRequest,
     SubmissionResponse,
@@ -27,7 +26,6 @@ from ..types import (
     QuoteStatus,
     JobResponse,
     JobStatus,
-    ListFilters,
 )
 from layers.risk.workflow import run_assessment
 from layers.risk.types import WorkflowResult, DecisionType as WorkflowDecisionType
@@ -35,7 +33,6 @@ from layers.risk.types import WorkflowResult, DecisionType as WorkflowDecisionTy
 logger = logging.getLogger("dsi.api.submissions")
 
 router = APIRouter()
-
 
 # =============================================================================
 # STORAGE BACKEND
@@ -375,122 +372,30 @@ async def create_submission(
         )
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.get("/submissions", response_model=List[SubmissionRecord])
-async def list_submissions(
-    coverage: Optional[str] = Query(None, description="Filter by coverage"),
-    status: Optional[str] = Query(None, description="Filter by status"),
-    limit: int = Query(20, le=100, description="Maximum results"),
-    offset: int = Query(0, ge=0, description="Offset for pagination"),
-) -> List[SubmissionRecord]:
-    """List submissions with optional filtering."""
-    if _db_available():
-        try:
-            from ...db.repositories import SubmissionRepository
-            from ...db.models import SubmissionStatus as DBSubmissionStatus
-
-            session = await _get_db_session()
-            if session:
-                try:
-                    repo = SubmissionRepository(session)
-                    db_status = None
-                    if status:
-                        db_status = DBSubmissionStatus(status)
-                    subs = await repo.list(
-                        coverage=coverage,
-                        status=db_status,
-                        limit=limit,
-                        offset=offset,
-                    )
-                    return [
-                        SubmissionRecord(
-                            submission_code=s.submission_code,
-                            entity_name=s.entity_name,
-                            domain_hint=s.domain_hint,
-                            coverage=s.coverage,
-                            configuration=s.configuration,
-                            status=SubmissionStatus(s.status.value),
-                            created_at=s.created_at,
-                            updated_at=s.updated_at or s.created_at,
-                        )
-                        for s in subs
-                    ]
-                finally:
-                    await session.close()
-        except Exception as e:
-            logger.warning("DB list failed, using in-memory: %s", e)
-
-    results = list(_memory.submissions.values())
-
-    if coverage:
-        results = [s for s in results if s["coverage"] == coverage]
-    if status:
-        results = [s for s in results if s["status"].value == status]
-
-    results.sort(key=lambda s: s["created_at"], reverse=True)
-    results = results[offset : offset + limit]
-
-    return [
-        SubmissionRecord(
-            submission_code=s["submission_code"],
-            entity_name=s["entity_name"],
-            domain_hint=s.get("domain_hint"),
-            coverage=s["coverage"],
-            configuration=s["configuration"],
-            status=s["status"],
-            created_at=s["created_at"],
-            updated_at=s["updated_at"],
-        )
-        for s in results
-    ]
-
-
 @router.get("/submissions/{submission_code}", response_model=SubmissionRecord)
 async def get_submission(submission_code: str) -> SubmissionRecord:
     """Get submission details by code."""
-    if _db_available():
-        try:
-            from ...db.repositories import SubmissionRepository
+    query = select(SubmissionRecord).where(SubmissionRecord.submission_code == submission_code)
 
-            session = await _get_db_session()
-            if session:
-                try:
-                    repo = SubmissionRepository(session)
-                    s = await repo.get_by_code(submission_code)
-                    if s:
-                        return SubmissionRecord(
-                            submission_code=s.submission_code,
-                            entity_name=s.entity_name,
-                            domain_hint=s.domain_hint,
-                            coverage=s.coverage,
-                            configuration=s.configuration,
-                            status=SubmissionStatus(s.status.value),
-                            created_at=s.created_at,
-                            updated_at=s.updated_at or s.created_at,
-                            error_message=s.error_message,
-                        )
-                finally:
-                    await session.close()
-        except Exception as e:
-            logger.warning("DB get failed, using in-memory: %s", e)
-
-    if submission_code not in _memory.submissions:
+    row = (await db.execute(query)).first()
+    if not row:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    s = _memory.submissions[submission_code]
-
     return SubmissionRecord(
-        submission_code=s["submission_code"],
-        entity_name=s["entity_name"],
-        domain_hint=s.get("domain_hint"),
-        coverage=s["coverage"],
-        configuration=s["configuration"],
-        status=s["status"],
-        created_at=s["created_at"],
-        updated_at=s["updated_at"],
-        error_message=s.get("error_message"),
+            submission_code=row.submission_code,
+            entity_name=row.entity_name,
+            domain_hint=row.domain_hint,
+            discovered_domain=row.discovered_domain,
+            country_hint=row.country_hint,
+            coverage=row.coverage,
+            configuration=row.configuration,
+            locale=row.locale,
+            status=row.status,
+            submission_data=row.submission_data,
+            direct_query_responses=row.direct_query_responses,
+            error_message=row.error_message,
+            created_at=row.created_at,
     )
-
 
 @router.delete("/submissions/{submission_code}")
 async def cancel_submission(submission_code: str) -> Dict[str, Any]:
@@ -537,7 +442,6 @@ async def cancel_submission(submission_code: str) -> Dict[str, Any]:
     del _memory.submissions[submission_code]
 
     return {"message": "Submission cancelled", "submission_code": submission_code}
-
 
 # =============================================================================
 # MULTI-COVERAGE ENDPOINTS
@@ -660,7 +564,6 @@ async def create_multi_coverage_submission(
 # JOB ENDPOINTS
 # =============================================================================
 
-
 @router.get("/jobs/{job_id}", response_model=JobResponse)
 async def get_job_status(job_id: str) -> JobResponse:
     """Get async job status."""
@@ -687,55 +590,4 @@ async def get_job_status(job_id: str) -> JobResponse:
         error=job.get("error"),
         created_at=job["created_at"],
         completed_at=job.get("completed_at"),
-    )
-
-
-# =============================================================================
-# QUOTE RETRIEVAL (convenience endpoint)
-# =============================================================================
-
-
-@router.get("/submissions/{submission_code}/quote", response_model=QuoteResponse)
-async def get_submission_quote(submission_code: str) -> QuoteResponse:
-    """Get the quote for a submission."""
-    if submission_code not in _memory.submissions:
-        raise HTTPException(status_code=404, detail="Submission not found")
-
-    sub = _memory.submissions[submission_code]
-
-    if sub["status"] != SubmissionStatus.READY:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Submission not ready (status: {sub['status'].value})",
-        )
-
-    quote_code = sub.get("quote_code")
-    if not quote_code or quote_code not in _memory.quotes:
-        raise HTTPException(status_code=404, detail="Quote not found")
-
-    q = _memory.quotes[quote_code]
-
-    return QuoteResponse(
-        quote_code=q["quote_code"],
-        submission_code=q["submission_code"],
-        version_code=q.get("version_code"),
-        status=q["status"],
-        composite_score=int(q["composite_score"]),
-        tier=q["tier"],
-        tier_label=q["tier_label"],
-        decision=q["decision"],
-        premium_options=q["premium_options"],
-        recommended_premium=q["recommended_premium"],
-        recommended_limit=q["recommended_limit"],
-        base_premium=q.get("base_premium"),
-        premium_after_modifiers=q.get("premium_after_modifiers"),
-        modifiers_applied=q.get("modifiers_applied", []),
-        loss_propensity=q.get("loss_propensity"),
-        exposure=q.get("exposure"),
-        discovery=q.get("discovery"),
-        signal_summary=q.get("signal_summary"),
-        referral_reasons=q.get("referral_reasons", []),
-        referral_code=q.get("referral_code"),
-        created_at=q["created_at"],
-        valid_until=q["valid_until"],
     )
