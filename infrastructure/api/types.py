@@ -571,7 +571,7 @@ class ModelVersionDBRecord(BaseModel):
     loss_propensity_band: Optional[str] = None
     severity_propensity_band: Optional[str] = None
     loss_confidence: Optional[float] = None
-    loss_cohort_id: Optional[str] = None
+    loss_cohort_code: Optional[str] = None
     loss_cohort_name: Optional[str] = None
     loss_cohort_confidence: Optional[float] = None
     loss_frequency_multiplier: Optional[float] = None

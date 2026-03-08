@@ -318,7 +318,7 @@ class ModelVersionRecord(Base):
     loss_propensity_band = Column(String(50))        # very_low .. high
     severity_propensity_band = Column(String(50))    # minimal .. catastrophic
     loss_confidence = Column(Float)
-    loss_cohort_id = Column(String(100))
+    loss_cohort_code = Column(String(100))
     loss_cohort_name = Column(String(255))
     loss_cohort_confidence = Column(Float)
     loss_frequency_multiplier = Column(Float)
