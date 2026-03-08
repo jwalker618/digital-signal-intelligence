@@ -310,12 +310,12 @@ def batch_refresh_by_volatility(
 
     # Find entities with stale signals
     stale_entities = db.query(
-        SignalCache.entity_id
+        SignalCache.entity_code
     ).filter(
-        SignalCache.signal_id.in_(signal_ids),
+        SignalCache.signal_code.in_(signal_ids),
         SignalCache.extracted_at < staleness_threshold,
     ).group_by(
-        SignalCache.entity_id
+        SignalCache.entity_code
     ).limit(limit).all()
 
     entity_ids = [e[0] for e in stale_entities]
@@ -465,17 +465,17 @@ def check_signal_freshness(
     results = {sid: False for sid in signal_ids}
 
     signals = db.query(SignalCache).filter(
-        SignalCache.entity_id == entity_id,
-        SignalCache.signal_id.in_(signal_ids),
+        SignalCache.entity_code == entity_id,
+        SignalCache.signal_code.in_(signal_ids),
     ).all()
 
     now = datetime.now(timezone.utc)
 
     for signal in signals:
-        volatility = get_signal_volatility(signal.signal_id)
+        volatility = get_signal_volatility(signal.signal_code)
         refresh_hours = get_refresh_interval_hours(volatility)
         staleness_threshold = now - timedelta(hours=refresh_hours)
 
-        results[signal.signal_id] = signal.extracted_at > staleness_threshold
+        results[signal.signal_code] = signal.extracted_at > staleness_threshold
 
     return results
