@@ -5,9 +5,7 @@ Endpoints for managing underwriter referrals and signal overrides.
 Strictly integrated with PostgreSQL via SQLAlchemy AsyncSession.
 """
 
-import json
 import logging
-import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any
 
@@ -17,37 +15,17 @@ from sqlalchemy import select, func
 
 from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
+    Quote,
     Referral,
-    ReferralStatus as DBReferralStatus,
+    ReferralStatus,
 )
+
 from ..types import (
     ReferralRecord,
 )
 
 logger = logging.getLogger("dsi.api.referrals")
 router = APIRouter()
-
-
-# =============================================================================
-# UTILITIES
-# =============================================================================
-
-def generate_id(prefix: str) -> str:
-    """Generate a unique string ID."""
-    return f"{prefix}_{uuid.uuid4().hex[:12]}"
-
-
-def _parse_json(val: Any, default: Any = None) -> Any:
-    """Safely parse PostgreSQL JSONB into Python dicts/lists."""
-    if val is None:
-        return default
-    if isinstance(val, (dict, list)):
-        return val
-    try:
-        return json.loads(val)
-    except (TypeError, ValueError):
-        return default
-
 
 # =============================================================================
 # ENDPOINTS
@@ -59,23 +37,52 @@ async def get_referral(
     db: AsyncSession = Depends(get_async_db),
 ) -> ReferralRecord:
     """Get referral details by code.."""
-    query = select(ReferralRecord).where(ReferralRecord.referral_code == referral_code)
+    query = select(Referral).where(Referral.referral_code == referral_code)
 
-    row = (await db.execute(query)).first()
-    if not row:
+    result = await db.execute(query)
+    record = result.scalar_one_or_none()
+
+    if not record:
         raise HTTPException(status_code=404, detail="Referral not found")
 
-    return ReferralRecord(
-        referral_code=row.referral_code,
-        status=row.status,
-        reasons=row.reasons,
-        priority=row.priority,
-        review_decision=row.review_decision,
-        review_notes=row.review_notes,
-        tier_override=row.tier_override,
-        premium_adjustment=row.premium_adjustment,
-        adjustments=row.adjustments,
-    )
+    return record
+
+@router.post("/referrals/{quote_code}/update-status")
+async def updateStatus_referral(
+    quote_code: str,
+    status: ReferralStatus,
+    db: AsyncSession = Depends(get_async_db),
+    commit: bool = True
+) -> Dict[str, Any]:
+    
+    """Update the status of a referral."""
+    query = (select(Referral).join(Quote, Referral.quote_id == Quote.id).where(Quote.quote_code == quote_code))
+    q = (await db.execute(query)).scalar_one_or_none()
+    
+    # Auto-approved or clean quotes won't have a referral
+    if not q:
+        return {
+            "status": "error",
+            "message": "Referral not found",
+            "referral_code": quote_code,
+        }
+
+    if q.status != ReferralStatus.IN_REVIEW:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Referral cannot be updated in current status: {q.status.value}",
+        )
+
+    q.status = status
+    if commit:
+        await db.commit()
+
+    return {
+        "status": "success",
+        "message": f"Referral status: {q.status.value}",
+        "referral_code": q.referral_code,
+        "updated_at": q.updated_at,
+    }
 
 @router.get("/referrals/summary/queue")
 async def get_queue_summary(
@@ -83,8 +90,8 @@ async def get_queue_summary(
 ) -> Dict[str, Any]:
     """Get a quick summary of the pending referral queue."""
     query = (
-        select(func.count(Referral.id), func.min(Referral.created_at))
-        .where(Referral.status == DBReferralStatus.PENDING)
+        select(func.count(Referral.referral_code), func.min(Referral.created_at))
+        .where(Referral.status == ReferralStatus.PENDING)
     )
     result = (await db.execute(query)).first()
     count = result[0] or 0
@@ -102,15 +109,12 @@ async def get_queue_summary(
         "oldest_hours": round(oldest_hours, 1),
     }
 
-
 @router.get("/referrals/stats")
 async def get_referral_stats(
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, Any]:
     """Aggregate referral DB statistics."""
-    query = select(Referral.status, func.count(Referral.id)).group_by(
-        Referral.status
-    )
+    query = select(Referral.status, func.count(Referral.referral_code)).group_by(Referral.status)
     rows = (await db.execute(query)).all()
 
     stats: Dict[str, int] = {
@@ -134,3 +138,4 @@ async def get_referral_stats(
         "resolved": resolved,
         "resolution_rate": resolved / total if total > 0 else 0,
     }
+

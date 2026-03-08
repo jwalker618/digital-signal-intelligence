@@ -105,10 +105,6 @@ class FrontendSubmissionPipeline(BaseModel):
     tier_label: str
     decision: DecisionType
 
-
-
-
-
 class SubmissionRequest(BaseModel):
     entity_name: str
     domain_hint: Optional[str] = None
@@ -521,7 +517,7 @@ class QuoteRecord(BaseModel):
     bound_by: Optional[str] = None
     policy_number: Optional[str] = None
 
-@maps_to(Referral, exclude=["id", "quote_id", "assigned_to", "assigned_at", "reviewed_by", "reviewed_at", "created_at", "updated_at"])
+@maps_to(Referral, exclude=["id", "quote_id", "assigned_to", "assigned_at", "reviewed_by", "reviewed_at", "updated_at"])
 class ReferralRecord(BaseModel):
     referral_code: str
     status: ReferralStatus
@@ -532,6 +528,7 @@ class ReferralRecord(BaseModel):
     tier_override: Optional[int] = None
     premium_adjustment: Optional[float] = None
     adjustments: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime
 
 ## NOTE: MODEL VERSION HAS MULTIPLE TABLES TO LOGICALLY COHORT DATA
 @maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at"])

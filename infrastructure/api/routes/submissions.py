@@ -7,19 +7,25 @@ Supports both database-backed persistence and in-memory fallback.
 
 import logging
 import time
-import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from infrastructure.db.config import get_async_db
+from infrastructure.db.models import (
+    Submission,
+    SubmissionStatus
+)
+
+from ..utils import generate_id
 
 from ..types import (
     SubmissionRequest,
     SubmissionResponse,
     SubmissionRecord,
-    SubmissionStatus,
     MultiCoverageRequest,
     MultiCoverageResponse,
     QuoteResponse,
@@ -37,7 +43,6 @@ router = APIRouter()
 # =============================================================================
 # STORAGE BACKEND
 # =============================================================================
-
 
 class InMemoryStore:
     """In-memory storage fallback when database is unavailable."""
@@ -58,7 +63,6 @@ def _db_available() -> bool:
     except Exception:
         return False
 
-
 async def _get_db_session() -> Optional[AsyncSession]:
     """Get a database session if DB is available, else None."""
     if not _db_available():
@@ -71,14 +75,9 @@ async def _get_db_session() -> Optional[AsyncSession]:
     except Exception:
         return None
 
-
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
-
-def generate_id(prefix: str) -> str:
-    """Generate a unique ID."""
-    return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 def workflow_result_to_quote(
     result: WorkflowResult,
@@ -373,29 +372,20 @@ async def create_submission(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/submissions/{submission_code}", response_model=SubmissionRecord)
-async def get_submission(submission_code: str) -> SubmissionRecord:
+async def get_submission(
+    submission_code: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> SubmissionRecord:
     """Get submission details by code."""
-    query = select(SubmissionRecord).where(SubmissionRecord.submission_code == submission_code)
+    query = select(Submission).where(Submission.submission_code == submission_code)
 
-    row = (await db.execute(query)).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Submission not found")
+    result = await db.execute(query)
+    record = result.scalar_one_or_none()
 
-    return SubmissionRecord(
-            submission_code=row.submission_code,
-            entity_name=row.entity_name,
-            domain_hint=row.domain_hint,
-            discovered_domain=row.discovered_domain,
-            country_hint=row.country_hint,
-            coverage=row.coverage,
-            configuration=row.configuration,
-            locale=row.locale,
-            status=row.status,
-            submission_data=row.submission_data,
-            direct_query_responses=row.direct_query_responses,
-            error_message=row.error_message,
-            created_at=row.created_at,
-    )
+    if not record:
+        raise HTTPException(status_code=404, detail="Referral not found")
+
+    return record
 
 @router.delete("/submissions/{submission_code}")
 async def cancel_submission(submission_code: str) -> Dict[str, Any]:

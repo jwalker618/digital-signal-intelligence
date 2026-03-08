@@ -19,6 +19,7 @@ Components:
 """
 
 from .main import app
+from .utils import generate_id
 from .types import (
     # Request models
     SubmissionRequest,
