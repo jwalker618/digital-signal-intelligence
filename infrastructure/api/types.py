@@ -93,17 +93,19 @@ class JobStatus(str, Enum):
 class FrontendSubmissionPipeline(BaseModel):
     submission_code: str
     quote_code: str
-    referral_code: str
+    referral_code: Optional[str] = None
     version_code: str
     entity_name: str
     coverage_configuration: str
     created_at: datetime
-    recommended_premium: float
-    recommended_limit: float
-    pure_composite_score: float
-    final_tier: int
-    tier_label: str
-    decision: DecisionType
+    recommended_premium: Optional[float] = None
+    recommended_limit: Optional[float] = None
+    pure_composite_score: Optional[float] = None
+    final_tier: Optional[int] = None
+    tier_label: Optional[str] = None
+    decision: str
+
+
 
 class SubmissionRequest(BaseModel):
     entity_name: str
@@ -129,12 +131,11 @@ class SignalOverrideRequest(BaseModel):
     evidence_reference: Optional[str] = None
     underwriter_id: Optional[str] = None
 
-# --- B. Pricing & 3-Pillar Component Blocks (JSONB structures) ---
-class PremiumOption(BaseModel):
-    limit: float
-    premium: float
-    rate: float
+class Note(BaseModel):
+    note: str
+    source: str
 
+# --- B. Pricing & 3-Pillar Component Blocks (JSONB structures) ---
 class SignalSummary(BaseModel):
     total_signals: int
     signals_extracted: int
@@ -161,17 +162,6 @@ class ExposureSummary(BaseModel):
     exposure_band_label: Optional[str] = None
     exposure_magnitude_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
-
-class SignalValue(BaseModel):
-    signal_code: str
-    score: float
-    audited_value: Optional[float] = None
-    confidence: float = 1.0
-
-    @property
-    def effective_value(self) -> float:
-        return self.audited_value if self.audited_value is not None else self.score
-
 
 # --- C. Composite Read Models (Aggregated Responses) ---
 class SubmissionResponse(BaseModel):
@@ -216,69 +206,6 @@ class QuoteListItem(BaseModel):
     premium: float
     decision: DecisionType
     created_at: datetime
-
-class ReferralListItem(BaseModel):
-    referral_code: str
-    entity_name: str
-    coverage: str
-    status: ReferralStatus
-    reasons: List[str]
-    age_hours: float
-    created_at: datetime
-
-class ModelVersionResponse(BaseModel):
-    version_code: str
-    version_number: int
-    version_type: str
-    composite_score: float
-    tier: int
-    tier_label: str
-    confidence: float
-    signal_count: int
-    overridden_signals: List[str] = Field(default_factory=list)
-    created_by: str
-    created_at: datetime
-    notes: List[str] = Field(default_factory=list)
-
-class ReferralSignalDetail(BaseModel):
-    """Projection joining Bridge -> Cache -> Audit tables."""
-    signal_cache_id: str
-    signal_code: str
-    signal_name: str
-    group_code: str
-    group_name: str
-    score: float
-    audited_value: Optional[float] = None
-    is_overridden: bool = False
-    weight: float
-    contribution_to_score: float
-    is_flagged: bool = False
-    flag_reason: Optional[str] = None
-    confidence: float
-    data_sources: List[str] = Field(default_factory=list)
-    extracted_at: datetime
-    raw_data: Optional[Dict[str, Any]] = None
-    in_model: bool = True
-    proxy_tier: Optional[str] = None
-    expectation_level: Optional[str] = None
-    was_absent: bool = False
-    override_rationale: Optional[str] = None
-    evidence_reference: Optional[str] = None
-    score_impact: Optional[float] = None
-    tier_impact: Optional[int] = None
-
-class ReferralSignalsResponse(BaseModel):
-    referral_code: Optional[str] = None
-    version_code: str
-    configuration_name: Optional[str] = None
-    coverage: Optional[str] = None
-    signals: List[ReferralSignalDetail]
-    flagged_count: int
-    overridden_count: int
-    total_signals: int
-    model_signal_count: int = 0
-    signal_coverage: float
-    average_confidence: float
 
 class SignalOverrideResponse(BaseModel):
     signal_code: str
@@ -410,44 +337,11 @@ class TokenRequest(BaseModel):
     username: str
     password: str
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    expires_in: int
-    permissions: List[str]
-
-class APIKeyValidation(BaseModel):
-    valid: bool
-    client_id: Optional[str] = None
-    permissions: List[str] = Field(default_factory=list)
-    rate_limit_tier: str = "standard"
-
 class HealthResponse(BaseModel):
     status: str
     version: str
     uptime_seconds: float
     components: Dict[str, str] = Field(default_factory=dict)
-
-class ConfigResponse(BaseModel):
-    coverages: List[str]
-    locales: List[str]
-    rate_limits: Dict[str, int]
-    features: Dict[str, bool]
-
-class PaginatedResponse(BaseModel):
-    items: List[Any]
-    total: int
-    page: int
-    page_size: int
-    pages: int
-
-class ListFilters(BaseModel):
-    coverage: Optional[str] = None
-    status: Optional[str] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    page: int = 1
-    page_size: int = 20
 
 class JobResponse(BaseModel):
     job_id: str
@@ -561,7 +455,7 @@ class ModelVersionDBRecord(BaseModel):
     decision: Optional[DecisionType] = None
     auto_approve: bool = False
     referral_reasons: List[str] = Field(default_factory=list)
-    notes: List[str] = Field(default_factory=list)
+    notes: List[Note] = Field(default_factory=list)
     loss_propensity_score: Optional[float] = None
     severity_propensity_score: Optional[float] = None
     loss_propensity_band: Optional[str] = None
@@ -667,7 +561,7 @@ class ModelVersionDBRecord_DetailOnly(BaseModel):
 class ModelVersionDBRecord_CommentaryOnly(BaseModel):
     version_code: str 
     referral_reasons: List[str] = Field(default_factory=list)
-    notes: List[str] = Field(default_factory=list)
+    notes: List[Note] = Field(default_factory=list)
 
 @maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
                                         "version_number", "version_type", "is_latest", "coverage", "configuration_name",

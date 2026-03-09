@@ -7,6 +7,9 @@ import { ShieldAlert, Edit3, Check, X, AlertTriangle, ArrowRight, Layers, Eye, F
 export default function ReferralTab() {
   const {
     activeSubmission,
+    activeQuote,
+    activeVersion,
+    activeReferral,
     referralSignals,
     fetchReferralSignals,
     submitSignalOverride,
@@ -28,18 +31,14 @@ export default function ReferralTab() {
 
   if (!activeSubmission) return null;
 
-  const handleOverrideSubmit = async () => {
-    if (!overrideModal || !activeSubmission.model_version_id) return;
+  // Assuming you have access to the active quote and the signal they are editing
+  const handleOverride = async () => {
     await submitSignalOverride(
-      activeSubmission.model_version_id,
-      overrideModal.signal.signal_cache_id,
-      overrideModal.signal.signal_id,
-      parseFloat(auditedValue),
-      rationale
+        activeQuote.quote_id,      // e.g., "quo_123456"
+        selectedSignal.signal_id,  // e.g., "active_cves" (Mapped as signal_code in backend)
+        newAuditedValue, 
+        rationaleText
     );
-    setOverrideModal(null);
-    setAuditedValue("");
-    setRationale("");
   };
 
   const handleFinalDecision = async (decision: string) => {

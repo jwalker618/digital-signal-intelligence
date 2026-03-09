@@ -1,3 +1,4 @@
+import SummaryTab from '@/components/submissions/workbench/SummaryTab';
 import { create } from 'zustand';
 
 export interface DsiState {
@@ -5,7 +6,7 @@ export interface DsiState {
   activeMenu: string;
   setActiveMenu: (menu: string) => void;
   previousMenu: string;
-  updateDecision: (id: string, decision: string) => Promise<void>;
+  updateDecision: (quoteCode: string, quoteDecision: string, referralDecision: string | null) => Promise<void>;
   navigateBack: () => void; 
 
   // NEW: Date Filter State
@@ -15,6 +16,9 @@ export interface DsiState {
   // Data State
   submissions: any[];
   activeSubmission: string | null;
+  activeQuote: string | null;
+  activeVersion: string | null;
+  activeReferral: string | null;
   isLoading: boolean;
   error: string | null;
   
@@ -25,13 +29,13 @@ export interface DsiState {
 
   // Actions
   fetchSubmissions: () => Promise<void>;
-  fetchSubmissionDetail: (row: any) => Promise<void>;
+  fetchCoreSubmissionDetail: (row: any) => Promise<void>;
 
   // Referral Actions State
   referralSignals: any[];
   isFetchingSignals: boolean;
-  fetchReferralSignals: (referralId: string) => Promise<void>;
-  submitSignalOverride: (referralId: string, signalId: string, auditedValue: number, rationale: string) => Promise<void>;
+  fetchReferralSignals: (versionCode: string) => Promise<void>;
+  submitSignalOverride: (quoteCode: string, signalCode: string, auditedValue: number, rationale: string) => Promise<void>;
 
 }
 
@@ -50,6 +54,9 @@ export const useDsiStore = create<DsiState>((set, get) => ({
 
   submissions: [],
   activeSubmission: null,
+  activeQuote: null,
+  activeVersion: null,
+  activeReferral: null,
   isLoading: false,
   error: null,
   referralSignals: [],
@@ -59,20 +66,23 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   navigateBack: () => {
     set((state) => ({
       activeMenu: state.previousMenu || "Referral Pipeline",
-      activeSubmission: null // Clearing this triggers the UI to revert!
+      activeSubmission: null, // Clearing this triggers the UI to revert!
+      activeQuote: null,
+      activeVersion: null,
+      activeReferral: null
     }));
   },  
 
-  updateDecision: async (referralId: string, decision: string) => {
+  updateDecision: async (quoteCode: string, quoteAction: string, referralAction: string | null) => {
     try {
       // Hits our strict DDD endpoint
-      const res = await fetch(`http://localhost:8000/api/v1/referrals/${referralId}`, {
+      const res = await fetch(`http://localhost:8000/api/v1/quotes/${quoteCode}/resolve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        // Strictly matches the ReferralDecision payload in types.py
-        body: JSON.stringify({ 
-          decision: decision, // "approve" or "decline"
-          notes: ["Quick action applied from pipeline"] 
+        
+        body: JSON.stringify({
+          quote_action: quoteAction, // "BOUND" or "DECLINED"
+          referral_action: referralAction, // "APPROVED", "DECLINED", or null (if no change to referral)
         })
       });
       
@@ -93,7 +103,6 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       // Fetch both simultaneously
       const [versionsRes, logsRes] = await Promise.all([
         fetch(`http://localhost:8000/api/v1/submissions/${submissionCode}/model_versions`),
-        fetch(`http://localhost:8000/api/v1/submissions/${submissionCode}/audit_logs`)
       ]);
 
       if (versionsRes.ok && logsRes.ok) {
@@ -109,10 +118,10 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     }
   },
 
-  fetchReferralSignals: async (modelVersionId: string) => {
+  fetchReferralSignals: async (submissionCode: string) => {
     set({ isFetchingSignals: true });
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/model_versions/${modelVersionId}/signals`);
+      const res = await fetch(`http://localhost:8000/api/v1/model_versions/${submissionCode}/submissionshistory/all`);
       if (!res.ok) throw new Error("Failed to fetch signals");
       const data = await res.json();
       set({ referralSignals: data.signals || [], isFetchingSignals: false });
@@ -122,14 +131,14 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     }
   },
 
-  submitSignalOverride: async (modelVersionId: string, signalCacheId: string, signalId: string, auditedValue: number, rationale: string) => {
+  submitSignalOverride: async (quoteCode: string, signalCode: string, auditedValue: number, rationale: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/model_versions/${modelVersionId}/signals/override`, {
+      // 1. Send the override request to your new endpoint
+      const res = await fetch(`http://localhost:8000/api/v1/signals/${quoteCode}/override`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          signal_cache_id: signalCacheId, // Included UUID
-          signal_id: signalId, 
+          signal_code: signalCode,
           audited_value: auditedValue, 
           rationale: rationale,
           underwriter_id: "system"
@@ -138,16 +147,40 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       
       if (!res.ok) throw new Error("Failed to override signal");
       
-      // 1. Refresh the signals to show the new audited value
-      await get().fetchReferralSignals(modelVersionId);
+      const overrideData = await res.json();
+      const newVersionCode = overrideData.new_version_code; // Grab the new is_latest model version
+
+      // 2. Fetch the updated Quote
+      // We MUST do this because the backend may have generated a brand new Referral for this Quote!
+      const quoteRes = await fetch(`http://localhost:8000/api/v1/quotes/${quoteCode}`);
       
-      // 2. Refresh the whole submission to pull the NEW Score and Premium (v2+ Model Version)!
-      const currentRow = get().activeSubmission;
-      if (currentRow) {
-        await get().fetchSubmissionDetail(currentRow);
+      if (quoteRes.ok) {
+        const quoteData = await quoteRes.json();
+        const activeSub = get().activeSubmission;
+
+        if (activeSub) {
+          // 3. Re-hydrate the active view with the fresh data and the NEW referral code
+          await get().fetchCoreSubmissionDetail({
+            submission_code: activeSub.submission_id || activeSub.submission_code,
+            quote_code: quoteCode,
+            referral_code: quoteData.referral_id // This is the crucial link to the new referral!
+          });
+
+          // 4. Refresh the audit logs and model version history tab
+          await get().fetchHistory(activeSub.submission_id || activeSub.submission_code);
+        }
       }
+      
+      // 5. Refresh the signals table to point to the newly generated model version
+      if (newVersionCode) {
+        await get().fetchReferralSignals(newVersionCode);
+      }
+
+      // 6. Refresh the main pipeline grid in the background so scores are updated when you navigate back
+      get().fetchSubmissions();
+
     } catch (err) {
-      console.error("Override failed", err);
+      console.error("Signal override failed:", err);
     }
   },
 
@@ -161,7 +194,6 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       targetDate.setDate(targetDate.getDate() - days);
       const isoDateString = targetDate.toISOString(); // e.g., 2026-02-03T11:53:00.000Z
       
-      // Pass the date to your backend!
       const res = await fetch(`http://localhost:8000/api/v1/frontend/pipeline?created_after=${isoDateString}`);
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       
@@ -172,25 +204,47 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     }
   },
 
-  fetchSubmissionDetail: async (row: any) => {
+  fetchCoreSubmissionDetail: async (row: any) => {
     set({ isLoading: true, error: null });
     try {
-      // Fetch the deep analysis data using the quote_id from the row
-      const res = await fetch(`http://localhost:8000/api/v1/quotes/${row.quote_code}`);
-      if (!res.ok) throw new Error("Failed to fetch deep details");
-      const deepData = await res.json();
       
-      set((state) => ({ 
-        // Merge the UI row (which has entity_name) with the deep API data
-        activeSubmission: { ...row, ...deepData }, 
-        previousMenu: state.activeMenu, // Remembers where we came from
-        activeMenu: "Summary", 
-        isLoading: false 
-      }));
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+      const safeFetch = (url) => fetch(url).then(res => res.ok ? res.json() : null).catch(() => null);
+
+      // Core fetches that always rely on the submission_code
+      const fetchPromises = [
+        safeFetch(`http://localhost:8000/api/v1/submissions/${row.submission_code}`),
+        safeFetch(`http://localhost:8000/api/v1/modelversion/${row.version_code}/all`),
+        safeFetch(`http://localhost:8000/api/v1/quotes/${row.quote_code}`),
+      ];
+
+      const referralPromise = row.referral_code 
+        ? safeFetch(`http://localhost:8000/api/v1/referrals/${row.referral_code}`)
+        : Promise.resolve(null);
+
+      // 2. Execute all network requests in parallel
+      const [subData, versionsData, quoteData, referralData] = await Promise.all(
+        [
+        ...fetchPromises,
+        referralPromise
+      ]);
+
+      // 3. Update the global store
+      if (subData) {
+        set({ 
+          activeSubmission: subData, 
+          activeQuote: quoteData,
+          activeVersion: versionsData,
+          activeReferral: referralData,
+          isLoading: false,
+          activeMenu: "Summary"
+        });
+      } else {
+        set({ error: "Failed to load core submission details.", isLoading: false });
+      }
+
+    } catch (err) {
+      console.error("Failed to fetch submission details:", err);
+      set({ error: err.message || "Network error occurred", isLoading: false });
     }
   }
-
-}))
-;
+}));

@@ -37,10 +37,10 @@ async def get_frontend_pipeline(
 
     query = text("""
                 SELECT
-                    s.submission_code AS submission_code,
-                    q.quote_code AS quote_code,
-                    r.referral_code AS referral_code,
-                    mv.version_code AS version_code,
+                    s.submission_code,
+                    q.quote_code,
+                    r.referral_code,
+                    mv.version_code,
              
                     s.entity_name,
                     COALESCE(s.coverage, '') || ' / ' || COALESCE(s.configuration, '') AS coverage_configuration,

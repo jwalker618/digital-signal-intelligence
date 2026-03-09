@@ -129,10 +129,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <>
                       <button 
                         onClick={navigateBack}
-                        className="w-full flex items-center gap-3 py-2 text-dsi-background hover:text-dsi-selected mb-2 border-b-3 border-dsi-outline/20 pb-4"
+                        className="w-full flex items-center gap-3 py-2 
+                          text-dsi-background 
+                          hover:text-dsi-selected 
+                          mb-2"
                       >
                         <ArrowLeftToLine className="icon shrink-0" />
-                        <span className="text-sm tracking-wider font-bold truncate">Back to {previousMenu}</span>
+                        <span className="text-sm tracking-wider truncate">Back to {previousMenu}</span>
                       </button>
                       
                       <ul className="ml-3 pl-dsi-pad flex flex-col gap-1">
@@ -140,7 +143,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           { name: "Summary", icon: FolderKanban },
                           { name: "Referral Actions", icon: UserStar },
                           { name: "Model Versions", icon: FileStack },
-                          { name: "Audit Log", icon: Shield }
                         ].map((item) => (
                           <li key={item.name}>
                             <button
