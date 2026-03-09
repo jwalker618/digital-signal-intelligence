@@ -486,6 +486,42 @@ class WorkflowEngine:
             model_version.loss_last_refresh = loss_propensity_result.calculated_at
             model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
 
+        # Add exposure assessment outputs to model version
+        exposure_result = next(
+            (r for r in traditional_modifier_results if r.modifier_type == "exposure"),
+            None,
+        )
+        if exposure_result and exposure_result.has_impact:
+            primary_exposure = exposure_result.components.get("primary_exposure", 0.0)
+            model_version.exposure_value = primary_exposure
+            model_version.exposure_modifier = exposure_result.factor
+            model_version.exposure_magnitude_score = exposure_result.components.get(
+                "size_factor", 1.0
+            ) * 50  # normalize to 0-100 scale
+            model_version.exposure_assessment_method = (
+                "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
+                else "full"
+            )
+            # Map exposure value to band
+            if primary_exposure <= 0:
+                model_version.exposure_band_id = 1
+                model_version.exposure_band_label = "Minimal"
+            elif primary_exposure < 50_000_000:
+                model_version.exposure_band_id = 1
+                model_version.exposure_band_label = "Small"
+            elif primary_exposure < 500_000_000:
+                model_version.exposure_band_id = 2
+                model_version.exposure_band_label = "Mid-Market"
+            elif primary_exposure < 5_000_000_000:
+                model_version.exposure_band_id = 3
+                model_version.exposure_band_label = "Large"
+            elif primary_exposure < 50_000_000_000:
+                model_version.exposure_band_id = 4
+                model_version.exposure_band_label = "Major"
+            else:
+                model_version.exposure_band_id = 5
+                model_version.exposure_band_label = "Mega"
+
         return WorkflowResult(
             entity_id=entity_id,
             coverage=coverage,
