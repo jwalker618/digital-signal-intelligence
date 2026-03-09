@@ -1921,68 +1921,54 @@ def build_modifiers_applied(co):
     return modifiers
 
 
-def calculate_base_premium(co):
+def calculate_base_premium(co, modifier_product, limit_ilf=1.0):
     """Derive base premium from the intended final premium.
 
-    Works backward from co["premium"] to produce a realistic base_premium
-    that, when modifiers and ILF are applied, lands near the intended value.
-    Uses MULTIPLIER method when revenue is available; PREMIUM_BASE otherwise.
+    Works backward from co["premium"] so that:
+        base_premium * modifier_product * limit_ilf ≈ intended_premium
+
+    This ensures base_premium, premium_after_modifiers, and final_premium
+    are genuinely distinct when modifiers have impact.
     """
-    tier = co["tier"]
     revenue = co.get("revenue", 0)
     intended = co.get("premium", 0)
 
     if intended <= 0:
         return 0, "premium_base"
 
-    if revenue > 0:
-        # Derive an implied rate so the audit trail shows a sensible calculation
-        # base = intended / (product of modifiers × ILF) — but we approximate
-        # by simply scaling the intended premium down by a tier factor
-        tier_divisors = {1: 1.0, 2: 1.2, 3: 1.5, 4: 2.0, 5: 2.5}
-        divisor = tier_divisors.get(tier, 1.5)
-        return round(intended / divisor, 2), "multiplier"
-    else:
-        return intended, "premium_base"
+    # Back-solve: base = intended / (modifiers * ILF)
+    divisor = modifier_product * limit_ilf
+    if divisor <= 0:
+        divisor = 1.0
+    base = round(intended / divisor, 2)
+
+    method = "multiplier" if revenue > 0 else "premium_base"
+    return base, method
 
 
-def apply_modifiers_to_premium(base_premium, modifiers, target_premium):
-    """Apply modifiers to base premium, scaling so the result lands at target_premium.
+def apply_modifiers_to_premium(base_premium, modifiers):
+    """Apply modifiers multiplicatively to base premium.
 
     Each modifier dict gets premium_before / premium_after fields
-    added so the audit trail is complete.  The modifiers are applied
-    as a narrative (showing their individual effects) but the final
-    value is anchored to the intended premium to avoid runaway values.
+    added so the audit trail is complete.  Modifiers are applied
+    genuinely so premium_after_modifiers reflects real modifier impact.
     """
-    if target_premium <= 0 or not modifiers:
-        return target_premium, modifiers
-
-    # Calculate the raw product of all modifier factors
-    raw_product = 1.0
-    for mod in modifiers:
-        raw_product *= mod["applied"]
-
-    # Scale factor so base × scaled_modifiers ≈ target
-    # This keeps relative modifier proportions but prevents explosion
-    scale = target_premium / (base_premium * raw_product) if (base_premium * raw_product) > 0 else 1.0
+    if base_premium <= 0 or not modifiers:
+        return base_premium, modifiers
 
     current = base_premium
     enriched = []
     for mod in modifiers:
-        factor = mod["applied"] * (scale ** (1.0 / len(modifiers)))  # distribute scale evenly
+        factor = mod["applied"]
         before = current
         current = round(current * factor, 2)
         enriched.append({
             **mod,
-            "applied": round(factor, 4),
             "premium_before": before,
             "premium_after": current,
         })
 
-    # Snap to target to avoid floating-point drift
-    if enriched:
-        enriched[-1]["premium_after"] = target_premium
-    return target_premium, enriched
+    return current, enriched
 
 
 def build_premium_options_from_base(premium_after_modifiers):
@@ -2267,23 +2253,6 @@ def seed_data():
             raw_modifiers = build_modifiers_applied(co)
             discovery = build_discovery_output(co)
 
-            # --- PREMIUM CALCULATION ---
-            # Use co["premium"] as the intended final premium (realistic values)
-            # and derive intermediate values backward for audit trail consistency.
-            intended_premium = co.get("premium", 0)
-            base_premium, base_premium_method = calculate_base_premium(co)
-            if co["decision"] == "decline":
-                base_premium = 0
-                premium_after_mods = 0
-                final_premium = 0
-                enriched_modifiers = raw_modifiers
-            else:
-                premium_after_mods, enriched_modifiers = apply_modifiers_to_premium(
-                    base_premium, raw_modifiers, intended_premium
-                )
-                final_premium = intended_premium
-            limit_premiums = build_premium_options_from_base(final_premium)
-
             # Build categorical outputs from submission data
             categorical_outputs = []
             for cat_field in ["industry", "size_band", "geography"]:
@@ -2298,6 +2267,53 @@ def seed_data():
             # Build loss propensity + exposure assessment
             loss_kwargs = build_loss_propensity(co)
             exposure_kwargs = build_exposure_assessment(co)
+
+            # --- PREMIUM CALCULATION ---
+            # Include loss_combined_modifier and exposure_modifier in the
+            # modifier chain so they genuinely affect the premium.
+            all_modifiers = list(raw_modifiers)  # copy categorical/signal modifiers
+
+            loss_mod = loss_kwargs.get("loss_combined_modifier", 1.0)
+            if loss_mod and loss_mod != 1.0:
+                all_modifiers.append({
+                    "type": "loss_propensity",
+                    "source": "loss_correlation",
+                    "applied": round(loss_mod, 4),
+                    "note": f"Loss combined modifier (freq*0.6 + sev*0.4)",
+                })
+
+            exp_mod = exposure_kwargs.get("exposure_modifier", 1.0)
+            if exp_mod and exp_mod != 1.0:
+                all_modifiers.append({
+                    "type": "exposure",
+                    "source": "exposure_assessment",
+                    "applied": round(exp_mod, 4),
+                    "note": f"Exposure band: {exposure_kwargs.get('exposure_band_label', 'Unknown')}",
+                })
+
+            # Compute the total modifier product so we can back-solve base_premium
+            modifier_product = 1.0
+            for mod in all_modifiers:
+                modifier_product *= mod["applied"]
+
+            # Use the $10M limit tier (ILF 1.0) as the anchor for back-solving
+            intended_premium = co.get("premium", 0)
+
+            if co["decision"] == "decline":
+                base_premium = 0
+                base_premium_method = "premium_base"
+                premium_after_mods = 0
+                final_premium = 0
+                enriched_modifiers = raw_modifiers
+            else:
+                base_premium, base_premium_method = calculate_base_premium(
+                    co, modifier_product, limit_ilf=1.0
+                )
+                premium_after_mods, enriched_modifiers = apply_modifiers_to_premium(
+                    base_premium, all_modifiers
+                )
+                final_premium = intended_premium
+            limit_premiums = build_premium_options_from_base(premium_after_mods)
 
             mv = ModelVersionRecord(
                 id=mv_id,
