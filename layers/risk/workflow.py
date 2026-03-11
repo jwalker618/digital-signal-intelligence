@@ -480,6 +480,18 @@ class WorkflowEngine:
             model_version.loss_frequency_multiplier = loss_propensity_result.frequency_multiplier
             model_version.loss_severity_multiplier = loss_propensity_result.severity_multiplier
             model_version.loss_combined_modifier = loss_propensity_result.combined_loss_modifier
+            # Persist loss group scores for full reconstructability
+            model_version.loss_group_scores = {
+                group_name: {
+                    "frequency_score": round(loss_propensity_result.frequency_group_scores.get(group_name, 0.0), 2),
+                    "severity_score": round(loss_propensity_result.severity_group_scores.get(group_name, 0.0), 2),
+                    "confidence": round(loss_propensity_result.group_confidences.get(group_name, 0.0), 4),
+                }
+                for group_name in set(
+                    list(loss_propensity_result.frequency_group_scores.keys())
+                    + list(loss_propensity_result.severity_group_scores.keys())
+                )
+            }
             model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
             model_version.loss_previous_score = loss_propensity_result.previous_score
             model_version.loss_score_velocity = loss_propensity_result.score_velocity

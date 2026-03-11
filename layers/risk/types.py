@@ -840,7 +840,7 @@ class ModelVersion:
     # Signal outputs (Step 4)
     signal_outputs: List[SignalOutput] = field(default_factory=list)
     categorical_outputs: List[CategoricalOutput] = field(default_factory=list)
-    group_scores: Dict[str, float] = field(default_factory=dict)
+    group_scores: Dict[str, Any] = field(default_factory=dict)
 
     # Scoring (Step 5)
     pure_composite_score: float = 0.0
@@ -933,7 +933,16 @@ class ScoringResult:
     # Step 4: Signal extraction
     signal_outputs: List[SignalOutput] = field(default_factory=list)
     categorical_outputs: List[CategoricalOutput] = field(default_factory=list)
-    group_scores: Dict[str, float] = field(default_factory=dict)
+    # group_scores: Dict[group_id, GroupScoreDetail] where GroupScoreDetail is:
+    #   risk_score: float          - weighted average of signal scores in group (0-100)
+    #   risk_weight: float         - group weight toward composite (from config)
+    #   risk_contribution: float   - risk_score * risk_weight * 10 (contribution to 0-1000 composite)
+    #   signal_count: int          - number of signals extracted for this group
+    #   expected_signal_count: int - total signals defined in config for this group
+    #   coverage_ratio: float      - signal_count / expected_signal_count
+    #   loss_weight: float|None    - group weight in loss dimension (if configured)
+    #   exposure_weight: float|None - group weight in exposure dimension (if configured)
+    group_scores: Dict[str, Any] = field(default_factory=dict)
 
     # Step 5: Pure composite
     pure_composite_score: float = 0.0

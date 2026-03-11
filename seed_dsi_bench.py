@@ -73,12 +73,99 @@ def _score(base, jitter=10):
     return max(0, min(100, base + random.randint(-jitter, jitter)))
 
 
-def _composite(tier):
-    """Map tier -> approximate composite score on the 0-1000 scale."""
-    return {1: 880, 2: 720, 3: 570, 4: 420, 5: 200}.get(tier, 500)
-
-
 TIER_LABELS = {1: "PREFERRED", 2: "STANDARD_PLUS", 3: "STANDARD", 4: "SUBSTANDARD", 5: "DECLINE"}
+
+
+# =============================================================================
+# COVERAGE GROUP CONFIGURATION
+#
+# Mirrors the real config YAML weights so seed data is mathematically
+# consistent.  Keys are coverage names; each group entry specifies:
+#   risk_weight      – group weight toward pure_composite_score  (sum → 1.0)
+#   loss_weight      – group weight in loss dimension             (sum → 1.0)
+#   exposure_weight  – group weight in exposure dimension         (sum → 1.0)
+#   expected_signals – total signals defined in config for this group
+# =============================================================================
+
+COVERAGE_GROUP_CONFIG = {
+    "cyber": {
+        "network_authority":        {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 8},
+        "technical_infrastructure": {"risk_weight": 0.35, "loss_weight": 0.35, "exposure_weight": 0.35, "expected_signals": 10},
+        "corporate_footprint":      {"risk_weight": 0.15, "loss_weight": 0.25, "exposure_weight": 0.25, "expected_signals": 18},
+        "public_record":            {"risk_weight": 0.25, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 9},
+        "structured_data":          {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 3},
+    },
+    "directors_officers": {
+        "network_authority":   {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 8},
+        "governance":          {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 12},
+        "financial":           {"risk_weight": 0.20, "loss_weight": 0.30, "exposure_weight": 0.20, "expected_signals": 12},
+        "litigation":          {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.05, "expected_signals": 9},
+        "executive":           {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.15, "expected_signals": 5},
+        "corporate_footprint": {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.20, "expected_signals": 6},
+        "structured_data":     {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.25, "expected_signals": 4},
+    },
+    "financial_institutions": {
+        "network_authority":     {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 7},
+        "regulatory_compliance": {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 7},
+        "financial_condition":   {"risk_weight": 0.20, "loss_weight": 0.30, "exposure_weight": 0.25, "expected_signals": 7},
+        "governance":            {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.10, "expected_signals": 6},
+        "operational_risk":      {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 5},
+        "cyber_security":        {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 6},
+        "corporate_footprint":   {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.15, "expected_signals": 6},
+        "structured_data":       {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.15, "expected_signals": 3},
+    },
+    "energy": {
+        "network_authority":        {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 56},
+        "safety_performance":       {"risk_weight": 0.30, "loss_weight": 0.35, "exposure_weight": 0.10, "expected_signals": 62},
+        "environmental_compliance": {"risk_weight": 0.20, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 40},
+        "operational_telemetry":    {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.20, "expected_signals": 47},
+        "financial_stability":      {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.20, "expected_signals": 54},
+        "asset_portfolio":          {"risk_weight": 0.10, "loss_weight": 0.15, "exposure_weight": 0.30, "expected_signals": 61},
+        "corporate_footprint":      {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.03, "expected_signals": 51},
+        "structured_data":          {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.02, "expected_signals": 24},
+    },
+    "marine": {
+        "network_authority":     {"risk_weight": 0.15, "loss_weight": 0.10, "exposure_weight": 0.05, "expected_signals": 10},
+        "operational_telemetry": {"risk_weight": 0.20, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 6},
+        "safety_compliance":     {"risk_weight": 0.25, "loss_weight": 0.35, "exposure_weight": 0.10, "expected_signals": 6},
+        "fleet_profile":         {"risk_weight": 0.10, "loss_weight": 0.15, "exposure_weight": 0.35, "expected_signals": 5},
+        "sanctions_compliance":  {"risk_weight": 0.15, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 5},
+        "environmental":         {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.10, "expected_signals": 4},
+        "corporate_footprint":   {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.10, "expected_signals": 6},
+        "structured_data":       {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 3},
+    },
+    "professional_indemnity": {
+        "network_authority":        {"risk_weight": 0.15, "loss_weight": 0.10, "exposure_weight": 0.05, "expected_signals": 6},
+        "regulatory_standing":      {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 7},
+        "firm_stability":           {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.20, "expected_signals": 6},
+        "practice_quality":         {"risk_weight": 0.15, "loss_weight": 0.20, "exposure_weight": 0.15, "expected_signals": 5},
+        "technical_infrastructure": {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 5},
+        "corporate_footprint":      {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.25, "expected_signals": 6},
+        "litigation_history":       {"risk_weight": 0.10, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 5},
+    },
+    "aerospace": {
+        "network_authority":     {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 5},
+        "safety_record":         {"risk_weight": 0.30, "loss_weight": 0.40, "exposure_weight": 0.10, "expected_signals": 9},
+        "regulatory_compliance": {"risk_weight": 0.20, "loss_weight": 0.20, "exposure_weight": 0.10, "expected_signals": 11},
+        "operational_quality":   {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 10},
+        "fleet_quality":         {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.35, "expected_signals": 9},
+        "financial_stability":   {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.10, "expected_signals": 4},
+        "route_risk":            {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.05, "expected_signals": 5},
+        "corporate_governance":  {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.10, "expected_signals": 8},
+    },
+}
+
+# Also accept SME sub-configurations that share the parent coverage's weights
+COVERAGE_GROUP_CONFIG["cyber_sme"] = COVERAGE_GROUP_CONFIG["cyber"]
+COVERAGE_GROUP_CONFIG["do_sme"] = COVERAGE_GROUP_CONFIG["directors_officers"]
+
+
+def _get_group_config(co):
+    """Look up the COVERAGE_GROUP_CONFIG entry for a company record."""
+    # Try configuration name first, then coverage name
+    cfg = co.get("configuration", "")
+    cov = co.get("coverage", "")
+    return COVERAGE_GROUP_CONFIG.get(cfg, COVERAGE_GROUP_CONFIG.get(cov, {}))
 
 
 # =============================================================================
@@ -1795,21 +1882,77 @@ def build_signal_outputs(profile_name, resolved_scores):
     return outputs
 
 
-def build_group_scores(profile_name, resolved_scores):
-    """Build group-level scores using pre-resolved scores."""
-    profile = SIGNAL_PROFILES.get(profile_name, {})
+def build_group_scores(co, resolved_scores):
+    """Build group-level scores using pre-resolved scores and real config weights.
+
+    Each group entry contains everything needed to reconstruct the composite:
+      risk_score * risk_weight * 10 = risk_contribution  (per group)
+      sum(risk_contribution) = pure_composite_score       (overall)
+
+    Returns:
+        dict[group_id, {...}]  — matches the enriched format from scorer.py
+    """
+    profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
+    gcfg = _get_group_config(co)
     group_scores = {}
+
     for group_id, signals in profile.items():
         scores = [resolved_scores.get((group_id, sid), 50) for sid in signals]
-        avg = sum(scores) / len(scores) if scores else 50
+        actual_count = len(scores)
+        # Weighted average within group (all signals equal weight within group
+        # since the seed doesn't define per-signal weights — just group weight)
+        risk_score = sum(scores) / actual_count if actual_count else 50.0
+
+        # Look up real config weights
+        cfg = gcfg.get(group_id, {})
+        risk_weight = cfg.get("risk_weight", 0.0)
+        loss_weight = cfg.get("loss_weight", None)
+        exposure_weight = cfg.get("exposure_weight", None)
+        expected_count = cfg.get("expected_signals", actual_count)
+
+        # Coverage ratio: what fraction of expected signals were present
+        coverage_ratio = actual_count / expected_count if expected_count > 0 else 0.0
+
+        # Contribution to composite (0-1000 scale)
+        risk_contribution = risk_score * risk_weight * 10
+
         group_scores[group_id] = {
-            "risk_score": round(avg + random.uniform(-3, 3), 1),
-            "loss_score": round(avg + random.uniform(-5, 5), 1),
-            "exposure_score": round(avg + random.uniform(-8, 8), 1),
-            "signal_count": len(scores),
-            "coverage_ratio": round(len(scores) / max(len(scores) + 2, 1), 2),
+            "risk_score": round(risk_score, 2),
+            "risk_weight": risk_weight,
+            "risk_contribution": round(risk_contribution, 2),
+            "signal_count": actual_count,
+            "expected_signal_count": expected_count,
+            "coverage_ratio": round(coverage_ratio, 4),
+            "loss_weight": loss_weight,
+            "exposure_weight": exposure_weight,
         }
     return group_scores
+
+
+def compute_composite_from_group_scores(group_scores):
+    """Derive pure_composite_score by summing group risk_contributions."""
+    return round(sum(g["risk_contribution"] for g in group_scores.values()), 2)
+
+
+def compute_signal_coverage(co, profile):
+    """Compute signal_coverage = populated_signals / total_expected_signals."""
+    gcfg = _get_group_config(co)
+    total_expected = 0
+    total_populated = 0
+    for group_id, signals in profile.items():
+        cfg = gcfg.get(group_id, {})
+        total_expected += cfg.get("expected_signals", len(signals))
+        total_populated += len(signals)
+    return round(total_populated / total_expected, 4) if total_expected > 0 else 0.0
+
+
+def compute_confidence(resolved_scores):
+    """Compute overall confidence from signal count heuristic."""
+    if not resolved_scores:
+        return 0.5
+    # More signals extracted → higher confidence, with diminishing returns
+    n = len(resolved_scores)
+    return round(min(0.98, 0.5 + 0.48 * (1 - 1 / (1 + n / 10))), 4)
 
 
 def build_signal_conditions(co, resolved_scores):
@@ -2067,35 +2210,89 @@ def build_discovery_output(co):
     }
 
 
-def build_loss_propensity(co):
-    """Build loss propensity columns keyed for ModelVersionRecord kwargs."""
-    tier = co["tier"]
-    # Higher tier = higher loss propensity
-    base_score = {1: 15, 2: 30, 3: 50, 4: 70, 5: 90}.get(tier, 50)
-    loss_score = _score(base_score, 8)
-    sev_score = _score(base_score + 5, 10)
+def build_loss_propensity(co, group_scores):
+    """Build loss propensity columns derived from actual signal group scores.
 
-    bands_loss = {1: "very_low", 2: "low", 3: "moderate", 4: "elevated", 5: "high"}
-    bands_sev = {1: "minimal", 2: "moderate", 3: "significant", 4: "severe", 5: "catastrophic"}
+    Uses the loss_weight from each group to compute a weighted loss propensity
+    score, then maps to bands and multipliers — same logic as the real
+    LossCorrelationScorer.
+    """
+    # Derive loss propensity score from group scores using loss weights
+    loss_weighted_sum = 0.0
+    loss_weight_total = 0.0
+    for gid, gs in group_scores.items():
+        lw = gs.get("loss_weight")
+        if lw and lw > 0:
+            loss_weighted_sum += gs["risk_score"] * lw
+            loss_weight_total += lw
 
-    freq_mult = {1: 0.60, 2: 0.80, 3: 1.00, 4: 1.25, 5: 1.50}.get(tier, 1.0)
-    sev_mult = {1: 0.70, 2: 0.90, 3: 1.10, 4: 1.30, 5: 1.50}.get(tier, 1.0)
+    # Loss propensity: invert so high risk_score → low loss propensity
+    # (high scores are good, high loss propensity is bad)
+    if loss_weight_total > 0:
+        avg_signal_score = loss_weighted_sum / loss_weight_total  # 0-100, high=good
+        loss_score = round(100.0 - avg_signal_score, 2)          # invert: high=bad
+    else:
+        loss_score = 50.0
+
+    # Severity: slight offset from frequency
+    sev_score = round(min(100, max(0, loss_score + random.uniform(-5, 5))), 2)
+
+    # Map to bands based on score thresholds (same as real scorer)
+    def _loss_band(s):
+        if s < 20: return "very_low"
+        if s < 40: return "low"
+        if s < 60: return "moderate"
+        if s < 80: return "elevated"
+        return "high"
+
+    def _sev_band(s):
+        if s < 20: return "minimal"
+        if s < 40: return "moderate"
+        if s < 60: return "significant"
+        if s < 80: return "severe"
+        return "catastrophic"
+
+    loss_band = _loss_band(loss_score)
+    sev_band = _sev_band(sev_score)
+
+    # Map bands to multipliers (same as real scorer defaults)
+    freq_mult_map = {"very_low": 0.60, "low": 0.80, "moderate": 1.00, "elevated": 1.25, "high": 1.50}
+    sev_mult_map = {"minimal": 0.70, "moderate": 0.90, "significant": 1.10, "severe": 1.30, "catastrophic": 1.50}
+    freq_mult = freq_mult_map.get(loss_band, 1.0)
+    sev_mult = sev_mult_map.get(sev_band, 1.0)
     combined = round(freq_mult * 0.6 + sev_mult * 0.4, 3)
+
+    # Loss group scores for full reconstructability
+    loss_group_scores = {}
+    for gid, gs in group_scores.items():
+        lw = gs.get("loss_weight")
+        if lw and lw > 0:
+            inverted = round(100.0 - gs["risk_score"], 2)
+            loss_group_scores[gid] = {
+                "frequency_score": inverted,
+                "severity_score": round(min(100, max(0, inverted + random.uniform(-3, 3))), 2),
+                "confidence": round(random.uniform(0.7, 0.95), 4),
+            }
+
+    loss_confidence = round(compute_confidence(
+        {k: v for k, v in co.get("_resolved_scores", {}).items()}
+    ), 2) if co.get("_resolved_scores") else round(random.uniform(0.65, 0.95), 2)
 
     return {
         "loss_propensity_score": loss_score,
         "severity_propensity_score": sev_score,
-        "loss_propensity_band": bands_loss.get(tier, "moderate"),
-        "severity_propensity_band": bands_sev.get(tier, "significant"),
-        "loss_confidence": round(random.uniform(0.65, 0.95), 2),
+        "loss_propensity_band": loss_band,
+        "severity_propensity_band": sev_band,
+        "loss_confidence": loss_confidence,
         "loss_cohort_code": f"cohort_{co.get('industry', 'general').lower()}",
         "loss_cohort_name": f"{co.get('industry', 'General')} Cohort",
         "loss_cohort_confidence": round(random.uniform(0.5, 0.9), 2),
         "loss_frequency_multiplier": freq_mult,
         "loss_severity_multiplier": sev_mult,
         "loss_combined_modifier": combined,
+        "loss_group_scores": loss_group_scores,
         "loss_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
-        "loss_previous_score": _score(base_score, 12) if random.random() > 0.3 else None,
+        "loss_previous_score": round(max(0, min(100, loss_score + random.uniform(-12, 12))), 1) if random.random() > 0.3 else None,
         "loss_score_velocity": round(random.uniform(-3, 3), 2) if random.random() > 0.3 else None,
         "loss_last_refresh": NOW - timedelta(days=random.randint(1, 30)) if random.random() > 0.3 else None,
         "correlation_matrix_version": "v1.0.0",
@@ -2206,8 +2403,6 @@ def seed_data():
         for i, co in enumerate(COMPANIES, 1):
             decision_enum = DecisionType(co["decision"])
             tier = co["tier"]
-            composite = _composite(tier)
-            confidence = round(0.6 + (0.35 * (1 - tier / 5)), 2)
 
             coverage_key = f"{co['coverage']}/{co['configuration']}"
             coverage_counts[coverage_key] = coverage_counts.get(coverage_key, 0) + 1
@@ -2247,7 +2442,14 @@ def seed_data():
             # Roll all signal scores ONCE — every table uses these same values
             resolved_scores = resolve_signal_scores(co.get("signal_profile", ""))
             signal_outputs = build_signal_outputs(co.get("signal_profile", ""), resolved_scores)
-            group_scores = build_group_scores(co.get("signal_profile", ""), resolved_scores)
+            group_scores = build_group_scores(co, resolved_scores)
+
+            # Derive composite, coverage, and confidence from signal data
+            profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
+            composite = compute_composite_from_group_scores(group_scores)
+            signal_cov = compute_signal_coverage(co, profile)
+            confidence = compute_confidence(resolved_scores)
+
             signal_conditions = build_signal_conditions(co, resolved_scores)
             co["_resolved_scores"] = resolved_scores  # pass to build_modifiers_applied
             raw_modifiers = build_modifiers_applied(co)
@@ -2265,7 +2467,7 @@ def seed_data():
                     })
 
             # Build loss propensity + exposure assessment
-            loss_kwargs = build_loss_propensity(co)
+            loss_kwargs = build_loss_propensity(co, group_scores)
             exposure_kwargs = build_exposure_assessment(co)
 
             # --- PREMIUM CALCULATION ---
@@ -2329,9 +2531,9 @@ def seed_data():
                 signal_outputs=signal_outputs,
                 categorical_outputs=categorical_outputs,
                 group_scores=group_scores,
-                pure_composite_score=composite + random.randint(-20, 20),
+                pure_composite_score=composite,
                 confidence=confidence,
-                signal_coverage=round(random.uniform(0.65, 0.95), 2),
+                signal_coverage=signal_cov,
                 signal_conditions=signal_conditions,
                 query_conditions=[
                     {"query_id": k, "response": v, "action": "flag" if not v else "none"}
@@ -2464,13 +2666,20 @@ def seed_data():
             db.flush()
 
             # === 5b. MODEL VERSION SIGNALS (Layer 2 — config-to-signal binding) ===
+            # Use real group weights from COVERAGE_GROUP_CONFIG.
+            # Within each group, signals share equal weight (the group weight
+            # is divided among them).  contribution = score × signal_weight
+            # × group_weight × 10, matching the scorer.py formula.
             signal_output_lookup = {s["signal_id"]: s for s in signal_outputs}
             mvs_id_map = {}  # (group_id, sig_code) -> mvs UUID
-            num_groups = len(profile)
+            gcfg = _get_group_config(co)
+
             for group_id, signals_in_group in profile.items():
-                group_weight = 1.0 / max(num_groups, 1)
+                g_cfg = gcfg.get(group_id, {})
+                g_risk_weight = g_cfg.get("risk_weight", 0.0)
                 num_in_group = len(signals_in_group)
-                signal_weight = round(group_weight / max(num_in_group, 1), 4)
+                # Equal weight within group — each signal's weight sums to 1.0
+                signal_weight = round(1.0 / max(num_in_group, 1), 4)
 
                 for sig_code in signals_in_group:
                     cache_ref = cache_id_map.get((group_id, sig_code))
@@ -2478,7 +2687,14 @@ def seed_data():
                         continue
                     so = signal_output_lookup.get(sig_code, {})
                     resolved = resolved_scores.get((group_id, sig_code), 50)
-                    contribution = round(resolved * signal_weight, 2)
+                    # Contribution to composite:
+                    # score participates in group_score (weighted avg → score × signal_weight / Σsignal_weight)
+                    # then group_score × group_weight × 10 → contribution to 0-1000.
+                    # Per-signal contribution = score × (signal_weight / Σsignal_weight) × group_weight × 10
+                    # Since all signal_weights are equal, this simplifies to:
+                    # contribution = (score / num_in_group) × group_weight × 10
+                    contribution = round((resolved / num_in_group) * g_risk_weight * 10, 4)
+
                     mvs_uuid = _uid()
                     mvs_id_map[(group_id, sig_code)] = mvs_uuid
                     mvs = ModelVersionSignal(
@@ -2489,6 +2705,7 @@ def seed_data():
                         entity_code=co["domain"],
                         score=resolved,
                         weight=signal_weight,
+                        group_weight=g_risk_weight,
                         contribution=contribution,
                         group_code=group_id,
                         proxy_tier=so.get("proxy_tier", "INFERRED_PROXY"),

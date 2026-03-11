@@ -324,6 +324,7 @@ class ModelVersionRecord(Base):
     loss_frequency_multiplier = Column(Float)
     loss_severity_multiplier = Column(Float)
     loss_combined_modifier = Column(Float)
+    loss_group_scores = Column(JSONB)                 # {group: {freq_score, sev_score, weight, ...}}
     loss_trend_direction = Column(String(50))        # improving / stable / deteriorating
     loss_previous_score = Column(Float)
     loss_score_velocity = Column(Float)
@@ -440,7 +441,8 @@ class ModelVersionSignal(Base):
 
     # Snapshot of what the signal contributed at scoring time
     score = Column(Float)                          # The score used (inferred or audited)
-    weight = Column(Float)                         # Weight from config at execution time
+    weight = Column(Float)                         # Signal weight within group (from config)
+    group_weight = Column(Float)                   # Group weight toward composite (from config)
     contribution = Column(Float)                   # Weighted contribution to composite
     group_code = Column(String(100))               # Which group this signal belonged to
     proxy_tier = Column(String(50))                # DIRECT_OBSERVABLE / INFERRED_PROXY / COHORT_INFERENCE
