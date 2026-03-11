@@ -21,7 +21,21 @@ export interface DsiState {
   activeReferral: string | null;
   isLoading: boolean;
   error: string | null;
-  
+
+  // Loss Analytics State
+  lossCohortBenchmarks: any[];
+  lossTrendDistribution: any[];
+  lossScatterData: any[];
+  isFetchingLossAnalytics: boolean;
+  fetchLossAnalytics: (coverage: string, daysFilter?: number) => Promise<void>;
+
+  // Exposure Analytics State
+  exposureBandBenchmarks: any[];
+  exposureTierDistribution: any[];
+  exposureScatterData: any[];
+  isFetchingExposureAnalytics: boolean;
+  fetchExposureAnalytics: (coverage: string, daysFilter?: number) => Promise<void>;
+
   // Submission Review State
   modelVersions: any[];
   auditLogs: any[];
@@ -62,6 +76,18 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   referralSignals: [],
   isFetchingSignals: false,
 
+  // Default Loss Analytics State
+  lossCohortBenchmarks: [],
+  lossTrendDistribution: [],
+  lossScatterData: [],
+  isFetchingLossAnalytics: false,
+
+  // Default Exposure Analytics State
+  exposureBandBenchmarks: [],
+  exposureTierDistribution: [],
+  exposureScatterData: [],
+  isFetchingExposureAnalytics: false,
+
 // Add the navigateBack action:
   navigateBack: () => {
     set((state) => ({
@@ -94,6 +120,74 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       console.error("Failed to update decision", err);
     }
   }, 
+
+fetchLossAnalytics: async (coverage: string, daysFilter = 365) => {
+    set({ isFetchingLossAnalytics: true });
+    
+    try {
+      // Calculate the 'created_after' date constraint
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() - daysFilter);
+      const isoDateString = targetDate.toISOString(); 
+
+      const baseUrl = 'http://localhost:8000/api/v1/analytics/loss';
+      const params = `?coverage=${encodeURIComponent(coverage)}&created_after=${encodeURIComponent(isoDateString)}`;
+
+      // Helper for safe fetching
+      const safeFetch = (url: string) => fetch(url).then(res => res.ok ? res.json() : []).catch(() => []);
+
+      // Execute all three aggregate queries simultaneously
+      const [cohortData, trendData, scatterData] = await Promise.all([
+        safeFetch(`${baseUrl}/cohort-benchmarks${params}`),
+        safeFetch(`${baseUrl}/trend-distribution${params}`),
+        safeFetch(`${baseUrl}/scatter-plot${params}`)
+      ]);
+
+      // Update the store with the optimized datasets
+      set({ 
+        lossCohortBenchmarks: cohortData,
+        lossTrendDistribution: trendData,
+        lossScatterData: scatterData,
+        isFetchingLossAnalytics: false 
+      });
+
+    } catch (err) {
+      console.error("Failed to fetch loss analytics:", err);
+      set({ isFetchingLossAnalytics: false });
+    }
+  },
+
+  fetchExposureAnalytics: async (coverage: string, daysFilter = 365) => {
+    set({ isFetchingExposureAnalytics: true });
+    
+    try {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() - daysFilter);
+      const isoDateString = targetDate.toISOString(); 
+
+      const baseUrl = 'http://localhost:8000/api/v1/analytics/exposure';
+      const params = `?coverage=${encodeURIComponent(coverage)}&created_after=${encodeURIComponent(isoDateString)}`;
+
+      const safeFetch = (url: string) => fetch(url).then(res => res.ok ? res.json() : []).catch(() => []);
+
+      const [bandData, tierData, scatterData] = await Promise.all([
+        safeFetch(`${baseUrl}/band-benchmarks${params}`),
+        safeFetch(`${baseUrl}/tier-distribution${params}`),
+        safeFetch(`${baseUrl}/scatter-plot${params}`)
+      ]);
+
+      set({ 
+        exposureBandBenchmarks: bandData,
+        exposureTierDistribution: tierData,
+        exposureScatterData: scatterData,
+        isFetchingExposureAnalytics: false 
+      });
+
+    } catch (err) {
+      console.error("Failed to fetch exposure analytics:", err);
+      set({ isFetchingExposureAnalytics: false });
+    }
+  },
 
   modelVersions: [],
   auditLogs: [],

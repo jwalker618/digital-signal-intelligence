@@ -6,9 +6,10 @@ interface ViewCanvasProps {
   children: ReactNode;         // The main analysis area (e.g., the Table or Workbench)
   topContext?: ReactNode;      // Optional top context window
   bottomContext?: ReactNode;   // Optional bottom context window
+  unstyledMain?: boolean;      // Optional flag to remove default background and padding
 }
 
-export default function ViewCanvas({ children, topContext, bottomContext }: ViewCanvasProps) {
+export default function ViewCanvas({ children, topContext, bottomContext, unstyledMain = false }: ViewCanvasProps) {
   return (
     <div className="w-full h-full relative">
       
@@ -25,7 +26,7 @@ export default function ViewCanvas({ children, topContext, bottomContext }: View
         {topContext}
       </div>
 
-      {/* Main Analysis Area */}
+      {/* Main Analysis Area (Fixed Boundary Constraints) */}
       <div
         className="
           absolute left-dsi-gap right-dsi-gap 
@@ -36,13 +37,18 @@ export default function ViewCanvas({ children, topContext, bottomContext }: View
           bottom: 'var(--cw)' ,
         }}
       >
-        <div className="
-          bg-dsi-analysis 
-          text-dsi-contrast-analysis 
-          min-h-full 
-          p-dsi-pad">
-          {children}
-        </div>
+        {/* Conditionally render the default panel styling OR raw children */}
+        {unstyledMain ? (
+          children
+        ) : (
+          <div className="
+            bg-dsi-analysis 
+            text-dsi-contrast-analysis 
+            min-h-full 
+            p-dsi-pad">
+            {children}
+          </div>
+        )}
       </div>
 
       {/*Bottom Context Window */}

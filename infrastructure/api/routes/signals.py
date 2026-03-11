@@ -1,5 +1,5 @@
 """
-DSI Signal Override Endpoints - Database Backed
+DSI Signal Endpoints - Database Backed
 
 Endpoint for applying audited_value overrides to signals.
 Creates a new model version via lightweight recalculation (no re-extraction),
@@ -19,11 +19,9 @@ from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
     Quote,
     QuoteStatus,
-    Referral,
     ModelVersionRecord,
     ModelVersionSignal,
     Signal,
-    SignalAuditRecord,
     DecisionType,
 )
 from infrastructure.db.repositories import (
@@ -34,7 +32,10 @@ from infrastructure.db.repositories import (
     ReferralRepository,
 )
 
-from ..types import SignalOverrideRequest, SignalOverrideResponse
+from ..types import (
+    SignalOverrideRequest, 
+    SignalOverrideResponse,
+)
 
 logger = logging.getLogger("dsi.api.signals")
 router = APIRouter()
@@ -489,3 +490,4 @@ async def override_signal(
         previous_version_code=old_model.version_code,
         new_version_code=new_model.version_code,
     )
+

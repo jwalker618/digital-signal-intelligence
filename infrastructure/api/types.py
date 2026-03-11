@@ -105,7 +105,19 @@ class FrontendSubmissionPipeline(BaseModel):
     tier_label: Optional[str] = None
     decision: str
 
-
+class FrontendRiskAssessment(BaseModel):
+    version_code: str
+    signal_id: int
+    score: Optional[float] = None
+    weight: Optional[float] = None
+    contribution: Optional[float] = None
+    group_code: Optional[str] = None
+    proxy_tier: Optional[str] = None
+    expectation_level: Optional[str] = None
+    was_absent: bool = False
+    data: Dict[str, Any]
+    confidence: Optional[float] = None
+    code: str
 
 class SubmissionRequest(BaseModel):
     entity_name: str
@@ -633,6 +645,10 @@ class SignalCacheRecord(BaseModel):
     ttl_seconds: Optional[int] = None
     extraction_time_ms: Optional[float] = None
     from_external_cache: bool = False
+
+maps_to(Signal, exclude=["id"])
+class SignalRecord(BaseModel):
+    code: str
 
 @maps_to(ModelVersionSignal, exclude=["id"])
 class ModelVersionSignalRecord(BaseModel):

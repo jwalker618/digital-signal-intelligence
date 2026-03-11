@@ -6,6 +6,10 @@ import ViewCanvas from "@/components/ViewCanvas";
 import { Download, FileText, MoreVertical, Calendar, Hash } from "lucide-react";
 
 import SummaryTab from "@/components/submissions/workbench/SummaryTab";
+import PricingTab from "@/components/submissions/workbench/PricingTab";
+import RiskTab from "@/components/submissions/workbench/RiskTab";
+import LossTab from "@/components/submissions/workbench/LossTab";
+import ExposureTab from "@/components/submissions/workbench/ExposureTab";
 import ReferralTab from "@/components/submissions/workbench/ReferralTab";
 import ModelVersionsTab from "@/components/submissions/workbench/ModelVersionsTab";
 
@@ -118,6 +122,14 @@ export default function WorkbenchView() {
     switch (activeMenu) {
       case "Summary":
         return <SummaryTab/>;
+      case "Pricing Anatomy":
+        return <PricingTab/>;
+      case "Risk Assessment":
+        return <RiskTab/>;
+      case "Loss Assessment":
+        return <LossTab/>;
+      case "Exposure Assessment":
+        return <ExposureTab/>;
       case "Referral Actions":
         return <ReferralTab/>;
       case "Model Versions":
@@ -128,7 +140,7 @@ export default function WorkbenchView() {
   };
 
   return (
-    <ViewCanvas topContext={TopContext} bottomContext={BottomContext}>
+    <ViewCanvas topContext={TopContext} bottomContext={BottomContext} unstyledMain={true}>
       {renderContent()}
     </ViewCanvas>
   );

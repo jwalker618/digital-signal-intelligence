@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 import { 
   PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine,
-  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot
+  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
@@ -141,6 +141,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       <ul className="ml-3 pl-dsi-pad flex flex-col gap-1">
                         {[
                           { name: "Summary", icon: FolderKanban },
+                          { name: "Pricing Anatomy", icon: Calculator },
+                          { name: "Risk Assessment", icon: ChartNoAxesGantt },
+                          { name: "Loss Assessment", icon: TrendingUpDown },
+                          { name: "Exposure Assessment", icon: Globe },
                           { name: "Referral Actions", icon: UserStar },
                           { name: "Model Versions", icon: FileStack },
                         ].map((item) => (

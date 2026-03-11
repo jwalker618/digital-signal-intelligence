@@ -10,11 +10,22 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.db.config import get_async_db
-from ..types import FrontendSubmissionPipeline
+
+from infrastructure.db.models import (
+    ModelVersionRecord,
+    ModelVersionSignal,
+    SignalCache,
+    Signal,
+)
+
+from ..types import (
+    FrontendSubmissionPipeline, 
+    FrontendRiskAssessment,
+)
 
 logger = logging.getLogger("dsi.api.frontend")
 router = APIRouter()
@@ -76,3 +87,25 @@ async def get_frontend_pipeline(
     except Exception as e:
         logger.error("DB get frontend pipeline failed: %s", e)
         raise HTTPException(status_code=500, detail="Failed to fetch pipeline data")
+
+@router.get("/frontend/{version_code}/signals", response_model=FrontendRiskAssessment)
+async def get_frontend_modelsignals(
+    version_code: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> FrontendRiskAssessment:
+    """Get model version signals details by code."""
+    query = (select(FrontendRiskAssessment)
+     .join(ModelVersionRecord, ModelVersionSignal.model_version_id == ModelVersionRecord.id)
+     .where(ModelVersionRecord.is_latest == True)
+     .join(SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id)
+     .join(Signal, ModelVersionSignal.signal_id == Signal.id)
+     .where(ModelVersionRecord.version_code == version_code))
+    
+    result = await db.execute(query)
+    record = result.scalar_one_or_none()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Signals not found")
+
+    return record
+

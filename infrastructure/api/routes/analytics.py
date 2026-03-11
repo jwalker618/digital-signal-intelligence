@@ -9,10 +9,15 @@ from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Query, Depends
-from sqlalchemy import text
+from sqlalchemy import text, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.db.config import get_async_db
+from infrastructure.db.models import (
+    ModelVersionRecord, 
+    Submission,
+)
+
 from ..types import (
     PortfolioSummaryResponse,
     TurnaroundMetricsResponse,
@@ -124,3 +129,202 @@ async def get_dashboard_data(
             "data": [150, 135, 45],
         },
     }
+
+# =============================================================================
+# SUBMISSION ANALYTICS
+# =============================================================================
+
+@router.get("/analytics/loss/scatter-plot")
+async def get_loss_scatter_data(
+    coverage: str,
+    created_after: datetime,
+    limit: int = 500,
+    db: AsyncSession = Depends(get_async_db),
+) -> List[Dict[str, Any]]:
+    """Component B: Lightweight coordinate payload for the scatter plot."""
+    
+    query = (
+        select(
+            ModelVersionRecord.version_id,
+            ModelVersionRecord.loss_propensity_score.label("x_propensity"),
+            ModelVersionRecord.severity_propensity_score.label("y_severity"),
+            ModelVersionRecord.decision
+        )
+        .select_from(ModelVersionRecord)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .where(
+            ModelVersionRecord.is_latest == True,
+            Submission.coverage == coverage,
+            Submission.created_at >= created_after
+        )
+        .limit(limit)
+    )
+
+    result = await db.execute(query)
+    return [dict(row) for row in result.mappings().all()]
+
+@router.get("/analytics/loss/cohort-benchmarks")
+async def get_cohort_benchmarks(
+    coverage: str,
+    created_after: datetime,
+    db: AsyncSession = Depends(get_async_db),
+) -> List[Dict[str, Any]]:
+    """Component C: Averages the loss modifiers grouped by cohort."""
+    
+    query = (
+        select(
+            ModelVersionRecord.loss_cohort_name.label("cohort_name"),
+            func.count(ModelVersionRecord.id).label("peer_count"),
+            func.avg(ModelVersionRecord.loss_combined_modifier).label("avg_modifier"),
+            func.avg(ModelVersionRecord.loss_propensity_score).label("avg_propensity")
+        )
+        .select_from(ModelVersionRecord)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .where(
+            ModelVersionRecord.is_latest == True,
+            Submission.coverage == coverage,
+            Submission.created_at >= created_after,
+            ModelVersionRecord.loss_cohort_name.is_not(None)
+        )
+        .group_by(ModelVersionRecord.loss_cohort_name)
+    )
+
+    result = await db.execute(query)
+    rows = result.mappings().all()
+    
+    # Format the floats safely
+    return [
+        {
+            "cohort_name": row["cohort_name"],
+            "peer_count": row["peer_count"],
+            "avg_modifier": round(row["avg_modifier"], 3) if row["avg_modifier"] else 1.0,
+            "avg_propensity": round(row["avg_propensity"], 1) if row["avg_propensity"] else 0.0,
+        }
+        for row in rows
+    ]
+
+@router.get("/analytics/loss/trend-distribution")
+async def get_trend_distribution(
+    coverage: str,
+    created_after: datetime,
+    db: AsyncSession = Depends(get_async_db),
+) -> List[Dict[str, Any]]:
+    """Component D: Counts the frequency of each trend direction."""
+    
+    query = (
+        select(
+            ModelVersionRecord.loss_trend_direction.label("trend"),
+            func.count(ModelVersionRecord.id).label("count")
+        )
+        .select_from(ModelVersionRecord)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .where(
+            ModelVersionRecord.is_latest == True,
+            Submission.coverage == coverage,
+            Submission.created_at >= created_after,
+            ModelVersionRecord.loss_trend_direction.is_not(None)
+        )
+        .group_by(ModelVersionRecord.loss_trend_direction)
+    )
+
+    result = await db.execute(query)
+    return [dict(row) for row in result.mappings().all()]
+
+@router.get("/analytics/exposure/scatter-plot")
+async def get_exposure_scatter_data(
+    coverage: str,
+    created_after: datetime,
+    limit: int = 500,
+    db: AsyncSession = Depends(get_async_db),
+) -> List[Dict[str, Any]]:
+    """Component B: Coordinate payload mapping Exposure Magnitude against Composite Score."""
+    
+    query = (
+        select(
+            ModelVersionRecord.version_id,
+            ModelVersionRecord.exposure_magnitude_score.label("x_magnitude"),
+            ModelVersionRecord.pure_composite_score.label("y_composite"),
+            ModelVersionRecord.decision
+        )
+        .select_from(ModelVersionRecord)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .where(
+            ModelVersionRecord.is_latest == True,
+            Submission.coverage == coverage,
+            Submission.created_at >= created_after
+        )
+        .limit(limit)
+    )
+
+    result = await db.execute(query)
+    return [dict(row) for row in result.mappings().all()]
+
+@router.get("/analytics/exposure/band-benchmarks")
+async def get_exposure_band_benchmarks(
+    coverage: str,
+    created_after: datetime,
+    db: AsyncSession = Depends(get_async_db),
+) -> List[Dict[str, Any]]:
+    """Component C: Averages the exposure modifiers grouped by band (e.g., Large, SME)."""
+    
+    query = (
+        select(
+            ModelVersionRecord.exposure_band_label.label("band_label"),
+            func.count(ModelVersionRecord.id).label("peer_count"),
+            func.avg(ModelVersionRecord.exposure_modifier).label("avg_modifier"),
+            func.avg(ModelVersionRecord.exposure_value).label("avg_exposure_value")
+        )
+        .select_from(ModelVersionRecord)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .where(
+            ModelVersionRecord.is_latest == True,
+            Submission.coverage == coverage,
+            Submission.created_at >= created_after,
+            ModelVersionRecord.exposure_band_label.is_not(None)
+        )
+        .group_by(ModelVersionRecord.exposure_band_label)
+    )
+
+    result = await db.execute(query)
+    rows = result.mappings().all()
+    
+    return [
+        {
+            "band_label": row["band_label"],
+            "peer_count": row["peer_count"],
+            "avg_modifier": round(row["avg_modifier"], 3) if row["avg_modifier"] else 1.0,
+            "avg_exposure_value": float(row["avg_exposure_value"]) if row["avg_exposure_value"] else 0.0,
+        }
+        for row in rows
+    ]
+
+@router.get("/analytics/exposure/tier-distribution")
+async def get_exposure_tier_distribution(
+    coverage: str,
+    created_after: datetime,
+    db: AsyncSession = Depends(get_async_db),
+) -> List[Dict[str, Any]]:
+    """Component D: Shows the average exposure magnitude per Final Tier."""
+    
+    query = (
+        select(
+            ModelVersionRecord.final_tier.label("tier"),
+            func.avg(ModelVersionRecord.exposure_magnitude_score).label("avg_magnitude"),
+            func.count(ModelVersionRecord.id).label("peer_count")
+        )
+        .select_from(ModelVersionRecord)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .where(
+            ModelVersionRecord.is_latest == True,
+            Submission.coverage == coverage,
+            Submission.created_at >= created_after,
+            ModelVersionRecord.final_tier.is_not(None)
+        )
+        .group_by(ModelVersionRecord.final_tier)
+        .order_by(ModelVersionRecord.final_tier)
+    )
+
+    result = await db.execute(query)
+    rows = result.mappings().all()
+    return [{"tier": f"Tier {row['tier']}", "avg_magnitude": round(row["avg_magnitude"] or 0, 1), "peer_count": row["peer_count"]} for row in rows]
+

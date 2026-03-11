@@ -53,7 +53,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
   };
 
   return (
-    <ViewCanvas bottomContext={BottomContext}>
+    <ViewCanvas bottomContext={BottomContext} unstyledMain={false}>
       <div className="w-full no-scrollbar">
         <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead className="sticky top-0 z-10 bg-dsi-analysis">
