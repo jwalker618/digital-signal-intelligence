@@ -2,11 +2,44 @@
 
 ## Overview
 
-The Coverage Builder generates **v2.0 compliant** coverage configurations for the DSI framework. It produces YAML configs matching the canonical schema used by all existing coverages (cyber, D&O, aerospace, etc.).
+The Coverage Builder provides two generation pipelines:
 
-A generated config is immediately usable by the DSI scoring engine, pricing engine, and workflow orchestrator without manual editing.
+1. **`build`** — Create an entirely new coverage line from a `CoverageSpec` (name, industry, market). Generates a single `_general` configuration with signal selection and weighting.
+
+2. **`expand`** — Expand an existing coverage line with multiple segment-specific sub-configurations from a structured `ExpansionSpec`. Generates complete config YAML, extractor stubs, aggregator stubs, and inference function registrations.
+
+**Use `build` when**: Creating a new coverage line from scratch (e.g., "create a new Casualty coverage").
+
+**Use `expand` when**: Adding multiple sub-configurations to an existing coverage line (e.g., Phase 6 — expanding PI from 2 configs to 13 profession-specific configs). This is the standard workflow for coverage expansion phases.
+
+Generated configs are immediately usable by the DSI scoring engine, pricing engine, and workflow orchestrator without manual editing.
 
 ## Quick Start
+
+### Expand an Existing Coverage (Coverage Expansion Phases)
+
+```bash
+# Preview what will be generated (no files written)
+python -m infrastructure.builder.cli expand \
+    --spec development/project/version/4/phase_6_spec.yaml
+
+# Generate and write all files
+python -m infrastructure.builder.cli expand \
+    --spec development/project/version/4/phase_6_spec.yaml \
+    --existing-config coverages/pi/config.yaml \
+    --write
+
+# Dry run with JSON output
+python -m infrastructure.builder.cli expand \
+    --spec development/project/version/4/phase_6_spec.yaml \
+    --dry-run --json
+```
+
+This generates:
+- Config YAML sub-configurations (appended to existing config.yaml)
+- Extractor stubs (`signal_architecture/signals/extractors/stubs/{coverage}/`)
+- Aggregator stubs (`signal_architecture/signals/aggregators/implementations/{coverage}/`)
+- Inference function registrations (`signal_architecture/signals/inference/functions/{coverage}/`)
 
 ### Build a New Coverage
 
@@ -47,6 +80,117 @@ python -m infrastructure.builder.cli list-industries
 # See available signal groups
 python -m infrastructure.builder.cli list-signals
 ```
+
+## How Coverage Expansions Work
+
+### Overview
+
+Coverage expansion is the standard workflow for phases that add multiple sub-configurations to an existing coverage line (e.g., Phase 5 energy, Phase 6 PI, Phase 7 cyber). The pipeline takes a structured YAML expansion spec and generates all required config YAML and signal architecture code.
+
+### Step 1: Author the Expansion Spec
+
+Create a `phase_N_spec.yaml` file. The spec captures all machine-consumable parameters in a compact format. See `development/project/version/4/phase_6_spec.yaml` as a reference (~1,500 lines for 11 configs + 58 signals).
+
+```yaml
+coverage_line: pi
+coverage_key: professional_indemnity
+phase: phase_6
+description: "Phase 6 PI Expansion"
+version: "2.3.0"
+
+default_product_types: [professional_liability, errors_omissions]
+default_markets: [us, uk, eu, apac]
+routing_field: profession_segment
+
+new_signal_groups:
+  - id: partner_practice_mix
+    label: Partner Practice Mix
+    description: "Tail-risk drivers for large legal practice"
+    group_type: three_layer_assessment
+    signals:
+      - id: lateral_hire_volume
+        name: Lateral Hire Volume
+        description: "Rate of lateral partner additions"
+        group_id: partner_practice_mix
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_size_weight: 0.15
+
+configurations:
+  - id: pi_legal_large
+    name: DSI PI Large Law Firm Pricing Model
+    description: "AmLaw 200, Magic Circle"
+    model_specificity: 4
+    min_premium: 100000
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: LEGAL, required_in_input: true}
+      - {field: revenue, operator: ">", value: 100000000, required_in_input: true}
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice claims}]
+    group_weights:
+      - {group_id: regulatory_standing, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: partner_practice_mix, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.25}
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0012
+      standard_rate: 0.0028
+      decline_rate: 0.0065
+```
+
+### Step 2: Run the Generator
+
+```bash
+python -m infrastructure.builder.cli expand \
+    --spec development/project/version/4/phase_6_spec.yaml \
+    --existing-config coverages/pi/config.yaml \
+    --write
+```
+
+### Step 3: Review and Validate
+
+```bash
+# Validate the generated config
+python -m infrastructure.builder.cli validate coverages/pi/config.yaml
+
+# Regenerate logic.md documentation
+python coverages/doc_generator.py
+
+# Run project assessment
+python development/project/assessments/scripts/assess_project.py
+```
+
+### Step 4: Register New Modules
+
+Update the `__init__.py` files in the extractor, aggregator, and inference function directories to import and export the new phase modules.
+
+### Expansion Spec Schema Reference
+
+| Section | Description |
+|---------|-------------|
+| `coverage_line` | Coverage directory name (e.g., `pi`, `energy`, `cyber`) |
+| `coverage_key` | Top-level YAML key (e.g., `professional_indemnity`, `energy`) |
+| `default_*` | Shared defaults (product_types, markets, pricing, tier bands) |
+| `routing_field` | Pre-routing field name (e.g., `profession_segment`) |
+| `new_signal_groups` | New groups with their signals (three_layer or categorical) |
+| `configurations` | Per-config: routing, weights, queries, pricing, tier bands |
+
+Each signal in `new_signal_groups` supports:
+- `signal_type: three_layer` — Scored signal with risk/loss/exposure weights
+- `signal_type: categorical` — Category signal with modifier features
+- `proxy_tier` — DIRECT_OBSERVABLE, INFERRED_PROXY, or COHORT_INFERENCE
+- `score_conditions` — Threshold-based actions (FLAG/MODIFIER/REFER)
+- `extractor_fields` — Field hints for stub generation
+
+### Companion Documentation
+
+For each expansion phase, create a light prose companion doc alongside the spec. Template: `development/project/templates/expansion_companion.md`. The companion provides strategic rationale, design decisions, and pricing philosophy — context that doesn't belong in a machine-consumable spec.
+
+---
 
 ## How New Coverages Are Created
 
@@ -325,11 +469,21 @@ done
 ```
 infrastructure/builder/
   __init__.py              Module exports
-  coverage_builder.py      Core builder logic (v2.0 config generation)
-  validator.py             v2.0 schema validation
+  coverage_builder.py      Core builder logic (v2.0 config generation — new coverage lines)
+  expansion_types.py       Expansion spec schema (ExpansionSpec, ConfigurationSpec, SignalSpec, etc.)
+  expansion_generator.py   Expansion generator (config YAML + signal code from spec)
+  validator.py             v2.0/v2.3 schema validation
   signal_library.py        Signal groups, industry profiles, registry integration
   types.py                 CoverageSpec, SignalSelection, ValidationResult, etc.
-  cli.py                   CLI interface (build, validate, list)
+  migrator.py              Config version migration (v2.0 → v2.2)
+  cli.py                   CLI interface (build, expand, validate, list)
+  README.md                This file
+
+development/project/
+  templates/
+    expansion_companion.md   Template for expansion phase companion docs
+  version/4/
+    phase_6_spec.yaml        Reference expansion spec (PI, 11 configs, 58 signals)
 
 tests/unit/
   test_coverage_builder_v2.py    24 tests covering structure, constraints, validation
