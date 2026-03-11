@@ -480,6 +480,18 @@ class WorkflowEngine:
             model_version.loss_frequency_multiplier = loss_propensity_result.frequency_multiplier
             model_version.loss_severity_multiplier = loss_propensity_result.severity_multiplier
             model_version.loss_combined_modifier = loss_propensity_result.combined_loss_modifier
+            # Persist loss group scores for full reconstructability
+            model_version.loss_group_scores = {
+                group_name: {
+                    "frequency_score": round(loss_propensity_result.frequency_group_scores.get(group_name, 0.0), 2),
+                    "severity_score": round(loss_propensity_result.severity_group_scores.get(group_name, 0.0), 2),
+                    "confidence": round(loss_propensity_result.group_confidences.get(group_name, 0.0), 4),
+                }
+                for group_name in set(
+                    list(loss_propensity_result.frequency_group_scores.keys())
+                    + list(loss_propensity_result.severity_group_scores.keys())
+                )
+            }
             model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
             model_version.loss_previous_score = loss_propensity_result.previous_score
             model_version.loss_score_velocity = loss_propensity_result.score_velocity
@@ -502,25 +514,32 @@ class WorkflowEngine:
                 "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
                 else "full"
             )
-            # Map exposure value to band
+            # Map exposure value to band and persist boundaries
+            _EXPOSURE_BANDS = [
+                (1, "Minimal",    0,              0,              0.80),
+                (1, "Small",      0,              50_000_000,     0.85),
+                (2, "Mid-Market", 50_000_000,     500_000_000,    0.95),
+                (3, "Large",      500_000_000,    5_000_000_000,  1.05),
+                (4, "Major",      5_000_000_000,  50_000_000_000, 1.15),
+                (5, "Mega",       50_000_000_000, None,           1.30),
+            ]
+            matched = _EXPOSURE_BANDS[-1]  # default to Mega
             if primary_exposure <= 0:
-                model_version.exposure_band_id = 1
-                model_version.exposure_band_label = "Minimal"
-            elif primary_exposure < 50_000_000:
-                model_version.exposure_band_id = 1
-                model_version.exposure_band_label = "Small"
-            elif primary_exposure < 500_000_000:
-                model_version.exposure_band_id = 2
-                model_version.exposure_band_label = "Mid-Market"
-            elif primary_exposure < 5_000_000_000:
-                model_version.exposure_band_id = 3
-                model_version.exposure_band_label = "Large"
-            elif primary_exposure < 50_000_000_000:
-                model_version.exposure_band_id = 4
-                model_version.exposure_band_label = "Major"
+                matched = _EXPOSURE_BANDS[0]
             else:
-                model_version.exposure_band_id = 5
-                model_version.exposure_band_label = "Mega"
+                for band in _EXPOSURE_BANDS[1:]:
+                    bid, label, bmin, bmax, mod = band
+                    if bmax is None or primary_exposure < bmax:
+                        matched = band
+                        break
+            bid, blabel, bmin, bmax, bmod = matched
+            model_version.exposure_band_id = bid
+            model_version.exposure_band_label = blabel
+            model_version.exposure_band_boundaries = {
+                "min_value": bmin,
+                "max_value": bmax,
+                "modifier": bmod,
+            }
 
         return WorkflowResult(
             entity_id=entity_id,

@@ -22,7 +22,7 @@ Connects the model layer to the signal architecture via the inference registry.
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 from infrastructure.models.config_schema import (
     CoverageConfig,
@@ -575,21 +575,26 @@ class ModelScorer:
         self,
         signal_outputs: List[SignalOutput],
         config: CoverageConfig
-    ) -> Tuple[float, Dict[str, float], float, float]:
+    ) -> Tuple[float, Dict[str, Any], float, float]:
         """
         Step 5: Calculate pure composite score.
 
         The composite score is a weighted sum of group scores,
-        where each group score is a weighted sum of signal scores.
+        where each group score is a weighted average of signal scores.
 
-        Score range: 0-1000 (signal scores 0-100 multiplied by 10)
+        Score range: 0-1000 (signal scores 0-100, group weights sum to ~1.0, × 10)
 
         Args:
             signal_outputs: All extracted signal outputs
             config: Coverage configuration (Pydantic compiled)
 
         Returns:
-            Tuple of (composite_score, group_scores, confidence, coverage)
+            Tuple of (composite_score, group_scores_detail, confidence, coverage)
+            where group_scores_detail is Dict[group_id, {
+                risk_score, risk_weight, risk_contribution,
+                signal_count, expected_signal_count, coverage_ratio,
+                loss_weight, exposure_weight
+            }]
         """
         # Group signals by group_id
         signals_by_group: Dict[str, List[SignalOutput]] = {}
@@ -605,14 +610,27 @@ class ModelScorer:
                 gid = sig.three_layer_assessment.group_id
                 signals_per_group[gid] = signals_per_group.get(gid, 0) + 1
 
+        # Build loss/exposure weight lookups from config (if available)
+        loss_weights: Dict[str, float] = {}
+        exposure_weights: Dict[str, float] = {}
+        for group in config.groups.three_layer_assessment:
+            if hasattr(group, 'loss') and group.loss:
+                loss_weights[group.id] = group.loss.weight
+            if hasattr(group, 'exposure') and group.exposure:
+                exposure_weights[group.id] = group.exposure.weight
+
         # Calculate group scores using three_layer_assessment groups
-        group_scores: Dict[str, float] = {}
+        group_scores_detail: Dict[str, Any] = {}
+        group_risk_scores: Dict[str, float] = {}  # for internal composite calc
         total_confidence = 0.0
         total_signals = 0
         populated_signals = 0
 
         for group in config.groups.three_layer_assessment:
             group_signals = signals_by_group.get(group.id, [])
+            expected_count = signals_per_group.get(group.id, 0)
+            actual_count = len(group_signals)
+            group_populated = 0
 
             if group_signals:
                 # Weighted average within group
@@ -627,20 +645,34 @@ class ModelScorer:
                 # Track confidence
                 group_confidence = sum(s.confidence for s in group_signals) / len(group_signals)
                 total_confidence += group_confidence * len(group_signals)
-                populated_signals += sum(1 for s in group_signals if s.error is None)
+                group_populated = sum(1 for s in group_signals if s.error is None)
+                populated_signals += group_populated
             else:
                 group_score = self.default_score
 
-            group_scores[group.id] = group_score
-            total_signals += signals_per_group.get(group.id, 0)
+            group_risk_scores[group.id] = group_score
+            total_signals += expected_count
 
-        # Calculate composite score (0-1000 scale)
-        composite_score = 0.0
-        for group in config.groups.three_layer_assessment:
-            group_score = group_scores.get(group.id, self.default_score)
-            group_weight = group.risk.weight if group.risk else 0.0
-            # Group score (0-100) * group weight * 10 = contribution to 0-1000 scale
-            composite_score += group_score * group_weight * 10
+            # Calculate group contribution to composite
+            risk_weight = group.risk.weight if group.risk else 0.0
+            risk_contribution = group_score * risk_weight * 10
+
+            group_scores_detail[group.id] = {
+                "risk_score": round(group_score, 2),
+                "risk_weight": risk_weight,
+                "risk_contribution": round(risk_contribution, 2),
+                "signal_count": actual_count,
+                "expected_signal_count": expected_count,
+                "coverage_ratio": round(group_populated / expected_count, 4) if expected_count > 0 else 0.0,
+                "loss_weight": loss_weights.get(group.id),
+                "exposure_weight": exposure_weights.get(group.id),
+            }
+
+        # Calculate composite score (0-1000 scale) — sum of all group contributions
+        composite_score = sum(
+            detail["risk_contribution"]
+            for detail in group_scores_detail.values()
+        )
 
         # Calculate overall confidence and coverage
         if total_signals > 0:
@@ -650,12 +682,12 @@ class ModelScorer:
             overall_confidence = 0.5
             signal_coverage = 0.0
 
-        return composite_score, group_scores, overall_confidence, signal_coverage
+        return composite_score, group_scores_detail, overall_confidence, signal_coverage
 
     def evaluate_signal_conditions(
         self,
         signal_outputs: List[SignalOutput],
-        group_scores: Dict[str, float],
+        group_scores: Dict[str, Any],
         config: CoverageConfig
     ) -> Tuple[List[TriggeredCondition], List[int], List[str], List[str]]:
         """
@@ -686,7 +718,8 @@ class ModelScorer:
         # Evaluate group-level conditions (from groups.three_layer_assessment)
         for group in config.groups.three_layer_assessment:
             if group.risk and group.risk.score_conditions:
-                group_score = group_scores.get(group.id, self.default_score)
+                gs_detail = group_scores.get(group.id)
+                group_score = gs_detail["risk_score"] if isinstance(gs_detail, dict) else (gs_detail if gs_detail is not None else self.default_score)
                 group_label = group.label or group.id
 
                 for condition in group.risk.score_conditions:
