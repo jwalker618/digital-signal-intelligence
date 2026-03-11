@@ -5,6 +5,7 @@ LLM-assisted coverage creation with validation.
 
 Components:
 - CoverageBuilder: Main builder for creating coverages
+- CoverageExpansionGenerator: Expansion pipeline for coverage phases
 - SignalLibrary: Library of reusable signals
 - ConfigValidator: Configuration validation
 """
@@ -26,6 +27,19 @@ from .types import (
     # Code generation
     GeneratedCode,
     SignalTemplate,
+)
+
+from .expansion_types import (
+    ExpansionSpec,
+    ExpansionResult,
+    ConfigurationSpec,
+    SignalGroupSpec,
+    SignalSpec,
+)
+
+from .expansion_generator import (
+    CoverageExpansionGenerator,
+    load_expansion_spec,
 )
 
 from .coverage_builder import CoverageBuilder
@@ -50,8 +64,16 @@ __all__ = [
     # Code generation
     "GeneratedCode",
     "SignalTemplate",
+    # Expansion types
+    "ExpansionSpec",
+    "ExpansionResult",
+    "ConfigurationSpec",
+    "SignalGroupSpec",
+    "SignalSpec",
     # Components
     "CoverageBuilder",
+    "CoverageExpansionGenerator",
+    "load_expansion_spec",
     "SignalLibrary",
     "ConfigValidator",
     "validate_coverage_config",

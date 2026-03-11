@@ -56,6 +56,18 @@ def build_parser() -> argparse.ArgumentParser:
     validate_cmd.add_argument("--json", action="store_true", dest="json_output",
                               help="Output result as JSON")
 
+    # --- expand command ---
+    expand_cmd = subparsers.add_parser("expand", help="Expand coverage from an expansion spec")
+    expand_cmd.add_argument("--spec", required=True, help="Path to expansion spec YAML")
+    expand_cmd.add_argument("--existing-config", default=None,
+                            help="Path to existing config.yaml to merge into")
+    expand_cmd.add_argument("--output-dir", default=".", help="Output directory root")
+    expand_cmd.add_argument("--write", action="store_true", help="Write generated files to disk")
+    expand_cmd.add_argument("--dry-run", action="store_true",
+                            help="Show what would be generated without writing")
+    expand_cmd.add_argument("--json", action="store_true", dest="json_output",
+                            help="Output result as JSON")
+
     # --- list command ---
     subparsers.add_parser("list-industries", help="List available industry profiles")
     subparsers.add_parser("list-signals", help="List available signal groups")
@@ -192,6 +204,79 @@ def cmd_validate(args) -> int:
     return 0 if result.valid else 1
 
 
+def cmd_expand(args) -> int:
+    """Expand coverage from an expansion spec."""
+    from .expansion_generator import CoverageExpansionGenerator, load_expansion_spec
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        print(f"Error: spec file not found: {spec_path}")
+        return 1
+
+    spec = load_expansion_spec(spec_path)
+
+    if not args.json_output:
+        print(f"Coverage Expansion: {spec.description}")
+        print(f"  Coverage line: {spec.coverage_line}")
+        print(f"  Phase: {spec.phase}")
+        print(f"  Configurations: {len(spec.configurations)}")
+        print(f"  New signal groups: {len(spec.new_signal_groups)}")
+        new_signals = sum(len(g.signals) for g in spec.new_signal_groups)
+        print(f"  New signals: {new_signals}")
+        print()
+
+    generator = CoverageExpansionGenerator(
+        spec=spec,
+        existing_config_path=args.existing_config,
+        output_dir=args.output_dir,
+    )
+
+    result = generator.generate(write=args.write, dry_run=args.dry_run)
+
+    if args.json_output:
+        output = {
+            "success": result.success,
+            "stats": result.stats,
+            "validation_errors": result.validation_errors,
+            "validation_warnings": result.validation_warnings,
+            "generated_files": list(result.generated_files.keys()),
+        }
+        print(json.dumps(output, indent=2))
+    else:
+        if result.validation_errors:
+            print("VALIDATION ERRORS:")
+            for err in result.validation_errors:
+                print(f"  - {err}")
+            return 1
+
+        print(f"GENERATION {'(dry run) ' if args.dry_run else ''}COMPLETE")
+        print(f"  Configurations: {result.stats.get('configurations_generated', 0)}")
+        print(f"  Config YAML lines: {result.stats.get('config_yaml_lines', 0)}")
+        print(f"  Code files: {result.stats.get('code_files_generated', 0)}")
+        print(f"  Total code lines: {result.stats.get('total_code_lines', 0)}")
+
+        if result.generated_files:
+            print(f"\n  Generated files:")
+            for path in result.generated_files:
+                lines = len(result.generated_files[path].splitlines())
+                print(f"    {path} ({lines} lines)")
+
+        if args.write and not args.dry_run:
+            print(f"\n  Files written to: {args.output_dir}")
+        elif not args.write:
+            print(f"\n  Use --write to save files to disk")
+
+        if not args.dry_run and not args.write:
+            # Show preview of config YAML
+            preview = result.config_yaml[:1500]
+            print(f"\n--- Config YAML Preview ---")
+            print(preview)
+            if len(result.config_yaml) > 1500:
+                print(f"... ({len(result.config_yaml)} chars total)")
+
+    return 0 if result.success else 1
+
+
 def cmd_list_industries() -> int:
     """List available industry profiles."""
     from .signal_library import SignalLibrary
@@ -236,6 +321,8 @@ def main():
 
     if args.command == "build":
         return asyncio.run(cmd_build(args))
+    elif args.command == "expand":
+        return cmd_expand(args)
     elif args.command == "validate":
         return cmd_validate(args)
     elif args.command == "list-industries":
