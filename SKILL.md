@@ -14,13 +14,14 @@ When starting any DSI work:
 1. **Follow the link to the Development documentation indicated in Implementation Status. If this cannot be found, it must be created first**
 1. **Review development/project/ for the relevant phase development plans**: Contains phase development plans
 1. **Do not proceed with work without a phase development plan**: These are required
-1. **Always seek clarification if a request is unclear** 
+1. **Always seek clarification if a request is unclear**
 1. **Reference YAML config** for the coverage you're working on
 1. **Never hardcode** - if it's in YAML, read it from YAML
 1. **Ensure the foundational principles are followed at all stages**: `docs/overview/Foundational Principles.md`
 1. **Follow the standard patterns** - don't invent new structures
 1. **Follow the 14-step workflow** - don't skip or reorder steps
 1. **Check technical_pricing/cross_walk/by_coverage.json** for common concepts
+1. **For coverage expansion phases**: Use the Coverage Expansion Pipeline — author an expansion spec YAML, then run `python -m infrastructure.builder.cli expand --spec <path> --write`. See [Coverage Expansion Pipeline](#coverage-expansion-pipeline) section and `infrastructure/builder/README.md`
 1. **For loss correlation work**: Review `loss/correlation_layer/development/` specification documents
 1. **For exposure shadow work**: Review `exposure/shadow_layer/development/` specification documents
 1. **After config changes**: Run `python coverages/doc_generator.py` to regenerate logic.md files
@@ -104,6 +105,14 @@ When starting any DSI work:
 - ✅ Builder output passes its own validator AND validates existing cyber config
 - ✅ score_conditions enforce FLAG|MODIFIER|REFER only (DECLINE tier-level only)
 - ✅ Generated configs match canonical structure: `coverage_id → config_name → {metadata, signal_registry, groups, risk_tier_bands, ...}`
+
+**Coverage Expansion Pipeline** (March 2026):
+- ✅ `CoverageExpansionGenerator`: Takes structured YAML expansion specs, generates complete config YAML + signal architecture code
+- ✅ CLI `expand` command: `python -m infrastructure.builder.cli expand --spec <path> [--existing-config <path>] [--write]`
+- ✅ Expansion spec schema (`expansion_types.py`): Machine-consumable format capturing all parameters needed for multi-config generation
+- ✅ Phase 6 PI expansion spec: 11 configurations, 58 new signals, 9 new signal groups — 1,504 lines of spec producing ~7,400 lines of output
+- ✅ Companion doc template: `development/project/templates/expansion_companion.md`
+- ✅ Generates: config YAML sub-configurations, extractor stubs, aggregator stubs (factory pattern), inference function registrations
 
 **Validation Status** (February 2026):
 - ✅ All core Python imports validated and working
@@ -906,6 +915,65 @@ The current development plan is defined in `development/project/version/active/`
 - Phase 10: Inter-coverage (Cyber + D&O + PI for same client)
 - Phase V4: Intra-coverage (Cyber General vs Cyber Tech vs Cyber SME)
 - These are complementary layers that can be composed via `create_multiplexed_workflow_factory()`
+
+### Coverage Expansion Pipeline
+
+**Purpose**: Efficiently generate multiple sub-configurations when expanding an existing coverage line (e.g., energy → 12 segment-specific configs, PI → 13 profession-specific configs). This replaces the manual process of transcribing phase docs into config YAML and signal code.
+
+**When to use**: Any phase that expands an existing coverage line with multiple new sub-configurations. This is the standard workflow for coverage expansion phases.
+
+**When NOT to use**: Use the original `CoverageBuilder` (`build` command) when creating an entirely new coverage line from scratch.
+
+**Workflow**:
+
+1. **Author the expansion spec** (`phase_N_spec.yaml`):
+   - Structured YAML format — typically 200-400 lines per config
+   - Defines: new signal groups, signals, per-config routing/weights/pricing/queries
+   - See `development/project/version/4/phase_6_spec.yaml` as reference
+   - Companion doc template: `development/project/templates/expansion_companion.md`
+
+2. **Run the generator**:
+   ```bash
+   # Preview (no files written)
+   python -m infrastructure.builder.cli expand \
+       --spec development/project/version/4/phase_6_spec.yaml
+
+   # Generate and write files
+   python -m infrastructure.builder.cli expand \
+       --spec development/project/version/4/phase_6_spec.yaml \
+       --existing-config coverages/pi/config.yaml \
+       --write
+   ```
+
+3. **Review generated output**:
+   - Config YAML: appended to existing `config.yaml`
+   - Extractor stubs: `signal_architecture/signals/extractors/stubs/{coverage}/`
+   - Aggregator stubs: `signal_architecture/signals/aggregators/implementations/{coverage}/`
+   - Inference functions: `signal_architecture/signals/inference/functions/{coverage}/`
+
+4. **Post-generation**:
+   - Validate: `python -m infrastructure.builder.cli validate coverages/{coverage}/config.yaml`
+   - Regenerate docs: `python coverages/doc_generator.py`
+   - Update `__init__.py` files to register new extractors/aggregators/functions
+   - Run project assessment: `python development/project/assessments/scripts/assess_project.py`
+
+**Expansion Spec Schema** (`expansion_types.py`):
+- `ExpansionSpec`: Top-level container (coverage_line, phase, defaults, signal groups, configurations)
+- `SignalGroupSpec`: New signal group with its signals
+- `SignalSpec`: Signal definition (id, proxy_tier, three-layer weights or categories)
+- `ConfigurationSpec`: Per-config routing, group weights, pricing, direct queries, tier bands
+
+**Key design decisions**:
+- Spec is the authoritative input; prose companion doc provides strategic rationale
+- Shared defaults reduce repetition (product_types, markets, tier band structure)
+- Per-config overrides for pricing, tier rates, limit configuration, ILF curves
+- Generator validates group weight sums (~1.0) before generating
+
+**Files**:
+- `infrastructure/builder/expansion_types.py` — Spec schema and data types
+- `infrastructure/builder/expansion_generator.py` — Generation engine (config YAML + signal code)
+- `infrastructure/builder/cli.py` — `expand` command
+- `development/project/templates/expansion_companion.md` — Companion doc template
 
 ### Pending Items
 
