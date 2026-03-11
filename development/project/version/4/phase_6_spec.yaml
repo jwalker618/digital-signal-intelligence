@@ -1,0 +1,1504 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 6: Professional Indemnity
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# Companion prose: phase_6.md
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/4/phase_6_spec.yaml \
+#       --existing-config coverages/pi/config.yaml \
+#       --write
+#
+# =============================================================================
+
+coverage_line: pi
+coverage_key: professional_indemnity
+phase: phase_6
+description: "Phase 6 Professional Indemnity Coverage Expansion — 11 new configurations"
+version: "2.3.0"
+
+default_product_types:
+  - professional_liability
+  - errors_omissions
+
+default_markets: [us, uk, eu, apac]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: professional_liability, errors_omissions, malpractice"
+  - field: limit
+    description: Requested limit in USD
+  - field: revenue
+    description: Annual revenue in USD (MULTIPLIER basis)
+
+routing_field: profession_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS (configs override rates per-config)
+# =============================================================================
+
+default_loss_tier_bands:
+  floor: 0.55
+  cap: 1.6
+
+default_exposure_bands:
+  size_weight: 0.6
+  complexity_weight: 0.4
+  size_thresholds:
+    - {label: MICRO, max_value: 1000000, applied: 0.5}
+    - {label: SMALL, max_value: 10000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 50000000, applied: 1.0}
+    - {label: LARGE, max_value: 250000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 1000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+  valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+# Default ILF for general PI product types (configs with custom curves override)
+default_pricing:
+  base_limit_reference: 1000000
+  base_deductible_reference: 50000
+  taxes_fees_rate: 0.05
+  by_product_type:
+    - product_type: professional_liability
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.7}
+          - {limit: 5000000, factor: 3.2}
+          - {limit: 10000000, factor: 5.5}
+          - {limit: 25000000, factor: 10.0}
+          - {limit: 50000000, factor: 17.0}
+          - {limit: 100000000, factor: 28.0}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.25}
+        - {deductible: 25000, factor: 1.10}
+        - {deductible: 50000, factor: 1.0}
+        - {deductible: 100000, factor: 0.92}
+        - {deductible: 250000, factor: 0.82}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.65}
+    - product_type: errors_omissions
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.6}
+          - {limit: 5000000, factor: 2.8}
+          - {limit: 10000000, factor: 4.5}
+          - {limit: 25000000, factor: 8.5}
+          - {limit: 50000000, factor: 14.0}
+          - {limit: 100000000, factor: 23.0}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.25}
+        - {deductible: 25000, factor: 1.10}
+        - {deductible: 50000, factor: 1.0}
+        - {deductible: 100000, factor: 0.92}
+        - {deductible: 250000, factor: 0.82}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.65}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # --- PARTNER PRACTICE MIX (pi_legal_large) ---
+  - id: partner_practice_mix
+    label: Partner Practice Mix
+    description: "Tail-risk drivers specific to large legal practice: partner churn, conflict exposure, matter concentration"
+    group_type: three_layer_assessment
+    signals:
+      - id: lateral_hire_volume
+        name: Lateral Hire Volume
+        description: Rate of lateral partner additions; higher churn = legacy claims risk from prior acts
+        group_id: partner_practice_mix
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_size_weight: 0.15
+      - id: prior_acts_coverage
+        name: Prior Acts Coverage
+        description: Prior acts tail coverage status; gap = uncovered legacy exposure
+        group_id: partner_practice_mix
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 5, note: "Prior acts coverage gap"}
+      - id: conflict_system_quality
+        name: Conflict System Quality
+        description: Conflict-of-interest screening system sophistication; failure = dual-representation claims
+        group_id: partner_practice_mix
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: trust_account_compliance
+        name: Trust Account Compliance
+        description: Client trust/IOLTA account compliance; violations are disciplinary-level signals
+        group_id: partner_practice_mix
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.10
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 5, note: "Trust account irregularities"}
+      - id: class_action_exposure
+        name: Class Action Exposure
+        description: Exposure from class action representation/defense; single-matter concentration risk
+        group_id: partner_practice_mix
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.25
+      - id: partner_departure_rate
+        name: Partner Departure Rate
+        description: Partner departure rate; key tail exposure driver and firm stability indicator
+        group_id: partner_practice_mix
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.10
+          exposure_size_weight: 0.15
+          score_conditions:
+            - {threshold: 20, comparison: "<=", action: REFER, override: 4, note: "High partner departure rate"}
+      - id: matter_concentration
+        name: Matter Concentration
+        description: "Single-matter revenue concentration; >15% from one matter = concentration risk"
+        group_id: partner_practice_mix
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.25
+
+  # --- CASE PORTFOLIO (pi_legal_specialist) ---
+  - id: case_portfolio
+    label: Case Portfolio
+    description: "Concentration and tail risk of specialist practice; single case can define entire risk profile"
+    group_type: three_layer_assessment
+    signals:
+      - id: case_concentration
+        name: Case Concentration
+        description: Revenue concentration from single case; high concentration = concentration risk
+        group_id: case_portfolio
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.30
+      - id: contingency_fee_ratio
+        name: Contingency Fee Ratio
+        description: Contingency-to-hourly ratio; contingency creates different exposure
+        group_id: case_portfolio
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.20
+      - id: trial_success_rate
+        name: Trial Success Rate
+        description: Win/loss record as quality proxy
+        group_id: case_portfolio
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: statute_tracking_compliance
+        name: Statute Tracking Compliance
+        description: "Sophistication of docketing and deadline-tracking system; #1 cause of legal malpractice"
+        group_id: case_portfolio
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 4, note: "Poor statute tracking"}
+      - id: case_value_distribution
+        name: Case Value Distribution
+        description: Distribution of case values in portfolio
+        group_id: case_portfolio
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.20
+
+  # --- AUDIT QUALITY (pi_audit) ---
+  - id: audit_quality
+    label: Audit Quality
+    description: "Profession-specific risk drivers with extremely high exposure weight reflecting catastrophic concentration risk"
+    group_type: three_layer_assessment
+    signals:
+      - id: pcaob_inspection_deficiency_rate
+        name: PCAOB Inspection Deficiency Rate
+        description: PCAOB inspection deficiency rate; high rate = systemic quality failure
+        group_id: audit_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.20
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 5, note: "PCAOB deficiency rate critical"}
+      - id: restatement_rate
+        name: Restatement Rate
+        description: Client financial restatement rate
+        group_id: audit_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.20
+      - id: going_concern_accuracy
+        name: Going Concern Accuracy
+        description: Going-concern opinion accuracy
+        group_id: audit_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.10
+      - id: sec_enforcement_exposure
+        name: SEC Enforcement Exposure
+        description: SEC enforcement actions or investigations
+        group_id: audit_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 5, note: "Active SEC enforcement"}
+      - id: audit_client_concentration
+        name: Audit Client Concentration
+        description: "Top audit client as % of fees; >15% = concentration risk"
+        group_id: audit_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.25
+      - id: audit_partner_rotation_compliance
+        name: Audit Partner Rotation Compliance
+        description: Partner rotation compliance per SOX requirements
+        group_id: audit_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.10
+      - id: securities_litigation_exposure
+        name: Securities Litigation Exposure
+        description: Securities class action tail exposure
+        group_id: audit_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.05
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.20
+
+  # --- DESIGN QUALITY (pi_architecture) ---
+  - id: design_quality
+    label: Design Quality
+    description: "Design work quality as primary risk driver; extremely high exposure weight reflects latent defect long-tail"
+    group_type: three_layer_assessment
+    signals:
+      - id: design_defect_claims
+        name: Design Defect Claims
+        description: Historical design defect claim frequency
+        group_id: design_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.20
+      - id: building_code_compliance
+        name: Building Code Compliance
+        description: Code compliance track record; pattern violations = systemic issues
+        group_id: design_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 4, note: "Pattern of code violations"}
+      - id: project_complexity_score
+        name: Project Complexity Score
+        description: "Average project complexity (hospitals > high-rise > residential)"
+        group_id: design_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.25
+      - id: latent_defect_exposure
+        name: Latent Defect Exposure
+        description: Long-tail defect claim exposure (10-15 year discovery period)
+        group_id: design_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.25
+      - id: sustainability_certification
+        name: Sustainability Certification
+        description: LEED/BREEAM certification track record as quality proxy
+        group_id: design_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.10
+      - id: pi_construction_phase
+        name: Construction Phase
+        description: "Project lifecycle stage"
+        group_id: design_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        signal_type: categorical
+        category_source: metadata.construction_phase
+        categories:
+          - {cat: PRE_CONSTRUCTION, label: Pre-Construction, applied: 1.30}
+          - {cat: CONSTRUCTION, label: Construction, applied: 1.20}
+          - {cat: COMMISSIONING, label: Commissioning, applied: 1.10}
+          - {cat: EARLY_OPERATION, label: Early Operation, applied: 1.05}
+          - {cat: MATURE_OPERATION, label: Mature Operation, applied: 0.90}
+          - {cat: OTHER, label: Other, applied: 1.0}
+
+  # --- ENGINEERING QUALITY (pi_engineering) ---
+  - id: engineering_quality
+    label: Engineering Quality
+    description: "Dominates all three dimensions with highest combined group weight (1.20); structural failure IS the risk"
+    group_type: three_layer_assessment
+    signals:
+      - id: structural_failure_history
+        name: Structural Failure History
+        description: Structural failure/deficiency claims; primary severity signal
+        group_id: engineering_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.25
+          loss_severity_weight: 0.30
+          exposure_size_weight: 0.25
+          score_conditions:
+            - {threshold: 20, comparison: "<=", action: REFER, override: 5, note: "Structural failure history"}
+      - id: pe_license_compliance
+        name: PE License Compliance
+        description: PE license status across operating jurisdictions; gaps = regulatory exposure
+        group_id: engineering_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 5, note: "PE license non-compliance"}
+      - id: geotechnical_claim_frequency
+        name: Geotechnical Claim Frequency
+        description: Geotechnical failure claims; soil/foundation failures are high-severity
+        group_id: engineering_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          exposure_size_weight: 0.20
+      - id: infrastructure_project_exposure
+        name: Infrastructure Project Exposure
+        description: Public infrastructure involvement; higher duty of care = higher severity
+        group_id: engineering_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.20
+      - id: project_size_concentration
+        name: Project Size Concentration
+        description: "Single-project revenue concentration; >20% = catastrophic risk"
+        group_id: engineering_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.25
+      - id: remediation_cost_history
+        name: Remediation Cost History
+        description: Past environmental remediation cost exposure from design failures
+        group_id: engineering_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.10
+
+  # --- DELIVERY QUALITY (pi_technology) ---
+  - id: delivery_quality
+    label: Delivery Quality
+    description: "Technology PI where risk is in delivery, not advice; high exposure weight reflects project concentration"
+    group_type: three_layer_assessment
+    signals:
+      - id: project_failure_rate
+        name: Project Failure Rate
+        description: "IT project abandonment/failure rate; 20-30% industry failure rate baseline"
+        group_id: delivery_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.20
+      - id: sla_compliance
+        name: SLA Compliance
+        description: Service level agreement adherence for managed services
+        group_id: delivery_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: data_breach_exposure
+        name: Data Breach Exposure
+        description: Client data handling practices and breach history
+        group_id: delivery_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.25
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 4, note: "Data breach history"}
+      - id: technology_stack_currency
+        name: Technology Stack Currency
+        description: Tech stack currency; outdated platforms = higher failure/security risk
+        group_id: delivery_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.15
+      - id: implementation_methodology
+        name: Implementation Methodology
+        description: "Structured methodology adherence (ITIL, Agile maturity, CMMI level)"
+        group_id: delivery_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.15
+      - id: client_data_encryption
+        name: Client Data Encryption
+        description: Client data encryption standards at rest and in transit
+        group_id: delivery_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.10
+
+  # --- ADVISORY QUALITY (pi_financial_advisory) ---
+  - id: advisory_quality
+    label: Advisory Quality
+    description: "Suitability failures and systemic mis-selling; high exposure weight reflects systemic risk"
+    group_type: three_layer_assessment
+    signals:
+      - id: suitability_compliance
+        name: Suitability Compliance
+        description: "Investment suitability compliance record; #1 claims driver"
+        group_id: advisory_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.30
+          loss_frequency_weight: 0.30
+          exposure_size_weight: 0.25
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 5, note: "Suitability compliance failure"}
+      - id: complaint_per_aum
+        name: Complaint Per AUM
+        description: "Complaints normalized per AUM; high ratio = systemic quality issues"
+        group_id: advisory_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.20
+      - id: regulatory_exam_results
+        name: Regulatory Exam Results
+        description: SEC/FCA examination findings; material weaknesses are severe signals
+        group_id: advisory_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: churning_indicators
+        name: Churning Indicators
+        description: Excessive trading indicators; high turnover = churning exposure
+        group_id: advisory_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_size_weight: 0.20
+      - id: fee_transparency_score
+        name: Fee Transparency Score
+        description: Fee disclosure quality; opaque fees generate mis-selling claims
+        group_id: advisory_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.10
+          exposure_complexity_weight: 0.15
+
+  # --- VALUATION QUALITY (pi_real_estate) ---
+  - id: valuation_quality
+    label: Valuation Quality
+    description: "Risk is accuracy of opinion; single negligent valuation can exceed firm annual revenue"
+    group_type: three_layer_assessment
+    signals:
+      - id: valuation_accuracy
+        name: Valuation Accuracy
+        description: Historical valuation accuracy vs realised prices; primary quality signal
+        group_id: valuation_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.30
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.25
+      - id: negligent_misstatement_history
+        name: Negligent Misstatement History
+        description: Negligent misstatement claims; directly predictive of future claims
+        group_id: valuation_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.25
+          loss_severity_weight: 0.30
+          exposure_size_weight: 0.25
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 5, note: "Negligent misstatement history"}
+      - id: property_type_concentration
+        name: Property Type Concentration
+        description: "Concentration in specific property types; commercial > residential severity"
+        group_id: valuation_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.20
+      - id: market_knowledge_currency
+        name: Market Knowledge Currency
+        description: Local market expertise currency; stale knowledge = valuation errors
+        group_id: valuation_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.15
+      - id: rics_compliance
+        name: RICS Compliance
+        description: RICS (UK) / Appraisal Institute (US) compliance; non-compliance = exposure
+        group_id: valuation_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.10
+          exposure_complexity_weight: 0.10
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 4, note: "RICS/AI non-compliance"}
+
+  # --- ENVIRONMENTAL ASSESSMENT QUALITY (pi_environmental) ---
+  - id: environmental_assessment_quality
+    label: Environmental Assessment Quality
+    description: "Extreme long-tail exposure and CERCLA severity; second-highest combined weight (1.10)"
+    group_type: three_layer_assessment
+    signals:
+      - id: contamination_assessment_accuracy
+        name: Contamination Assessment Accuracy
+        description: Phase I/II assessment accuracy; primary loss predictor
+        group_id: environmental_assessment_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.30
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.25
+      - id: regulatory_compliance_track
+        name: Regulatory Compliance Track
+        description: Environmental regulation compliance advice accuracy
+        group_id: environmental_assessment_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: remediation_effectiveness
+        name: Remediation Effectiveness
+        description: Remediation advice effectiveness measured by regulatory closure rates
+        group_id: environmental_assessment_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.20
+      - id: long_tail_exposure
+        name: Long Tail Exposure
+        description: Latent contamination discovery risk; 15-20 year tail
+        group_id: environmental_assessment_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.25
+      - id: cercla_superfund_exposure
+        name: CERCLA Superfund Exposure
+        description: CERCLA/Superfund site involvement; PRP designation exposure
+        group_id: environmental_assessment_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+          score_conditions:
+            - {threshold: 20, comparison: "<=", action: REFER, override: 5, note: "Active CERCLA/Superfund involvement"}
+
+  # --- ADDITIONAL SIGNALS FOR EXISTING GROUPS (pi_accounting, pi_management_consulting) ---
+  - id: accounting_additions
+    label: Accounting Additional Signals
+    description: Additional signals for pi_accounting added to existing groups
+    group_type: three_layer_assessment
+    signals:
+      - id: tax_opinion_quality
+        name: Tax Opinion Quality
+        description: Quality of tax opinions; aggressive positions correlate with IRS challenge rate
+        group_id: practice_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.10
+      - id: irs_examination_track
+        name: IRS Examination Track
+        description: Client IRS examination outcomes; high challenge success = quality indicator
+        group_id: regulatory_standing
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+      - id: estate_planning_complexity
+        name: Estate Planning Complexity
+        description: Engagement complexity distribution; high-complexity work has longer tail
+        group_id: practice_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_complexity_weight: 0.15
+
+  - id: consulting_additions
+    label: Management Consulting Additional Signals
+    description: Additional signals for pi_management_consulting added to existing groups
+    group_type: three_layer_assessment
+    signals:
+      - id: engagement_scope_clarity
+        name: Engagement Scope Clarity
+        description: Scope definition quality in engagement letters; ambiguity = dispute risk
+        group_id: practice_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.10
+      - id: deliverable_acceptance_rate
+        name: Deliverable Acceptance Rate
+        description: Client deliverable acceptance rate; high rejection = quality issues
+        group_id: practice_quality
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.10
+      - id: client_outcome_correlation
+        name: Client Outcome Correlation
+        description: Advice-to-outcome correlation over time; weak correlation = adverse selection
+        group_id: practice_quality
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_complexity_weight: 0.10
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. PI LEGAL LARGE
+  # =========================================================================
+  - id: pi_legal_large
+    name: DSI PI Large Law Firm Pricing Model
+    description: "Top-tier corporate/commercial practices — AmLaw 200, Magic Circle"
+    model_specificity: 4
+    min_premium: 100000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: LEGAL, required_in_input: true}
+      - {field: revenue, operator: ">", value: 100000000, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice claims}]
+      - id: disciplinary_pending
+        question: Any pending disciplinary proceedings against any partner?
+        conditions: [{action: REFER, override: 4, note: Pending disciplinary proceedings}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed in past 3 years?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: trust_irregularities
+        question: Any trust account/IOLTA irregularities in past 5 years?
+        conditions: [{action: REFER, override: 5, note: Trust account irregularities}]
+      - id: lateral_hiring_surge
+        question: Have >20% of equity partners been lateral hires in past 2 years?
+        conditions: [{action: FLAG, note: High lateral hiring rate}]
+      - id: matter_concentration_query
+        question: Any single matter representing >15% of firm revenue?
+        conditions: [{action: FLAG, note: Matter concentration risk}]
+      - id: class_action_lead
+        question: Is firm lead counsel in class action with >$1B exposure?
+        conditions: [{action: FLAG, note: Large class action lead counsel}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: practice_quality, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.10}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: partner_practice_mix, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.25}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0012
+      standard_plus_rate: 0.0018
+      standard_rate: 0.0028
+      substandard_rate: 0.0042
+      decline_rate: 0.0065
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [100000, 250000, 500000, 1000000, 2500000, 5000000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 250000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: professional_liability
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.8}
+              - {limit: 25000000, factor: 3.5}
+              - {limit: 50000000, factor: 6.0}
+              - {limit: 100000000, factor: 10.5}
+              - {limit: 250000000, factor: 19.0}
+          deductible_factors:
+            - {deductible: 100000, factor: 1.20}
+            - {deductible: 250000, factor: 1.0}
+            - {deductible: 500000, factor: 0.90}
+            - {deductible: 1000000, factor: 0.82}
+            - {deductible: 2500000, factor: 0.72}
+            - {deductible: 5000000, factor: 0.62}
+        - product_type: errors_omissions
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.7}
+              - {limit: 25000000, factor: 3.2}
+              - {limit: 50000000, factor: 5.5}
+              - {limit: 100000000, factor: 9.5}
+              - {limit: 250000000, factor: 17.0}
+          deductible_factors:
+            - {deductible: 100000, factor: 1.20}
+            - {deductible: 250000, factor: 1.0}
+            - {deductible: 500000, factor: 0.90}
+            - {deductible: 1000000, factor: 0.82}
+            - {deductible: 2500000, factor: 0.72}
+            - {deductible: 5000000, factor: 0.62}
+
+  # =========================================================================
+  # 2. PI LEGAL SPECIALIST
+  # =========================================================================
+  - id: pi_legal_specialist
+    name: DSI PI Specialist/Plaintiff Law Firm Model
+    description: Specialist and plaintiff law firms; niche practices
+    model_specificity: 3
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: LEGAL, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice claims}]
+      - id: disciplinary_pending
+        question: Any pending disciplinary proceedings?
+        conditions: [{action: REFER, override: 4, note: Pending disciplinary proceedings}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: missed_deadlines
+        question: Any missed statute of limitations or filing deadlines in past 5 years?
+        conditions: [{action: REFER, override: 5, note: Missed statute/filing deadlines}]
+      - id: single_case_concentration
+        question: Does any single case represent >30% of annual revenue?
+        conditions: [{action: REFER, override: 4, note: Single case revenue concentration}]
+      - id: bar_complaints
+        question: Any bar complaints in past 3 years?
+        conditions: [{action: FLAG, note: Recent bar complaints}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.25, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: practice_quality, risk_weight: 0.15, loss_weight: 0.25, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: case_portfolio, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.35}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0015
+      standard_plus_rate: 0.0022
+      standard_rate: 0.0032
+      substandard_rate: 0.0048
+      decline_rate: 0.0075
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.05
+
+  # =========================================================================
+  # 3. PI AUDIT
+  # =========================================================================
+  - id: pi_audit
+    name: DSI PI Public Company Audit Model
+    description: Public company audit — Big 4 and mid-tier audit firms
+    model_specificity: 4
+    min_premium: 250000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: ACCOUNTING, required_in_input: true}
+      - {field: sub_profession_type, operator: IN, value: [AUDIT_PUBLIC, AUDIT_PRIVATE], required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice claims}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: pcaob_deficiencies
+        question: Any Part I.A or Part II PCAOB deficiencies in last inspection cycle?
+        conditions: [{action: REFER, override: 4, note: PCAOB deficiencies identified}]
+      - id: client_restatement
+        question: Any audit client financial restatement in past 3 years?
+        conditions: [{action: REFER, override: 4, note: Client restatement disclosed}]
+      - id: sec_investigation
+        question: Any SEC investigation or enforcement action?
+        conditions: [{action: REFER, override: 5, note: Active SEC investigation/enforcement}]
+      - id: independence_violations
+        question: Any audit independence violations in past 5 years?
+        conditions: [{action: REFER, override: 5, note: Audit independence violations}]
+      - id: client_bankruptcy
+        question: Any audit client bankruptcy within 12 months of clean opinion?
+        conditions: [{action: REFER, override: 4, note: Client bankruptcy post clean opinion}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.15}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: practice_quality, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: audit_quality, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.40}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0020
+      standard_plus_rate: 0.0030
+      standard_rate: 0.0045
+      substandard_rate: 0.0070
+      decline_rate: 0.0110
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [250000, 500000, 1000000, 2500000, 5000000, 10000000]
+
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 500000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: professional_liability
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 2.0}
+              - {limit: 50000000, factor: 3.5}
+              - {limit: 100000000, factor: 6.0}
+              - {limit: 250000000, factor: 12.5}
+              - {limit: 500000000, factor: 22.0}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.90}
+            - {deductible: 2500000, factor: 0.80}
+            - {deductible: 5000000, factor: 0.70}
+            - {deductible: 10000000, factor: 0.60}
+        - product_type: errors_omissions
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.8}
+              - {limit: 50000000, factor: 3.0}
+              - {limit: 100000000, factor: 5.2}
+              - {limit: 250000000, factor: 10.5}
+              - {limit: 500000000, factor: 18.0}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.90}
+            - {deductible: 2500000, factor: 0.80}
+            - {deductible: 5000000, factor: 0.70}
+            - {deductible: 10000000, factor: 0.60}
+
+  # =========================================================================
+  # 4. PI ACCOUNTING
+  # =========================================================================
+  - id: pi_accounting
+    name: DSI PI Non-Audit Accounting Model
+    description: "Non-audit accounting: tax advisory, bookkeeping, estate planning, forensic"
+    model_specificity: 2
+    min_premium: 15000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: ACCOUNTING, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice claims}]
+      - id: disciplinary_pending
+        question: Any pending state board disciplinary proceedings?
+        conditions: [{action: REFER, override: 4, note: State board disciplinary proceedings}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: irs_penalties
+        question: Any IRS preparer penalties or sanctions in past 5 years?
+        conditions: [{action: REFER, override: 5, note: IRS preparer penalties}]
+      - id: listed_transactions
+        question: Any involvement in listed or reportable tax transactions?
+        conditions: [{action: REFER, override: 4, note: Listed/reportable tax transactions}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: practice_quality, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: technical_infrastructure, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.15}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.20, exposure_weight: 0.20}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0015
+      standard_rate: 0.0022
+      substandard_rate: 0.0035
+      decline_rate: 0.0055
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.05
+
+  # =========================================================================
+  # 5. PI ARCHITECTURE
+  # =========================================================================
+  - id: pi_architecture
+    name: DSI PI Architecture & Landscape Design Model
+    description: Architecture and landscape design practices
+    model_specificity: 3
+    min_premium: 15000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: DESIGN_CONSTRUCTION, required_in_input: true}
+      - {field: sub_profession_type, operator: IN, value: [ARCHITECTURE, LANDSCAPE, INTERIOR_DESIGN]}
+
+    direct_queries:
+      - id: design_defect_claims_query
+        question: Any pending or threatened design defect or malpractice claims?
+        conditions: [{action: REFER, override: 4, note: Design defect/malpractice claims}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: code_violations_pattern
+        question: Any pattern of building code violations (>2 in 3 years)?
+        conditions: [{action: REFER, override: 4, note: Pattern of code violations}]
+      - id: structural_concerns
+        question: Any structural adequacy concerns on current projects?
+        conditions: [{action: REFER, override: 5, note: Structural adequacy concerns}]
+      - id: license_issues
+        question: Any architectural license under review, suspended, or revoked?
+        conditions: [{action: REFER, override: 5, note: Architectural license issues}]
+      - id: latent_defect_discovered
+        question: Any latent defect discovered on project completed >5 years ago?
+        conditions: [{action: FLAG, note: Latent defect on old project}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.05}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: practice_quality, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: design_quality, risk_weight: 0.25, loss_weight: 0.30, exposure_weight: 0.45}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0012
+      standard_plus_rate: 0.0018
+      standard_rate: 0.0026
+      substandard_rate: 0.0040
+      decline_rate: 0.0060
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.05
+
+  # =========================================================================
+  # 6. PI ENGINEERING
+  # =========================================================================
+  - id: pi_engineering
+    name: DSI PI Structural/Civil/Geotechnical Engineering Model
+    description: Structural, civil, geotechnical, and related engineering practices
+    model_specificity: 3
+    min_premium: 20000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: DESIGN_CONSTRUCTION, required_in_input: true}
+      - {field: sub_profession_type, operator: IN, value: [STRUCTURAL, GEOTECHNICAL, CIVIL, MECHANICAL, ELECTRICAL, ENVIRONMENTAL_ENG]}
+
+    direct_queries:
+      - id: structural_failure_claims
+        question: Any pending or threatened structural failure or malpractice claims?
+        conditions: [{action: REFER, override: 4, note: Structural failure/malpractice claims}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: structural_collapse
+        question: Any structural failure, collapse, or life-safety incident attributable to firm design in past 10 years?
+        conditions: [{action: REFER, override: 5, note: Structural failure/collapse history}]
+      - id: pe_license_issue
+        question: Any PE license suspended, revoked, or under investigation in any jurisdiction?
+        conditions: [{action: REFER, override: 5, note: PE license suspension/investigation}]
+      - id: geotechnical_failure
+        question: Any geotechnical failure (foundation, slope stability, bearing capacity) attributable to firm work?
+        conditions: [{action: REFER, override: 5, note: Geotechnical failure history}]
+      - id: critical_infrastructure
+        question: Does firm design critical public infrastructure (bridges, dams, water treatment)?
+        conditions: [{action: FLAG, note: Critical public infrastructure design}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.05}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: practice_quality, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: engineering_quality, risk_weight: 0.35, loss_weight: 0.35, exposure_weight: 0.50}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0015
+      standard_plus_rate: 0.0022
+      standard_rate: 0.0032
+      substandard_rate: 0.0050
+      decline_rate: 0.0080
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 2000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: professional_liability
+          ilf_curve:
+            base_limit: 2000000
+            factors:
+              - {limit: 2000000, factor: 1.0}
+              - {limit: 5000000, factor: 2.2}
+              - {limit: 10000000, factor: 3.8}
+              - {limit: 25000000, factor: 7.0}
+              - {limit: 50000000, factor: 12.0}
+              - {limit: 100000000, factor: 20.0}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.20}
+            - {deductible: 50000, factor: 1.0}
+            - {deductible: 100000, factor: 0.90}
+            - {deductible: 250000, factor: 0.80}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.65}
+        - product_type: errors_omissions
+          ilf_curve:
+            base_limit: 2000000
+            factors:
+              - {limit: 2000000, factor: 1.0}
+              - {limit: 5000000, factor: 2.0}
+              - {limit: 10000000, factor: 3.4}
+              - {limit: 25000000, factor: 6.2}
+              - {limit: 50000000, factor: 10.5}
+              - {limit: 100000000, factor: 17.5}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.20}
+            - {deductible: 50000, factor: 1.0}
+            - {deductible: 100000, factor: 0.90}
+            - {deductible: 250000, factor: 0.80}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.65}
+
+  # =========================================================================
+  # 7. PI TECHNOLOGY
+  # =========================================================================
+  - id: pi_technology
+    name: DSI PI IT Consulting & Systems Integration Model
+    description: IT consulting, systems integration, managed services
+    model_specificity: 3
+    min_premium: 20000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: TECHNOLOGY, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice or breach of contract claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice/breach claims}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: project_terminated
+        question: Any client project abandoned or terminated for cause in past 3 years?
+        conditions: [{action: REFER, override: 4, note: Project termination for cause}]
+      - id: data_breach
+        question: Any data breach involving client data in past 5 years?
+        conditions: [{action: REFER, override: 5, note: Client data breach history}]
+      - id: regulatory_investigation
+        question: Any regulatory investigation (GDPR, CCPA, PCI-DSS) related to firm services?
+        conditions: [{action: REFER, override: 4, note: Regulatory investigation}]
+      - id: sla_litigation
+        question: Any SLA-related litigation or arbitration in past 3 years?
+        conditions: [{action: FLAG, note: SLA litigation/arbitration}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.05}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: practice_quality, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: delivery_quality, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.35}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0015
+      standard_rate: 0.0022
+      substandard_rate: 0.0035
+      decline_rate: 0.0055
+
+    pricing:
+      base_limit_reference: 2000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.05
+
+  # =========================================================================
+  # 8. PI FINANCIAL ADVISORY
+  # =========================================================================
+  - id: pi_financial_advisory
+    name: DSI PI Wealth Management & IFA Model
+    description: Wealth managers, IFAs, RIAs, pension consultants
+    model_specificity: 3
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: FINANCIAL_ADVISORY, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice or mis-selling claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice/mis-selling claims}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: regulatory_enforcement
+        question: Any SEC/FCA enforcement action or fine in past 5 years?
+        conditions: [{action: REFER, override: 5, note: SEC/FCA enforcement action}]
+      - id: suitability_complaints
+        question: Any suitability-related client complaints or FINRA arbitrations in past 3 years?
+        conditions: [{action: REFER, override: 4, note: Suitability complaints/arbitrations}]
+      - id: churning_allegations
+        question: Any churning or excessive trading allegations?
+        conditions: [{action: REFER, override: 5, note: Churning/excessive trading allegations}]
+      - id: pension_transfers
+        question: Does firm advise on DB pension transfers (UK) or 401k rollovers (US)?
+        conditions: [{action: FLAG, note: Pension transfer/rollover advisory}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.15}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: practice_quality, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: advisory_quality, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.30}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0012
+      standard_plus_rate: 0.0018
+      standard_rate: 0.0028
+      substandard_rate: 0.0042
+      decline_rate: 0.0065
+
+    pricing:
+      base_limit_reference: 2000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.05
+
+  # =========================================================================
+  # 9. PI MANAGEMENT CONSULTING
+  # =========================================================================
+  - id: pi_management_consulting
+    name: DSI PI Strategy & Management Advisory Model
+    description: Strategy and management consulting firms
+    model_specificity: 2
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: MANAGEMENT_CONSULTING, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice or breach of contract claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice/breach claims}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: scope_disputes
+        question: Any engagement scope disputes or fee disputes >$500K in past 3 years?
+        conditions: [{action: REFER, override: 4, note: Significant scope/fee disputes}]
+      - id: adverse_outcomes
+        question: Any client alleging significant adverse outcome from following firm advice?
+        conditions: [{action: FLAG, note: Client adverse outcome allegations}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: regulatory_standing, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.05}
+      - {group_id: firm_stability, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: practice_quality, risk_weight: 0.20, loss_weight: 0.25, exposure_weight: 0.15}
+      - {group_id: technical_infrastructure, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0006
+      standard_plus_rate: 0.0010
+      standard_rate: 0.0015
+      substandard_rate: 0.0024
+      decline_rate: 0.0038
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.05
+
+  # =========================================================================
+  # 10. PI REAL ESTATE
+  # =========================================================================
+  - id: pi_real_estate
+    name: DSI PI Surveyors, Valuers & Estate Agents Model
+    description: Property valuers, surveyors, estate agents, appraisers
+    model_specificity: 3
+    min_premium: 10000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: REAL_ESTATE_VALUATION, required_in_input: true}
+
+    direct_queries:
+      - id: negligent_misstatement
+        question: Any pending or threatened negligent misstatement or valuation claims?
+        conditions: [{action: REFER, override: 4, note: Negligent misstatement/valuation claims}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: valuation_overturned
+        question: Any valuation challenged or overturned by court or tribunal in past 5 years?
+        conditions: [{action: REFER, override: 4, note: Valuation overturned by court}]
+      - id: rics_disciplinary
+        question: Any RICS/Appraisal Institute disciplinary action or investigation?
+        conditions: [{action: REFER, override: 5, note: RICS/AI disciplinary action}]
+      - id: mortgage_fraud
+        question: Any involvement in transactions subsequently identified as mortgage fraud?
+        conditions: [{action: REFER, override: 5, note: Mortgage fraud association}]
+      - id: market_concentration
+        question: Is >50% of portfolio in single market segment currently in downturn?
+        conditions: [{action: FLAG, note: Market segment concentration in downturn}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: practice_quality, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: valuation_quality, risk_weight: 0.20, loss_weight: 0.25, exposure_weight: 0.40}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0015
+      standard_rate: 0.0022
+      substandard_rate: 0.0035
+      decline_rate: 0.0055
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.05
+
+  # =========================================================================
+  # 11. PI ENVIRONMENTAL
+  # =========================================================================
+  - id: pi_environmental
+    name: DSI PI Environmental Consulting Model
+    description: "Environmental consulting: EIA, contaminated land, remediation advisory"
+    model_specificity: 3
+    min_premium: 20000
+
+    routing_constraints:
+      - {field: profession_segment, operator: "==", value: ENVIRONMENTAL, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any pending or threatened malpractice or negligent assessment claims?
+        conditions: [{action: REFER, override: 4, note: Pending malpractice/negligent assessment}]
+      - id: coverage_declined
+        question: Has PI coverage been declined or non-renewed?
+        conditions: [{action: REFER, override: 5, note: Prior PI declined/non-renewed}]
+      - id: contamination_missed
+        question: Any instance of contamination discovered that firm's prior assessment failed to identify?
+        conditions: [{action: REFER, override: 5, note: Missed contamination in assessment}]
+      - id: cercla_prp
+        question: Is firm named as PRP on any active CERCLA/Superfund site?
+        conditions: [{action: REFER, override: 5, note: Active CERCLA/Superfund PRP}]
+      - id: epa_enforcement
+        question: Any EPA enforcement action related to firm's assessment or remediation advice?
+        conditions: [{action: REFER, override: 4, note: EPA enforcement on firm advice}]
+      - id: old_claim
+        question: Any claim arising from assessment work completed >10 years ago?
+        conditions: [{action: FLAG, note: Long-tail claim from old assessment}]
+
+    category_groups: [profession_type, sub_profession_type, firm_size, revenue_size]
+
+    group_weights:
+      - {group_id: network_authority, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: regulatory_standing, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: practice_quality, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: technical_infrastructure, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: environmental_assessment_quality, risk_weight: 0.35, loss_weight: 0.30, exposure_weight: 0.45}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0014
+      standard_plus_rate: 0.0020
+      standard_rate: 0.0030
+      substandard_rate: 0.0046
+      decline_rate: 0.0072
+
+    pricing:
+      base_limit_reference: 2000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.05
