@@ -2299,29 +2299,44 @@ def build_loss_propensity(co, group_scores):
     }
 
 
+_EXPOSURE_BANDS = [
+    # (band_id, label, min_value, max_value, base_magnitude, modifier)
+    (1, "Minimal",    0,              0,              10.0, 0.80),
+    (1, "Small",      0,              50_000_000,     20.0, 0.85),
+    (2, "Mid-Market", 50_000_000,     500_000_000,    40.0, 0.95),
+    (3, "Large",      500_000_000,    5_000_000_000,  60.0, 1.05),
+    (4, "Major",      5_000_000_000,  50_000_000_000, 80.0, 1.15),
+    (5, "Mega",       50_000_000_000, None,           95.0, 1.30),
+]
+
+
 def build_exposure_assessment(co):
     """Build exposure assessment columns keyed for ModelVersionRecord kwargs."""
     # Use revenue or hull_value as the primary exposure metric
     exposure_value = co.get("revenue", 0) or co.get("hull_value", 0) or co.get("tiv", 0) or 0
 
-    # Map to bands based on value ranges (simplified)
+    # Find matching band
+    matched = _EXPOSURE_BANDS[-1]  # default Mega
     if exposure_value <= 0:
-        band_id, band_label, magnitude, modifier = 1, "Minimal", 10.0, 0.80
-    elif exposure_value < 50_000_000:
-        band_id, band_label, magnitude, modifier = 1, "Small", 20.0, 0.85
-    elif exposure_value < 500_000_000:
-        band_id, band_label, magnitude, modifier = 2, "Mid-Market", 40.0, 0.95
-    elif exposure_value < 5_000_000_000:
-        band_id, band_label, magnitude, modifier = 3, "Large", 60.0, 1.05
-    elif exposure_value < 50_000_000_000:
-        band_id, band_label, magnitude, modifier = 4, "Major", 80.0, 1.15
+        matched = _EXPOSURE_BANDS[0]
     else:
-        band_id, band_label, magnitude, modifier = 5, "Mega", 95.0, 1.30
+        for band in _EXPOSURE_BANDS[1:]:
+            bid, label, bmin, bmax, mag, mod = band
+            if bmax is None or exposure_value < bmax:
+                matched = band
+                break
+
+    band_id, band_label, band_min, band_max, magnitude, modifier = matched
 
     return {
         "exposure_value": float(exposure_value),
         "exposure_band_id": band_id,
         "exposure_band_label": band_label,
+        "exposure_band_boundaries": {
+            "min_value": band_min,
+            "max_value": band_max,
+            "modifier": modifier,
+        },
         "exposure_magnitude_score": round(magnitude + random.uniform(-5, 5), 1),
         "exposure_modifier": modifier,
         "exposure_assessment_method": "config_band_lookup",

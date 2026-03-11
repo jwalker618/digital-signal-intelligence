@@ -1,4 +1,4 @@
-"""Add group_weight to model_version_signals and loss_group_scores to model_versions
+"""Add group_weight, loss_group_scores, and exposure_band_boundaries
 
 Revision ID: 005
 Revises: 004
@@ -10,6 +10,8 @@ Changes:
    - Combined with signal weight and score, enables full composite reconstruction
 2. model_versions: add loss_group_scores JSONB column
    - Stores per-group frequency/severity scores for loss propensity reconstructability
+3. model_versions: add exposure_band_boundaries JSONB column
+   - Snapshots the matched band's min_value, max_value, modifier at execution time
 """
 from typing import Sequence, Union
 
@@ -34,8 +36,13 @@ def upgrade() -> None:
         "model_versions",
         sa.Column("loss_group_scores", JSONB(), nullable=True),
     )
+    op.add_column(
+        "model_versions",
+        sa.Column("exposure_band_boundaries", JSONB(), nullable=True),
+    )
 
 
 def downgrade() -> None:
+    op.drop_column("model_versions", "exposure_band_boundaries")
     op.drop_column("model_versions", "loss_group_scores")
     op.drop_column("model_version_signals", "group_weight")

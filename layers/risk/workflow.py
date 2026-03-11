@@ -514,25 +514,32 @@ class WorkflowEngine:
                 "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
                 else "full"
             )
-            # Map exposure value to band
+            # Map exposure value to band and persist boundaries
+            _EXPOSURE_BANDS = [
+                (1, "Minimal",    0,              0,              0.80),
+                (1, "Small",      0,              50_000_000,     0.85),
+                (2, "Mid-Market", 50_000_000,     500_000_000,    0.95),
+                (3, "Large",      500_000_000,    5_000_000_000,  1.05),
+                (4, "Major",      5_000_000_000,  50_000_000_000, 1.15),
+                (5, "Mega",       50_000_000_000, None,           1.30),
+            ]
+            matched = _EXPOSURE_BANDS[-1]  # default to Mega
             if primary_exposure <= 0:
-                model_version.exposure_band_id = 1
-                model_version.exposure_band_label = "Minimal"
-            elif primary_exposure < 50_000_000:
-                model_version.exposure_band_id = 1
-                model_version.exposure_band_label = "Small"
-            elif primary_exposure < 500_000_000:
-                model_version.exposure_band_id = 2
-                model_version.exposure_band_label = "Mid-Market"
-            elif primary_exposure < 5_000_000_000:
-                model_version.exposure_band_id = 3
-                model_version.exposure_band_label = "Large"
-            elif primary_exposure < 50_000_000_000:
-                model_version.exposure_band_id = 4
-                model_version.exposure_band_label = "Major"
+                matched = _EXPOSURE_BANDS[0]
             else:
-                model_version.exposure_band_id = 5
-                model_version.exposure_band_label = "Mega"
+                for band in _EXPOSURE_BANDS[1:]:
+                    bid, label, bmin, bmax, mod = band
+                    if bmax is None or primary_exposure < bmax:
+                        matched = band
+                        break
+            bid, blabel, bmin, bmax, bmod = matched
+            model_version.exposure_band_id = bid
+            model_version.exposure_band_label = blabel
+            model_version.exposure_band_boundaries = {
+                "min_value": bmin,
+                "max_value": bmax,
+                "modifier": bmod,
+            }
 
         return WorkflowResult(
             entity_id=entity_id,
