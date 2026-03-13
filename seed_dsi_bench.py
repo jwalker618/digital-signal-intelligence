@@ -1964,6 +1964,7 @@ def build_signal_conditions(co, resolved_scores):
     """
     conditions = []
     modifiers = []
+    tier_overrides = []
     tier = co["tier"]
     profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
 
@@ -1972,6 +1973,7 @@ def build_signal_conditions(co, resolved_scores):
             score = resolved_scores.get((group_id, signal_id), 50)
             signal_name = signal_id.replace("_", " ").title()
             if score <= 30:
+                override_tier = 5  # worst-case tier override for critical scores
                 conditions.append({
                     "source_type": "signal_feature",
                     "source_id": signal_id,
@@ -1979,9 +1981,10 @@ def build_signal_conditions(co, resolved_scores):
                     "score": score,
                     "response": None,
                     "action": "refer",
-                    "action_value": 5,  # worst-case tier override for critical scores
+                    "action_value": override_tier,
                     "note": f"Critical: {signal_name} score {score}/100",
                 })
+                tier_overrides.append(override_tier)
             elif score <= 45:
                 conditions.append({
                     "source_type": "signal_feature",
@@ -2012,7 +2015,7 @@ def build_signal_conditions(co, resolved_scores):
                     "factor": factor,
                 })
 
-    return conditions, modifiers
+    return conditions, modifiers, tier_overrides
 
 
 def build_modifiers_applied(co):
@@ -2119,17 +2122,28 @@ def apply_modifiers_to_premium(base_premium, modifiers):
     return current, enriched
 
 
+_ILF_TABLE = {
+    1_000_000: 0.30,
+    5_000_000: 0.80,
+    10_000_000: 1.00,
+    25_000_000: 1.80,
+    50_000_000: 3.00,
+}
+
+
+def get_ilf_for_limit(limit: int) -> float:
+    """Return the ILF factor for a given limit, defaulting to 1.0 (10M anchor)."""
+    return _ILF_TABLE.get(limit, 1.0)
+
+
 def build_premium_options_from_base(premium_after_modifiers):
     """Build premium_options dict using ILF-style scaling from premium_after_modifiers."""
     if premium_after_modifiers <= 0:
         return {}
     p = premium_after_modifiers
     return {
-        "1000000": int(p * 0.30),
-        "5000000": int(p * 0.80),
-        "10000000": int(p * 1.00),
-        "25000000": int(p * 1.80),
-        "50000000": int(p * 3.00),
+        str(limit): int(p * ilf)
+        for limit, ilf in _ILF_TABLE.items()
     }
 
 
@@ -2577,7 +2591,7 @@ def seed_data():
             signal_cov = compute_signal_coverage(co, profile)
             confidence = compute_confidence(resolved_scores)
 
-            signal_conditions, signal_cond_modifiers = build_signal_conditions(co, resolved_scores)
+            signal_conditions, signal_cond_modifiers, signal_tier_overrides = build_signal_conditions(co, resolved_scores)
             query_conditions, query_tier_overrides, query_mod_list = evaluate_query_conditions(co)
             co["_resolved_scores"] = resolved_scores  # pass to build_modifiers_applied
             raw_modifiers = build_modifiers_applied(co)
@@ -2641,6 +2655,11 @@ def seed_data():
             # Use the $10M limit tier (ILF 1.0) as the anchor for back-solving
             intended_premium = co.get("premium", 0)
 
+            # Back-solve: intended_premium = base * modifiers * ILF_at_limit
+            # so that premium_options[requested_limit] ≈ intended_premium.
+            requested_limit = co.get("limit", 10_000_000)
+            limit_ilf = get_ilf_for_limit(requested_limit)
+
             if co["decision"] == "decline":
                 base_premium = 0
                 base_premium_method = "premium_base"
@@ -2649,13 +2668,18 @@ def seed_data():
                 enriched_modifiers = raw_modifiers
             else:
                 base_premium, base_premium_method = calculate_base_premium(
-                    co, modifier_product, limit_ilf=1.0
+                    co, modifier_product, limit_ilf=limit_ilf
                 )
                 premium_after_mods, enriched_modifiers = apply_modifiers_to_premium(
                     base_premium, all_modifiers
                 )
-                final_premium = intended_premium
+                final_premium = intended_premium  # will be corrected below
             limit_premiums = build_premium_options_from_base(premium_after_mods)
+
+            # final_premium must match the premium_options entry at the
+            # requested limit so all values correlate across quote and MV.
+            if limit_premiums and str(requested_limit) in limit_premiums:
+                final_premium = limit_premiums[str(requested_limit)]
 
             # Enrich signal_conditions that have modifier action with premium tracking.
             # Walk the enriched_modifiers to find matching signal_condition entries and
@@ -2683,27 +2707,38 @@ def seed_data():
                         qc["premium_before"] = chain_entry.get("premium_before")
                         qc["premium_after"] = chain_entry.get("premium_after")
 
-            # Resolve tier overrides: query overrides can force a worse tier
+            # Resolve tier overrides: combine signal + query, worst-case wins
+            all_tier_overrides = signal_tier_overrides + query_tier_overrides
             resolved_tier_overrides = []
             final_tier = tier
-            if query_tier_overrides:
-                max_override = max(query_tier_overrides)
+            if all_tier_overrides:
+                max_override = max(all_tier_overrides)
                 if max_override > tier:
                     final_tier = max_override
-                for ov in query_tier_overrides:
-                    # Find the query condition that triggered this override
-                    source_qc = next(
-                        (qc for qc in query_conditions
-                         if qc["action"] == "refer" and qc["action_value"] == ov),
-                        None,
-                    )
-                    resolved_tier_overrides.append({
-                        "source": "direct_query",
-                        "source_id": source_qc["source_id"] if source_qc else "unknown",
-                        "override_tier": ov,
-                        "note": source_qc["note"] if source_qc else "",
-                        "applied": ov > tier,  # only applied if worse than score-based
-                    })
+
+                # Record signal-sourced overrides
+                for sc in signal_conditions:
+                    if sc["action"] == "refer" and isinstance(sc["action_value"], int):
+                        ov = sc["action_value"]
+                        resolved_tier_overrides.append({
+                            "source": "signal_condition",
+                            "source_id": sc["source_id"],
+                            "override_tier": ov,
+                            "note": sc["note"],
+                            "applied": ov > tier,
+                        })
+
+                # Record query-sourced overrides
+                for qc in query_conditions:
+                    if qc["action"] == "refer" and isinstance(qc["action_value"], int):
+                        ov = qc["action_value"]
+                        resolved_tier_overrides.append({
+                            "source": "direct_query",
+                            "source_id": qc["source_id"],
+                            "override_tier": ov,
+                            "note": qc["note"],
+                            "applied": ov > tier,
+                        })
 
             mv = ModelVersionRecord(
                 id=mv_id,
@@ -2755,14 +2790,20 @@ def seed_data():
                 "decline": QuoteStatus.DECLINED,
             }[co["decision"]]
 
+            # Recommended limit comes from the company config; recommended premium
+            # must be looked up from the premium_options at that limit so they
+            # correlate.  Falls back to final_premium if no match.
+            rec_limit = co.get("limit", 10_000_000)
+            rec_premium = limit_premiums.get(str(rec_limit), final_premium)
+
             quote = Quote(
                 id=quote_id,
                 quote_code=f"Q-{(co['ticker'] or co['entity_name'][:4]).upper().replace(' ', '')}-{_hex(4)}",
                 submission_id=sub_id,
                 model_version_id=mv_id,
                 status=quote_status,
-                recommended_premium=final_premium,
-                recommended_limit=co.get("limit", 1_000_000),
+                recommended_premium=rec_premium,
+                recommended_limit=rec_limit,
                 premium_options=limit_premiums,
                 valid_from=NOW,
                 valid_until=NOW + timedelta(days=30),
