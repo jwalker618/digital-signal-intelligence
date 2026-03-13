@@ -383,25 +383,28 @@ class TestCompositeScore:
 class TestConditionEvaluation:
     """Tests for Step 6: Signal conditions evaluation."""
 
-    def test_evaluate_conditions_returns_dict(self, scorer, config_with_conditions):
-        """Should return dict with condition results."""
+    def test_evaluate_conditions_returns_tuple(self, scorer, config_with_conditions):
+        """Should return tuple of (conditions, tier_overrides, referrals, notes, modifiers)."""
         outputs = scorer.extract_signals(
             entity_id="test-entity",
             config=config_with_conditions
         )
         _, group_scores, _ = scorer.calculate_composite(outputs, config_with_conditions)
 
-        conditions = scorer.evaluate_signal_conditions(
+        result = scorer.evaluate_signal_conditions(
             signal_outputs=outputs,
             group_scores=group_scores,
             config=config_with_conditions
         )
 
-        assert isinstance(conditions, dict)
-        assert "all_conditions" in conditions
-        assert "tier_overrides" in conditions
-        assert "referrals" in conditions
-        assert "notes" in conditions
+        assert isinstance(result, tuple)
+        assert len(result) == 5
+        conditions, tier_overrides, referrals, notes, modifiers = result
+        assert isinstance(conditions, list)
+        assert isinstance(tier_overrides, list)
+        assert isinstance(referrals, list)
+        assert isinstance(notes, list)
+        assert isinstance(modifiers, list)
 
     def test_evaluate_conditions_triggers_tier_override(self, scorer, config_with_conditions):
         """Should trigger tier override when condition met."""
@@ -411,14 +414,14 @@ class TestConditionEvaluation:
         )
         _, group_scores, _ = scorer.calculate_composite(outputs, config_with_conditions)
 
-        conditions = scorer.evaluate_signal_conditions(
+        _, tier_overrides, _, _, _ = scorer.evaluate_signal_conditions(
             signal_outputs=outputs,
             group_scores=group_scores,
             config=config_with_conditions
         )
 
         # Poor signal returns score of 25, which is below 30 threshold
-        assert 5 in conditions["tier_overrides"]
+        assert 5 in tier_overrides
 
     def test_evaluate_conditions_triggers_referral(self, scorer, config_with_conditions):
         """Should trigger referral when condition met."""
@@ -428,14 +431,14 @@ class TestConditionEvaluation:
         )
         _, group_scores, _ = scorer.calculate_composite(outputs, config_with_conditions)
 
-        conditions = scorer.evaluate_signal_conditions(
+        _, _, referrals, _, _ = scorer.evaluate_signal_conditions(
             signal_outputs=outputs,
             group_scores=group_scores,
             config=config_with_conditions
         )
 
         # Score of 25 is below 40 threshold
-        assert "Low safety score" in conditions["referrals"]
+        assert "Low safety score" in referrals
 
     def test_evaluate_conditions_triggers_note(self, scorer, config_with_conditions):
         """Should trigger note when condition met."""
@@ -445,14 +448,14 @@ class TestConditionEvaluation:
         )
         _, group_scores, _ = scorer.calculate_composite(outputs, config_with_conditions)
 
-        conditions = scorer.evaluate_signal_conditions(
+        _, _, _, notes, _ = scorer.evaluate_signal_conditions(
             signal_outputs=outputs,
             group_scores=group_scores,
             config=config_with_conditions
         )
 
         # Score of 25 is below 50 threshold
-        assert "Safety score below threshold" in conditions["notes"]
+        assert "Safety score below threshold" in notes
 
     def test_evaluate_group_level_conditions(self, scorer, config_with_conditions):
         """Should evaluate group-level conditions."""
@@ -462,14 +465,14 @@ class TestConditionEvaluation:
         )
         _, group_scores, _ = scorer.calculate_composite(outputs, config_with_conditions)
 
-        conditions = scorer.evaluate_signal_conditions(
+        _, _, referrals, _, _ = scorer.evaluate_signal_conditions(
             signal_outputs=outputs,
             group_scores=group_scores,
             config=config_with_conditions
         )
 
         # Group score will be low (25 * 1.0 * 1.0 * 10 = 250), below 300 threshold
-        assert "Group score below threshold" in conditions["referrals"]
+        assert "Group score below threshold" in referrals
 
 
 # =============================================================================

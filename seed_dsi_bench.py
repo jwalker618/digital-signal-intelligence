@@ -1956,58 +1956,63 @@ def compute_confidence(resolved_scores):
 
 
 def build_signal_conditions(co, resolved_scores):
-    """Build signal_conditions from company data - these drive the UI's condition display."""
+    """Build signal_conditions from company data — mirrors workflow TriggeredCondition structure.
+
+    Returns (conditions, modifiers) where modifiers contains dicts with
+    {source, source_id, name, factor} for conditions with action=modifier,
+    matching the workflow's ScoringResult.modifiers.
+    """
     conditions = []
+    modifiers = []
     tier = co["tier"]
     profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
 
-    # Add conditions based on resolved scores (not raw profile values)
     for group_id, signals in profile.items():
         for signal_id in signals:
             score = resolved_scores.get((group_id, signal_id), 50)
+            signal_name = signal_id.replace("_", " ").title()
             if score <= 30:
                 conditions.append({
-                    "signal_id": signal_id,
-                    "group_id": group_id,
+                    "source_type": "signal_feature",
+                    "source_id": signal_id,
+                    "source_name": signal_name,
+                    "score": score,
+                    "response": None,
                     "action": "refer",
-                    "note": f"Critical: {signal_id.replace('_', ' ').title()} score {score}/100",
-                    "applied_modifier": 0.0,
-                    "threshold": 30,
-                    "comparison": "<=",
+                    "action_value": 5,  # worst-case tier override for critical scores
+                    "note": f"Critical: {signal_name} score {score}/100",
                 })
             elif score <= 45:
                 conditions.append({
-                    "signal_id": signal_id,
-                    "group_id": group_id,
+                    "source_type": "signal_feature",
+                    "source_id": signal_id,
+                    "source_name": signal_name,
+                    "score": score,
+                    "response": None,
                     "action": "flag",
-                    "note": f"Warning: {signal_id.replace('_', ' ').title()} score {score}/100",
-                    "applied_modifier": 0.0,
-                    "threshold": 45,
-                    "comparison": "<=",
+                    "action_value": f"Warning: {signal_name} score {score}/100",
+                    "note": f"Warning: {signal_name} score {score}/100",
                 })
             elif score >= 90:
+                factor = 0.95  # 5% credit
                 conditions.append({
-                    "signal_id": signal_id,
-                    "group_id": group_id,
+                    "source_type": "signal_feature",
+                    "source_id": signal_id,
+                    "source_name": signal_name,
+                    "score": score,
+                    "response": None,
                     "action": "modifier",
-                    "note": f"Strong {signal_id.replace('_', ' ').title()} - credit applied",
-                    "applied_modifier": -0.05,
-                    "threshold": 90,
-                    "comparison": ">=",
+                    "action_value": factor,
+                    "note": f"Strong {signal_name} — credit applied",
+                })
+                modifiers.append({
+                    "source": "signal_condition",
+                    "source_id": signal_id,
+                    "name": signal_name,
+                    "factor": factor,
                 })
 
-    # Add query-based conditions
-    if co.get("referral_reasons"):
-        for reason in co["referral_reasons"]:
-            conditions.append({
-                "signal_id": "direct_query",
-                "group_id": "query_conditions",
-                "action": "refer" if tier >= 3 else "flag",
-                "note": reason,
-                "applied_modifier": 0.0,
-            })
-
-    return conditions
+    return conditions, modifiers
 
 
 def build_modifiers_applied(co):
@@ -2191,6 +2196,113 @@ def build_direct_query_responses(co):
         responses["pilot_shortage"] = tier >= 3
 
     return responses
+
+
+# -- Query condition impact definitions per coverage --
+# Maps (coverage, query_id, trigger_response) → action spec.
+# If a query+response pair isn't listed, it has no impact.
+_QUERY_IMPACTS = {
+    # Cyber
+    ("cyber", "mfa_enabled", False):           {"action": "modifier", "applied": 1.15, "note": "No MFA deployed — loading applied"},
+    ("cyber", "security_training", False):      {"action": "flag", "note": "No security awareness training"},
+    ("cyber", "incident_response_plan", False): {"action": "modifier", "applied": 1.10, "note": "No incident response plan — loading applied"},
+    ("cyber", "edr_deployed", False):           {"action": "flag", "note": "No EDR/XDR solution deployed"},
+    ("cyber", "immutable_backups", False):      {"action": "modifier", "applied": 1.08, "note": "No immutable backups — loading applied"},
+    ("cyber", "recent_incident", True):         {"action": "refer", "override": 4, "note": "Recent security incident disclosed"},
+
+    # D&O
+    ("directors_officers", "pending_claims", True):            {"action": "refer", "override": 4, "note": "Pending claims against directors/officers"},
+    ("directors_officers", "regulatory_investigation", True):  {"action": "refer", "override": 5, "note": "Active regulatory investigation"},
+    ("directors_officers", "executive_dispute", True):         {"action": "modifier", "applied": 1.20, "note": "Executive dispute disclosed — loading applied"},
+
+    # FI
+    ("financial_institutions", "regulatory_action", True):     {"action": "refer", "override": 5, "note": "Regulatory action pending"},
+    ("financial_institutions", "examination_issues", True):    {"action": "modifier", "applied": 1.12, "note": "Examination issues identified — loading applied"},
+    ("financial_institutions", "cyber_incident", True):        {"action": "refer", "override": 4, "note": "Recent cyber incident at financial institution"},
+
+    # Energy
+    ("energy", "major_incident_5yr", True):         {"action": "refer", "override": 4, "note": "Major incident in last 5 years"},
+    ("energy", "environmental_violation", True):     {"action": "modifier", "applied": 1.15, "note": "Environmental violation — loading applied"},
+    ("energy", "shutdown_order", True):              {"action": "refer", "override": 5, "note": "Active shutdown order"},
+
+    # Marine
+    ("marine", "total_loss_5yr", True):        {"action": "refer", "override": 4, "note": "Total loss in last 5 years"},
+    ("marine", "detention_12mo", True):         {"action": "modifier", "applied": 1.10, "note": "Port detention in last 12 months — loading applied"},
+    ("marine", "sanctions_exposure", True):     {"action": "refer", "override": 5, "note": "Sanctions exposure identified"},
+
+    # PI
+    ("professional_indemnity", "claims_history", True):    {"action": "modifier", "applied": 1.12, "note": "Prior claims history — loading applied"},
+    ("professional_indemnity", "prior_litigation", True):  {"action": "refer", "override": 4, "note": "Prior litigation disclosed"},
+
+    # Aerospace
+    ("aerospace", "hull_loss_5yr", True):      {"action": "refer", "override": 4, "note": "Hull loss in last 5 years"},
+    ("aerospace", "faa_enforcement", True):     {"action": "refer", "override": 5, "note": "FAA enforcement action"},
+    ("aerospace", "pilot_shortage", True):      {"action": "modifier", "applied": 1.08, "note": "Pilot shortage reported — loading applied"},
+}
+
+
+def evaluate_query_conditions(co):
+    """Evaluate direct query responses and return structured conditions with impacts.
+
+    Mirrors the workflow's QueryEvaluator output structure.
+
+    Returns:
+        (query_conditions, tier_overrides, query_modifiers)
+    """
+    coverage = co["coverage"]
+    responses = build_direct_query_responses(co)
+
+    query_conditions = []
+    tier_overrides = []
+    query_modifiers = []
+
+    for query_id, response in responses.items():
+        impact = _QUERY_IMPACTS.get((coverage, query_id, response))
+
+        if impact is None:
+            # No impact for this query+response pair
+            query_conditions.append({
+                "source_type": "direct_query",
+                "source_id": query_id,
+                "source_name": query_id.replace("_", " ").title(),
+                "score": None,
+                "response": response,
+                "action": "none",
+                "action_value": None,
+                "note": "",
+            })
+            continue
+
+        action = impact["action"]
+        if action == "refer":
+            override = impact.get("override")
+            action_value = override
+            if override is not None:
+                tier_overrides.append(override)
+        elif action == "modifier":
+            factor = impact["applied"]
+            action_value = factor
+            query_modifiers.append({
+                "type": "direct_query",
+                "source": query_id,
+                "applied": factor,
+                "note": impact["note"],
+            })
+        else:  # flag
+            action_value = impact.get("note", "")
+
+        query_conditions.append({
+            "source_type": "direct_query",
+            "source_id": query_id,
+            "source_name": query_id.replace("_", " ").title(),
+            "score": None,
+            "response": response,
+            "action": action,
+            "action_value": action_value,
+            "note": impact["note"],
+        })
+
+    return query_conditions, tier_overrides, query_modifiers
 
 
 def build_discovery_output(co):
@@ -2465,7 +2577,8 @@ def seed_data():
             signal_cov = compute_signal_coverage(co, profile)
             confidence = compute_confidence(resolved_scores)
 
-            signal_conditions = build_signal_conditions(co, resolved_scores)
+            signal_conditions, signal_cond_modifiers = build_signal_conditions(co, resolved_scores)
+            query_conditions, query_tier_overrides, query_mod_list = evaluate_query_conditions(co)
             co["_resolved_scores"] = resolved_scores  # pass to build_modifiers_applied
             raw_modifiers = build_modifiers_applied(co)
             discovery = build_discovery_output(co)
@@ -2486,9 +2599,21 @@ def seed_data():
             exposure_kwargs = build_exposure_assessment(co)
 
             # --- PREMIUM CALCULATION ---
-            # Include loss_combined_modifier and exposure_modifier in the
-            # modifier chain so they genuinely affect the premium.
-            all_modifiers = list(raw_modifiers)  # copy categorical/signal modifiers
+            # All modifier sources feed into a single chain so premium_before/
+            # premium_after values are genuinely sequential.
+            all_modifiers = list(raw_modifiers)  # categorical + score-derived
+
+            # Signal condition modifiers (e.g. score >= 90 → 0.95 credit)
+            for scm in signal_cond_modifiers:
+                all_modifiers.append({
+                    "type": "signal_condition",
+                    "source": scm["source_id"],
+                    "applied": scm["factor"],
+                    "note": scm["name"],
+                })
+
+            # Query condition modifiers (e.g. no MFA → 1.15 loading)
+            all_modifiers.extend(query_mod_list)
 
             loss_mod = loss_kwargs.get("loss_combined_modifier", 1.0)
             if loss_mod and loss_mod != 1.0:
@@ -2532,6 +2657,54 @@ def seed_data():
                 final_premium = intended_premium
             limit_premiums = build_premium_options_from_base(premium_after_mods)
 
+            # Enrich signal_conditions that have modifier action with premium tracking.
+            # Walk the enriched_modifiers to find matching signal_condition entries and
+            # back-fill premium_before / premium_after from the modifier chain.
+            _sc_mod_lookup = {
+                m["source"]: m for m in enriched_modifiers
+                if m.get("type") == "signal_condition"
+            }
+            for sc in signal_conditions:
+                if sc["action"] == "modifier":
+                    chain_entry = _sc_mod_lookup.get(sc["source_id"])
+                    if chain_entry:
+                        sc["premium_before"] = chain_entry.get("premium_before")
+                        sc["premium_after"] = chain_entry.get("premium_after")
+
+            # Enrich query_conditions that have modifier/refer action with premium tracking.
+            _qc_mod_lookup = {
+                m["source"]: m for m in enriched_modifiers
+                if m.get("type") == "direct_query"
+            }
+            for qc in query_conditions:
+                if qc["action"] == "modifier":
+                    chain_entry = _qc_mod_lookup.get(qc["source_id"])
+                    if chain_entry:
+                        qc["premium_before"] = chain_entry.get("premium_before")
+                        qc["premium_after"] = chain_entry.get("premium_after")
+
+            # Resolve tier overrides: query overrides can force a worse tier
+            resolved_tier_overrides = []
+            final_tier = tier
+            if query_tier_overrides:
+                max_override = max(query_tier_overrides)
+                if max_override > tier:
+                    final_tier = max_override
+                for ov in query_tier_overrides:
+                    # Find the query condition that triggered this override
+                    source_qc = next(
+                        (qc for qc in query_conditions
+                         if qc["action"] == "refer" and qc["action_value"] == ov),
+                        None,
+                    )
+                    resolved_tier_overrides.append({
+                        "source": "direct_query",
+                        "source_id": source_qc["source_id"] if source_qc else "unknown",
+                        "override_tier": ov,
+                        "note": source_qc["note"] if source_qc else "",
+                        "applied": ov > tier,  # only applied if worse than score-based
+                    })
+
             mv = ModelVersionRecord(
                 id=mv_id,
                 version_code=f"mv_{_hex(8)}",
@@ -2550,14 +2723,11 @@ def seed_data():
                 confidence=confidence,
                 signal_coverage=signal_cov,
                 signal_conditions=signal_conditions,
-                query_conditions=[
-                    {"query_id": k, "response": v, "action": "flag" if not v else "none"}
-                    for k, v in build_direct_query_responses(co).items()
-                ],
-                tier_overrides=[],
+                query_conditions=query_conditions,
+                tier_overrides=resolved_tier_overrides,
                 score_based_tier=tier,
-                final_tier=tier,
-                tier_label=TIER_LABELS.get(tier, "UNKNOWN"),
+                final_tier=final_tier,
+                tier_label=TIER_LABELS.get(final_tier, "UNKNOWN"),
                 base_premium=base_premium,
                 base_premium_method=base_premium_method,
                 modifiers_applied=enriched_modifiers,

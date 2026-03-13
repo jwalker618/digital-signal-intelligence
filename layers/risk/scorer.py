@@ -157,7 +157,7 @@ class ModelScorer:
         )
 
         # Step 6: Evaluate signal conditions
-        conditions, tier_overrides, referrals, notes = self.evaluate_signal_conditions(
+        conditions, tier_overrides, referrals, notes, signal_modifiers = self.evaluate_signal_conditions(
             signal_outputs=signal_outputs,
             group_scores=group_scores,
             config=config,
@@ -183,6 +183,7 @@ class ModelScorer:
             tier_overrides=tier_overrides,
             referrals=referrals,
             notes=notes,
+            modifiers=signal_modifiers,
         )
 
     def _apply_audited_values(
@@ -689,7 +690,7 @@ class ModelScorer:
         signal_outputs: List[SignalOutput],
         group_scores: Dict[str, Any],
         config: CoverageConfig
-    ) -> Tuple[List[TriggeredCondition], List[int], List[str], List[str]]:
+    ) -> Tuple[List[TriggeredCondition], List[int], List[str], List[str], List[Dict[str, Any]]]:
         """
         Step 6: Evaluate conditions at group and signal levels.
 
@@ -705,12 +706,13 @@ class ModelScorer:
             config: Coverage configuration (Pydantic compiled)
 
         Returns:
-            Tuple of (conditions, tier_overrides, referrals, notes)
+            Tuple of (conditions, tier_overrides, referrals, notes, modifiers)
         """
         conditions: List[TriggeredCondition] = []
         tier_overrides: List[int] = []
         referrals: List[str] = []
         notes: List[str] = []
+        modifiers: List[Dict[str, Any]] = []
 
         # Create signal lookup by ID
         signal_by_id = {s.signal_id: s for s in signal_outputs}
@@ -739,7 +741,8 @@ class ModelScorer:
                         )
                         conditions.append(tc)
                         self._collect_condition_impacts(
-                            condition, tier_overrides, referrals, notes
+                            condition, tier_overrides, referrals, notes,
+                            modifiers, source_id=group.id, source_name=group_label,
                         )
 
         # Evaluate signal-level conditions (from signal_registry)
@@ -771,7 +774,8 @@ class ModelScorer:
                     )
                     conditions.append(tc)
                     self._collect_condition_impacts(
-                        condition, tier_overrides, referrals, notes
+                        condition, tier_overrides, referrals, notes,
+                        modifiers, source_id=signal.id, source_name=signal_name,
                     )
 
                     if signal_output:
@@ -781,10 +785,11 @@ class ModelScorer:
             f"Evaluated signal conditions: "
             f"{len(tier_overrides)} tier overrides, "
             f"{len(referrals)} referrals, "
+            f"{len(modifiers)} modifiers, "
             f"{len(notes)} notes"
         )
 
-        return conditions, tier_overrides, referrals, notes
+        return conditions, tier_overrides, referrals, notes, modifiers
 
     def _check_score_condition(self, score: float, condition: ScoreCondition) -> bool:
         """
@@ -830,6 +835,9 @@ class ModelScorer:
         tier_overrides: List[int],
         referrals: List[str],
         notes: List[str],
+        modifiers: List[Dict[str, Any]],
+        source_id: str = "unknown",
+        source_name: str = "unknown",
     ) -> None:
         """Collect impacts from a triggered ScoreCondition into output lists."""
         if condition.action == ScoreConditionAction.REFER:
@@ -839,7 +847,14 @@ class ModelScorer:
         elif condition.action == ScoreConditionAction.FLAG:
             notes.append(condition.note or "Flag triggered")
         elif condition.action == ScoreConditionAction.MODIFIER:
-            notes.append(f"MODIFIER:{condition.applied}")
+            factor = condition.applied or 1.0
+            if factor != 1.0:
+                modifiers.append({
+                    "source": "signal_condition",
+                    "source_id": source_id,
+                    "name": source_name,
+                    "factor": factor,
+                })
 
 
 # Singleton instance for convenience
