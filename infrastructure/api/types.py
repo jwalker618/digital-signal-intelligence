@@ -106,17 +106,15 @@ class FrontendSubmissionPipeline(BaseModel):
     decision: str
 
 class FrontendRiskAssessment(BaseModel):
-    version_code: str
     signal_id: int
     score: Optional[float] = None
     weight: Optional[float] = None
+    group_weight: Optional[float] = None
     contribution: Optional[float] = None
     group_code: Optional[str] = None
     proxy_tier: Optional[str] = None
     expectation_level: Optional[str] = None
     was_absent: bool = False
-    data: Dict[str, Any]
-    confidence: Optional[float] = None
     code: str
 
 class SubmissionRequest(BaseModel):
@@ -479,6 +477,7 @@ class ModelVersionDBRecord(BaseModel):
     loss_frequency_multiplier: Optional[float] = None
     loss_severity_multiplier: Optional[float] = None
     loss_combined_modifier: Optional[float] = None
+    loss_group_scores: Dict[str, Any] = Field(default_factory=dict)
     loss_trend_direction: Optional[str] = None
     loss_previous_score: Optional[float] = None
     loss_score_velocity: Optional[float] = None
@@ -487,6 +486,7 @@ class ModelVersionDBRecord(BaseModel):
     exposure_value: Optional[float] = None
     exposure_band_id: Optional[int] = None
     exposure_band_label: Optional[str] = None
+    exposure_band_boundaries: Dict[str, Any] = Field(default_factory=dict)
     exposure_magnitude_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
     exposure_assessment_method: Optional[str] = None
@@ -498,11 +498,12 @@ class ModelVersionDBRecord(BaseModel):
                                         
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
-                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_trend_direction", "loss_previous_score",
-                                        "loss_score_velocity","loss_last_refresh","correlation_matrix_version", 
+                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
+                                        "loss_trend_direction", "loss_previous_score", "loss_score_velocity",
+                                        "loss_last_refresh","correlation_matrix_version", 
                                         
-                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_magnitude_score",
-                                        "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
+                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
                                       ])
 class ModelVersionDBRecord_BaseOnly(BaseModel):
     version_code: str
@@ -540,11 +541,12 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
                                         
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
-                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_trend_direction", "loss_previous_score",
-                                        "loss_score_velocity","loss_last_refresh","correlation_matrix_version", 
+                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
+                                        "loss_trend_direction", "loss_previous_score", "loss_score_velocity",
+                                        "loss_last_refresh","correlation_matrix_version",  
                                         
-                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_magnitude_score",
-                                        "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
+                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
                                         ])
 class ModelVersionDBRecord_DetailOnly(BaseModel):
     version_code: str
@@ -564,11 +566,12 @@ class ModelVersionDBRecord_DetailOnly(BaseModel):
                                         
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
-                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_trend_direction", "loss_previous_score",
-                                        "loss_score_velocity","loss_last_refresh","correlation_matrix_version", 
+                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
+                                        "loss_trend_direction", "loss_previous_score", "loss_score_velocity",
+                                        "loss_last_refresh","correlation_matrix_version", 
                                         
-                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_magnitude_score",
-                                        "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
+                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
                                       ])
 class ModelVersionDBRecord_CommentaryOnly(BaseModel):
     version_code: str 
@@ -586,8 +589,8 @@ class ModelVersionDBRecord_CommentaryOnly(BaseModel):
 
                                         "referral_reasons", "notes",
                                 
-                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_magnitude_score",
-                                        "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
+                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
                                       ])
 class ModelVersionDBRecord_LossOnly(BaseModel):
     version_code: str 
@@ -602,6 +605,7 @@ class ModelVersionDBRecord_LossOnly(BaseModel):
     loss_frequency_multiplier: Optional[float] = None
     loss_severity_multiplier: Optional[float] = None
     loss_combined_modifier: Optional[float] = None
+    loss_group_scores: Dict[str, Any] = Field(default_factory=dict)
     loss_trend_direction: Optional[str] = None
     loss_previous_score: Optional[float] = None
     loss_score_velocity: Optional[float] = None
@@ -621,14 +625,16 @@ class ModelVersionDBRecord_LossOnly(BaseModel):
                                         
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
-                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_trend_direction", "loss_previous_score",
-                                        "loss_score_velocity","loss_last_refresh","correlation_matrix_version", 
+                                        "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
+                                        "loss_trend_direction", "loss_previous_score", "loss_score_velocity",
+                                        "loss_last_refresh","correlation_matrix_version", 
                                       ])
 class ModelVersionDBRecord_ExposureOnly(BaseModel):
     version_code: str
     exposure_value: Optional[float] = None
     exposure_band_id: Optional[int] = None
     exposure_band_label: Optional[str] = None
+    exposure_band_boundaries: Dict[str, Any] = Field(default_factory=dict)
     exposure_magnitude_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
     exposure_assessment_method: Optional[str] = None
@@ -658,6 +664,7 @@ class ModelVersionSignalRecord(BaseModel):
     entity_code: str
     score: Optional[float] = None
     weight: Optional[float] = None
+    group_weight: Optional[float] = None
     contribution: Optional[float] = None
     group_code: Optional[str] = None
     proxy_tier: Optional[str] = None

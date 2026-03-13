@@ -88,24 +88,39 @@ async def get_frontend_pipeline(
         logger.error("DB get frontend pipeline failed: %s", e)
         raise HTTPException(status_code=500, detail="Failed to fetch pipeline data")
 
-@router.get("/frontend/{version_code}/signals", response_model=FrontendRiskAssessment)
+@router.get("/frontend/{version_code}/signals", response_model=List[FrontendRiskAssessment])
 async def get_frontend_modelsignals(
     version_code: str,
     db: AsyncSession = Depends(get_async_db),
-) -> FrontendRiskAssessment:
-    """Get model version signals details by code."""
-    query = (select(FrontendRiskAssessment)
-     .join(ModelVersionRecord, ModelVersionSignal.model_version_id == ModelVersionRecord.id)
-     .where(ModelVersionRecord.is_latest == True)
-     .join(SignalCache, ModelVersionSignal.signal_cache_id == SignalCache.id)
-     .join(Signal, ModelVersionSignal.signal_id == Signal.id)
-     .where(ModelVersionRecord.version_code == version_code))
+) -> List[FrontendRiskAssessment]:
+
+# Select the exact columns mapping to your Pydantic model
+    query = (
+        select(
+            ModelVersionSignal.signal_id,
+            ModelVersionSignal.score,
+            ModelVersionSignal.weight,
+            ModelVersionSignal.group_weight,
+            ModelVersionSignal.contribution,
+            ModelVersionSignal.group_code,
+            ModelVersionSignal.proxy_tier,
+            ModelVersionSignal.expectation_level,
+            ModelVersionSignal.was_absent,
+            Signal.code
+        )
+        .select_from(ModelVersionSignal)
+        .join(ModelVersionRecord, ModelVersionSignal.model_version_id == ModelVersionRecord.id)
+        .join(Signal, ModelVersionSignal.signal_id == Signal.id)
+        .where(ModelVersionRecord.version_code == version_code)
+        .where(ModelVersionRecord.is_latest == True) 
+    )
     
     result = await db.execute(query)
-    record = result.scalar_one_or_none()
+    rows = result.mappings().all()
 
-    if not record:
-        raise HTTPException(status_code=404, detail="Signals not found")
+    # Return empty list if none found (better than 404 for UI grids)
+    if not rows:
+        return []
 
-    return record
+    return [FrontendRiskAssessment(**row) for row in rows]
 

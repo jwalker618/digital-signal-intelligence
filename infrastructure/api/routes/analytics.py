@@ -241,7 +241,7 @@ async def get_exposure_scatter_data(
     
     query = (
         select(
-            ModelVersionRecord.version_id,
+            ModelVersionRecord.version_code,
             ModelVersionRecord.exposure_magnitude_score.label("x_magnitude"),
             ModelVersionRecord.pure_composite_score.label("y_composite"),
             ModelVersionRecord.decision

@@ -22,14 +22,19 @@ export interface DsiState {
   isLoading: boolean;
   error: string | null;
 
-  // Loss Analytics State
+  // RiskTab
+  riskSignals: any[];
+  isFetchingRiskSignals: boolean;
+  fetchRiskSignals: (versionCode: string) => Promise<void>;
+
+  // LossTab
   lossCohortBenchmarks: any[];
   lossTrendDistribution: any[];
   lossScatterData: any[];
   isFetchingLossAnalytics: boolean;
   fetchLossAnalytics: (coverage: string, daysFilter?: number) => Promise<void>;
 
-  // Exposure Analytics State
+  // ExposureTab
   exposureBandBenchmarks: any[];
   exposureTierDistribution: any[];
   exposureScatterData: any[];
@@ -76,13 +81,17 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   referralSignals: [],
   isFetchingSignals: false,
 
-  // Default Loss Analytics State
+  // Default Risk Tab
+  riskSignals: [],
+  isFetchingRiskSignals: false,
+
+  // Default Loss Tab
   lossCohortBenchmarks: [],
   lossTrendDistribution: [],
   lossScatterData: [],
   isFetchingLossAnalytics: false,
 
-  // Default Exposure Analytics State
+  // Default Exposure Tab
   exposureBandBenchmarks: [],
   exposureTierDistribution: [],
   exposureScatterData: [],
@@ -121,7 +130,23 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     }
   }, 
 
-fetchLossAnalytics: async (coverage: string, daysFilter = 365) => {
+  fetchRiskSignals: async (versionCode: string) => {
+    set({ isFetchingRiskSignals: true });
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/frontend/${versionCode}/signals`);
+      if (res.ok) {
+        const data = await res.json();
+        set({ riskSignals: data, isFetchingRiskSignals: false });
+      } else {
+        set({ riskSignals: [], isFetchingRiskSignals: false });
+      }
+    } catch (err) {
+      console.error("Failed to fetch risk signals:", err);
+      set({ riskSignals: [], isFetchingRiskSignals: false });
+    }
+  },
+
+  fetchLossAnalytics: async (coverage: string, daysFilter = 365) => {
     set({ isFetchingLossAnalytics: true });
     
     try {
