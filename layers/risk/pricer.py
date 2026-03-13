@@ -309,7 +309,7 @@ class ModelPricer:
                     premium_after=current_premium,
                 ))
 
-        # Apply query modifiers
+        # Apply signal, query, and traditional modifiers
         for mod in query_modifiers:
             factor = mod.get("factor", 1.0)
             if factor != 1.0:
@@ -318,9 +318,9 @@ class ModelPricer:
                 total_modifier *= factor
 
                 modifiers_applied.append(AppliedModifier(
-                    source="direct_query",
+                    source=mod.get("source", "direct_query"),
                     source_id=mod.get("source_id", "unknown"),
-                    name=mod.get("name", "Query modifier"),
+                    name=mod.get("name", "Modifier"),
                     factor=factor,
                     premium_before=premium_before,
                     premium_after=current_premium,

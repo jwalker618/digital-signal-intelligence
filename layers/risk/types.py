@@ -954,6 +954,7 @@ class ScoringResult:
     tier_overrides: List[int] = field(default_factory=list)
     referrals: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
+    modifiers: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass

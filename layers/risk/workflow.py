@@ -374,8 +374,8 @@ class WorkflowEngine:
             if r.has_impact  # Only include modifiers with actual impact
         ]
 
-        # Combine query modifiers with traditional modifiers
-        all_modifiers = query_result.modifiers + traditional_modifiers_for_pricer
+        # Combine signal, query, and traditional modifiers
+        all_modifiers = scoring_result.modifiers + query_result.modifiers + traditional_modifiers_for_pricer
 
         # Add loss propensity modifier if available and significant
         if loss_propensity_result and loss_propensity_result.combined_loss_modifier != 1.0:
