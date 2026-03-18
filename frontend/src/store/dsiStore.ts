@@ -1,5 +1,5 @@
-import SummaryTab from '@/components/submissions/workbench/SummaryTab';
 import { create } from 'zustand';
+import { ReactNode } from 'react';
 
 export interface DsiState {
   // Navigation & Context State
@@ -8,6 +8,14 @@ export interface DsiState {
   previousMenu: string;
   updateDecision: (quoteCode: string, quoteDecision: string, referralDecision: string | null) => Promise<void>;
   navigateBack: () => void; 
+
+  // Title Bar Menu Actions and Quick Action
+  hasPageActions: boolean;
+  setHasPageActions: (hasActions: boolean) => void;
+  isPageActionsOpen: boolean;
+  setPageActionsOpen: (isOpen: boolean) => void;
+  pageQuickAction: ReactNode | null;
+  setPageQuickAction: (action: ReactNode | null) => void;
 
   // NEW: Date Filter State
   daysFilter: number;
@@ -62,6 +70,14 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   activeMenu: "Referral Pipeline",
   setActiveMenu: (menu) => set({ activeMenu: menu }),
   previousMenu: "Referral Pipeline",
+
+  // Title Bar Menu and Quick Actions
+  hasPageActions: false,
+  setHasPageActions: (hasActions) => set({ hasPageActions: hasActions }),
+  isPageActionsOpen: false,
+  setPageActionsOpen: (isOpen) => set({ isPageActionsOpen: isOpen }),
+  pageQuickAction: null,
+  setPageQuickAction: (action) => set({ pageQuickAction: action }),
 
   // Default to 30 days, just like the backend
   daysFilter: 30,

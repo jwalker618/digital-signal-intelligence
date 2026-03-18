@@ -2,33 +2,11 @@
 
 import { useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
+import Modal from "@/components/Modal";
 import { 
   Activity, Shield, Calculator, BarChart3, TrendingUp, 
   X, User, Search, MessageSquare, Plus 
 } from "lucide-react";
-
-// --- REUSABLE MODAL COMPONENT ---
-const Modal = ({ isOpen, onClose, title, icon: Icon, children }: any) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-dsi-analysis border border-dsi-outline/20 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-        <div className="flex items-center justify-between p-4 border-b border-dsi-outline/10 bg-dsi-background/30">
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            {Icon && <Icon className="w-5 h-5 text-dsi-selected" />}
-            {title}
-          </h3>
-          <button onClick={onClose} className="p-1 hover:bg-dsi-outline/10 rounded text-dsi-selected transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="p-6 overflow-y-auto">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function SummaryTab() {
   const { activeSubmission, activeQuote, activeVersion } = useDsiStore();

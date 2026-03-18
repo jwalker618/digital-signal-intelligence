@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 import { 
-  PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine,
+  PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine, MoreVertical,
   Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt
 } from "lucide-react";
 
@@ -22,9 +22,9 @@ const inter = Inter({
   variable: '--font-inter'
 });
 
-// Helper component to stop repeating button code
-const SidebarIconBtn = ({ icon: Icon, onClick, className, style }: { icon: any, onClick?: () => void, className: string, style?: any }) => (
-  <button onClick={onClick} className={`absolute p-dsi-pad text-dsi-background hover:text-dsi-selected ${className}`} style={style}>
+// Helper component updated to drop absolute positioning for easier Flexbox usage
+const SidebarIconBtn = ({ icon: Icon, onClick, className = "", style }: { icon: any, onClick?: () => void, className?: string, style?: any }) => (
+  <button onClick={onClick} className={`text-dsi-background hover:text-dsi-selected transition-colors ${className}`} style={style}>
     <Icon className="icon" />
   </button>
 );
@@ -48,14 +48,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       const parentWidth = sidebarRef.current?.parentElement?.getBoundingClientRect().width;
       
       // Mathematically lock the collapsed width to exactly 5% of the usable screen.
-      // This stays completely stable during open/close animations!
       if (parentWidth) {
         setCollapsedWidthPx(parentWidth * 0.05);
       }
     };
 
-    // Observe the parent container instead of the sidebar. 
-    // It will only fire when the user physically resizes the browser window.
     const observer = new ResizeObserver(measure);
     if (sidebarRef.current?.parentElement) {
       observer.observe(sidebarRef.current.parentElement);
@@ -64,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     measure();
 
     return () => observer.disconnect();
-  }, []); // Removed [isOpen] so it doesn't recalculate during the click transition
+  }, []); 
 
   useEffect(() => {
     const html = document.documentElement;
@@ -103,7 +100,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="
-                absolute top-dsi-pad right-dsi-pad p-dsi-pad 
+                absolute top-dsi-pad 
+                right-dsi-pad p-dsi-pad 
                 text-dsi-background 
                 hover:text-dsi-selected"
             >
@@ -115,10 +113,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <nav 
                 className="
                   absolute left-10 right-0 
-                  flex-grow py-dsi-pad 
+                  py-dsi-pad 
                   overflow-y-auto 
                   overflow-x-hidden no-scrollbar"
-                style={{ top: collapsedWidthPx }}
+                style={{ top: collapsedWidthPx, bottom: collapsedWidthPx }} // Added bottom constraint so it doesn't overlap icons
               >
                 <div className="px-dsi-pad">
                   
@@ -152,8 +150,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                             <button
                               onClick={() => {
                                 setActiveMenu(item.name) 
-                              }
-                              }
+                              }}
                               className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
                                 activeMenu === item.name 
                                   ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
@@ -215,16 +212,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </nav>
             )}
 
-            {/* BOTTOM ICONS */}
+            {/* BOTTOM ICONS (Now using Flexbox for easy layout!) */}
             {isOpen && collapsedWidthPx && (
-              <>
-                <div
-                  className="absolute left-dsi-pad right-dsi-pad border-t-3 border-dsi-outline"
-                  style={{ bottom: collapsedWidthPx }}
-                />
-                <SidebarIconBtn icon={CircleUserRound} className="left-dsi-pad" style={{ bottom: collapsedWidthPx / 2 - 20 }} />
-                <SidebarIconBtn icon={Bug} className="right-dsi-pad" style={{ bottom: collapsedWidthPx / 2 - 20 }} />
-              </>
+              <div 
+                className="
+                  absolute 
+                  left-dsi-pad 
+                  right-dsi-pad 
+                  border-t-3 border-dsi-outline 
+                  flex items-center 
+                  justify-between"
+                style={{ bottom: 0, height: collapsedWidthPx }}
+              >
+                {/* Left Side: User Icon */}
+                <div className="flex items-center gap-6">
+                  <SidebarIconBtn icon={CircleUserRound} />
+                </div>
+                
+                {/* Right Side: Theme Toggle */}
+                <div className="flex items-center gap-6">
+                  <SidebarIconBtn icon={Bug} />
+                  <SidebarIconBtn 
+                    icon={isDark ? LightbulbOff : Lightbulb} 
+                    onClick={() => setIsDark(!isDark)} 
+                  />  
+                </div> 
+              </div>
             )}
           </aside>
 
@@ -239,35 +252,61 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* TITLE BAR */}
             <div
-              className="border-b-3 border-dsi-outline flex items-center justify-between px-dsi-main shrink-0"
+              className="
+                border-b-3 border-dsi-outline 
+                flex items-center 
+                justify-between 
+                px-dsi-main
+                shrink-0"
               style={{ height: 'var(--cw)' }}
             >
- 
-              <h1 className="font-inter text-2xl tracking-wide flex items-center gap-4">
+              <h1 className="
+                font-inter 
+                text-2xl 
+                tracking-wide 
+                flex 
+                items-center 
+                gap-4">
                 <span className="flex items-center gap-4">
-                  Submissions 
                   <span className="opacity-50 font-light">/</span> 
-                  
-                  {/* Base Menu (or Previous Menu if drilled down) */}
                   {activeSubmission ? previousMenu : activeMenu}
                 </span>
                 
-                {/* Deep Dive Breadcrumbs - STOPS AT ENTITY NAME NOW */}
                 {activeSubmission && (
                   <span className="flex items-center gap-4">
                     <span className="opacity-50 font-light">/</span>
                     <span className="font-bold">{activeSubmission.entity_name}</span>
+                    <span className="opacity-50 font-light">/</span>
+                    <span className="">{activeMenu}</span>
                   </span>
                 )}
               </h1>
 
-              <button onClick={() => setIsDark(!isDark)} className="p-dsi-pad text-dsi-contrast-background hover:text-dsi-selected transition-colors">
-                {isDark ? <LightbulbOff className="icon" /> : <Lightbulb className="icon" />}
-              </button>
+              {/* DYNAMIC CONTEXT ACTIONS & QUICK ACTION SLOTS */}
+              <div className="
+                flex items-center 
+                gap-2
+                px-dsi-main
+                ">
+                
+                {/* 1. Optional Quick Action Slot */}
+                {useDsiStore(state => state.pageQuickAction)}
+
+                {/* 2. Optional Ellipsis Menu Trigger */}
+                {useDsiStore(state => state.hasPageActions) && (
+                  <button 
+                    onClick={() => useDsiStore.getState().setPageActionsOpen(true)} 
+                    className="p-1.5 rounded text-dsi-contrast-background hover:bg-dsi-outline/10 hover:text-dsi-selected transition-colors"
+                    title="Page Actions"
+                  >
+                    <MoreVertical className="icon" />
+                  </button>
+                )}
+                
+              </div>
             </div>
 
             {/* THE DYNAMIC CANVAS AREA */}
-            {/* We hand this entire space over to page.tsx to render whatever it wants */}
             <div className="relative flex-1 overflow-hidden">
               {children}
             </div>

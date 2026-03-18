@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, X, Loader2, Calendar } from "lucide-react";
+import { useEffect } from "react";
+import { Check, X, Loader2 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas"; 
 import { useDsiStore } from "@/store/dsiStore";
@@ -8,6 +9,7 @@ import "@/app/globals.css";
 
 export default function PipelineTable({ type }: { type: "full" | "referral" }) {
   const { 
+    setPageQuickAction,
     submissions, 
     isLoading, 
     daysFilter,
@@ -15,56 +17,69 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
     fetchCoreSubmissionDetail,
     updateDecision } = useDsiStore();
 
+  useEffect(() => {
+    // Inject a quick filter dropdown into the global Title Bar
+    setPageQuickAction(
+      <select 
+        value={daysFilter}
+        onChange={(e) => setDaysFilter(Number(e.target.value))}
+        className="
+          outline-none
+          bg-dsi-background
+          text-dsi-contrast-background
+          hover:text-dsi-selected"
+      >
+        <option value={7}>Last 7 Days</option>
+        <option value={30}>Last 30 Days</option>
+        <option value={90}>Last 90 Days</option>
+        <option value={365}>Last 1 Year</option>
+      </select>
+    );
+
+    // Cleanup when the user leaves the pipeline page
+    return () => setPageQuickAction(null);
+  }, [daysFilter, setDaysFilter, setPageQuickAction]);
+
   if (isLoading) {
-    return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-dsi-selected w-8 h-8" /></div>;
+    return (
+      <ViewCanvas unstyledMain={false}>
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="animate-spin text-dsi-selected w-8 h-8" />
+        </div>
+      </ViewCanvas>
+    );
   }
 
   // Filter for Referral Pipeline using the new flat 'decision' field
   const displayData = type === "referral" 
     ? submissions.filter(s => s.decision === "REFER") : submissions;
 
-  // DEFINE BOTTOM CONTEXT UI FOR THIS SPECIFIC VIEW
-  const BottomContext = (
-    <div className="w-full h-full flex">
-      <div className="pt-dsi-pad flex relative">
-        <Calendar className="icon" />
-        <select 
-          value={daysFilter} 
-          onChange={(e) => setDaysFilter(Number(e.target.value))}
-          className="icon"
-        >
-          <option value={7}>Last 7 Days</option>
-          <option value={30}>Last 30 Days</option>
-          <option value={90}>Last 90 Days</option>
-          <option value={365}>Last 1 Year</option>
-        </select>
-        
-        {/* Dynamic Description */}
-        <p className="">
-          Showing submissions updated within the last <span className="font-bold">{daysFilter} days</span> (or status = DRAFT).
-        </p>
-
-      </div>
-    </div>
-  );
-
   const handleRowClick = (sub: any) => {
     fetchCoreSubmissionDetail(sub); 
   };
 
   return (
-    <ViewCanvas bottomContext={BottomContext} unstyledMain={false}>
+    <ViewCanvas unstyledMain={false}>
       <div className="w-full no-scrollbar">
+        <div className="text-dsi-contrast-background pb-4 text-sm">
+          <h1>
+            Showing submissions updated within the last <span className="font-bold">{daysFilter} days</span> (or status = DRAFT).
+          </h1> 
+        </div>
         <table className="w-full text-left border-collapse whitespace-nowrap">
-          <thead className="sticky top-0 z-10 bg-dsi-analysis">
-            <tr className="border-b-2 border-dsi-selected text-dsi-selected font-semibold text-sm tracking-wider uppercase">
-              <th className="py-3 px-4">Client</th>
-              <th className="py-3 px-4">Coverage</th>
-              <th className="py-3 px-4 text-wrap">Pure Composite Score</th>
-              <th className="py-3 px-4">Tier</th>
-              <th className="py-3 px-4 text-right">Gross Premium $</th>
-              <th className="py-3 px-4 text-right">Limit $</th>
-              <th className="py-3 px-4 text-center">
+          <thead className="sticky top-0 z-10 ">
+            <tr className="
+              border-b-3 border-dsi-contrast-background 
+              text-dsi-contrast-background 
+              font-semibold text-sm uppercase
+              tracking-wider ">
+              <th className="py-3">Client</th>
+              <th className="py-3 px-2">Coverage</th>
+              <th className="py-3 px-2 text-wrap">Pure Composite Score</th>
+              <th className="py-3 px-2 text-center">Tier</th>
+              <th className="py-3 px-2 text-center">Gross Premium $</th>
+              <th className="py-3 px-2 text-center">Limit $</th>
+              <th className="py-3 px-2 text-center">
                 {type === "full" ? "Decision" : "Quick Actions"}
               </th>
             </tr>
@@ -82,17 +97,17 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                   className="
                     cursor-pointer
                     even:bg-dsi-contrast-analysis
-                    text-dsi-selected
-                    hover:text-dsi-contrast-background"
+                    text-dsi-contrast-background 
+                    hover:text-dsi-selected"
                 >
-                  <td className="py-3 px-4">{sub.entity_name}</td>
-                  <td className="py-3 px-4">{sub.coverage_configuration}</td>
-                  <td className="py-3 px-4 text-right">{sub.pure_composite_score}</td>
-                  <td className="py-3 px-4 text-right">{sub.final_tier}</td>
-                  <td className="py-3 px-4 text-right">${premium.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-right">${limit.toLocaleString()}</td>
+                  <td className="py-3 px-1">{sub.entity_name}</td>
+                  <td className="py-3 px-2">{sub.coverage_configuration}</td>
+                  <td className="py-3 px-2 text-right">{sub.pure_composite_score.toFixed(0)}</td>
+                  <td className="py-3 px-2 text-right">{sub.final_tier}</td>
+                  <td className="py-3 px-2 text-right">${premium.toLocaleString()}</td>
+                  <td className="py-3 px-2 text-right">${limit.toLocaleString()}</td>
 
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-2">
                     {type === "full" ? 
                     (
                       <span className={`lowercase`}>{sub.decision}</span>

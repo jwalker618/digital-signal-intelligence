@@ -16,11 +16,13 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       {/*Top Context Window */}
       <div 
         className="
-          absolute top-0 left-dsi-gap right-dsi-gap 
+          absolute top-0 
+          left-dsi-gap 
+          right-dsi-gap 
           overflow-auto
           text-dsi-contrast-background"
         style={{ 
-          height: 'var(--cw)'
+          height: topContext ? ('var(--cw)') : (0) ,
         }}
       >
         {topContext}
@@ -29,12 +31,14 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       {/* Main Analysis Area (Fixed Boundary Constraints) */}
       <div
         className="
-          absolute left-dsi-gap right-dsi-gap 
+          absolute 
+          left-dsi-gap 
+          right-dsi-gap 
           overflow-auto
           no-scrollbar"
         style={{
-          top: 'var(--cw)' ,
-          bottom: 'var(--cw)' ,
+          top: topContext ? ('var(--cw)') : (0) ,
+          bottom: bottomContext ? ('var(--cw)') : (0) ,
         }}
       >
         {/* Conditionally render the default panel styling OR raw children */}
@@ -42,7 +46,6 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
           children
         ) : (
           <div className="
-            bg-dsi-analysis 
             text-dsi-contrast-analysis 
             min-h-full 
             p-dsi-pad">
@@ -51,19 +54,20 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
         )}
       </div>
 
-      {/*Bottom Context Window */}
+      {/*Optional Bottom Context Window */}
       <div
         className="
-          absolute bottom-0 left-dsi-gap right-dsi-gap 
+          absolute bottom-0 
+          left-dsi-gap 
+          right-dsi-gap 
           overflow-auto 
           text-dsi-contrast-background"
         style={{ 
-          height: 'var(--cw)' 
+          height: bottomContext ? ('var(--cw)') : (0) 
         }}
       >
         {bottomContext}
       </div>
-
     </div>
   );
 }
