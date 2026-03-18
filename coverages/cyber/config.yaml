@@ -164,19 +164,19 @@ cyber:
         features:
         - cat: MICRO
           label: Micro
-          applied: 0.4
+          applied: 1.5
         - cat: SMALL
           label: Small
-          applied: 0.6
+          applied: 1.2
         - cat: MEDIUM
           label: Medium
           applied: 1.0
         - cat: LARGE
           label: Large
-          applied: 2.0
+          applied: 0.40
         - cat: ENTERPRISE
           label: Enterprise
-          applied: 4.0
+          applied: 0.12
         - cat: OTHER
           label: Other
           applied: 1.0
@@ -994,7 +994,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.001
+            applied: 0.00004
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1006,7 +1006,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.0015
+            applied: 0.00006
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1018,7 +1018,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.0025
+            applied: 0.00008
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1030,7 +1030,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.004
+            applied: 0.00015
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1042,7 +1042,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.01
+            applied: 0.0003
     loss_tier_bands:
       bands:
       - id: 1
@@ -1153,7 +1153,7 @@ cyber:
               applied: 0.7
               implied_thresholds:
                 min: 1000000001
-                max: None
+                max: null
       complexity:
         weight: 0.4
         bands:
@@ -1218,12 +1218,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00} # Anchor
-              - {limit: 2000000, factor: 1.75}
-              - {limit: 5000000, factor: 3.40}
-              - {limit: 10000000, factor: 5.50}
-              - {limit: 25000000, factor: 10.00}
-              - {limit: 50000000, factor: 16.00}
-              - {limit: 100000000, factor: 25.00}
+              - {limit: 2000000, factor: 1.40}
+              - {limit: 5000000, factor: 2.15}
+              - {limit: 10000000, factor: 3.00}
+              - {limit: 25000000, factor: 4.50}
+              - {limit: 50000000, factor: 6.00}
+              - {limit: 100000000, factor: 8.00}
           deductible_factors:
             - {deductible: 10000, factor: 1.25}
             - {deductible: 25000, factor: 1.15}
@@ -1238,12 +1238,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.65}
-              - {limit: 5000000, factor: 3.00}
-              - {limit: 10000000, factor: 4.50}
-              - {limit: 25000000, factor: 8.00}
-              - {limit: 50000000, factor: 12.50}
-              - {limit: 100000000, factor: 19.00}
+              - {limit: 2000000, factor: 1.35}
+              - {limit: 5000000, factor: 2.00}
+              - {limit: 10000000, factor: 2.80}
+              - {limit: 25000000, factor: 4.20}
+              - {limit: 50000000, factor: 5.60}
+              - {limit: 100000000, factor: 7.50}
           deductible_factors:
             - {deductible: 10000, factor: 1.20}
             - {deductible: 25000, factor: 1.10}
@@ -1258,12 +1258,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.60}
-              - {limit: 5000000, factor: 2.80}
-              - {limit: 10000000, factor: 4.20}
-              - {limit: 25000000, factor: 7.50}
-              - {limit: 50000000, factor: 11.50}
-              - {limit: 100000000, factor: 17.00}
+              - {limit: 2000000, factor: 1.30}
+              - {limit: 5000000, factor: 1.90}
+              - {limit: 10000000, factor: 2.60}
+              - {limit: 25000000, factor: 3.90}
+              - {limit: 50000000, factor: 5.20}
+              - {limit: 100000000, factor: 7.00}
           deductible_factors:
             - {deductible: 10000, factor: 1.15}
             - {deductible: 25000, factor: 1.08}
@@ -1278,12 +1278,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.85}
-              - {limit: 5000000, factor: 3.80}
-              - {limit: 10000000, factor: 6.50}
-              - {limit: 25000000, factor: 12.00}
-              - {limit: 50000000, factor: 20.00}
-              - {limit: 100000000, factor: 32.00}
+              - {limit: 2000000, factor: 1.45}
+              - {limit: 5000000, factor: 2.30}
+              - {limit: 10000000, factor: 3.20}
+              - {limit: 25000000, factor: 5.00}
+              - {limit: 50000000, factor: 6.80}
+              - {limit: 100000000, factor: 9.00}
           deductible_factors:
             - {deductible: 10000, factor: 1.30}
             - {deductible: 25000, factor: 1.15}
@@ -1294,6 +1294,13 @@ cyber:
             - {deductible: 1000000, factor: 0.45}
 
       taxes_fees_rate: 0.05  
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
   
   cyber_sme:
     metadata:
@@ -2006,3 +2013,10 @@ cyber:
             - {deductible: 25000, factor: 0.85}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

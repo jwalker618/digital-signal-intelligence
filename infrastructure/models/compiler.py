@@ -103,11 +103,22 @@ def get_compiled_configs(
             with open(config_file) as f:
                 raw_data = yaml.safe_load(f)
 
-            if not isinstance(raw_data, dict) or coverage_id not in raw_data:
+            if not isinstance(raw_data, dict):
                 logger.warning(f"Invalid structure in {config_file}, skipping")
                 continue
 
-            coverage_data = raw_data[coverage_id]
+            # Try directory name first, then fall back to the first (only) key
+            if coverage_id in raw_data:
+                coverage_data = raw_data[coverage_id]
+            elif len(raw_data) == 1:
+                actual_key = next(iter(raw_data))
+                logger.info(
+                    f"Using key '{actual_key}' for coverage dir '{coverage_id}'"
+                )
+                coverage_data = raw_data[actual_key]
+            else:
+                logger.warning(f"No matching key in {config_file}, skipping")
+                continue
             configurations = {}
 
             for config_id, config_data in coverage_data.items():
@@ -126,17 +137,20 @@ def get_compiled_configs(
                     )
                     configurations[config_id] = compiled_config
                     logger.info(f"Compiled: {coverage_id}/{config_id}")
-                except ValidationError as e:
-                    # Collect all validation errors
-                    error_messages = []
-                    for err in e.errors():
-                        loc = " -> ".join(str(x) for x in err["loc"])
-                        error_messages.append(f"{loc}: {err['msg']}")
-                    raise ConfigCompilationError(
-                        coverage_id,
-                        config_id,
-                        "; ".join(error_messages)
+                except (ValidationError, ValueError) as e:
+                    # Log validation errors and skip this config
+                    if isinstance(e, ValidationError):
+                        error_messages = []
+                        for err in e.errors():
+                            loc = " -> ".join(str(x) for x in err["loc"])
+                            error_messages.append(f"{loc}: {err['msg']}")
+                        detail = "; ".join(error_messages)
+                    else:
+                        detail = str(e)
+                    logger.warning(
+                        f"Skipping {coverage_id}/{config_id}: {detail}"
                     )
+                    continue
 
             if configurations:
                 compiled[coverage_id] = Coverage(

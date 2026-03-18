@@ -4,6 +4,12 @@ DSI Comprehensive Bench Seed Script
 Seeds the database with realistic, end-to-end data covering every coverage,
 configuration, tier, decision path, signal group, and UI component.
 
+**Uses the production workflow components** (ModelScorer, ModelPricer,
+QueryEvaluator, compiled CoverageConfig) for all calculation logic.
+Signal scores are synthetic (from SIGNAL_PROFILES), but scoring, pricing,
+ILF scaling, modifier application, tier resolution, and query evaluation
+all flow through the same code paths as a real submission.
+
 Coverage lines seeded:
   - Cyber (cyber_general + cyber_sme)
   - Directors & Officers (do_general + do_sme)
@@ -30,6 +36,7 @@ Run:
 
 import uuid
 import random
+import logging
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -53,11 +60,20 @@ from infrastructure.db.models import (
     ReferralStatus,
 )
 
+# Production workflow components
+from infrastructure.models.compiler import get_config
+from layers.risk.scorer import ModelScorer
+from layers.risk.pricer import ModelPricer
+from layers.risk.query_evaluator import QueryEvaluator
+from layers.risk.types import SignalOutput, CategoricalOutput, utcnow
+
 # =============================================================================
 # HELPERS
 # =============================================================================
 
 NOW = datetime.now(timezone.utc)
+
+logger = logging.getLogger("dsi.seed")
 
 
 def _uid():
@@ -73,99 +89,35 @@ def _score(base, jitter=10):
     return max(0, min(100, base + random.randint(-jitter, jitter)))
 
 
-TIER_LABELS = {1: "PREFERRED", 2: "STANDARD_PLUS", 3: "STANDARD", 4: "SUBSTANDARD", 5: "DECLINE"}
-
-
-# =============================================================================
-# COVERAGE GROUP CONFIGURATION
-#
-# Mirrors the real config YAML weights so seed data is mathematically
-# consistent.  Keys are coverage names; each group entry specifies:
-#   risk_weight      – group weight toward pure_composite_score  (sum → 1.0)
-#   loss_weight      – group weight in loss dimension             (sum → 1.0)
-#   exposure_weight  – group weight in exposure dimension         (sum → 1.0)
-#   expected_signals – total signals defined in config for this group
-# =============================================================================
-
-COVERAGE_GROUP_CONFIG = {
-    "cyber": {
-        "network_authority":        {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 8},
-        "technical_infrastructure": {"risk_weight": 0.35, "loss_weight": 0.35, "exposure_weight": 0.35, "expected_signals": 10},
-        "corporate_footprint":      {"risk_weight": 0.15, "loss_weight": 0.25, "exposure_weight": 0.25, "expected_signals": 18},
-        "public_record":            {"risk_weight": 0.25, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 9},
-        "structured_data":          {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 3},
-    },
-    "directors_officers": {
-        "network_authority":   {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 8},
-        "governance":          {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 12},
-        "financial":           {"risk_weight": 0.20, "loss_weight": 0.30, "exposure_weight": 0.20, "expected_signals": 12},
-        "litigation":          {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.05, "expected_signals": 9},
-        "executive":           {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.15, "expected_signals": 5},
-        "corporate_footprint": {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.20, "expected_signals": 6},
-        "structured_data":     {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.25, "expected_signals": 4},
-    },
-    "financial_institutions": {
-        "network_authority":     {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 7},
-        "regulatory_compliance": {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 7},
-        "financial_condition":   {"risk_weight": 0.20, "loss_weight": 0.30, "exposure_weight": 0.25, "expected_signals": 7},
-        "governance":            {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.10, "expected_signals": 6},
-        "operational_risk":      {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 5},
-        "cyber_security":        {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 6},
-        "corporate_footprint":   {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.15, "expected_signals": 6},
-        "structured_data":       {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.15, "expected_signals": 3},
-    },
-    "energy": {
-        "network_authority":        {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 56},
-        "safety_performance":       {"risk_weight": 0.30, "loss_weight": 0.35, "exposure_weight": 0.10, "expected_signals": 62},
-        "environmental_compliance": {"risk_weight": 0.20, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 40},
-        "operational_telemetry":    {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.20, "expected_signals": 47},
-        "financial_stability":      {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.20, "expected_signals": 54},
-        "asset_portfolio":          {"risk_weight": 0.10, "loss_weight": 0.15, "exposure_weight": 0.30, "expected_signals": 61},
-        "corporate_footprint":      {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.03, "expected_signals": 51},
-        "structured_data":          {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.02, "expected_signals": 24},
-    },
-    "marine": {
-        "network_authority":     {"risk_weight": 0.15, "loss_weight": 0.10, "exposure_weight": 0.05, "expected_signals": 10},
-        "operational_telemetry": {"risk_weight": 0.20, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 6},
-        "safety_compliance":     {"risk_weight": 0.25, "loss_weight": 0.35, "exposure_weight": 0.10, "expected_signals": 6},
-        "fleet_profile":         {"risk_weight": 0.10, "loss_weight": 0.15, "exposure_weight": 0.35, "expected_signals": 5},
-        "sanctions_compliance":  {"risk_weight": 0.15, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 5},
-        "environmental":         {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.10, "expected_signals": 4},
-        "corporate_footprint":   {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.10, "expected_signals": 6},
-        "structured_data":       {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 3},
-    },
-    "professional_indemnity": {
-        "network_authority":        {"risk_weight": 0.15, "loss_weight": 0.10, "exposure_weight": 0.05, "expected_signals": 6},
-        "regulatory_standing":      {"risk_weight": 0.25, "loss_weight": 0.25, "exposure_weight": 0.10, "expected_signals": 7},
-        "firm_stability":           {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.20, "expected_signals": 6},
-        "practice_quality":         {"risk_weight": 0.15, "loss_weight": 0.20, "exposure_weight": 0.15, "expected_signals": 5},
-        "technical_infrastructure": {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.10, "expected_signals": 5},
-        "corporate_footprint":      {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.25, "expected_signals": 6},
-        "litigation_history":       {"risk_weight": 0.10, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 5},
-    },
-    "aerospace": {
-        "network_authority":     {"risk_weight": 0.10, "loss_weight": 0.05, "exposure_weight": 0.05, "expected_signals": 5},
-        "safety_record":         {"risk_weight": 0.30, "loss_weight": 0.40, "exposure_weight": 0.10, "expected_signals": 9},
-        "regulatory_compliance": {"risk_weight": 0.20, "loss_weight": 0.20, "exposure_weight": 0.10, "expected_signals": 11},
-        "operational_quality":   {"risk_weight": 0.15, "loss_weight": 0.15, "exposure_weight": 0.15, "expected_signals": 10},
-        "fleet_quality":         {"risk_weight": 0.10, "loss_weight": 0.10, "exposure_weight": 0.35, "expected_signals": 9},
-        "financial_stability":   {"risk_weight": 0.05, "loss_weight": 0.03, "exposure_weight": 0.10, "expected_signals": 4},
-        "route_risk":            {"risk_weight": 0.05, "loss_weight": 0.02, "exposure_weight": 0.05, "expected_signals": 5},
-        "corporate_governance":  {"risk_weight": 0.05, "loss_weight": 0.05, "exposure_weight": 0.10, "expected_signals": 8},
-    },
+# Maps COMPANIES coverage field -> compiler coverage_id (directory name)
+COVERAGE_DIR_MAP = {
+    "cyber": "cyber",
+    "directors_officers": "do",
+    "financial_institutions": "fi",
+    "energy": "energy",
+    "marine": "marine",
+    "professional_indemnity": "pi",
+    "aerospace": "aerospace",
 }
 
-# Also accept SME sub-configurations that share the parent coverage's weights
-COVERAGE_GROUP_CONFIG["cyber_sme"] = COVERAGE_GROUP_CONFIG["cyber"]
-COVERAGE_GROUP_CONFIG["do_sme"] = COVERAGE_GROUP_CONFIG["directors_officers"]
+# Production singletons — instantiated once, reused for all companies
+_scorer = ModelScorer()
+_pricer = ModelPricer()
+_query_evaluator = QueryEvaluator()
+
+# Config cache — avoids recompiling the same config for every company
+_config_cache = {}
 
 
-def _get_group_config(co):
-    """Look up the COVERAGE_GROUP_CONFIG entry for a company record."""
-    # Try configuration name first, then coverage name
-    cfg = co.get("configuration", "")
-    cov = co.get("coverage", "")
-    return COVERAGE_GROUP_CONFIG.get(cfg, COVERAGE_GROUP_CONFIG.get(cov, {}))
+def _get_compiled_config(co):
+    """Load and cache the compiled CoverageConfig for a company record."""
+    config_id = co["configuration"]
+    if config_id in _config_cache:
+        return _config_cache[config_id]
+    coverage_dir = COVERAGE_DIR_MAP[co["coverage"]]
+    config = get_config(coverage_dir, config_id)
+    _config_cache[config_id] = config
+    return config
 
 
 # =============================================================================
@@ -1864,362 +1816,186 @@ def resolve_signal_scores(profile_name):
     return resolved
 
 
-def build_signal_outputs(profile_name, resolved_scores):
-    """Build signal_outputs list using pre-resolved scores."""
-    profile = SIGNAL_PROFILES.get(profile_name, {})
-    outputs = []
-    for group_id, signals in profile.items():
-        for signal_id in signals:
-            score = resolved_scores.get((group_id, signal_id), 50)
-            outputs.append({
-                "signal_id": signal_id,
-                "group_id": group_id,
-                "score": score,
-                "confidence": round(random.uniform(0.7, 0.99), 2),
-                "proxy_tier": random.choice(["DIRECT_OBSERVABLE", "INFERRED_PROXY"]),
-                "extraction_time_ms": round(random.uniform(50, 800), 1),
-            })
-    return outputs
+def build_synthetic_signal_outputs(config, resolved_scores):
+    """Build SignalOutput dataclass instances using the production config's signal registry.
 
+    Iterates every signal in config.signal_registry that has three_layer_assessment.
+    Uses resolved_scores for signals we have profile data for; defaults to 50
+    for signals not covered by the profile (matches production scorer behaviour).
 
-def build_group_scores(co, resolved_scores):
-    """Build group-level scores using pre-resolved scores and real config weights.
-
-    Each group entry contains everything needed to reconstruct the composite:
-      risk_score * risk_weight * 10 = risk_contribution  (per group)
-      sum(risk_contribution) = pure_composite_score       (overall)
-
-    Returns:
-        dict[group_id, {...}]  — matches the enriched format from scorer.py
+    Returns (signal_outputs, categorical_outputs) matching the production
+    ScoringResult structure.
     """
-    profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
-    gcfg = _get_group_config(co)
-    group_scores = {}
+    signal_outputs = []
 
-    for group_id, signals in profile.items():
-        scores = [resolved_scores.get((group_id, sid), 50) for sid in signals]
-        actual_count = len(scores)
-        # Weighted average within group (all signals equal weight within group
-        # since the seed doesn't define per-signal weights — just group weight)
-        risk_score = sum(scores) / actual_count if actual_count else 50.0
+    for signal_def in config.signal_registry:
+        if not signal_def.three_layer_assessment:
+            continue
 
-        # Look up real config weights
-        cfg = gcfg.get(group_id, {})
-        risk_weight = cfg.get("risk_weight", 0.0)
-        loss_weight = cfg.get("loss_weight", None)
-        exposure_weight = cfg.get("exposure_weight", None)
-        expected_count = cfg.get("expected_signals", actual_count)
+        tla = signal_def.three_layer_assessment
+        group_id = tla.group_id
+        weight = tla.risk.weight if tla.risk else 0.0
 
-        # Coverage ratio: what fraction of expected signals were present
-        coverage_ratio = actual_count / expected_count if expected_count > 0 else 0.0
+        # Look up score from nested profile data {group_id: {signal_id: score}}
+        score = None
+        group_scores = resolved_scores.get(group_id, {})
+        if isinstance(group_scores, dict):
+            score = group_scores.get(signal_def.id)
+        if score is None:
+            # Try all groups (signal might be under a different group name in the profile)
+            for g_scores in resolved_scores.values():
+                if isinstance(g_scores, dict) and signal_def.id in g_scores:
+                    score = g_scores[signal_def.id]
+                    break
+        if score is None:
+            score = 50.0  # Default for signals not in profile
 
-        # Contribution to composite (0-1000 scale)
-        risk_contribution = risk_score * risk_weight * 10
+        signal_outputs.append(SignalOutput(
+            signal_id=signal_def.id,
+            signal_name=signal_def.id.replace("_", " ").title(),
+            group_id=group_id,
+            raw_score=score,
+            confidence=round(random.uniform(0.7, 0.99), 2),
+            weighted_score=score * weight,
+            weight=weight,
+            data_sources=["seed"],
+            extracted_at=utcnow(),
+            execution_time_ms=round(random.uniform(50, 800), 1),
+        ))
 
-        group_scores[group_id] = {
-            "risk_score": round(risk_score, 2),
-            "risk_weight": risk_weight,
-            "risk_contribution": round(risk_contribution, 2),
-            "signal_count": actual_count,
-            "expected_signal_count": expected_count,
-            "coverage_ratio": round(coverage_ratio, 4),
-            "loss_weight": loss_weight,
-            "exposure_weight": exposure_weight,
-        }
-    return group_scores
-
-
-def compute_composite_from_group_scores(group_scores):
-    """Derive pure_composite_score by summing group risk_contributions."""
-    return round(sum(g["risk_contribution"] for g in group_scores.values()), 2)
+    return signal_outputs
 
 
-def compute_signal_coverage(co, profile):
-    """Compute signal_coverage = populated_signals / total_expected_signals."""
-    gcfg = _get_group_config(co)
-    total_expected = 0
-    total_populated = 0
-    for group_id, signals in profile.items():
-        cfg = gcfg.get(group_id, {})
-        total_expected += cfg.get("expected_signals", len(signals))
-        total_populated += len(signals)
-    return round(total_populated / total_expected, 4) if total_expected > 0 else 0.0
+def build_synthetic_categorical_outputs(config, co):
+    """Build CategoricalOutput instances from config's categorical signal definitions.
 
-
-def compute_confidence(resolved_scores):
-    """Compute overall confidence from signal count heuristic."""
-    if not resolved_scores:
-        return 0.5
-    # More signals extracted → higher confidence, with diminishing returns
-    n = len(resolved_scores)
-    return round(min(0.98, 0.5 + 0.48 * (1 - 1 / (1 + n / 10))), 4)
-
-
-def build_signal_conditions(co, resolved_scores):
-    """Build signal_conditions from company data — mirrors workflow TriggeredCondition structure.
-
-    Returns (conditions, modifiers) where modifiers contains dicts with
-    {source, source_id, name, factor} for conditions with action=modifier,
-    matching the workflow's ScoringResult.modifiers.
+    Maps company metadata (industry, size_band, geography) to the config's
+    categorical group features to get the correct modifier values.
     """
-    conditions = []
-    modifiers = []
-    tier_overrides = []
-    tier = co["tier"]
-    profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
+    categorical_outputs = []
 
-    for group_id, signals in profile.items():
-        for signal_id in signals:
-            score = resolved_scores.get((group_id, signal_id), 50)
-            signal_name = signal_id.replace("_", " ").title()
-            if score <= 30:
-                override_tier = 5  # worst-case tier override for critical scores
-                conditions.append({
-                    "source_type": "signal_feature",
-                    "source_id": signal_id,
-                    "source_name": signal_name,
-                    "score": score,
-                    "response": None,
-                    "action": "refer",
-                    "action_value": override_tier,
-                    "note": f"Critical: {signal_name} score {score}/100",
-                })
-                tier_overrides.append(override_tier)
-            elif score <= 45:
-                conditions.append({
-                    "source_type": "signal_feature",
-                    "source_id": signal_id,
-                    "source_name": signal_name,
-                    "score": score,
-                    "response": None,
-                    "action": "flag",
-                    "action_value": f"Warning: {signal_name} score {score}/100",
-                    "note": f"Warning: {signal_name} score {score}/100",
-                })
-            elif score >= 90:
-                factor = 0.95  # 5% credit
-                conditions.append({
-                    "source_type": "signal_feature",
-                    "source_id": signal_id,
-                    "source_name": signal_name,
-                    "score": score,
-                    "response": None,
-                    "action": "modifier",
-                    "action_value": factor,
-                    "note": f"Strong {signal_name} — credit applied",
-                })
-                modifiers.append({
-                    "source": "signal_condition",
-                    "source_id": signal_id,
-                    "name": signal_name,
-                    "factor": factor,
-                })
-
-    return conditions, modifiers, tier_overrides
-
-
-def build_modifiers_applied(co):
-    """Build the modifiers_applied list for the ModelVersionRecord."""
-    modifiers = []
-    tier = co["tier"]
-
-    # Industry modifier
-    industry_mods = {
-        "TECHNOLOGY": 1.15, "FINANCIAL_SERVICES": 1.4, "HEALTHCARE": 1.5,
-        "RETAIL": 1.25, "MANUFACTURING": 0.95, "ENERGY": 1.2,
+    # Build a map of group_id -> company field value
+    field_value_map = {
+        "industry_classification": co.get("industry", "OTHER"),
+        "size_band": co.get("size_band", "MEDIUM"),
+        "geography": co.get("geography", "US"),
     }
-    ind = co.get("industry", "OTHER")
-    if ind in industry_mods:
-        modifiers.append({
-            "type": "categorical",
-            "source": "industry_classification",
-            "applied": industry_mods[ind],
-            "note": f"Industry: {ind}",
-        })
 
-    # Size modifier
-    size_mods = {"MICRO": 0.4, "SMALL": 0.6, "MEDIUM": 1.0, "LARGE": 2.0, "ENTERPRISE": 4.0}
-    size = co.get("size_band", "MEDIUM")
-    if size in size_mods:
-        modifiers.append({
-            "type": "categorical",
-            "source": "size_band",
-            "applied": size_mods[size],
-            "note": f"Size: {size}",
-        })
+    for signal_def in config.signal_registry:
+        if not signal_def.categories:
+            continue
 
-    # Signal-derived modifiers (use resolved scores if available)
-    profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
-    _resolved = co.get("_resolved_scores", {})
-    for group_id, signals in profile.items():
-        scores = [_resolved.get((group_id, sid), base) for sid, base in signals.items()]
-        avg = sum(scores) / len(scores) if scores else 50
-        if avg >= 85:
-            modifiers.append({
-                "type": "score_condition",
-                "source": group_id,
-                "applied": 0.92,
-                "note": f"Strong {group_id.replace('_', ' ')} credit",
-            })
-        elif avg <= 30:
-            modifiers.append({
-                "type": "score_condition",
-                "source": group_id,
-                "applied": 1.20,
-                "note": f"Poor {group_id.replace('_', ' ')} loading",
-            })
+        cat_def = signal_def.categories
+        group_id = cat_def.group_id
 
-    return modifiers
+        # Find the matching category group for label
+        cat_group = None
+        for cg in config.groups.categories:
+            if cg.id == group_id:
+                cat_group = cg
+                break
+
+        group_name = cat_group.label if cat_group else group_id
+        default_cat = cat_group.default_cat if cat_group else "OTHER"
+
+        # Determine which category value applies
+        # Try source field first (e.g. "metadata.industry")
+        selected_cat = None
+        if cat_def.source:
+            field_name = cat_def.source.replace("metadata.", "")
+            selected_cat = co.get(field_name)
+
+        # Fallback: try the group_id in our field map
+        if selected_cat is None:
+            selected_cat = field_value_map.get(group_id)
+
+        if selected_cat is None:
+            selected_cat = default_cat
+
+        # Find modifier from features
+        modifier = 1.0
+        label = selected_cat
+        matched = False
+        for feat in cat_def.features:
+            if feat.cat == selected_cat:
+                modifier = feat.applied if feat.applied is not None else 1.0
+                label = feat.label or selected_cat
+                matched = True
+                break
+
+        # If no match, try default_cat
+        if not matched and default_cat:
+            for feat in cat_def.features:
+                if feat.cat == default_cat:
+                    modifier = feat.applied if feat.applied is not None else 1.0
+                    label = feat.label or default_cat
+                    selected_cat = default_cat
+                    break
+
+        categorical_outputs.append(CategoricalOutput(
+            group_id=group_id,
+            group_name=group_name,
+            category=selected_cat,
+            label=label,
+            modifier=modifier,
+            confidence=round(random.uniform(0.8, 0.99), 2),
+            extracted_at=utcnow(),
+        ))
+
+    return categorical_outputs
 
 
-def calculate_base_premium(co, modifier_product, limit_ilf=1.0):
-    """Derive base premium from the intended final premium.
+def run_production_scoring(config, signal_outputs):
+    """Run Steps 5-6 through the production ModelScorer.
 
-    Works backward from co["premium"] so that:
-        base_premium * modifier_product * limit_ilf ≈ intended_premium
+    Uses scorer.calculate_composite() for weighted group scores and composite,
+    and scorer.evaluate_signal_conditions() for config-defined conditions.
 
-    This ensures base_premium, premium_after_modifiers, and final_premium
-    are genuinely distinct when modifiers have impact.
+    Returns (composite, group_scores, confidence, coverage,
+             conditions, tier_overrides, referrals, notes, signal_modifiers)
     """
-    revenue = co.get("revenue", 0)
-    intended = co.get("premium", 0)
-
-    if intended <= 0:
-        return 0, "premium_base"
-
-    # Back-solve: base = intended / (modifiers * ILF)
-    divisor = modifier_product * limit_ilf
-    if divisor <= 0:
-        divisor = 1.0
-    base = round(intended / divisor, 2)
-
-    method = "multiplier" if revenue > 0 else "premium_base"
-    return base, method
+    composite, group_scores, confidence, signal_coverage = _scorer.calculate_composite(
+        signal_outputs=signal_outputs,
+        config=config,
+    )
+    conditions, tier_overrides, referrals, notes, signal_modifiers = _scorer.evaluate_signal_conditions(
+        signal_outputs=signal_outputs,
+        group_scores=group_scores,
+        config=config,
+    )
+    return (composite, group_scores, confidence, signal_coverage,
+            conditions, tier_overrides, referrals, notes, signal_modifiers)
 
 
-def apply_modifiers_to_premium(base_premium, modifiers):
-    """Apply modifiers multiplicatively to base premium.
+def run_production_query_evaluation(config, direct_query_responses):
+    """Run Step 7 through the production QueryEvaluator.
 
-    Each modifier dict gets premium_before / premium_after fields
-    added so the audit trail is complete.  Modifiers are applied
-    genuinely so premium_after_modifiers reflects real modifier impact.
+    Returns the QueryEvaluationResult with conditions, tier_overrides,
+    referrals, notes, and modifiers — all derived from config.yaml definitions.
     """
-    if base_premium <= 0 or not modifiers:
-        return base_premium, modifiers
-
-    current = base_premium
-    enriched = []
-    for mod in modifiers:
-        factor = mod["applied"]
-        before = current
-        current = round(current * factor, 2)
-        enriched.append({
-            **mod,
-            "premium_before": before,
-            "premium_after": current,
-        })
-
-    return current, enriched
+    return _query_evaluator.evaluate_queries(
+        responses=direct_query_responses,
+        config=config,
+    )
 
 
-_ILF_TABLE = {
-    1_000_000: 0.30,
-    2_000_000: 0.55,
-    5_000_000: 0.80,
-    10_000_000: 1.00,
-    25_000_000: 1.80,
-    50_000_000: 3.00,
-    100_000_000: 5.00,
-    250_000_000: 9.00,
-    500_000_000: 14.00,
-    750_000_000: 18.00,
-    1_000_000_000: 22.00,
-    2_000_000_000: 30.00,
-}
+def run_production_pricing(config, composite, signal_tier_overrides,
+                           query_tier_overrides, all_modifiers,
+                           categorical_outputs, submission_data):
+    """Run Steps 8-12 through the production ModelPricer.
 
-_ILF_ANCHOR_LIMIT = 10_000_000  # The limit where ILF = 1.0
-
-# Pre-sorted for interpolation lookups
-_ILF_SORTED = sorted(_ILF_TABLE.items())
-
-
-def resolve_ilf(limit: int) -> dict:
-    """Resolve the ILF factor for a limit, interpolating if not in the table.
-
-    Returns a dict with:
-        factor       – the ILF multiplier
-        method       – "table" (exact match) or "interpolated" or "extrapolated"
-        anchor_limit – the limit where ILF = 1.0
-        bracket_low  – lower bound used for interpolation (None if exact)
-        bracket_high – upper bound used for interpolation (None if exact)
+    Returns PricingResult with tier resolution, base premium, modifiers,
+    ILF scaling, and final premium — all from config.yaml definitions.
     """
-    anchor = _ILF_ANCHOR_LIMIT
-    base = {"anchor_limit": anchor, "bracket_low": None, "bracket_high": None}
-
-    # Exact match — fast path
-    if limit in _ILF_TABLE:
-        return {**base, "factor": _ILF_TABLE[limit], "method": "table"}
-
-    limits = [l for l, _ in _ILF_SORTED]
-    factors = [f for _, f in _ILF_SORTED]
-
-    # Below the lowest entry — extrapolate from first two points
-    if limit < limits[0]:
-        lo_l, lo_f = limits[0], factors[0]
-        hi_l, hi_f = limits[1], factors[1]
-        t = (limit - lo_l) / (hi_l - lo_l)  # will be negative
-        factor = lo_f + t * (hi_f - lo_f)
-        factor = max(factor, 0.01)  # floor to avoid zero/negative
-        return {**base, "factor": round(factor, 4), "method": "extrapolated",
-                "bracket_low": lo_l, "bracket_high": hi_l}
-
-    # Above the highest entry — extrapolate from last two points
-    if limit > limits[-1]:
-        lo_l, lo_f = limits[-2], factors[-2]
-        hi_l, hi_f = limits[-1], factors[-1]
-        t = (limit - lo_l) / (hi_l - lo_l)
-        factor = lo_f + t * (hi_f - lo_f)
-        return {**base, "factor": round(factor, 4), "method": "extrapolated",
-                "bracket_low": lo_l, "bracket_high": hi_l}
-
-    # Between two entries — linear interpolation
-    for i in range(len(limits) - 1):
-        if limits[i] < limit < limits[i + 1]:
-            lo_l, lo_f = limits[i], factors[i]
-            hi_l, hi_f = limits[i + 1], factors[i + 1]
-            t = (limit - lo_l) / (hi_l - lo_l)
-            factor = lo_f + t * (hi_f - lo_f)
-            return {**base, "factor": round(factor, 4), "method": "interpolated",
-                    "bracket_low": lo_l, "bracket_high": hi_l}
-
-    # Shouldn't reach here, but fallback to anchor
-    return {**base, "factor": 1.0, "method": "table"}
-
-
-def get_ilf_for_limit(limit: int) -> float:
-    """Return the ILF factor for a given limit (convenience wrapper)."""
-    return resolve_ilf(limit)["factor"]
-
-
-def build_premium_options_from_base(premium_after_modifiers, requested_limit=None):
-    """Build premium_options dict using ILF-style scaling from premium_after_modifiers.
-
-    Always includes every entry in the ILF table.  If requested_limit is not
-    already in the table it is added so the recommended limit always appears
-    in the options.
-    """
-    if premium_after_modifiers <= 0:
-        return {}
-    p = premium_after_modifiers
-    options = {
-        str(limit): int(p * ilf)
-        for limit, ilf in _ILF_TABLE.items()
-    }
-    # Ensure the requested limit is represented even if it's off-table
-    if requested_limit and str(requested_limit) not in options:
-        ilf = get_ilf_for_limit(requested_limit)
-        options[str(requested_limit)] = int(p * ilf)
-    return options
+    return _pricer.price_submission(
+        pure_composite_score=composite,
+        signal_tier_overrides=signal_tier_overrides,
+        query_tier_overrides=query_tier_overrides,
+        query_modifiers=all_modifiers,
+        categorical_outputs=categorical_outputs,
+        submission_data=submission_data,
+        config=config,
+    )
 
 
 def build_submission_data(co):
@@ -2242,156 +2018,38 @@ def build_submission_data(co):
     return data
 
 
-def build_direct_query_responses(co):
-    """Build direct_query_responses based on company risk profile."""
-    tier = co["tier"]
-    coverage = co["coverage"]
+def build_direct_query_responses(co, config):
+    """Build direct_query_responses using the config's actual query IDs.
 
+    Iterates config.direct_queries to discover what queries exist,
+    then generates plausible boolean responses based on the company's
+    risk tier. Higher tiers (worse risk) answer risk-affirmative queries True.
+    """
+    tier = co["tier"]
     responses = {}
-    if coverage == "cyber":
-        responses["mfa_enabled"] = tier <= 2
-        responses["security_training"] = tier <= 3
-        responses["incident_response_plan"] = tier <= 2
-        responses["edr_deployed"] = tier <= 3
-        responses["immutable_backups"] = tier <= 3
-        responses["recent_incident"] = tier >= 4
-        if co.get("industry") == "HEALTHCARE":
-            responses["phi_handler"] = True
-    elif coverage == "directors_officers":
-        responses["pending_claims"] = tier >= 4
-        responses["regulatory_investigation"] = tier >= 4
-        responses["planned_transaction"] = False
-        responses["executive_dispute"] = tier >= 4
-    elif coverage == "financial_institutions":
-        responses["regulatory_action"] = tier >= 4
-        responses["examination_issues"] = tier >= 3
-        responses["cyber_incident"] = tier >= 4
-        responses["significant_growth"] = False
-    elif coverage == "energy":
-        responses["major_incident_5yr"] = tier >= 4
-        responses["environmental_violation"] = tier >= 3
-        responses["shutdown_order"] = tier >= 5
-    elif coverage == "marine":
-        responses["total_loss_5yr"] = tier >= 4
-        responses["detention_12mo"] = tier >= 4
-        responses["sanctions_exposure"] = tier >= 5
-    elif coverage == "professional_indemnity":
-        responses["claims_history"] = tier >= 3
-        responses["prior_coverage"] = True
-        responses["prior_litigation"] = tier >= 4
-    elif coverage == "aerospace":
-        responses["hull_loss_5yr"] = tier >= 4
-        responses["faa_enforcement"] = tier >= 4
-        responses["pilot_shortage"] = tier >= 3
+
+    for query in config.direct_queries:
+        qid = query.id
+
+        # Determine the "risk-affirmative" response for each query by
+        # inspecting its conditions — which response triggers REFER/MODIFIER
+        risk_response = True  # default: True is the risky answer
+        for qc in query.query_condition:
+            if qc.action.value in ("REFER", "MODIFIER"):
+                risk_response = qc.return_value
+                break
+
+        # Assign response based on tier:
+        # Tier 1-2: safe answer, Tier 3: mixed, Tier 4-5: risky answer
+        if tier <= 2:
+            responses[qid] = not risk_response
+        elif tier == 3:
+            # 50/50 for tier 3 — some queries trigger, some don't
+            responses[qid] = random.choice([risk_response, not risk_response])
+        else:
+            responses[qid] = risk_response
 
     return responses
-
-
-# -- Query condition impact definitions per coverage --
-# Maps (coverage, query_id, trigger_response) → action spec.
-# If a query+response pair isn't listed, it has no impact.
-_QUERY_IMPACTS = {
-    # Cyber
-    ("cyber", "mfa_enabled", False):           {"action": "modifier", "applied": 1.15, "note": "No MFA deployed — loading applied"},
-    ("cyber", "security_training", False):      {"action": "flag", "note": "No security awareness training"},
-    ("cyber", "incident_response_plan", False): {"action": "modifier", "applied": 1.10, "note": "No incident response plan — loading applied"},
-    ("cyber", "edr_deployed", False):           {"action": "flag", "note": "No EDR/XDR solution deployed"},
-    ("cyber", "immutable_backups", False):      {"action": "modifier", "applied": 1.08, "note": "No immutable backups — loading applied"},
-    ("cyber", "recent_incident", True):         {"action": "refer", "override": 4, "note": "Recent security incident disclosed"},
-
-    # D&O
-    ("directors_officers", "pending_claims", True):            {"action": "refer", "override": 4, "note": "Pending claims against directors/officers"},
-    ("directors_officers", "regulatory_investigation", True):  {"action": "refer", "override": 5, "note": "Active regulatory investigation"},
-    ("directors_officers", "executive_dispute", True):         {"action": "modifier", "applied": 1.20, "note": "Executive dispute disclosed — loading applied"},
-
-    # FI
-    ("financial_institutions", "regulatory_action", True):     {"action": "refer", "override": 5, "note": "Regulatory action pending"},
-    ("financial_institutions", "examination_issues", True):    {"action": "modifier", "applied": 1.12, "note": "Examination issues identified — loading applied"},
-    ("financial_institutions", "cyber_incident", True):        {"action": "refer", "override": 4, "note": "Recent cyber incident at financial institution"},
-
-    # Energy
-    ("energy", "major_incident_5yr", True):         {"action": "refer", "override": 4, "note": "Major incident in last 5 years"},
-    ("energy", "environmental_violation", True):     {"action": "modifier", "applied": 1.15, "note": "Environmental violation — loading applied"},
-    ("energy", "shutdown_order", True):              {"action": "refer", "override": 5, "note": "Active shutdown order"},
-
-    # Marine
-    ("marine", "total_loss_5yr", True):        {"action": "refer", "override": 4, "note": "Total loss in last 5 years"},
-    ("marine", "detention_12mo", True):         {"action": "modifier", "applied": 1.10, "note": "Port detention in last 12 months — loading applied"},
-    ("marine", "sanctions_exposure", True):     {"action": "refer", "override": 5, "note": "Sanctions exposure identified"},
-
-    # PI
-    ("professional_indemnity", "claims_history", True):    {"action": "modifier", "applied": 1.12, "note": "Prior claims history — loading applied"},
-    ("professional_indemnity", "prior_litigation", True):  {"action": "refer", "override": 4, "note": "Prior litigation disclosed"},
-
-    # Aerospace
-    ("aerospace", "hull_loss_5yr", True):      {"action": "refer", "override": 4, "note": "Hull loss in last 5 years"},
-    ("aerospace", "faa_enforcement", True):     {"action": "refer", "override": 5, "note": "FAA enforcement action"},
-    ("aerospace", "pilot_shortage", True):      {"action": "modifier", "applied": 1.08, "note": "Pilot shortage reported — loading applied"},
-}
-
-
-def evaluate_query_conditions(co):
-    """Evaluate direct query responses and return structured conditions with impacts.
-
-    Mirrors the workflow's QueryEvaluator output structure.
-
-    Returns:
-        (query_conditions, tier_overrides, query_modifiers)
-    """
-    coverage = co["coverage"]
-    responses = build_direct_query_responses(co)
-
-    query_conditions = []
-    tier_overrides = []
-    query_modifiers = []
-
-    for query_id, response in responses.items():
-        impact = _QUERY_IMPACTS.get((coverage, query_id, response))
-
-        if impact is None:
-            # No impact for this query+response pair
-            query_conditions.append({
-                "source_type": "direct_query",
-                "source_id": query_id,
-                "source_name": query_id.replace("_", " ").title(),
-                "score": None,
-                "response": response,
-                "action": "none",
-                "action_value": None,
-                "note": "",
-            })
-            continue
-
-        action = impact["action"]
-        if action == "refer":
-            override = impact.get("override")
-            action_value = override
-            if override is not None:
-                tier_overrides.append(override)
-        elif action == "modifier":
-            factor = impact["applied"]
-            action_value = factor
-            query_modifiers.append({
-                "type": "direct_query",
-                "source": query_id,
-                "applied": factor,
-                "note": impact["note"],
-            })
-        else:  # flag
-            action_value = impact.get("note", "")
-
-        query_conditions.append({
-            "source_type": "direct_query",
-            "source_id": query_id,
-            "source_name": query_id.replace("_", " ").title(),
-            "score": None,
-            "response": response,
-            "action": action,
-            "action_value": action_value,
-            "note": impact["note"],
-        })
-
-    return query_conditions, tier_overrides, query_modifiers
 
 
 def build_discovery_output(co):
@@ -2475,9 +2133,7 @@ def build_loss_propensity(co, group_scores):
                 "confidence": round(random.uniform(0.7, 0.95), 4),
             }
 
-    loss_confidence = round(compute_confidence(
-        {k: v for k, v in co.get("_resolved_scores", {}).items()}
-    ), 2) if co.get("_resolved_scores") else round(random.uniform(0.65, 0.95), 2)
+    loss_confidence = round(random.uniform(0.65, 0.95), 2)
 
     return {
         "loss_propensity_score": loss_score,
@@ -2617,20 +2273,19 @@ def seed_data():
         coverage_counts = {}
 
         for i, co in enumerate(COMPANIES, 1):
-            decision_enum = DecisionType(co["decision"])
-            tier = co["tier"]
-
             coverage_key = f"{co['coverage']}/{co['configuration']}"
             coverage_counts[coverage_key] = coverage_counts.get(coverage_key, 0) + 1
-            stats[co["decision"]] += 1
 
-            print(f"   [{i:2d}/{len(COMPANIES)}] {co['entity_name']:<30s} "
-                  f"| {coverage_key:<30s} | Tier {tier} | {co['decision'].upper()}")
+            # === LOAD PRODUCTION CONFIG ===
+            config = _get_compiled_config(co)
 
             # === 1. SUBMISSION ===
             sub_id = _uid()
             processing_start = NOW - timedelta(minutes=random.randint(5, 60))
             processing_end = processing_start + timedelta(seconds=random.randint(3, 45))
+
+            submission_data = build_submission_data(co)
+            direct_query_responses = build_direct_query_responses(co, config)
 
             sub = Submission(
                 id=sub_id,
@@ -2643,8 +2298,8 @@ def seed_data():
                 configuration=co["configuration"],
                 locale="US" if co.get("geography") == "US" else co.get("geography", "US"),
                 status=SubmissionStatus.READY,
-                submission_data=build_submission_data(co),
-                direct_query_responses=build_direct_query_responses(co),
+                submission_data=submission_data,
+                direct_query_responses=direct_query_responses,
                 processing_started_at=processing_start,
                 processing_completed_at=processing_end,
                 processing_duration_ms=(processing_end - processing_start).total_seconds() * 1000,
@@ -2655,168 +2310,177 @@ def seed_data():
 
             # === 2. MODEL VERSION RECORD ===
             mv_id = _uid()
+
             # Roll all signal scores ONCE — every table uses these same values
             resolved_scores = resolve_signal_scores(co.get("signal_profile", ""))
-            signal_outputs = build_signal_outputs(co.get("signal_profile", ""), resolved_scores)
-            group_scores = build_group_scores(co, resolved_scores)
 
-            # Derive composite, coverage, and confidence from signal data
-            profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
-            composite = compute_composite_from_group_scores(group_scores)
-            signal_cov = compute_signal_coverage(co, profile)
-            confidence = compute_confidence(resolved_scores)
+            # Build synthetic SignalOutput instances from config signal registry
+            signal_outputs = build_synthetic_signal_outputs(config, resolved_scores)
 
-            signal_conditions, signal_cond_modifiers, signal_tier_overrides = build_signal_conditions(co, resolved_scores)
-            query_conditions, query_tier_overrides, query_mod_list = evaluate_query_conditions(co)
-            co["_resolved_scores"] = resolved_scores  # pass to build_modifiers_applied
-            raw_modifiers = build_modifiers_applied(co)
+            # Build categorical outputs from config definitions
+            categorical_outputs = build_synthetic_categorical_outputs(config, co)
+
+            # --- PRODUCTION SCORING (Steps 5-6) ---
+            (composite, group_scores, confidence, signal_cov,
+             signal_conditions, signal_tier_overrides, scoring_referrals,
+             scoring_notes, signal_modifiers) = run_production_scoring(config, signal_outputs)
+
+            # --- PRODUCTION QUERY EVALUATION (Step 7) ---
+            query_result = run_production_query_evaluation(config, direct_query_responses)
+
+            # Combine signal + query modifiers (same as workflow.py line 378)
+            all_modifiers = signal_modifiers + query_result.modifiers
+
+            # --- PRODUCTION PRICING (Steps 8-12) ---
+            pricing_result = run_production_pricing(
+                config, composite, signal_tier_overrides,
+                query_result.tier_overrides, all_modifiers,
+                categorical_outputs, submission_data,
+            )
+
+            # Combine referral reasons and notes
+            all_referrals = scoring_referrals + query_result.referrals
+            all_notes = scoring_notes + query_result.notes
+
+            # Determine decision from tier (same as workflow.py)
+            final_tier = pricing_result.final_tier
+            tier_band = config.get_tier_band(final_tier)
+            if tier_band and tier_band.interpretation.action.value == "DECLINE":
+                decision_str = "decline"
+            elif all_referrals or (tier_band and tier_band.interpretation.action.value == "REFER"):
+                decision_str = "refer"
+            else:
+                decision_str = "approve"
+
+            decision_enum = DecisionType(decision_str)
+            auto_approve = decision_str == "approve"
+
+            stats[decision_str] += 1
+
+            # Use referral_reasons from company if provided (for richer demo data),
+            # otherwise use production-derived referrals
+            referral_reasons = co.get("referral_reasons", all_referrals) if decision_str != "approve" else []
+
+            print(f"   [{i:2d}/{len(COMPANIES)}] {co['entity_name']:<30s} "
+                  f"| {coverage_key:<30s} | Tier {final_tier} ({pricing_result.tier_label}) "
+                  f"| {decision_str.upper():<8s} | ${pricing_result.final_premium:,.0f}")
+
             discovery = build_discovery_output(co)
-
-            # Build categorical outputs from submission data
-            categorical_outputs = []
-            for cat_field in ["industry", "size_band", "geography"]:
-                val = co.get(cat_field)
-                if val:
-                    categorical_outputs.append({
-                        "group_id": cat_field if cat_field != "industry" else "industry_classification",
-                        "selected_cat": val,
-                        "source": f"metadata.{cat_field}",
-                    })
 
             # Build loss propensity + exposure assessment
             loss_kwargs = build_loss_propensity(co, group_scores)
             exposure_kwargs = build_exposure_assessment(co)
 
-            # --- PREMIUM CALCULATION ---
-            # All modifier sources feed into a single chain so premium_before/
-            # premium_after values are genuinely sequential.
-            all_modifiers = list(raw_modifiers)  # categorical + score-derived
+            # Serialise production dataclass outputs to dicts for JSONB storage
+            signal_outputs_json = [
+                {
+                    "signal_id": s.signal_id,
+                    "group_id": s.group_id,
+                    "score": s.raw_score,
+                    "confidence": s.confidence,
+                    "weight": s.weight,
+                    "weighted_score": s.weighted_score,
+                    "proxy_tier": random.choice(["DIRECT_OBSERVABLE", "INFERRED_PROXY"]),
+                    "extraction_time_ms": s.execution_time_ms,
+                }
+                for s in signal_outputs
+            ]
 
-            # Signal condition modifiers (e.g. score >= 90 → 0.95 credit)
-            for scm in signal_cond_modifiers:
-                all_modifiers.append({
-                    "type": "signal_condition",
-                    "source": scm["source_id"],
-                    "applied": scm["factor"],
-                    "note": scm["name"],
-                })
+            categorical_outputs_json = [
+                {
+                    "group_id": c.group_id,
+                    "group_name": c.group_name,
+                    "selected_cat": c.category,
+                    "label": c.label,
+                    "modifier": c.modifier,
+                    "source": f"metadata.{c.group_id}",
+                }
+                for c in categorical_outputs
+            ]
 
-            # Query condition modifiers (e.g. no MFA → 1.15 loading)
-            all_modifiers.extend(query_mod_list)
+            signal_conditions_json = [
+                {
+                    "source_type": c.source_type,
+                    "source_id": c.source_id,
+                    "source_name": c.source_name,
+                    "score": c.score,
+                    "response": c.response,
+                    "action": c.action.value if hasattr(c.action, 'value') else str(c.action),
+                    "action_value": c.action_value,
+                    "note": c.note,
+                }
+                for c in signal_conditions
+            ]
 
-            loss_mod = loss_kwargs.get("loss_combined_modifier", 1.0)
-            if loss_mod and loss_mod != 1.0:
-                all_modifiers.append({
-                    "type": "loss_propensity",
-                    "source": "loss_correlation",
-                    "applied": round(loss_mod, 4),
-                    "note": f"Loss combined modifier (freq*0.6 + sev*0.4)",
-                })
+            query_conditions_json = [
+                {
+                    "source_type": c.source_type,
+                    "source_id": c.source_id,
+                    "source_name": c.source_name,
+                    "score": c.score,
+                    "response": c.response,
+                    "action": c.action.value if hasattr(c.action, 'value') else str(c.action),
+                    "action_value": c.action_value,
+                    "note": c.note,
+                }
+                for c in query_result.conditions_triggered
+            ]
 
-            exp_mod = exposure_kwargs.get("exposure_modifier", 1.0)
-            if exp_mod and exp_mod != 1.0:
-                all_modifiers.append({
-                    "type": "exposure",
-                    "source": "exposure_assessment",
-                    "applied": round(exp_mod, 4),
-                    "note": f"Exposure band: {exposure_kwargs.get('exposure_band_label', 'Unknown')}",
-                })
+            modifiers_applied_json = [
+                {
+                    "source": m.source,
+                    "source_id": m.source_id,
+                    "name": m.name,
+                    "applied": m.factor,
+                    "premium_before": m.premium_before,
+                    "premium_after": m.premium_after,
+                }
+                for m in pricing_result.modifiers_applied
+            ]
 
-            # Compute the total modifier product so we can back-solve base_premium
-            modifier_product = 1.0
-            for mod in all_modifiers:
-                modifier_product *= mod["applied"]
-
-            # Use the $10M limit tier (ILF 1.0) as the anchor for back-solving
-            intended_premium = co.get("premium", 0)
-
-            # Back-solve: intended_premium = base * modifiers * ILF_at_limit
-            # so that premium_options[requested_limit] ≈ intended_premium.
+            # Resolve ILF for the requested limit for audit trail
             requested_limit = co.get("limit", 10_000_000)
-            ilf_result = resolve_ilf(requested_limit)
-            limit_ilf = ilf_result["factor"]
-
-            if co["decision"] == "decline":
-                base_premium = 0
-                base_premium_method = "premium_base"
-                premium_after_mods = 0
-                final_premium = 0
-                enriched_modifiers = raw_modifiers
-            else:
-                base_premium, base_premium_method = calculate_base_premium(
-                    co, modifier_product, limit_ilf=limit_ilf
-                )
-                premium_after_mods, enriched_modifiers = apply_modifiers_to_premium(
-                    base_premium, all_modifiers
-                )
-                final_premium = intended_premium  # will be corrected below
-            limit_premiums = build_premium_options_from_base(
-                premium_after_mods, requested_limit=requested_limit
+            ilf_factor = config.get_ilf(
+                submission_data.get("product_type", ""),
+                requested_limit
             )
 
-            # final_premium must match the premium_options entry at the
-            # requested limit so all values correlate across quote and MV.
-            if limit_premiums and str(requested_limit) in limit_premiums:
-                final_premium = limit_premiums[str(requested_limit)]
-
-            # Enrich signal_conditions that have modifier action with premium tracking.
-            # Walk the enriched_modifiers to find matching signal_condition entries and
-            # back-fill premium_before / premium_after from the modifier chain.
-            _sc_mod_lookup = {
-                m["source"]: m for m in enriched_modifiers
-                if m.get("type") == "signal_condition"
-            }
-            for sc in signal_conditions:
-                if sc["action"] == "modifier":
-                    chain_entry = _sc_mod_lookup.get(sc["source_id"])
-                    if chain_entry:
-                        sc["premium_before"] = chain_entry.get("premium_before")
-                        sc["premium_after"] = chain_entry.get("premium_after")
-
-            # Enrich query_conditions that have modifier/refer action with premium tracking.
-            _qc_mod_lookup = {
-                m["source"]: m for m in enriched_modifiers
-                if m.get("type") == "direct_query"
-            }
-            for qc in query_conditions:
-                if qc["action"] == "modifier":
-                    chain_entry = _qc_mod_lookup.get(qc["source_id"])
-                    if chain_entry:
-                        qc["premium_before"] = chain_entry.get("premium_before")
-                        qc["premium_after"] = chain_entry.get("premium_after")
-
-            # Resolve tier overrides: combine signal + query, worst-case wins
-            all_tier_overrides = signal_tier_overrides + query_tier_overrides
+            # Build tier override audit records
+            all_tier_overrides = signal_tier_overrides + query_result.tier_overrides
             resolved_tier_overrides = []
-            final_tier = tier
-            if all_tier_overrides:
-                max_override = max(all_tier_overrides)
-                if max_override > tier:
-                    final_tier = max_override
+            score_based_tier = pricing_result.score_based_tier
+            for sc in signal_conditions:
+                if hasattr(sc.action, 'value'):
+                    action_val = sc.action.value
+                else:
+                    action_val = str(sc.action)
+                if action_val == "refer" and isinstance(sc.action_value, int):
+                    resolved_tier_overrides.append({
+                        "source": "signal_condition",
+                        "source_id": sc.source_id,
+                        "override_tier": sc.action_value,
+                        "note": sc.note,
+                        "applied": sc.action_value > score_based_tier,
+                    })
+            for qc in query_result.conditions_triggered:
+                if hasattr(qc.action, 'value'):
+                    action_val = qc.action.value
+                else:
+                    action_val = str(qc.action)
+                if action_val == "refer" and isinstance(qc.action_value, int):
+                    resolved_tier_overrides.append({
+                        "source": "direct_query",
+                        "source_id": qc.source_id,
+                        "override_tier": qc.action_value,
+                        "note": qc.note,
+                        "applied": qc.action_value > score_based_tier,
+                    })
 
-                # Record signal-sourced overrides
-                for sc in signal_conditions:
-                    if sc["action"] == "refer" and isinstance(sc["action_value"], int):
-                        ov = sc["action_value"]
-                        resolved_tier_overrides.append({
-                            "source": "signal_condition",
-                            "source_id": sc["source_id"],
-                            "override_tier": ov,
-                            "note": sc["note"],
-                            "applied": ov > tier,
-                        })
-
-                # Record query-sourced overrides
-                for qc in query_conditions:
-                    if qc["action"] == "refer" and isinstance(qc["action_value"], int):
-                        ov = qc["action_value"]
-                        resolved_tier_overrides.append({
-                            "source": "direct_query",
-                            "source_id": qc["source_id"],
-                            "override_tier": ov,
-                            "note": qc["note"],
-                            "applied": ov > tier,
-                        })
+            # Zero premium for declines
+            final_premium = pricing_result.final_premium if decision_str != "decline" else 0
+            base_premium = pricing_result.base_premium if decision_str != "decline" else 0
+            premium_after_mods = pricing_result.premium_after_modifiers if decision_str != "decline" else 0
+            limit_premiums = pricing_result.limit_premiums if decision_str != "decline" else {}
 
             mv = ModelVersionRecord(
                 id=mv_id,
@@ -2829,30 +2493,30 @@ def seed_data():
                 configuration_name=co["configuration"],
                 config_hash=_hex(16),
                 discovery_output=discovery,
-                signal_outputs=signal_outputs,
-                categorical_outputs=categorical_outputs,
+                signal_outputs=signal_outputs_json,
+                categorical_outputs=categorical_outputs_json,
                 group_scores=group_scores,
                 pure_composite_score=composite,
                 confidence=confidence,
                 signal_coverage=signal_cov,
-                signal_conditions=signal_conditions,
-                query_conditions=query_conditions,
+                signal_conditions=signal_conditions_json,
+                query_conditions=query_conditions_json,
                 tier_overrides=resolved_tier_overrides,
-                score_based_tier=tier,
+                score_based_tier=score_based_tier,
                 final_tier=final_tier,
-                tier_label=TIER_LABELS.get(final_tier, "UNKNOWN"),
+                tier_label=pricing_result.tier_label,
                 base_premium=base_premium,
-                base_premium_method=base_premium_method,
-                modifiers_applied=enriched_modifiers,
+                base_premium_method=pricing_result.base_premium_method,
+                modifiers_applied=modifiers_applied_json,
                 premium_after_modifiers=premium_after_mods,
                 limit_premiums=limit_premiums,
                 final_premium=final_premium,
-                ilf_factor=ilf_result["factor"],
-                ilf_method=ilf_result["method"],
-                ilf_anchor_limit=ilf_result["anchor_limit"],
+                ilf_factor=ilf_factor,
+                ilf_method="config",
+                ilf_anchor_limit=config.pricing.base_limit_reference,
                 decision=decision_enum,
-                auto_approve=co["decision"] == "approve",
-                referral_reasons=co.get("referral_reasons", []),
+                auto_approve=auto_approve,
+                referral_reasons=referral_reasons,
                 notes=[{"note": co.get("description", ""), "source": "seed_script"}],
                 created_by="seed_dsi_bench",
                 # Loss propensity columns
@@ -2869,11 +2533,9 @@ def seed_data():
                 "approve": QuoteStatus.READY,
                 "refer": QuoteStatus.DRAFT,
                 "decline": QuoteStatus.DECLINED,
-            }[co["decision"]]
+            }[decision_str]
 
-            # Recommended limit comes from the company config; recommended premium
-            # must be looked up from the premium_options at that limit so they
-            # correlate.  Falls back to final_premium if no match.
+            # Recommended limit from company config; premium from production pricing
             rec_limit = co.get("limit", 10_000_000)
             rec_premium = limit_premiums.get(str(rec_limit), final_premium)
 
@@ -2893,7 +2555,7 @@ def seed_data():
             db.flush()
 
             # === 4. REFERRAL (for refer/decline decisions) ===
-            if co["decision"] in ("refer", "decline"):
+            if decision_str in ("refer", "decline"):
                 ref_status = ReferralStatus.PENDING
                 reviewed_by = None
                 reviewed_at = None
@@ -2901,7 +2563,7 @@ def seed_data():
                 review_decision = None
 
                 # Make some referrals already reviewed
-                if co["decision"] == "refer" and random.random() > 0.5:
+                if decision_str == "refer" and random.random() > 0.5:
                     ref_status = random.choice([ReferralStatus.APPROVED, ReferralStatus.IN_REVIEW])
                     if ref_status == ReferralStatus.APPROVED:
                         reviewed_by = uw_user_id
@@ -2914,124 +2576,110 @@ def seed_data():
                     referral_code=f"ref_{_hex(8)}",
                     quote_id=quote_id,
                     status=ref_status,
-                    reasons=co.get("referral_reasons", ["Tier-based referral"]),
-                    priority=min(tier, 5),
+                    reasons=referral_reasons or ["Tier-based referral"],
+                    priority=min(final_tier, 5),
                     assigned_to=uw_user_id if ref_status != ReferralStatus.PENDING else None,
                     assigned_at=NOW - timedelta(hours=random.randint(2, 72)) if ref_status != ReferralStatus.PENDING else None,
                     reviewed_by=reviewed_by,
                     reviewed_at=reviewed_at,
                     review_decision=review_decision,
                     review_notes=review_notes,
-                    tier_override=tier - 1 if review_decision == "approve" and tier > 1 else None,
+                    tier_override=final_tier - 1 if review_decision == "approve" and final_tier > 1 else None,
                     premium_adjustment=final_premium * 0.1 if review_decision == "approve" else None,
                 )
                 db.add(referral)
                 db.flush()
 
             # === 5. SIGNAL CACHE ENTRIES ===
-            profile = SIGNAL_PROFILES.get(co.get("signal_profile", ""), {})
-            cache_id_map = {}  # (group_id, signal_id) -> cache UUID
-            for group_id, signals in profile.items():
-                for sig_code in signals:
-                    resolved = resolved_scores.get((group_id, sig_code), 50)
-                    cache_uuid = _uid()
-                    cache_id_map[(group_id, sig_code)] = cache_uuid
+            # Build from production signal_outputs (SignalOutput dataclass instances)
+            cache_id_map = {}  # signal_id -> cache UUID
+            for so in signal_outputs:
+                sig_code = so.signal_id
+                cache_uuid = _uid()
+                cache_id_map[sig_code] = cache_uuid
 
-                    sig_ref_id = _signal_id_cache.get(sig_code)
-                    if sig_ref_id is None:
-                        sig_ref = Signal(code=sig_code)
-                        db.add(sig_ref)
-                        db.flush()
-                        sig_ref_id = sig_ref.id
-                        _signal_id_cache[sig_code] = sig_ref_id
+                sig_ref_id = _signal_id_cache.get(sig_code)
+                if sig_ref_id is None:
+                    sig_ref = Signal(code=sig_code)
+                    db.add(sig_ref)
+                    db.flush()
+                    sig_ref_id = sig_ref.id
+                    _signal_id_cache[sig_code] = sig_ref_id
 
-                    src_name = f"{sig_code}_extractor"
-                    src_ref_id = _source_id_cache.get(src_name)
-                    if src_ref_id is None:
-                        src_ref = SignalSource(name=src_name)
-                        db.add(src_ref)
-                        db.flush()
-                        src_ref_id = src_ref.id
-                        _source_id_cache[src_name] = src_ref_id
+                src_name = f"{sig_code}_extractor"
+                src_ref_id = _source_id_cache.get(src_name)
+                if src_ref_id is None:
+                    src_ref = SignalSource(name=src_name)
+                    db.add(src_ref)
+                    db.flush()
+                    src_ref_id = src_ref.id
+                    _source_id_cache[src_name] = src_ref_id
 
-                    cache = SignalCache(
-                        id=cache_uuid,
-                        entity_code=co["domain"],
-                        signal_id=sig_ref_id,
-                        source_id=src_ref_id,
-                        data={
-                            "score": resolved,
-                            "raw_data": {"source": "seed", "entity": co["entity_name"]},
-                            "metadata": {"group_code": group_id},
-                        },
-                        confidence=round(random.uniform(0.7, 0.99), 2),
-                        ttl_seconds=86400,
-                        expires_at=NOW + timedelta(days=1),
-                        extraction_time_ms=round(random.uniform(30, 500), 1),
-                    )
-                    db.add(cache)
+                cache = SignalCache(
+                    id=cache_uuid,
+                    entity_code=co["domain"],
+                    signal_id=sig_ref_id,
+                    source_id=src_ref_id,
+                    data={
+                        "score": so.raw_score,
+                        "raw_data": {"source": "seed", "entity": co["entity_name"]},
+                        "metadata": {"group_code": so.group_id},
+                    },
+                    confidence=so.confidence,
+                    ttl_seconds=86400,
+                    expires_at=NOW + timedelta(days=1),
+                    extraction_time_ms=so.execution_time_ms,
+                )
+                db.add(cache)
             db.flush()
 
             # === 5b. MODEL VERSION SIGNALS (Layer 2 — config-to-signal binding) ===
-            # Use real group weights from COVERAGE_GROUP_CONFIG.
-            # Within each group, signals share equal weight (the group weight
-            # is divided among them).  contribution = score × signal_weight
-            # × group_weight × 10, matching the scorer.py formula.
-            signal_output_lookup = {s["signal_id"]: s for s in signal_outputs}
-            mvs_id_map = {}  # (group_id, sig_code) -> mvs UUID
-            gcfg = _get_group_config(co)
+            # Uses production signal outputs with weights from config signal registry.
+            mvs_id_map = {}  # signal_id -> mvs UUID
 
-            for group_id, signals_in_group in profile.items():
-                g_cfg = gcfg.get(group_id, {})
-                g_risk_weight = g_cfg.get("risk_weight", 0.0)
-                num_in_group = len(signals_in_group)
-                # Equal weight within group — each signal's weight sums to 1.0
-                signal_weight = round(1.0 / max(num_in_group, 1), 4)
+            for so in signal_outputs:
+                sig_code = so.signal_id
+                cache_ref = cache_id_map.get(sig_code)
+                if not cache_ref or sig_code not in _signal_id_cache:
+                    continue
 
-                for sig_code in signals_in_group:
-                    cache_ref = cache_id_map.get((group_id, sig_code))
-                    if not cache_ref:
-                        continue
-                    so = signal_output_lookup.get(sig_code, {})
-                    resolved = resolved_scores.get((group_id, sig_code), 50)
-                    # Contribution to composite:
-                    # score participates in group_score (weighted avg → score × signal_weight / Σsignal_weight)
-                    # then group_score × group_weight × 10 → contribution to 0-1000.
-                    # Per-signal contribution = score × (signal_weight / Σsignal_weight) × group_weight × 10
-                    # Since all signal_weights are equal, this simplifies to:
-                    # contribution = (score / num_in_group) × group_weight × 10
-                    contribution = round((resolved / num_in_group) * g_risk_weight * 10, 4)
+                # Get group detail for contribution calculation
+                gs_detail = group_scores.get(so.group_id, {})
+                g_risk_weight = gs_detail.get("risk_weight", 0.0) if isinstance(gs_detail, dict) else 0.0
+                signal_count = gs_detail.get("signal_count", 1) if isinstance(gs_detail, dict) else 1
 
-                    mvs_uuid = _uid()
-                    mvs_id_map[(group_id, sig_code)] = mvs_uuid
-                    mvs = ModelVersionSignal(
-                        id=mvs_uuid,
-                        model_version_id=mv_id,
-                        signal_cache_id=cache_ref,
-                        signal_id=_signal_id_cache[sig_code],
-                        entity_code=co["domain"],
-                        score=resolved,
-                        weight=signal_weight,
-                        group_weight=g_risk_weight,
-                        contribution=contribution,
-                        group_code=group_id,
-                        proxy_tier=so.get("proxy_tier", "INFERRED_PROXY"),
-                        expectation_level=random.choice(["UNIVERSAL", "ENTERPRISE", "CORPORATE"]),
-                        was_absent=False,
-                    )
-                    db.add(mvs)
+                # Per-signal contribution mirrors scorer.py formula
+                contribution = round(so.weighted_score * 10, 4) if so.weight > 0 else 0.0
+
+                mvs_uuid = _uid()
+                mvs_id_map[sig_code] = mvs_uuid
+                mvs = ModelVersionSignal(
+                    id=mvs_uuid,
+                    model_version_id=mv_id,
+                    signal_cache_id=cache_ref,
+                    signal_id=_signal_id_cache[sig_code],
+                    entity_code=co["domain"],
+                    score=so.raw_score,
+                    weight=so.weight,
+                    group_weight=g_risk_weight,
+                    contribution=contribution,
+                    group_code=so.group_id,
+                    proxy_tier=random.choice(["DIRECT_OBSERVABLE", "INFERRED_PROXY"]),
+                    expectation_level=random.choice(["UNIVERSAL", "ENTERPRISE", "CORPORATE"]),
+                    was_absent=False,
+                )
+                db.add(mvs)
             db.flush()
 
             # === 6. SIGNAL AUDIT RECORDS (for overridden signals) ===
-            if co["decision"] == "refer" and profile:
+            if decision_str == "refer" and signal_outputs:
                 overridable_signals = [
-                    (gid, sid, resolved_scores.get((gid, sid), 50))
-                    for gid, sigs in profile.items()
-                    for sid in sigs
-                    if resolved_scores.get((gid, sid), 50) <= 50
+                    (so.signal_id, so.raw_score)
+                    for so in signal_outputs
+                    if so.raw_score <= 50
                 ]
-                for gid, sid, resolved in overridable_signals[:2]:
-                    mvs_ref = mvs_id_map.get((gid, sid))
+                for sid, resolved in overridable_signals[:2]:
+                    mvs_ref = mvs_id_map.get(sid)
                     if not mvs_ref:
                         continue
                     audited = min(100.0, resolved + 15.0)
@@ -3061,9 +2709,9 @@ def seed_data():
                     "entity_name": co["entity_name"],
                     "coverage": co["coverage"],
                     "configuration": co["configuration"],
-                    "decision": co["decision"],
-                    "tier": tier,
-                    "premium": co["premium"],
+                    "decision": decision_str,
+                    "tier": final_tier,
+                    "premium": final_premium,
                     "source": "seed_dsi_bench",
                 },
             )

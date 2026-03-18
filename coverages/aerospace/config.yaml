@@ -1230,13 +1230,13 @@ aerospace:
         - id: 5 
           label: "EXTREMELY_COMPLEX"
           description: Extremely complex operations
-          interpretation: 
-            bands: 
+          interpretation:
+            bands:
               min: 81
               max: 100
-          application: 
-            method: "MODIFIER"
-            applied: 1.6
+            application:
+              method: "MODIFIER"
+              applied: 1.6
 
     limit_configuration:
       type: "DECOUPLED"
@@ -1321,6 +1321,13 @@ aerospace:
             - {deductible: 500000, factor: 0.72}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 30.0
 
   # ===========================================================================
   # AEROSPACE SME (General Aviation)
@@ -2131,3 +2138,10 @@ aerospace:
             - {deductible: 25000, factor: 0.87}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 30.0

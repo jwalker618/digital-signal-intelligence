@@ -191,19 +191,19 @@ financial_institutions:
         features:
         - cat: MEGA
           label: Mega (>$250B)
-          applied: 2.5
+          applied: 0.15
         - cat: LARGE
           label: Large ($50B-$250B)
-          applied: 1.8
+          applied: 0.35
         - cat: MID
           label: Mid-Size ($10B-$50B)
-          applied: 1.3
+          applied: 1.0
         - cat: SMALL
           label: Small ($1B-$10B)
-          applied: 1.0
+          applied: 1.5
         - cat: COMMUNITY
           label: Community (<$1B)
-          applied: 0.8
+          applied: 2.0
         - cat: OTHER
           label: UNKNOWN
           applied: 1.0
@@ -1109,7 +1109,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00001
+            applied: 0.000008
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1121,7 +1121,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.000015
+            applied: 0.000012
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1133,7 +1133,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00002
+            applied: 0.000015
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1145,7 +1145,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00003
+            applied: 0.000025
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1157,7 +1157,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00006
+            applied: 0.00005
     loss_tier_bands:
       bands:
       - id: 1
@@ -1365,17 +1365,17 @@ financial_institutions:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.65
+              factor: 1.35
             - limit: 5000000
-              factor: 2.9
+              factor: 2.00
             - limit: 10000000
-              factor: 4.3
+              factor: 2.80
             - limit: 25000000
-              factor: 7.5
+              factor: 4.20
             - limit: 50000000
-              factor: 11.5
+              factor: 5.60
             - limit: 100000000
-              factor: 17.0
+              factor: 7.50
 
           deductible_factors:
           - deductible: 10000
@@ -1399,17 +1399,17 @@ financial_institutions:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.75
+              factor: 1.40
             - limit: 5000000
-              factor: 3.3
+              factor: 2.15
             - limit: 10000000
-              factor: 5.2
+              factor: 3.00
             - limit: 25000000
-              factor: 9.5
+              factor: 4.50
             - limit: 50000000
-              factor: 15.0
+              factor: 6.00
             - limit: 100000000
-              factor: 23.0
+              factor: 8.00
 
           deductible_factors:
           - deductible: 10000
@@ -1433,17 +1433,17 @@ financial_institutions:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.85
+              factor: 1.45
             - limit: 5000000
-              factor: 3.6
+              factor: 2.30
             - limit: 10000000
-              factor: 5.8
+              factor: 3.20
             - limit: 25000000
-              factor: 11.0
+              factor: 5.00
             - limit: 50000000
-              factor: 18.0
+              factor: 6.80
             - limit: 100000000
-              factor: 28.0
+              factor: 9.00
 
           deductible_factors:
           - deductible: 10000
@@ -1467,17 +1467,17 @@ financial_institutions:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.75
+              factor: 1.40
             - limit: 5000000
-              factor: 3.4
+              factor: 2.15
             - limit: 10000000
-              factor: 5.5
+              factor: 3.00
             - limit: 25000000
-              factor: 10.0
+              factor: 4.50
             - limit: 50000000
-              factor: 16.0
+              factor: 6.00
             - limit: 100000000
-              factor: 25.0
+              factor: 8.00
 
           deductible_factors:
           - deductible: 10000
@@ -1501,17 +1501,17 @@ financial_institutions:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.6
+              factor: 1.30
             - limit: 5000000
-              factor: 2.8
+              factor: 1.90
             - limit: 10000000
-              factor: 4.2
+              factor: 2.60
             - limit: 25000000
-              factor: 7.0
+              factor: 3.80
             - limit: 50000000
-              factor: 10.5
+              factor: 5.00
             - limit: 100000000
-              factor: 15.5
+              factor: 6.50
 
           deductible_factors:
           - deductible: 10000
@@ -1535,17 +1535,17 @@ financial_institutions:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.7
+              factor: 1.35
             - limit: 5000000
-              factor: 3.1
+              factor: 2.00
             - limit: 10000000
-              factor: 4.8
+              factor: 2.80
             - limit: 25000000
-              factor: 8.5
+              factor: 4.20
             - limit: 50000000
-              factor: 13.0
+              factor: 5.60
             - limit: 100000000
-              factor: 20.0
+              factor: 7.50
 
           deductible_factors:
           - deductible: 10000
@@ -1563,6 +1563,13 @@ financial_institutions:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
 
   # ===========================================================================
   # FINANCIAL INSTITUTIONS SME
@@ -1817,3 +1824,10 @@ financial_institutions:
               - {deductible: 50000, factor: 0.82}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

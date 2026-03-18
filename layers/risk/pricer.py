@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Any, Tuple
 
 from infrastructure.models.config_schema import (
     CoverageConfig,
+    Guardrails,
     RiskTierBand,
     TierAction,
     PricingMethod,
@@ -93,11 +94,13 @@ class ModelPricer:
         )
 
         # Step 11: Apply modifiers
-        modifiers_applied, total_modifier, premium_after_modifiers = self.apply_modifiers(
-            base_premium=base_premium,
-            categorical_outputs=categorical_outputs,
-            query_modifiers=query_modifiers,
-            config=config,
+        modifiers_applied, total_modifier, premium_after_modifiers, modifier_was_clamped = (
+            self.apply_modifiers(
+                base_premium=base_premium,
+                categorical_outputs=categorical_outputs,
+                query_modifiers=query_modifiers,
+                config=config,
+            )
         )
 
         # Ensure minimum premium
@@ -121,6 +124,59 @@ class ModelPricer:
                 first_limit = min(limit_premiums.keys(), key=lambda x: float(x))
                 final_premium = limit_premiums[first_limit]
 
+        # Guardrail checks on final premium
+        guardrail_warnings: List[str] = []
+        premium_was_capped = False
+        guardrails = config.guardrails
+
+        if modifier_was_clamped:
+            guardrail_warnings.append(
+                f"MODIFIER_CLAMPED: total_modifier clamped to "
+                f"[{guardrails.modifier_floor}, {guardrails.modifier_cap}]"
+            )
+
+        # Cap premium vs limit
+        requested_limit = submission_data.get("limit", 0)
+        if requested_limit and requested_limit > 0:
+            max_premium_by_limit = requested_limit * guardrails.max_premium_to_limit_ratio
+            if final_premium > max_premium_by_limit:
+                guardrail_warnings.append(
+                    f"PREMIUM_CAPPED_BY_LIMIT: {final_premium:.0f} exceeds "
+                    f"{guardrails.max_premium_to_limit_ratio:.0%} of limit {requested_limit:.0f}, "
+                    f"capped to {max_premium_by_limit:.0f}"
+                )
+                final_premium = max_premium_by_limit
+                premium_was_capped = True
+                # Also cap limit_premiums
+                for lim_key in limit_premiums:
+                    lim_val = float(lim_key)
+                    cap = lim_val * guardrails.max_premium_to_limit_ratio
+                    if limit_premiums[lim_key] > cap:
+                        limit_premiums[lim_key] = round(cap, 2)
+
+        # Cap premium vs revenue
+        revenue = submission_data.get("revenue", 0)
+        if revenue and revenue > 0:
+            max_premium_by_revenue = revenue * guardrails.max_premium_to_revenue_ratio
+            if final_premium > max_premium_by_revenue:
+                guardrail_warnings.append(
+                    f"PREMIUM_CAPPED_BY_REVENUE: {final_premium:.0f} exceeds "
+                    f"{guardrails.max_premium_to_revenue_ratio:.2%} of revenue {revenue:.0f}, "
+                    f"capped to {max_premium_by_revenue:.0f}"
+                )
+                final_premium = max_premium_by_revenue
+                premium_was_capped = True
+                for lim_key in limit_premiums:
+                    if limit_premiums[lim_key] > max_premium_by_revenue:
+                        limit_premiums[lim_key] = round(max_premium_by_revenue, 2)
+
+        if guardrail_warnings:
+            logger.warning(
+                "Guardrails triggered for %s/%s: %s",
+                config.coverage_id, config.config_id,
+                "; ".join(guardrail_warnings),
+            )
+
         return PricingResult(
             tier_overrides_considered=all_overrides,
             max_tier_override=max_override,
@@ -135,6 +191,9 @@ class ModelPricer:
             premium_after_modifiers=premium_after_modifiers,
             limit_premiums=limit_premiums,
             final_premium=final_premium,
+            guardrail_warnings=guardrail_warnings,
+            modifier_was_clamped=modifier_was_clamped,
+            premium_was_capped=premium_was_capped,
         )
 
     def get_tier_for_score(
@@ -271,7 +330,7 @@ class ModelPricer:
         categorical_outputs: List[CategoricalOutput],
         query_modifiers: List[Dict[str, Any]],
         config: CoverageConfig
-    ) -> Tuple[List[AppliedModifier], float, float]:
+    ) -> Tuple[List[AppliedModifier], float, float, bool]:
         """
         Step 11: Apply all modifiers in sequence.
 
@@ -326,6 +385,24 @@ class ModelPricer:
                     premium_after=current_premium,
                 ))
 
+        # Clamp total modifier within guardrail bounds
+        guardrails = config.guardrails
+        modifier_was_clamped = False
+        if total_modifier < guardrails.modifier_floor:
+            logger.info(
+                f"Modifier {total_modifier:.3f} clamped to floor {guardrails.modifier_floor}"
+            )
+            total_modifier = guardrails.modifier_floor
+            current_premium = base_premium * total_modifier
+            modifier_was_clamped = True
+        elif total_modifier > guardrails.modifier_cap:
+            logger.info(
+                f"Modifier {total_modifier:.3f} clamped to cap {guardrails.modifier_cap}"
+            )
+            total_modifier = guardrails.modifier_cap
+            current_premium = base_premium * total_modifier
+            modifier_was_clamped = True
+
         logger.debug(
             f"Applied {len(modifiers_applied)} modifiers: "
             f"total_modifier={total_modifier:.3f}, "
@@ -333,7 +410,7 @@ class ModelPricer:
             f"final={current_premium:.0f}"
         )
 
-        return modifiers_applied, total_modifier, current_premium
+        return modifiers_applied, total_modifier, current_premium, modifier_was_clamped
 
     def scale_to_limits(
         self,

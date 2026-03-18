@@ -1001,6 +1001,11 @@ class PricingResult:
     limit_premiums: Dict[str, float] = field(default_factory=dict)
     final_premium: float = 0.0
 
+    # Guardrail outputs
+    guardrail_warnings: List[str] = field(default_factory=list)
+    modifier_was_clamped: bool = False
+    premium_was_capped: bool = False
+
 
 @dataclass
 class WorkflowResult:

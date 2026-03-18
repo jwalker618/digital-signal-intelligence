@@ -1482,6 +1482,13 @@ energy:
 
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
+
   # ===========================================================================
   # ENERGY UPSTREAM DEEPWATER
   # ===========================================================================
@@ -2424,6 +2431,13 @@ energy:
           - {deductible: 10000000, factor: 0.65}
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
+
   # ===========================================================================
   # ENERGY UPSTREAM ONSHORE
   # ===========================================================================
@@ -3054,6 +3068,13 @@ energy:
           ilf_curve: {base_limit: 10000000, factors: [{limit: 1000000, factor: 0.25}, {limit: 2500000, factor: 0.45}, {limit: 5000000, factor: 0.7}, {limit: 10000000, factor: 1.0}, {limit: 25000000, factor: 1.9}, {limit: 50000000, factor: 3.4}, {limit: 100000000, factor: 6.0}, {limit: 250000000, factor: 12.6}, {limit: 500000000, factor: 22.0}]}
           deductible_factors: [{deductible: 10000, factor: 1.3}, {deductible: 25000, factor: 1.15}, {deductible: 50000, factor: 1.0}, {deductible: 100000, factor: 0.9}, {deductible: 250000, factor: 0.8}, {deductible: 500000, factor: 0.72}, {deductible: 1000000, factor: 0.65}]
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY UPSTREAM UNCONVENTIONAL
@@ -3713,6 +3734,13 @@ energy:
           deductible_factors: [{deductible: 25000, factor: 1.2}, {deductible: 50000, factor: 1.1}, {deductible: 100000, factor: 1.0}, {deductible: 250000, factor: 0.88}, {deductible: 500000, factor: 0.78}, {deductible: 1000000, factor: 0.68}]
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
+
   # ===========================================================================
   # ENERGY MIDSTREAM
   # ===========================================================================
@@ -4217,6 +4245,13 @@ energy:
           ilf_curve: {base_limit: 10000000, factors: [{limit: 1000000, factor: 0.25}, {limit: 2500000, factor: 0.45}, {limit: 5000000, factor: 0.7}, {limit: 10000000, factor: 1.0}, {limit: 25000000, factor: 1.9}, {limit: 50000000, factor: 3.4}, {limit: 100000000, factor: 6.0}, {limit: 250000000, factor: 12.6}, {limit: 500000000, factor: 22.0}]}
           deductible_factors: [{deductible: 10000, factor: 1.3}, {deductible: 25000, factor: 1.15}, {deductible: 50000, factor: 1.05}, {deductible: 100000, factor: 1.0}, {deductible: 250000, factor: 0.88}, {deductible: 500000, factor: 0.78}, {deductible: 1000000, factor: 0.68}]
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY DOWNSTREAM
@@ -4734,6 +4769,13 @@ energy:
           ilf_curve: {base_limit: 10000000, factors: [{limit: 1000000, factor: 0.25}, {limit: 2500000, factor: 0.45}, {limit: 5000000, factor: 0.7}, {limit: 10000000, factor: 1.0}, {limit: 25000000, factor: 2.0}, {limit: 50000000, factor: 3.6}, {limit: 100000000, factor: 6.2}, {limit: 250000000, factor: 13.0}, {limit: 500000000, factor: 22.5}, {limit: 1000000000, factor: 39.0}]}
           deductible_factors: [{deductible: 25000, factor: 1.25}, {deductible: 50000, factor: 1.1}, {deductible: 100000, factor: 1.0}, {deductible: 250000, factor: 0.9}, {deductible: 500000, factor: 0.82}, {deductible: 1000000, factor: 0.72}, {deductible: 2500000, factor: 0.62}]
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # energy_offshore_wind
@@ -5924,6 +5966,13 @@ energy:
           - {deductible: 5000000, factor: 0.65}
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
+
   # ===========================================================================
   # energy_onshore_renewable
   # Onshore wind and utility-scale solar
@@ -7085,6 +7134,13 @@ energy:
           - {deductible: 5000000, factor: 0.65}
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
+
   # ===========================================================================
   # ENERGY STORAGE (BESS & GREEN HYDROGEN)
   # ===========================================================================
@@ -8245,6 +8301,13 @@ energy:
           - {deductible: 2500000, factor: 0.58}
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
+
   # ===========================================================================
   # ENERGY SME (SMALL ENERGY OPERATORS)
   # ===========================================================================
@@ -8959,3 +9022,10 @@ energy:
           - {deductible: 250000, factor: 0.82}
           - {deductible: 500000, factor: 0.7}
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0

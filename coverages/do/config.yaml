@@ -105,22 +105,22 @@ directors_officers:
         features:
         - cat: PUBLIC_LARGE_CAP
           label: Public Large Cap
-          applied: 2.5
+          applied: 0.12
         - cat: PUBLIC_MID_CAP
           label: Public Mid Cap
-          applied: 1.5
+          applied: 0.40
         - cat: PUBLIC_SMALL_CAP
           label: Public Small Cap
           applied: 1.0
         - cat: PUBLIC_MICRO_CAP
           label: Public Micro Cap
-          applied: 1.25
+          applied: 1.5
         - cat: PRE_IPO
           label: Pre-IPO
-          applied: 2.0
+          applied: 1.8
         - cat: SPAC
           label: SPAC
-          applied: 3.5
+          applied: 2.5
         - cat: PRIVATE_BACKED
           label: Private VC/PE Backed
           applied: 0.6
@@ -979,7 +979,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.0005
+            applied: 0.00004
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -991,7 +991,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.00075
+            applied: 0.00006
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1003,7 +1003,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.001
+            applied: 0.00008
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1015,7 +1015,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.002
+            applied: 0.00015
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1027,7 +1027,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.005
+            applied: 0.0003
     loss_tier_bands:
       bands:
       - id: 1
@@ -1235,17 +1235,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.9
+              factor: 1.45
             - limit: 5000000
-              factor: 3.8
+              factor: 2.30
             - limit: 10000000
-              factor: 6.2
+              factor: 3.20
             - limit: 25000000
-              factor: 12.0
+              factor: 5.00
             - limit: 50000000
-              factor: 19.0
+              factor: 6.80
             - limit: 100000000
-              factor: 30.0
+              factor: 9.00
 
           deductible_factors:
           - deductible: 10000
@@ -1269,17 +1269,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.8
+              factor: 1.40
             - limit: 5000000
-              factor: 3.5
+              factor: 2.15
             - limit: 10000000
-              factor: 5.6
+              factor: 3.00
             - limit: 25000000
-              factor: 10.5
+              factor: 4.50
             - limit: 50000000
-              factor: 16.5
+              factor: 6.00
             - limit: 100000000
-              factor: 26.0
+              factor: 8.00
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1302,17 +1302,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.95
+              factor: 1.50
             - limit: 5000000
-              factor: 4.0
+              factor: 2.40
             - limit: 10000000
-              factor: 6.8
+              factor: 3.40
             - limit: 25000000
-              factor: 13.5
+              factor: 5.30
             - limit: 50000000
-              factor: 22.0
+              factor: 7.20
             - limit: 100000000
-              factor: 35.0
+              factor: 9.50
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1335,17 +1335,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 2.0
+              factor: 1.50
             - limit: 5000000
-              factor: 4.2
+              factor: 2.50
             - limit: 10000000
-              factor: 7.2
+              factor: 3.50
             - limit: 25000000
-              factor: 14.5
+              factor: 5.50
             - limit: 50000000
-              factor: 24.0
+              factor: 7.50
             - limit: 100000000
-              factor: 38.0
+              factor: 10.00
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1368,17 +1368,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.6
+              factor: 1.30
             - limit: 5000000
-              factor: 2.8
+              factor: 1.90
             - limit: 10000000
-              factor: 4.2
+              factor: 2.60
             - limit: 25000000
-              factor: 7.0
+              factor: 3.80
             - limit: 50000000
-              factor: 10.5
+              factor: 5.00
             - limit: 100000000
-              factor: 15.5
+              factor: 6.50
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1401,17 +1401,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.7
+              factor: 1.35
             - limit: 5000000
-              factor: 3.1
+              factor: 2.00
             - limit: 10000000
-              factor: 4.8
+              factor: 2.80
             - limit: 25000000
-              factor: 8.5
+              factor: 4.20
             - limit: 50000000
-              factor: 13.0
+              factor: 5.60
             - limit: 100000000
-              factor: 20.0
+              factor: 7.50
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1428,6 +1428,13 @@ directors_officers:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
   
   do_sme:
     metadata:
@@ -2068,3 +2075,10 @@ directors_officers:
           - {deductible: 100000, factor: 0.70}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
