@@ -1145,10 +1145,10 @@ professional_indemnity:
             base_limit: 1000000
             factors:
             - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 3.0}
-            - {limit: 10000000, factor: 4.5}
-            - {limit: 25000000, factor: 8.5}
-            - {limit: 50000000, factor: 14.0}
+            - {limit: 5000000, factor: 2.00}
+            - {limit: 10000000, factor: 2.80}
+            - {limit: 25000000, factor: 4.20}
+            - {limit: 50000000, factor: 5.60}
           deductible_factors:
           - {deductible: 25000, factor: 1.15}
           - {deductible: 50000, factor: 1.0}
@@ -1161,10 +1161,10 @@ professional_indemnity:
             base_limit: 1000000
             factors:
             - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 3.0}
-            - {limit: 10000000, factor: 4.5}
-            - {limit: 25000000, factor: 8.5}
-            - {limit: 50000000, factor: 14.0}
+            - {limit: 5000000, factor: 2.00}
+            - {limit: 10000000, factor: 2.80}
+            - {limit: 25000000, factor: 4.20}
+            - {limit: 50000000, factor: 5.60}
           deductible_factors:
           - {deductible: 25000, factor: 1.15}
           - {deductible: 50000, factor: 1.0}
@@ -1177,10 +1177,10 @@ professional_indemnity:
             base_limit: 1000000
             factors:
             - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 3.0}
-            - {limit: 10000000, factor: 4.5}
-            - {limit: 25000000, factor: 8.5}
-            - {limit: 50000000, factor: 14.0}
+            - {limit: 5000000, factor: 2.00}
+            - {limit: 10000000, factor: 2.80}
+            - {limit: 25000000, factor: 4.20}
+            - {limit: 50000000, factor: 5.60}
           deductible_factors:
           - {deductible: 25000, factor: 1.15}
           - {deductible: 50000, factor: 1.0}

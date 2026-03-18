@@ -1218,12 +1218,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00} # Anchor
-              - {limit: 2000000, factor: 1.75}
-              - {limit: 5000000, factor: 3.40}
-              - {limit: 10000000, factor: 5.50}
-              - {limit: 25000000, factor: 10.00}
-              - {limit: 50000000, factor: 16.00}
-              - {limit: 100000000, factor: 25.00}
+              - {limit: 2000000, factor: 1.40}
+              - {limit: 5000000, factor: 2.15}
+              - {limit: 10000000, factor: 3.00}
+              - {limit: 25000000, factor: 4.50}
+              - {limit: 50000000, factor: 6.00}
+              - {limit: 100000000, factor: 8.00}
           deductible_factors:
             - {deductible: 10000, factor: 1.25}
             - {deductible: 25000, factor: 1.15}
@@ -1238,12 +1238,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.65}
-              - {limit: 5000000, factor: 3.00}
-              - {limit: 10000000, factor: 4.50}
-              - {limit: 25000000, factor: 8.00}
-              - {limit: 50000000, factor: 12.50}
-              - {limit: 100000000, factor: 19.00}
+              - {limit: 2000000, factor: 1.35}
+              - {limit: 5000000, factor: 2.00}
+              - {limit: 10000000, factor: 2.80}
+              - {limit: 25000000, factor: 4.20}
+              - {limit: 50000000, factor: 5.60}
+              - {limit: 100000000, factor: 7.50}
           deductible_factors:
             - {deductible: 10000, factor: 1.20}
             - {deductible: 25000, factor: 1.10}
@@ -1258,12 +1258,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.60}
-              - {limit: 5000000, factor: 2.80}
-              - {limit: 10000000, factor: 4.20}
-              - {limit: 25000000, factor: 7.50}
-              - {limit: 50000000, factor: 11.50}
-              - {limit: 100000000, factor: 17.00}
+              - {limit: 2000000, factor: 1.30}
+              - {limit: 5000000, factor: 1.90}
+              - {limit: 10000000, factor: 2.60}
+              - {limit: 25000000, factor: 3.90}
+              - {limit: 50000000, factor: 5.20}
+              - {limit: 100000000, factor: 7.00}
           deductible_factors:
             - {deductible: 10000, factor: 1.15}
             - {deductible: 25000, factor: 1.08}
@@ -1278,12 +1278,12 @@ cyber:
             base_limit: 1000000
             factors:
               - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.85}
-              - {limit: 5000000, factor: 3.80}
-              - {limit: 10000000, factor: 6.50}
-              - {limit: 25000000, factor: 12.00}
-              - {limit: 50000000, factor: 20.00}
-              - {limit: 100000000, factor: 32.00}
+              - {limit: 2000000, factor: 1.45}
+              - {limit: 5000000, factor: 2.30}
+              - {limit: 10000000, factor: 3.20}
+              - {limit: 25000000, factor: 5.00}
+              - {limit: 50000000, factor: 6.80}
+              - {limit: 100000000, factor: 9.00}
           deductible_factors:
             - {deductible: 10000, factor: 1.30}
             - {deductible: 25000, factor: 1.15}

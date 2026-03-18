@@ -1235,17 +1235,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.9
+              factor: 1.45
             - limit: 5000000
-              factor: 3.8
+              factor: 2.30
             - limit: 10000000
-              factor: 6.2
+              factor: 3.20
             - limit: 25000000
-              factor: 12.0
+              factor: 5.00
             - limit: 50000000
-              factor: 19.0
+              factor: 6.80
             - limit: 100000000
-              factor: 30.0
+              factor: 9.00
 
           deductible_factors:
           - deductible: 10000
@@ -1269,17 +1269,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.8
+              factor: 1.40
             - limit: 5000000
-              factor: 3.5
+              factor: 2.15
             - limit: 10000000
-              factor: 5.6
+              factor: 3.00
             - limit: 25000000
-              factor: 10.5
+              factor: 4.50
             - limit: 50000000
-              factor: 16.5
+              factor: 6.00
             - limit: 100000000
-              factor: 26.0
+              factor: 8.00
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1302,17 +1302,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.95
+              factor: 1.50
             - limit: 5000000
-              factor: 4.0
+              factor: 2.40
             - limit: 10000000
-              factor: 6.8
+              factor: 3.40
             - limit: 25000000
-              factor: 13.5
+              factor: 5.30
             - limit: 50000000
-              factor: 22.0
+              factor: 7.20
             - limit: 100000000
-              factor: 35.0
+              factor: 9.50
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1335,17 +1335,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 2.0
+              factor: 1.50
             - limit: 5000000
-              factor: 4.2
+              factor: 2.50
             - limit: 10000000
-              factor: 7.2
+              factor: 3.50
             - limit: 25000000
-              factor: 14.5
+              factor: 5.50
             - limit: 50000000
-              factor: 24.0
+              factor: 7.50
             - limit: 100000000
-              factor: 38.0
+              factor: 10.00
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1368,17 +1368,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.6
+              factor: 1.30
             - limit: 5000000
-              factor: 2.8
+              factor: 1.90
             - limit: 10000000
-              factor: 4.2
+              factor: 2.60
             - limit: 25000000
-              factor: 7.0
+              factor: 3.80
             - limit: 50000000
-              factor: 10.5
+              factor: 5.00
             - limit: 100000000
-              factor: 15.5
+              factor: 6.50
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1401,17 +1401,17 @@ directors_officers:
             - limit: 1000000
               factor: 1.0
             - limit: 2000000
-              factor: 1.7
+              factor: 1.35
             - limit: 5000000
-              factor: 3.1
+              factor: 2.00
             - limit: 10000000
-              factor: 4.8
+              factor: 2.80
             - limit: 25000000
-              factor: 8.5
+              factor: 4.20
             - limit: 50000000
-              factor: 13.0
+              factor: 5.60
             - limit: 100000000
-              factor: 20.0
+              factor: 7.50
           deductible_factors:
           - deductible: 10000
             factor: 1.5
