@@ -1054,11 +1054,11 @@ professional_indemnity:
 
     risk_tier_bands:
       bands:
-      - {id: 1, label: PREFERRED, interpretation: {bands: {min: 800, max: 1000}, action: APPROVE, application: {method: MULTIPLIER, applied: 0.0008, basis: revenue}}}
-      - {id: 2, label: STANDARD_PLUS, interpretation: {bands: {min: 650, max: 799}, action: APPROVE, application: {method: MULTIPLIER, applied: 0.0012, basis: revenue}}}
-      - {id: 3, label: STANDARD, interpretation: {bands: {min: 500, max: 649}, action: REFER, application: {method: MULTIPLIER, applied: 0.0018, basis: revenue}}}
-      - {id: 4, label: SUBSTANDARD, interpretation: {bands: {min: 350, max: 499}, action: REFER, application: {method: MULTIPLIER, applied: 0.0028, basis: revenue}}}
-      - {id: 5, label: DECLINE, interpretation: {bands: {min: 0, max: 349}, action: DECLINE, application: {method: MULTIPLIER, applied: 0.0045, basis: revenue}}}    
+      - {id: 1, label: PREFERRED, interpretation: {bands: {min: 800, max: 1000}, action: APPROVE, application: {method: MULTIPLIER, applied: 0.00008, basis: revenue}}}
+      - {id: 2, label: STANDARD_PLUS, interpretation: {bands: {min: 650, max: 799}, action: APPROVE, application: {method: MULTIPLIER, applied: 0.00012, basis: revenue}}}
+      - {id: 3, label: STANDARD, interpretation: {bands: {min: 500, max: 649}, action: REFER, application: {method: MULTIPLIER, applied: 0.00018, basis: revenue}}}
+      - {id: 4, label: SUBSTANDARD, interpretation: {bands: {min: 350, max: 499}, action: REFER, application: {method: MULTIPLIER, applied: 0.00028, basis: revenue}}}
+      - {id: 5, label: DECLINE, interpretation: {bands: {min: 0, max: 349}, action: DECLINE, application: {method: MULTIPLIER, applied: 0.00045, basis: revenue}}}    
  
     loss_tier_bands:
       bands:
@@ -1190,6 +1190,12 @@ professional_indemnity:
 
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+
   # ===========================================================================
   # PI SME (Small Business)
   # Target: Revenue <= $50M. Categorical Pricing. Bundled Limits.
@@ -1301,3 +1307,9 @@ professional_indemnity:
           - {deductible: 50000, factor: 0.80}
         # (Replicate factors for errors_omissions and malpractice)
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01

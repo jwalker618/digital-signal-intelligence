@@ -191,19 +191,19 @@ financial_institutions:
         features:
         - cat: MEGA
           label: Mega (>$250B)
-          applied: 2.5
+          applied: 0.15
         - cat: LARGE
           label: Large ($50B-$250B)
-          applied: 1.8
+          applied: 0.35
         - cat: MID
           label: Mid-Size ($10B-$50B)
-          applied: 1.3
+          applied: 1.0
         - cat: SMALL
           label: Small ($1B-$10B)
-          applied: 1.0
+          applied: 1.5
         - cat: COMMUNITY
           label: Community (<$1B)
-          applied: 0.8
+          applied: 2.0
         - cat: OTHER
           label: UNKNOWN
           applied: 1.0
@@ -1109,7 +1109,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00001
+            applied: 0.000008
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1121,7 +1121,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.000015
+            applied: 0.000012
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1133,7 +1133,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00002
+            applied: 0.000015
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1145,7 +1145,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00003
+            applied: 0.000025
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1157,7 +1157,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00006
+            applied: 0.00005
     loss_tier_bands:
       bands:
       - id: 1
@@ -1564,6 +1564,12 @@ financial_institutions:
             factor: 0.7
       taxes_fees_rate: 0.05
 
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+
   # ===========================================================================
   # FINANCIAL INSTITUTIONS SME
   # Target: AUM <= $500M. Fixed Pricing. Bundled Limits. Simplified signals.
@@ -1817,3 +1823,9 @@ financial_institutions:
               - {deductible: 50000, factor: 0.82}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01

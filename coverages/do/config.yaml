@@ -105,22 +105,22 @@ directors_officers:
         features:
         - cat: PUBLIC_LARGE_CAP
           label: Public Large Cap
-          applied: 2.5
+          applied: 0.12
         - cat: PUBLIC_MID_CAP
           label: Public Mid Cap
-          applied: 1.5
+          applied: 0.40
         - cat: PUBLIC_SMALL_CAP
           label: Public Small Cap
           applied: 1.0
         - cat: PUBLIC_MICRO_CAP
           label: Public Micro Cap
-          applied: 1.25
+          applied: 1.5
         - cat: PRE_IPO
           label: Pre-IPO
-          applied: 2.0
+          applied: 1.8
         - cat: SPAC
           label: SPAC
-          applied: 3.5
+          applied: 2.5
         - cat: PRIVATE_BACKED
           label: Private VC/PE Backed
           applied: 0.6
@@ -979,7 +979,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.0005
+            applied: 0.00004
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -991,7 +991,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.00075
+            applied: 0.00006
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1003,7 +1003,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.001
+            applied: 0.00008
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1015,7 +1015,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.002
+            applied: 0.00015
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1027,7 +1027,7 @@ directors_officers:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.005
+            applied: 0.0003
     loss_tier_bands:
       bands:
       - id: 1
@@ -1428,6 +1428,12 @@ directors_officers:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
   
   do_sme:
     metadata:
@@ -2068,3 +2074,9 @@ directors_officers:
           - {deductible: 100000, factor: 0.70}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01

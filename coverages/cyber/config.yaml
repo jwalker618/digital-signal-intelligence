@@ -164,19 +164,19 @@ cyber:
         features:
         - cat: MICRO
           label: Micro
-          applied: 0.4
+          applied: 1.5
         - cat: SMALL
           label: Small
-          applied: 0.6
+          applied: 1.2
         - cat: MEDIUM
           label: Medium
           applied: 1.0
         - cat: LARGE
           label: Large
-          applied: 2.0
+          applied: 0.40
         - cat: ENTERPRISE
           label: Enterprise
-          applied: 4.0
+          applied: 0.12
         - cat: OTHER
           label: Other
           applied: 1.0
@@ -994,7 +994,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.001
+            applied: 0.00004
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1006,7 +1006,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.0015
+            applied: 0.00006
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1018,7 +1018,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.0025
+            applied: 0.00008
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1030,7 +1030,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.004
+            applied: 0.00015
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1042,7 +1042,7 @@ cyber:
           application:
             method: MULTIPLIER
             basis: revenue
-            applied: 0.01
+            applied: 0.0003
     loss_tier_bands:
       bands:
       - id: 1
@@ -1294,6 +1294,12 @@ cyber:
             - {deductible: 1000000, factor: 0.45}
 
       taxes_fees_rate: 0.05  
+
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
   
   cyber_sme:
     metadata:
@@ -2006,3 +2012,9 @@ cyber:
             - {deductible: 25000, factor: 0.85}
 
       taxes_fees_rate: 0.05
+
+    guardrails:
+      modifier_floor: 0.5
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01

@@ -544,6 +544,32 @@ class Pricing(BaseModel):
 
 
 # =============================================================================
+# GUARDRAILS
+# =============================================================================
+
+class Guardrails(BaseModel):
+    """
+    Runtime pricing guardrails.
+
+    Enforced by the pricer to prevent commercially impossible outputs.
+    Modifier clamping bounds the total modifier product; premium caps
+    ensure final premiums stay within acceptable ratios to limit and revenue.
+    """
+    modifier_floor: float = Field(default=0.50, ge=0.0, le=1.0)
+    modifier_cap: float = Field(default=2.50, ge=1.0)
+    max_premium_to_limit_ratio: float = Field(default=0.35, ge=0.0, le=1.0)
+    max_premium_to_revenue_ratio: float = Field(default=0.01, ge=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def validate_floor_below_cap(self) -> "Guardrails":
+        if self.modifier_floor >= self.modifier_cap:
+            raise ValueError(
+                f"modifier_floor ({self.modifier_floor}) must be < modifier_cap ({self.modifier_cap})"
+            )
+        return self
+
+
+# =============================================================================
 # COMPLETE COVERAGE CONFIG
 # =============================================================================
 
@@ -567,6 +593,7 @@ class CoverageConfig(BaseModel):
     exposure: Optional[Exposure] = None
     limit_configuration: Optional[LimitConfiguration] = None
     pricing: Pricing
+    guardrails: Guardrails = Field(default_factory=Guardrails)
 
     @model_validator(mode="after")
     def validate_cross_references(self) -> "CoverageConfig":
