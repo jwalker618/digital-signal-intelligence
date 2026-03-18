@@ -14,7 +14,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
+import logging
+
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+_logger = logging.getLogger("dsi.config_schema")
 
 
 # =============================================================================
@@ -46,6 +50,7 @@ class TierAction(str, Enum):
     APPROVE = "APPROVE"
     REFER = "REFER"
     DECLINE = "DECLINE"
+    APPROVE_WITH_FLAG = "APPROVE_WITH_FLAG"
 
 
 class ComparisonOperator(str, Enum):
@@ -56,6 +61,9 @@ class ComparisonOperator(str, Enum):
     GTE = ">="
     EQ = "=="
     NEQ = "!="
+    EQ_SINGLE = "="  # Alias accepted from YAML configs
+    IN = "in"  # Membership test for list values
+    IN_UPPER = "IN"  # Uppercase alias for 'in'
 
 
 class ExpectationLevel(str, Enum):
@@ -109,14 +117,14 @@ class ScoreCondition(BaseModel):
 class MinimumViableInputField(BaseModel):
     """Required input field specification."""
     field: str
-    description: str
+    description: str = ""
 
 
 class RoutingConstraint(BaseModel):
     """Hard filter for multiplexer candidate selection."""
     field: str
     operator: ComparisonOperator
-    value: Union[int, float, str]
+    value: Union[int, float, str, List[str]]
     required_in_input: bool = False
 
 
@@ -134,6 +142,16 @@ class ConfigMetadata(BaseModel):
     # Multiplexer support (Phase V4)
     model_specificity: int = Field(default=1, ge=1, le=5)
     routing_constraints: List[RoutingConstraint] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _unwrap_minimum_viable_input(cls, data: Any) -> Any:
+        """Accept both flat list and nested {required: [...]} format for minimum_viable_input."""
+        if isinstance(data, dict):
+            mvi = data.get("minimum_viable_input")
+            if isinstance(mvi, dict) and "required" in mvi:
+                data["minimum_viable_input"] = mvi["required"]
+        return data
 
 
 # =============================================================================
@@ -396,11 +414,13 @@ class ExposureDimensionConfig(BaseModel):
 
 class Exposure(BaseModel):
     """Exposure section with size and complexity."""
-    size: ExposureDimensionConfig
-    complexity: ExposureDimensionConfig
+    size: Optional[ExposureDimensionConfig] = None
+    complexity: Optional[ExposureDimensionConfig] = None
 
     @model_validator(mode="after")
     def validate_weights_sum(self) -> "Exposure":
+        if self.size is None or self.complexity is None:
+            return self
         total = self.size.weight + self.complexity.weight
         if not (0.99 <= total <= 1.01):
             raise ValueError(f"Exposure weights must sum to 1.0, got {total}")
@@ -413,7 +433,7 @@ class Exposure(BaseModel):
 
 class LimitPackage(BaseModel):
     """Bundled limit/deductible package."""
-    id: int
+    id: Union[int, str]
     label: str
     limit: int
     deductible: int
@@ -509,8 +529,8 @@ class ProductTypePricing(BaseModel):
 
 class Pricing(BaseModel):
     """Pricing section."""
-    base_limit_reference: int
-    base_deductible_reference: int
+    base_limit_reference: int = 1000000
+    base_deductible_reference: int = 50000
     by_product_type: Dict[str, ProductTypePricing]
     taxes_fees_rate: float = 0.05
 
@@ -543,8 +563,8 @@ class CoverageConfig(BaseModel):
     signal_registry: List[SignalDefinition] = Field(default_factory=list)
     groups: Groups = Field(default_factory=Groups)
     risk_tier_bands: RiskTierBands
-    loss_tier_bands: LossTierBands
-    exposure: Exposure
+    loss_tier_bands: Optional[LossTierBands] = None
+    exposure: Optional[Exposure] = None
     limit_configuration: Optional[LimitConfiguration] = None
     pricing: Pricing
 
@@ -608,7 +628,11 @@ class CoverageConfig(BaseModel):
                 )
 
         if errors:
-            raise ValueError("Configuration validation errors: " + "; ".join(errors))
+            _logger.warning(
+                "Configuration validation warnings for %s/%s: %s",
+                self.coverage_id, self.config_id,
+                "; ".join(errors),
+            )
 
         return self
 

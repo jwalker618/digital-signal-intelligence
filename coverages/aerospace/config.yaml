@@ -1230,13 +1230,13 @@ aerospace:
         - id: 5 
           label: "EXTREMELY_COMPLEX"
           description: Extremely complex operations
-          interpretation: 
-            bands: 
+          interpretation:
+            bands:
               min: 81
               max: 100
-          application: 
-            method: "MODIFIER"
-            applied: 1.6
+            application:
+              method: "MODIFIER"
+              applied: 1.6
 
     limit_configuration:
       type: "DECOUPLED"

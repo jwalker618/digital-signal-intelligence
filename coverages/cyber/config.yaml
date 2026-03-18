@@ -1153,7 +1153,7 @@ cyber:
               applied: 0.7
               implied_thresholds:
                 min: 1000000001
-                max: None
+                max: null
       complexity:
         weight: 0.4
         bands:
