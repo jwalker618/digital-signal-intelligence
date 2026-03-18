@@ -1836,16 +1836,13 @@ def build_synthetic_signal_outputs(config, resolved_scores):
         group_id = tla.group_id
         weight = tla.risk.weight if tla.risk else 0.0
 
-        # Look up score from nested profile data {group_id: {signal_id: score}}
-        score = None
-        group_scores = resolved_scores.get(group_id, {})
-        if isinstance(group_scores, dict):
-            score = group_scores.get(signal_def.id)
+        # Look up score from resolved_scores keyed by (group_id, signal_id) tuples
+        score = resolved_scores.get((group_id, signal_def.id))
         if score is None:
-            # Try all groups (signal might be under a different group name in the profile)
-            for g_scores in resolved_scores.values():
-                if isinstance(g_scores, dict) and signal_def.id in g_scores:
-                    score = g_scores[signal_def.id]
+            # Try matching by signal_id alone (may appear under a different group)
+            for (g, s), v in resolved_scores.items():
+                if s == signal_def.id:
+                    score = v
                     break
         if score is None:
             score = 50.0  # Default for signals not in profile
