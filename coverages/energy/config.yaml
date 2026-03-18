@@ -1483,7 +1483,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -2431,7 +2431,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -3068,7 +3068,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -3732,7 +3732,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -4243,7 +4243,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -4766,7 +4766,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -5961,7 +5961,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -7128,7 +7128,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -8294,7 +8294,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
@@ -9015,7 +9015,7 @@ energy:
       taxes_fees_rate: 0.05
 
     guardrails:
-      modifier_floor: 0.5
+      modifier_floor: 0.10
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005

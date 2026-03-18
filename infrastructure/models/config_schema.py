@@ -555,7 +555,7 @@ class Guardrails(BaseModel):
     Modifier clamping bounds the total modifier product; premium caps
     ensure final premiums stay within acceptable ratios to limit and revenue.
     """
-    modifier_floor: float = Field(default=0.50, ge=0.0, le=1.0)
+    modifier_floor: float = Field(default=0.10, ge=0.0, le=1.0)
     modifier_cap: float = Field(default=2.50, ge=1.0)
     max_premium_to_limit_ratio: float = Field(default=0.35, ge=0.0, le=1.0)
     max_premium_to_revenue_ratio: float = Field(default=0.01, ge=0.0, le=1.0)
