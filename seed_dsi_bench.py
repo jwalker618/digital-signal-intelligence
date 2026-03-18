@@ -2137,21 +2137,89 @@ _ILF_TABLE = {
     2_000_000_000: 30.00,
 }
 
+_ILF_ANCHOR_LIMIT = 10_000_000  # The limit where ILF = 1.0
+
+# Pre-sorted for interpolation lookups
+_ILF_SORTED = sorted(_ILF_TABLE.items())
+
+
+def resolve_ilf(limit: int) -> dict:
+    """Resolve the ILF factor for a limit, interpolating if not in the table.
+
+    Returns a dict with:
+        factor       – the ILF multiplier
+        method       – "table" (exact match) or "interpolated" or "extrapolated"
+        anchor_limit – the limit where ILF = 1.0
+        bracket_low  – lower bound used for interpolation (None if exact)
+        bracket_high – upper bound used for interpolation (None if exact)
+    """
+    anchor = _ILF_ANCHOR_LIMIT
+    base = {"anchor_limit": anchor, "bracket_low": None, "bracket_high": None}
+
+    # Exact match — fast path
+    if limit in _ILF_TABLE:
+        return {**base, "factor": _ILF_TABLE[limit], "method": "table"}
+
+    limits = [l for l, _ in _ILF_SORTED]
+    factors = [f for _, f in _ILF_SORTED]
+
+    # Below the lowest entry — extrapolate from first two points
+    if limit < limits[0]:
+        lo_l, lo_f = limits[0], factors[0]
+        hi_l, hi_f = limits[1], factors[1]
+        t = (limit - lo_l) / (hi_l - lo_l)  # will be negative
+        factor = lo_f + t * (hi_f - lo_f)
+        factor = max(factor, 0.01)  # floor to avoid zero/negative
+        return {**base, "factor": round(factor, 4), "method": "extrapolated",
+                "bracket_low": lo_l, "bracket_high": hi_l}
+
+    # Above the highest entry — extrapolate from last two points
+    if limit > limits[-1]:
+        lo_l, lo_f = limits[-2], factors[-2]
+        hi_l, hi_f = limits[-1], factors[-1]
+        t = (limit - lo_l) / (hi_l - lo_l)
+        factor = lo_f + t * (hi_f - lo_f)
+        return {**base, "factor": round(factor, 4), "method": "extrapolated",
+                "bracket_low": lo_l, "bracket_high": hi_l}
+
+    # Between two entries — linear interpolation
+    for i in range(len(limits) - 1):
+        if limits[i] < limit < limits[i + 1]:
+            lo_l, lo_f = limits[i], factors[i]
+            hi_l, hi_f = limits[i + 1], factors[i + 1]
+            t = (limit - lo_l) / (hi_l - lo_l)
+            factor = lo_f + t * (hi_f - lo_f)
+            return {**base, "factor": round(factor, 4), "method": "interpolated",
+                    "bracket_low": lo_l, "bracket_high": hi_l}
+
+    # Shouldn't reach here, but fallback to anchor
+    return {**base, "factor": 1.0, "method": "table"}
+
 
 def get_ilf_for_limit(limit: int) -> float:
-    """Return the ILF factor for a given limit, defaulting to 1.0 (10M anchor)."""
-    return _ILF_TABLE.get(limit, 1.0)
+    """Return the ILF factor for a given limit (convenience wrapper)."""
+    return resolve_ilf(limit)["factor"]
 
 
-def build_premium_options_from_base(premium_after_modifiers):
-    """Build premium_options dict using ILF-style scaling from premium_after_modifiers."""
+def build_premium_options_from_base(premium_after_modifiers, requested_limit=None):
+    """Build premium_options dict using ILF-style scaling from premium_after_modifiers.
+
+    Always includes every entry in the ILF table.  If requested_limit is not
+    already in the table it is added so the recommended limit always appears
+    in the options.
+    """
     if premium_after_modifiers <= 0:
         return {}
     p = premium_after_modifiers
-    return {
+    options = {
         str(limit): int(p * ilf)
         for limit, ilf in _ILF_TABLE.items()
     }
+    # Ensure the requested limit is represented even if it's off-table
+    if requested_limit and str(requested_limit) not in options:
+        ilf = get_ilf_for_limit(requested_limit)
+        options[str(requested_limit)] = int(p * ilf)
+    return options
 
 
 def build_submission_data(co):
@@ -2665,7 +2733,8 @@ def seed_data():
             # Back-solve: intended_premium = base * modifiers * ILF_at_limit
             # so that premium_options[requested_limit] ≈ intended_premium.
             requested_limit = co.get("limit", 10_000_000)
-            limit_ilf = get_ilf_for_limit(requested_limit)
+            ilf_result = resolve_ilf(requested_limit)
+            limit_ilf = ilf_result["factor"]
 
             if co["decision"] == "decline":
                 base_premium = 0
@@ -2681,7 +2750,9 @@ def seed_data():
                     base_premium, all_modifiers
                 )
                 final_premium = intended_premium  # will be corrected below
-            limit_premiums = build_premium_options_from_base(premium_after_mods)
+            limit_premiums = build_premium_options_from_base(
+                premium_after_mods, requested_limit=requested_limit
+            )
 
             # final_premium must match the premium_options entry at the
             # requested limit so all values correlate across quote and MV.
@@ -2776,6 +2847,9 @@ def seed_data():
                 premium_after_modifiers=premium_after_mods,
                 limit_premiums=limit_premiums,
                 final_premium=final_premium,
+                ilf_factor=ilf_result["factor"],
+                ilf_method=ilf_result["method"],
+                ilf_anchor_limit=ilf_result["anchor_limit"],
                 decision=decision_enum,
                 auto_approve=co["decision"] == "approve",
                 referral_reasons=co.get("referral_reasons", []),
