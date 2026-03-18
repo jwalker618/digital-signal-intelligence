@@ -1300,6 +1300,7 @@ cyber:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
   
   cyber_sme:
     metadata:
@@ -2018,3 +2019,4 @@ cyber:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

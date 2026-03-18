@@ -1327,6 +1327,7 @@ aerospace:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 30.0
 
   # ===========================================================================
   # AEROSPACE SME (General Aviation)
@@ -2143,3 +2144,4 @@ aerospace:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 30.0

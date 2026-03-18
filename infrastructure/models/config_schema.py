@@ -559,6 +559,11 @@ class Guardrails(BaseModel):
     modifier_cap: float = Field(default=2.50, ge=1.0)
     max_premium_to_limit_ratio: float = Field(default=0.35, ge=0.0, le=1.0)
     max_premium_to_revenue_ratio: float = Field(default=0.01, ge=0.0, le=1.0)
+    max_ilf_factor: float = Field(
+        default=10.0, ge=1.0,
+        description="Maximum allowed ILF factor at any limit point. "
+        "Prevents runaway premium amplification at high limits."
+    )
 
     @model_validator(mode="after")
     def validate_floor_below_cap(self) -> "Guardrails":
@@ -636,6 +641,16 @@ class CoverageConfig(BaseModel):
                 errors.append(
                     f"Product '{prod_name}' ILF anchor at {base_limit} should be 1.0, got {anchor_factor}"
                 )
+
+        # Validate ILF factors within guardrail bounds
+        max_ilf = self.guardrails.max_ilf_factor
+        for prod_name, prod_pricing in self.pricing.by_product_type.items():
+            for f in prod_pricing.ilf_curve.factors:
+                if f.factor > max_ilf:
+                    errors.append(
+                        f"Product '{prod_name}' ILF factor {f.factor} at limit "
+                        f"{f.limit:,} exceeds max_ilf_factor ({max_ilf})"
+                    )
 
         # Validate deductible anchor
         base_ded = self.pricing.base_deductible_reference

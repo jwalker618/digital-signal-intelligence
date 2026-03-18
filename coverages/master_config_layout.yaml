@@ -637,6 +637,11 @@
                                             # Final premium capped at revenue × this ratio.
                                             # Catches rate miscalibration for mega-cap entities.
 
+      max_ilf_factor: {float}              # e.g., 10.0 — no ILF curve point may exceed this value.
+                                            # Validated at boot time across all product_type ILF curves.
+                                            # Prevents runaway premium amplification at high limits
+                                            # (e.g., $25M ILF of 12x would blow past guardrail caps).
+
 # =============================================================================
 # SCORE_CONDITIONS EVALUATION LOGIC
 # =============================================================================

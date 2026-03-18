@@ -331,6 +331,58 @@ class TestCrossCoverageConsistency:
                         f"(>= 0.001) for revenue-based MULTIPLIER"
                     )
 
+    @pytest.mark.parametrize("coverage,config_name", [
+        ("cyber", "cyber_general"),
+        ("do", "do_general"),
+        ("fi", "fi_general"),
+        ("pi", "pi_general"),
+    ])
+    def test_ilf_factors_within_guardrail_bounds(self, coverage, config_name):
+        """No ILF factor should exceed the config's max_ilf_factor guardrail."""
+        config = load_config(coverage, config_name)
+        max_ilf = config.guardrails.max_ilf_factor
+        for prod_name, prod_pricing in config.pricing.by_product_type.items():
+            for point in prod_pricing.ilf_curve.factors:
+                assert point.factor <= max_ilf, (
+                    f"{config_name} {prod_name} ILF {point.factor} at limit "
+                    f"{point.limit:,} exceeds max_ilf_factor ({max_ilf})"
+                )
+
+    @pytest.mark.parametrize("coverage,config_name,basis_field,basis_value,cat_args", [
+        ("cyber", "cyber_general", "revenue", 90_000_000_000,
+         [("size_band", "ENTERPRISE", 0.12)]),
+        ("do", "do_general", "revenue", 230_000_000_000,
+         [("company_type", "PUBLIC_LARGE_CAP", 0.12)]),
+    ])
+    def test_tier_differentiation_preserved_at_high_limits(
+        self, coverage, config_name, basis_field, basis_value, cat_args
+    ):
+        """T1 and T4 must produce meaningfully different premiums at $25M limit."""
+        config = load_config(coverage, config_name)
+        product_type = next(iter(config.pricing.by_product_type))
+
+        submission = {
+            basis_field: basis_value, "limit": 25_000_000,
+            "deductible": 50_000, "product_type": product_type,
+        }
+
+        t1 = price_scenario(config, score=850, submission_data=submission,
+                            categorical_modifiers=cat_args)
+        t4 = price_scenario(config, score=400, submission_data=submission,
+                            categorical_modifiers=cat_args)
+
+        # T4 should cost more than T1
+        assert t4["final_premium"] > t1["final_premium"], (
+            f"{config_name} T4 premium ({t4['final_premium']:,.0f}) should exceed "
+            f"T1 ({t1['final_premium']:,.0f}) at $25M limit"
+        )
+        # Neither should be hitting the guardrail cap (which would flatten differentiation)
+        cap = 25_000_000 * config.guardrails.max_premium_to_limit_ratio
+        assert not (t1["premium_was_capped"] and t4["premium_was_capped"]), (
+            f"{config_name} both T1 and T4 hit guardrail cap ({cap:,.0f}) at $25M — "
+            f"ILF curves likely too steep"
+        )
+
     def test_size_modifiers_compress_for_large(self):
         """Size/type modifiers for large entities must be < 1.0 in MULTIPLIER configs."""
         checks = [

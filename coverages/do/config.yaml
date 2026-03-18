@@ -1434,6 +1434,7 @@ directors_officers:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
   
   do_sme:
     metadata:
@@ -2080,3 +2081,4 @@ directors_officers:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

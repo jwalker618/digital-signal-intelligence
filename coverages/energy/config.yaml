@@ -1487,6 +1487,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY UPSTREAM DEEPWATER
@@ -2435,6 +2436,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY UPSTREAM ONSHORE
@@ -3072,6 +3074,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY UPSTREAM UNCONVENTIONAL
@@ -3736,6 +3739,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY MIDSTREAM
@@ -4247,6 +4251,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY DOWNSTREAM
@@ -4770,6 +4775,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # energy_offshore_wind
@@ -5965,6 +5971,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # energy_onshore_renewable
@@ -7132,6 +7139,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY STORAGE (BESS & GREEN HYDROGEN)
@@ -8298,6 +8306,7 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
 
   # ===========================================================================
   # ENERGY SME (SMALL ENERGY OPERATORS)
@@ -9019,3 +9028,4 @@ energy:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
+      max_ilf_factor: 65.0
