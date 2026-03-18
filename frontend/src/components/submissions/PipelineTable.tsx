@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Check, X, Loader2 } from "lucide-react";
+import { CircleCheck, CircleX, Loader2 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas"; 
 import { useDsiStore } from "@/store/dsiStore";
@@ -62,9 +62,15 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
     <ViewCanvas unstyledMain={false}>
       <div className="w-full no-scrollbar">
         <div className="text-dsi-contrast-background pb-4 text-sm">
-          <h1>
-            Showing submissions updated within the last <span className="font-bold">{daysFilter} days</span> (or status = DRAFT).
-          </h1> 
+          {type === "full" ? (
+            <h1>
+              Showing submissions updated within the last <span className="font-bold">{daysFilter} days</span>
+            </h1>
+          ) : (
+            <h1>
+              Showing submissions updated within the last <span className="font-bold">{daysFilter} days</span> (or status = DRAFT).
+            </h1>
+          )}
         </div>
         <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead className="sticky top-0 z-10 ">
@@ -114,25 +120,25 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                     ) : (
                       <div className="flex items-center justify-center gap-4">
                         <button 
-                          className="text-green-600 dark:text-green-400 hover:scale-125" 
+                          className= "hover:scale-150" 
                           onClick={(e) => { 
                             e.stopPropagation(); // Stops the row click from firing!
                             if (sub.referral_id) updateDecision(sub.quote_code, "BOUND", "APPROVED"); 
                           }}
                         >
-                          <Check className="icon" />
+                          <CircleCheck className="icon" />
                         </button>
 
-                        <span className="opacity-50 text-dsi-selected font-light">/</span>
+                        <span className="opacity-50 text-dsi-contrast-background font-light">/</span>
 
                         <button 
-                          className="text-red-600 dark:text-red-400 hover:scale-125" 
+                          className="hover:scale-150" 
                           onClick={(e) => { 
                             e.stopPropagation(); 
                             if (sub.referral_id) updateDecision(sub.quote_code, "DECLINED", "DECLINED"); 
                           }}
                         >
-                          <X className="icon" />
+                          <CircleX className="icon" />
                         </button>
                       </div>
                     )}

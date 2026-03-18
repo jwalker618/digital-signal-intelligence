@@ -44,7 +44,50 @@ export default function SummaryTab() {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto animate-in fade-in duration-500 pb-12 pt-4">
+    <div className="
+      pt-4
+      w-full no-scrollbar
+      animate-in fade-in duration-500"
+    >
+      
+      {/* KEY INFORMATION */}
+      <div className="
+        grid grid-cols-1 grid-rows-4
+        sticky top-5 z-5
+        border-b-3 border-dsi-contrast-background
+        rounded-xl
+        overflow-hidden
+        bg-dsi-analysis shadow-sm
+        pt-2 pb-2 pl-4 gap-1"
+      >  
+        <div className="underline font-bold">
+          Key Information
+        </div>
+        <div className="content-center">
+          <span>Status: </span><span className="uppercase font-bold">{activeQuote.status}</span>
+        </div>
+        
+        <div className="content-center">
+          {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+            <span className="gap-6 ">
+              <span>Quote Valid From: {new Date(activeQuote.valid_from).toLocaleDateString()}; Until: {new Date(activeQuote.valid_until).toLocaleDateString()}</span>
+            </span>
+          )}
+          {activeQuote.status === 'bound' && (
+            <span className="gap-6 ">
+                <span>Bound Date: {activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                <span>Policy Reference: {activeQuote.policy_number || 'Pending'}</span>
+            </span>
+          )}
+        </div>
+        
+        <div className="content-center">
+          <span>Submission Code: </span><span className="uppercase font-bold">{activeSubmission.submission_code}</span>
+          <span> || </span>
+          <span>Quote Code: </span><span className="uppercase font-bold">{activeQuote.quote_code}</span>
+        </div>
+
+      </div>
       
       {/* TWO-COLUMN LAYOUT */}
       <div className="flex flex-col lg:flex-row gap-6">

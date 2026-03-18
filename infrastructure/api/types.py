@@ -462,6 +462,9 @@ class ModelVersionDBRecord(BaseModel):
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
     final_premium: Optional[float] = None
+    ilf_factor: Optional[float] = None
+    ilf_method: Optional[str] = None        
+    ilf_anchor_limit: Optional[float] = None
     decision: Optional[DecisionType] = None
     auto_approve: bool = False
     referral_reasons: List[str] = Field(default_factory=list)
@@ -527,6 +530,9 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
     final_premium: Optional[float] = None
+    ilf_factor: Optional[float] = None
+    ilf_method: Optional[str] = None        
+    ilf_anchor_limit: Optional[float] = None
     decision: Optional[DecisionType] = None
     auto_approve: bool = False
 
@@ -535,8 +541,9 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
-                                        "limit_premiums", "final_premium", "decision","auto_approve",
-
+                                        "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
+                                        "decision","auto_approve",
+   
                                         "referral_reasons", "notes",
                                         
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
@@ -560,7 +567,8 @@ class ModelVersionDBRecord_DetailOnly(BaseModel):
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
-                                        "limit_premiums", "final_premium", "decision","auto_approve",
+                                        "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
+                                        "decision","auto_approve",
 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
                                         
@@ -583,7 +591,8 @@ class ModelVersionDBRecord_CommentaryOnly(BaseModel):
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
-                                        "limit_premiums", "final_premium", "decision","auto_approve",
+                                        "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
+                                        "decision","auto_approve",
 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
 
@@ -617,7 +626,8 @@ class ModelVersionDBRecord_LossOnly(BaseModel):
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
-                                        "limit_premiums", "final_premium", "decision","auto_approve",
+                                        "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
+                                        "decision","auto_approve",
 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
 
