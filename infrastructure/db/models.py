@@ -304,6 +304,11 @@ class ModelVersionRecord(Base):
     limit_premiums = Column(JSONB, default=dict)
     final_premium = Column(Float)
 
+    # ILF (Increased Limit Factor) audit
+    ilf_factor = Column(Float)                       # The ILF multiplier applied at the requested limit
+    ilf_method = Column(String(50))                  # table, interpolated, or extrapolated
+    ilf_anchor_limit = Column(Float)                 # The limit where ILF = 1.0 (e.g. 10_000_000)
+
     # Decision
     decision = Column(SQLEnum(DecisionType))
     auto_approve = Column(Boolean, default=False)
