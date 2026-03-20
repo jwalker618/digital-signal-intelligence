@@ -459,6 +459,16 @@ class ModelPricer:
                 limit_premium = premium * ilf * ded_factor
                 limit_premiums[str(limit)] = round(limit_premium, 2)
 
+            # If the requested limit isn't in the standard menu, price it
+            # via ILF interpolation so any limit can be quoted
+            requested_limit = submission_data.get("limit")
+            if requested_limit:
+                req_key = str(int(requested_limit))
+                if req_key not in limit_premiums:
+                    ilf = config.get_ilf(product_type, int(requested_limit))
+                    limit_premium = premium * ilf * ded_factor
+                    limit_premiums[req_key] = round(limit_premium, 2)
+
         return limit_premiums
 
     def _resolve_product_type(
