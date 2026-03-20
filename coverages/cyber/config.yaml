@@ -1169,12 +1169,6 @@ cyber:
               applied: 1.3
     limit_configuration:
       type: DECOUPLED
-      valid_limits:
-      - 1000000
-      - 3000000
-      - 5000000
-      - 10000000
-      - 25000000
       valid_deductibles:
       - 10000
       - 25000
@@ -1182,6 +1176,8 @@ cyber:
       - 100000
       - 250000
       - 500000
+      min_limit: 1000000
+      max_limit: 25000000
     pricing:
       base_limit_reference: 1000000
       base_deductible_reference: 50000

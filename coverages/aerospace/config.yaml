@@ -1284,13 +1284,6 @@ aerospace:
               applied: 1.6
     limit_configuration:
       type: DECOUPLED
-      valid_limits:
-      - 10000000
-      - 25000000
-      - 50000000
-      - 100000000
-      - 250000000
-      - 500000000
       valid_deductibles:
       - 10000
       - 25000
@@ -1298,6 +1291,8 @@ aerospace:
       - 100000
       - 250000
       - 500000
+      min_limit: 10000000
+      max_limit: 500000000
     pricing:
       base_limit_reference: 10000000
       base_deductible_reference: 50000

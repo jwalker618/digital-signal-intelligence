@@ -503,7 +503,11 @@ class ConfigYAMLGenerator:
         result = {"type": lc.type.value}
 
         if lc.type == LimitConfigType.DECOUPLED:
-            result["valid_limits"] = lc.valid_limits
+            if lc.min_limit is not None and lc.max_limit is not None:
+                result["min_limit"] = lc.min_limit
+                result["max_limit"] = lc.max_limit
+            elif lc.valid_limits:
+                result["valid_limits"] = lc.valid_limits
             result["valid_deductibles"] = lc.valid_deductibles
         elif lc.type == LimitConfigType.BUNDLED and lc.packages:
             result["packages"] = lc.packages

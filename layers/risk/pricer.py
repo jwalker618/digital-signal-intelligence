@@ -484,27 +484,23 @@ class ModelPricer:
                 limit_premium = premium * ilf * ded_factor
                 limit_premiums[str(pkg.limit)] = round(limit_premium, 2)
 
-        elif limit_config.type == LimitConfigType.DECOUPLED and limit_config.valid_limits:
+        elif limit_config.type == LimitConfigType.DECOUPLED:
             # DECOUPLED: independent limit/deductible selection
             base_deductible = int(
                 submission_data.get("deductible", config.pricing.base_deductible_reference)
             )
             ded_factor = config.get_deductible_factor(product_type, base_deductible)
 
-            for limit in limit_config.valid_limits:
+            # Generate contextual limit options (programmatic or explicit)
+            requested_limit = submission_data.get("limit")
+            limit_options = limit_config.generate_limit_options(
+                requested_limit=int(requested_limit) if requested_limit else None
+            )
+
+            for limit in limit_options:
                 ilf = config.get_ilf(product_type, limit)
                 limit_premium = premium * ilf * ded_factor
                 limit_premiums[str(limit)] = round(limit_premium, 2)
-
-            # If the requested limit isn't in the standard menu, price it
-            # via ILF interpolation so any limit can be quoted
-            requested_limit = submission_data.get("limit")
-            if requested_limit:
-                req_key = str(int(requested_limit))
-                if req_key not in limit_premiums:
-                    ilf = config.get_ilf(product_type, int(requested_limit))
-                    limit_premium = premium * ilf * ded_factor
-                    limit_premiums[req_key] = round(limit_premium, 2)
 
         return limit_premiums
 

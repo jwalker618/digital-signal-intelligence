@@ -447,18 +447,69 @@ class LimitConfiguration(BaseModel):
     # For BUNDLED mode
     packages: Optional[List[LimitPackage]] = None
 
-    # For DECOUPLED mode
-    valid_limits: Optional[List[int]] = None
+    # For DECOUPLED mode — programmatic limit generation
+    min_limit: Optional[int] = None
+    max_limit: Optional[int] = None
     valid_deductibles: Optional[List[int]] = None
+
+    # Legacy: explicit list of limits (still supported, overrides min/max)
+    valid_limits: Optional[List[int]] = None
 
     @model_validator(mode="after")
     def validate_mode(self) -> "LimitConfiguration":
         if self.type == LimitConfigType.BUNDLED and not self.packages:
             raise ValueError("BUNDLED mode requires 'packages'")
         if self.type == LimitConfigType.DECOUPLED:
-            if not self.valid_limits or not self.valid_deductibles:
-                raise ValueError("DECOUPLED mode requires 'valid_limits' and 'valid_deductibles'")
+            has_range = self.min_limit is not None and self.max_limit is not None
+            has_list = self.valid_limits is not None and len(self.valid_limits) > 0
+            if not has_range and not has_list:
+                raise ValueError(
+                    "DECOUPLED mode requires either (min_limit + max_limit) "
+                    "or valid_limits"
+                )
+            if not self.valid_deductibles:
+                raise ValueError("DECOUPLED mode requires 'valid_deductibles'")
         return self
+
+    def generate_limit_options(self, requested_limit: Optional[int] = None) -> List[int]:
+        """
+        Generate contextual limit options around the requested limit.
+
+        If valid_limits is explicitly set, returns those directly.
+        Otherwise, generates a menu of standard limit options between
+        min_limit and max_limit, centered around the requested limit.
+
+        Returns:
+            Sorted list of limit options
+        """
+        if self.valid_limits:
+            return sorted(self.valid_limits)
+
+        if self.min_limit is None or self.max_limit is None:
+            return []
+
+        # Generate standard limit steps between min and max
+        # Steps follow market conventions: 1, 2, 3, 5, 10, 15, 20, 25, 50, 75, 100 × base
+        standard_multipliers = [
+            0.25, 0.5, 1, 2, 3, 5, 7.5, 10, 15, 20, 25, 50, 75, 100,
+            150, 200, 250, 500, 750, 1000,
+        ]
+        all_options = set()
+        base = self.min_limit
+        for m in standard_multipliers:
+            limit = int(base * m)
+            if self.min_limit <= limit <= self.max_limit:
+                all_options.add(limit)
+
+        # Always include min and max
+        all_options.add(self.min_limit)
+        all_options.add(self.max_limit)
+
+        # If requested_limit is provided, include it and nearby round limits
+        if requested_limit and self.min_limit <= requested_limit <= self.max_limit:
+            all_options.add(requested_limit)
+
+        return sorted(all_options)
 
 
 # =============================================================================

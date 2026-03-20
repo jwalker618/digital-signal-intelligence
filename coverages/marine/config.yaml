@@ -1266,15 +1266,6 @@ marine:
               applied: 1.6
     limit_configuration:
       type: DECOUPLED
-      valid_limits:
-      - 5000000
-      - 10000000
-      - 25000000
-      - 50000000
-      - 100000000
-      - 250000000
-      - 500000000
-      - 1000000000
       valid_deductibles:
       - 10000
       - 25000
@@ -1283,6 +1274,8 @@ marine:
       - 250000
       - 500000
       - 1000000
+      min_limit: 5000000
+      max_limit: 1000000000
     pricing:
       base_limit_reference: 10000000
       base_deductible_reference: 50000
@@ -1964,17 +1957,13 @@ marine:
               applied: 1.15
     limit_configuration:
       type: DECOUPLED
-      valid_limits:
-      - 1000000
-      - 2500000
-      - 5000000
-      - 10000000
-      - 25000000
       valid_deductibles:
       - 5000
       - 10000
       - 25000
       - 50000
+      min_limit: 1000000
+      max_limit: 25000000
     pricing:
       base_limit_reference: 5000000
       base_deductible_reference: 10000

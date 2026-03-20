@@ -554,8 +554,11 @@
       # Maximum flexibility, ILF/deductible factor scaling applies
       # -----------------------------------------------------------------------
       type: "DECOUPLED"                    # Limits and deductibles are independent
-      valid_limits:                        # Allowed limit options (in default_currency)
-        - {integer}                        # e.g., 1000000, 2000000, 5000000
+      min_limit: {integer}                 # Minimum allowed limit (e.g., 1000000)
+      max_limit: {integer}                 # Maximum allowed limit (e.g., 100000000)
+      # Limit options are generated programmatically between min and max
+      # using standard market multipliers (1×, 2×, 3×, 5×, 10×, 25×, 50×, 100× of min_limit)
+      # The requested limit is always included in the generated options
       valid_deductibles:                   # Allowed deductible options (in default_currency)
         - {integer}                        # e.g., 10000, 25000, 50000, 100000
 
