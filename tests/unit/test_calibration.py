@@ -342,11 +342,21 @@ class TestCrossCoverageConsistency:
         config = load_config(coverage, config_name)
         max_ilf = config.guardrails.max_ilf_factor
         for prod_name, prod_pricing in config.pricing.by_product_type.items():
-            for point in prod_pricing.ilf_curve.factors:
-                assert point.factor <= max_ilf, (
-                    f"{config_name} {prod_name} ILF {point.factor} at limit "
-                    f"{point.limit:,} exceeds max_ilf_factor ({max_ilf})"
-                )
+            ilf_curve = prod_pricing.ilf_curve
+            if ilf_curve.is_parametric:
+                # For parametric curves, check the cap parameter if present
+                cap = (ilf_curve.params or {}).get("cap")
+                if cap is not None:
+                    assert cap <= max_ilf, (
+                        f"{config_name} {prod_name} parametric cap {cap} "
+                        f"exceeds max_ilf_factor ({max_ilf})"
+                    )
+            else:
+                for point in (ilf_curve.factors or []):
+                    assert point.factor <= max_ilf, (
+                        f"{config_name} {prod_name} ILF {point.factor} at limit "
+                        f"{point.limit:,} exceeds max_ilf_factor ({max_ilf})"
+                    )
 
     @pytest.mark.parametrize("coverage,config_name,basis_field,basis_value,cat_args", [
         ("cyber", "cyber_general", "revenue", 90_000_000_000,

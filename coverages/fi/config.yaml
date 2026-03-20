@@ -1,22 +1,3 @@
-# =============================================================================
-# DSI Model Configuration
-# =============================================================================
-#
-# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
-# 1. Signals defined once in signal_registry with group_id reference
-# 2. source: score (default) uses 0-100 inference return
-# 3. source: metadata.field uses inference metadata with bands/categories
-# 4. Categorical groups apply modifiers (applied:), not scores
-# 5. score_conditions (plural, banded) apply actions based on score thresholds
-#    Actions: FLAG | MODIFIER | REFER
-# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
-# 7. Normalisation handled by inference functions, not config
-#
-# AUGMENTED BY:
-# - analysis_outputs/{coverage}_v{date}.yaml - empirically-derived parameters
-# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
-#
-# =============================================================================
 financial_institutions:
   fi_general:
     metadata:
@@ -48,10 +29,9 @@ financial_institutions:
       model_specificity: 1
       routing_constraints:
       - field: aum
-        operator: ">"
+        operator: '>'
         value: 500000000
         required_in_input: true
-        
     direct_queries:
     - id: regulatory_action
       question: Any pending or recent (3 years) regulatory enforcement actions?
@@ -1109,7 +1089,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.000008
+            applied: 8.0e-06
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1121,7 +1101,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.000012
+            applied: 1.2e-05
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1133,7 +1113,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.000015
+            applied: 1.5e-05
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1145,7 +1125,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.000025
+            applied: 2.5e-05
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1157,7 +1137,7 @@ financial_institutions:
           application:
             method: MULTIPLIER
             basis: total_assets
-            applied: 0.00005
+            applied: 5.0e-05
     loss_tier_bands:
       bands:
       - id: 1
@@ -1338,45 +1318,32 @@ financial_institutions:
     limit_configuration:
       type: DECOUPLED
       valid_limits:
-        - 1000000
-        - 2000000
-        - 5000000
-        - 10000000
-        - 25000000
-        - 50000000
-        - 100000000
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
       valid_deductibles:
-        - 10000
-        - 25000
-        - 50000
-        - 100000
-        - 250000
-        - 500000
-        - 1000000
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
     pricing:
       base_limit_reference: 1000000
       base_deductible_reference: 50000
-      
       by_product_type:
         financial_institution_bond:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.35
-            - limit: 5000000
-              factor: 2.00
-            - limit: 10000000
-              factor: 2.80
-            - limit: 25000000
-              factor: 4.20
-            - limit: 50000000
-              factor: 5.60
-            - limit: 100000000
-              factor: 7.50
-
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1394,23 +1361,11 @@ financial_institutions:
             factor: 0.7
         professional_liability:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.40
-            - limit: 5000000
-              factor: 2.15
-            - limit: 10000000
-              factor: 3.00
-            - limit: 25000000
-              factor: 4.50
-            - limit: 50000000
-              factor: 6.00
-            - limit: 100000000
-              factor: 8.00
-
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1428,23 +1383,11 @@ financial_institutions:
             factor: 0.7
         directors_officers:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.45
-            - limit: 5000000
-              factor: 2.30
-            - limit: 10000000
-              factor: 3.20
-            - limit: 25000000
-              factor: 5.00
-            - limit: 50000000
-              factor: 6.80
-            - limit: 100000000
-              factor: 9.00
-
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 6.0
+              k: 0.02
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1462,23 +1405,11 @@ financial_institutions:
             factor: 0.7
         cyber_liability:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.40
-            - limit: 5000000
-              factor: 2.15
-            - limit: 10000000
-              factor: 3.00
-            - limit: 25000000
-              factor: 4.50
-            - limit: 50000000
-              factor: 6.00
-            - limit: 100000000
-              factor: 8.00
-
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1496,23 +1427,11 @@ financial_institutions:
             factor: 0.7
         employment_practices:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.30
-            - limit: 5000000
-              factor: 1.90
-            - limit: 10000000
-              factor: 2.60
-            - limit: 25000000
-              factor: 3.80
-            - limit: 50000000
-              factor: 5.00
-            - limit: 100000000
-              factor: 6.50
-
+            anchor_limit: 1000000
+            curve: power
+            params:
+              alpha: 0.4
+              cap: 8.0
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1530,23 +1449,11 @@ financial_institutions:
             factor: 0.7
         fiduciary_liability:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - limit: 1000000
-              factor: 1.0
-            - limit: 2000000
-              factor: 1.35
-            - limit: 5000000
-              factor: 2.00
-            - limit: 10000000
-              factor: 2.80
-            - limit: 25000000
-              factor: 4.20
-            - limit: 50000000
-              factor: 5.60
-            - limit: 100000000
-              factor: 7.50
-
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 10000
             factor: 1.5
@@ -1563,270 +1470,478 @@ financial_institutions:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
-
     guardrails:
-      modifier_floor: 0.10
+      modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01
       max_ilf_factor: 10.0
-
-  # ===========================================================================
-  # FINANCIAL INSTITUTIONS SME
-  # Target: AUM <= $500M. Fixed Pricing. Bundled Limits. Simplified signals.
-  # ===========================================================================
   fi_sme:
     metadata:
-      name: "DSI Financial Institutions SME Model"
-      description: "Streamlined FI coverage for community banks, small advisers, and funds"
-      version: "2.3.0"
+      name: DSI Financial Institutions SME Model
+      description: Streamlined FI coverage for community banks, small advisers, and funds
+      version: 2.3.0
       product_types:
-        - "financial_institution_bond"
-        - "professional_liability"
-        - "directors_officers"
-        - "cyber_liability"
-        - "employment_practices"
-      applicable_markets: ["us"]
+      - financial_institution_bond
+      - professional_liability
+      - directors_officers
+      - cyber_liability
+      - employment_practices
+      applicable_markets:
+      - us
       minimum_viable_input:
         required:
-          - field: "client_name"
-          - field: "product_type"
-          - field: "limit"
-          - field: "total_assets"
+        - field: client_name
+        - field: product_type
+        - field: limit
+        - field: total_assets
       min_premium: 5000
-      default_currency: "USD"
-
+      default_currency: USD
       model_specificity: 2
       routing_constraints:
-        - field: "total_assets"
-          operator: "<="
-          value: 500000000
-          required_in_input: true
-
+      - field: total_assets
+        operator: <=
+        value: 500000000
+        required_in_input: true
     direct_queries:
-      - id: "regulatory_action_sme"
-        question: "Any pending regulatory enforcement actions or MRAs?"
-        query_condition:
-          - return: true
-            action: "REFER"
-            override: 4
-            note: "Regulatory action disclosed"
-      - id: "cyber_incident_sme"
-        question: "Any reportable cyber incidents or wire fraud losses in past 24 months?"
-        query_condition:
-          - return: true
-            action: "REFER"
-            override: 4
-            note: "Recent cyber/fraud incident"
-
-    # Reduced Signal Registry (Focused on core financials, cyber, and regulatory)
+    - id: regulatory_action_sme
+      question: Any pending regulatory enforcement actions or MRAs?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        note: Regulatory action disclosed
+    - id: cyber_incident_sme
+      question: Any reportable cyber incidents or wire fraud losses in past 24 months?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        note: Recent cyber/fraud incident
     signal_registry:
-      - id: "institution_type"
-        inference_utility_function: "institution_type_basefunction"
-        proxy_tier: "INFERRED_PROXY"
-        categories:
-          group_id: "institution_type"
-          source: "metadata.institution_type"
-          features:
-            - {cat: "COMMUNITY_BANK", label: "Community Bank", applied: 0.85}
-            - {cat: "CREDIT_UNION", label: "Credit Union", applied: 0.80}
-            - {cat: "INVESTMENT_ADVISER", label: "Investment Adviser", applied: 1.10}
-            - {cat: "FINTECH", label: "Fintech Startup", applied: 1.50}
-            - {cat: "OTHER", label: "Other", applied: 1.00}
-      
-      - id: "examination_rating"
-        inference_utility_function: "examination_rating_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "regulatory_compliance"
-          risk: {correlation_direction: "positive", weight: 0.60, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Weak exam rating"}]}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.50}}
-
-      - id: "enforcement_action"
-        inference_utility_function: "enforcement_action_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "regulatory_compliance"
-          risk: {correlation_direction: "positive", weight: 0.40, score_conditions: [{threshold: 30, comparison: "<=", action: "REFER", override: 5, note: "Active enforcement"}]}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.50}}
-
-      - id: "capital_ratio"
-        inference_utility_function: "capital_ratio_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "financial_condition"
-          risk: {correlation_direction: "positive", weight: 0.50, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Capital adequacy concerns"}]}
-          loss: {severity: {correlation_direction: "positive", weight: 0.50}}
-          exposure: {size: {correlation_direction: "positive", weight: 0.50}}
-
-      - id: "asset_quality"
-        inference_utility_function: "asset_quality_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "financial_condition"
-          risk: {correlation_direction: "positive", weight: 0.50}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.50}}
-          exposure: {size: {correlation_direction: "positive", weight: 0.50}}
-
-      - id: "tls_score"
-        inference_utility_function: "tls_configuration_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "cyber_security"
-          risk: {correlation_direction: "positive", weight: 0.50}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.50}}
-
-      - id: "breach_history"
-        inference_utility_function: "breach_history_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "cyber_security"
-          risk: {correlation_direction: "positive", weight: 0.50, score_conditions: [{threshold: 35, comparison: "<=", action: "REFER", override: 4, note: "Breach history"}]}
-          loss: {severity: {correlation_direction: "positive", weight: 0.50}}
-
-      - id: "litigation"
-        inference_utility_function: "litigation_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "operational_risk"
-          risk: {correlation_direction: "positive", weight: 1.00}
-          loss: {frequency: {correlation_direction: "positive", weight: 1.00}}
-
+    - id: institution_type
+      inference_utility_function: institution_type_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: institution_type
+        source: metadata.institution_type
+        features:
+        - cat: COMMUNITY_BANK
+          label: Community Bank
+          applied: 0.85
+        - cat: CREDIT_UNION
+          label: Credit Union
+          applied: 0.8
+        - cat: INVESTMENT_ADVISER
+          label: Investment Adviser
+          applied: 1.1
+        - cat: FINTECH
+          label: Fintech Startup
+          applied: 1.5
+        - cat: OTHER
+          label: Other
+          applied: 1.0
+    - id: examination_rating
+      inference_utility_function: examination_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: regulatory_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.6
+          score_conditions:
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Weak exam rating
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.5
+    - id: enforcement_action
+      inference_utility_function: enforcement_action_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: regulatory_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.4
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Active enforcement
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.5
+    - id: capital_ratio
+      inference_utility_function: capital_ratio_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: financial_condition
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+          score_conditions:
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Capital adequacy concerns
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.5
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.5
+    - id: asset_quality
+      inference_utility_function: asset_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: financial_condition
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.5
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.5
+    - id: tls_score
+      inference_utility_function: tls_configuration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cyber_security
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.5
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cyber_security
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+          score_conditions:
+          - threshold: 35
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Breach history
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.5
+    - id: litigation
+      inference_utility_function: litigation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: operational_risk
+        risk:
+          correlation_direction: positive
+          weight: 1.0
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 1.0
     groups:
       categories:
-        - {id: "institution_type", label: "Institution Type", impact: "MODIFIER", default_cat: "OTHER"}
+      - id: institution_type
+        label: Institution Type
+        impact: MODIFIER
+        default_cat: OTHER
       three_layer_assessment:
-        - id: "regulatory_compliance"
-          label: "Regulatory Compliance"
-          risk: {weight: 0.35}
-          loss: {weight: 0.30}
-          exposure: {weight: 0.10}
-        - id: "financial_condition"
-          label: "Financial Condition"
-          risk: {weight: 0.35}
-          loss: {weight: 0.30}
-          exposure: {weight: 0.40}
-        - id: "cyber_security"
-          label: "Cyber Security"
-          risk: {weight: 0.15}
-          loss: {weight: 0.20}
-          exposure: {weight: 0.20}
-        - id: "operational_risk"
-          label: "Operational Risk"
-          risk: {weight: 0.15}
-          loss: {weight: 0.20}
-          exposure: {weight: 0.30}
-
-    # Fixed Base Pricing for SME
+      - id: regulatory_compliance
+        label: Regulatory Compliance
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.1
+      - id: financial_condition
+        label: Financial Condition
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.4
+      - id: cyber_security
+        label: Cyber Security
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.2
+      - id: operational_risk
+        label: Operational Risk
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.3
     risk_tier_bands:
       bands:
-        - {id: 1, label: "PREFERRED", interpretation: {bands: {min: 800, max: 1000}, action: "APPROVE", application: {method: "PREMIUM_BASE", value: 5000}}}
-        - {id: 2, label: "STANDARD_PLUS", interpretation: {bands: {min: 650, max: 799}, action: "APPROVE", application: {method: "PREMIUM_BASE", value: 7500}}}
-        - {id: 3, label: "STANDARD", interpretation: {bands: {min: 500, max: 649}, action: "REFER", application: {method: "PREMIUM_BASE", value: 12000}}}
-        - {id: 4, label: "SUBSTANDARD", interpretation: {bands: {min: 350, max: 499}, action: "REFER", application: {method: "PREMIUM_BASE", value: 18000}}}
-        - {id: 5, label: "DECLINE", interpretation: {bands: {min: 0, max: 349}, action: "DECLINE", application: {method: "PREMIUM_BASE", value: 0}}}
-
+      - id: 1
+        label: PREFERRED
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            value: 5000
+      - id: 2
+        label: STANDARD_PLUS
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            value: 7500
+      - id: 3
+        label: STANDARD
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            value: 12000
+      - id: 4
+        label: SUBSTANDARD
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            value: 18000
+      - id: 5
+        label: DECLINE
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: PREMIUM_BASE
+            value: 0
     loss_tier_bands:
       bands:
-        - {id: 1, label: "VERY_LOW", interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
-        - {id: 2, label: "LOW", interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
-        - {id: 3, label: "MODERATE", interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
-        - {id: 4, label: "ELEVATED", interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.15, severity_modifier: 1.15}}}
-        - {id: 5, label: "HIGH", interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.35, severity_modifier: 1.4}}}
-      constraints: {floor: 0.6, cap: 1.5}
-
+      - id: 1
+        label: VERY_LOW
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.6
+        cap: 1.5
     exposure:
       size:
-        weight: 0.60
+        weight: 0.6
         bands:
-          - {id: 1, label: "MICRO", interpretation: {bands: {min: 0, max: 33}, application: {method: "MODIFIER", applied: 0.80}}} # < $50M
-          - {id: 2, label: "SMALL", interpretation: {bands: {min: 34, max: 66}, application: {method: "MODIFIER", applied: 1.00}}} # $50M - $250M
-          - {id: 3, label: "MEDIUM", interpretation: {bands: {min: 67, max: 100}, application: {method: "MODIFIER", applied: 1.25}}} # $250M - $500M
+        - id: 1
+          label: MICRO
+          interpretation:
+            bands:
+              min: 0
+              max: 33
+            application:
+              method: MODIFIER
+              applied: 0.8
+        - id: 2
+          label: SMALL
+          interpretation:
+            bands:
+              min: 34
+              max: 66
+            application:
+              method: MODIFIER
+              applied: 1.0
+        - id: 3
+          label: MEDIUM
+          interpretation:
+            bands:
+              min: 67
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.25
       complexity:
-        weight: 0.40
+        weight: 0.4
         bands:
-          - {id: 1, label: "SIMPLE", interpretation: {bands: {min: 0, max: 50}, application: {method: "MODIFIER", applied: 0.90}}}
-          - {id: 2, label: "COMPLEX", interpretation: {bands: {min: 51, max: 100}, application: {method: "MODIFIER", applied: 1.15}}}
-
-    # SME Bundled Limits
+        - id: 1
+          label: SIMPLE
+          interpretation:
+            bands:
+              min: 0
+              max: 50
+            application:
+              method: MODIFIER
+              applied: 0.9
+        - id: 2
+          label: COMPLEX
+          interpretation:
+            bands:
+              min: 51
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.15
     limit_configuration:
-      type: "BUNDLED"
+      type: BUNDLED
       packages:
-        - {id: 1, label: "STARTER", limit: 1000000, deductible: 10000}
-        - {id: 2, label: "STANDARD", limit: 2000000, deductible: 25000}
-        - {id: 3, label: "PREMIUM", limit: 5000000, deductible: 50000}
-
+      - id: 1
+        label: STARTER
+        limit: 1000000
+        deductible: 10000
+      - id: 2
+        label: STANDARD
+        limit: 2000000
+        deductible: 25000
+      - id: 3
+        label: PREMIUM
+        limit: 5000000
+        deductible: 50000
     pricing:
-      # Anchor exactly matches the STARTER package
       base_limit_reference: 1000000
       base_deductible_reference: 10000
-      
       by_product_type:
         financial_institution_bond:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-              - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.65}
-              - {limit: 5000000, factor: 2.90}
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.0
+              k: 0.15
           deductible_factors:
-              - {deductible: 10000, factor: 1.00} # Anchor
-              - {deductible: 25000, factor: 0.90}
-              - {deductible: 50000, factor: 0.82}
-
-        # [Apply exact same ILF & Deductible Factor blocks for professional_liability, directors_officers, cyber_liability, employment_practices]
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.82
         professional_liability:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-              - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.75}
-              - {limit: 5000000, factor: 3.30}
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.0
+              k: 0.15
           deductible_factors:
-              - {deductible: 10000, factor: 1.00}
-              - {deductible: 25000, factor: 0.90}
-              - {deductible: 50000, factor: 0.82}
-              
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.82
         directors_officers:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-              - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.85}
-              - {limit: 5000000, factor: 3.60}
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.0
+              k: 0.15
           deductible_factors:
-              - {deductible: 10000, factor: 1.00}
-              - {deductible: 25000, factor: 0.90}
-              - {deductible: 50000, factor: 0.82}
-              
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.82
         cyber_liability:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-              - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.75}
-              - {limit: 5000000, factor: 3.40}
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.0
+              k: 0.15
           deductible_factors:
-              - {deductible: 10000, factor: 1.00}
-              - {deductible: 25000, factor: 0.90}
-              - {deductible: 50000, factor: 0.82}
-              
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.82
         employment_practices:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-              - {limit: 1000000, factor: 1.00}
-              - {limit: 2000000, factor: 1.60}
-              - {limit: 5000000, factor: 2.80}
+            anchor_limit: 1000000
+            curve: power
+            params:
+              alpha: 0.35
+              cap: 4.0
           deductible_factors:
-              - {deductible: 10000, factor: 1.00}
-              - {deductible: 25000, factor: 0.90}
-              - {deductible: 50000, factor: 0.82}
-
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.82
       taxes_fees_rate: 0.05
-
     guardrails:
-      modifier_floor: 0.10
+      modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01

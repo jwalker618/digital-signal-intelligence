@@ -516,11 +516,20 @@ class ConfigYAMLGenerator:
 
         by_product = {}
         for pp in pricing.by_product_type:
+            ilf = pp.ilf_curve
+            if hasattr(ilf, 'curve') and ilf.curve is not None:
+                ilf_dict = {
+                    "anchor_limit": ilf.anchor_limit,
+                    "curve": ilf.curve,
+                    "params": ilf.params or {},
+                }
+            else:
+                ilf_dict = {
+                    "base_limit": ilf.base_limit,
+                    "factors": ilf.factors,
+                }
             entry = {
-                "ilf_curve": {
-                    "base_limit": pp.ilf_curve.base_limit,
-                    "factors": pp.ilf_curve.factors,
-                },
+                "ilf_curve": ilf_dict,
                 "deductible_factors": pp.deductible_factors,
             }
             by_product[pp.product_type] = entry

@@ -583,12 +583,17 @@
       # -----------------------------------------------------------------------
       by_product_type:
         "{product_type_1}":                # Must match entry in metadata.product_types
-          # Increased Limit Factors (ILF)
+          # Increased Limit Factors (ILF) — Parametric Curve
+          # Curve types: bounded_exponential, power, logarithmic, pareto
+          # ILF is normalised to 1.0 at anchor_limit, never drops below 1.0
           ilf_curve:
-            base_limit: {integer}          # Should match base_limit_reference
-            factors:
-              - limit: {integer}
-                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+            anchor_limit: {integer}        # Should match base_limit_reference; ILF = 1.0 here
+            curve: {string}                # One of: bounded_exponential, power, logarithmic, pareto
+            params:                        # Curve-specific parameters:
+              # bounded_exponential: max_ilf (asymptotic raw ILF), k (growth rate)
+              # power:               alpha (exponent, 0.3-0.6 typical), cap (maximum ILF)
+              # logarithmic:         a, b (shape params), cap
+              # pareto:              alpha (tail exponent, 0.3-0.7 typical), cap
 
           # Deductible Adjustments
           # Can use credits (SME) or factors (Corp)
@@ -597,18 +602,14 @@
               factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
 
         "{product_type_2}":                # Different product type
-          # Increased Limit Factors (ILF)
           ilf_curve:
-            base_limit: {integer}          # Should match base_limit_reference
-            factors:
-              - limit: {integer}
-                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+            anchor_limit: {integer}
+            curve: {string}
+            params: {}
 
-          # Deductible Adjustments
-          # Can use credits (SME) or factors (Corp)
           deductible_factors:
             - deductible: {integer}
-              factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
+              factor: {float}
 
       # Shared parameters (apply to all product types)
       taxes_fees_rate: {float}             # e.g., 0.05 = 5%

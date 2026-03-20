@@ -2448,10 +2448,17 @@ def seed_data():
 
             # Resolve ILF for the requested limit for audit trail
             requested_limit = co.get("limit", 10_000_000)
-            ilf_factor = config.get_ilf(
-                submission_data.get("product_type", ""),
-                requested_limit
-            )
+            product_type = submission_data.get("product_type", "")
+            ilf_factor = config.get_ilf(product_type, requested_limit)
+
+            # Determine ILF method and anchor from the curve config
+            _pt_pricing = config.pricing.by_product_type.get(product_type)
+            if _pt_pricing and _pt_pricing.ilf_curve.is_parametric:
+                ilf_method = f"parametric:{_pt_pricing.ilf_curve.curve}"
+                ilf_anchor = _pt_pricing.ilf_curve.anchor_limit
+            else:
+                ilf_method = "table"
+                ilf_anchor = config.pricing.base_limit_reference
 
             # Build tier override audit records
             all_tier_overrides = signal_tier_overrides + query_result.tier_overrides
@@ -2521,8 +2528,8 @@ def seed_data():
                 limit_premiums=limit_premiums,
                 final_premium=final_premium,
                 ilf_factor=ilf_factor,
-                ilf_method="config",
-                ilf_anchor_limit=config.pricing.base_limit_reference,
+                ilf_method=ilf_method,
+                ilf_anchor_limit=ilf_anchor,
                 decision=decision_enum,
                 auto_approve=auto_approve,
                 referral_reasons=referral_reasons,

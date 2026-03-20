@@ -1,27 +1,4 @@
-# =============================================================================
-# DSI Model Configuration
-# =============================================================================
-#
-# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
-# 1. Signals defined once in signal_registry with group_id reference
-# 2. source: score (default) uses 0-100 inference return
-# 3. source: metadata.field uses inference metadata with bands/categories
-# 4. Categorical groups apply modifiers (applied:), not scores
-# 5. score_conditions (plural, banded) apply actions based on score thresholds
-#    Actions: FLAG | MODIFIER | REFER
-# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
-# 7. Normalisation handled by inference functions, not config
-#
-# AUGMENTED BY:
-# - analysis_outputs/{coverage}_v{date}.yaml - empirically-derived parameters
-# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
-#
-# =============================================================================
 professional_indemnity:
-  # ===========================================================================
-  # PI GENERAL (Corporate)
-  # Target: Revenue > $50M. Rate on Revenue. Decoupled Limits.
-  # ===========================================================================
   pi_general:
     metadata:
       name: DSI Professional Indemnity Corporate Model
@@ -31,22 +8,25 @@ professional_indemnity:
       - professional_liability
       - errors_omissions
       - malpractice
-      applicable_markets: ["us", "uk", "eu", "apac"]
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
       minimum_viable_input:
         required:
         - field: client_name
         - field: product_type
         - field: limit
-        - field: revenue       # Required for MULTIPLIER basis
+        - field: revenue
       min_premium: 25000
       default_currency: USD
       model_specificity: 1
       routing_constraints:
       - field: revenue
-        operator: ">"
+        operator: '>'
         value: 50000000
         required_in_input: true
-
     direct_queries:
     - id: pending_claims
       question: Any pending or threatened malpractice claims?
@@ -96,7 +76,6 @@ professional_indemnity:
         override: null
         applied: null
         note: Major client loss (>25% revenue)
-
     signal_registry:
     - id: profession_type
       inference_utility_function: primaryprofessional_classification_basefunction
@@ -105,21 +84,48 @@ professional_indemnity:
         group_id: profession_type
         source: metadata.profession_type
         features:
-        - {cat: ACCOUNTING_FIRM, label: Accounting Firm, applied: 1.40}
-        - {cat: LAW_FIRM, label: Law Firm, applied: 1.30}
-        - {cat: ENGINEERING, label: Engineering, applied: 1.25}
-        - {cat: FINANCIAL_PLANNING, label: Financial Planning, applied: 1.20}
-        - {cat: ARCHITECTURE, label: Architecture, applied: 1.15}
-        - {cat: IT_CONSULTING, label: IT Consulting, applied: 1.05}
-        - {cat: ENVIRONMENTAL_CONSULTING, label: Environmental Consulting, applied: 1.05}
-        - {cat: APPRAISAL_VALUATION, label: Appraisal/Valuation, applied: 1.00}
-        - {cat: INSURANCE_BROKER, label: Insurance Broker, applied: 1.00}
-        - {cat: HEALTHCARE_ADMIN, label: Healthcare Administration, applied: 0.90}
-        - {cat: MANAGEMENT_CONSULTING, label: Management Consulting, applied: 0.90}
-        - {cat: HR_CONSULTING, label: HR Consulting, applied: 0.85}
-        - {cat: REAL_ESTATE, label: Real Estate, applied: 0.85}
-        - {cat: OTHER, label: Other Professional, applied: 1.00}
-
+        - cat: ACCOUNTING_FIRM
+          label: Accounting Firm
+          applied: 1.4
+        - cat: LAW_FIRM
+          label: Law Firm
+          applied: 1.3
+        - cat: ENGINEERING
+          label: Engineering
+          applied: 1.25
+        - cat: FINANCIAL_PLANNING
+          label: Financial Planning
+          applied: 1.2
+        - cat: ARCHITECTURE
+          label: Architecture
+          applied: 1.15
+        - cat: IT_CONSULTING
+          label: IT Consulting
+          applied: 1.05
+        - cat: ENVIRONMENTAL_CONSULTING
+          label: Environmental Consulting
+          applied: 1.05
+        - cat: APPRAISAL_VALUATION
+          label: Appraisal/Valuation
+          applied: 1.0
+        - cat: INSURANCE_BROKER
+          label: Insurance Broker
+          applied: 1.0
+        - cat: HEALTHCARE_ADMIN
+          label: Healthcare Administration
+          applied: 0.9
+        - cat: MANAGEMENT_CONSULTING
+          label: Management Consulting
+          applied: 0.9
+        - cat: HR_CONSULTING
+          label: HR Consulting
+          applied: 0.85
+        - cat: REAL_ESTATE
+          label: Real Estate
+          applied: 0.85
+        - cat: OTHER
+          label: Other Professional
+          applied: 1.0
     - id: sub_profession_type
       inference_utility_function: sub_profession_classification_basefunction
       proxy_tier: INFERRED_PROXY
@@ -900,10 +906,10 @@ professional_indemnity:
             weight: 0.2
     groups:
       categories:
-      - id: profession_type 
-        label: Profession Type 
+      - id: profession_type
+        label: Profession Type
         description: ''
-        impact: MODIFIER 
+        impact: MODIFIER
         default_cat: OTHER
       - id: sub_profession_type
         label: Sub Profession Type
@@ -1051,15 +1057,63 @@ professional_indemnity:
           weight: 0.15
         exposure:
           weight: 0.15
-
     risk_tier_bands:
       bands:
-      - {id: 1, label: PREFERRED, interpretation: {bands: {min: 800, max: 1000}, action: APPROVE, application: {method: MULTIPLIER, applied: 0.00008, basis: revenue}}}
-      - {id: 2, label: STANDARD_PLUS, interpretation: {bands: {min: 650, max: 799}, action: APPROVE, application: {method: MULTIPLIER, applied: 0.00012, basis: revenue}}}
-      - {id: 3, label: STANDARD, interpretation: {bands: {min: 500, max: 649}, action: REFER, application: {method: MULTIPLIER, applied: 0.00018, basis: revenue}}}
-      - {id: 4, label: SUBSTANDARD, interpretation: {bands: {min: 350, max: 499}, action: REFER, application: {method: MULTIPLIER, applied: 0.00028, basis: revenue}}}
-      - {id: 5, label: DECLINE, interpretation: {bands: {min: 0, max: 349}, action: DECLINE, application: {method: MULTIPLIER, applied: 0.00045, basis: revenue}}}    
- 
+      - id: 1
+        label: PREFERRED
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 8.0e-05
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.00012
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.00018
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.00028
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.00045
+            basis: revenue
     loss_tier_bands:
       bands:
       - id: 1
@@ -1115,92 +1169,148 @@ professional_indemnity:
       constraints:
         floor: 0.55
         cap: 1.6
-
     exposure:
       size:
         weight: 0.6
         bands:
-        - {id: 1, label: MEDIUM, interpretation: {bands: {min: 0, max: 33}, application: {method: MODIFIER, applied: 1.0}}} # 50M - 100M
-        - {id: 2, label: LARGE, interpretation: {bands: {min: 34, max: 66}, application: {method: MODIFIER, applied: 1.15}}} # 100M - 250M
-        - {id: 3, label: VERY_LARGE, interpretation: {bands: {min: 67, max: 100}, application: {method: MODIFIER, applied: 1.35}}} # >250M
+        - id: 1
+          label: MEDIUM
+          interpretation:
+            bands:
+              min: 0
+              max: 33
+            application:
+              method: MODIFIER
+              applied: 1.0
+        - id: 2
+          label: LARGE
+          interpretation:
+            bands:
+              min: 34
+              max: 66
+            application:
+              method: MODIFIER
+              applied: 1.15
+        - id: 3
+          label: VERY_LARGE
+          interpretation:
+            bands:
+              min: 67
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.35
       complexity:
         weight: 0.4
         bands:
-        - {id: 1, label: SIMPLE, interpretation: {bands: {min: 0, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
-        - {id: 2, label: COMPLEX, interpretation: {bands: {min: 41, max: 75}, application: {method: MODIFIER, applied: 1.1}}}
-        - {id: 3, label: HIGHLY_COMPLEX, interpretation: {bands: {min: 76, max: 100}, application: {method: MODIFIER, applied: 1.3}}}
-    
+        - id: 1
+          label: SIMPLE
+          interpretation:
+            bands:
+              min: 0
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 2
+          label: COMPLEX
+          interpretation:
+            bands:
+              min: 41
+              max: 75
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 3
+          label: HIGHLY_COMPLEX
+          interpretation:
+            bands:
+              min: 76
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.3
     limit_configuration:
       type: DECOUPLED
-      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000]
-      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000]
-
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      valid_deductibles:
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
     pricing:
       base_limit_reference: 1000000
       base_deductible_reference: 50000
-      
       by_product_type:
         professional_liability:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 2.00}
-            - {limit: 10000000, factor: 2.80}
-            - {limit: 25000000, factor: 4.20}
-            - {limit: 50000000, factor: 5.60}
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.6}
-
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.6
         errors_omissions:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 2.00}
-            - {limit: 10000000, factor: 2.80}
-            - {limit: 25000000, factor: 4.20}
-            - {limit: 50000000, factor: 5.60}
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.6}
-
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.6
         malpractice:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 2.00}
-            - {limit: 10000000, factor: 2.80}
-            - {limit: 25000000, factor: 4.20}
-            - {limit: 50000000, factor: 5.60}
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.6}         
-
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.6
       taxes_fees_rate: 0.05
-
     guardrails:
-      modifier_floor: 0.10
+      modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01
       max_ilf_factor: 10.0
-
-  # ===========================================================================
-  # PI SME (Small Business)
-  # Target: Revenue <= $50M. Categorical Pricing. Bundled Limits.
-  # ===========================================================================
   pi_sme:
     metadata:
       name: DSI Professional Indemnity SME Model
@@ -1210,7 +1320,11 @@ professional_indemnity:
       - professional_liability
       - errors_omissions
       - malpractice
-      applicable_markets: ["us", "uk", "eu", "apac"]
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
       minimum_viable_input:
         required:
         - field: client_name
@@ -1222,14 +1336,10 @@ professional_indemnity:
       model_specificity: 2
       routing_constraints:
       - field: revenue
-        operator: "<="
+        operator: <=
         value: 50000000
         required_in_input: true
-
-    # ... [direct_queries as above] ...
-    
     signal_registry:
-    # CATEGORICAL BASELINE PRESERVED: Your exact logic for SME base prices
     - id: profession_type
       inference_utility_function: primaryprofessional_classification_basefunction
       proxy_tier: INFERRED_PROXY
@@ -1237,80 +1347,190 @@ professional_indemnity:
         group_id: profession_type
         source: metadata.profession_type
         features:
-        - {cat: LAW_FIRM, label: Law Firm, value: 8500}
-        - {cat: ACCOUNTING_FIRM, label: Accounting Firm, value: 9000}
-        - {cat: ARCHITECTURE, label: Architecture, value: 7500}
-        - {cat: ENGINEERING, label: Engineering, value: 8000}
-        - {cat: MANAGEMENT_CONSULTING, label: Management Consulting, value: 6000}
-        - {cat: IT_CONSULTING, label: IT Consulting, value: 7000}
-        - {cat: HR_CONSULTING, label: HR Consulting, value: 5500}
-        - {cat: REAL_ESTATE, label: Real Estate, value: 5500}
-        - {cat: INSURANCE_BROKER, label: Insurance Broker, value: 6500}
-        - {cat: FINANCIAL_PLANNING, label: Financial Planning, value: 7500}
-        - {cat: HEALTHCARE_ADMIN, label: Healthcare Administration, value: 6000}
-        - {cat: APPRAISAL_VALUATION, label: Appraisal/Valuation, value: 6500}
-        - {cat: ENVIRONMENTAL_CONSULTING, label: Environmental Consulting, value: 7000}
-        - {cat: OTHER, label: Other Professional, value: 6000}
-
-    # ... [Keep your sub_profession_type, firm_size, and SME-relevant signals] ...
-    
+        - cat: LAW_FIRM
+          label: Law Firm
+          value: 8500
+        - cat: ACCOUNTING_FIRM
+          label: Accounting Firm
+          value: 9000
+        - cat: ARCHITECTURE
+          label: Architecture
+          value: 7500
+        - cat: ENGINEERING
+          label: Engineering
+          value: 8000
+        - cat: MANAGEMENT_CONSULTING
+          label: Management Consulting
+          value: 6000
+        - cat: IT_CONSULTING
+          label: IT Consulting
+          value: 7000
+        - cat: HR_CONSULTING
+          label: HR Consulting
+          value: 5500
+        - cat: REAL_ESTATE
+          label: Real Estate
+          value: 5500
+        - cat: INSURANCE_BROKER
+          label: Insurance Broker
+          value: 6500
+        - cat: FINANCIAL_PLANNING
+          label: Financial Planning
+          value: 7500
+        - cat: HEALTHCARE_ADMIN
+          label: Healthcare Administration
+          value: 6000
+        - cat: APPRAISAL_VALUATION
+          label: Appraisal/Valuation
+          value: 6500
+        - cat: ENVIRONMENTAL_CONSULTING
+          label: Environmental Consulting
+          value: 7000
+        - cat: OTHER
+          label: Other Professional
+          value: 6000
     groups:
       categories:
-      - {id: profession_type, label: Profession Type, impact: PREMIUM_BASE, default_cat: OTHER}
-
-    # FIXED SCHEMA LOGIC: Legally applies tier modifiers to the categorical value
+      - id: profession_type
+        label: Profession Type
+        impact: PREMIUM_BASE
+        default_cat: OTHER
     risk_tier_bands:
       bands:
-      - {id: 1, label: PREFERRED, interpretation: {bands: {min: 800, max: 1000}, action: APPROVE, application: {method: MULTIPLIER, applied: 0.75, basis: categorical}}}
-      - {id: 2, label: STANDARD_PLUS, interpretation: {bands: {min: 650, max: 799}, action: APPROVE, application: {method: MULTIPLIER, applied: 1.00, basis: categorical}}}
-      - {id: 3, label: STANDARD, interpretation: {bands: {min: 500, max: 649}, action: REFER, application: {method: MULTIPLIER, applied: 1.30, basis: categorical}}}
-      - {id: 4, label: SUBSTANDARD, interpretation: {bands: {min: 350, max: 499}, action: REFER, application: {method: MULTIPLIER, applied: 1.75, basis: categorical}}}
-      - {id: 5, label: DECLINE, interpretation: {bands: {min: 0, max: 349}, action: DECLINE, application: {method: MULTIPLIER, applied: 2.50, basis: categorical}}}
-
+      - id: 1
+        label: PREFERRED
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.75
+            basis: categorical
+      - id: 2
+        label: STANDARD_PLUS
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 1.0
+            basis: categorical
+      - id: 3
+        label: STANDARD
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 1.3
+            basis: categorical
+      - id: 4
+        label: SUBSTANDARD
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 1.75
+            basis: categorical
+      - id: 5
+        label: DECLINE
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 2.5
+            basis: categorical
     exposure:
       size:
         weight: 0.6
         bands:
-        - {id: 1, label: MICRO, interpretation: {bands: {min: 0, max: 33}, application: {method: MODIFIER, applied: 0.75}}} # < 1M
-        - {id: 2, label: SMALL, interpretation: {bands: {min: 34, max: 66}, application: {method: MODIFIER, applied: 1.00}}} # 1M - 10M
-        - {id: 3, label: MEDIUM, interpretation: {bands: {min: 67, max: 100}, application: {method: MODIFIER, applied: 1.25}}} # 10M - 50M
-
-    # FIXED: True Phase 5 Bundled Menu Packages
+        - id: 1
+          label: MICRO
+          interpretation:
+            bands:
+              min: 0
+              max: 33
+            application:
+              method: MODIFIER
+              applied: 0.75
+        - id: 2
+          label: SMALL
+          interpretation:
+            bands:
+              min: 34
+              max: 66
+            application:
+              method: MODIFIER
+              applied: 1.0
+        - id: 3
+          label: MEDIUM
+          interpretation:
+            bands:
+              min: 67
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.25
     limit_configuration:
       type: BUNDLED
       packages:
-        - {id: 1, label: STARTER, limit: 250000, deductible: 2500}
-        - {id: 2, label: BASIC, limit: 500000, deductible: 5000}
-        - {id: 3, label: STANDARD, limit: 1000000, deductible: 10000} # Anchor Match
-        - {id: 4, label: ENHANCED, limit: 2000000, deductible: 25000}
-        - {id: 5, label: PREMIER, limit: 5000000, deductible: 50000}
-
+      - id: 1
+        label: STARTER
+        limit: 250000
+        deductible: 2500
+      - id: 2
+        label: BASIC
+        limit: 500000
+        deductible: 5000
+      - id: 3
+        label: STANDARD
+        limit: 1000000
+        deductible: 10000
+      - id: 4
+        label: ENHANCED
+        limit: 2000000
+        deductible: 25000
+      - id: 5
+        label: PREMIER
+        limit: 5000000
+        deductible: 50000
     pricing:
       base_limit_reference: 1000000
       base_deductible_reference: 10000
-    
       by_product_type:
         professional_liability:
           ilf_curve:
-            base_limit: 1000000
-            factors:
-            - {limit: 250000, factor: 0.50}
-            - {limit: 500000, factor: 0.75}
-            - {limit: 1000000, factor: 1.00} # Anchor
-            - {limit: 2000000, factor: 1.65}
-            - {limit: 5000000, factor: 3.00}
-
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.0
+              k: 0.15
           deductible_factors:
-          - {deductible: 2500, factor: 1.20}
-          - {deductible: 5000, factor: 1.10}
-          - {deductible: 10000, factor: 1.00} # Anchor
-          - {deductible: 25000, factor: 0.90}
-          - {deductible: 50000, factor: 0.80}
-        # (Replicate factors for errors_omissions and malpractice)
+          - deductible: 2500
+            factor: 1.2
+          - deductible: 5000
+            factor: 1.1
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.8
       taxes_fees_rate: 0.05
-
     guardrails:
-      modifier_floor: 0.10
+      modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.01

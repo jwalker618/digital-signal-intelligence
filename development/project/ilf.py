@@ -35,11 +35,11 @@ def logarithmic_curve(L, anchor, a, b, cap):
 
 def pareto_curve(L, anchor, alpha, cap):
     """
-    ILF(L) = (1 - (anchor/L)^alpha)^(-1), capped.
+    Pareto severity ILF: (L/anchor)^alpha, capped. Returns 1.0 at/below anchor.
     """
     if L <= anchor:
         return 1.0
-    ilf = (1 - (anchor / L) ** alpha) ** -1
+    ilf = (L / anchor) ** alpha
     return min(ilf, cap)
 
 

@@ -209,13 +209,21 @@ def adapt_config_for_scorer(config: PydanticCoverageConfig) -> Dict[str, Any]:
             "taxes_fees_rate": config.pricing.taxes_fees_rate,
             "by_product_type": {
                 pt: {
-                    "ilf_curve": {
-                        "base_limit": pricing.ilf_curve.base_limit,
-                        "factors": [
-                            {"limit": f.limit, "factor": f.factor}
-                            for f in pricing.ilf_curve.factors
-                        ],
-                    },
+                    "ilf_curve": (
+                        {
+                            "anchor_limit": pricing.ilf_curve.anchor_limit,
+                            "curve": pricing.ilf_curve.curve,
+                            "params": pricing.ilf_curve.params or {},
+                        }
+                        if pricing.ilf_curve.is_parametric
+                        else {
+                            "base_limit": pricing.ilf_curve.base_limit,
+                            "factors": [
+                                {"limit": f.limit, "factor": f.factor}
+                                for f in (pricing.ilf_curve.factors or [])
+                            ],
+                        }
+                    ),
                     "deductible_factors": [
                         {"deductible": f.deductible, "factor": f.factor}
                         for f in pricing.deductible_factors
