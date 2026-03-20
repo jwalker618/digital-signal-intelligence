@@ -795,6 +795,22 @@ class TriggeredCondition:
 
 
 @dataclass
+class BasePremiumDerivation:
+    """
+    Captures exactly how base premium was derived.
+
+    Provides full audit trail: method, input basis, rate, tier, and result.
+    """
+    method: str                         # "MULTIPLIER", "PREMIUM_BASE", or "DEFAULT"
+    basis_field: Optional[str] = None   # "revenue", "tiv", "limit", etc.
+    basis_value: Optional[float] = None # e.g. 96_000_000_000
+    rate: Optional[float] = None        # e.g. 0.00008
+    tier: int = 3
+    tier_label: str = "STANDARD"
+    result: float = 0.0
+
+
+@dataclass
 class AppliedModifier:
     """
     A modifier that was applied during pricing.
@@ -858,6 +874,7 @@ class ModelVersion:
     # Pricing (Steps 10-12)
     base_premium: float = 0.0
     base_premium_method: str = "pure"
+    base_premium_derivation: Optional[BasePremiumDerivation] = None
     modifiers_applied: List[AppliedModifier] = field(default_factory=list)
     premium_after_modifiers: float = 0.0
     limit_premiums: Dict[str, float] = field(default_factory=dict)
@@ -991,6 +1008,7 @@ class PricingResult:
     # Step 10: Base premium
     base_premium: float = 0.0
     base_premium_method: str = "pure"
+    base_premium_derivation: Optional[BasePremiumDerivation] = None
 
     # Step 11: Modifiers
     modifiers_applied: List[AppliedModifier] = field(default_factory=list)

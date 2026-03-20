@@ -26,6 +26,7 @@ from infrastructure.models.config_schema import (
 from .types import (
     PricingResult,
     AppliedModifier,
+    BasePremiumDerivation,
     CategoricalOutput,
 )
 
@@ -86,11 +87,13 @@ class ModelPricer:
         final_tier_band = config.get_tier_band(final_tier)
 
         # Step 10: Calculate base premium
-        base_premium, method = self.calculate_base_premium(
+        tier_label = final_tier_band.label if final_tier_band else f"TIER_{final_tier}"
+        base_premium, method, base_premium_derivation = self.calculate_base_premium(
             tier=final_tier,
             tier_band=final_tier_band,
             submission_data=submission_data,
             config=config,
+            tier_label=tier_label,
         )
 
         # Step 11: Apply modifiers
@@ -182,10 +185,11 @@ class ModelPricer:
             max_tier_override=max_override,
             score_based_tier=score_based_band.id,
             final_tier=final_tier,
-            tier_label=final_tier_band.label if final_tier_band else f"TIER_{final_tier}",
+            tier_label=tier_label,
             tier_config=None,  # Deprecated: use config.get_tier_band() directly
             base_premium=base_premium,
             base_premium_method=method,
+            base_premium_derivation=base_premium_derivation,
             modifiers_applied=modifiers_applied,
             total_modifier=total_modifier,
             premium_after_modifiers=premium_after_modifiers,
@@ -276,8 +280,9 @@ class ModelPricer:
         tier: int,
         tier_band: Optional[RiskTierBand],
         submission_data: Dict[str, Any],
-        config: CoverageConfig
-    ) -> Tuple[float, str]:
+        config: CoverageConfig,
+        tier_label: str = "STANDARD",
+    ) -> Tuple[float, str, BasePremiumDerivation]:
         """
         Step 10: Generate base premium from tier.
 
@@ -290,13 +295,18 @@ class ModelPricer:
             tier_band: Risk tier band from compiled config
             submission_data: Submission data with metrics
             config: Coverage configuration (Pydantic compiled)
+            tier_label: Human-readable tier label
 
         Returns:
-            Tuple of (base_premium, method)
+            Tuple of (base_premium, method, derivation)
         """
         if tier_band is None:
             logger.warning(f"No config for tier {tier}, using default")
-            return config.metadata.min_premium or 25000, "default"
+            result = config.metadata.min_premium or 25000
+            derivation = BasePremiumDerivation(
+                method="DEFAULT", tier=tier, tier_label=tier_label, result=result,
+            )
+            return result, "default", derivation
 
         app = tier_band.interpretation.application
 
@@ -307,22 +317,49 @@ class ModelPricer:
 
             if basis_value <= 0:
                 logger.debug(f"No {rate_basis} value for MULTIPLIER, using PREMIUM_BASE fallback")
-                return app.value or config.metadata.min_premium or 25000, "default"
+                result = app.value or config.metadata.min_premium or 25000
+                derivation = BasePremiumDerivation(
+                    method="DEFAULT", basis_field=rate_basis,
+                    tier=tier, tier_label=tier_label, result=result,
+                )
+                return result, "default", derivation
 
             rate = app.applied or 0
             base_premium = basis_value * rate
-            return base_premium, "multiplier"
+            derivation = BasePremiumDerivation(
+                method="MULTIPLIER", basis_field=rate_basis,
+                basis_value=basis_value, rate=rate,
+                tier=tier, tier_label=tier_label, result=base_premium,
+            )
+            return base_premium, "multiplier", derivation
 
         # PREMIUM_BASE: direct premium from tier
         if app.method == PricingMethod.PREMIUM_BASE:
             if app.value is not None:
-                return float(app.value), "premium_base"
-            return config.metadata.min_premium or 25000, "default"
+                result = float(app.value)
+                derivation = BasePremiumDerivation(
+                    method="PREMIUM_BASE",
+                    tier=tier, tier_label=tier_label, result=result,
+                )
+                return result, "premium_base", derivation
+            result = config.metadata.min_premium or 25000
+            derivation = BasePremiumDerivation(
+                method="DEFAULT", tier=tier, tier_label=tier_label, result=result,
+            )
+            return result, "default", derivation
 
         # MODIFIER or unknown: use value if available
         if app.value is not None:
-            return float(app.value), "pure"
-        return config.metadata.min_premium or 25000, "default"
+            result = float(app.value)
+            derivation = BasePremiumDerivation(
+                method="DEFAULT", tier=tier, tier_label=tier_label, result=result,
+            )
+            return result, "pure", derivation
+        result = config.metadata.min_premium or 25000
+        derivation = BasePremiumDerivation(
+            method="DEFAULT", tier=tier, tier_label=tier_label, result=result,
+        )
+        return result, "default", derivation
 
     def apply_modifiers(
         self,

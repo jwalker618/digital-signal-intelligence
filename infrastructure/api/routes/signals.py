@@ -185,7 +185,7 @@ def determine_tier_from_score(
             decision = DecisionType.REFER
 
         # Calculate base premium from tier
-        base_premium, method = pricer.calculate_base_premium(
+        base_premium, method, _derivation = pricer.calculate_base_premium(
             tier=tier_band.id,
             tier_band=tier_band,
             submission_data={},

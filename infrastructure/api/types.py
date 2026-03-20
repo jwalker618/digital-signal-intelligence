@@ -194,6 +194,7 @@ class QuoteResponse(BaseModel):
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
     base_premium: Optional[float] = None
+    base_premium_derivation: Optional[Dict[str, Any]] = None
     premium_after_modifiers: Optional[float] = None
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     loss_propensity: Optional[LossPropensitySummary] = None
@@ -458,12 +459,13 @@ class ModelVersionDBRecord(BaseModel):
     tier_label: Optional[str] = None
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
+    base_premium_derivation: Optional[Dict[str, Any]] = None
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
     final_premium: Optional[float] = None
     ilf_factor: Optional[float] = None
-    ilf_method: Optional[str] = None        
+    ilf_method: Optional[str] = None
     ilf_anchor_limit: Optional[float] = None
     decision: Optional[DecisionType] = None
     auto_approve: bool = False
@@ -526,12 +528,13 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
     tier_label: Optional[str] = None
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
+    base_premium_derivation: Optional[Dict[str, Any]] = None
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
     final_premium: Optional[float] = None
     ilf_factor: Optional[float] = None
-    ilf_method: Optional[str] = None        
+    ilf_method: Optional[str] = None
     ilf_anchor_limit: Optional[float] = None
     decision: Optional[DecisionType] = None
     auto_approve: bool = False

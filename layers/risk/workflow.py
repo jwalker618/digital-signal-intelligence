@@ -451,6 +451,7 @@ class WorkflowEngine:
             tier_label=pricing_result.tier_label,
             base_premium=pricing_result.base_premium,
             base_premium_method=pricing_result.base_premium_method,
+            base_premium_derivation=pricing_result.base_premium_derivation,
             modifiers_applied=pricing_result.modifiers_applied,
             premium_after_modifiers=pricing_result.premium_after_modifiers,
             limit_premiums=pricing_result.limit_premiums,

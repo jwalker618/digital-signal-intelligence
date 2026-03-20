@@ -299,6 +299,7 @@ class ModelVersionRecord(Base):
     # Pricing
     base_premium = Column(Float)
     base_premium_method = Column(String(50))
+    base_premium_derivation = Column(JSONB, default=dict)
     modifiers_applied = Column(JSONB, default=list)
     premium_after_modifiers = Column(Float)
     limit_premiums = Column(JSONB, default=dict)

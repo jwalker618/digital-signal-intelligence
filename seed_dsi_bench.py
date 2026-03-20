@@ -37,6 +37,7 @@ Run:
 import uuid
 import random
 import logging
+from dataclasses import asdict
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -2514,6 +2515,7 @@ def seed_data():
                 tier_label=pricing_result.tier_label,
                 base_premium=base_premium,
                 base_premium_method=pricing_result.base_premium_method,
+                base_premium_derivation=asdict(pricing_result.base_premium_derivation) if pricing_result.base_premium_derivation else None,
                 modifiers_applied=modifiers_applied_json,
                 premium_after_modifiers=premium_after_mods,
                 limit_premiums=limit_premiums,

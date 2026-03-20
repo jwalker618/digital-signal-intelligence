@@ -203,7 +203,7 @@ class TestBasePremium:
 
     def test_pure_premium_method(self, pricer, sample_config):
         """Should use pure premium from tier config."""
-        premium, method, rate_value = pricer.calculate_base_premium(
+        premium, method, derivation = pricer.calculate_base_premium(
             tier=1,
             submission_data={},
             config=sample_config
@@ -211,13 +211,13 @@ class TestBasePremium:
 
         assert premium == 25000
         assert method == PremiumMethod.PURE
-        assert rate_value is None
+        assert derivation.basis_value is None
 
     def test_rate_based_method(self, pricer, rate_based_config):
         """Should calculate premium from rate * TIV."""
         submission_data = {"tiv": 10000000}
 
-        premium, method, rate_value = pricer.calculate_base_premium(
+        premium, method, derivation = pricer.calculate_base_premium(
             tier=1,
             submission_data=submission_data,
             config=rate_based_config
@@ -226,7 +226,7 @@ class TestBasePremium:
         # 10M * 0.5% = 50,000
         assert premium == 50000
         assert method == PremiumMethod.RATE_BASED
-        assert rate_value == 10000000
+        assert derivation.basis_value == 10000000
 
     def test_rate_based_respects_minimum(self, pricer, rate_based_config):
         """Rate-based should respect minimum premium."""
@@ -245,14 +245,14 @@ class TestBasePremium:
         """Missing rate basis should use minimum premium."""
         submission_data = {}  # No TIV provided
 
-        premium, method, rate_value = pricer.calculate_base_premium(
+        premium, method, derivation = pricer.calculate_base_premium(
             tier=1,
             submission_data=submission_data,
             config=rate_based_config
         )
 
         assert premium == 10000
-        assert rate_value is None
+        assert derivation.basis_value is None
 
     def test_invalid_tier_uses_minimum(self, pricer, sample_config):
         """Invalid tier should use minimum premium."""
