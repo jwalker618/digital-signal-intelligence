@@ -62,6 +62,7 @@ from infrastructure.db.models import (
 
 # Production workflow components
 from infrastructure.models.compiler import get_config
+from layers.risk.appetite import evaluate_appetite
 from layers.risk.scorer import ModelScorer
 from layers.risk.pricer import ModelPricer
 from layers.risk.query_evaluator import QueryEvaluator
@@ -2266,7 +2267,7 @@ def seed_data():
         _signal_id_cache = {}   # signal_code -> signals.id
         _source_id_cache = {}   # source_name -> signal_sources.id
 
-        stats = {"approve": 0, "refer": 0, "decline": 0}
+        stats = {"approve": 0, "refer": 0, "decline": 0, "outside_appetite": 0}
         coverage_counts = {}
 
         for i, co in enumerate(COMPANIES, 1):
@@ -2282,6 +2283,15 @@ def seed_data():
             processing_end = processing_start + timedelta(seconds=random.randint(3, 45))
 
             submission_data = build_submission_data(co)
+
+            # Step 0a: Appetite check — reject before running the model
+            appetite_result = evaluate_appetite(co["coverage"], submission_data)
+            if not appetite_result.fit:
+                stats["outside_appetite"] += 1
+                print(f"  [{i:>2}/{len(COMPANIES)}] {co['entity_name']:30s}  "
+                      f"OUTSIDE_APPETITE  ({'; '.join(appetite_result.reasons)})")
+                continue
+
             direct_query_responses = build_direct_query_responses(co, config)
 
             sub = Submission(
@@ -2736,6 +2746,8 @@ def seed_data():
         print(f"\n  Signal cache entries: ~{total_signals}")
         print(f"  Users created: 3 (system, underwriter, analyst)")
         print(f"  Referrals created: {stats['refer'] + stats['decline']}")
+        if stats.get("outside_appetite", 0) > 0:
+            print(f"  Outside appetite (skipped): {stats['outside_appetite']}")
         print("=" * 70)
 
     except Exception as e:

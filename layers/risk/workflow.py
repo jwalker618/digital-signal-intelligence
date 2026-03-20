@@ -4,6 +4,7 @@ DSI Model Layer - Workflow Engine (Phase 4 + 6 + 7)
 Orchestrates the complete 14-step workflow:
 
 0. Website Discovery (Phase 6)
+0a. Appetite Check — pre-qualification gate (underwriting authority)
 1. Model Configuration Instantiation
 2. Model Data File Creation
 3. Minimum Viable Input Verification
@@ -42,6 +43,7 @@ from .types import (
 from .model_data import ModelDataManager, get_model_data_manager
 from .scorer import ModelScorer, get_scorer
 from .query_evaluator import QueryEvaluator, get_query_evaluator
+from .appetite import evaluate_appetite
 from .pricer import ModelPricer, get_pricer
 from .modifiers import (
     TraditionalModifier,
@@ -269,6 +271,20 @@ class WorkflowEngine:
             country_hint=country_hint,
             skip_discovery=skip_discovery
         )
+
+        # Step 0a: Appetite Check — pre-qualification gate
+        appetite_result = evaluate_appetite(coverage, submission_data)
+        if not appetite_result.fit:
+            logger.info(
+                "Submission outside appetite for %s: %s",
+                coverage, "; ".join(appetite_result.reasons),
+            )
+            return WorkflowResult(
+                entity_id=entity_id,
+                coverage=coverage,
+                decision=DecisionType.DECLINE,
+                notes=[f"OUTSIDE_APPETITE: {r}" for r in appetite_result.reasons],
+            )
 
         # Step 1: Load Configuration (compiled Pydantic models)
         if config is None:
