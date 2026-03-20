@@ -1,0 +1,12 @@
+# Energy Underwriting Appetite
+# Owned by: Underwriting
+# Scope: All energy configurations (general, upstream, midstream, downstream, renewables)
+
+appetite:
+  max_single_limit: 1_000_000_000   # $1B max any one policy
+
+  constraints:
+    - field: tiv
+      operator: "<="
+      value: 100_000_000_000        # $100B TIV
+      reason: "TIV exceeds energy underwriting authority — requires syndicate structure"

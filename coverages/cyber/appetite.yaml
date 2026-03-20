@@ -1,0 +1,15 @@
+# Cyber Underwriting Appetite
+# Owned by: Underwriting
+# Scope: All cyber configurations (cyber_general, cyber_sme)
+#
+# This file defines what we are willing to write, not how we price it.
+# Changes here require underwriting authority sign-off.
+
+appetite:
+  max_single_limit: 100_000_000     # $100M max any one policy
+
+  constraints:
+    - field: revenue
+      operator: "<="
+      value: 500_000_000_000        # $500B — beyond this, bespoke treaty only
+      reason: "Revenue exceeds cyber underwriting authority — requires facultative placement"

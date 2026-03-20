@@ -1,0 +1,12 @@
+# Professional Indemnity Underwriting Appetite
+# Owned by: Underwriting
+# Scope: All PI configurations (pi_general)
+
+appetite:
+  max_single_limit: 150_000_000     # $150M max any one policy
+
+  constraints:
+    - field: revenue
+      operator: "<="
+      value: 100_000_000_000        # $100B
+      reason: "Revenue exceeds PI underwriting authority"
