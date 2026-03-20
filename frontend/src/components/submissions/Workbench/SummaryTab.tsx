@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import Modal from "@/components/Modal";
 import { 
   Activity, Shield, Calculator, BarChart3, TrendingUp, 
-  X, User, Search, MessageSquare, Plus 
+  X, User, Search, MessageSquare, Plus, Paperclip 
 } from "lucide-react";
 
 export default function SummaryTab() {
@@ -45,48 +45,67 @@ export default function SummaryTab() {
 
   return (
     <div className="
-      pt-4
       w-full no-scrollbar
-      animate-in fade-in duration-500"
+      border-collapse whitespace-nowrap
+      animate-in fade-in duration-500 pb-12"
     >
-      
-      {/* KEY INFORMATION */}
+      {/* STICKY WRAPPER: Acts as a solid curtain to hide scrolling content */}
       <div className="
-        grid grid-cols-1 grid-rows-4
-        sticky top-5 z-5
-        border-b-3 border-dsi-contrast-background
-        rounded-xl
-        overflow-hidden
-        bg-dsi-analysis shadow-sm
-        pt-2 pb-2 pl-4 gap-1"
-      >  
-        <div className="underline font-bold">
-          Key Information
-        </div>
-        <div className="content-center">
-          <span>Status: </span><span className="uppercase font-bold">{activeQuote.status}</span>
-        </div>
-        
-        <div className="content-center">
-          {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
-            <span className="gap-6 ">
-              <span>Quote Valid From: {new Date(activeQuote.valid_from).toLocaleDateString()}; Until: {new Date(activeQuote.valid_until).toLocaleDateString()}</span>
-            </span>
-          )}
-          {activeQuote.status === 'bound' && (
-            <span className="gap-6 ">
-                <span>Bound Date: {activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                <span>Policy Reference: {activeQuote.policy_number || 'Pending'}</span>
-            </span>
-          )}
-        </div>
-        
-        <div className="content-center">
-          <span>Submission Code: </span><span className="uppercase font-bold">{activeSubmission.submission_code}</span>
-          <span> || </span>
-          <span>Quote Code: </span><span className="uppercase font-bold">{activeQuote.quote_code}</span>
+        sticky top-0 z-20 
+        bg-dsi-background 
+        pt-3 pb-2"
+        >  
+
+        {/* SECTION HEADER */}
+        <div className="
+          flex gap-dsi-pad
+          rounded-t-xl
+          border-b-1 border-dsi-outline/50
+          overflow-x-hidden whitespace-nowrap border-collapse
+          bg-dsi-analysis/60
+          pl-dsi-pad
+          pt-2 pb-2    
+        "
+        >
+          <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
 
+        {/* KEY INFORMATION CARD */}
+        <div className="
+          grid grid-cols-[10%_35%_55%] grid-rows-1
+          border-b-3 border-dsi-contrast-background
+          overflow-x-hidden whitespace-nowrap border-collapse
+          rounded-b-xl
+          bg-dsi-analysis shadow-sm
+          pt-2 pb-2" 
+        >  
+          <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
+            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
+          </div>
+          
+          <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
+            {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+              <span className="">
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
+                <span className="pl-2 pr-2"> </span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
+              </span>
+            )}
+            {activeQuote.status === 'bound' && (
+              <span className="">
+                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
+              </span>
+            )}
+          </div>
+          
+          <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
+            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
+            <span className="pl-6 pr-6">||</span>
+            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
+          </div>
+
+        </div>
       </div>
       
       {/* TWO-COLUMN LAYOUT */}

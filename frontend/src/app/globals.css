@@ -11,9 +11,10 @@
 
   /* PROGRAMMATIC SPACING ENGINE */
   /* This creates native Tailwind classes like p-dsi-pad, left-dsi-pad, px-dsi-main */
-  --spacing-dsi-pad: 1rem;     /* Replaces your hardcoded '4' (16px) */
-  --spacing-dsi-main: 1.5rem;  /* Replaces your hardcoded '6' (24px) */
-  --spacing-dsi-gap: 2rem;     /* Replaces your hardcoded '8' (32px) */
+  --spacing-dsi-pad: 1rem;      /* '4' (16px) */
+  --spacing-dsi-main: 1.5rem;   /* '6' (24px) */
+  --spacing-dsi-gap: 2rem;      /* '8' (32px) */
+  --spacing-dsi-indent: 3rem; /* '12'(48px) */  
 
   /* FONTS */
   --font-ibm: var(--font-ibm), ui-sans-serif, system-ui, sans-serif;
