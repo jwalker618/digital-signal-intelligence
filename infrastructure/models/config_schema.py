@@ -522,44 +522,56 @@ class ILFCurveFactor(BaseModel):
     factor: float
 
 
-# ---- Parametric ILF curve functions ----------------------------------------
+# ---- Parametric ILF raw curve functions ------------------------------------
+#
+# Each function returns raw(L) — the un-normalised curve value at limit L.
+# Anchor normalisation (ILF = raw(L) / raw(anchor)) is applied uniformly
+# in ILFCurve._parametric_factor(), so adding a new curve type only requires
+# defining its raw(L) shape.  All curves guarantee ILF(anchor) = 1.0.
+#
 
-def _bounded_exponential(L: float, anchor: float, max_ilf: float, k: float) -> float:
-    """ILF(L) = [1 + (max_ilf-1)*(1 - exp(-k*L/anchor))] / raw(anchor)."""
-    raw_anchor = 1 + (max_ilf - 1) * (1 - math.exp(-k))
-    raw = 1 + (max_ilf - 1) * (1 - math.exp(-k * (L / anchor)))
-    return raw / raw_anchor
-
-
-def _power_curve(L: float, anchor: float, alpha: float, cap: float) -> float:
-    """ILF(L) = (L/anchor)^alpha, capped."""
-    return min((L / anchor) ** alpha, cap)
-
-
-def _logarithmic_curve(L: float, anchor: float, a: float, b: float, cap: float) -> float:
-    """ILF(L) = [a + b*ln(L/anchor + 1)] / raw(anchor), capped."""
-    raw_anchor = a + b * math.log(2)   # at L=anchor: ln(1+1) = ln(2)
-    raw = a + b * math.log((L / anchor) + 1)
-    return min(raw / raw_anchor, cap)
+def _raw_bounded_exponential(L: float, anchor: float, max_ilf: float, k: float) -> float:
+    """raw(L) = 1 + (max_ilf-1) * (1 - exp(-k * L/anchor))"""
+    return 1.0 + (max_ilf - 1.0) * (1.0 - math.exp(-k * (L / anchor)))
 
 
-def _pareto_curve(L: float, anchor: float, alpha: float, cap: float) -> float:
+def _raw_power(L: float, anchor: float, alpha: float) -> float:
+    """raw(L) = (L/anchor)^alpha — already 1.0 at anchor."""
+    return (L / anchor) ** alpha
+
+
+def _raw_logarithmic(L: float, anchor: float, a: float, b: float) -> float:
+    """raw(L) = a + b * ln(L/anchor + 1)"""
+    return a + b * math.log((L / anchor) + 1.0)
+
+
+def _raw_pareto(L: float, anchor: float, alpha: float) -> float:
+    """raw(L) = (L/anchor)^alpha — single-Pareto severity scaling."""
+    return (L / anchor) ** alpha
+
+
+def _raw_iso_pareto(L: float, anchor: float, q: float, b: float) -> float:
     """
-    Pareto severity ILF: (L/anchor)^alpha, capped. Returns 1.0 at/below anchor.
+    ISO Pareto ILF — based on the truncated Pareto severity distribution.
 
-    Based on the single-Pareto severity distribution where the limited expected
-    value scales as L^alpha. Standard actuarial ILF with alpha typically 0.3-0.7.
+    raw(L) = 1 - (b / (b + L))^(q - 1)
+
+    where q is the Pareto shape parameter (typically 1.5-3.0) and b is the
+    loss elimination ratio threshold (typically a small fraction of the anchor).
+
+    The ISO increased limits table is a discretised version of this curve.
+    Actuarial teams can specify 'iso_pareto' with (q, b) to reproduce
+    standard ISO tables without hand-fitting.
     """
-    if L <= anchor:
-        return 1.0
-    return min((L / anchor) ** alpha, cap)
+    return 1.0 - (b / (b + L)) ** (q - 1.0)
 
 
 _CURVE_REGISTRY: Dict[str, Callable] = {
-    "bounded_exponential": _bounded_exponential,
-    "power": _power_curve,
-    "logarithmic": _logarithmic_curve,
-    "pareto": _pareto_curve,
+    "bounded_exponential": _raw_bounded_exponential,
+    "power": _raw_power,
+    "logarithmic": _raw_logarithmic,
+    "pareto": _raw_pareto,
+    "iso_pareto": _raw_iso_pareto,
 }
 
 
@@ -616,10 +628,35 @@ class ILFCurve(BaseModel):
         return self._table_factor(limit)
 
     def _parametric_factor(self, limit: int) -> float:
-        """Evaluate the parametric curve at the given limit."""
+        """
+        Evaluate the parametric curve at the given limit.
+
+        Uniform anchor normalisation: ILF = raw(L) / raw(anchor).
+        This guarantees ILF(anchor) = 1.0 for every curve type.
+        A floor of 1.0 ensures limits below anchor never produce ILF < 1.
+        An optional 'cap' parameter in params bounds the maximum ILF.
+        """
         curve_fn = _CURVE_REGISTRY[self.curve]
-        params = self.params or {}
-        ilf = curve_fn(float(limit), float(self.anchor_limit), **params)
+        params = dict(self.params or {})
+
+        # Extract cap before passing to raw function (not all curves use it)
+        cap = params.pop("cap", None)
+
+        anchor = float(self.anchor_limit)
+        raw_at_limit = curve_fn(float(limit), anchor, **params)
+        raw_at_anchor = curve_fn(anchor, anchor, **params)
+
+        # Normalise: ILF(anchor) = 1.0
+        if raw_at_anchor == 0:
+            ilf = 1.0
+        else:
+            ilf = raw_at_limit / raw_at_anchor
+
+        # Apply cap if specified
+        if cap is not None:
+            ilf = min(ilf, cap)
+
+        # Floor at 1.0
         return max(ilf, 1.0)
 
     def _table_factor(self, limit: int) -> float:

@@ -1,7 +1,7 @@
 {coverage}:
   {configuration}:
     pricing:
-   
+
       by_product_type:
         {product}:
           ilf_curve:
@@ -9,7 +9,7 @@
             curve: bounded_exponential
             params:
               max_ilf: 3.0
-              k: 1.2
+              k: 0.04
 
         {product}:
           ilf_curve:
@@ -17,7 +17,7 @@
             curve: power
             params:
               alpha: 0.35
-              cap: 4
+              cap: 4.0
 
         {product}:
           ilf_curve:
@@ -33,5 +33,14 @@
             anchor_limit: 5000000
             curve: pareto
             params:
-              alpha: 0.9
+              alpha: 0.5
+              cap: 12.0
+
+        {product}:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: iso_pareto
+            params:
+              q: 2.0
+              b: 25000.0
               cap: 5.0
