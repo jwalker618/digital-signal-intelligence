@@ -383,13 +383,27 @@ class PremiumValidator:
         ratio = report.premium_to_limit_ratio
 
         if pricing_result.premium_was_capped:
-            report.warnings.append(ValidationWarning(
-                severity="CRITICAL",
-                category="RATIO",
-                message="Premium was capped by guardrail (max_premium_to_limit_ratio). "
-                        "Guardrails are acting as primary pricing control, not safety net",
-                values={"guardrail_warnings": pricing_result.guardrail_warnings},
-            ))
+            if ratio >= report.target_max:
+                # Guardrail is the primary pricing control — the capped premium
+                # still exceeds or meets the target max
+                report.warnings.append(ValidationWarning(
+                    severity="CRITICAL",
+                    category="RATIO",
+                    message="Premium was capped by guardrail and P/L ({:.4f}) still exceeds "
+                            "target max ({:.3f}) — guardrail is primary pricing control".format(
+                                ratio, report.target_max),
+                    values={"guardrail_warnings": pricing_result.guardrail_warnings},
+                ))
+            else:
+                # Guardrail fired but brought premium into a reasonable range —
+                # acting as intended safety net
+                report.warnings.append(ValidationWarning(
+                    severity="INFO",
+                    category="RATIO",
+                    message="Premium was capped by guardrail but final P/L ({:.4f}) is within "
+                            "target — guardrail acting as safety net".format(ratio),
+                    values={"guardrail_warnings": pricing_result.guardrail_warnings},
+                ))
 
         if ratio > report.target_max:
             report.warnings.append(ValidationWarning(
@@ -441,6 +455,10 @@ class PremiumValidator:
         guardrail_hits = sum(1 for r in reports if any(
             w.category == "RATIO" and "capped by guardrail" in w.message.lower()
             for w in r.warnings))
+        guardrail_primary = sum(1 for r in reports if any(
+            w.category == "RATIO" and "primary pricing control" in w.message.lower()
+            for w in r.warnings))
+        guardrail_safety_net = guardrail_hits - guardrail_primary
 
         # Per-cohort breakdown
         cohort_stats: Dict[str, Dict[str, Any]] = {}
@@ -467,6 +485,8 @@ class PremiumValidator:
             "with_critical": with_critical,
             "guardrail_hits": guardrail_hits,
             "guardrail_hit_pct": 100 * guardrail_hits / total if total else 0,
+            "guardrail_primary": guardrail_primary,
+            "guardrail_safety_net": guardrail_safety_net,
             "cohort_stats": cohort_stats,
         }
 
@@ -484,11 +504,15 @@ class PremiumValidator:
         lines.append("=" * 90)
         lines.append("")
         lines.append("Total risks: {}  |  Within target: {} ({:.1f}%)  |  "
-                      "Critical warnings: {}  |  Guardrail hits: {} ({:.1f}%)".format(
+                      "Outside target: {}".format(
                           summary["total"], summary["within_target"],
                           summary["within_target_pct"],
-                          summary["with_critical"], summary["guardrail_hits"],
-                          summary["guardrail_hit_pct"]))
+                          summary["total"] - summary["within_target"]))
+        lines.append("Guardrails fired: {} total  |  {} as safety net (OK)  |  "
+                      "{} as primary control (PROBLEM)".format(
+                          summary["guardrail_hits"],
+                          summary["guardrail_safety_net"],
+                          summary["guardrail_primary"]))
         lines.append("")
 
         # Cohort breakdown
