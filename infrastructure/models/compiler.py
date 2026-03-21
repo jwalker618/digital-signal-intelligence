@@ -44,6 +44,25 @@ class ConfigNotFoundError(Exception):
     pass
 
 
+class ConfigQuarantinedError(Exception):
+    """Raised when a quarantined configuration is requested.
+
+    A quarantined config has failed health checks (e.g., pricing calibration
+    issues that would allow invalid risks to be processed). The config must
+    be fixed and pass health checks before it can be used.
+
+    Set DSI_BYPASS_HEALTH_GATE=1 to override (testing/dev only).
+    """
+    def __init__(self, coverage: str, config: str, reason: str):
+        self.coverage = coverage
+        self.config = config
+        self.reason = reason
+        super().__init__(
+            f"Configuration '{coverage}/{config}' is QUARANTINED and cannot be used: "
+            f"{reason}"
+        )
+
+
 # =============================================================================
 # COMPILED CONFIG CACHE
 # =============================================================================
@@ -198,7 +217,8 @@ def get_coverage(coverage_id: str) -> Coverage:
 
 def get_config(
     coverage_id: str,
-    config_id: Optional[str] = None
+    config_id: Optional[str] = None,
+    allow_quarantined: bool = False,
 ) -> CoverageConfig:
     """
     Get a compiled CoverageConfig.
@@ -207,12 +227,16 @@ def get_config(
         coverage_id: Coverage identifier (e.g., "cyber")
         config_id: Configuration identifier (e.g., "cyber_general").
                    If None, defaults to {coverage_id}_general.
+        allow_quarantined: If True, return config even if quarantined.
+                          For testing/diagnostics only.
 
     Returns:
         Compiled CoverageConfig model with O(1) attribute access
 
     Raises:
         ConfigNotFoundError: If coverage or config not found
+        ConfigQuarantinedError: If config is quarantined and
+            allow_quarantined is False
 
     Example:
         config = get_config("cyber", "cyber_general")
@@ -237,7 +261,47 @@ def get_config(
             f"Available: {available}"
         )
 
+    # Enforce quarantine unless explicitly bypassed
+    if not allow_quarantined and _health_gate_initialized:
+        from layers.risk.config_health_gate import get_health_gate
+        gate = get_health_gate()
+        if gate.is_quarantined(coverage_id, config_id):
+            reason = gate.get_quarantine_reason(coverage_id, config_id)
+            raise ConfigQuarantinedError(coverage_id, config_id, reason)
+
     return coverage.configurations[config_id]
+
+
+# Flag to track whether the health gate has been initialized.
+# This prevents circular imports during initial compilation.
+_health_gate_initialized = False
+
+
+def initialize_health_gate() -> Dict[str, any]:
+    """Run health checks on all configs and enable quarantine enforcement.
+
+    Should be called once during application startup, after configs are compiled.
+
+    Returns:
+        Dict of health check results keyed by coverage/config
+    """
+    global _health_gate_initialized
+    from layers.risk.config_health_gate import get_health_gate
+
+    gate = get_health_gate()
+    results = gate.run_all_checks()
+    _health_gate_initialized = True
+
+    quarantined = gate.get_quarantined()
+    if quarantined:
+        logger.warning(
+            "Health gate initialized: %d/%d configs quarantined",
+            len(quarantined), len(results),
+        )
+    else:
+        logger.info("Health gate initialized: all %d configs healthy", len(results))
+
+    return results
 
 
 def list_coverages() -> list[str]:

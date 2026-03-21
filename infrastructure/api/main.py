@@ -147,6 +147,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Extractor factory init skipped: {e}")
 
+    # Run configuration health gate — quarantine mis-calibrated configs
+    try:
+        from infrastructure.models.compiler import initialize_health_gate
+        health_results = initialize_health_gate()
+        quarantined = {k: v for k, v in health_results.items() if not v.passed}
+        if quarantined:
+            logger.warning(
+                "Health gate: %d config(s) QUARANTINED — they cannot process "
+                "live submissions until fixed: %s",
+                len(quarantined), list(quarantined.keys()),
+            )
+        else:
+            logger.info("Health gate: all %d configs healthy", len(health_results))
+    except Exception as e:
+        logger.error(f"Health gate initialization failed: {e}")
+
     yield
 
     # Shutdown
