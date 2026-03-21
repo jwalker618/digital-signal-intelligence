@@ -28,7 +28,7 @@ Constraints:
 - score_conditions are banded (plural, list of multiple conditions)
 - score_conditions do NOT apply to tier bands
 - Signals defined once in signal_registry with group_id reference
-- base_limit_reference MUST exist as a key in ilf_curve
+- anchor_limit in ilf_curve SHOULD match base_limit_reference (ILF = 1.0 here)
 - base_deductible_reference MUST have factor 1.00 in deductible_factors
 """
 
@@ -809,11 +809,17 @@ class CoverageBuilder:
     def _build_limit_configuration(self, spec: CoverageSpec) -> Dict[str, Any]:
         """Build polymorphic limit configuration for V5 (BUNDLED or DECOUPLED)."""
         if spec.pricing_mode == "DECOUPLED":
-            return {
+            config = {
                 "type": "DECOUPLED",
-                "valid_limits": spec.valid_limits or [1000000, 5000000, 10000000, 25000000, 50000000],
                 "valid_deductibles": spec.valid_deductibles or [25000, 50000, 100000, 250000, 500000],
             }
+            # Prefer programmatic min/max over hard-coded valid_limits
+            if spec.min_limit is not None and spec.max_limit is not None:
+                config["min_limit"] = spec.min_limit
+                config["max_limit"] = spec.max_limit
+            else:
+                config["valid_limits"] = spec.valid_limits or [1000000, 5000000, 10000000, 25000000, 50000000]
+            return config
         else:
             # BUNDLED Mode (SME Menu Pricing)
             base_ded = spec.base_deductible_reference
@@ -847,19 +853,36 @@ class CoverageBuilder:
         return pricing
   
     def _build_ilf_curve(self, spec: CoverageSpec) -> Dict[str, Any]:
-        """Build ILF curve with anchor limit included."""
-        base_limit = spec.base_limit_reference
+        """Build parametric ILF curve configuration.
+
+        Generates anchor_limit + curve + params format. Uniform anchor
+        normalisation (ILF = raw(L) / raw(anchor)) is applied at runtime
+        by the ILFCurve engine — the builder only needs to specify the
+        curve shape and parameters.
+        """
+        anchor = spec.ilf_anchor_limit or spec.base_limit_reference
+
+        # Use spec-level overrides if provided, otherwise sensible defaults
+        curve_type = spec.ilf_curve_type
+        params = dict(spec.ilf_params) if spec.ilf_params else {}
+
+        if not params:
+            # Default params by curve type
+            if curve_type == "bounded_exponential":
+                params = {"max_ilf": 4.5, "k": 0.025, "cap": 8.0}
+            elif curve_type == "power":
+                params = {"alpha": 0.45, "cap": 6.0}
+            elif curve_type == "logarithmic":
+                params = {"a": 0.8, "b": 0.15, "cap": 3.5}
+            elif curve_type == "pareto":
+                params = {"alpha": 0.5, "cap": 12.0}
+            elif curve_type == "iso_pareto":
+                params = {"q": 2.0, "b": 25000.0, "cap": 5.0}
+
         return {
-            "base_limit": base_limit,
-            "factors": [
-                {"limit": 1000000, "factor": 1.00 if base_limit == 1000000 else 0.50},
-                {"limit": 2000000, "factor": 1.70 if base_limit == 1000000 else 0.85},
-                {"limit": 5000000, "factor": 3.20 if base_limit == 1000000 else 1.60},
-                {"limit": 10000000, "factor": 5.00 if base_limit == 1000000 else 2.50},
-                {"limit": 25000000, "factor": 9.00 if base_limit == 1000000 else 4.50},
-                {"limit": 50000000, "factor": 14.00 if base_limit == 1000000 else 7.00},
-                {"limit": 100000000, "factor": 22.00 if base_limit == 1000000 else 11.00},
-            ],
+            "anchor_limit": anchor,
+            "curve": curve_type,
+            "params": params,
         }
 
     def _build_deductible_factors(self, spec: CoverageSpec) -> List[Dict[str, Any]]:
