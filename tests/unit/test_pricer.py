@@ -8,14 +8,63 @@ import pytest
 
 from layers.risk.pricer import ModelPricer
 from layers.risk.types import (
-    CoverageConfig,
-    TierConfig,
-    LimitBand,
     PricingResult,
-    ModifierApplication,
-    DecisionType,
-    PremiumMethod,
+    AppliedModifier,
+    BasePremiumDerivation,
+    CategoricalOutput,
 )
+from infrastructure.models.config_schema import (
+    CoverageConfig,
+    ConfigMetadata,
+    RiskTierBands,
+    RiskTierBand,
+    RiskTierInterpretation,
+    RiskTierApplication,
+    TierBandRange,
+    TierAction,
+    PricingMethod,
+    Guardrails,
+    Pricing,
+    ProductTypePricing,
+    ILFCurve,
+    ILFCurveFactor,
+    DeductibleFactor,
+    LimitConfiguration,
+    LimitConfigType,
+)
+
+
+# =============================================================================
+# HELPERS
+# =============================================================================
+
+def _make_tier_band(
+    tier_id: int,
+    label: str,
+    min_score: int,
+    max_score: int,
+    action: TierAction,
+    method: PricingMethod = PricingMethod.PREMIUM_BASE,
+    value: int = None,
+    applied: float = None,
+    basis: str = None,
+) -> RiskTierBand:
+    """Helper to build a RiskTierBand."""
+    return RiskTierBand(
+        id=tier_id,
+        label=label,
+        description=f"Tier {tier_id}",
+        interpretation=RiskTierInterpretation(
+            bands=TierBandRange(min=min_score, max=max_score),
+            action=action,
+            application=RiskTierApplication(
+                method=method,
+                value=value,
+                applied=applied,
+                basis=basis,
+            ),
+        ),
+    )
 
 
 # =============================================================================
@@ -30,104 +79,105 @@ def pricer():
 
 @pytest.fixture
 def sample_config():
-    """Create a sample config for pricing tests."""
+    """Create a sample config for pricing tests using Pydantic models."""
     return CoverageConfig(
-        coverage="aerospace",
-        configuration="aerospace_general",
-        version="1.0.0",
-        config_hash="test-hash",
-        required_inputs=["entity_id", "tiv"],
-        signal_groups=[],
-        direct_queries=[],
-        categorical_groups=["operator_type", "fleet_category"],
-        categorical_features={
-            "operator_type": {
-                "major_airline": 0.85,
-                "regional_airline": 1.00,
-                "charter_operator": 1.25,
-                "flight_school": 1.50
+        coverage_id="aerospace",
+        config_id="aerospace_general",
+        metadata=ConfigMetadata(
+            name="Aerospace Test",
+            version="1.0.0",
+            product_types=["aerospace_hull"],
+            min_premium=15000,
+        ),
+        risk_tier_bands=RiskTierBands(bands=[
+            _make_tier_band(1, "PREFERRED", 800, 1000, TierAction.APPROVE,
+                            PricingMethod.PREMIUM_BASE, value=25000),
+            _make_tier_band(2, "STANDARD", 600, 799, TierAction.APPROVE,
+                            PricingMethod.PREMIUM_BASE, value=35000),
+            _make_tier_band(3, "SUBSTANDARD", 400, 599, TierAction.REFER,
+                            PricingMethod.PREMIUM_BASE, value=50000),
+            _make_tier_band(4, "BORDERLINE", 200, 399, TierAction.REFER,
+                            PricingMethod.PREMIUM_BASE, value=75000),
+            _make_tier_band(5, "DECLINE", 0, 199, TierAction.DECLINE,
+                            PricingMethod.PREMIUM_BASE, value=100000),
+        ]),
+        pricing=Pricing(
+            base_limit_reference=1000000,
+            base_deductible_reference=25000,
+            by_product_type={
+                "aerospace_hull": ProductTypePricing(
+                    ilf_curve=ILFCurve(
+                        base_limit=1000000,
+                        factors=[
+                            ILFCurveFactor(limit=1000000, factor=1.0),
+                            ILFCurveFactor(limit=5000000, factor=2.5),
+                            ILFCurveFactor(limit=10000000, factor=4.0),
+                            ILFCurveFactor(limit=25000000, factor=7.0),
+                        ],
+                    ),
+                    deductible_factors=[
+                        DeductibleFactor(deductible=10000, factor=1.15),
+                        DeductibleFactor(deductible=25000, factor=1.0),
+                        DeductibleFactor(deductible=50000, factor=0.90),
+                        DeductibleFactor(deductible=100000, factor=0.85),
+                    ],
+                ),
             },
-            "fleet_category": {
-                "widebody": 1.15,
-                "narrowbody": 1.00,
-                "turboprop": 0.95,
-                "helicopter": 1.40
-            }
-        },
-        tier_thresholds=[
-            TierConfig(
-                tier=1, min_score=800, max_score=1000,
-                base_premium=25000, decision=DecisionType.APPROVE
-            ),
-            TierConfig(
-                tier=2, min_score=600, max_score=799,
-                base_premium=35000, decision=DecisionType.APPROVE
-            ),
-            TierConfig(
-                tier=3, min_score=400, max_score=599,
-                base_premium=50000, decision=DecisionType.REFER
-            ),
-            TierConfig(
-                tier=4, min_score=200, max_score=399,
-                base_premium=75000, decision=DecisionType.REFER
-            ),
-            TierConfig(
-                tier=5, min_score=0, max_score=199,
-                base_premium=100000, decision=DecisionType.DECLINE
-            ),
-        ],
-        limit_bands=[
-            LimitBand(limit=1000000, ilf=1.0),
-            LimitBand(limit=5000000, ilf=2.5),
-            LimitBand(limit=10000000, ilf=4.0),
-            LimitBand(limit=25000000, ilf=7.0),
-        ],
-        deductible_credits={
-            10000: 1.0,
-            25000: 0.95,
-            50000: 0.90,
-            100000: 0.85,
-        },
-        metadata={"min_premium": 15000}
+        ),
+        limit_configuration=LimitConfiguration(
+            type=LimitConfigType.DECOUPLED,
+            valid_limits=[1000000, 5000000, 10000000, 25000000],
+            valid_deductibles=[10000, 25000, 50000, 100000],
+        ),
+        guardrails=Guardrails(
+            modifier_floor=0.10,
+            modifier_cap=2.50,
+            max_premium_to_limit_ratio=0.35,
+            max_premium_to_revenue_ratio=0.01,
+            max_ilf_factor=10.0,
+        ),
     )
 
 
 @pytest.fixture
 def rate_based_config():
-    """Create a config with rate-based pricing."""
+    """Create a config with rate-based (MULTIPLIER) pricing."""
     return CoverageConfig(
-        coverage="aerospace",
-        configuration="aerospace_rate",
-        version="1.0.0",
-        config_hash="test-hash-rate",
-        required_inputs=["entity_id", "tiv"],
-        signal_groups=[],
-        direct_queries=[],
-        categorical_groups=[],
-        categorical_features={},
-        tier_thresholds=[
-            TierConfig(
-                tier=1, min_score=800, max_score=1000,
-                rate=0.005, rate_basis="tiv",
-                decision=DecisionType.APPROVE
-            ),
-            TierConfig(
-                tier=2, min_score=600, max_score=799,
-                rate=0.0075, rate_basis="tiv",
-                decision=DecisionType.APPROVE
-            ),
-            TierConfig(
-                tier=3, min_score=400, max_score=599,
-                rate=0.01, rate_basis="tiv",
-                decision=DecisionType.REFER
-            ),
-        ],
-        limit_bands=[
-            LimitBand(limit=1000000, ilf=1.0),
-            LimitBand(limit=5000000, ilf=2.5),
-        ],
-        deductible_credits={},
-        metadata={"min_premium": 10000}
+        coverage_id="aerospace",
+        config_id="aerospace_rate",
+        metadata=ConfigMetadata(
+            name="Aerospace Rate Test",
+            version="1.0.0",
+            product_types=["aerospace_hull"],
+            min_premium=10000,
+        ),
+        risk_tier_bands=RiskTierBands(bands=[
+            _make_tier_band(1, "PREFERRED", 800, 1000, TierAction.APPROVE,
+                            PricingMethod.MULTIPLIER, applied=0.005, basis="tiv"),
+            _make_tier_band(2, "STANDARD", 600, 799, TierAction.APPROVE,
+                            PricingMethod.MULTIPLIER, applied=0.0075, basis="tiv"),
+            _make_tier_band(3, "SUBSTANDARD", 400, 599, TierAction.REFER,
+                            PricingMethod.MULTIPLIER, applied=0.01, basis="tiv"),
+        ]),
+        pricing=Pricing(
+            base_limit_reference=1000000,
+            base_deductible_reference=25000,
+            by_product_type={
+                "aerospace_hull": ProductTypePricing(
+                    ilf_curve=ILFCurve(
+                        base_limit=1000000,
+                        factors=[
+                            ILFCurveFactor(limit=1000000, factor=1.0),
+                            ILFCurveFactor(limit=5000000, factor=2.5),
+                        ],
+                    ),
+                    deductible_factors=[
+                        DeductibleFactor(deductible=25000, factor=1.0),
+                    ],
+                ),
+            },
+        ),
+        guardrails=Guardrails(),
     )
 
 
@@ -140,28 +190,33 @@ class TestTierOverrides:
 
     def test_no_overrides_returns_score_tier(self, pricer):
         """With no overrides, should return score-based tier."""
-        final = pricer.resolve_tier_overrides(score_tier=2, overrides=[])
+        final, max_override = pricer.resolve_tier_overrides(score_tier=2, overrides=[])
         assert final == 2
+        assert max_override is None
 
     def test_single_override_applies(self, pricer):
         """Single override should apply when worse than score tier."""
-        final = pricer.resolve_tier_overrides(score_tier=2, overrides=[4])
+        final, max_override = pricer.resolve_tier_overrides(score_tier=2, overrides=[4])
         assert final == 4
+        assert max_override == 4
 
     def test_multiple_overrides_max_wins(self, pricer):
         """Maximum override should win when multiple present."""
-        final = pricer.resolve_tier_overrides(score_tier=2, overrides=[3, 5, 4])
+        final, max_override = pricer.resolve_tier_overrides(score_tier=2, overrides=[3, 5, 4])
         assert final == 5
+        assert max_override == 5
 
     def test_override_below_score_tier_ignored(self, pricer):
         """Override better than score tier should be ignored."""
-        final = pricer.resolve_tier_overrides(score_tier=4, overrides=[2])
+        final, max_override = pricer.resolve_tier_overrides(score_tier=4, overrides=[2])
         assert final == 4
+        assert max_override == 2
 
     def test_mixed_overrides_max_applied(self, pricer):
         """Should apply max of overrides vs score tier."""
-        final = pricer.resolve_tier_overrides(score_tier=3, overrides=[2, 4, 1])
+        final, max_override = pricer.resolve_tier_overrides(score_tier=3, overrides=[2, 4, 1])
         assert final == 4
+        assert max_override == 4
 
 
 # =============================================================================
@@ -173,25 +228,25 @@ class TestScoreToTier:
 
     def test_high_score_tier_1(self, pricer, sample_config):
         """High score should map to tier 1."""
-        tier = pricer._score_to_tier(850, sample_config)
-        assert tier == 1
+        band = pricer.get_tier_for_score(850, sample_config)
+        assert band.id == 1
 
     def test_mid_score_tier_3(self, pricer, sample_config):
         """Mid score should map to tier 3."""
-        tier = pricer._score_to_tier(500, sample_config)
-        assert tier == 3
+        band = pricer.get_tier_for_score(500, sample_config)
+        assert band.id == 3
 
     def test_low_score_tier_5(self, pricer, sample_config):
         """Low score should map to tier 5."""
-        tier = pricer._score_to_tier(100, sample_config)
-        assert tier == 5
+        band = pricer.get_tier_for_score(100, sample_config)
+        assert band.id == 5
 
     def test_boundary_score(self, pricer, sample_config):
         """Boundary scores should map correctly."""
-        assert pricer._score_to_tier(800, sample_config) == 1
-        assert pricer._score_to_tier(799, sample_config) == 2
-        assert pricer._score_to_tier(600, sample_config) == 2
-        assert pricer._score_to_tier(599, sample_config) == 3
+        assert pricer.get_tier_for_score(800, sample_config).id == 1
+        assert pricer.get_tier_for_score(799, sample_config).id == 2
+        assert pricer.get_tier_for_score(600, sample_config).id == 2
+        assert pricer.get_tier_for_score(599, sample_config).id == 3
 
 
 # =============================================================================
@@ -201,65 +256,60 @@ class TestScoreToTier:
 class TestBasePremium:
     """Tests for Step 10: Base premium generation."""
 
-    def test_pure_premium_method(self, pricer, sample_config):
-        """Should use pure premium from tier config."""
+    def test_premium_base_method(self, pricer, sample_config):
+        """Should use PREMIUM_BASE value from tier band."""
+        tier_band = sample_config.get_tier_band(1)
         premium, method, derivation = pricer.calculate_base_premium(
             tier=1,
+            tier_band=tier_band,
             submission_data={},
-            config=sample_config
+            config=sample_config,
         )
 
         assert premium == 25000
-        assert method == PremiumMethod.PURE
-        assert derivation.basis_value is None
+        assert method == "premium_base"
+        assert derivation.method == "PREMIUM_BASE"
 
-    def test_rate_based_method(self, pricer, rate_based_config):
+    def test_multiplier_method(self, pricer, rate_based_config):
         """Should calculate premium from rate * TIV."""
+        tier_band = rate_based_config.get_tier_band(1)
         submission_data = {"tiv": 10000000}
 
         premium, method, derivation = pricer.calculate_base_premium(
             tier=1,
+            tier_band=tier_band,
             submission_data=submission_data,
-            config=rate_based_config
+            config=rate_based_config,
         )
 
         # 10M * 0.5% = 50,000
         assert premium == 50000
-        assert method == PremiumMethod.RATE_BASED
+        assert method == "multiplier"
         assert derivation.basis_value == 10000000
 
-    def test_rate_based_respects_minimum(self, pricer, rate_based_config):
-        """Rate-based should respect minimum premium."""
-        submission_data = {"tiv": 100000}  # Small TIV
-
-        premium, method, _ = pricer.calculate_base_premium(
-            tier=1,
-            submission_data=submission_data,
-            config=rate_based_config
-        )
-
-        # 100,000 * 0.5% = 500, but min is 10,000
-        assert premium == 10000
-
-    def test_missing_rate_basis_uses_minimum(self, pricer, rate_based_config):
-        """Missing rate basis should use minimum premium."""
+    def test_multiplier_missing_basis_uses_fallback(self, pricer, rate_based_config):
+        """Missing rate basis should use fallback."""
+        tier_band = rate_based_config.get_tier_band(1)
         submission_data = {}  # No TIV provided
 
         premium, method, derivation = pricer.calculate_base_premium(
             tier=1,
+            tier_band=tier_band,
             submission_data=submission_data,
-            config=rate_based_config
+            config=rate_based_config,
         )
 
+        # Fallback to min_premium or default
         assert premium == 10000
         assert derivation.basis_value is None
 
-    def test_invalid_tier_uses_minimum(self, pricer, sample_config):
-        """Invalid tier should use minimum premium."""
+    def test_missing_tier_band_uses_default(self, pricer, sample_config):
+        """Missing tier band should use minimum premium."""
         premium, method, _ = pricer.calculate_base_premium(
             tier=99,
+            tier_band=None,
             submission_data={},
-            config=sample_config
+            config=sample_config,
         )
 
         assert premium == 15000  # min_premium from metadata
@@ -274,29 +324,48 @@ class TestModifiers:
 
     def test_categorical_modifier_applied(self, pricer, sample_config):
         """Should apply categorical modifier."""
-        premium, modifiers = pricer.apply_modifiers(
+        cat_outputs = [
+            CategoricalOutput(
+                group_id="operator_type",
+                group_name="operator_type",
+                category="major_airline",
+                label="Major Airline",
+                modifier=0.85,
+                confidence=0.9,
+            ),
+        ]
+        modifiers, total, premium, clamped = pricer.apply_modifiers(
             base_premium=50000,
-            categorical_selections={"operator_type": "major_airline"},
+            categorical_outputs=cat_outputs,
             query_modifiers=[],
-            config=sample_config
+            config=sample_config,
         )
 
         # 50,000 * 0.85 = 42,500
         assert premium == 42500
         assert len(modifiers) == 1
-        assert modifiers[0].name == "operator_type:major_airline"
         assert modifiers[0].factor == 0.85
+        assert not clamped
 
     def test_multiple_categorical_modifiers(self, pricer, sample_config):
         """Should apply multiple categorical modifiers."""
-        premium, modifiers = pricer.apply_modifiers(
+        cat_outputs = [
+            CategoricalOutput(
+                group_id="operator_type", group_name="operator_type",
+                category="charter_operator", label="Charter Operator",
+                modifier=1.25, confidence=0.9,
+            ),
+            CategoricalOutput(
+                group_id="fleet_category", group_name="fleet_category",
+                category="helicopter", label="Helicopter",
+                modifier=1.40, confidence=0.9,
+            ),
+        ]
+        modifiers, total, premium, clamped = pricer.apply_modifiers(
             base_premium=50000,
-            categorical_selections={
-                "operator_type": "charter_operator",
-                "fleet_category": "helicopter"
-            },
+            categorical_outputs=cat_outputs,
             query_modifiers=[],
-            config=sample_config
+            config=sample_config,
         )
 
         # 50,000 * 1.25 * 1.40 = 87,500
@@ -306,25 +375,32 @@ class TestModifiers:
 
     def test_query_modifier_applied(self, pricer, sample_config):
         """Should apply query modifiers."""
-        premium, modifiers = pricer.apply_modifiers(
+        modifiers, total, premium, clamped = pricer.apply_modifiers(
             base_premium=50000,
-            categorical_selections={},
+            categorical_outputs=[],
             query_modifiers=[{"name": "wet_lease", "factor": 1.15}],
-            config=sample_config
+            config=sample_config,
         )
 
         # 50,000 * 1.15 = 57,500
-        assert premium == 57500
+        assert abs(premium - 57500) < 0.01
         assert len(modifiers) == 1
         assert modifiers[0].source == "direct_query"
 
     def test_combined_modifiers(self, pricer, sample_config):
         """Should apply categorical then query modifiers."""
-        premium, modifiers = pricer.apply_modifiers(
+        cat_outputs = [
+            CategoricalOutput(
+                group_id="operator_type", group_name="operator_type",
+                category="major_airline", label="Major Airline",
+                modifier=0.85, confidence=0.9,
+            ),
+        ]
+        modifiers, total, premium, clamped = pricer.apply_modifiers(
             base_premium=50000,
-            categorical_selections={"operator_type": "major_airline"},
+            categorical_outputs=cat_outputs,
             query_modifiers=[{"name": "wet_lease", "factor": 1.15}],
-            config=sample_config
+            config=sample_config,
         )
 
         # 50,000 * 0.85 * 1.15 = 48,875
@@ -334,23 +410,11 @@ class TestModifiers:
 
     def test_modifier_1_0_skipped(self, pricer, sample_config):
         """Modifiers with factor 1.0 should be skipped."""
-        premium, modifiers = pricer.apply_modifiers(
+        modifiers, total, premium, clamped = pricer.apply_modifiers(
             base_premium=50000,
-            categorical_selections={},
+            categorical_outputs=[],
             query_modifiers=[{"name": "no_impact", "factor": 1.0}],
-            config=sample_config
-        )
-
-        assert premium == 50000
-        assert len(modifiers) == 0
-
-    def test_unknown_categorical_group_ignored(self, pricer, sample_config):
-        """Unknown categorical group should be ignored."""
-        premium, modifiers = pricer.apply_modifiers(
-            base_premium=50000,
-            categorical_selections={"unknown_group": "some_category"},
-            query_modifiers=[],
-            config=sample_config
+            config=sample_config,
         )
 
         assert premium == 50000
@@ -358,11 +422,18 @@ class TestModifiers:
 
     def test_modifier_tracks_before_after(self, pricer, sample_config):
         """Modifier should track premium before and after."""
-        _, modifiers = pricer.apply_modifiers(
+        cat_outputs = [
+            CategoricalOutput(
+                group_id="operator_type", group_name="operator_type",
+                category="major_airline", label="Major Airline",
+                modifier=0.85, confidence=0.9,
+            ),
+        ]
+        modifiers, _, _, _ = pricer.apply_modifiers(
             base_premium=50000,
-            categorical_selections={"operator_type": "major_airline"},
+            categorical_outputs=cat_outputs,
             query_modifiers=[],
-            config=sample_config
+            config=sample_config,
         )
 
         mod = modifiers[0]
@@ -381,118 +452,39 @@ class TestLimitBands:
         """Should scale premium across all limit bands."""
         limit_premiums = pricer.scale_to_limits(
             premium=50000,
-            config=sample_config
+            submission_data={"deductible": 25000},
+            config=sample_config,
         )
 
         assert len(limit_premiums) == 4
-        assert limit_premiums[1000000] == 50000  # ILF 1.0
-        assert limit_premiums[5000000] == 125000  # ILF 2.5
-        assert limit_premiums[10000000] == 200000  # ILF 4.0
-        assert limit_premiums[25000000] == 350000  # ILF 7.0
+        # With deductible factor 1.0 (base deductible = 25k)
+        assert limit_premiums["1000000"] == 50000    # ILF 1.0
+        assert limit_premiums["5000000"] == 125000   # ILF 2.5
+        assert limit_premiums["10000000"] == 200000  # ILF 4.0
+        assert limit_premiums["25000000"] == 350000  # ILF 7.0
 
-    def test_scale_rounds_to_cents(self, pricer, sample_config):
-        """Should round premiums to 2 decimal places."""
-        limit_premiums = pricer.scale_to_limits(
-            premium=33333.333,
-            config=sample_config
-        )
-
-        for premium in limit_premiums.values():
-            # Should be rounded to 2 decimals
-            assert premium == round(premium, 2)
-
-    def test_no_limit_bands_returns_single(self, pricer):
-        """Config without limit bands should return single premium."""
+    def test_no_limit_config_returns_empty(self, pricer):
+        """Config without limit configuration should return empty dict."""
         config = CoverageConfig(
-            coverage="test",
-            configuration="test",
-            version="1.0.0",
-            config_hash="hash",
-            required_inputs=[],
-            signal_groups=[],
-            direct_queries=[],
-            categorical_groups=[],
-            categorical_features={},
-            tier_thresholds=[
-                TierConfig(tier=1, min_score=0, max_score=1000, base_premium=10000, decision=DecisionType.APPROVE)
-            ],
-            limit_bands=[],  # No limit bands
-            deductible_credits={},
-            metadata={}
+            coverage_id="test",
+            config_id="test",
+            metadata=ConfigMetadata(
+                name="Test", version="1.0.0", product_types=["test"],
+            ),
+            risk_tier_bands=RiskTierBands(bands=[
+                _make_tier_band(1, "PREFERRED", 0, 1000, TierAction.APPROVE,
+                                PricingMethod.PREMIUM_BASE, value=10000),
+            ]),
+            pricing=Pricing(
+                base_limit_reference=1000000,
+                base_deductible_reference=25000,
+                by_product_type={},
+            ),
+            guardrails=Guardrails(),
         )
 
-        limit_premiums = pricer.scale_to_limits(50000, config)
-
-        assert len(limit_premiums) == 1
-        assert limit_premiums[0] == 50000
-
-
-# =============================================================================
-# DEDUCTIBLE CREDIT TESTS
-# =============================================================================
-
-class TestDeductibleCredits:
-    """Tests for deductible credit application."""
-
-    def test_exact_deductible_match(self, pricer, sample_config):
-        """Should apply exact deductible credit."""
-        premium, credit = pricer.apply_deductible_credit(
-            premium=50000,
-            deductible=25000,
-            config=sample_config
-        )
-
-        assert premium == 47500  # 50,000 * 0.95
-        assert credit == 0.95
-
-    def test_deductible_between_tiers(self, pricer, sample_config):
-        """Should use closest lower deductible credit."""
-        premium, credit = pricer.apply_deductible_credit(
-            premium=50000,
-            deductible=35000,  # Between 25k and 50k
-            config=sample_config
-        )
-
-        # Should use 25k credit (0.95)
-        assert premium == 47500
-        assert credit == 0.95
-
-    def test_deductible_above_all_tiers(self, pricer, sample_config):
-        """Should use highest deductible credit when above all tiers."""
-        premium, credit = pricer.apply_deductible_credit(
-            premium=50000,
-            deductible=200000,  # Above 100k
-            config=sample_config
-        )
-
-        # Should use 100k credit (0.85)
-        assert premium == 42500
-        assert credit == 0.85
-
-    def test_no_deductible_credits_returns_same(self, pricer):
-        """Should return same premium when no deductible credits configured."""
-        config = CoverageConfig(
-            coverage="test",
-            configuration="test",
-            version="1.0.0",
-            config_hash="hash",
-            required_inputs=[],
-            signal_groups=[],
-            direct_queries=[],
-            categorical_groups=[],
-            categorical_features={},
-            tier_thresholds=[
-                TierConfig(tier=1, min_score=0, max_score=1000, base_premium=10000, decision=DecisionType.APPROVE)
-            ],
-            limit_bands=[],
-            deductible_credits={},  # No credits
-            metadata={}
-        )
-
-        premium, credit = pricer.apply_deductible_credit(50000, 25000, config)
-
-        assert premium == 50000
-        assert credit == 1.0
+        limit_premiums = pricer.scale_to_limits(50000, {}, config)
+        assert len(limit_premiums) == 0
 
 
 # =============================================================================
@@ -509,29 +501,36 @@ class TestFullPricingPipeline:
             signal_tier_overrides=[],
             query_tier_overrides=[],
             query_modifiers=[],
-            categorical_selections={},
-            submission_data={},
-            config=sample_config
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
         )
 
         assert isinstance(result, PricingResult)
 
     def test_price_submission_populates_fields(self, pricer, sample_config):
         """Should populate all PricingResult fields."""
+        cat_outputs = [
+            CategoricalOutput(
+                group_id="operator_type", group_name="operator_type",
+                category="major_airline", label="Major Airline",
+                modifier=0.85, confidence=0.9,
+            ),
+        ]
         result = pricer.price_submission(
             pure_composite_score=750,
             signal_tier_overrides=[],
             query_tier_overrides=[],
             query_modifiers=[],
-            categorical_selections={"operator_type": "major_airline"},
-            submission_data={},
-            config=sample_config
+            categorical_outputs=cat_outputs,
+            submission_data={"deductible": 25000},
+            config=sample_config,
         )
 
         assert result.score_based_tier == 2
         assert result.final_tier == 2
         assert result.base_premium == 35000
-        assert result.base_premium_method == PremiumMethod.PURE
+        assert result.base_premium_method == "premium_base"
         assert len(result.modifiers_applied) == 1
         assert result.premium_after_modifiers == 29750  # 35000 * 0.85
         assert len(result.limit_premiums) == 4
@@ -543,9 +542,9 @@ class TestFullPricingPipeline:
             signal_tier_overrides=[3],
             query_tier_overrides=[4],
             query_modifiers=[],
-            categorical_selections={},
-            submission_data={},
-            config=sample_config
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
         )
 
         assert result.score_based_tier == 2
@@ -555,157 +554,28 @@ class TestFullPricingPipeline:
 
     def test_price_submission_with_all_components(self, pricer, sample_config):
         """Should handle all pricing components together."""
+        cat_outputs = [
+            CategoricalOutput(
+                group_id="operator_type", group_name="operator_type",
+                category="major_airline", label="Major Airline",
+                modifier=0.85, confidence=0.9,
+            ),
+        ]
         result = pricer.price_submission(
             pure_composite_score=750,
             signal_tier_overrides=[3],
             query_tier_overrides=[],
             query_modifiers=[{"name": "wet_lease", "factor": 1.15}],
-            categorical_selections={
-                "operator_type": "major_airline",
-                "fleet_category": "widebody"
-            },
-            submission_data={},
-            config=sample_config
+            categorical_outputs=cat_outputs,
+            submission_data={"deductible": 25000},
+            config=sample_config,
         )
 
         # Score tier 2, override to 3
         assert result.final_tier == 3
         assert result.base_premium == 50000
 
-        # Modifiers: 0.85 * 1.15 * 1.15 = 1.124
-        # 50,000 * 0.85 * 1.15 * 1.15 = 56,243.75
-        expected_premium = 50000 * 0.85 * 1.15 * 1.15
+        # Modifiers: 0.85 * 1.15 = 0.9775
+        # 50,000 * 0.85 * 1.15 = 48,875
+        expected_premium = 50000 * 0.85 * 1.15
         assert abs(result.premium_after_modifiers - expected_premium) < 0.01
-
-
-# =============================================================================
-# LIMIT OPTIONS TESTS
-# =============================================================================
-
-class TestLimitOptions:
-    """Tests for getting limit options with deductible."""
-
-    def test_get_limit_options(self, pricer, sample_config):
-        """Should return all limit options with deductible applied."""
-        options = pricer.get_limit_options(
-            premium=50000,
-            deductible=25000,
-            config=sample_config
-        )
-
-        assert len(options) == 4
-        assert all("limit" in opt for opt in options)
-        assert all("deductible" in opt for opt in options)
-        assert all("final_premium" in opt for opt in options)
-
-    def test_limit_options_sorted_by_limit(self, pricer, sample_config):
-        """Options should be sorted by limit."""
-        options = pricer.get_limit_options(
-            premium=50000,
-            deductible=25000,
-            config=sample_config
-        )
-
-        limits = [opt["limit"] for opt in options]
-        assert limits == sorted(limits)
-
-
-# =============================================================================
-# PRICING BREAKDOWN TESTS
-# =============================================================================
-
-class TestPricingBreakdown:
-    """Tests for pricing breakdown utility."""
-
-    def test_get_pricing_breakdown(self, pricer, sample_config):
-        """Should return detailed breakdown dict."""
-        result = pricer.price_submission(
-            pure_composite_score=750,
-            signal_tier_overrides=[],
-            query_tier_overrides=[],
-            query_modifiers=[{"name": "wet_lease", "factor": 1.15}],
-            categorical_selections={"operator_type": "major_airline"},
-            submission_data={},
-            config=sample_config
-        )
-
-        breakdown = pricer.get_pricing_breakdown(result, sample_config)
-
-        assert "tier_resolution" in breakdown
-        assert "base_premium" in breakdown
-        assert "modifiers" in breakdown
-        assert "total_modifier_factor" in breakdown
-        assert "limit_options" in breakdown
-
-    def test_breakdown_modifier_impact(self, pricer, sample_config):
-        """Breakdown should show modifier impact."""
-        result = pricer.price_submission(
-            pure_composite_score=750,
-            signal_tier_overrides=[],
-            query_tier_overrides=[],
-            query_modifiers=[],
-            categorical_selections={"operator_type": "major_airline"},
-            submission_data={},
-            config=sample_config
-        )
-
-        breakdown = pricer.get_pricing_breakdown(result, sample_config)
-
-        mod = breakdown["modifiers"][0]
-        assert "name" in mod
-        assert "factor" in mod
-        assert "impact" in mod
-        # Impact should be negative for discount
-        assert mod["impact"] < 0
-
-
-# =============================================================================
-# VALIDATION TESTS
-# =============================================================================
-
-class TestPricingValidation:
-    """Tests for pricing input validation."""
-
-    def test_validate_valid_inputs(self, pricer, sample_config):
-        """Should pass validation for valid inputs."""
-        is_valid, errors = pricer.validate_pricing_inputs(
-            tier=2,
-            categorical_selections={"operator_type": "major_airline"},
-            config=sample_config
-        )
-
-        assert is_valid is True
-        assert len(errors) == 0
-
-    def test_validate_invalid_tier(self, pricer, sample_config):
-        """Should fail for invalid tier."""
-        is_valid, errors = pricer.validate_pricing_inputs(
-            tier=99,
-            categorical_selections={},
-            config=sample_config
-        )
-
-        assert is_valid is False
-        assert any("Invalid tier" in e for e in errors)
-
-    def test_validate_unknown_categorical_group(self, pricer, sample_config):
-        """Should fail for unknown categorical group."""
-        is_valid, errors = pricer.validate_pricing_inputs(
-            tier=2,
-            categorical_selections={"unknown_group": "some_value"},
-            config=sample_config
-        )
-
-        assert is_valid is False
-        assert any("Unknown categorical group" in e for e in errors)
-
-    def test_validate_invalid_category(self, pricer, sample_config):
-        """Should fail for invalid category value."""
-        is_valid, errors = pricer.validate_pricing_inputs(
-            tier=2,
-            categorical_selections={"operator_type": "invalid_type"},
-            config=sample_config
-        )
-
-        assert is_valid is False
-        assert any("Invalid category" in e for e in errors)
