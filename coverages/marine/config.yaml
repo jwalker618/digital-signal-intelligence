@@ -1,22 +1,3 @@
-# =============================================================================
-# DSI Model Configuration
-# =============================================================================
-#
-# STRUCTURAL PRINCIPLES (per master_config_layout.yaml):
-# 1. Signals defined once in signal_registry with group_id reference
-# 2. source: score (default) uses 0-100 inference return
-# 3. source: metadata.field uses inference metadata with bands/categories
-# 4. Categorical groups apply modifiers (applied:), not scores
-# 5. score_conditions (plural, banded) apply actions based on score thresholds
-#    Actions: FLAG | MODIFIER | REFER
-# 6. proxy_tier at signal level (DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE)
-# 7. Normalisation handled by inference functions, not config
-#
-# AUGMENTED BY:
-# - analysis_outputs/{coverage}_v{date}.yaml - empirically-derived parameters
-# - schemas/organisational_graph.yaml - graph structure (coverage-agnostic)
-#
-# =============================================================================
 marine:
   marine_general:
     metadata:
@@ -50,10 +31,9 @@ marine:
       model_specificity: 1
       routing_constraints:
       - field: hull_value
-        operator: ">"
+        operator: '>'
         value: 50000000
         required_in_input: true
-
     direct_queries:
     - id: psc_detentions
       question: Any vessels detained by port state control in past 36 months?
@@ -1286,492 +1266,759 @@ marine:
               applied: 1.6
     limit_configuration:
       type: DECOUPLED
-      valid_limits:
-        - 5000000
-        - 10000000
-        - 25000000
-        - 50000000
-        - 100000000
-        - 250000000
-        - 500000000
-        - 1000000000
       valid_deductibles:
-        - 10000
-        - 25000
-        - 50000
-        - 100000
-        - 250000
-        - 500000
-        - 1000000
- 
-    # =========================================================================
-    # PRICING PARAMETERS (MARINE GENERAL)
-    # =========================================================================
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+      min_limit: 5000000
+      max_limit: 1000000000
     pricing:
       base_limit_reference: 10000000
       base_deductible_reference: 50000
-      
       by_product_type:
-
-        # 1. FIRST-PARTY HULL: ILF must be FLAT because premium scales with hull_value
         hull_machinery:
           ilf_curve:
-            base_limit: 10000000
-            factors:
-            - {limit: 10000000, factor: 1.0}
-            - {limit: 25000000, factor: 1.0}
-            - {limit: 50000000, factor: 1.0}
-            - {limit: 100000000, factor: 1.0}
-            - {limit: 250000000, factor: 1.0}
-            - {limit: 500000000, factor: 1.0}
-            - {limit: 1000000000, factor: 1.0}
+            anchor_limit: 10000000
+            curve: power
+            params:
+              alpha: 0.0
+              cap: 1.0
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}   # Anchor
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 250000, factor: 0.9}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.7}
-
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 250000
+            factor: 0.9
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         total_loss:
           ilf_curve:
-            base_limit: 10000000
-            factors:
-            - {limit: 10000000, factor: 1.0}
-            - {limit: 25000000, factor: 1.0}
-            - {limit: 50000000, factor: 1.0}
-            - {limit: 100000000, factor: 1.0}
-            - {limit: 250000000, factor: 1.0}
-            - {limit: 500000000, factor: 1.0}
-            - {limit: 1000000000, factor: 1.0}
+            anchor_limit: 10000000
+            curve: power
+            params:
+              alpha: 0.0
+              cap: 1.0
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}   # Anchor
-          - {deductible: 100000, factor: 0.97}
-          - {deductible: 250000, factor: 0.94}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.7}
-
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.97
+          - deductible: 250000
+            factor: 0.94
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         increased_value:
           ilf_curve:
-            base_limit: 10000000
-            factors:
-            - {limit: 10000000, factor: 1.0}
-            - {limit: 25000000, factor: 1.0}
-            - {limit: 50000000, factor: 1.0}
-            - {limit: 100000000, factor: 1.0}
-            - {limit: 250000000, factor: 1.0}
-            - {limit: 500000000, factor: 1.0}
-            - {limit: 1000000000, factor: 1.0}
+            anchor_limit: 10000000
+            curve: power
+            params:
+              alpha: 0.0
+              cap: 1.0
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}   # Anchor
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 250000, factor: 0.9}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.7}
-
-        # 2. LIABILITY/CONSEQUENTIAL: Steep curves maintained
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 250000
+            factor: 0.9
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         loss_of_hire:
           ilf_curve:
-            base_limit: 10000000
-            factors:
-            - {limit: 10000000, factor: 1.0}
-            - {limit: 25000000, factor: 2.2}
-            - {limit: 50000000, factor: 4.0}
-            - {limit: 100000000, factor: 7.0}
-            - {limit: 250000000, factor: 14.5}
-            - {limit: 500000000, factor: 25.0}
-            - {limit: 1000000000, factor: 45.0}
+            anchor_limit: 10000000
+            curve: pareto
+            params:
+              alpha: 0.5
+              cap: 12.0
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}   # Anchor
-          - {deductible: 100000, factor: 0.96}
-          - {deductible: 250000, factor: 0.92}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.7}
-
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.96
+          - deductible: 250000
+            factor: 0.92
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         pi_liability:
           ilf_curve:
-            base_limit: 10000000
-            factors:
-            - {limit: 10000000, factor: 1.0}
-            - {limit: 25000000, factor: 2.0}
-            - {limit: 50000000, factor: 3.6}
-            - {limit: 100000000, factor: 6.2}
-            - {limit: 250000000, factor: 13.0}
-            - {limit: 500000000, factor: 22.0}
-            - {limit: 1000000000, factor: 38.0}
+            anchor_limit: 10000000
+            curve: pareto
+            params:
+              alpha: 0.5
+              cap: 12.0
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}   # Anchor
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 250000, factor: 0.9}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.7}
-
-        # FIXED ANCHOR: Rescaled so 10M = 1.00
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 250000
+            factor: 0.9
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         war_risks:
           ilf_curve:
-            base_limit: 10000000               # FIXED
-            factors:
-            - {limit: 5000000, factor: 0.56}   # Back-calculated
-            - {limit: 10000000, factor: 1.00}  # New Anchor = 1.0
-            - {limit: 25000000, factor: 2.11}  # Rescaled
-            - {limit: 50000000, factor: 3.61}
-            - {limit: 100000000, factor: 6.39}
-            - {limit: 250000000, factor: 13.33}
-            - {limit: 500000000, factor: 23.33}
+            anchor_limit: 10000000
+            curve: pareto
+            params:
+              alpha: 0.5
+              cap: 12.0
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}   # Anchor
-          - {deductible: 100000, factor: 0.97}
-          - {deductible: 250000, factor: 0.94}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.7}
-
-        # FIXED ANCHOR: Rescaled so 10M = 1.00
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.97
+          - deductible: 250000
+            factor: 0.94
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
         cargo:
           ilf_curve:
-            base_limit: 10000000               # FIXED
-            factors:
-            - {limit: 5000000, factor: 0.57}   # Back-calculated
-            - {limit: 10000000, factor: 1.00}  # New Anchor = 1.0
-            - {limit: 25000000, factor: 2.00}  # Rescaled
-            - {limit: 50000000, factor: 3.31}
-            - {limit: 100000000, factor: 5.71}
-            - {limit: 250000000, factor: 11.43}
-            - {limit: 500000000, factor: 20.00}
+            anchor_limit: 10000000
+            curve: power
+            params:
+              alpha: 0.4
+              cap: 8.0
           deductible_factors:
-          - {deductible: 10000, factor: 1.5}
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.0}   # Anchor
-          - {deductible: 100000, factor: 0.95}
-          - {deductible: 250000, factor: 0.9}
-          - {deductible: 500000, factor: 0.7}
-          - {deductible: 1000000, factor: 0.7}
-
+          - deductible: 10000
+            factor: 1.5
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.95
+          - deductible: 250000
+            factor: 0.9
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.7
       taxes_fees_rate: 0.05
-
     guardrails:
-      modifier_floor: 0.10
+      modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005
       max_ilf_factor: 50.0
-
-  # ===========================================================================
-  # MARINE SME
-  # Target: Hull Value <= $50M. Rate-based pricing. Decoupled Limits. Simplified.
-  # ===========================================================================
   marine_sme:
     metadata:
-      name: "DSI Marine SME Model"
-      description: "Marine coverage for regional fleets, brown-water, and light commercial"
-      version: "2.3.0"
+      name: DSI Marine SME Model
+      description: Marine coverage for regional fleets, brown-water, and light commercial
+      version: 2.3.0
       product_types:
-        - "hull_machinery"
-        - "pi_liability"
-        - "cargo"
-      applicable_markets: ["global"]
+      - hull_machinery
+      - pi_liability
+      - cargo
+      applicable_markets:
+      - global
       minimum_viable_input:
         required:
-          - field: "client_name"
-          - field: "product_type"
-          - field: "limit"
-          - field: "hull_value"
+        - field: client_name
+        - field: product_type
+        - field: limit
+        - field: hull_value
       min_premium: 5000
-      default_currency: "USD"
-
+      default_currency: USD
       model_specificity: 2
       routing_constraints:
-        - field: "hull_value"
-          operator: "<="
-          value: 50000000
-          required_in_input: true
-
+      - field: hull_value
+        operator: <=
+        value: 50000000
+        required_in_input: true
     direct_queries:
-      - id: "psc_detentions_sme"
-        question: "Any vessels detained by port state control in past 36 months?"
-        query_condition:
-          - return: true
-            action: "REFER"
-            override: 4
-            note: "PSC detentions disclosed"
-      - id: "total_losses_sme"
-        question: "Any total losses or major casualties in past 5 years?"
-        query_condition:
-          - return: true
-            action: "REFER"
-            override: 4
-            note: "Total losses disclosed"
-
-    # Reduced Signal Registry (Focused strictly on safety and operations)
+    - id: psc_detentions_sme
+      question: Any vessels detained by port state control in past 36 months?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        note: PSC detentions disclosed
+    - id: total_losses_sme
+      question: Any total losses or major casualties in past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        note: Total losses disclosed
     signal_registry:
-      - id: "vessel_category"
-        inference_utility_function: "primaryvessel_category_basefunction"
-        proxy_tier: "INFERRED_PROXY"
-        categories:
-          group_id: "vessel_category"
-          source: "metadata.vessel_category"
-          features:
-            - {cat: "WORKBOAT_TUG", label: "Workboat/Tug", applied: 0.85}
-            - {cat: "FISHING", label: "Commercial Fishing", applied: 1.30}
-            - {cat: "PASSENGER_FERRY", label: "Passenger/Ferry", applied: 1.20}
-            - {cat: "COASTAL_CARGO", label: "Coastal Cargo", applied: 1.00}
-            - {cat: "OTHER", label: "Other", applied: 1.10}
-
-      - id: "fleet_age_band"
-        inference_utility_function: "fleet_age_basefunction"
-        proxy_tier: "INFERRED_PROXY"
-        categories:
-          group_id: "fleet_age_band"
-          features:
-            - {cat: "AGE_0_10", label: "0-10 Years", applied: 0.90}
-            - {cat: "AGE_10_20", label: "10-20 Years", applied: 1.00}
-            - {cat: "AGE_20_PLUS", label: "20+ Years", applied: 1.35}
-            - {cat: "OTHER", label: "UNKNOWN", applied: 1.10}
-
-      - id: "psc_detention"
-        inference_utility_function: "psc_detention_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "safety_compliance"
-          risk: {correlation_direction: "positive", weight: 0.50, score_conditions: [{threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Elevated PSC detention rate"}]}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.60}}
-
-      - id: "casualty_history"
-        inference_utility_function: "casualty_history_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "safety_compliance"
-          risk: {correlation_direction: "positive", weight: 0.50, score_conditions: [{threshold: 30, comparison: "<=", action: "REFER", override: 4, note: "Casualty history"}]}
-          loss: {severity: {correlation_direction: "positive", weight: 0.40}}
-
-      - id: "ais_compliance"
-        inference_utility_function: "ais_compliance_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "operational_telemetry"
-          risk: {correlation_direction: "positive", weight: 0.35, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "AIS compliance concerns"}]}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.35}}
-          exposure: {size: {correlation_direction: "positive", weight: 0.20}}
-
-      - id: "route_risk"
-        inference_utility_function: "route_risk_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "operational_telemetry"
-          risk: {correlation_direction: "negative", weight: 0.35}
-          loss: {frequency: {correlation_direction: "negative", weight: 0.35}}
-          exposure: {complexity: {correlation_direction: "negative", weight: 0.30}}
-
-      - id: "operational_efficiency"
-        inference_utility_function: "operational_efficiency_basefunction"
-        proxy_tier: "INFERRED_PROXY"
-        three_layer_assessment:
-          group_id: "operational_telemetry"
-          risk: {correlation_direction: "positive", weight: 0.30}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.30}}
-          exposure: {complexity: {correlation_direction: "positive", weight: 0.25}}
-
-      - id: "class_status"
-        inference_utility_function: "class_status_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "safety_compliance"
-          risk: {correlation_direction: "positive", weight: 0.30, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "Class status concerns"}]}
-          loss: {severity: {correlation_direction: "positive", weight: 0.30}}
-
-      - id: "ism_compliance"
-        inference_utility_function: "ism_compliance_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "safety_compliance"
-          risk: {correlation_direction: "positive", weight: 0.20, score_conditions: [{threshold: 40, comparison: "<=", action: "REFER", override: 4, note: "ISM concerns"}]}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.30}}
-
-      - id: "flag_state"
-        inference_utility_function: "flag_state_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "network_authority"
-          risk: {correlation_direction: "positive", weight: 0.35}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.35}}
-          exposure: {size: {correlation_direction: "positive", weight: 0.30}}
-
-      - id: "classification_society"
-        inference_utility_function: "classification_society_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "network_authority"
-          risk: {correlation_direction: "positive", weight: 0.35}
-          loss: {severity: {correlation_direction: "positive", weight: 0.35}}
-          exposure: {size: {correlation_direction: "positive", weight: 0.20}}
-
-      - id: "pi_club"
-        inference_utility_function: "pi_club_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "network_authority"
-          risk: {correlation_direction: "positive", weight: 0.30}
-          loss: {severity: {correlation_direction: "positive", weight: 0.30}}
-          exposure: {complexity: {correlation_direction: "positive", weight: 0.25}}
-
-      - id: "fleet_stability"
-        inference_utility_function: "fleet_stability_basefunction"
-        proxy_tier: "INFERRED_PROXY"
-        three_layer_assessment:
-          group_id: "fleet_profile"
-          risk: {correlation_direction: "positive", weight: 0.50}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.50}}
-          exposure: {complexity: {correlation_direction: "positive", weight: 0.50}}
-
-      - id: "crew_certification"
-        inference_utility_function: "crew_certification_basefunction"
-        proxy_tier: "DIRECT_OBSERVABLE"
-        three_layer_assessment:
-          group_id: "fleet_profile"
-          risk: {correlation_direction: "positive", weight: 0.45}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.45}}
-          exposure: {size: {correlation_direction: "positive", weight: 0.45}}
-
-      - id: "vessel_quality"
-        inference_utility_function: "vessel_quality_basefunction"
-        proxy_tier: "INFERRED_PROXY"
-        three_layer_assessment:
-          group_id: "fleet_profile"
-          risk: {correlation_direction: "positive", weight: 0.05}
-          loss: {frequency: {correlation_direction: "positive", weight: 0.05}}
-          exposure: {complexity: {correlation_direction: "positive", weight: 0.05}}
-
+    - id: vessel_category
+      inference_utility_function: primaryvessel_category_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: vessel_category
+        source: metadata.vessel_category
+        features:
+        - cat: WORKBOAT_TUG
+          label: Workboat/Tug
+          applied: 0.85
+        - cat: FISHING
+          label: Commercial Fishing
+          applied: 1.3
+        - cat: PASSENGER_FERRY
+          label: Passenger/Ferry
+          applied: 1.2
+        - cat: COASTAL_CARGO
+          label: Coastal Cargo
+          applied: 1.0
+        - cat: OTHER
+          label: Other
+          applied: 1.1
+    - id: fleet_age_band
+      inference_utility_function: fleet_age_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: fleet_age_band
+        features:
+        - cat: AGE_0_10
+          label: 0-10 Years
+          applied: 0.9
+        - cat: AGE_10_20
+          label: 10-20 Years
+          applied: 1.0
+        - cat: AGE_20_PLUS
+          label: 20+ Years
+          applied: 1.35
+        - cat: OTHER
+          label: UNKNOWN
+          applied: 1.1
+    - id: psc_detention
+      inference_utility_function: psc_detention_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Elevated PSC detention rate
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.6
+    - id: casualty_history
+      inference_utility_function: casualty_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Casualty history
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.4
+    - id: ais_compliance
+      inference_utility_function: ais_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: positive
+          weight: 0.35
+          score_conditions:
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: AIS compliance concerns
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.35
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: route_risk
+      inference_utility_function: route_risk_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: negative
+          weight: 0.35
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.35
+        exposure:
+          complexity:
+            correlation_direction: negative
+            weight: 0.3
+    - id: operational_efficiency
+      inference_utility_function: operational_efficiency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: operational_telemetry
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: class_status
+      inference_utility_function: class_status_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+          score_conditions:
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Class status concerns
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+    - id: ism_compliance
+      inference_utility_function: ism_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: safety_compliance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: ISM concerns
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.3
+    - id: flag_state
+      inference_utility_function: flag_state_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.35
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.35
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.3
+    - id: classification_society
+      inference_utility_function: classification_society_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.35
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.35
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: pi_club
+      inference_utility_function: pi_club_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: fleet_stability
+      inference_utility_function: fleet_stability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: positive
+          weight: 0.5
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.5
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.5
+    - id: crew_certification
+      inference_utility_function: crew_certification_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: positive
+          weight: 0.45
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.45
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.45
+    - id: vessel_quality
+      inference_utility_function: vessel_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fleet_profile
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.05
     groups:
       categories:
-        - {id: "vessel_category", label: "Vessel Category", impact: "MODIFIER", default_cat: "OTHER"}
-        - {id: "fleet_age_band", label: "Fleet Age Band", impact: "MODIFIER", default_cat: "OTHER"}
+      - id: vessel_category
+        label: Vessel Category
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: fleet_age_band
+        label: Fleet Age Band
+        impact: MODIFIER
+        default_cat: OTHER
       three_layer_assessment:
-        - id: "safety_compliance"
-          label: "Safety Compliance"
-          risk: {weight: 0.30}
-          loss: {weight: 0.35}
-          exposure: {weight: 0.20}
-        - id: "operational_telemetry"
-          label: "Operational Telemetry"
-          risk: {weight: 0.25}
-          loss: {weight: 0.25}
-          exposure: {weight: 0.25}
-        - id: "network_authority"
-          label: "Network Authority"
-          risk: {weight: 0.25}
-          loss: {weight: 0.25}
-          exposure: {weight: 0.30}
-        - id: "fleet_profile"
-          label: "Fleet Profile"
-          risk: {weight: 0.20}
-          loss: {weight: 0.15}
-          exposure: {weight: 0.25}
-
-    # Rates are higher for SME than Corporate due to lower spread of risk
+      - id: safety_compliance
+        label: Safety Compliance
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.2
+      - id: operational_telemetry
+        label: Operational Telemetry
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.25
+      - id: network_authority
+        label: Network Authority
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.3
+      - id: fleet_profile
+        label: Fleet Profile
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.25
     risk_tier_bands:
       bands:
-        - {id: 1, label: "PREFERRED", interpretation: {bands: {min: 800, max: 1000}, action: "APPROVE", application: {method: "MULTIPLIER", applied: 0.0035, basis: "hull_value"}}}
-        - {id: 2, label: "STANDARD_PLUS", interpretation: {bands: {min: 650, max: 799}, action: "APPROVE", application: {method: "MULTIPLIER", applied: 0.0050, basis: "hull_value"}}}
-        - {id: 3, label: "STANDARD", interpretation: {bands: {min: 500, max: 649}, action: "REFER", application: {method: "MULTIPLIER", applied: 0.0080, basis: "hull_value"}}}
-        - {id: 4, label: "SUBSTANDARD", interpretation: {bands: {min: 350, max: 499}, action: "REFER", application: {method: "MULTIPLIER", applied: 0.0125, basis: "hull_value"}}}
-        - {id: 5, label: "DECLINE", interpretation: {bands: {min: 0, max: 349}, action: "DECLINE", application: {method: "MULTIPLIER", applied: 0.0200, basis: "hull_value"}}}
-
+      - id: 1
+        label: PREFERRED
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0035
+            basis: hull_value
+      - id: 2
+        label: STANDARD_PLUS
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: hull_value
+      - id: 3
+        label: STANDARD
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.008
+            basis: hull_value
+      - id: 4
+        label: SUBSTANDARD
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0125
+            basis: hull_value
+      - id: 5
+        label: DECLINE
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.02
+            basis: hull_value
     loss_tier_bands:
       bands:
-        - {id: 1, label: "VERY_LOW", interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
-        - {id: 2, label: "LOW", interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
-        - {id: 3, label: "MODERATE", interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
-        - {id: 4, label: "ELEVATED", interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.15, severity_modifier: 1.15}}}
-        - {id: 5, label: "HIGH", interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.35, severity_modifier: 1.4}}}
-      constraints: {floor: 0.6, cap: 1.5}
-
+      - id: 1
+        label: VERY_LOW
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.6
+        cap: 1.5
     exposure:
       size:
-        weight: 0.70
+        weight: 0.7
         bands:
-          - {id: 1, label: "MICRO", interpretation: {bands: {min: 0, max: 33}, application: {method: "MODIFIER", applied: 0.85}}}
-          - {id: 2, label: "SMALL", interpretation: {bands: {min: 34, max: 66}, application: {method: "MODIFIER", applied: 1.00}}}
-          - {id: 3, label: "MEDIUM", interpretation: {bands: {min: 67, max: 100}, application: {method: "MODIFIER", applied: 1.15}}}
+        - id: 1
+          label: MICRO
+          interpretation:
+            bands:
+              min: 0
+              max: 33
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: SMALL
+          interpretation:
+            bands:
+              min: 34
+              max: 66
+            application:
+              method: MODIFIER
+              applied: 1.0
+        - id: 3
+          label: MEDIUM
+          interpretation:
+            bands:
+              min: 67
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.15
       complexity:
-        weight: 0.30
+        weight: 0.3
         bands:
-          - {id: 1, label: "SIMPLE", interpretation: {bands: {min: 0, max: 40}, application: {method: "MODIFIER", applied: 0.90}}}
-          - {id: 2, label: "MODERATE", interpretation: {bands: {min: 41, max: 70}, application: {method: "MODIFIER", applied: 1.00}}}
-          - {id: 3, label: "COMPLEX", interpretation: {bands: {min: 71, max: 100}, application: {method: "MODIFIER", applied: 1.15}}}
-
-    # DECOUPLED Limits (Required for Hull)
+        - id: 1
+          label: SIMPLE
+          interpretation:
+            bands:
+              min: 0
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.9
+        - id: 2
+          label: MODERATE
+          interpretation:
+            bands:
+              min: 41
+              max: 70
+            application:
+              method: MODIFIER
+              applied: 1.0
+        - id: 3
+          label: COMPLEX
+          interpretation:
+            bands:
+              min: 71
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.15
     limit_configuration:
-      type: "DECOUPLED"
-      valid_limits: [1000000, 2500000, 5000000, 10000000, 25000000]
-      valid_deductibles: [5000, 10000, 25000, 50000]
-
+      type: DECOUPLED
+      valid_deductibles:
+      - 5000
+      - 10000
+      - 25000
+      - 50000
+      min_limit: 1000000
+      max_limit: 25000000
     pricing:
-      # Anchor set to $5M Liability Limit and $10k Deductible
       base_limit_reference: 5000000
       base_deductible_reference: 10000
-      
       by_product_type:
-        # FLAT curve because premium is already driven by hull_value multiplier
         hull_machinery:
           ilf_curve:
-            base_limit: 5000000
-            factors:
-              - {limit: 1000000, factor: 1.00}
-              - {limit: 2500000, factor: 1.00}
-              - {limit: 5000000, factor: 1.00}
-              - {limit: 10000000, factor: 1.00}
-              - {limit: 25000000, factor: 1.00}
+            anchor_limit: 5000000
+            curve: power
+            params:
+              alpha: 0.0
+              cap: 1.0
           deductible_factors:
-            - {deductible: 5000, factor: 1.15}
-            - {deductible: 10000, factor: 1.00} # Anchor
-            - {deductible: 25000, factor: 0.85}
-            - {deductible: 50000, factor: 0.70}
-
-        # STEEP curve because liability scales independently of hull size
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.7
         pi_liability:
           ilf_curve:
-            base_limit: 5000000
-            factors:
-              - {limit: 1000000, factor: 0.40}
-              - {limit: 2500000, factor: 0.65}
-              - {limit: 5000000, factor: 1.00} # Anchor
-              - {limit: 10000000, factor: 1.60}
-              - {limit: 25000000, factor: 3.20}
+            anchor_limit: 5000000
+            curve: pareto
+            params:
+              alpha: 0.4
+              cap: 5.0
           deductible_factors:
-            - {deductible: 5000, factor: 1.10}
-            - {deductible: 10000, factor: 1.00} # Anchor
-            - {deductible: 25000, factor: 0.90}
-            - {deductible: 50000, factor: 0.80}
-
+          - deductible: 5000
+            factor: 1.1
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.8
         cargo:
           ilf_curve:
-            base_limit: 5000000
-            factors:
-              - {limit: 1000000, factor: 0.50}
-              - {limit: 2500000, factor: 0.70}
-              - {limit: 5000000, factor: 1.00} # Anchor
-              - {limit: 10000000, factor: 1.45}
-              - {limit: 25000000, factor: 2.50}
+            anchor_limit: 5000000
+            curve: power
+            params:
+              alpha: 0.35
+              cap: 4.0
           deductible_factors:
-            - {deductible: 5000, factor: 1.15}
-            - {deductible: 10000, factor: 1.00} # Anchor
-            - {deductible: 25000, factor: 0.85}
-            - {deductible: 50000, factor: 0.70}
-
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.7
       taxes_fees_rate: 0.03
-
     guardrails:
-      modifier_floor: 0.10
+      modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.005

@@ -12,9 +12,10 @@ All raw dictionary lookups are replaced with typed dot notation:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 import logging
+import math
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -446,18 +447,69 @@ class LimitConfiguration(BaseModel):
     # For BUNDLED mode
     packages: Optional[List[LimitPackage]] = None
 
-    # For DECOUPLED mode
-    valid_limits: Optional[List[int]] = None
+    # For DECOUPLED mode — programmatic limit generation
+    min_limit: Optional[int] = None
+    max_limit: Optional[int] = None
     valid_deductibles: Optional[List[int]] = None
+
+    # Legacy: explicit list of limits (still supported, overrides min/max)
+    valid_limits: Optional[List[int]] = None
 
     @model_validator(mode="after")
     def validate_mode(self) -> "LimitConfiguration":
         if self.type == LimitConfigType.BUNDLED and not self.packages:
             raise ValueError("BUNDLED mode requires 'packages'")
         if self.type == LimitConfigType.DECOUPLED:
-            if not self.valid_limits or not self.valid_deductibles:
-                raise ValueError("DECOUPLED mode requires 'valid_limits' and 'valid_deductibles'")
+            has_range = self.min_limit is not None and self.max_limit is not None
+            has_list = self.valid_limits is not None and len(self.valid_limits) > 0
+            if not has_range and not has_list:
+                raise ValueError(
+                    "DECOUPLED mode requires either (min_limit + max_limit) "
+                    "or valid_limits"
+                )
+            if not self.valid_deductibles:
+                raise ValueError("DECOUPLED mode requires 'valid_deductibles'")
         return self
+
+    def generate_limit_options(self, requested_limit: Optional[int] = None) -> List[int]:
+        """
+        Generate contextual limit options around the requested limit.
+
+        If valid_limits is explicitly set, returns those directly.
+        Otherwise, generates a menu of standard limit options between
+        min_limit and max_limit, centered around the requested limit.
+
+        Returns:
+            Sorted list of limit options
+        """
+        if self.valid_limits:
+            return sorted(self.valid_limits)
+
+        if self.min_limit is None or self.max_limit is None:
+            return []
+
+        # Generate standard limit steps between min and max
+        # Steps follow market conventions: 1, 2, 3, 5, 10, 15, 20, 25, 50, 75, 100 × base
+        standard_multipliers = [
+            0.25, 0.5, 1, 2, 3, 5, 7.5, 10, 15, 20, 25, 50, 75, 100,
+            150, 200, 250, 500, 750, 1000,
+        ]
+        all_options = set()
+        base = self.min_limit
+        for m in standard_multipliers:
+            limit = int(base * m)
+            if self.min_limit <= limit <= self.max_limit:
+                all_options.add(limit)
+
+        # Always include min and max
+        all_options.add(self.min_limit)
+        all_options.add(self.max_limit)
+
+        # If requested_limit is provided, include it and nearby round limits
+        if requested_limit and self.min_limit <= requested_limit <= self.max_limit:
+            all_options.add(requested_limit)
+
+        return sorted(all_options)
 
 
 # =============================================================================
@@ -465,38 +517,164 @@ class LimitConfiguration(BaseModel):
 # =============================================================================
 
 class ILFCurveFactor(BaseModel):
-    """Single point on ILF curve."""
+    """Single point on ILF curve (legacy table format)."""
     limit: int
     factor: float
 
 
+# ---- Parametric ILF raw curve functions ------------------------------------
+#
+# Each function returns raw(L) — the un-normalised curve value at limit L.
+# Anchor normalisation (ILF = raw(L) / raw(anchor)) is applied uniformly
+# in ILFCurve._parametric_factor(), so adding a new curve type only requires
+# defining its raw(L) shape.  All curves guarantee ILF(anchor) = 1.0.
+#
+
+def _raw_bounded_exponential(L: float, anchor: float, max_ilf: float, k: float) -> float:
+    """raw(L) = 1 + (max_ilf-1) * (1 - exp(-k * L/anchor))"""
+    return 1.0 + (max_ilf - 1.0) * (1.0 - math.exp(-k * (L / anchor)))
+
+
+def _raw_power(L: float, anchor: float, alpha: float) -> float:
+    """raw(L) = (L/anchor)^alpha — already 1.0 at anchor."""
+    return (L / anchor) ** alpha
+
+
+def _raw_logarithmic(L: float, anchor: float, a: float, b: float) -> float:
+    """raw(L) = a + b * ln(L/anchor + 1)"""
+    return a + b * math.log((L / anchor) + 1.0)
+
+
+def _raw_pareto(L: float, anchor: float, alpha: float) -> float:
+    """raw(L) = (L/anchor)^alpha — single-Pareto severity scaling."""
+    return (L / anchor) ** alpha
+
+
+def _raw_iso_pareto(L: float, anchor: float, q: float, b: float) -> float:
+    """
+    ISO Pareto ILF — based on the truncated Pareto severity distribution.
+
+    raw(L) = 1 - (b / (b + L))^(q - 1)
+
+    where q is the Pareto shape parameter (typically 1.5-3.0) and b is the
+    loss elimination ratio threshold (typically a small fraction of the anchor).
+
+    The ISO increased limits table is a discretised version of this curve.
+    Actuarial teams can specify 'iso_pareto' with (q, b) to reproduce
+    standard ISO tables without hand-fitting.
+    """
+    return 1.0 - (b / (b + L)) ** (q - 1.0)
+
+
+_CURVE_REGISTRY: Dict[str, Callable] = {
+    "bounded_exponential": _raw_bounded_exponential,
+    "power": _raw_power,
+    "logarithmic": _raw_logarithmic,
+    "pareto": _raw_pareto,
+    "iso_pareto": _raw_iso_pareto,
+}
+
+
 class ILFCurve(BaseModel):
-    """Increased Limit Factor curve."""
-    base_limit: int
-    factors: List[ILFCurveFactor]
+    """
+    Increased Limit Factor curve — parametric or legacy table.
+
+    Parametric (preferred):
+        anchor_limit: 5000000
+        curve: bounded_exponential
+        params:
+            max_ilf: 3.0
+            k: 1.2
+
+    Legacy table (still supported):
+        base_limit: 1000000
+        factors:
+            - {limit: 1000000, factor: 1.0}
+            - {limit: 5000000, factor: 2.15}
+    """
+    # Parametric fields
+    anchor_limit: Optional[int] = None
+    curve: Optional[str] = None
+    params: Optional[Dict[str, float]] = None
+
+    # Legacy table fields
+    base_limit: Optional[int] = None
+    factors: Optional[List[ILFCurveFactor]] = None
+
+    @model_validator(mode="after")
+    def validate_curve_config(self) -> "ILFCurve":
+        has_parametric = self.curve is not None and self.anchor_limit is not None
+        has_table = self.factors is not None and self.base_limit is not None
+        if not has_parametric and not has_table:
+            raise ValueError(
+                "ILFCurve must specify either (anchor_limit + curve + params) "
+                "or (base_limit + factors)"
+            )
+        if has_parametric and self.curve not in _CURVE_REGISTRY:
+            raise ValueError(
+                f"Unknown ILF curve type '{self.curve}'. "
+                f"Valid types: {list(_CURVE_REGISTRY.keys())}"
+            )
+        return self
+
+    @property
+    def is_parametric(self) -> bool:
+        return self.curve is not None and self.anchor_limit is not None
 
     def get_factor_for_limit(self, limit: int) -> float:
-        """Get ILF factor for a given limit (with interpolation)."""
+        """Get ILF factor for a given limit."""
+        if self.is_parametric:
+            return self._parametric_factor(limit)
+        return self._table_factor(limit)
+
+    def _parametric_factor(self, limit: int) -> float:
+        """
+        Evaluate the parametric curve at the given limit.
+
+        Uniform anchor normalisation: ILF = raw(L) / raw(anchor).
+        This guarantees ILF(anchor) = 1.0 for every curve type.
+        A floor of 1.0 ensures limits below anchor never produce ILF < 1.
+        An optional 'cap' parameter in params bounds the maximum ILF.
+        """
+        curve_fn = _CURVE_REGISTRY[self.curve]
+        params = dict(self.params or {})
+
+        # Extract cap before passing to raw function (not all curves use it)
+        cap = params.pop("cap", None)
+
+        anchor = float(self.anchor_limit)
+        raw_at_limit = curve_fn(float(limit), anchor, **params)
+        raw_at_anchor = curve_fn(anchor, anchor, **params)
+
+        # Normalise: ILF(anchor) = 1.0
+        if raw_at_anchor == 0:
+            ilf = 1.0
+        else:
+            ilf = raw_at_limit / raw_at_anchor
+
+        # Apply cap if specified
+        if cap is not None:
+            ilf = min(ilf, cap)
+
+        # Floor at 1.0
+        return max(ilf, 1.0)
+
+    def _table_factor(self, limit: int) -> float:
+        """Legacy: interpolate from factor table."""
         if not self.factors:
             return 1.0
 
-        # Find exact match or interpolate
         for f in self.factors:
             if f.limit == limit:
                 return f.factor
 
-        # Simple linear interpolation
         sorted_factors = sorted(self.factors, key=lambda x: x.limit)
 
-        # Below minimum
         if limit < sorted_factors[0].limit:
             return sorted_factors[0].factor
-
-        # Above maximum
         if limit > sorted_factors[-1].limit:
             return sorted_factors[-1].factor
 
-        # Find bracket and interpolate
         for i in range(len(sorted_factors) - 1):
             if sorted_factors[i].limit <= limit <= sorted_factors[i + 1].limit:
                 low = sorted_factors[i]
@@ -628,29 +806,40 @@ class CoverageConfig(BaseModel):
         # Validate ILF anchor
         base_limit = self.pricing.base_limit_reference
         for prod_name, prod_pricing in self.pricing.by_product_type.items():
-            anchor_factor = None
-            for f in prod_pricing.ilf_curve.factors:
-                if f.limit == base_limit:
-                    anchor_factor = f.factor
-                    break
-            if anchor_factor is None:
-                errors.append(
-                    f"Product '{prod_name}' ILF curve missing base_limit_reference ({base_limit})"
-                )
-            elif anchor_factor != 1.0:
-                errors.append(
-                    f"Product '{prod_name}' ILF anchor at {base_limit} should be 1.0, got {anchor_factor}"
-                )
+            ilf = prod_pricing.ilf_curve
+            if ilf.is_parametric:
+                # Parametric curves normalise to 1.0 at anchor_limit by construction
+                if ilf.anchor_limit != base_limit:
+                    _logger.info(
+                        f"Product '{prod_name}' parametric anchor_limit ({ilf.anchor_limit}) "
+                        f"differs from base_limit_reference ({base_limit})"
+                    )
+            else:
+                anchor_factor = None
+                for f in ilf.factors:
+                    if f.limit == base_limit:
+                        anchor_factor = f.factor
+                        break
+                if anchor_factor is None:
+                    errors.append(
+                        f"Product '{prod_name}' ILF curve missing base_limit_reference ({base_limit})"
+                    )
+                elif anchor_factor != 1.0:
+                    errors.append(
+                        f"Product '{prod_name}' ILF anchor at {base_limit} should be 1.0, got {anchor_factor}"
+                    )
 
         # Validate ILF factors within guardrail bounds
         max_ilf = self.guardrails.max_ilf_factor
         for prod_name, prod_pricing in self.pricing.by_product_type.items():
-            for f in prod_pricing.ilf_curve.factors:
-                if f.factor > max_ilf:
-                    errors.append(
-                        f"Product '{prod_name}' ILF factor {f.factor} at limit "
-                        f"{f.limit:,} exceeds max_ilf_factor ({max_ilf})"
-                    )
+            ilf = prod_pricing.ilf_curve
+            if not ilf.is_parametric and ilf.factors:
+                for f in ilf.factors:
+                    if f.factor > max_ilf:
+                        errors.append(
+                            f"Product '{prod_name}' ILF factor {f.factor} at limit "
+                            f"{f.limit:,} exceeds max_ilf_factor ({max_ilf})"
+                        )
 
         # Validate deductible anchor
         base_ded = self.pricing.base_deductible_reference

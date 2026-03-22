@@ -28,7 +28,7 @@ import time
 import uuid
 from typing import Dict, List, Optional, Any, Tuple
 
-from infrastructure.models.compiler import get_config
+from infrastructure.models.compiler import get_config, ConfigQuarantinedError
 from infrastructure.models.config_schema import CoverageConfig, TierAction
 
 from .types import (
@@ -288,7 +288,22 @@ class WorkflowEngine:
 
         # Step 1: Load Configuration (compiled Pydantic models)
         if config is None:
-            config = get_config(coverage)
+            try:
+                config = get_config(coverage)
+            except ConfigQuarantinedError as e:
+                logger.error(
+                    "Cannot process %s/%s: config is quarantined — %s",
+                    entity_id, coverage, e.reason,
+                )
+                return WorkflowResult(
+                    entity_id=entity_id,
+                    coverage=coverage,
+                    decision=DecisionType.DECLINE,
+                    notes=[
+                        "CONFIG_QUARANTINED: Configuration has failed health "
+                        "checks and is disabled. {}".format(e.reason)
+                    ],
+                )
             logger.debug(f"Loaded config: {config.config_id} v{config.metadata.version}")
 
         # Step 2: Create Model Data File
@@ -451,6 +466,7 @@ class WorkflowEngine:
             tier_label=pricing_result.tier_label,
             base_premium=pricing_result.base_premium,
             base_premium_method=pricing_result.base_premium_method,
+            base_premium_derivation=pricing_result.base_premium_derivation,
             modifiers_applied=pricing_result.modifiers_applied,
             premium_after_modifiers=pricing_result.premium_after_modifiers,
             limit_premiums=pricing_result.limit_premiums,

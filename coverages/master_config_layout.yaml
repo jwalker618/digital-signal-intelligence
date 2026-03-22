@@ -554,8 +554,11 @@
       # Maximum flexibility, ILF/deductible factor scaling applies
       # -----------------------------------------------------------------------
       type: "DECOUPLED"                    # Limits and deductibles are independent
-      valid_limits:                        # Allowed limit options (in default_currency)
-        - {integer}                        # e.g., 1000000, 2000000, 5000000
+      min_limit: {integer}                 # Minimum allowed limit (e.g., 1000000)
+      max_limit: {integer}                 # Maximum allowed limit (e.g., 100000000)
+      # Limit options are generated programmatically between min and max
+      # using standard market multipliers (1×, 2×, 3×, 5×, 10×, 25×, 50×, 100× of min_limit)
+      # The requested limit is always included in the generated options
       valid_deductibles:                   # Allowed deductible options (in default_currency)
         - {integer}                        # e.g., 10000, 25000, 50000, 100000
 
@@ -583,12 +586,37 @@
       # -----------------------------------------------------------------------
       by_product_type:
         "{product_type_1}":                # Must match entry in metadata.product_types
-          # Increased Limit Factors (ILF)
+          # Increased Limit Factors (ILF) — Parametric Curve
+          # All curves normalise uniformly: ILF = raw(L) / raw(anchor)
+          # ILF = 1.0 at anchor_limit, never drops below 1.0
+          # Adding a new curve only requires defining raw(L) — normalization is automatic.
+          #
+          # Curve types: bounded_exponential, power, logarithmic, pareto, iso_pareto
+          #
+          # Curve selection guidance:
+          #   bounded_exponential — Saturating growth. Use for financial lines (D&O, PI)
+          #                         where ILF plateaus at high limits. k=0.02-0.05 typical.
+          #   power               — Clean power-law. Use for moderate-growth products.
+          #                         alpha=0 gives flat (ILF=1.0 at all limits).
+          #                         alpha=0.3-0.6 typical for scaling products.
+          #   logarithmic         — Decelerating growth. Use where ILF growth slows
+          #                         significantly at high limits. a=0.8, b=0.15 typical.
+          #   pareto              — Heavy-tail severity scaling. Use for liability lines
+          #                         with large-loss potential. alpha=0.4-0.6 typical.
+          #   iso_pareto          — ISO increased limits table formula. Use for GL/casualty
+          #                         lines where ISO tables are the industry standard.
+          #                         q=1.5-3.0 (Pareto shape), b=loss elimination threshold.
+          #
+          # All curves support an optional "cap" parameter (maximum ILF).
           ilf_curve:
-            base_limit: {integer}          # Should match base_limit_reference
-            factors:
-              - limit: {integer}
-                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+            anchor_limit: {integer}        # Should match base_limit_reference; ILF = 1.0 here
+            curve: {string}                # One of: bounded_exponential, power, logarithmic, pareto, iso_pareto
+            params:                        # Curve-specific parameters (all support optional "cap"):
+              # bounded_exponential: max_ilf (asymptotic raw ILF), k (growth rate), cap
+              # power:               alpha (exponent, 0=flat, 0.3-0.6 typical), cap
+              # logarithmic:         a, b (shape params), cap
+              # pareto:              alpha (tail exponent, 0.3-0.7 typical), cap
+              # iso_pareto:          q (Pareto shape, 1.5-3.0), b (loss elimination threshold), cap
 
           # Deductible Adjustments
           # Can use credits (SME) or factors (Corp)
@@ -597,18 +625,14 @@
               factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
 
         "{product_type_2}":                # Different product type
-          # Increased Limit Factors (ILF)
           ilf_curve:
-            base_limit: {integer}          # Should match base_limit_reference
-            factors:
-              - limit: {integer}
-                factor: {float}            # e.g., $1M=1.00, $5M=3.50
+            anchor_limit: {integer}
+            curve: {string}
+            params: {}
 
-          # Deductible Adjustments
-          # Can use credits (SME) or factors (Corp)
           deductible_factors:
             - deductible: {integer}
-              factor: {float}              # e.g., $50k=1.00 (Anchor), $100k=0.85 (Credit)
+              factor: {float}
 
       # Shared parameters (apply to all product types)
       taxes_fees_rate: {float}             # e.g., 0.05 = 5%

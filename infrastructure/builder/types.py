@@ -87,9 +87,16 @@ class CoverageSpec:
     base_limit_reference: int = 1000000      # The base price buys this limit
     base_deductible_reference: int = 50000   # The base price assumes this deductible
     pricing_mode: str = "BUNDLED"            # BUNDLED or DECOUPLED
-    valid_limits: Optional[List[int]] = None        # For DECOUPLED mode
+    valid_limits: Optional[List[int]] = None        # For DECOUPLED mode (legacy)
     valid_deductibles: Optional[List[int]] = None   # For DECOUPLED mode
+    min_limit: Optional[int] = None                 # For DECOUPLED programmatic limits
+    max_limit: Optional[int] = None                 # For DECOUPLED programmatic limits
     coverage_type: str = ""  # e.g., "cyber", "do", "pi"
+
+    # Parametric ILF curve defaults (overridable per product type)
+    ilf_curve_type: str = "bounded_exponential"     # Default curve type
+    ilf_anchor_limit: Optional[int] = None          # Defaults to base_limit_reference
+    ilf_params: Optional[Dict[str, Any]] = None     # Curve-specific params
 
 
 @dataclass

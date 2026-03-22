@@ -503,7 +503,11 @@ class ConfigYAMLGenerator:
         result = {"type": lc.type.value}
 
         if lc.type == LimitConfigType.DECOUPLED:
-            result["valid_limits"] = lc.valid_limits
+            if lc.min_limit is not None and lc.max_limit is not None:
+                result["min_limit"] = lc.min_limit
+                result["max_limit"] = lc.max_limit
+            elif lc.valid_limits:
+                result["valid_limits"] = lc.valid_limits
             result["valid_deductibles"] = lc.valid_deductibles
         elif lc.type == LimitConfigType.BUNDLED and lc.packages:
             result["packages"] = lc.packages
@@ -516,11 +520,20 @@ class ConfigYAMLGenerator:
 
         by_product = {}
         for pp in pricing.by_product_type:
+            ilf = pp.ilf_curve
+            if hasattr(ilf, 'curve') and ilf.curve is not None:
+                ilf_dict = {
+                    "anchor_limit": ilf.anchor_limit,
+                    "curve": ilf.curve,
+                    "params": ilf.params or {},
+                }
+            else:
+                ilf_dict = {
+                    "base_limit": ilf.base_limit,
+                    "factors": ilf.factors,
+                }
             entry = {
-                "ilf_curve": {
-                    "base_limit": pp.ilf_curve.base_limit,
-                    "factors": pp.ilf_curve.factors,
-                },
+                "ilf_curve": ilf_dict,
                 "deductible_factors": pp.deductible_factors,
             }
             by_product[pp.product_type] = entry
