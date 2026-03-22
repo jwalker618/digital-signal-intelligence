@@ -257,6 +257,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 flex items-center 
                 justify-between 
                 px-dsi-main
+                whitespace-nowrap border-collapse
                 shrink-0"
               style={{ height: 'var(--cw)' }}
             >
