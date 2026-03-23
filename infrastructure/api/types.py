@@ -463,7 +463,9 @@ class ModelVersionDBRecord(BaseModel):
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
+    limit_premium_details: List[Dict[str, Any]] = Field(default_factory=list)
     final_premium: Optional[float] = None
+    uncapped_premium: Optional[float] = None
     ilf_factor: Optional[float] = None
     ilf_method: Optional[str] = None
     ilf_anchor_limit: Optional[float] = None
@@ -532,14 +534,16 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
+    limit_premium_details: List[Dict[str, Any]] = Field(default_factory=list)
     final_premium: Optional[float] = None
+    uncapped_premium: Optional[float] = None
     ilf_factor: Optional[float] = None
     ilf_method: Optional[str] = None
     ilf_anchor_limit: Optional[float] = None
     decision: Optional[DecisionType] = None
     auto_approve: bool = False
 
-@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
+@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash",
                                         "version_number", "version_type", "is_latest", "coverage", "configuration_name",
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",

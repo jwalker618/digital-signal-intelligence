@@ -400,7 +400,13 @@ class WorkflowEngine:
 
         # Convert traditional modifier results to query_modifiers format
         traditional_modifiers_for_pricer = [
-            {"name": r.modifier_type, "factor": r.factor, "confidence": r.confidence}
+            {
+                "name": r.modifier_type,
+                "factor": r.factor,
+                "confidence": r.confidence,
+                "source": "traditional",
+                "source_id": r.modifier_type,
+            }
             for r in traditional_modifier_results
             if r.has_impact  # Only include modifiers with actual impact
         ]
@@ -414,6 +420,8 @@ class WorkflowEngine:
                 "name": "loss_propensity",
                 "factor": loss_propensity_result.combined_loss_modifier,
                 "confidence": loss_propensity_result.loss_confidence,
+                "source": "loss_propensity",
+                "source_id": "loss_propensity",
             }
             all_modifiers.append(loss_modifier)
 
@@ -464,13 +472,16 @@ class WorkflowEngine:
             score_based_tier=pricing_result.score_based_tier,
             final_tier=pricing_result.final_tier,
             tier_label=pricing_result.tier_label,
+            tier_margin=pricing_result.tier_margin,
             base_premium=pricing_result.base_premium,
             base_premium_method=pricing_result.base_premium_method,
             base_premium_derivation=pricing_result.base_premium_derivation,
             modifiers_applied=pricing_result.modifiers_applied,
             premium_after_modifiers=pricing_result.premium_after_modifiers,
             limit_premiums=pricing_result.limit_premiums,
+            limit_premium_details=pricing_result.limit_premium_details,
             final_premium=pricing_result.final_premium,
+            uncapped_premium=pricing_result.uncapped_premium,
             decision=decision,
             auto_approve=auto_approve,
             referral_reasons=all_referrals,
@@ -546,31 +557,32 @@ class WorkflowEngine:
                 "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
                 else "full"
             )
-            # Map exposure value to band and persist boundaries
-            _EXPOSURE_BANDS = [
-                (1, "Minimal",    0,              0,              0.80),
-                (1, "Small",      0,              50_000_000,     0.85),
-                (2, "Mid-Market", 50_000_000,     500_000_000,    0.95),
-                (3, "Large",      500_000_000,    5_000_000_000,  1.05),
-                (4, "Major",      5_000_000_000,  50_000_000_000, 1.15),
-                (5, "Mega",       50_000_000_000, None,           1.30),
+            # Map exposure value to band label for display context
+            # Band modifier is the ACTUAL pricing factor — not a separate lookup
+            _EXPOSURE_BAND_LABELS = [
+                (1, "Minimal",    0,              0),
+                (1, "Small",      0,              50_000_000),
+                (2, "Mid-Market", 50_000_000,     500_000_000),
+                (3, "Large",      500_000_000,    5_000_000_000),
+                (4, "Major",      5_000_000_000,  50_000_000_000),
+                (5, "Mega",       50_000_000_000, None),
             ]
-            matched = _EXPOSURE_BANDS[-1]  # default to Mega
+            matched = _EXPOSURE_BAND_LABELS[-1]  # default to Mega
             if primary_exposure <= 0:
-                matched = _EXPOSURE_BANDS[0]
+                matched = _EXPOSURE_BAND_LABELS[0]
             else:
-                for band in _EXPOSURE_BANDS[1:]:
-                    bid, label, bmin, bmax, mod = band
+                for band in _EXPOSURE_BAND_LABELS[1:]:
+                    bid, label, bmin, bmax = band
                     if bmax is None or primary_exposure < bmax:
                         matched = band
                         break
-            bid, blabel, bmin, bmax, bmod = matched
+            bid, blabel, bmin, bmax = matched
             model_version.exposure_band_id = bid
             model_version.exposure_band_label = blabel
             model_version.exposure_band_boundaries = {
                 "min_value": bmin,
                 "max_value": bmax,
-                "modifier": bmod,
+                "modifier": exposure_result.factor,  # actual pricing factor, not a display value
             }
 
         return WorkflowResult(

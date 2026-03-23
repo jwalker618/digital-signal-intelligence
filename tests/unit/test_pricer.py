@@ -27,7 +27,6 @@ from infrastructure.models.config_schema import (
     Pricing,
     ProductTypePricing,
     ILFCurve,
-    ILFCurveFactor,
     DeductibleFactor,
     LimitConfiguration,
     LimitConfigType,
@@ -107,13 +106,9 @@ def sample_config():
             by_product_type={
                 "aerospace_hull": ProductTypePricing(
                     ilf_curve=ILFCurve(
-                        base_limit=1000000,
-                        factors=[
-                            ILFCurveFactor(limit=1000000, factor=1.0),
-                            ILFCurveFactor(limit=5000000, factor=2.5),
-                            ILFCurveFactor(limit=10000000, factor=4.0),
-                            ILFCurveFactor(limit=25000000, factor=7.0),
-                        ],
+                        anchor_limit=1000000,
+                        curve="power",
+                        params={"alpha": 0.569},
                     ),
                     deductible_factors=[
                         DeductibleFactor(deductible=10000, factor=1.15),
@@ -165,11 +160,9 @@ def rate_based_config():
             by_product_type={
                 "aerospace_hull": ProductTypePricing(
                     ilf_curve=ILFCurve(
-                        base_limit=1000000,
-                        factors=[
-                            ILFCurveFactor(limit=1000000, factor=1.0),
-                            ILFCurveFactor(limit=5000000, factor=2.5),
-                        ],
+                        anchor_limit=1000000,
+                        curve="power",
+                        params={"alpha": 0.569},
                     ),
                     deductible_factors=[
                         DeductibleFactor(deductible=25000, factor=1.0),
@@ -449,19 +442,31 @@ class TestLimitBands:
     """Tests for Step 12: Limit band scaling."""
 
     def test_scale_to_limits(self, pricer, sample_config):
-        """Should scale premium across all limit bands."""
-        limit_premiums = pricer.scale_to_limits(
+        """Should scale premium across all limit bands with detail breakdown."""
+        limit_premiums, limit_details = pricer.scale_to_limits(
             premium=50000,
             submission_data={"deductible": 25000},
             config=sample_config,
         )
 
         assert len(limit_premiums) == 4
-        # With deductible factor 1.0 (base deductible = 25k)
-        assert limit_premiums["1000000"] == 50000    # ILF 1.0
-        assert limit_premiums["5000000"] == 125000   # ILF 2.5
-        assert limit_premiums["10000000"] == 200000  # ILF 4.0
-        assert limit_premiums["25000000"] == 350000  # ILF 7.0
+        # With parametric power curve (alpha=0.569, anchor=1M) and deductible factor 1.0
+        assert limit_premiums["1000000"] == 50000  # ILF 1.0 at anchor
+        assert limit_premiums["5000000"] > 100000  # ILF ~2.5
+        assert limit_premiums["10000000"] > limit_premiums["5000000"]  # monotonically increasing
+        assert limit_premiums["25000000"] > limit_premiums["10000000"]
+
+        # LimitPremiumDetail objects carry component factors
+        assert len(limit_details) == 4
+        detail_1m = next(d for d in limit_details if d.limit == 1_000_000)
+        assert detail_1m.ilf_factor == 1.0  # anchor always = 1.0
+        assert detail_1m.deductible_factor == 1.0
+        assert detail_1m.premium_before_scaling == 50000
+        assert detail_1m.premium_after_scaling == 50000
+
+        detail_25m = next(d for d in limit_details if d.limit == 25_000_000)
+        assert detail_25m.ilf_factor > 5.0  # power curve ILF for 25x anchor
+        assert detail_25m.premium_after_scaling == limit_premiums["25000000"]
 
     def test_no_limit_config_returns_empty(self, pricer):
         """Config without limit configuration should return empty dict."""
@@ -483,8 +488,9 @@ class TestLimitBands:
             guardrails=Guardrails(),
         )
 
-        limit_premiums = pricer.scale_to_limits(50000, {}, config)
+        limit_premiums, limit_details = pricer.scale_to_limits(50000, {}, config)
         assert len(limit_premiums) == 0
+        assert len(limit_details) == 0
 
 
 # =============================================================================
@@ -579,3 +585,173 @@ class TestFullPricingPipeline:
         # 50,000 * 0.85 * 1.15 = 48,875
         expected_premium = 50000 * 0.85 * 1.15
         assert abs(result.premium_after_modifiers - expected_premium) < 0.01
+
+
+# =============================================================================
+# PHASE A: NEW CAPABILITY TESTS
+# =============================================================================
+
+class TestUncappedPremium:
+    """Tests for A1: uncapped premium capture."""
+
+    def test_uncapped_premium_none_when_not_capped(self, pricer, sample_config):
+        """When premium is within guardrails, uncapped_premium should be None."""
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000, "limit": 1000000},
+            config=sample_config,
+        )
+        assert result.premium_was_capped is False
+        assert result.uncapped_premium is None
+
+    def test_uncapped_premium_captured_when_capped(self, pricer, sample_config):
+        """When premium exceeds guardrail, uncapped premium should be preserved."""
+        # Use a modifier to push premium past the limit ratio cap
+        # Tier 4 (score 250) has base_premium=75000, modifier 2.5 → 187,500
+        # With ILF at 1M ≈ 1.0, limit cap = 1M × 0.35 = 350,000 → not capped
+        # But with revenue cap: revenue 100K × 0.01 = 1,000 → will cap
+        result = pricer.price_submission(
+            pure_composite_score=250,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[{"name": "loading", "factor": 2.0}],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000, "limit": 1000000, "revenue": 100000},
+            config=sample_config,
+        )
+        assert result.premium_was_capped is True
+        assert result.uncapped_premium is not None
+        assert result.uncapped_premium > result.final_premium
+
+
+class TestLimitPremiumDetails:
+    """Tests for A2: ILF transparency via LimitPremiumDetail."""
+
+    def test_limit_details_populated(self, pricer, sample_config):
+        """Each limit option should have a LimitPremiumDetail."""
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        assert len(result.limit_premium_details) == len(result.limit_premiums)
+
+    def test_limit_details_have_component_factors(self, pricer, sample_config):
+        """LimitPremiumDetail should store ilf_factor and deductible_factor."""
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        for detail in result.limit_premium_details:
+            assert detail.ilf_factor >= 1.0
+            assert detail.deductible_factor > 0
+            assert detail.premium_before_scaling > 0
+            assert detail.premium_after_scaling > 0
+            # Verify the math: premium = base × ilf × ded_factor
+            expected = round(detail.premium_before_scaling * detail.ilf_factor * detail.deductible_factor, 2)
+            assert abs(detail.premium_after_scaling - expected) < 0.01
+
+    def test_anchor_limit_ilf_is_one(self, pricer, sample_config):
+        """ILF at anchor limit should be 1.0."""
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        anchor_detail = next(
+            (d for d in result.limit_premium_details if d.limit == 1000000), None
+        )
+        assert anchor_detail is not None
+        assert anchor_detail.ilf_factor == 1.0
+
+
+class TestTierMargin:
+    """Tests for A4: tier margin context."""
+
+    def test_tier_margin_populated(self, pricer, sample_config):
+        """PricingResult should include tier margin context."""
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        margin = result.tier_margin
+        assert margin is not None
+        assert margin.score == 750
+        assert margin.tier_id == 2  # score 750 → tier 2 (600-799)
+        assert 0.0 <= margin.percentile_in_tier <= 1.0
+
+    def test_tier_margin_distance_to_boundaries(self, pricer, sample_config):
+        """Should calculate distance to adjacent tier boundaries."""
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        margin = result.tier_margin
+        # Tier 2 is 600-799, score 750
+        assert margin.distance_to_better_tier == 150.0  # 750 - 600 = 150
+        assert margin.distance_to_worse_tier == 49.0    # 799 - 750 = 49
+        assert margin.adjacent_better_tier == 1
+        assert margin.adjacent_worse_tier == 3
+
+    def test_tier_margin_best_tier_no_better(self, pricer, sample_config):
+        """Best tier should have no adjacent_better_tier."""
+        result = pricer.price_submission(
+            pure_composite_score=950,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        margin = result.tier_margin
+        assert margin.tier_id == 1  # best tier
+        assert margin.adjacent_better_tier is None
+        assert margin.distance_to_better_tier is None
+
+
+class TestParametricOnlyILF:
+    """Tests for A5: table-based ILF removal."""
+
+    def test_table_ilf_rejected(self):
+        """ILFCurve should reject table-based configuration."""
+        with pytest.raises(Exception):
+            ILFCurve(base_limit=1000000, factors=[])
+
+    def test_parametric_ilf_required(self):
+        """ILFCurve must have anchor_limit and curve."""
+        curve = ILFCurve(
+            anchor_limit=5000000,
+            curve="power",
+            params={"alpha": 0.5},
+        )
+        assert curve.is_parametric is True
+        assert curve.get_factor_for_limit(5000000) == 1.0
+        assert curve.get_factor_for_limit(20000000) > 1.0

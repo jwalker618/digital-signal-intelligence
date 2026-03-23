@@ -516,11 +516,6 @@ class LimitConfiguration(BaseModel):
 # PRICING
 # =============================================================================
 
-class ILFCurveFactor(BaseModel):
-    """Single point on ILF curve (legacy table format)."""
-    limit: int
-    factor: float
-
 
 # ---- Parametric ILF raw curve functions ------------------------------------
 #
@@ -577,40 +572,24 @@ _CURVE_REGISTRY: Dict[str, Callable] = {
 
 class ILFCurve(BaseModel):
     """
-    Increased Limit Factor curve — parametric or legacy table.
+    Increased Limit Factor curve — parametric only.
 
-    Parametric (preferred):
+    Supported curve types: bounded_exponential, power, logarithmic, pareto, iso_pareto.
+
+    Example:
         anchor_limit: 5000000
         curve: bounded_exponential
         params:
             max_ilf: 3.0
             k: 1.2
-
-    Legacy table (still supported):
-        base_limit: 1000000
-        factors:
-            - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 2.15}
     """
-    # Parametric fields
-    anchor_limit: Optional[int] = None
-    curve: Optional[str] = None
+    anchor_limit: int
+    curve: str
     params: Optional[Dict[str, float]] = None
-
-    # Legacy table fields
-    base_limit: Optional[int] = None
-    factors: Optional[List[ILFCurveFactor]] = None
 
     @model_validator(mode="after")
     def validate_curve_config(self) -> "ILFCurve":
-        has_parametric = self.curve is not None and self.anchor_limit is not None
-        has_table = self.factors is not None and self.base_limit is not None
-        if not has_parametric and not has_table:
-            raise ValueError(
-                "ILFCurve must specify either (anchor_limit + curve + params) "
-                "or (base_limit + factors)"
-            )
-        if has_parametric and self.curve not in _CURVE_REGISTRY:
+        if self.curve not in _CURVE_REGISTRY:
             raise ValueError(
                 f"Unknown ILF curve type '{self.curve}'. "
                 f"Valid types: {list(_CURVE_REGISTRY.keys())}"
@@ -619,23 +598,11 @@ class ILFCurve(BaseModel):
 
     @property
     def is_parametric(self) -> bool:
-        return self.curve is not None and self.anchor_limit is not None
+        """Always True — table-based ILF has been removed."""
+        return True
 
     def get_factor_for_limit(self, limit: int) -> float:
         """Get ILF factor for a given limit."""
-        if self.is_parametric:
-            return self._parametric_factor(limit)
-        return self._table_factor(limit)
-
-    def _parametric_factor(self, limit: int) -> float:
-        """
-        Evaluate the parametric curve at the given limit.
-
-        Uniform anchor normalisation: ILF = raw(L) / raw(anchor).
-        This guarantees ILF(anchor) = 1.0 for every curve type.
-        A floor of 1.0 ensures limits below anchor never produce ILF < 1.
-        An optional 'cap' parameter in params bounds the maximum ILF.
-        """
         curve_fn = _CURVE_REGISTRY[self.curve]
         params = dict(self.params or {})
 
@@ -658,31 +625,6 @@ class ILFCurve(BaseModel):
 
         # Floor at 1.0
         return max(ilf, 1.0)
-
-    def _table_factor(self, limit: int) -> float:
-        """Legacy: interpolate from factor table."""
-        if not self.factors:
-            return 1.0
-
-        for f in self.factors:
-            if f.limit == limit:
-                return f.factor
-
-        sorted_factors = sorted(self.factors, key=lambda x: x.limit)
-
-        if limit < sorted_factors[0].limit:
-            return sorted_factors[0].factor
-        if limit > sorted_factors[-1].limit:
-            return sorted_factors[-1].factor
-
-        for i in range(len(sorted_factors) - 1):
-            if sorted_factors[i].limit <= limit <= sorted_factors[i + 1].limit:
-                low = sorted_factors[i]
-                high = sorted_factors[i + 1]
-                ratio = (limit - low.limit) / (high.limit - low.limit)
-                return low.factor + ratio * (high.factor - low.factor)
-
-        return 1.0
 
 
 class DeductibleFactor(BaseModel):
@@ -807,39 +749,12 @@ class CoverageConfig(BaseModel):
         base_limit = self.pricing.base_limit_reference
         for prod_name, prod_pricing in self.pricing.by_product_type.items():
             ilf = prod_pricing.ilf_curve
-            if ilf.is_parametric:
-                # Parametric curves normalise to 1.0 at anchor_limit by construction
-                if ilf.anchor_limit != base_limit:
-                    _logger.info(
-                        f"Product '{prod_name}' parametric anchor_limit ({ilf.anchor_limit}) "
-                        f"differs from base_limit_reference ({base_limit})"
-                    )
-            else:
-                anchor_factor = None
-                for f in ilf.factors:
-                    if f.limit == base_limit:
-                        anchor_factor = f.factor
-                        break
-                if anchor_factor is None:
-                    errors.append(
-                        f"Product '{prod_name}' ILF curve missing base_limit_reference ({base_limit})"
-                    )
-                elif anchor_factor != 1.0:
-                    errors.append(
-                        f"Product '{prod_name}' ILF anchor at {base_limit} should be 1.0, got {anchor_factor}"
-                    )
-
-        # Validate ILF factors within guardrail bounds
-        max_ilf = self.guardrails.max_ilf_factor
-        for prod_name, prod_pricing in self.pricing.by_product_type.items():
-            ilf = prod_pricing.ilf_curve
-            if not ilf.is_parametric and ilf.factors:
-                for f in ilf.factors:
-                    if f.factor > max_ilf:
-                        errors.append(
-                            f"Product '{prod_name}' ILF factor {f.factor} at limit "
-                            f"{f.limit:,} exceeds max_ilf_factor ({max_ilf})"
-                        )
+            # Parametric curves normalise to 1.0 at anchor_limit by construction
+            if ilf.anchor_limit != base_limit:
+                _logger.info(
+                    f"Product '{prod_name}' parametric anchor_limit ({ilf.anchor_limit}) "
+                    f"differs from base_limit_reference ({base_limit})"
+                )
 
         # Validate deductible anchor
         base_ded = self.pricing.base_deductible_reference

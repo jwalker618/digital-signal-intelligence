@@ -870,6 +870,7 @@ class ModelVersion:
     score_based_tier: int = 3
     final_tier: int = 3
     tier_label: str = "STANDARD"
+    tier_margin: Optional[Any] = None  # TierMarginContext
 
     # Pricing (Steps 10-12)
     base_premium: float = 0.0
@@ -878,7 +879,9 @@ class ModelVersion:
     modifiers_applied: List[AppliedModifier] = field(default_factory=list)
     premium_after_modifiers: float = 0.0
     limit_premiums: Dict[str, float] = field(default_factory=dict)
+    limit_premium_details: List[Any] = field(default_factory=list)  # List[LimitPremiumDetail]
     final_premium: float = 0.0
+    uncapped_premium: Optional[float] = None  # Pre-guardrail premium (set when capped)
 
     # Decision (Step 13)
     decision: DecisionType = DecisionType.REFER
@@ -989,6 +992,43 @@ class QueryEvaluationResult:
 
 
 @dataclass
+class TierMarginContext:
+    """
+    Context about how close a score is to tier boundaries.
+
+    Helps underwriters understand if a risk is marginally in its tier
+    (e.g., "barely Tier 3, close to Tier 2 boundary").
+    """
+    score: float                       # The composite score
+    tier_id: int                       # Current tier
+    tier_min: float                    # Current tier's lower bound
+    tier_max: float                    # Current tier's upper bound
+    percentile_in_tier: float          # 0.0 = at min, 1.0 = at max
+    distance_to_better_tier: Optional[float] = None   # Points below current tier min (None if best tier)
+    distance_to_worse_tier: Optional[float] = None     # Points above current tier max (None if worst tier)
+    adjacent_better_tier: Optional[int] = None         # Tier ID of next better tier
+    adjacent_worse_tier: Optional[int] = None          # Tier ID of next worse tier
+
+
+@dataclass
+class LimitPremiumDetail:
+    """
+    Detailed pricing breakdown for a single limit option.
+
+    Stores component factors discretely (not just computed premium) to enable
+    future tower/layer pricing via ILF(attachment + limit) - ILF(attachment).
+    """
+    limit: int
+    deductible: int = 0
+    attachment_point: Optional[int] = None  # None = ground-up; set for tower layers
+    ilf_factor: float = 1.0
+    deductible_factor: float = 1.0
+    premium_before_scaling: float = 0.0  # premium_after_modifiers
+    premium_after_scaling: float = 0.0   # premium × ilf × ded_factor
+    uncapped_premium: Optional[float] = None  # pre-guardrail value if capped
+
+
+@dataclass
 class PricingResult:
     """
     Output from pricing calculation (Steps 8-12).
@@ -1004,6 +1044,7 @@ class PricingResult:
     final_tier: int = 3
     tier_label: str = "STANDARD"
     tier_config: Optional[Any] = None  # RiskTierBand from config_schema (or legacy TierConfig)
+    tier_margin: Optional[TierMarginContext] = None
 
     # Step 10: Base premium
     base_premium: float = 0.0
@@ -1017,9 +1058,11 @@ class PricingResult:
 
     # Step 12: Limit bands
     limit_premiums: Dict[str, float] = field(default_factory=dict)
+    limit_premium_details: List[Any] = field(default_factory=list)  # List[LimitPremiumDetail]
     final_premium: float = 0.0
 
     # Guardrail outputs
+    uncapped_premium: Optional[float] = None  # Pre-guardrail premium (set when premium_was_capped=True)
     guardrail_warnings: List[str] = field(default_factory=list)
     modifier_was_clamped: bool = False
     premium_was_capped: bool = False

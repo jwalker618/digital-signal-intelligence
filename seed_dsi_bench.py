@@ -2631,11 +2631,11 @@ def seed_data():
 
             # Determine ILF method and anchor from the curve config
             _pt_pricing = config.pricing.by_product_type.get(product_type)
-            if _pt_pricing and _pt_pricing.ilf_curve.is_parametric:
+            if _pt_pricing:
                 ilf_method = f"parametric:{_pt_pricing.ilf_curve.curve}"
                 ilf_anchor = _pt_pricing.ilf_curve.anchor_limit
             else:
-                ilf_method = "table"
+                ilf_method = "unknown"
                 ilf_anchor = config.pricing.base_limit_reference
 
             # Build tier override audit records
