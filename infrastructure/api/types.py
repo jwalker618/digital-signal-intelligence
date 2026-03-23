@@ -459,7 +459,7 @@ class ModelVersionDBRecord(BaseModel):
     tier_label: Optional[str] = None
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
-    base_premium_derivation: Optional[Dict[str, Any]] = None
+    base_premium_derivation: Dict[str, Any] = Field(default_factory=dict)
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
@@ -528,7 +528,7 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
     tier_label: Optional[str] = None
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
-    base_premium_derivation: Optional[Dict[str, Any]] = None
+    base_premium_derivation: Dict[str, Any] = Field(default_factory=dict)
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     limit_premiums: Dict[str, Any] = Field(default_factory=dict)
@@ -545,7 +545,7 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
                                         "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
-                                        "decision","auto_approve",
+                                        "decision","auto_approve", "base_premium_derivation",
    
                                         "referral_reasons", "notes",
                                         
@@ -571,7 +571,7 @@ class ModelVersionDBRecord_DetailOnly(BaseModel):
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
                                         "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
-                                        "decision","auto_approve",
+                                        "decision","auto_approve", "base_premium_derivation",
 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
                                         
@@ -595,7 +595,7 @@ class ModelVersionDBRecord_CommentaryOnly(BaseModel):
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
                                         "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
-                                        "decision","auto_approve",
+                                        "decision","auto_approve", "base_premium_derivation",
 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
 
@@ -630,7 +630,7 @@ class ModelVersionDBRecord_LossOnly(BaseModel):
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
                                         "limit_premiums", "final_premium",  "ilf_factor","ilf_method","ilf_anchor_limit",
-                                        "decision","auto_approve",
+                                        "decision","auto_approve", "base_premium_derivation",
 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
 

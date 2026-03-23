@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { Calculator, HandCoins, ShieldCheck, ChevronDown, ChevronRight, ArrowRightToLine, Paperclip, SquareMenu} from "lucide-react";
+import { 
+  Calculator, HandCoins, ChevronDown, 
+  ChevronRight, ArrowRightToLine, Paperclip, 
+  SquareMenu, PenLine, WeightTilde
+} from "lucide-react";
 
 export default function PricingTab() {
   const { activeSubmission, activeQuote, activeVersion } = useDsiStore();
@@ -59,7 +63,6 @@ export default function PricingTab() {
   const signalTotal = signalItems.reduce((acc, item) => acc + item.impact, 0);
   const directTotal = directItems.reduce((acc, item) => acc + item.impact, 0);
 
-  
   // =======================================================================
   // KPI CALCULATIONS
   // =======================================================================
@@ -72,9 +75,6 @@ export default function PricingTab() {
   // 1. Base to Anchor (Technical Modifiers Impact)
   const baseToAnchorDiff = anchorPremium - basePremium;
   const baseToAnchorPct = basePremium > 0 ? (baseToAnchorDiff / basePremium) * 100 : 0;
-
-  // 2. Anchor to Final (ILF / Limit Impact)
-  const anchorToFinalDiff = recommendedPremium - anchorPremium;
 
   const premiumAfterCategorical = basePremium + categoricalTotal;
   const premiumAfterSignal = premiumAfterCategorical + signalTotal;
@@ -179,9 +179,6 @@ export default function PricingTab() {
             <div className="pl-dsi-pad pr-dsi-pad font-bold text-right">
               {basePremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
-            <div className="pl-dsi-pad pr-dsi-pad text-xs text-left">
-              Calc. Methodology: {activeVersion.base_premium_method}
-            </div>
           </div>
           <div className="border-r-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse">
             <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2"> 
@@ -205,12 +202,6 @@ export default function PricingTab() {
             </div>
             <div className="pl-dsi-pad pr-dsi-pad font-bold text-center">
               {activeVersion.ilf_factor.toFixed(1)}
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad text-xs text-left">
-              Method: {activeVersion.ilf_method}
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad text-xs text-left">
-              Anchor: {activeVersion.ilf_anchor_limit.toLocaleString()}
             </div>
           </div>
           <div className="
@@ -263,7 +254,7 @@ export default function PricingTab() {
           </div>
 
           {/* =======================================================================
-              COMPONENT B: PRICING ANATOMY (WATERFALL GROUPS)
+              COMPONENT B: PRICING ANATOMY
               ======================================================================= */}
           <div className="
             flex flex-col flex-1
@@ -281,160 +272,385 @@ export default function PricingTab() {
               pt-2 pb-2
               "
               >
-              <table className="w-full whitespace-nowrap border-collapse">
-                <thead>
-                  <tr className="text-center text-sm underline">
-                    <th className="text-left font-normal">Calculation Step</th>
-                    <th className="font-normal">Modifier</th>
-                    <th className="font-normal">Premium Impact</th>
-                    <th className="font-normal">Running Total</th>
-                  </tr>
-                </thead>
-                <tbody>
+              
+              {/* BASE PREMIUM */}
+              <div className="
+                border-b-1 border-dsi-outline/50
+                pb-2
+              "
+              >
+                <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-3">
                   
-                  {/* 1. Base Premium Row */}
-                  <tr className="border-b-1 border-dsi-outline/50"
+                  {/* row 1 */}
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    flex gap-dsi-pad text-sm"
                     >
-                    <td className="
-                      flex gap-dsi-pad 
-                      text-sm
-                      pt-dsi-pad pb-dsi-pad">
-                      <ArrowRightToLine className="icon"/> Base Premium (Tier {activeVersion.final_tier})
-                    </td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">-</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">-</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right font-bold">{basePremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                  </tr>
+                      <ArrowRightToLine className="icon"/> Tier {activeVersion.final_tier} Base Premium using {activeVersion.base_premium_derivation.method} methodology
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-xs text-center border-r-1 border-dsi-outline/50"
+                    >Basis
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-sm text-right uppercase bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.base_premium_derivation.basis_field} @ 
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.base_premium_derivation.basis_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
 
-                  {/* --- GROUP 1: CATEGORCIAL ADJUSTMENTS --- */}
-                  <tr 
-                    className="
-                      cursor-pointer 
-                      border-b border-dsi-outline/10 
-                      hover:bg-dsi-background/20 
-                      transition-colors
-                      "
-                    onClick={() => toggleGroup('categorical')}
-                  >
-                    <td className="
-                      hover:text-dsi-selected
-                      flex gap-dsi-pad 
-                      text-sm
-                      pt-dsi-pad pb-dsi-pad">
-                      {expandedGroups.categorical ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
-                      Categorical Adjustments
-                    </td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">{categoricalItems.length} items</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right font-bold">{categoricalTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right">{premiumAfterCategorical.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                  </tr>
-                  {expandedGroups.categorical && categoricalItems.map((mod, idx) => (
-                    <tr key={`sig-${idx}`} className="bg-dsi-background/30"
-                      >
-                      <td className="pl-dsi-indent pr-dsi-pad text-sm" title={mod.name}>
-                        {mod.name}
-                      </td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">{Number(mod.multiplier).toFixed(3)}x</td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-right">{mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-right text-xs">-</td>
-                    </tr>
-                  ))}
-                  {expandedGroups.categorical && categoricalItems.length === 0 && (
-                    <tr className="bg-dsi-background/30"><td colSpan={4} className="pl-dsi-indent pr-dsi-pad text-xs opacity-50 italic">No modifiers applied.</td></tr>
-                  )}
-
-                  {/* --- GROUP 2: SIGNAL ADJUSTMENTS --- */}
-                  <tr 
-                    className="
-                      cursor-pointer 
-                      border-b border-dsi-outline/10 
-                      hover:bg-dsi-background/20 
-                      transition-colors
-                      "
-                    onClick={() => toggleGroup('signal')}
-                  >
-                    <td className="
-                      hover:text-dsi-selected
-                      flex gap-dsi-pad 
-                      text-sm
-                      pt-dsi-pad pb-dsi-pad">
-                      {expandedGroups.signal ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
-                      Signal Adjustments
-                    </td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">{signalItems.length} items</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right font-bold">{signalTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right">{premiumAfterSignal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                  </tr>
-                  {expandedGroups.signal && signalItems.map((mod, idx) => (
-                    <tr key={`sig-${idx}`} className="bg-dsi-background/30"
-                      >
-                      <td className="pl-dsi-indent pr-dsi-pad text-sm" title={mod.name}>
-                        {mod.name}
-                      </td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">{Number(mod.multiplier).toFixed(3)}x</td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-right">{mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-right text-xs">-</td>
-                    </tr>
-                  ))}
-                  {expandedGroups.signal && signalItems.length === 0 && (
-                    <tr className="bg-dsi-background/30"><td colSpan={4} className="pl-dsi-indent pr-dsi-pad text-xs opacity-50 italic">No modifiers applied.</td></tr>
-                  )}
-
-                  {/* --- GROUP 3: DIRECT ADJUSTMENTS --- */}
-                  <tr 
-                    className="
-                      cursor-pointer 
-                      hover:bg-dsi-background/20 
-                      transition-colors
-                      "
-                    onClick={() => toggleGroup('direct')}
-                  >
-                    <td className="
-                      hover:text-dsi-selected
-                      flex gap-dsi-pad 
-                      text-sm
-                      pt-dsi-pad pb-dsi-pad">
-                      {expandedGroups.direct ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
-                      Direct Query Adjustments
-                    </td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">{directItems.length} items</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right font-bold">{directTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right">{premiumAfterDirect.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                  </tr>
-                  {expandedGroups.direct && directItems.map((mod, idx) => (
-                    <tr key={`sig-${idx}`} className="bg-dsi-background/30"
-                      >
-                      <td className="pl-dsi-indent pr-dsi-pad text-sm" title={mod.name}>
-                        {mod.name}
-                      </td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">{Number(mod.multiplier).toFixed(3)}x</td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-right">{mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td className="pl-dsi-pad pr-dsi-pad text-right text-xs">-</td>
-                    </tr>
-                  ))}
-                  {expandedGroups.direct && directItems.length === 0 && (
-                    <tr className="bg-dsi-background/30"><td colSpan={4} className="pl-dsi-indent pr-dsi-pad text-xs opacity-50 italic">No modifiers applied.</td></tr>
-                  )}
-
-                  {/* LOADED PREMIUM */}
-                  <tr className="border-t-1 border-dsi-outline/50"
+                  {/* row 2 */}
+                  <div></div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-xs text-center border-r-1 border-dsi-outline/50"
+                    >Rate
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    bg-dsi-selected/10 text-dsi-selected"
                     >
-                    <td className="
-                      flex gap-dsi-pad 
-                      text-sm
-                      pt-dsi-pad pb-dsi-pad">
-                      <ArrowRightToLine className="icon"/> Loaded Premium
-                    </td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-center text-xs">-</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right font-bold">{baseToAnchorDiff.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="pl-dsi-pad pr-dsi-pad text-right font-bold">{anchorPremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                  </tr>
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.base_premium_derivation.rate}x
+                  </div>
 
-                </tbody>
-              </table>
+                  {/* row 3 */}
+                  <div></div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-xs text-center border-r-1 border-dsi-outline/50"
+                    >Result
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    bg-dsi-selected/10 text-dsi-selected"
+                    >
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.base_premium_derivation.result.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                </div>
+
+              </div>
+
+            {/*ADJUSTMENTS*/}
+            <div className="grid grid-cols-[50%_10%_20%_20%] pt-2 pb-2">
+              
+              {/* row 1: Table Headers */}
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse
+                flex gap-dsi-pad text-sm pt-2 pb-2"
+                >
+                  <PenLine className="icon"/> Adjustments
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse 
+                text-center text-xs pt-2 pb-2"
+                >Modifier
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse 
+                text-right text-xs pt-2 pb-2"
+                >Impact 
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse 
+                pl-dsi-pad pr-dsi-pad text-right text-xs pt-2 pb-2"
+                >Result
+              </div>
+
+              {/* ==============================================
+                  CATEGORICAL HEADER
+                  ============================================== */}
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse
+                hover:text-dsi-selected cursor-pointer
+                border-b border-dsi-outline/10
+                flex gap-dsi-pad
+                text-sm
+                pt-dsi-pad pb-dsi-pad
+                "
+                onClick={() => toggleGroup('categorical')}
+                >
+                  {expandedGroups.categorical ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Categorical
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-xs text-center content-center
+                "
+                onClick={() => toggleGroup('categorical')}
+                >
+                  {categoricalItems.length} items
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-b border-dsi-outline/10
+                text-right font-bold content-center
+                "
+                onClick={() => toggleGroup('categorical')}
+                >
+                  {categoricalTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-b border-dsi-outline/10
+                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
+                "
+                onClick={() => toggleGroup('categorical')}
+                >
+                  {premiumAfterCategorical.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+
+              {/* ==============================================
+                  GROUP BODY: Categorical Items 
+                  ============================================== */}
+              {expandedGroups.categorical && categoricalItems.map((mod, idx) => (
+                <div key={`cat-${idx}`} className="contents">
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    title={mod.name}
+                    >
+                    {mod.name}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-center text-xs content-center bg-dsi-background/30"
+                    >
+                    {Number(mod.multiplier).toFixed(3)}x
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30"
+                    >
+                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
+                    >
+                    -
+                  </div>
+                </div>
+              ))}
+
+              {expandedGroups.categorical && categoricalItems.length === 0 && (
+                <div className="
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
+                  >
+                  No modifiers applied.
+                </div>
+              )}
+
+
+              {/* ==============================================
+                  SIGNAL HEADER
+                  ============================================== */}
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse
+                hover:text-dsi-selected cursor-pointer
+                border-b border-dsi-outline/10
+                flex gap-dsi-pad
+                text-sm
+                pt-dsi-pad pb-dsi-pad
+                "
+                onClick={() => toggleGroup('signal')}
+                >
+                  {expandedGroups.signal ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Signal
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-xs text-center content-center
+                "
+                onClick={() => toggleGroup('signal')}
+                >
+                  {signalItems.length} items
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-b border-dsi-outline/10
+                text-right font-bold content-center
+                "
+                onClick={() => toggleGroup('signal')}
+                >
+                  {signalTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-b border-dsi-outline/10
+                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
+                "
+                onClick={() => toggleGroup('signal')}
+                >
+                  {premiumAfterSignal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+
+              {/* ==============================================
+                  GROUP BODY: Signal Items 
+                  ============================================== */}
+              {expandedGroups.signal && signalItems.map((mod, idx) => (
+                <div key={`cat-${idx}`} className="contents">
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    title={mod.name}
+                    >
+                    {mod.name}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-center text-xs content-center bg-dsi-background/30"
+                    >
+                    {Number(mod.multiplier).toFixed(3)}x
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30"
+                    >
+                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
+                    >
+                    -
+                  </div>
+                </div>
+              ))}
+
+              {expandedGroups.signal && signalItems.length === 0 && (
+                <div className="
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
+                  >
+                  No modifiers applied.
+                </div>
+              )}
+
+
+              {/* ==============================================
+                  DIRECT HEADER
+                  ============================================== */}
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse
+                hover:text-dsi-selected cursor-pointer
+                flex gap-dsi-pad
+                text-sm
+                pt-dsi-pad pb-dsi-pad
+                "
+                onClick={() => toggleGroup('direct')}
+                >
+                  {expandedGroups.direct ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Direct Query
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-xs text-center content-center
+                "
+                onClick={() => toggleGroup('direct')}
+                >
+                  {directItems.length} items
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-right font-bold content-center
+                "
+                onClick={() => toggleGroup('direct')}
+                >
+                  {directTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
+                "
+                onClick={() => toggleGroup('direct')}
+                >
+                  {premiumAfterDirect.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+
+              {/* ==============================================
+                  GROUP BODY: Direct Items 
+                  ============================================== */}
+              {expandedGroups.direct && directItems.map((mod, idx) => (
+                <div key={`cat-${idx}`} className="contents">
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    title={mod.name}
+                    >
+                    {mod.name}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-center text-xs content-center bg-dsi-background/30"
+                    >
+                    {Number(mod.multiplier).toFixed(3)}x
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30"
+                    >
+                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
+                    >
+                    -
+                  </div>
+                </div>
+              ))}
+
+              {expandedGroups.direct && directItems.length === 0 && (
+                <div className="
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
+                  >
+                  No modifiers applied.
+                </div>
+              )}
+
+            </div>
+            
+            {/* LOADED PREMIUM */}
+            <div className="
+              border-t-1 border-dsi-outline/50
+              pt-2 pb-2
+            "
+            >
+              <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-1">
+                
+                {/* row 1 */}
+                <div className="
+                  overflow-x-hidden whitespace-nowrap border-collapse
+                  flex gap-dsi-pad text-sm"
+                  >
+                    <WeightTilde className="icon"/> Loaded Premium before ILF
+                </div>
+                <div></div>
+                <div></div>
+                <div className="
+                  overflow-x-hidden whitespace-nowrap border-collapse 
+                  pl-dsi-pad pr-dsi-pad text-right"
+                  >{activeVersion.premium_after_modifiers.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </div>
+
+              </div>
+
             </div>
           </div>
         </div>
+      </div>
 
         <div className="flex flex-col">
           {/* SECTION HEADER */}
