@@ -54,6 +54,20 @@ Schema changes:
 - `LimitConfiguration.layers: Optional[List[TowerLayer]]`
 - `generate_limit_options()` becomes polymorphic: for TOWER, returns the layer structure; for DECOUPLED/BUNDLED, behaves as today
 
+#### Bespoke Towers
+
+Tower configs support arbitrary limit/excess bandings — there is no requirement to use standard layer structures. A config can define any combination of attachment and limit values per layer, allowing:
+
+- Non-standard layer widths (e.g. a thin primary with wide excess layers, or vice versa)
+- Gaps between layers (if the program intentionally leaves a band uninsured)
+- Overlapping coverage across products within the same tower
+
+Validation rules for bespoke towers:
+- Each layer must have `attachment >= 0` and `limit > 0`
+- Layers must be ordered by attachment (ascending)
+- No two layers within the same product may overlap (i.e. `layer[n].attachment + layer[n].limit <= layer[n+1].attachment`)
+- ILF curves must cover the full range up to `max(attachment + limit)` — the health gate validates this
+
 ### E3: Multi-Layer Pricing Engine
 
 In `ModelPricer.scale_to_limits()`:
@@ -86,26 +100,63 @@ for detail in limit_details:
     )
 ```
 
-### E4: Subscription Participation
+### E4: Subscription Market — Order & Line Model
 
-Add `SUBSCRIPTION` to `LimitConfigType`:
+The subscription market operates at two levels:
+
+1. **Order**: The slip/policy unit that defines the 100% terms — total limit, total premium, attachment, deductible, and the full layer structure (if tower). The order represents the risk as placed in the market.
+2. **Line**: Each subscriber's participation on the order. A line captures the insurer's signed percentage, their share of premium, and their role (lead or follow).
+
+This distinction matters because the order is the pricing unit (ROL, ILF, and premium all apply at the 100% order level) while the line is the allocation unit (what each insurer actually books).
+
+#### Schema
 
 ```yaml
+# Order-level configuration (on LimitConfiguration)
 limit_configuration:
   type: SUBSCRIPTION
   total_limit: 50000000
-  minimum_line: 0.05    # 5% minimum participation
-  maximum_line: 0.25    # 25% maximum participation
-  participation_options: [0.05, 0.10, 0.15, 0.20, 0.25]
+  order_premium: 2500000    # 100% premium for the order
+
+# Line-level (per subscriber, on the output/booking side)
+subscription_line:
+  minimum_line: 0.05        # 5% minimum participation
+  maximum_line: 0.25        # 25% maximum participation
+  signed_line: 0.15         # actual signed line (any value between min and max)
+  role: LEAD                # LEAD or FOLLOW
 ```
+
+Any line percentage between `minimum_line` and `maximum_line` is valid — no discrete options needed.
 
 Schema changes:
 - New enum value: `LimitConfigType.SUBSCRIPTION`
-- New fields on `LimitConfiguration`: `total_limit`, `minimum_line`, `maximum_line`, `participation_options`
+- New model: `SubscriptionOrder(StrictModel)` with `total_limit`, `order_premium`
+- New model: `SubscriptionLine(StrictModel)` with `minimum_line`, `maximum_line`, `signed_line: Optional[float]`, `role: LineRole`
+- New enum: `LineRole` — `LEAD`, `FOLLOW`
+- `LimitConfiguration` extended with `subscription_order: Optional[SubscriptionOrder]`, `subscription_line: Optional[SubscriptionLine]`
 
-Pricing: `our_premium = participation_pct x full_premium`. ROL unchanged.
+#### Lead vs Follow Pricing Impact
 
-Subscription can also compose with tower: each layer has a total premium, and the insurer participates on one or more layers at a percentage.
+Lead/follow status is captured as a DB marker on the line and affects pricing:
+
+- **Lead**: Typically commands a higher rate. The lead insurer sets terms, handles claims, and bears administrative burden. A `lead_loading_factor` (e.g. 1.05–1.15) is applied to the lead's premium to reflect this.
+- **Follow**: Takes the terms as set by the lead. No loading applied — follows at the order price.
+
+```python
+line_premium = order_premium * signed_line
+if role == LineRole.LEAD:
+    line_premium *= lead_loading_factor  # from config, e.g. 1.10
+```
+
+The `lead_loading_factor` is configurable per product type in the pricing config.
+
+#### Pricing
+
+- `order_premium` = full 100% premium derived from ILF/base pricing (same as ground-up)
+- `line_premium` = `signed_line x order_premium` (adjusted for lead loading if applicable)
+- ROL is always calculated at the order level (100% basis), not the line level
+
+Subscription composes with tower: each tower layer has an order-level premium, and the insurer takes a line on one or more layers.
 
 ### E5: Output Types
 
@@ -118,18 +169,22 @@ class LayerPremiumDetail:
     layer_label: str
     attachment: int
     limit: int
-    participation_pct: float = 1.0
-    gross_premium: float = 0.0  # 100% premium for the layer
-    net_premium: float = 0.0    # participation_pct x gross_premium
-    rol: float = 0.0            # gross_premium / limit
-    ilf_top: float = 0.0        # ILF(attachment + limit)
-    ilf_bottom: float = 0.0     # ILF(attachment)
-    layer_ilf: float = 0.0      # ilf_top - ilf_bottom
+    order_premium: float = 0.0      # 100% premium for the layer
+    signed_line: float = 1.0        # participation (1.0 = ground-up / 100%)
+    role: str = "FOLLOW"            # LEAD or FOLLOW
+    lead_loading: float = 1.0       # applied multiplier (1.0 for follow)
+    line_premium: float = 0.0       # signed_line x order_premium x lead_loading
+    rol: float = 0.0                # order_premium / limit (always at 100%)
+    ilf_top: float = 0.0            # ILF(attachment + limit)
+    ilf_bottom: float = 0.0         # ILF(attachment)
+    layer_ilf: float = 0.0          # ilf_top - ilf_bottom
 ```
 
 `DualRecommendation` extended for multi-layer:
 - `structure_type: str` — "ground_up", "tower", "subscription"
 - `layers: List[LayerPremiumDetail]` — populated for tower/subscription
+- `signed_line: Optional[float]` — the insurer's line on the order
+- `role: Optional[LineRole]` — lead or follow
 - Upper/lower recommendations at both layer and program level
 
 ## Impact on Ground-Up Behavior
@@ -151,10 +206,13 @@ class LayerPremiumDetail:
 
 1. **Unit tests for layer ILF derivation**: Verify `ILF(A+L) - ILF(A)` produces correct layer premiums
 2. **Tower ROL validation**: Verify per-layer ROL is within appetite for the attachment/limit band
-3. **Subscription premium scaling**: Verify `participation_pct x premium` arithmetic
-4. **Combined tower + subscription**: Multi-layer with partial participation
-5. **Ground-up regression**: Verify all existing tests still pass unchanged
-6. **Config health gate**: Tower configs pass health gate validation
+3. **Bespoke tower validation**: Non-standard bandings, gap detection, ILF range coverage
+4. **Order/line separation**: Verify order-level pricing is independent of line allocation
+5. **Line premium arithmetic**: Verify `signed_line x order_premium x lead_loading`
+6. **Lead vs follow pricing**: Lead loading applied correctly; follow at par
+7. **Combined tower + subscription**: Multi-layer order with partial line on selected layers
+8. **Ground-up regression**: Verify all existing tests still pass unchanged
+9. **Config health gate**: Tower and subscription configs pass health gate validation
 
 ## Implementation Order
 
