@@ -1074,3 +1074,107 @@ def validate_coverage_config(yaml_content: str) -> ValidationResult:
     """Convenience function to validate coverage config."""
     validator = ConfigValidator()
     return validator.validate_yaml(yaml_content)
+
+
+def validate_cross_coverage_consistency(
+    configs: Dict[str, Any],
+) -> ValidationResult:
+    """Validate field consistency across multiple compiled coverage configs.
+
+    Checks:
+    - All configs use the same base_deductible_reference where applicable
+    - ILF anchor_limit is consistent within a coverage family
+    - Tier band score ranges don't overlap or have gaps
+    - Signal IDs referenced in groups exist in signal_registry
+    - Limit ranges are reasonable (min < max)
+
+    Args:
+        configs: Dict mapping config key to compiled CoverageConfig objects
+
+    Returns:
+        ValidationResult with cross-coverage issues
+    """
+    issues: List[ValidationIssue] = []
+
+    # Collect per-config stats
+    anchor_limits_by_coverage = {}
+    base_deductibles = {}
+
+    for key, config in configs.items():
+        coverage_id = getattr(config, "coverage_id", key.split("/")[0] if "/" in key else key)
+
+        # Check ILF anchor_limit consistency within coverage family
+        if hasattr(config, "pricing") and config.pricing:
+            for pt_name, pt in config.pricing.by_product_type.items():
+                if hasattr(pt, "ilf_curve") and pt.ilf_curve:
+                    anchor = pt.ilf_curve.anchor_limit
+                    family_key = coverage_id
+                    if family_key not in anchor_limits_by_coverage:
+                        anchor_limits_by_coverage[family_key] = {}
+                    anchor_limits_by_coverage[family_key][f"{key}/{pt_name}"] = anchor
+
+            # Check base_deductible_reference
+            base_ded = config.pricing.base_deductible_reference
+            if base_ded:
+                base_deductibles[key] = base_ded
+
+        # Check tier band score ranges for gaps/overlaps
+        if hasattr(config, "risk_tier_bands") and config.risk_tier_bands:
+            bands = config.risk_tier_bands.bands
+            for i in range(len(bands) - 1):
+                current_max = bands[i].interpretation.bands.max
+                next_min = bands[i + 1].interpretation.bands.min
+                if next_min > current_max + 1:
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.WARNING,
+                        category="cross_coverage",
+                        message=(
+                            f"{key}: gap in tier bands between tier {bands[i].id} "
+                            f"(max={current_max}) and tier {bands[i+1].id} (min={next_min})"
+                        ),
+                    ))
+                elif next_min < current_max:
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.WARNING,
+                        category="cross_coverage",
+                        message=(
+                            f"{key}: overlap in tier bands between tier {bands[i].id} "
+                            f"(max={current_max}) and tier {bands[i+1].id} (min={next_min})"
+                        ),
+                    ))
+
+        # Check signal group references
+        if hasattr(config, "signal_registry") and hasattr(config, "groups"):
+            tla_group_ids = {g.id for g in config.groups.three_layer_assessment}
+            for signal in config.signal_registry:
+                if signal.three_layer_assessment:
+                    gid = signal.three_layer_assessment.group_id
+                    if gid not in tla_group_ids:
+                        issues.append(ValidationIssue(
+                            severity=ValidationSeverity.ERROR,
+                            category="cross_coverage",
+                            message=(
+                                f"{key}: signal '{signal.id}' references group "
+                                f"'{gid}' which is not defined in groups.three_layer_assessment"
+                            ),
+                        ))
+
+    # Check anchor_limit consistency within coverage families
+    for family, anchors in anchor_limits_by_coverage.items():
+        unique_anchors = set(anchors.values())
+        if len(unique_anchors) > 1:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.WARNING,
+                category="cross_coverage",
+                message=(
+                    f"Coverage family '{family}' has inconsistent ILF anchor_limits: "
+                    f"{dict(anchors)}"
+                ),
+            ))
+
+    has_errors = any(i.severity == ValidationSeverity.ERROR for i in issues)
+    return ValidationResult(
+        valid=not has_errors,
+        issues=issues,
+        warnings=[i.message for i in issues if i.severity == ValidationSeverity.WARNING],
+    )

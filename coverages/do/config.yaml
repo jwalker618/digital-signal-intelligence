@@ -134,7 +134,7 @@ directors_officers:
           applied: 1.4
         - cat: TECHNOLOGY
           label: Technology
-          mapplied: 1.25
+          applied: 1.25
         - cat: ENERGY
           label: Energy
           applied: 1.15

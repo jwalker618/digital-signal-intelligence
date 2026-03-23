@@ -17,9 +17,14 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Union
 import logging
 import math
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 _logger = logging.getLogger("dsi.config_schema")
+
+
+class StrictModel(BaseModel):
+    """Base model that rejects unknown fields in YAML config."""
+    model_config = ConfigDict(extra="forbid")
 
 
 # =============================================================================
@@ -62,9 +67,7 @@ class ComparisonOperator(str, Enum):
     GTE = ">="
     EQ = "=="
     NEQ = "!="
-    EQ_SINGLE = "="  # Alias accepted from YAML configs
     IN = "in"  # Membership test for list values
-    IN_UPPER = "IN"  # Uppercase alias for 'in'
 
 
 class ExpectationLevel(str, Enum):
@@ -93,7 +96,7 @@ class PricingMethod(str, Enum):
 # SCORE CONDITIONS
 # =============================================================================
 
-class ScoreCondition(BaseModel):
+class ScoreCondition(StrictModel):
     """Banded score condition for signals and groups."""
     threshold: int
     comparison: ComparisonOperator
@@ -115,13 +118,13 @@ class ScoreCondition(BaseModel):
 # METADATA
 # =============================================================================
 
-class MinimumViableInputField(BaseModel):
+class MinimumViableInputField(StrictModel):
     """Required input field specification."""
     field: str
     description: str = ""
 
 
-class RoutingConstraint(BaseModel):
+class RoutingConstraint(StrictModel):
     """Hard filter for multiplexer candidate selection."""
     field: str
     operator: ComparisonOperator
@@ -129,7 +132,7 @@ class RoutingConstraint(BaseModel):
     required_in_input: bool = False
 
 
-class ConfigMetadata(BaseModel):
+class ConfigMetadata(StrictModel):
     """Configuration metadata block."""
     name: str
     description: Optional[str] = None
@@ -159,8 +162,10 @@ class ConfigMetadata(BaseModel):
 # DIRECT QUERIES
 # =============================================================================
 
-class QueryCondition(BaseModel):
+class QueryCondition(StrictModel):
     """Condition for a direct query response."""
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
     # Return value is the trigger (True/False from user)
     return_value: bool = Field(alias="return")
     action: ScoreConditionAction
@@ -168,11 +173,8 @@ class QueryCondition(BaseModel):
     applied: Optional[float] = None
     note: Optional[str] = None
 
-    class Config:
-        populate_by_name = True
 
-
-class DirectQuery(BaseModel):
+class DirectQuery(StrictModel):
     """Binary question that cannot be externally observed."""
     id: str
     question: str
@@ -183,7 +185,7 @@ class DirectQuery(BaseModel):
 # SIGNAL REGISTRY - CATEGORICAL
 # =============================================================================
 
-class CategoryFeature(BaseModel):
+class CategoryFeature(StrictModel):
     """Category value and its pricing impact."""
     cat: str
     label: Optional[str] = None
@@ -191,7 +193,7 @@ class CategoryFeature(BaseModel):
     value: Optional[float] = None    # Base premium value
 
 
-class SignalCategories(BaseModel):
+class SignalCategories(StrictModel):
     """Categorical signal definition."""
     group_id: str
     source: Optional[str] = None  # e.g., "metadata.field_name"
@@ -202,20 +204,20 @@ class SignalCategories(BaseModel):
 # SIGNAL REGISTRY - THREE LAYER ASSESSMENT
 # =============================================================================
 
-class MetadataBand(BaseModel):
+class MetadataBand(StrictModel):
     """Numeric metadata band mapping."""
     min: int
     max: Optional[int] = None  # None = no upper limit
     score: int = Field(ge=0, le=100)
 
 
-class MetadataCategory(BaseModel):
+class MetadataCategory(StrictModel):
     """Text metadata category mapping."""
     match: Optional[str] = None  # None = default/catch-all
     score: int = Field(ge=0, le=100)
 
 
-class DimensionBlock(BaseModel):
+class DimensionBlock(StrictModel):
     """Single dimension within three-layer assessment."""
     source: Optional[str] = None  # Default: "score"
     bands: Optional[List[MetadataBand]] = None  # For numeric metadata
@@ -225,19 +227,19 @@ class DimensionBlock(BaseModel):
     score_conditions: Optional[List[ScoreCondition]] = None
 
 
-class LossDimension(BaseModel):
+class LossDimension(StrictModel):
     """Loss dimension with frequency and severity."""
     frequency: Optional[DimensionBlock] = None
     severity: Optional[DimensionBlock] = None
 
 
-class ExposureDimension(BaseModel):
+class ExposureDimension(StrictModel):
     """Exposure dimension with size and complexity."""
     size: Optional[DimensionBlock] = None
     complexity: Optional[DimensionBlock] = None
 
 
-class ThreeLayerAssessment(BaseModel):
+class ThreeLayerAssessment(StrictModel):
     """Three-layer assessment block for a signal."""
     group_id: str
     risk: Optional[DimensionBlock] = None
@@ -249,7 +251,7 @@ class ThreeLayerAssessment(BaseModel):
 # SIGNAL REGISTRY - COMPLETE SIGNAL
 # =============================================================================
 
-class SignalDefinition(BaseModel):
+class SignalDefinition(StrictModel):
     """Complete signal definition in signal_registry."""
     id: str
     inference_utility_function: str
@@ -273,7 +275,7 @@ class SignalDefinition(BaseModel):
 # GROUPS
 # =============================================================================
 
-class CategoryGroup(BaseModel):
+class CategoryGroup(StrictModel):
     """Categorical group definition."""
     id: str
     label: str
@@ -282,13 +284,13 @@ class CategoryGroup(BaseModel):
     default_cat: str
 
 
-class GroupDimension(BaseModel):
+class GroupDimension(StrictModel):
     """Dimension block for a three-layer assessment group."""
     weight: float = Field(ge=0.0, le=1.0)
     score_conditions: Optional[List[ScoreCondition]] = None
 
 
-class ThreeLayerAssessmentGroup(BaseModel):
+class ThreeLayerAssessmentGroup(StrictModel):
     """Three-layer assessment group definition."""
     id: str
     label: Optional[str] = None
@@ -298,7 +300,7 @@ class ThreeLayerAssessmentGroup(BaseModel):
     exposure: Optional[GroupDimension] = None
 
 
-class Groups(BaseModel):
+class Groups(StrictModel):
     """Groups section containing categories and three-layer assessment."""
     categories: List[CategoryGroup] = Field(default_factory=list)
     three_layer_assessment: List[ThreeLayerAssessmentGroup] = Field(default_factory=list)
@@ -308,13 +310,13 @@ class Groups(BaseModel):
 # TIER BANDS
 # =============================================================================
 
-class TierBandRange(BaseModel):
+class TierBandRange(StrictModel):
     """Score range for a tier band."""
     min: int
     max: int
 
 
-class RiskTierApplication(BaseModel):
+class RiskTierApplication(StrictModel):
     """Application block for risk tier."""
     method: PricingMethod = PricingMethod.PREMIUM_BASE
     value: Optional[int] = None    # For PREMIUM_BASE
@@ -322,14 +324,14 @@ class RiskTierApplication(BaseModel):
     basis: Optional[str] = None      # For MULTIPLIER
 
 
-class RiskTierInterpretation(BaseModel):
+class RiskTierInterpretation(StrictModel):
     """Interpretation block for risk tier."""
     bands: TierBandRange
     action: TierAction
     application: RiskTierApplication
 
 
-class RiskTierBand(BaseModel):
+class RiskTierBand(StrictModel):
     """Single risk tier band definition."""
     id: int
     label: str
@@ -337,7 +339,7 @@ class RiskTierBand(BaseModel):
     interpretation: RiskTierInterpretation
 
 
-class RiskTierBands(BaseModel):
+class RiskTierBands(StrictModel):
     """Risk tier bands section."""
     bands: List[RiskTierBand]
 
@@ -349,19 +351,19 @@ class RiskTierBands(BaseModel):
         return self.bands[-1].id  # Default to last tier
 
 
-class LossTierApplication(BaseModel):
+class LossTierApplication(StrictModel):
     """Application block for loss tier."""
     frequency_modifier: float
     severity_modifier: float
 
 
-class LossTierInterpretation(BaseModel):
+class LossTierInterpretation(StrictModel):
     """Interpretation block for loss tier."""
     bands: TierBandRange
     application: LossTierApplication
 
 
-class LossTierBand(BaseModel):
+class LossTierBand(StrictModel):
     """Single loss tier band definition."""
     id: int
     label: str
@@ -369,13 +371,13 @@ class LossTierBand(BaseModel):
     interpretation: LossTierInterpretation
 
 
-class LossTierConstraints(BaseModel):
+class LossTierConstraints(StrictModel):
     """Loss tier modifier constraints."""
     floor: float = 0.75
     cap: float = 1.50
 
 
-class LossTierBands(BaseModel):
+class LossTierBands(StrictModel):
     """Loss tier bands section."""
     bands: List[LossTierBand]
     constraints: LossTierConstraints = Field(default_factory=LossTierConstraints)
@@ -385,7 +387,7 @@ class LossTierBands(BaseModel):
 # EXPOSURE
 # =============================================================================
 
-class ExposureBandApplication(BaseModel):
+class ExposureBandApplication(StrictModel):
     """Application block for exposure band."""
     method: PricingMethod = PricingMethod.MODIFIER
     applied: float
@@ -393,13 +395,14 @@ class ExposureBandApplication(BaseModel):
     implied_thresholds: Optional[Dict[str, Optional[int]]] = None
 
 
-class ExposureBandInterpretation(BaseModel):
+class ExposureBandInterpretation(StrictModel):
     """Interpretation block for exposure band."""
     bands: TierBandRange
     application: ExposureBandApplication
+    implied_thresholds: Optional[Dict[str, Optional[int]]] = None  # Some configs place this here
 
 
-class ExposureBand(BaseModel):
+class ExposureBand(StrictModel):
     """Single exposure band definition."""
     id: int
     label: str
@@ -407,13 +410,13 @@ class ExposureBand(BaseModel):
     interpretation: ExposureBandInterpretation
 
 
-class ExposureDimensionConfig(BaseModel):
+class ExposureDimensionConfig(StrictModel):
     """Exposure dimension configuration (size or complexity)."""
     weight: float = Field(ge=0.0, le=1.0)
     bands: List[ExposureBand]
 
 
-class Exposure(BaseModel):
+class Exposure(StrictModel):
     """Exposure section with size and complexity."""
     size: Optional[ExposureDimensionConfig] = None
     complexity: Optional[ExposureDimensionConfig] = None
@@ -432,15 +435,16 @@ class Exposure(BaseModel):
 # LIMIT CONFIGURATION
 # =============================================================================
 
-class LimitPackage(BaseModel):
+class LimitPackage(StrictModel):
     """Bundled limit/deductible package."""
     id: Union[int, str]
     label: str
     limit: int
     deductible: int
+    target_segment: Optional[str] = None  # Optional description of target segment
 
 
-class LimitConfiguration(BaseModel):
+class LimitConfiguration(StrictModel):
     """Limit and deductible configuration."""
     type: LimitConfigType = LimitConfigType.DECOUPLED
 
@@ -570,7 +574,7 @@ _CURVE_REGISTRY: Dict[str, Callable] = {
 }
 
 
-class ILFCurve(BaseModel):
+class ILFCurve(StrictModel):
     """
     Increased Limit Factor curve — parametric only.
 
@@ -627,13 +631,13 @@ class ILFCurve(BaseModel):
         return max(ilf, 1.0)
 
 
-class DeductibleFactor(BaseModel):
+class DeductibleFactor(StrictModel):
     """Deductible adjustment factor."""
     deductible: int
     factor: float
 
 
-class ProductTypePricing(BaseModel):
+class ProductTypePricing(StrictModel):
     """Pricing parameters for a product type."""
     ilf_curve: ILFCurve
     deductible_factors: List[DeductibleFactor]
@@ -647,7 +651,7 @@ class ProductTypePricing(BaseModel):
         return 1.0
 
 
-class Pricing(BaseModel):
+class Pricing(StrictModel):
     """Pricing section."""
     base_limit_reference: int = 1000000
     base_deductible_reference: int = 50000
@@ -667,7 +671,7 @@ class Pricing(BaseModel):
 # GUARDRAILS
 # =============================================================================
 
-class Guardrails(BaseModel):
+class Guardrails(StrictModel):
     """
     Runtime pricing guardrails.
 
@@ -698,7 +702,7 @@ class Guardrails(BaseModel):
 # COMPLETE COVERAGE CONFIG
 # =============================================================================
 
-class CoverageConfig(BaseModel):
+class CoverageConfig(StrictModel):
     """
     Complete coverage configuration.
 
@@ -847,7 +851,7 @@ class CoverageConfig(BaseModel):
 # COVERAGE WRAPPER
 # =============================================================================
 
-class Coverage(BaseModel):
+class Coverage(StrictModel):
     """
     Top-level coverage containing one or more configurations.
 

@@ -1507,7 +1507,7 @@ energy:
         value: 100000000
         required_in_input: true
       - field: operation_segment
-        operator: '='
+        operator: '=='
         value: UPSTREAM_DEEPWATER
         required_in_input: true
     direct_queries:
@@ -2626,7 +2626,7 @@ energy:
       model_specificity: 2
       routing_constraints:
       - field: operation_segment
-        operator: '='
+        operator: '=='
         value: UPSTREAM_CONVENTIONAL
         required_in_input: true
     direct_queries:
@@ -3943,7 +3943,7 @@ energy:
       model_specificity: 3
       routing_constraints:
       - field: operation_segment
-        operator: '='
+        operator: '=='
         value: UPSTREAM_UNCONVENTIONAL
         required_in_input: true
     direct_queries:
@@ -6122,8 +6122,6 @@ energy:
       - id: safety_performance
         label: Safety Performance
         description: OSHA metrics
-        PHMSA compliance: null
-        process safety: null
         risk:
           weight: 0.15
         loss:
@@ -6133,9 +6131,6 @@ energy:
       - id: environmental_compliance
         label: Environmental Compliance
         description: EPA violations
-        spills: null
-        emissions: null
-        methane: null
         risk:
           weight: 0.2
         loss:
@@ -6145,8 +6140,6 @@ energy:
       - id: operational_telemetry
         label: Operational Telemetry
         description: Inline inspection
-        cathodic protection: null
-        SCADA maturity: null
         risk:
           weight: 0.2
         loss:
@@ -6156,8 +6149,6 @@ energy:
       - id: financial_stability
         label: Financial Stability
         description: Credit rating
-        leverage: null
-        ARO coverage: null
         risk:
           weight: 0.15
         loss:
@@ -6167,8 +6158,6 @@ energy:
       - id: asset_portfolio
         label: Asset Portfolio
         description: Pipeline vintage
-        right-of-way: null
-        asset age: null
         risk:
           weight: 0.15
         loss:
@@ -6178,7 +6167,6 @@ energy:
       - id: corporate_footprint
         label: Corporate Footprint
         description: ESG reporting
-        safety communication: null
         risk:
           weight: 0.05
         loss:
@@ -7411,8 +7399,6 @@ energy:
       - id: safety_performance
         label: Safety Performance
         description: OSHA metrics
-        PSM audits: null
-        process safety: null
         risk:
           weight: 0.3
         loss:
@@ -7422,8 +7408,6 @@ energy:
       - id: environmental_compliance
         label: Environmental Compliance
         description: EPA violations
-        spills: null
-        emissions: null
         risk:
           weight: 0.1
         loss:
@@ -7433,8 +7417,6 @@ energy:
       - id: operational_telemetry
         label: Operational Telemetry
         description: Mechanical integrity
-        maintenance patterns: null
-        SCADA: null
         risk:
           weight: 0.15
         loss:
@@ -7444,8 +7426,6 @@ energy:
       - id: financial_stability
         label: Financial Stability
         description: Credit rating
-        leverage: null
-        BI exposure ratio: null
         risk:
           weight: 0.1
         loss:
@@ -7455,8 +7435,6 @@ energy:
       - id: asset_portfolio
         label: Asset Portfolio
         description: Turnaround compliance
-        feedstock complexity: null
-        concentration: null
         risk:
           weight: 0.15
         loss:
@@ -7466,8 +7444,6 @@ energy:
       - id: corporate_footprint
         label: Corporate Footprint
         description: ESG reporting
-        safety communication: null
-        PSM culture: null
         risk:
           weight: 0.1
         loss:
@@ -7868,11 +7844,11 @@ energy:
       model_specificity: 4
       routing_constraints:
       - field: operation_segment
-        operator: '='
+        operator: '=='
         value: RENEWABLE
         required_in_input: true
       - field: technology_type
-        operator: '='
+        operator: '=='
         value: OFFSHORE_WIND
         required_in_input: true
     direct_queries:
@@ -9211,11 +9187,11 @@ energy:
       model_specificity: 2
       routing_constraints:
       - field: operation_segment
-        operator: '='
+        operator: '=='
         value: RENEWABLE
         required_in_input: true
       - field: technology_type
-        operator: IN
+        operator: in
         value:
         - ONSHORE_WIND
         - UTILITY_SOLAR
@@ -10522,11 +10498,11 @@ energy:
       model_specificity: 3
       routing_constraints:
       - field: operation_segment
-        operator: '='
+        operator: '=='
         value: RENEWABLE
         required_in_input: true
       - field: technology_type
-        operator: IN
+        operator: in
         value:
         - BATTERY_STORAGE
         - HYDROGEN
