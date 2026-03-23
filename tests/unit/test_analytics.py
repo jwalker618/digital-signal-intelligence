@@ -7,7 +7,7 @@ Tests performance tracking, cohort analysis, and model tuning.
 import pytest
 from datetime import date, datetime
 
-from analytics import (
+from infrastructure.analytics import (
     OutcomeRecord,
     PerformanceMetrics,
     TierPerformance,

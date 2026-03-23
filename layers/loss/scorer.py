@@ -298,7 +298,10 @@ class LossCorrelationScorer:
         """Map score to severity band."""
         for band in self.config.severity_bands:
             if band.min_score <= score < band.max_score:
-                return SeverityPropensityBand(band.name)
+                try:
+                    return SeverityPropensityBand(band.name)
+                except ValueError:
+                    break
 
         # Default based on score
         if score < 20:

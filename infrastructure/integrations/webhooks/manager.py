@@ -308,6 +308,7 @@ class WebhookManager:
             return {
                 "total_deliveries": 0,
                 "success_rate": 0.0,
+                "active_webhooks": sum(1 for w in self._webhooks.values() if w.active),
             }
 
         total = len(self._deliveries)

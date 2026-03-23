@@ -7,7 +7,7 @@ Tests for email, document, and webhook integrations.
 import pytest
 from datetime import datetime
 
-from integrations import (
+from infrastructure.integrations import (
     # Email types
     EmailProvider,
     FilterRule,

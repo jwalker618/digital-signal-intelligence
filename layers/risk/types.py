@@ -50,6 +50,13 @@ class PremiumMethod(Enum):
     CATEGORICAL = "CATEGORICAL"    # v2.0: Category-derived premium
 
 
+class VersionType(str, Enum):
+    """Model version types."""
+    INITIAL = "initial"
+    REFERRAL_REVIEW = "referral_review"
+    AMENDMENT = "amendment"
+
+
 class DiscoveryConfidence(Enum):
     """Confidence levels for website discovery."""
     HIGH = "high"           # 90%+ confidence - multiple signals align

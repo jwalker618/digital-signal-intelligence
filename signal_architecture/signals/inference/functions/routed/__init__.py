@@ -38,7 +38,7 @@ from .signals import (
     breach_history_routed,
 )
 
-from ..registry import register_inference_function
+from ...registry import register_inference_function
 
 __all__ = [
     # Sanctions & Corporate

@@ -42,8 +42,9 @@ class TestJurisdictionRouter:
     def test_detect_locale_from_domain_us(self):
         """US domain should resolve to US locale."""
         router = JurisdictionRouter()
-        assert router.detect_locale_from_domain('example.com') == 'US'
         assert router.detect_locale_from_domain('company.us') == 'US'
+        # .com is a generic TLD, returns None
+        assert router.detect_locale_from_domain('example.com') is None
 
     def test_detect_locale_from_domain_eu(self):
         """EU domains should resolve correctly."""
@@ -206,17 +207,20 @@ class TestSanctionsResult:
         """Should create valid sanctions result."""
         result = SanctionsResult(
             entity_searched='Test Corp',
-            sources_checked=['opensanctions', 'ofac_sdn'],
+            sources_checked=['opensanctions', 'ofac_sanctions'],
             sources_with_matches=['opensanctions'],
             total_matches=1,
             risk_level=RiskLevel.MEDIUM,
+            highest_match_score=75.0,
+            confirmed_sanctioned=False,
             matches=[
                 SanctionsMatch(
                     matched_name='Test Corporation',
                     source='opensanctions',
+                    source_list='EU Consolidated',
                     match_score=75.0,
                     match_type=SanctionsMatchType.FUZZY,
-                    program=SanctionsProgram.EU,
+                    program=SanctionsProgram.EU_SANCTIONS,
                 )
             ],
         )
@@ -248,6 +252,7 @@ class TestCorporateResult:
         """Should correctly identify active company."""
         result = CorporateResult(
             entity_searched='Active Ltd',
+            search_type='name',
             sources_checked=['companies_house', 'opencorporates'],
             sources_with_results=['companies_house'],
             records_found=1,
@@ -268,6 +273,7 @@ class TestCorporateResult:
         """Should include LEI information."""
         result = CorporateResult(
             entity_searched='Big Bank',
+            search_type='lei',
             sources_checked=['gleif_lei'],
             sources_with_results=['gleif_lei'],
             records_found=1,
@@ -351,43 +357,43 @@ class TestRoutedInferenceFunctions:
 
     def test_sanctions_check_routed_import(self):
         """Should import sanctions_check_routed."""
-        from signals.inference.functions.routed import (
+        from signal_architecture.signals.inference.functions.routed import (
             sanctions_check_routed,
         )
         assert callable(sanctions_check_routed)
 
     def test_corporate_registry_routed_import(self):
         """Should import corporate_registry_routed."""
-        from signals.inference.functions.routed import (
+        from signal_architecture.signals.inference.functions.routed import (
             corporate_registry_routed,
         )
         assert callable(corporate_registry_routed)
 
     def test_email_auth_routed_import(self):
         """Should import email_auth_routed."""
-        from signals.inference.functions.routed import (
+        from signal_architecture.signals.inference.functions.routed import (
             email_auth_routed,
         )
         assert callable(email_auth_routed)
 
     def test_security_headers_routed_import(self):
         """Should import security_headers_routed."""
-        from signals.inference.functions.routed import (
+        from signal_architecture.signals.inference.functions.routed import (
             security_headers_routed,
         )
         assert callable(security_headers_routed)
 
     def test_vulnerability_routed_import(self):
         """Should import vulnerability_routed."""
-        from signals.inference.functions.routed import (
+        from signal_architecture.signals.inference.functions.routed import (
             vulnerability_routed,
         )
         assert callable(vulnerability_routed)
 
     def test_register_all(self):
         """Should register all routed functions."""
-        from signals.inference.functions.routed import register_all
-        from signals.inference.functions.registry import (
+        from signal_architecture.signals.inference.functions.routed import register_all
+        from signal_architecture.signals.inference.registry import (
             get_inference_function,
         )
 
@@ -404,7 +410,7 @@ class TestRoutingBridges:
 
     def test_sanctions_bridge_import(self):
         """Should import SanctionsSignalBridge."""
-        from signals.aggregators.routing_bridges import (
+        from signal_architecture.signals.aggregators.routing_bridges import (
             SanctionsSignalBridge,
         )
         bridge = SanctionsSignalBridge()
@@ -412,7 +418,7 @@ class TestRoutingBridges:
 
     def test_corporate_bridge_import(self):
         """Should import CorporateSignalBridge."""
-        from signals.aggregators.routing_bridges import (
+        from signal_architecture.signals.aggregators.routing_bridges import (
             CorporateSignalBridge,
         )
         bridge = CorporateSignalBridge()
@@ -420,7 +426,7 @@ class TestRoutingBridges:
 
     def test_dns_bridge_import(self):
         """Should import DNSSignalBridge."""
-        from signals.aggregators.routing_bridges import (
+        from signal_architecture.signals.aggregators.routing_bridges import (
             DNSSignalBridge,
         )
         bridge = DNSSignalBridge()
@@ -428,7 +434,7 @@ class TestRoutingBridges:
 
     def test_network_bridge_import(self):
         """Should import NetworkSignalBridge."""
-        from signals.aggregators.routing_bridges import (
+        from signal_architecture.signals.aggregators.routing_bridges import (
             NetworkSignalBridge,
         )
         bridge = NetworkSignalBridge()
@@ -436,7 +442,7 @@ class TestRoutingBridges:
 
     def test_security_bridge_import(self):
         """Should import SecuritySignalBridge."""
-        from signals.aggregators.routing_bridges import (
+        from signal_architecture.signals.aggregators.routing_bridges import (
             SecuritySignalBridge,
         )
         bridge = SecuritySignalBridge()
@@ -444,7 +450,7 @@ class TestRoutingBridges:
 
     def test_get_bridge_factory(self):
         """Should get bridge by signal type."""
-        from signals.aggregators.routing_bridges import get_bridge
+        from signal_architecture.signals.aggregators.routing_bridges import get_bridge
 
         assert get_bridge('sanctions') is not None
         assert get_bridge('corporate') is not None
@@ -466,23 +472,23 @@ class TestExtractorTiers:
 
     def test_extractors_have_tiers(self):
         """All production extractors should have tier assignments."""
-        from signals.routing.router import EXTRACTOR_TIERS
+        from signal_architecture.signals.routing.router import EXTRACTOR_TIERS
 
         # Check some key extractors
         assert 'opensanctions' in EXTRACTOR_TIERS
-        assert 'ofac_sdn' in EXTRACTOR_TIERS
+        assert 'ofac_sanctions' in EXTRACTOR_TIERS
         assert 'companies_house' in EXTRACTOR_TIERS
         assert 'opencorporates' in EXTRACTOR_TIERS
 
     def test_free_tier_extractors(self):
         """Free tier extractors should be marked FREE."""
-        from signals.routing.router import EXTRACTOR_TIERS
+        from signal_architecture.signals.routing.router import EXTRACTOR_TIERS
 
         free_extractors = [
             'opensanctions',
-            'ofac_sdn',
+            'ofac_sanctions',
             'companies_house',
-            'fbi_wanted',
+            'fbi_most_wanted',
         ]
         for ext in free_extractors:
             if ext in EXTRACTOR_TIERS:

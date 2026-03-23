@@ -210,7 +210,16 @@ class CoverageBuilder:
         
         # 2. If no LLM, fallback to static top N (Your current logic)
         if not self.llm_client:
-            selections = [SignalSelection(...) for rec in available_signals[:spec.max_signals]]
+            selections = [
+                SignalSelection(
+                    signal_id=rec.signal_id,
+                    signal_name=rec.signal_name,
+                    group_id=rec.group_id,
+                    weight=rec.suggested_weight,
+                    proxy_tier=rec.proxy_tier,
+                )
+                for rec in available_signals[:spec.max_signals]
+            ]
             return self._normalize_signal_weights(selections)
 
         # 3. The LLM Hook: Bound the LLM strictly to the available signals
@@ -237,6 +246,20 @@ class CoverageBuilder:
 
         return selections
     
+    def _normalize_signal_weights(self, selections: List[SignalSelection]) -> List[SignalSelection]:
+        """Normalize weights so they equal 1.0 within each group."""
+        groups: Dict[str, List[SignalSelection]] = {}
+        for s in selections:
+            groups.setdefault(s.group_id, []).append(s)
+
+        for group_signals in groups.values():
+            total = sum(s.weight for s in group_signals)
+            if total > 0:
+                for s in group_signals:
+                    s.weight = round(s.weight / total, 4)
+
+        return selections
+
     async def generate_config(
         self,
         spec: CoverageSpec,
@@ -528,6 +551,13 @@ class CoverageBuilder:
                     tla_groups[gid]["risk"]["weight"] = even_split
                     tla_groups[gid]["loss"]["weight"] = even_split
                     tla_groups[gid]["exposure"]["weight"] = even_split
+
+            # Identify high-weight groups for score conditions
+            avg_weight = 1.0 / max(len(tla_groups), 1)
+            high_weight_groups = {
+                gid for gid, d in tla_groups.items()
+                if d["risk"]["weight"] >= avg_weight
+            }
 
             # Add score_conditions at group level for key groups
             for gid, group in tla_groups.items():

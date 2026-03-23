@@ -261,9 +261,9 @@ class TestWorkflowPerformance:
     def test_scoring_latency(self):
         """Benchmark scoring pipeline only."""
         from layers.risk.scorer import ModelScorer
-        from layers.risk.config_manager import load_coverage_config
+        from infrastructure.models.compiler import get_config
 
-        config = load_coverage_config("cyber")
+        config = get_config("cyber")
         scorer = ModelScorer()
 
         stats = _time_fn(

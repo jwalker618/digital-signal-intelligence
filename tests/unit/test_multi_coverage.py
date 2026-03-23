@@ -9,7 +9,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from orchestration import (
+from signal_architecture.orchestration import (
     # Types
     MultiCoverageRequest,
     MultiCoverageResult,
