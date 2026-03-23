@@ -1040,6 +1040,28 @@ class LimitPremiumDetail:
 
 
 @dataclass
+class LayerPremiumDetail:
+    """Pricing breakdown for a single tower/subscription layer.
+
+    Captures both the order-level (100%) premium and the insurer's line-level
+    premium, with lead/follow role and loading applied.
+    """
+    layer_id: int = 0
+    layer_label: str = ""
+    attachment: int = 0
+    limit: int = 0
+    order_premium: float = 0.0      # 100% premium for the layer
+    signed_line: float = 1.0        # participation (1.0 = ground-up / 100%)
+    role: str = "FOLLOW"            # LEAD or FOLLOW
+    lead_loading: float = 1.0       # applied multiplier (1.0 for follow)
+    line_premium: float = 0.0       # signed_line x order_premium x lead_loading
+    rol: float = 0.0                # order_premium / limit (always at 100%)
+    ilf_top: float = 0.0            # ILF(attachment + limit)
+    ilf_bottom: float = 0.0         # ILF(attachment)
+    layer_ilf: float = 0.0          # ilf_top - ilf_bottom
+
+
+@dataclass
 class PricingResult:
     """
     Output from pricing calculation (Steps 8-12).

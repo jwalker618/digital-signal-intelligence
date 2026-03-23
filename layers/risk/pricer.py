@@ -21,11 +21,13 @@ from infrastructure.models.config_schema import (
     TierAction,
     PricingMethod,
     LimitConfigType,
+    LineRole,
 )
 
 from .types import (
     PricingResult,
     LimitPremiumDetail,
+    LayerPremiumDetail,
     TierMarginContext,
     AppliedModifier,
     BasePremiumDerivation,
@@ -592,7 +594,139 @@ class ModelPricer:
                     premium_after_scaling=round(limit_premium, 2),
                 ))
 
+        elif limit_config.type == LimitConfigType.TOWER and limit_config.layers:
+            # TOWER: stacked excess layers priced via ILF differentials
+            base_deductible = int(
+                submission_data.get("deductible", config.pricing.base_deductible_reference)
+            )
+            ded_factor = config.get_deductible_factor(product_type, base_deductible)
+
+            for layer in limit_config.layers:
+                ilf_top = config.get_cumulative_ilf(product_type, layer.attachment + layer.limit)
+                ilf_bottom = config.get_cumulative_ilf(product_type, layer.attachment)
+                layer_ilf = ilf_top - ilf_bottom
+                layer_premium = premium * layer_ilf * ded_factor
+
+                limit_premiums[str(layer.limit)] = round(layer_premium, 2)
+                limit_details.append(LimitPremiumDetail(
+                    limit=layer.limit,
+                    deductible=base_deductible,
+                    attachment_point=layer.attachment,
+                    ilf_factor=layer_ilf,
+                    deductible_factor=ded_factor,
+                    premium_before_scaling=premium,
+                    premium_after_scaling=round(layer_premium, 2),
+                ))
+
+        elif limit_config.type == LimitConfigType.SUBSCRIPTION:
+            # SUBSCRIPTION: order-level pricing, then line allocation
+            order = limit_config.subscription_order
+            if order:
+                ilf = config.get_ilf(product_type, order.total_limit)
+                base_deductible = int(
+                    submission_data.get("deductible", config.pricing.base_deductible_reference)
+                )
+                ded_factor = config.get_deductible_factor(product_type, base_deductible)
+                order_premium = premium * ilf * ded_factor
+
+                limit_premiums[str(order.total_limit)] = round(order_premium, 2)
+                limit_details.append(LimitPremiumDetail(
+                    limit=order.total_limit,
+                    deductible=base_deductible,
+                    ilf_factor=ilf,
+                    deductible_factor=ded_factor,
+                    premium_before_scaling=premium,
+                    premium_after_scaling=round(order_premium, 2),
+                ))
+
         return limit_premiums, limit_details
+
+    def price_tower_layers(
+        self,
+        premium: float,
+        submission_data: Dict[str, Any],
+        config: CoverageConfig,
+    ) -> List[LayerPremiumDetail]:
+        """Price tower layers and return detailed layer-level breakdown.
+
+        This produces LayerPremiumDetail objects with ILF components, order
+        premiums, and (if subscription line is present) line-level allocation.
+        """
+        limit_config = config.limit_configuration
+        if limit_config is None or limit_config.type not in (
+            LimitConfigType.TOWER, LimitConfigType.SUBSCRIPTION
+        ):
+            return []
+
+        product_type = self._resolve_product_type(submission_data, config)
+        base_deductible = int(
+            submission_data.get("deductible", config.pricing.base_deductible_reference)
+        )
+        ded_factor = config.get_deductible_factor(product_type, base_deductible)
+
+        # Resolve subscription line parameters
+        line = limit_config.subscription_line
+        signed_line = line.signed_line if line and line.signed_line else 1.0
+        role = line.role.value if line else "FOLLOW"
+
+        # Resolve lead loading
+        prod_pricing = config.pricing.by_product_type.get(product_type)
+        lead_loading = 1.0
+        if role == "LEAD" and prod_pricing:
+            lead_loading = prod_pricing.lead_loading_factor
+
+        layer_details: List[LayerPremiumDetail] = []
+
+        if limit_config.type == LimitConfigType.TOWER and limit_config.layers:
+            for layer in limit_config.layers:
+                ilf_top = config.get_cumulative_ilf(product_type, layer.attachment + layer.limit)
+                ilf_bottom = config.get_cumulative_ilf(product_type, layer.attachment)
+                layer_ilf = ilf_top - ilf_bottom
+                order_prem = round(premium * layer_ilf * ded_factor, 2)
+                line_prem = round(order_prem * signed_line * lead_loading, 2)
+                rol = order_prem / layer.limit if layer.limit > 0 else 0.0
+
+                layer_details.append(LayerPremiumDetail(
+                    layer_id=layer.id,
+                    layer_label=layer.label,
+                    attachment=layer.attachment,
+                    limit=layer.limit,
+                    order_premium=order_prem,
+                    signed_line=signed_line,
+                    role=role,
+                    lead_loading=lead_loading,
+                    line_premium=line_prem,
+                    rol=rol,
+                    ilf_top=ilf_top,
+                    ilf_bottom=ilf_bottom,
+                    layer_ilf=layer_ilf,
+                ))
+
+        elif limit_config.type == LimitConfigType.SUBSCRIPTION:
+            order = limit_config.subscription_order
+            if order:
+                ilf = config.get_ilf(product_type, order.total_limit)
+                order_prem = round(premium * ilf * ded_factor, 2)
+                line_prem = round(order_prem * signed_line * lead_loading, 2)
+                rol = order_prem / order.total_limit if order.total_limit > 0 else 0.0
+
+                layer_details.append(LayerPremiumDetail(
+                    layer_id=1,
+                    layer_label="Primary",
+                    attachment=0,
+                    limit=order.total_limit,
+                    order_premium=order_prem,
+                    signed_line=signed_line,
+                    role=role,
+                    lead_loading=lead_loading,
+                    line_premium=line_prem,
+                    rol=rol,
+                    ilf_top=ilf,
+                    ilf_bottom=0.0,
+                    layer_ilf=ilf,
+                ))
+
+        return layer_details
 
     def _resolve_product_type(
         self,

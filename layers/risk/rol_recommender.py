@@ -67,6 +67,12 @@ class DualRecommendation:
     all_options: List[LimitRecommendation] = field(default_factory=list)
     requested_limit: int = 0
 
+    # Phase E: multi-layer / subscription extensions
+    structure_type: str = "ground_up"  # "ground_up", "tower", "subscription"
+    layers: List[Any] = field(default_factory=list)  # List[LayerPremiumDetail]
+    signed_line: Optional[float] = None
+    role: Optional[str] = None  # "LEAD" or "FOLLOW"
+
     @property
     def spread(self) -> float:
         """Premium difference between upper and lower recommendations."""

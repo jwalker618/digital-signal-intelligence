@@ -37,7 +37,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
-from infrastructure.models.config_schema import CoverageConfig
+from infrastructure.models.config_schema import CoverageConfig, LimitConfigType
 
 logger = logging.getLogger("dsi.config_health_gate")
 
@@ -330,7 +330,24 @@ class ConfigHealthGate:
 
                 limit = int(fixture["submission_data"].get("limit", 0))
                 premium = pricing_result.final_premium
-                rol_result = rol_validator.validate_rol(premium, limit)
+
+                # For tower configs, validate ROL per layer from limit_details
+                if (config.limit_configuration
+                        and config.limit_configuration.type == LimitConfigType.TOWER
+                        and pricing_result.limit_premium_details):
+                    # Use worst-case ROL across layers for gate purposes
+                    layer_results = []
+                    for ld in pricing_result.limit_premium_details:
+                        lr = rol_validator.validate_rol(
+                            ld.premium_after_scaling,
+                            ld.limit,
+                            attachment=ld.attachment_point or 0,
+                        )
+                        layer_results.append(lr)
+                    # Use the first layer's result as representative
+                    rol_result = layer_results[0] if layer_results else rol_validator.validate_rol(premium, limit)
+                else:
+                    rol_result = rol_validator.validate_rol(premium, limit)
 
                 # Guardrail is "primary control" when premium was capped AND
                 # the ROL is still outside appetite (capping wasn't enough)

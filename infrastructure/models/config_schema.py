@@ -83,6 +83,14 @@ class LimitConfigType(str, Enum):
     """Limit configuration modes."""
     BUNDLED = "BUNDLED"      # Menu pricing with packages
     DECOUPLED = "DECOUPLED"  # Independent limit/deductible selection
+    TOWER = "TOWER"          # Stacked excess layers
+    SUBSCRIPTION = "SUBSCRIPTION"  # Order/line subscription market
+
+
+class LineRole(str, Enum):
+    """Lead vs follow role on a subscription line."""
+    LEAD = "LEAD"
+    FOLLOW = "FOLLOW"
 
 
 class PricingMethod(str, Enum):
@@ -444,6 +452,42 @@ class LimitPackage(StrictModel):
     target_segment: Optional[str] = None  # Optional description of target segment
 
 
+class TowerLayer(StrictModel):
+    """A single layer in a tower (excess-of-loss) structure."""
+    id: int
+    label: str
+    attachment: int = Field(ge=0)
+    limit: int = Field(gt=0)
+
+
+class SubscriptionOrder(StrictModel):
+    """Order-level terms for a subscription market (100% basis)."""
+    total_limit: int = Field(gt=0)
+    order_premium: Optional[float] = None  # Set by pricing engine if not explicit
+
+
+class SubscriptionLine(StrictModel):
+    """Insurer's line on a subscription order."""
+    minimum_line: float = Field(gt=0.0, le=1.0)
+    maximum_line: float = Field(gt=0.0, le=1.0)
+    signed_line: Optional[float] = None  # Actual signed %, between min and max
+    role: LineRole = LineRole.FOLLOW
+
+    @model_validator(mode="after")
+    def validate_line_bounds(self) -> "SubscriptionLine":
+        if self.maximum_line < self.minimum_line:
+            raise ValueError(
+                f"maximum_line ({self.maximum_line}) must be >= minimum_line ({self.minimum_line})"
+            )
+        if self.signed_line is not None:
+            if not (self.minimum_line <= self.signed_line <= self.maximum_line):
+                raise ValueError(
+                    f"signed_line ({self.signed_line}) must be between "
+                    f"minimum_line ({self.minimum_line}) and maximum_line ({self.maximum_line})"
+                )
+        return self
+
+
 class LimitConfiguration(StrictModel):
     """Limit and deductible configuration."""
     type: LimitConfigType = LimitConfigType.DECOUPLED
@@ -459,6 +503,13 @@ class LimitConfiguration(StrictModel):
     # Legacy: explicit list of limits (still supported, overrides min/max)
     valid_limits: Optional[List[int]] = None
 
+    # For TOWER mode — stacked excess layers (bespoke bandings supported)
+    layers: Optional[List[TowerLayer]] = None
+
+    # For SUBSCRIPTION mode — order/line model
+    subscription_order: Optional[SubscriptionOrder] = None
+    subscription_line: Optional[SubscriptionLine] = None
+
     @model_validator(mode="after")
     def validate_mode(self) -> "LimitConfiguration":
         if self.type == LimitConfigType.BUNDLED and not self.packages:
@@ -473,7 +524,29 @@ class LimitConfiguration(StrictModel):
                 )
             if not self.valid_deductibles:
                 raise ValueError("DECOUPLED mode requires 'valid_deductibles'")
+        if self.type == LimitConfigType.TOWER:
+            if not self.layers or len(self.layers) == 0:
+                raise ValueError("TOWER mode requires 'layers'")
+            self._validate_tower_layers()
+        if self.type == LimitConfigType.SUBSCRIPTION:
+            if not self.subscription_order:
+                raise ValueError("SUBSCRIPTION mode requires 'subscription_order'")
         return self
+
+    def _validate_tower_layers(self) -> None:
+        """Validate bespoke tower layer ordering and no overlaps."""
+        if not self.layers:
+            return
+        sorted_layers = sorted(self.layers, key=lambda l: l.attachment)
+        for i, layer in enumerate(sorted_layers):
+            if i > 0:
+                prev = sorted_layers[i - 1]
+                prev_top = prev.attachment + prev.limit
+                if layer.attachment < prev_top:
+                    raise ValueError(
+                        f"Tower layers overlap: layer '{prev.label}' ends at {prev_top} "
+                        f"but layer '{layer.label}' attaches at {layer.attachment}"
+                    )
 
     def generate_limit_options(self, requested_limit: Optional[int] = None) -> List[int]:
         """
@@ -630,6 +703,29 @@ class ILFCurve(StrictModel):
         # Floor at 1.0
         return max(ilf, 1.0)
 
+    def get_cumulative_factor(self, limit: int) -> float:
+        """Get cumulative ILF factor for tower layer pricing.
+
+        Unlike get_factor_for_limit(), this does NOT floor at 1.0.
+        This is required for tower pricing where the layer premium is
+        derived from ILF(A+L) - ILF(A), and ILF(0) must be 0.0 (not 1.0).
+        """
+        if limit <= 0:
+            return 0.0
+        curve_fn = _CURVE_REGISTRY[self.curve]
+        params = dict(self.params or {})
+        cap = params.pop("cap", None)
+        anchor = float(self.anchor_limit)
+        raw_at_limit = curve_fn(float(limit), anchor, **params)
+        raw_at_anchor = curve_fn(anchor, anchor, **params)
+        if raw_at_anchor == 0:
+            ilf = 1.0
+        else:
+            ilf = raw_at_limit / raw_at_anchor
+        if cap is not None:
+            ilf = min(ilf, cap)
+        return ilf
+
 
 class DeductibleFactor(StrictModel):
     """Deductible adjustment factor."""
@@ -641,6 +737,7 @@ class ProductTypePricing(StrictModel):
     """Pricing parameters for a product type."""
     ilf_curve: ILFCurve
     deductible_factors: List[DeductibleFactor]
+    lead_loading_factor: float = Field(default=1.0, ge=1.0, le=2.0)
 
     def get_deductible_factor(self, deductible: int) -> float:
         """Get deductible factor for a given deductible."""
@@ -839,6 +936,12 @@ class CoverageConfig(StrictModel):
         if product_type not in self.pricing.by_product_type:
             return 1.0
         return self.pricing.by_product_type[product_type].ilf_curve.get_factor_for_limit(limit)
+
+    def get_cumulative_ilf(self, product_type: str, limit: int) -> float:
+        """Get cumulative ILF for tower layer pricing (no floor at 1.0)."""
+        if product_type not in self.pricing.by_product_type:
+            return 0.0 if limit <= 0 else 1.0
+        return self.pricing.by_product_type[product_type].ilf_curve.get_cumulative_factor(limit)
 
     def get_deductible_factor(self, product_type: str, deductible: int) -> float:
         """Get deductible factor for product type and deductible."""
