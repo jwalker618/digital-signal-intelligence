@@ -536,8 +536,8 @@ class WorkflowEngine:
                 )
             }
             model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
-            model_version.loss_previous_score = loss_propensity_result.previous_score
-            model_version.loss_score_velocity = loss_propensity_result.score_velocity
+            model_version.loss_previous_score = loss_propensity_result.previous_combined_score
+            model_version.loss_score_velocity = loss_propensity_result.combined_score_velocity
             model_version.loss_last_refresh = loss_propensity_result.calculated_at
             model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
 
@@ -553,10 +553,18 @@ class WorkflowEngine:
             model_version.exposure_magnitude_score = exposure_result.components.get(
                 "size_factor", 1.0
             ) * 50  # normalize to 0-100 scale
+            model_version.exposure_complexity_score = exposure_result.components.get(
+                "complexity_score", None
+            )
             model_version.exposure_assessment_method = (
                 "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
                 else "full"
             )
+            # Persist component factors for transparency
+            model_version.exposure_components = {
+                k: v for k, v in exposure_result.components.items()
+                if k not in ("primary_exposure", "mode")
+            }
             # Map exposure value to band label for display context
             # Band modifier is the ACTUAL pricing factor — not a separate lookup
             _EXPOSURE_BAND_LABELS = [

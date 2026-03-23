@@ -223,7 +223,7 @@ class TestLossCorrelationScorer:
         result = scorer.calculate_propensity(sample_signal_outputs)
 
         assert result.trend_direction == TrendDirection.STABLE
-        assert result.score_velocity == 0.0
+        assert result.combined_score_velocity == 0.0
 
     def test_trend_calculation_with_previous(self, sample_loss_config, sample_signal_outputs):
         """Test trend calculation with previous result."""
@@ -242,7 +242,7 @@ class TestLossCorrelationScorer:
 
         # Should show deterioration since current is higher than previous
         assert second_result.trend_direction == TrendDirection.DETERIORATING
-        assert second_result.score_velocity > 0
+        assert second_result.combined_score_velocity > 0
 
     def test_pricing_modifier_calculation(self, sample_loss_config, sample_signal_outputs):
         """Test pricing modifier calculation."""

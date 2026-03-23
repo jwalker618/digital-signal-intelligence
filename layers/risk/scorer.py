@@ -718,46 +718,75 @@ class ModelScorer:
         signal_by_id = {s.signal_id: s for s in signal_outputs}
 
         # Evaluate group-level conditions (from groups.three_layer_assessment)
+        # Check all three dimensions: risk, loss, exposure
         for group in config.groups.three_layer_assessment:
+            gs_detail = group_scores.get(group.id)
+            group_score = gs_detail["risk_score"] if isinstance(gs_detail, dict) else (gs_detail if gs_detail is not None else self.default_score)
+            group_label = group.label or group.id
+
+            # Collect score_conditions from all dimensions
+            dimension_conditions = []
             if group.risk and group.risk.score_conditions:
-                gs_detail = group_scores.get(group.id)
-                group_score = gs_detail["risk_score"] if isinstance(gs_detail, dict) else (gs_detail if gs_detail is not None else self.default_score)
-                group_label = group.label or group.id
+                for c in group.risk.score_conditions:
+                    dimension_conditions.append(("risk", c))
+            if group.loss and group.loss.score_conditions:
+                for c in group.loss.score_conditions:
+                    dimension_conditions.append(("loss", c))
+            if group.exposure and group.exposure.score_conditions:
+                for c in group.exposure.score_conditions:
+                    dimension_conditions.append(("exposure", c))
 
-                for condition in group.risk.score_conditions:
-                    if self._check_score_condition(group_score, condition):
-                        action = _CONDITION_ACTION_MAP.get(condition.action, ConditionAction.NOTE)
-                        action_value = self._get_condition_action_value(condition)
+            for dimension, condition in dimension_conditions:
+                if self._check_score_condition(group_score, condition):
+                    action = _CONDITION_ACTION_MAP.get(condition.action, ConditionAction.NOTE)
+                    action_value = self._get_condition_action_value(condition)
 
-                        tc = TriggeredCondition(
-                            source_type="signal_group",
-                            source_id=group.id,
-                            source_name=group_label,
-                            score=group_score,
-                            response=None,
-                            action=action,
-                            action_value=action_value,
-                            note=condition.note or str(action_value),
-                        )
-                        conditions.append(tc)
-                        self._collect_condition_impacts(
-                            condition, tier_overrides, referrals, notes,
-                            modifiers, source_id=group.id, source_name=group_label,
-                        )
+                    tc = TriggeredCondition(
+                        source_type="signal_group",
+                        source_id=group.id,
+                        source_name=f"{group_label} ({dimension})",
+                        score=group_score,
+                        response=None,
+                        action=action,
+                        action_value=action_value,
+                        note=condition.note or str(action_value),
+                    )
+                    conditions.append(tc)
+                    self._collect_condition_impacts(
+                        condition, tier_overrides, referrals, notes,
+                        modifiers, source_id=group.id, source_name=f"{group_label} ({dimension})",
+                    )
 
         # Evaluate signal-level conditions (from signal_registry)
+        # Check all three dimensions: risk, loss, exposure
         for signal in config.signal_registry:
             if not signal.three_layer_assessment:
-                continue
-            risk = signal.three_layer_assessment.risk
-            if not risk or not risk.score_conditions:
                 continue
 
             signal_output = signal_by_id.get(signal.id)
             signal_score = signal_output.raw_score if signal_output else self.default_score
             signal_name = signal.id.replace("_", " ").title()
 
-            for condition in risk.score_conditions:
+            # Collect score_conditions from all dimensions
+            tla = signal.three_layer_assessment
+            dimension_conditions = []
+            if tla.risk and tla.risk.score_conditions:
+                for c in tla.risk.score_conditions:
+                    dimension_conditions.append(("risk", c))
+            if tla.loss and hasattr(tla.loss, 'severity') and tla.loss.severity and tla.loss.severity.score_conditions:
+                for c in tla.loss.severity.score_conditions:
+                    dimension_conditions.append(("loss_severity", c))
+            if tla.loss and hasattr(tla.loss, 'frequency') and tla.loss.frequency and tla.loss.frequency.score_conditions:
+                for c in tla.loss.frequency.score_conditions:
+                    dimension_conditions.append(("loss_frequency", c))
+            if tla.exposure and hasattr(tla.exposure, 'size') and tla.exposure.size and tla.exposure.size.score_conditions:
+                for c in tla.exposure.size.score_conditions:
+                    dimension_conditions.append(("exposure_size", c))
+            if tla.exposure and hasattr(tla.exposure, 'complexity') and tla.exposure.complexity and tla.exposure.complexity.score_conditions:
+                for c in tla.exposure.complexity.score_conditions:
+                    dimension_conditions.append(("exposure_complexity", c))
+
+            for dimension, condition in dimension_conditions:
                 if self._check_score_condition(signal_score, condition):
                     action = _CONDITION_ACTION_MAP.get(condition.action, ConditionAction.NOTE)
                     action_value = self._get_condition_action_value(condition)
@@ -765,7 +794,7 @@ class ModelScorer:
                     tc = TriggeredCondition(
                         source_type="signal_feature",
                         source_id=signal.id,
-                        source_name=signal_name,
+                        source_name=f"{signal_name} ({dimension})",
                         score=signal_score,
                         response=None,
                         action=action,
@@ -775,7 +804,7 @@ class ModelScorer:
                     conditions.append(tc)
                     self._collect_condition_impacts(
                         condition, tier_overrides, referrals, notes,
-                        modifiers, source_id=signal.id, source_name=signal_name,
+                        modifiers, source_id=signal.id, source_name=f"{signal_name} ({dimension})",
                     )
 
                     if signal_output:
