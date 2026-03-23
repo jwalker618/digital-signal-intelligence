@@ -164,7 +164,8 @@
 | A2 | **ILF transparency** — structured LimitPremiumDetail replacing flat dict | pricer.py, types.py | Medium |
 | A3 | **Modifier visibility** — categorize and show before/after per modifier | pricer.py, types.py, workflow.py | Medium |
 | A4 | **Tier margin context** — distance to boundaries, percentile in tier | pricer.py, types.py, config_schema.py | Small |
-| A5 | **Remove table-based ILF** — parametric only | config_schema.py, pricer.py, tests | Medium |
+| A5 | **Remove table-based ILF** — enforce parametric-only in schema, remove table support from ILFCurve, update any configs/tests using table ILF | config_schema.py, pricer.py, config YAMLs | Medium |
+| A6 | **Phase A tests** — unit tests for uncapped premium capture, ILF transparency output, modifier categorization, tier margin calculations. Update existing tests that use table-based ILF | tests/unit/test_pricer.py, tests/unit/test_config_health_gate.py | Medium |
 
 ### Phase B: Scoring Completeness
 *Wire up capabilities that exist in schema but aren't executing.*
@@ -174,17 +175,19 @@
 | B1 | **Evaluate loss/exposure score_conditions** | scorer.py, workflow.py | Medium |
 | B2 | **Surface exposure dimension breakdown** | workflow.py, types.py, exposure/scorer.py | Medium |
 | B3 | **Clarify loss score fields** — rename, add individual trends | loss/types.py, workflow.py | Small |
+| B4 | **Phase B tests** — unit tests for loss/exposure score_conditions evaluation, exposure dimension breakdown output, loss field clarity | tests/unit/test_scorer.py, tests/unit/test_workflow.py | Medium |
 
 ### Phase C: ROL Engine (Core Upgrade)
-*Replaces PremiumValidator and limit recommendation logic.*
+*Replaces PremiumValidator and limit recommendation logic entirely.*
 
 | # | Item | Files | Effort |
 |---|------|-------|--------|
-| C1 | **Build ROL curve validator** — replaces PremiumValidator | NEW: layers/risk/rol_validator.py | Large |
-| C2 | **ROL dual recommendation engine** — upper/lower optimal limits | NEW: layers/risk/rol_recommender.py | Large |
-| C3 | **Limit re-calculation method** — reprice with different limit | workflow.py, pricer.py | Medium |
-| C4 | **Update ConfigHealthGate** to use ROL validator | config_health_gate.py | Medium |
-| C5 | **Remove PremiumValidator** — replaced by ROL | premium_validator.py (delete) | Small |
+| C1 | **Build ROL curve validator** — replaces PremiumValidator entirely. Per-coverage ROL appetite bands, validates premium/limit ratios against expected curves, flags anomalies | NEW: layers/risk/rol_validator.py | Large |
+| C2 | **ROL dual recommendation engine** — replaces the median-of-menu limit selection. Produces upper recommendation (best value higher limit with attractive ROL) and lower recommendation (minimum adequate at client's request). Economic logic, not arbitrary menu | NEW: layers/risk/rol_recommender.py | Large |
+| C3 | **Limit re-calculation method** — ability to reprice with a different limit selection without re-running entire workflow | workflow.py, pricer.py | Medium |
+| C4 | **Update ConfigHealthGate** to use ROL validator instead of PremiumValidator for boot-time config validation | config_health_gate.py | Medium |
+| C5 | **Remove PremiumValidator** — fully replaced by ROL validator, not alongside it | premium_validator.py (delete), workflow.py | Small |
+| C6 | **ROL engine tests** — unit tests for ROL validator, dual recommender, re-calculation, and ConfigHealthGate ROL integration | NEW: tests/unit/test_rol_validator.py, tests/unit/test_rol_recommender.py | Large |
 
 ### Phase D: Config Strictness
 *Tighten validation to prevent misconfiguration.*
@@ -224,9 +227,19 @@ Phase A (Foundation)  ──→  Phase B (Scoring)  ──→  Phase C (ROL Engi
 
 ---
 
+## TESTING STRATEGY
+
+Each phase includes explicit test work items (A6, B4, C6). In addition:
+
+- **Seed bench re-run**: `seed_dsi_bench.py` (61 companies) must be re-run after each phase to verify no regressions and validate new output fields
+- **ConfigHealthGate**: All 22 production configs must continue passing health checks throughout — this is a continuous gate
+- **Existing test suite**: All existing unit tests must pass after each phase; test fixtures using table-based ILF must be migrated in Phase A
+- **ROL validation**: Phase C requires new integration tests that verify ROL validator produces sensible results across all production configs (replaces the PremiumValidator coverage)
+- **Regression test**: After PremiumValidator removal (C5), verify that all previously-passing submissions still price correctly under the ROL regime
+
 ## NOTES
 
-- All seed bench tests (`seed_dsi_bench.py`) should be re-run after each phase
-- ConfigHealthGate tests must pass continuously
-- Frontend components (PricingTab, RiskTab, etc.) will need updates after Phase A to display new detail fields
-- Tower/subscription (Phase E) is the largest lift and may warrant its own design review
+- Frontend components (PricingTab, RiskTab, etc.) will need updates after Phase A to display new detail fields (ILF breakdown, uncapped premium, tier margins)
+- Tower/subscription (Phase E) is the largest lift and may warrant its own design review before implementation
+- ROL appetite bands per coverage will need calibration — this is a configuration exercise alongside the code work in Phase C
+- The ROL engine replaces PremiumValidator **entirely** — it is not a parallel system running alongside it
