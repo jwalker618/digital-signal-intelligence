@@ -638,6 +638,44 @@ class ModelPricer:
 
         return base_rate * hull_factor
 
+    def reprice_at_limit(
+        self,
+        premium_after_modifiers: float,
+        new_limit: int,
+        deductible: int,
+        config: CoverageConfig,
+        submission_data: Optional[Dict[str, Any]] = None,
+    ) -> LimitPremiumDetail:
+        """Re-price at a different limit without re-running the full workflow.
+
+        Takes the premium after modifiers (pre-ILF) and applies ILF and
+        deductible factor for the new limit. This enables quick what-if
+        analysis and the recommendation engine to evaluate arbitrary limits.
+
+        Args:
+            premium_after_modifiers: Premium after all modifiers but before ILF
+            new_limit: Target limit
+            deductible: Deductible amount
+            config: Coverage configuration
+            submission_data: Optional submission data for product_type resolution
+
+        Returns:
+            LimitPremiumDetail for the requested limit
+        """
+        product_type = self._resolve_product_type(submission_data or {}, config)
+        ilf = config.get_ilf(product_type, new_limit)
+        ded_factor = config.get_deductible_factor(product_type, deductible)
+        limit_premium = premium_after_modifiers * ilf * ded_factor
+
+        return LimitPremiumDetail(
+            limit=new_limit,
+            deductible=deductible,
+            ilf_factor=ilf,
+            deductible_factor=ded_factor,
+            premium_before_scaling=premium_after_modifiers,
+            premium_after_scaling=round(limit_premium, 2),
+        )
+
 
 # Singleton instance for convenience
 _default_pricer: Optional[ModelPricer] = None

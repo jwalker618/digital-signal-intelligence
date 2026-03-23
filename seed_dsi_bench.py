@@ -67,7 +67,7 @@ from layers.risk.appetite import evaluate_appetite
 from layers.risk.scorer import ModelScorer
 from layers.risk.pricer import ModelPricer
 from layers.risk.query_evaluator import QueryEvaluator
-from layers.risk.premium_validator import PremiumValidator
+from layers.risk.rol_validator import ROLValidator
 from layers.risk.types import SignalOutput, CategoricalOutput, utcnow
 
 # =============================================================================
@@ -2437,8 +2437,8 @@ def seed_data():
 
         stats = {"approve": 0, "refer": 0, "decline": 0, "outside_appetite": 0}
         coverage_counts = {}
-        validation_inputs = []  # Collected for premium accumulation validation
-        _premium_validator = PremiumValidator()
+        validation_inputs = []  # Collected for ROL validation
+        _rol_validator = ROLValidator()
 
         for i, co in enumerate(COMPANIES, 1):
             coverage_key = f"{co['coverage']}/{co['configuration']}"
@@ -2937,10 +2937,23 @@ def seed_data():
             print(f"  Outside appetite (skipped): {stats['outside_appetite']}")
         print("=" * 70)
 
-        # Premium accumulation validation
+        # ROL validation summary
         if validation_inputs:
-            reports, summary = _premium_validator.validate_batch(validation_inputs)
-            print("\n" + _premium_validator.format_batch_summary(reports, summary))
+            ok = warn = fail = 0
+            for vi in validation_inputs:
+                limit = int(vi["submission_data"].get("limit", 0))
+                premium = vi["pricing_result"].final_premium
+                if limit > 0:
+                    r = _rol_validator.validate_rol(premium, limit)
+                    if r.severity == "OK":
+                        ok += 1
+                    elif r.severity == "WARNING":
+                        warn += 1
+                    else:
+                        fail += 1
+            total = ok + warn + fail
+            print(f"\n  ROL Validation: {total} checked — "
+                  f"{ok} OK, {warn} WARNING, {fail} FAIL")
 
     except Exception as e:
         db.rollback()

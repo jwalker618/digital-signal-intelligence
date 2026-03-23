@@ -45,6 +45,8 @@ from .scorer import ModelScorer, get_scorer
 from .query_evaluator import QueryEvaluator, get_query_evaluator
 from .appetite import evaluate_appetite
 from .pricer import ModelPricer, get_pricer
+from .rol_validator import ROLValidator
+from .rol_recommender import ROLRecommender
 from .modifiers import (
     TraditionalModifier,
     TraditionalModifierResult,
@@ -490,15 +492,20 @@ class WorkflowEngine:
             signal_coverage=scoring_result.signal_coverage,
         )
 
-        # Determine recommended option
+        # Determine recommended option via ROL-driven dual recommendation
         recommended_limit = 0.0
         recommended_premium = pricing_result.final_premium
         if pricing_result.limit_premiums:
-            # Recommend middle limit option
-            limits = sorted([float(k) for k in pricing_result.limit_premiums.keys()])
-            mid_index = len(limits) // 2
-            recommended_limit = limits[mid_index]
-            recommended_premium = pricing_result.limit_premiums[str(int(recommended_limit))]
+            rol_validator = ROLValidator()
+            rol_recommender = ROLRecommender(validator=rol_validator)
+            requested_limit = int(submission_data.get("limit", 0))
+            dual_rec = rol_recommender.recommend(
+                limit_premiums=pricing_result.limit_premiums,
+                requested_limit=requested_limit,
+            )
+            # Use upper recommendation as the primary recommendation
+            recommended_limit = float(dual_rec.upper.limit)
+            recommended_premium = dual_rec.upper.premium
 
         logger.info(
             f"Workflow complete: score={scoring_result.pure_composite_score:.0f}, "
