@@ -1101,7 +1101,7 @@ class PricingResult:
 
     # Guardrail outputs
     uncapped_premium: Optional[float] = None  # Pre-guardrail premium (set when premium_was_capped=True)
-    guardrail_warnings: List[str] = field(default_factory=list)
+    guardrail_warnings: List[Dict[str, str]] = field(default_factory=list)  # List[Note]-shaped: {"note": ..., "source": ...}
     modifier_was_clamped: bool = False
     premium_was_capped: bool = False
 
