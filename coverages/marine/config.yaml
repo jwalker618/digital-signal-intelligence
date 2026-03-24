@@ -1207,7 +1207,7 @@ marine:
               max: 100
             application:
               method: MODIFIER
-              applied: 2.5
+              applied: 1.3
               implied_thresholds:
                 min: 250000000
                 max: 1000000000
@@ -1435,12 +1435,13 @@ marine:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 50.0
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   marine_sme:
     metadata:
       name: DSI Marine SME Model
@@ -2020,6 +2021,6 @@ marine:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 50.0
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0

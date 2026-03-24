@@ -1358,12 +1358,13 @@ aerospace:
           - deductible: 500000
             factor: 0.72
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 30.0
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   aerospace_sme:
     metadata:
       name: DSI Aerospace SME Model
@@ -2180,9 +2181,10 @@ aerospace:
           - deductible: 25000
             factor: 0.87
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 30.0
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
