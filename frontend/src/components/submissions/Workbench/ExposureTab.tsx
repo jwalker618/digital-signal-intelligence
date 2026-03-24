@@ -2,7 +2,10 @@
 
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { Target, Activity, BarChart3, Layers, ScatterChart as ScatterIcon, Paperclip } from "lucide-react";
+import {
+  Target, Activity, BarChart3, Layers, ScatterChart as ScatterIcon,
+  Paperclip, Puzzle, Gauge
+} from "lucide-react";
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, ReferenceLine, Label
@@ -18,6 +21,9 @@ const getDecisionColor = (decision: string | undefined) => {
   if (!decision) return '#475569';
   return DECISION_COLORS[decision.toLowerCase()] || '#475569';
 };
+
+const formatNum = (num: number | null | undefined, decimals = 1) =>
+  num !== null && num !== undefined ? Number(num).toFixed(decimals) : "-";
 
 export default function ExposureTab() {
   const {
@@ -57,12 +63,24 @@ export default function ExposureTab() {
   const subjectModifier = activeVersion.exposure_modifier || 1.0;
   const subjectMagnitude = activeVersion.exposure_size_score || 0;
 
+  // Band boundaries for position gauge
+  const bandBounds = activeVersion.exposure_band_boundaries || {};
+  const bandMin = bandBounds.min_value ?? bandBounds.lower ?? null;
+  const bandMax = bandBounds.max_value ?? bandBounds.upper ?? null;
+  const exposureValue = activeVersion.exposure_value || 0;
+  const hasBandPosition = bandMin != null && bandMax != null && bandMax > bandMin;
+  const bandPct = hasBandPosition ? Math.max(0, Math.min(1, (exposureValue - bandMin) / (bandMax - bandMin))) : null;
+
+  // Components breakdown
+  const components = activeVersion.exposure_components || {};
+  const componentEntries = Object.entries(components).filter(([, v]) => v != null);
+
   return (
     <div className="
       w-full no-scrollbar
       animate-in fade-in duration-500 pb-12"
       >
-      {/* STICKY WRAPPER: Acts as a solid curtain to hide scrolling content */}
+      {/* STICKY WRAPPER */}
       <div className="
         sticky top-0 z-20
         bg-dsi-background
@@ -122,7 +140,7 @@ export default function ExposureTab() {
       </div>
 
       {/* =======================================================================
-          COMPONENT A: SUBJECT PROFILE (HERO KPIs)
+          COMPONENT A: SUBJECT PROFILE — expanded with all exposure fields
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
         <div className="
@@ -144,7 +162,8 @@ export default function ExposureTab() {
           bg-dsi-analysis shadow-sm
           pt-4 pb-4
         ">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pl-dsi-pad pr-dsi-pad">
+          {/* Row 1: Primary KPIs — expanded */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 pl-dsi-pad pr-dsi-pad">
             <div>
               <span className="opacity-70 block text-xs mb-1">Exposure Value (TIV/Rev)</span>
               <span className="font-bold text-lg text-dsi-selected">
@@ -156,11 +175,22 @@ export default function ExposureTab() {
               <span className="font-bold text-lg uppercase">
                 {activeVersion.exposure_band_label || "N/A"}
               </span>
+              {hasBandPosition && (
+                <span className="text-[10px] opacity-40 block">
+                  ${Number(bandMin).toLocaleString()} – ${Number(bandMax).toLocaleString()}
+                </span>
+              )}
             </div>
             <div>
-              <span className="opacity-70 block text-xs mb-1">Magnitude Score</span>
+              <span className="opacity-70 block text-xs mb-1">Size Score</span>
               <span className="font-bold text-lg">
                 {activeVersion.exposure_size_score?.toFixed(1) || "0.0"}
+              </span>
+            </div>
+            <div>
+              <span className="opacity-70 block text-xs mb-1">Complexity Score</span>
+              <span className="font-bold text-lg">
+                {activeVersion.exposure_complexity_score?.toFixed(1) || "N/A"}
               </span>
             </div>
             <div>
@@ -169,8 +199,156 @@ export default function ExposureTab() {
                 {activeVersion.exposure_modifier?.toFixed(3) || "1.000"}x
               </span>
             </div>
+            <div>
+              <span className="opacity-70 block text-xs mb-1">Assessment Method</span>
+              <span className="font-bold text-sm uppercase">
+                {activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || "N/A"}
+              </span>
+            </div>
+            <div>
+              <span className="opacity-70 block text-xs mb-1">Final Tier</span>
+              <span className="font-bold text-lg text-dsi-selected">
+                Tier {activeVersion.final_tier || "–"}
+              </span>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* =======================================================================
+          BAND POSITION & COMPONENTS ROW
+          ======================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
+
+        {/* BAND POSITION GAUGE */}
+        <div className="flex flex-col">
+          <div className="
+            flex gap-dsi-pad
+            rounded-t-xl
+            border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          ">
+            <Gauge className="icon"/><span className="text-sm">Band Position</span>
+          </div>
+          <div className="
+            flex flex-col flex-1
+            border-b-3 border-dsi-contrast-background
+            overflow-x-hidden border-collapse
+            rounded-b-xl
+            bg-dsi-analysis shadow-sm
+            pt-4 pb-4
+          ">
+            {hasBandPosition ? (
+              <div className="pl-dsi-pad pr-dsi-pad space-y-4">
+                {/* Band bar */}
+                <div>
+                  <div className="flex justify-between text-xs opacity-60 mb-1">
+                    <span>Band floor</span>
+                    <span className="font-bold uppercase">{activeVersion.exposure_band_label}</span>
+                    <span>Band ceiling</span>
+                  </div>
+                  <div className="relative h-6 bg-dsi-background rounded-full overflow-hidden border border-dsi-outline/20">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600/30 via-slate-500/30 to-amber-600/30 rounded-full"
+                      style={{ width: '100%' }}
+                    />
+                    {/* Position marker */}
+                    <div
+                      className="absolute top-0 bottom-0 w-0.5 bg-dsi-selected z-10"
+                      style={{ left: `${Math.max(2, Math.min(98, (bandPct || 0) * 100))}%` }}
+                    >
+                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-dsi-selected whitespace-nowrap">
+                        ${exposureValue.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-xs mt-1 opacity-50">
+                    <span>${Number(bandMin).toLocaleString()}</span>
+                    <span>${Number(bandMax).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Position metrics */}
+                <div className="grid grid-cols-3 gap-4 text-wrap">
+                  <div className="border border-dsi-outline/20 rounded-lg p-3">
+                    <span className="text-xs opacity-60 block mb-1">Band Percentile</span>
+                    <span className="font-bold text-lg">{((bandPct || 0) * 100).toFixed(0)}%</span>
+                    <span className="text-xs opacity-50 block">from band floor</span>
+                  </div>
+                  <div className="border border-dsi-outline/20 rounded-lg p-3">
+                    <span className="text-xs opacity-60 block mb-1">Below Ceiling</span>
+                    <span className="font-bold text-lg">
+                      ${(bandMax - exposureValue).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="border border-dsi-outline/20 rounded-lg p-3">
+                    <span className="text-xs opacity-60 block mb-1">Above Floor</span>
+                    <span className="font-bold text-lg">
+                      ${(exposureValue - bandMin).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
+                Band boundary data not available.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* EXPOSURE COMPONENTS BREAKDOWN */}
+        <div className="flex flex-col">
+          <div className="
+            flex gap-dsi-pad
+            rounded-t-xl
+            border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          ">
+            <Puzzle className="icon"/><span className="text-sm">Exposure Components</span>
+          </div>
+          <div className="
+            flex flex-col flex-1
+            border-b-3 border-dsi-contrast-background
+            overflow-y-auto border-collapse
+            rounded-b-xl
+            bg-dsi-analysis shadow-sm
+            pt-2 pb-2
+            max-h-[320px]
+          ">
+            {componentEntries.length > 0 ? (
+              <div className="space-y-0">
+                {componentEntries.map(([key, value]: [string, any]) => {
+                  const isNumeric = typeof value === 'number';
+                  const displayValue = isNumeric
+                    ? (Math.abs(value) >= 1000 ? `$${Number(value).toLocaleString()}` : formatNum(value, 2))
+                    : String(value);
+                  return (
+                    <div key={key} className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                      <span className="text-sm opacity-70 truncate max-w-[200px]" title={key}>
+                        {key.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-sm font-bold ml-2 shrink-0">
+                        {displayValue}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
+                No component breakdown available.
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
       {isFetchingExposureAnalytics ? (

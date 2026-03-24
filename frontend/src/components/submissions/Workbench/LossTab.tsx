@@ -2,7 +2,10 @@
 
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { TrendingUp, TrendingDown, Activity, Target, ShieldAlert, BarChart3, Paperclip, Minus } from "lucide-react";
+import {
+  TrendingUp, TrendingDown, Activity, Target, ShieldAlert, BarChart3,
+  Paperclip, Minus, Clock, GitBranch, Layers
+} from "lucide-react";
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, ReferenceLine, Label
@@ -18,6 +21,9 @@ const getDecisionColor = (decision: string | undefined) => {
   if (!decision) return '#475569';
   return DECISION_COLORS[decision.toLowerCase()] || '#475569';
 };
+
+const formatNum = (num: number | null | undefined, decimals = 1) =>
+  num !== null && num !== undefined ? Number(num).toFixed(decimals) : "-";
 
 export default function LossTab() {
   const {
@@ -63,6 +69,15 @@ export default function LossTab() {
   const trendDirection = activeVersion.loss_trend_direction || 'stable';
   const freqTrend = activeVersion.loss_frequency_trend_direction || 'stable';
   const sevTrend = activeVersion.loss_severity_trend_direction || 'stable';
+
+  // Previous scores for delta display
+  const prevScore = activeVersion.loss_previous_score;
+  const prevFreqScore = activeVersion.loss_previous_frequency_score;
+  const prevSevScore = activeVersion.loss_previous_severity_score;
+
+  // Group scores breakdown
+  const groupScores = activeVersion.loss_group_scores || {};
+  const groupEntries = Object.entries(groupScores).sort(([, a]: any, [, b]: any) => (b || 0) - (a || 0));
 
   // Compute book-wide trend totals for context line
   const trendTotal = lossTrendDistribution.reduce((acc: number, d: any) => acc + d.count, 0);
@@ -152,7 +167,7 @@ export default function LossTab() {
       </div>
 
       {/* =======================================================================
-          COMPONENT A: SUBJECT PROFILE
+          COMPONENT A: SUBJECT PROFILE — expanded with all loss fields
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
         <div className="
@@ -174,11 +189,18 @@ export default function LossTab() {
           bg-dsi-analysis shadow-sm
           pt-4 pb-4
         ">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 pl-dsi-pad pr-dsi-pad">
+          {/* Row 1: Primary KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 pl-dsi-pad pr-dsi-pad">
             <div>
               <span className="opacity-70 block text-xs mb-1">Propensity Band</span>
               <span className="font-bold text-lg text-dsi-selected uppercase">
                 {activeVersion.loss_propensity_band?.replace(/_/g, ' ') || "N/A"}
+              </span>
+            </div>
+            <div>
+              <span className="opacity-70 block text-xs mb-1">Severity Band</span>
+              <span className="font-bold text-lg uppercase">
+                {activeVersion.severity_propensity_band?.replace(/_/g, ' ') || "N/A"}
               </span>
             </div>
             <div>
@@ -188,9 +210,30 @@ export default function LossTab() {
               </span>
             </div>
             <div>
-              <span className="opacity-70 block text-xs mb-1">Severity Score</span>
+              <span className="opacity-70 block text-xs mb-1">Freq Multiplier</span>
               <span className="font-bold text-lg">
-                {activeVersion.severity_propensity_score?.toFixed(1) || "0.0"}
+                {activeVersion.loss_frequency_multiplier?.toFixed(3) || "1.000"}x
+              </span>
+            </div>
+            <div>
+              <span className="opacity-70 block text-xs mb-1">Sev Multiplier</span>
+              <span className="font-bold text-lg">
+                {activeVersion.loss_severity_multiplier?.toFixed(3) || "1.000"}x
+              </span>
+            </div>
+            <div>
+              <span className="opacity-70 block text-xs mb-1">Model Confidence</span>
+              <span className="font-bold text-lg">
+                {activeVersion.loss_confidence != null ? `${(activeVersion.loss_confidence * 100).toFixed(0)}%` : "N/A"}
+              </span>
+            </div>
+            <div>
+              <span className="opacity-70 block text-xs mb-1">Cohort</span>
+              <span className="font-bold text-sm leading-tight block">
+                {activeVersion.loss_cohort_name || "Unknown"}
+              </span>
+              <span className="text-[10px] opacity-40">
+                {activeVersion.loss_cohort_confidence != null ? `${(activeVersion.loss_cohort_confidence * 100).toFixed(0)}% conf` : ''}
               </span>
             </div>
             <div>
@@ -199,12 +242,22 @@ export default function LossTab() {
                 {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
               </span>
             </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Cohort Assignment</span>
-              <span className="font-bold text-sm leading-tight block">
-                {activeVersion.loss_cohort_name || "Unknown"}
+          </div>
+
+          {/* Row 2: Meta line */}
+          <div className="flex items-center gap-4 pl-dsi-pad pr-dsi-pad mt-3 pt-3 border-t border-dsi-outline/10 text-xs opacity-40">
+            {activeVersion.loss_last_refresh && (
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Last refresh: {new Date(activeVersion.loss_last_refresh).toLocaleDateString()}
               </span>
-            </div>
+            )}
+            {activeVersion.correlation_matrix_version && (
+              <span className="flex items-center gap-1">
+                <GitBranch className="w-3 h-3" />
+                Matrix: {activeVersion.correlation_matrix_version}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -303,7 +356,7 @@ export default function LossTab() {
               </div>
             </div>
 
-            {/* COMPONENT D: SUBJECT VELOCITY PANEL (replaces pie chart) */}
+            {/* COMPONENT D: SUBJECT VELOCITY PANEL with previous scores */}
             <div className="flex flex-col">
               <div className="
                 flex gap-dsi-pad
@@ -324,7 +377,7 @@ export default function LossTab() {
                 bg-dsi-analysis shadow-sm
                 pt-4 pb-4
               ">
-                <div className="pl-dsi-pad pr-dsi-pad space-y-4">
+                <div className="pl-dsi-pad pr-dsi-pad space-y-3">
 
                   {/* Overall trend */}
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
@@ -339,6 +392,11 @@ export default function LossTab() {
                       </span>
                       <span className="text-xs opacity-50">pts/period</span>
                     </div>
+                    {prevScore != null && (
+                      <div className="text-[10px] opacity-40 mt-1">
+                        Previous: {formatNum(prevScore, 1)} → Current: {formatNum(activeVersion.loss_propensity_score, 1)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Frequency breakdown */}
@@ -353,6 +411,11 @@ export default function LossTab() {
                         {freqVelocity > 0 ? '+' : ''}{freqVelocity.toFixed(1)}
                       </span>
                     </div>
+                    {prevFreqScore != null && (
+                      <div className="text-[10px] opacity-40 mt-1">
+                        Previous: {formatNum(prevFreqScore, 1)} → Current: {formatNum(activeVersion.loss_propensity_score, 1)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Severity breakdown */}
@@ -367,11 +430,16 @@ export default function LossTab() {
                         {sevVelocity > 0 ? '+' : ''}{sevVelocity.toFixed(1)}
                       </span>
                     </div>
+                    {prevSevScore != null && (
+                      <div className="text-[10px] opacity-40 mt-1">
+                        Previous: {formatNum(prevSevScore, 1)} → Current: {formatNum(activeVersion.severity_propensity_score, 1)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Book-wide context */}
                   {trendTotal > 0 && (
-                    <div className="border-t border-dsi-outline/20 pt-3 mt-3">
+                    <div className="border-t border-dsi-outline/20 pt-3">
                       <span className="text-xs opacity-70 block mb-2">Book-wide Trend ({trendTotal} peers)</span>
                       <div className="flex gap-3 text-xs">
                         <span className="flex items-center gap-1">
@@ -397,91 +465,150 @@ export default function LossTab() {
           </div>
 
           {/* =======================================================================
-              CHART ROW 2: COHORT BENCHMARKING
+              CHART ROW 2: COHORT BENCHMARKING + GROUP SCORES
               ======================================================================= */}
-          <div className="flex flex-col pt-2 pb-2">
-            <div className="
-              flex gap-dsi-pad
-              rounded-t-xl
-              border-b-1 border-dsi-outline/50
-              overflow-x-hidden whitespace-nowrap border-collapse
-              bg-dsi-analysis/60
-              pl-dsi-pad
-              pt-2 pb-2
-            ">
-              <BarChart3 className="icon"/><span className="text-sm">Cohort Benchmarking</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 pt-2 pb-2">
+
+            {/* COHORT BENCHMARKING (2/3 width) */}
+            <div className="lg:col-span-2 flex flex-col">
+              <div className="
+                flex gap-dsi-pad
+                rounded-t-xl
+                border-b-1 border-dsi-outline/50
+                overflow-x-hidden whitespace-nowrap border-collapse
+                bg-dsi-analysis/60
+                pl-dsi-pad
+                pt-2 pb-2
+              ">
+                <BarChart3 className="icon"/><span className="text-sm">Cohort Benchmarking</span>
+              </div>
+              <div className="
+                flex flex-col flex-1
+                border-b-3 border-dsi-contrast-background
+                overflow-x-hidden whitespace-nowrap border-collapse
+                rounded-b-xl
+                bg-dsi-analysis shadow-sm
+                pt-4 pb-4
+              ">
+                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({subjectModifier.toFixed(3)}x).</p>
+                <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
+                  {lossCohortBenchmarks.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={lossCohortBenchmarks} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
+                        <XAxis
+                          dataKey="cohort_name"
+                          stroke="#94a3b8"
+                          tick={{ fill: '#94a3b8', fontSize: 11 }}
+                          interval={0}
+                          tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
+                        />
+                        <YAxis
+                          stroke="#94a3b8"
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          domain={['auto', 'auto']}
+                        />
+                        <RechartsTooltip
+                          contentStyle={tooltipStyle}
+                          cursor={{ fill: '#1e293b', opacity: 0.4 }}
+                          formatter={(value: any, name: string) => {
+                            if (name === 'avg_modifier') return [`${Number(value).toFixed(3)}x`, 'Avg Modifier'];
+                            return [value, name];
+                          }}
+                          labelFormatter={(label) => {
+                            const match = lossCohortBenchmarks.find((d: any) => d.cohort_name === label);
+                            return match ? `${label} (n=${match.peer_count})` : label;
+                          }}
+                        />
+                        {/* Subject modifier reference line */}
+                        <ReferenceLine
+                          y={subjectModifier}
+                          stroke="#3b82f6"
+                          strokeDasharray="6 3"
+                          strokeWidth={2}
+                        >
+                          <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="#3b82f6" fontSize={11} />
+                        </ReferenceLine>
+                        <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
+                          label={({ x, y, width, index }: any) => {
+                            const entry = lossCohortBenchmarks[index];
+                            return (
+                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="#94a3b8" fontSize={10}>
+                                n={entry?.peer_count}
+                              </text>
+                            );
+                          }}
+                        >
+                          {lossCohortBenchmarks.map((entry: any, index: number) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={entry.cohort_name === activeVersion.loss_cohort_name ? '#3b82f6' : '#475569'}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full items-center justify-center opacity-50 italic text-sm">No cohort data available.</div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="
-              flex flex-col flex-1
-              border-b-3 border-dsi-contrast-background
-              overflow-x-hidden whitespace-nowrap border-collapse
-              rounded-b-xl
-              bg-dsi-analysis shadow-sm
-              pt-4 pb-4
-            ">
-              <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({subjectModifier.toFixed(3)}x).</p>
-              <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
-                {lossCohortBenchmarks.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={lossCohortBenchmarks} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
-                      <XAxis
-                        dataKey="cohort_name"
-                        stroke="#94a3b8"
-                        tick={{ fill: '#94a3b8', fontSize: 11 }}
-                        interval={0}
-                        tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
-                      />
-                      <YAxis
-                        stroke="#94a3b8"
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                        domain={['auto', 'auto']}
-                      />
-                      <RechartsTooltip
-                        contentStyle={tooltipStyle}
-                        cursor={{ fill: '#1e293b', opacity: 0.4 }}
-                        formatter={(value: any, name: string) => {
-                          if (name === 'avg_modifier') return [`${Number(value).toFixed(3)}x`, 'Avg Modifier'];
-                          return [value, name];
-                        }}
-                        labelFormatter={(label) => {
-                          const match = lossCohortBenchmarks.find((d: any) => d.cohort_name === label);
-                          return match ? `${label} (n=${match.peer_count})` : label;
-                        }}
-                      />
-                      {/* Subject modifier reference line */}
-                      <ReferenceLine
-                        y={subjectModifier}
-                        stroke="#3b82f6"
-                        strokeDasharray="6 3"
-                        strokeWidth={2}
-                      >
-                        <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="#3b82f6" fontSize={11} />
-                      </ReferenceLine>
-                      <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
-                        label={({ x, y, width, index }: any) => {
-                          const entry = lossCohortBenchmarks[index];
-                          return (
-                            <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="#94a3b8" fontSize={10}>
-                              n={entry?.peer_count}
-                            </text>
-                          );
-                        }}
-                      >
-                        {lossCohortBenchmarks.map((entry: any, index: number) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={entry.cohort_name === activeVersion.loss_cohort_name ? '#3b82f6' : '#475569'}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+
+            {/* LOSS GROUP SCORES BREAKDOWN (1/3 width) */}
+            <div className="flex flex-col">
+              <div className="
+                flex gap-dsi-pad
+                rounded-t-xl
+                border-b-1 border-dsi-outline/50
+                overflow-x-hidden whitespace-nowrap border-collapse
+                bg-dsi-analysis/60
+                pl-dsi-pad
+                pt-2 pb-2
+              ">
+                <Layers className="icon"/><span className="text-sm">Loss Group Scores</span>
+              </div>
+              <div className="
+                flex flex-col flex-1
+                border-b-3 border-dsi-contrast-background
+                overflow-y-auto whitespace-nowrap border-collapse
+                rounded-b-xl
+                bg-dsi-analysis shadow-sm
+                pt-2 pb-2
+                max-h-[400px]
+              ">
+                {groupEntries.length > 0 ? (
+                  <div className="space-y-0">
+                    {groupEntries.map(([group, score]: [string, any]) => {
+                      const numScore = typeof score === 'object' ? (score?.risk_score || score?.score || 0) : (score || 0);
+                      const barWidth = Math.min(100, Math.max(2, numScore));
+                      return (
+                        <div key={group} className="px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs truncate max-w-[160px]" title={group}>{group}</span>
+                            <span className="text-xs font-bold ml-2">{formatNum(numScore, 1)}</span>
+                          </div>
+                          <div className="h-1.5 bg-dsi-background rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{
+                                width: `${barWidth}%`,
+                                backgroundColor: numScore > 70 ? '#f43f5e' : numScore > 40 ? '#f59e0b' : '#10b981'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <div className="flex h-full items-center justify-center opacity-50 italic text-sm">No cohort data available.</div>
+                  <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
+                    No group scores available.
+                  </div>
                 )}
               </div>
             </div>
+
           </div>
         </>
       )}
