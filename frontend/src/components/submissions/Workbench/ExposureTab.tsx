@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   Target, Activity, BarChart3, Layers, ScatterChart as ScatterIcon,
-  Paperclip, Puzzle, Gauge
+  Paperclip, Puzzle, Gauge, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -71,9 +71,35 @@ export default function ExposureTab() {
   const hasBandPosition = bandMin != null && bandMax != null && bandMax > bandMin;
   const bandPct = hasBandPosition ? Math.max(0, Math.min(1, (exposureValue - bandMin) / (bandMax - bandMin))) : null;
 
-  // Components breakdown
+  // Components breakdown — structured as {size: {score, band_label, modifier, weight}, complexity: {...}, combined_modifier}
   const components = activeVersion.exposure_components || {};
-  const componentEntries = Object.entries(components).filter(([, v]) => v != null);
+  const sizeComp = components.size || null;
+  const complexityComp = components.complexity || null;
+  const combinedModifier = components.combined_modifier;
+  const hasComponents = sizeComp || complexityComp;
+
+  // Exposure-relevant signal conditions
+  // Exposure groups come from group_scores entries with exposure_weight > 0
+  const groupScores = activeVersion.group_scores || {};
+  const exposureGroupKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const [key, val] of Object.entries(groupScores)) {
+      if ((val as any)?.exposure_weight && (val as any).exposure_weight > 0) keys.add(key);
+    }
+    return keys;
+  }, [groupScores]);
+
+  const signalConditions = activeVersion?.signal_conditions || [];
+  const queryConditions = activeVersion?.query_conditions || [];
+  const allConditions = [...signalConditions, ...queryConditions];
+  const exposureConditions = useMemo(() => {
+    if (exposureGroupKeys.size === 0) return [];
+    return allConditions.filter((c: any) => {
+      if (c.source_type === 'signal_group' && exposureGroupKeys.has(c.source_id)) return true;
+      if (c.group_code && exposureGroupKeys.has(c.group_code)) return true;
+      return false;
+    });
+  }, [allConditions, exposureGroupKeys]);
 
   return (
     <div className="
@@ -300,7 +326,7 @@ export default function ExposureTab() {
           </div>
         </div>
 
-        {/* EXPOSURE COMPONENTS BREAKDOWN */}
+        {/* EXPOSURE COMPONENTS BREAKDOWN — structured rendering */}
         <div className="flex flex-col">
           <div className="
             flex gap-dsi-pad
@@ -319,27 +345,65 @@ export default function ExposureTab() {
             overflow-y-auto border-collapse
             rounded-b-xl
             bg-dsi-analysis shadow-sm
-            pt-2 pb-2
-            max-h-[320px]
+            pt-4 pb-4
           ">
-            {componentEntries.length > 0 ? (
-              <div className="space-y-0">
-                {componentEntries.map(([key, value]: [string, any]) => {
-                  const isNumeric = typeof value === 'number';
-                  const displayValue = isNumeric
-                    ? (Math.abs(value) >= 1000 ? `$${Number(value).toLocaleString()}` : formatNum(value, 2))
-                    : String(value);
-                  return (
-                    <div key={key} className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
-                      <span className="text-sm opacity-70 truncate max-w-[200px]" title={key}>
-                        {key.replace(/_/g, ' ')}
-                      </span>
-                      <span className="text-sm font-bold ml-2 shrink-0">
-                        {displayValue}
-                      </span>
+            {hasComponents ? (
+              <div className="pl-dsi-pad pr-dsi-pad space-y-3">
+                {/* Size component */}
+                {sizeComp && (
+                  <div className="border border-dsi-outline/20 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold uppercase">Size Component</span>
+                      <span className="text-[10px] opacity-40">Weight: {formatNum(sizeComp.weight, 2)}</span>
                     </div>
-                  );
-                })}
+                    <div className="grid grid-cols-3 gap-3 text-wrap">
+                      <div>
+                        <span className="text-[10px] opacity-50 block">Score</span>
+                        <span className="text-sm font-bold">{formatNum(sizeComp.score, 1)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] opacity-50 block">Band</span>
+                        <span className="text-sm font-bold uppercase">{sizeComp.band_label || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] opacity-50 block">Modifier</span>
+                        <span className="text-sm font-bold">{formatNum(sizeComp.modifier, 3)}x</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Complexity component */}
+                {complexityComp && (
+                  <div className="border border-dsi-outline/20 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold uppercase">Complexity Component</span>
+                      <span className="text-[10px] opacity-40">Weight: {formatNum(complexityComp.weight, 2)}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-wrap">
+                      <div>
+                        <span className="text-[10px] opacity-50 block">Score</span>
+                        <span className="text-sm font-bold">{formatNum(complexityComp.score, 1)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] opacity-50 block">Band</span>
+                        <span className="text-sm font-bold uppercase">{complexityComp.band_label || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] opacity-50 block">Modifier</span>
+                        <span className="text-sm font-bold">{formatNum(complexityComp.modifier, 3)}x</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Combined modifier */}
+                {combinedModifier != null && (
+                  <div className="border-t border-dsi-outline/20 pt-3 flex items-center justify-between">
+                    <span className="text-xs opacity-60">Combined Modifier</span>
+                    <span className="font-bold text-lg">{formatNum(combinedModifier, 3)}x</span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
@@ -598,6 +662,71 @@ export default function ExposureTab() {
             </div>
 
           </div>
+
+          {/* =======================================================================
+              EXPOSURE-RELEVANT SIGNAL CONDITIONS
+              ======================================================================= */}
+          {exposureConditions.length > 0 && (
+            <div className="flex flex-col pt-2 pb-2">
+              <div className="
+                flex gap-dsi-pad
+                rounded-t-xl
+                border-b-1 border-dsi-outline/50
+                overflow-x-hidden whitespace-nowrap border-collapse
+                bg-dsi-analysis/60
+                pl-dsi-pad
+                pt-2 pb-2
+              ">
+                <AlertTriangle className="icon"/>
+                <span className="text-sm">Exposure Signal Conditions ({exposureConditions.length})</span>
+              </div>
+              <div className="
+                flex flex-col flex-1
+                border-b-3 border-dsi-contrast-background
+                overflow-y-auto border-collapse
+                rounded-b-xl
+                bg-dsi-analysis shadow-sm
+                pt-2 pb-2
+                max-h-[280px]
+              ">
+                <div className="space-y-0">
+                  {exposureConditions.map((cond: any, idx: number) => {
+                    const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
+                    const isModifier = actionKey === 'modifier';
+                    const isReferral = actionKey === 'referral' || actionKey === 'refer';
+                    const isTierOverride = actionKey === 'tier_override';
+                    const tagColor = isModifier ? 'bg-blue-500/15 text-blue-400' :
+                                     isReferral ? 'bg-amber-500/15 text-amber-400' :
+                                     isTierOverride ? 'bg-rose-500/15 text-rose-400' :
+                                     'bg-slate-500/15 text-slate-400';
+                    return (
+                      <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-amber-400' : isModifier ? 'text-blue-400' : 'text-slate-400'}`} />
+                          <div className="min-w-0">
+                            <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
+                            <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${tagColor}`}>
+                            {actionKey.replace('_', ' ')}
+                          </span>
+                          {cond.action_value != null && typeof cond.action_value === 'number' && (
+                            <span className="text-xs font-bold opacity-70 w-16 text-right">
+                              {isModifier ? `${(cond.action_value * 100).toFixed(0)}%` :
+                               isTierOverride ? `→ T${cond.action_value}` :
+                               cond.action_value}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 

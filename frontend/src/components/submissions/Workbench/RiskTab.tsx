@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   Target, Activity, Calculator, RotateCcw, Paperclip,
-  AlertTriangle, ShieldAlert, ChevronUp, ChevronDown, Gauge
+  AlertTriangle, ShieldAlert, ChevronUp, ChevronDown, Gauge, Layers
 } from "lucide-react";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -458,6 +458,78 @@ export default function RiskTab() {
         </div>
 
       </div>
+
+      {/* =======================================================================
+          GROUP SCORES — cross-pillar weights
+          ======================================================================= */}
+      {activeVersion.group_scores && Object.keys(activeVersion.group_scores).length > 0 && (
+        <div className="flex flex-col pt-2 pb-2">
+          <div className="
+            flex gap-dsi-pad
+            rounded-t-xl
+            border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          ">
+            <Layers className="icon"/><span className="text-sm">Group Score Summary</span>
+          </div>
+          <div className="
+            flex flex-col flex-1
+            border-b-3 border-dsi-contrast-background
+            overflow-x-auto whitespace-nowrap border-collapse
+            rounded-b-xl
+            bg-dsi-analysis shadow-sm
+            pt-2 pb-2
+          ">
+            <table className="w-full text-sm text-left whitespace-nowrap">
+              <thead>
+                <tr className="text-center text-sm underline opacity-70">
+                  <th className="py-2 pl-dsi-pad pr-2 font-normal text-left">Group</th>
+                  <th className="py-2 px-2 font-normal text-right">Risk Score</th>
+                  <th className="py-2 px-2 font-normal text-right">Risk Weight</th>
+                  <th className="py-2 px-2 font-normal text-right">Contribution</th>
+                  <th className="py-2 px-2 font-normal text-center">Coverage</th>
+                  <th className="py-2 px-2 font-normal text-right border-l border-dsi-outline/20">Loss Weight</th>
+                  <th className="py-2 pr-dsi-pad font-normal text-right">Exposure Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(activeVersion.group_scores)
+                  .sort(([, a]: any, [, b]: any) => (b?.risk_contribution || 0) - (a?.risk_contribution || 0))
+                  .map(([groupId, gs]: [string, any]) => (
+                    <tr key={groupId} className="border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors">
+                      <td className="py-2 pl-dsi-pad pr-2 font-semibold truncate max-w-[160px]" title={groupId}>{groupId}</td>
+                      <td className="py-2 px-2 text-right">{formatNum(gs.risk_score, 1)}</td>
+                      <td className="py-2 px-2 text-right opacity-60">{formatNum(gs.risk_weight, 2)}</td>
+                      <td className="py-2 px-2 text-right font-bold">{formatNum(gs.risk_contribution, 1)}</td>
+                      <td className="py-2 px-2 text-center">
+                        <span className={`text-xs ${gs.coverage_ratio >= 1 ? 'text-emerald-400' : gs.coverage_ratio >= 0.5 ? 'text-amber-400' : 'text-rose-400'}`}>
+                          {gs.signal_count || 0}/{gs.expected_signal_count || 0}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 text-right border-l border-dsi-outline/20">
+                        {gs.loss_weight != null && gs.loss_weight > 0 ? (
+                          <span className="text-blue-400 font-bold">{formatNum(gs.loss_weight, 2)}</span>
+                        ) : (
+                          <span className="opacity-20">–</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-dsi-pad text-right">
+                        {gs.exposure_weight != null && gs.exposure_weight > 0 ? (
+                          <span className="text-purple-400 font-bold">{formatNum(gs.exposure_weight, 2)}</span>
+                        ) : (
+                          <span className="opacity-20">–</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* =======================================================================
           SIGNAL TABLE WITH SCENARIO INPUTS

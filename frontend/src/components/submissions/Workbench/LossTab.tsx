@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   TrendingUp, TrendingDown, Activity, Target, ShieldAlert, BarChart3,
-  Paperclip, Minus, Clock, GitBranch, Layers
+  Paperclip, Minus, Clock, GitBranch, Layers, AlertTriangle
 } from "lucide-react";
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -75,9 +75,29 @@ export default function LossTab() {
   const prevFreqScore = activeVersion.loss_previous_frequency_score;
   const prevSevScore = activeVersion.loss_previous_severity_score;
 
-  // Group scores breakdown
+  // Group scores breakdown — each entry is {frequency_score, severity_score, confidence}
   const groupScores = activeVersion.loss_group_scores || {};
-  const groupEntries = Object.entries(groupScores).sort(([, a]: any, [, b]: any) => (b || 0) - (a || 0));
+  const groupEntries = Object.entries(groupScores).sort(([, a]: any, [, b]: any) => {
+    const aScore = (a?.frequency_score || 0) + (a?.severity_score || 0);
+    const bScore = (b?.frequency_score || 0) + (b?.severity_score || 0);
+    return bScore - aScore;
+  });
+
+  // Loss-relevant signal conditions: filter conditions whose source group is in loss_group_scores
+  const lossGroupKeys = new Set(Object.keys(groupScores));
+  const signalConditions = activeVersion?.signal_conditions || [];
+  const queryConditions = activeVersion?.query_conditions || [];
+  const allConditions = [...signalConditions, ...queryConditions];
+  const lossConditions = useMemo(() => {
+    if (lossGroupKeys.size === 0) return allConditions.filter((c: any) => c.action?.toLowerCase?.() === 'modifier');
+    return allConditions.filter((c: any) => {
+      // Group-level conditions that match a loss group
+      if (c.source_type === 'signal_group' && lossGroupKeys.has(c.source_id)) return true;
+      // Signal-level conditions where the group_code is in loss groups
+      if (c.group_code && lossGroupKeys.has(c.group_code)) return true;
+      return false;
+    });
+  }, [allConditions, lossGroupKeys]);
 
   // Compute book-wide trend totals for context line
   const trendTotal = lossTrendDistribution.reduce((acc: number, d: any) => acc + d.count, 0);
@@ -571,7 +591,7 @@ export default function LossTab() {
               <div className="
                 flex flex-col flex-1
                 border-b-3 border-dsi-contrast-background
-                overflow-y-auto whitespace-nowrap border-collapse
+                overflow-y-auto border-collapse
                 rounded-b-xl
                 bg-dsi-analysis shadow-sm
                 pt-2 pb-2
@@ -579,23 +599,45 @@ export default function LossTab() {
               ">
                 {groupEntries.length > 0 ? (
                   <div className="space-y-0">
-                    {groupEntries.map(([group, score]: [string, any]) => {
-                      const numScore = typeof score === 'object' ? (score?.risk_score || score?.score || 0) : (score || 0);
-                      const barWidth = Math.min(100, Math.max(2, numScore));
+                    {groupEntries.map(([group, detail]: [string, any]) => {
+                      const freqScore = detail?.frequency_score ?? 0;
+                      const sevScore = detail?.severity_score ?? 0;
+                      const confidence = detail?.confidence;
                       return (
-                        <div key={group} className="px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs truncate max-w-[160px]" title={group}>{group}</span>
-                            <span className="text-xs font-bold ml-2">{formatNum(numScore, 1)}</span>
+                        <div key={group} className="px-dsi-pad py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-semibold truncate max-w-[140px]" title={group}>{group}</span>
+                            {confidence != null && (
+                              <span className="text-[10px] opacity-40 ml-1">{(confidence * 100).toFixed(0)}% conf</span>
+                            )}
                           </div>
-                          <div className="h-1.5 bg-dsi-background rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{
-                                width: `${barWidth}%`,
-                                backgroundColor: numScore > 70 ? '#f43f5e' : numScore > 40 ? '#f59e0b' : '#10b981'
-                              }}
-                            />
+                          {/* Frequency bar */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] opacity-50 w-10 shrink-0">Freq</span>
+                            <div className="flex-1 h-1.5 bg-dsi-background rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{
+                                  width: `${Math.min(100, Math.max(2, freqScore))}%`,
+                                  backgroundColor: freqScore > 70 ? '#f43f5e' : freqScore > 40 ? '#f59e0b' : '#10b981'
+                                }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-bold w-8 text-right">{formatNum(freqScore, 1)}</span>
+                          </div>
+                          {/* Severity bar */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] opacity-50 w-10 shrink-0">Sev</span>
+                            <div className="flex-1 h-1.5 bg-dsi-background rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{
+                                  width: `${Math.min(100, Math.max(2, sevScore))}%`,
+                                  backgroundColor: sevScore > 70 ? '#f43f5e' : sevScore > 40 ? '#f59e0b' : '#10b981'
+                                }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-bold w-8 text-right">{formatNum(sevScore, 1)}</span>
                           </div>
                         </div>
                       );
@@ -610,6 +652,71 @@ export default function LossTab() {
             </div>
 
           </div>
+
+          {/* =======================================================================
+              LOSS-RELEVANT SIGNAL CONDITIONS
+              ======================================================================= */}
+          {lossConditions.length > 0 && (
+            <div className="flex flex-col pt-2 pb-2">
+              <div className="
+                flex gap-dsi-pad
+                rounded-t-xl
+                border-b-1 border-dsi-outline/50
+                overflow-x-hidden whitespace-nowrap border-collapse
+                bg-dsi-analysis/60
+                pl-dsi-pad
+                pt-2 pb-2
+              ">
+                <AlertTriangle className="icon"/>
+                <span className="text-sm">Loss Signal Conditions ({lossConditions.length})</span>
+              </div>
+              <div className="
+                flex flex-col flex-1
+                border-b-3 border-dsi-contrast-background
+                overflow-y-auto border-collapse
+                rounded-b-xl
+                bg-dsi-analysis shadow-sm
+                pt-2 pb-2
+                max-h-[280px]
+              ">
+                <div className="space-y-0">
+                  {lossConditions.map((cond: any, idx: number) => {
+                    const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
+                    const isModifier = actionKey === 'modifier';
+                    const isReferral = actionKey === 'referral' || actionKey === 'refer';
+                    const isTierOverride = actionKey === 'tier_override';
+                    const tagColor = isModifier ? 'bg-blue-500/15 text-blue-400' :
+                                     isReferral ? 'bg-amber-500/15 text-amber-400' :
+                                     isTierOverride ? 'bg-rose-500/15 text-rose-400' :
+                                     'bg-slate-500/15 text-slate-400';
+                    return (
+                      <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-amber-400' : isModifier ? 'text-blue-400' : 'text-slate-400'}`} />
+                          <div className="min-w-0">
+                            <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
+                            <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${tagColor}`}>
+                            {actionKey.replace('_', ' ')}
+                          </span>
+                          {cond.action_value != null && typeof cond.action_value === 'number' && (
+                            <span className="text-xs font-bold opacity-70 w-16 text-right">
+                              {isModifier ? `${(cond.action_value * 100).toFixed(0)}%` :
+                               isTierOverride ? `→ T${cond.action_value}` :
+                               cond.action_value}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
