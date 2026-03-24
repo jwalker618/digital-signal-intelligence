@@ -30,6 +30,11 @@ export interface DsiState {
   isLoading: boolean;
   error: string | null;
 
+
+  // PricingTab
+  isSelectingLimit: boolean;
+  selectLimitOption: (quoteCode: string, selectedLimit: number, rationale?: string) => Promise<void>;
+
   // RiskTab
   riskSignals: any[];
   isFetchingRiskSignals: boolean;
@@ -96,6 +101,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   error: null,
   referralSignals: [],
   isFetchingSignals: false,
+  isSelectingLimit: false,
 
   // Default Risk Tab
   riskSignals: [],
@@ -316,6 +322,41 @@ export const useDsiStore = create<DsiState>((set, get) => ({
 
     } catch (err) {
       console.error("Signal override failed:", err);
+    }
+  },
+
+  selectLimitOption: async (quoteCode: string, selectedLimit: number, rationale?: string) => {
+    set({ isSelectingLimit: true });
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/quotes/${quoteCode}/select-option`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selected_limit: selectedLimit,
+          rationale: rationale || null,
+          underwriter_id: "system"
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to select limit option");
+
+      const data = await res.json();
+      const activeSub = get().activeSubmission;
+
+      if (activeSub) {
+        await get().fetchCoreSubmissionDetail({
+          submission_code: (activeSub as any).submission_code || (activeSub as any).submission_id,
+          quote_code: quoteCode,
+          version_code: data.new_version_code,
+          referral_code: (get().activeReferral as any)?.referral_code || null
+        });
+      }
+
+      get().fetchSubmissions();
+    } catch (err) {
+      console.error("Limit selection failed:", err);
+    } finally {
+      set({ isSelectingLimit: false });
     }
   },
 

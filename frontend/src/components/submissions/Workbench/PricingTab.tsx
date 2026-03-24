@@ -2,22 +2,22 @@
 
 import { useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { 
-  Calculator, HandCoins, ChevronDown, 
-  ChevronRight, ArrowRightToLine, Paperclip, 
-  SquareMenu, PenLine, WeightTilde
+import {
+  Calculator, HandCoins, ChevronDown,
+  ChevronRight, ArrowRightToLine, Paperclip,
+  ShieldEllipsis, PenLine, WeightTilde, Check, CircleEllipsis
 } from "lucide-react";
 
 export default function PricingTab() {
-  const { activeSubmission, activeQuote, activeVersion } = useDsiStore();
+  const { activeSubmission, activeQuote, activeVersion, isSelectingLimit, selectLimitOption } = useDsiStore();
 
   // Accordion state for the grouped modifiers
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    categorcial: true,
-    signal: true,
-    query: true,
-    loss: true,
-    exposure: true,
+    categorical: false,
+    signal: false,
+    direct: false,
+    loss: false,
+    exposure: false,
   });
 
   const toggleGroup = (group: string) => {
@@ -35,7 +35,7 @@ export default function PricingTab() {
   // =======================================================================
   // DATA EXTRACTION & GROUPING
   // =======================================================================
-  
+
   // Helper to extract and sort valid modifiers from arrays
   const extractModifiers = (arr: any[], sourceType: string) => {
     if (!arr) return [];
@@ -74,27 +74,60 @@ export default function PricingTab() {
   const basePremium = activeVersion.base_premium || 0;
   const anchorPremium = activeVersion.premium_after_modifiers || 0;
 
-  // 1. Base to Anchor (Technical Modifiers Impact)
-  const baseToAnchorDiff = anchorPremium - basePremium;
-  const baseToAnchorPct = basePremium > 0 ? (baseToAnchorDiff / basePremium) * 100 : 0;
-
   const premiumAfterCategorical = basePremium + categoricalTotal;
   const premiumAfterSignal = premiumAfterCategorical + signalTotal;
   const premiumAfterDirect = premiumAfterSignal + directTotal;
   const premiumAfterLoss = premiumAfterDirect + lossTotal;
   const premiumAfterExposure = premiumAfterLoss + exposureTotal;
 
+  // =======================================================================
+  // LIMIT OPTIONS (from ROL columns + recommended)
+  // =======================================================================
+
+  const limitOptions: { limit: number; premium: number; rol: number; rationale: string; label: string }[] = [];
+
+  if (activeVersion.rol_upper_limit && activeVersion.rol_upper_premium) {
+    limitOptions.push({
+      limit: activeVersion.rol_upper_limit,
+      premium: activeVersion.rol_upper_premium,
+      rol: activeVersion.rol_upper_rol || (activeVersion.rol_upper_premium / activeVersion.rol_upper_limit),
+      rationale: activeVersion.rol_upper_rationale || '',
+      label: 'Upper'
+    });
+  }
+
+  if (activeVersion.rol_lower_limit && activeVersion.rol_lower_premium) {
+    const isDuplicate = limitOptions.some(o => o.limit === activeVersion.rol_lower_limit);
+    if (!isDuplicate) {
+      limitOptions.push({
+        limit: activeVersion.rol_lower_limit,
+        premium: activeVersion.rol_lower_premium,
+        rol: activeVersion.rol_lower_rol || (activeVersion.rol_lower_premium / activeVersion.rol_lower_limit),
+        rationale: activeVersion.rol_lower_rationale || '',
+        label: 'Lower'
+      });
+    }
+  }
+
+  // Sort by limit ascending
+  limitOptions.sort((a, b) => a.limit - b.limit);
+
+  const handleSelectOption = async (limit: number) => {
+    if (!activeQuote?.quote_code || isSelectingLimit) return;
+    await selectLimitOption(activeQuote.quote_code, limit);
+  };
+
   return (
     <div className="
-      w-full no-scrollbar 
+      w-full no-scrollbar
       animate-in fade-in duration-500 pb-12"
       >
       {/* STICKY WRAPPER: Acts as a solid curtain to hide scrolling content */}
       <div className="
-        sticky top-0 z-20 
-        bg-dsi-background 
+        sticky top-0 z-20
+        bg-dsi-background
         pt-3 pb-2"
-        >  
+        >
 
         {/* SECTION HEADER */}
         <div className="
@@ -104,7 +137,7 @@ export default function PricingTab() {
           overflow-x-hidden whitespace-nowrap border-collapse
           bg-dsi-analysis/60
           pl-dsi-pad
-          pt-2 pb-2    
+          pt-2 pb-2
         "
         >
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
@@ -117,12 +150,12 @@ export default function PricingTab() {
           overflow-x-hidden whitespace-nowrap border-collapse
           rounded-b-xl
           bg-dsi-analysis shadow-sm
-          pt-2 pb-2" 
-        >  
+          pt-2 pb-2"
+        >
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
             <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
           </div>
-          
+
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
             {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
               <span className="">
@@ -138,101 +171,13 @@ export default function PricingTab() {
               </span>
             )}
           </div>
-          
+
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
             <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
             <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
           </div>
 
-        </div>
-      </div>
-
-      {/* SECTION HEADER */}
-      <div className="
-        flex gap-dsi-pad
-        rounded-t-xl
-        border-b-1 border-dsi-outline/50
-        overflow-x-hidden whitespace-nowrap border-collapse
-        bg-dsi-analysis/60
-        pl-dsi-pad
-        pt-2 pb-2    
-      "
-      >
-        <HandCoins className="icon"/><span className="text-sm">Recommended Quote Details</span>
-      </div>
-      {/* =======================================================================
-          COMPONENT A: PRICING SUMMARY KPIs
-          ======================================================================= */}
-      <div className=" 
-        border-b-3 border-dsi-contrast-background
-        overflow-x-hidden whitespace-nowrap border-collapse
-        rounded-b-xl
-        bg-dsi-analysis shadow-sm
-        pt-2 pb-2"        
-        >
-        <div className="
-          grid grid-cols-6 grid-rows-1
-          pl-dsi-pad
-          pt-1 pb-1"
-          >
-          <div className="border-r-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse">
-            <div className="mt-1 text-sm text-center underline pb-2"> 
-              Base Premium
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad font-bold text-right">
-              {basePremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </div>
-          </div>
-          <div className="border-r-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse">
-            <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2"> 
-              Loaded Premium
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad font-bold text-right">
-              {anchorPremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </div>
-          </div>
-          <div className="border-r-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse">
-            <div className="pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2"> 
-              Overall Loading
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad font-bold text-center">
-              {baseToAnchorPct.toFixed(1)}%
-            </div>
-          </div>
-          <div className="border-r-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse">
-            <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2"> 
-              ILF
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad font-bold text-center">
-              {activeVersion.ilf_factor.toFixed(1)}
-            </div>
-          </div>
-          <div className="
-            bg-dsi-selected/10 border-r-1 border-dsi-outline/50 
-            overflow-x-hidden whitespace-nowrap border-collapse
-            text-dsi-selected"
-            >
-            <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2"> 
-              Final Premium
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
-              {recommendedPremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </div>
-          </div>
-          <div className="
-            bg-dsi-selected/10 
-            overflow-x-hidden whitespace-nowrap border-collapse
-            text-dsi-selected
-            mr-3"
-            >
-            <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2"> 
-              Final Limit
-            </div>
-            <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
-              {recommendedLimit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -251,7 +196,7 @@ export default function PricingTab() {
             overflow-x-hidden whitespace-nowrap border-collapse
             bg-dsi-analysis/60
             pl-dsi-pad
-            pt-2 pb-2    
+            pt-2 pb-2
           "
           >
             <Calculator className="icon"/><span className="text-sm">Pricing Anatomy</span>
@@ -268,23 +213,23 @@ export default function PricingTab() {
             bg-dsi-analysis shadow-sm
             pt-2 pb-2
             "
-            >        
+            >
             <div className="
-              flex-1 
+              flex-1
               overflow-x-auto
               pl-dsi-pad pr-dsi-pad
               pt-2 pb-2
               "
               >
-              
+
               {/* BASE PREMIUM */}
               <div className="
                 border-b-1 border-dsi-outline/50
                 pb-dsi-pad
               "
               >
-                <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-3">
-                  
+                <div className="grid grid-cols-[50%_10%_20%_20%]">
+
                   {/* row 1 */}
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -293,17 +238,17 @@ export default function PricingTab() {
                       <ArrowRightToLine className="icon"/> Tier {activeVersion.final_tier} Base Premium using {activeVersion.base_premium_derivation.method} methodology
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Basis
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-sm text-right uppercase bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.base_premium_derivation.basis_field} @ 
+                    >{activeVersion.base_premium_derivation.basis_field} @
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.base_premium_derivation.basis_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
@@ -311,17 +256,17 @@ export default function PricingTab() {
                   {/* row 2 */}
                   <div></div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Rate
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     bg-dsi-selected/10 text-dsi-selected"
                     >
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.base_premium_derivation.rate}x
                   </div>
@@ -329,17 +274,17 @@ export default function PricingTab() {
                   {/* row 3 */}
                   <div></div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Result
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     bg-dsi-selected/10 text-dsi-selected"
                     >
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.base_premium_derivation.result.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
@@ -349,7 +294,7 @@ export default function PricingTab() {
 
             {/*ADJUSTMENTS*/}
             <div className="grid grid-cols-[50%_10%_20%_20%] pt-2 pb-2">
-              
+
               {/* row 1: Table Headers */}
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
@@ -358,17 +303,17 @@ export default function PricingTab() {
                   <PenLine className="icon"/> Adjustments
               </div>
               <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse 
+                overflow-x-hidden whitespace-nowrap border-collapse
                 text-center text-xs pt-2 pb-2"
                 >Modifier
               </div>
               <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse 
+                overflow-x-hidden whitespace-nowrap border-collapse
                 text-right text-xs pt-2 pb-2"
-                >Impact 
+                >Impact
               </div>
               <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse 
+                overflow-x-hidden whitespace-nowrap border-collapse
                 pl-dsi-pad pr-dsi-pad text-right text-xs pt-2 pb-2"
                 >Result
               </div>
@@ -379,7 +324,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -391,6 +336,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('categorical')}
                 >
@@ -398,7 +344,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('categorical')}
@@ -407,7 +353,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('categorical')}
@@ -416,13 +362,13 @@ export default function PricingTab() {
               </div>
 
               {/* ==============================================
-                  GROUP BODY: Categorical Items 
+                  GROUP BODY: Categorical Items
                   ============================================== */}
               {expandedGroups.categorical && categoricalItems.map((mod, idx) => (
                 <div key={`cat-${idx}`} className="contents">
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                     title={mod.name}
                     >
                     {mod.name}
@@ -450,7 +396,7 @@ export default function PricingTab() {
 
               {expandedGroups.categorical && categoricalItems.length === 0 && (
                 <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
                   text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                   >
                   No modifiers applied.
@@ -464,7 +410,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -476,6 +422,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('signal')}
                 >
@@ -483,7 +430,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('signal')}
@@ -492,7 +439,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('signal')}
@@ -501,13 +448,13 @@ export default function PricingTab() {
               </div>
 
               {/* ==============================================
-                  GROUP BODY: Signal Items 
+                  GROUP BODY: Signal Items
                   ============================================== */}
               {expandedGroups.signal && signalItems.map((mod, idx) => (
-                <div key={`cat-${idx}`} className="contents">
+                <div key={`sig-${idx}`} className="contents">
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                     title={mod.name}
                     >
                     {mod.name}
@@ -535,7 +482,7 @@ export default function PricingTab() {
 
               {expandedGroups.signal && signalItems.length === 0 && (
                 <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
                   text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                   >
                   No modifiers applied.
@@ -549,7 +496,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -561,6 +508,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('direct')}
                 >
@@ -568,6 +516,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('direct')}
@@ -576,6 +525,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('direct')}
@@ -584,13 +534,13 @@ export default function PricingTab() {
               </div>
 
               {/* ==============================================
-                  GROUP BODY: Direct Items 
+                  GROUP BODY: Direct Items
                   ============================================== */}
               {expandedGroups.direct && directItems.map((mod, idx) => (
-                <div key={`cat-${idx}`} className="contents">
+                <div key={`dir-${idx}`} className="contents">
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                     title={mod.name}
                     >
                     {mod.name}
@@ -618,7 +568,7 @@ export default function PricingTab() {
 
               {expandedGroups.direct && directItems.length === 0 && (
                 <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
                   text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                   >
                   No modifiers applied.
@@ -632,7 +582,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -644,6 +594,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('loss')}
                 >
@@ -651,6 +602,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('loss')}
@@ -659,6 +611,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('loss')}
@@ -667,13 +620,13 @@ export default function PricingTab() {
               </div>
 
               {/* ==============================================
-                  GROUP BODY: Loss Items 
+                  GROUP BODY: Loss Items
                   ============================================== */}
               {expandedGroups.loss && lossItems.map((mod, idx) => (
-                <div key={`cat-${idx}`} className="contents">
+                <div key={`loss-${idx}`} className="contents">
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                     title={mod.name}
                     >
                     {mod.name}
@@ -701,7 +654,7 @@ export default function PricingTab() {
 
               {expandedGroups.loss && lossItems.length === 0 && (
                 <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
                   text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                   >
                   No modifiers applied.
@@ -714,6 +667,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -725,6 +679,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('exposure')}
                 >
@@ -732,6 +687,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('exposure')}
@@ -740,6 +696,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('exposure')}
@@ -748,13 +705,13 @@ export default function PricingTab() {
               </div>
 
               {/* ==============================================
-                  GROUP BODY: Exposure Items 
+                  GROUP BODY: Exposure Items
                   ============================================== */}
               {expandedGroups.exposure && exposureItems.map((mod, idx) => (
-                <div key={`cat-${idx}`} className="contents">
+                <div key={`exp-${idx}`} className="contents">
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                     title={mod.name}
                     >
                     {mod.name}
@@ -782,7 +739,7 @@ export default function PricingTab() {
 
               {expandedGroups.exposure && exposureItems.length === 0 && (
                 <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
                   text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                   >
                   No modifiers applied.
@@ -790,15 +747,15 @@ export default function PricingTab() {
               )}
 
             </div>
-            
-              {/* LOADED PREMIUM */}
+
+              {/* FINAL PREMIUM CALCULATION */}
               <div className="
                 border-t-1 border-dsi-outline/50
                 pt-dsi-pad pb-dsi-pad
               "
               >
-                <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-3">
-                  
+                <div className="grid grid-cols-[50%_10%_20%_20%]">
+
                   {/* row 1 */}
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -808,12 +765,12 @@ export default function PricingTab() {
                   </div>
                   <div></div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Loaded Premium
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.final_premium_detail.premium_before_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
@@ -822,12 +779,12 @@ export default function PricingTab() {
                   <div></div>
                   <div></div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >ILF Factor
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.final_premium_detail.ilf_factor.toFixed(3)}x
                   </div>
@@ -836,41 +793,85 @@ export default function PricingTab() {
                   <div></div>
                   <div></div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Deductible Factor
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.final_premium_detail.deductible_factor.toFixed(3)}x
                   </div>
 
-                  {/* row 4 */}
+                  {/* GUARDRAILS */}
+                  {activeVersion.guardrail_warnings && activeVersion.guardrail_warnings.length > 0 && (
+                    <div className="contents">
+                      <div className="pt-2"></div>
+                      <div className="pt-2"></div>
+                      <div className="pt-2"></div>
+                      <div className="pt-2"></div>
+                      
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+
+                      <div className="
+                        flex gap-dsi-pad text-sm
+                        overflow-x-hidden whitespace-nowrap border-collapse"
+                        >
+                          <ShieldEllipsis className="icon"/> Guardrails Applied
+                      </div>
+                      <div></div>
+                      <div className="
+                        overflow-x-hidden whitespace-nowrap border-collapse
+                        text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50
+                        "
+                        >Uncapped Premium *
+                      </div>
+                      <div className="
+                        overflow-x-hidden whitespace-nowrap border-collapse
+                        pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected line-through
+                        "
+                        >{activeVersion.uncapped_premium?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </div>
+                      
+                      {activeVersion.guardrail_warnings.map((warning: any, i: number) => (
+                        <div key={i} className="col-span-4 text-xs pl-dsi-indent text-wrap italic text-dsi-selected pt-1">
+                          * {warning.note}
+                        </div>
+                      ))}
+                      <div className="col-span-4 pb-2"></div>
+                    </div>
+                  )}
+
+                  {/* Final Premium */}
                   <div></div>
                   <div></div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Final Premium
                   </div>
                   <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.final_premium_detail.premium_after_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
+                  
                 </div>
 
               </div>
-
-
 
           </div>
         </div>
       </div>
 
+
+        {/* RIGHT COLUMN: Recommended Quote Details + Limit Options (Merged) */}
         <div className="flex flex-col">
-          {/* SECTION HEADER */}
+
+          {/* SECTION HEADER: Recommended Quote Details */}
           <div className="
             flex gap-dsi-pad
             rounded-t-xl
@@ -878,64 +879,152 @@ export default function PricingTab() {
             overflow-x-hidden whitespace-nowrap border-collapse
             bg-dsi-analysis/60
             pl-dsi-pad
-            pt-2 pb-2    
+            pt-2 pb-2
           "
           >
-            <SquareMenu className="icon"/><span className="text-sm">Alternative Limit Options</span>
+            <HandCoins className="icon"/><span className="text-sm">Recommended Quote Details</span>
           </div>
 
-          {/* =======================================================================
-              COMPONENT C: LIMIT OPTIONS
-              ======================================================================= */}
+          {/* TOP BODY: KPIs (No rounding, no bottom shadow) */}
+          <div className="
+            flex flex-col
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis
+            "
+            >
+            {/* RECOMMENDED QUOTE KPIs */}
+            <div className="
+              grid grid-cols-2 grid-rows-1
+              pl-dsi-pad
+              pt-2 pb-4"
+              >
+              <div className="
+                bg-dsi-selected/10 border-r-1 border-dsi-outline/50
+                overflow-x-hidden whitespace-nowrap border-collapse
+                pb-2 pt-1
+                text-dsi-selected"
+                >
+                <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
+                  Final Premium
+                </div>
+                <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
+                  {recommendedPremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </div>
+              </div>
+              <div className="
+                bg-dsi-selected/10
+                overflow-x-hidden whitespace-nowrap border-collapse
+                text-dsi-selected
+                mr-3"
+                >
+                <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
+                  Final Limit
+                </div>
+                <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
+                  {recommendedLimit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* INNER SECTION HEADER: Calculated Quote Options (No top rounding) */}
+          <div className="
+            flex gap-dsi-pad
+            border-t-1 border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          "
+          >
+            <CircleEllipsis className="icon"/><span className="text-sm">Calculated Quote Options</span>
+          </div>
+
+          {/* BOTTOM BODY: Limit Options (Has bottom rounding & flex-1 to stretch) */}
           <div className="
             flex flex-col flex-1
             border-b-3 border-dsi-contrast-background
             overflow-x-hidden whitespace-nowrap border-collapse
             rounded-b-xl
             bg-dsi-analysis shadow-sm
-            pt-2 pb-2">
-            <p className="pl-dsi-pad pr-dsi-pad text-sm  mb-4 text-wrap">
-              Pre-calculated technical premiums for alternative limit requests based on the current model version.
-            </p>
-            
-            <div className="pl-dsi-pad pr-dsi-pad flex-1 w-full space-y-2">
-              {Object.keys(activeVersion.limit_premiums || {}).length > 0 ? (
-                Object.entries(activeVersion.limit_premiums)
-                  // Sort by limit amount ascending
-                  .sort(([limitA], [limitB]) => parseInt(limitA) - parseInt(limitB))
-                  .map(([limit, premium]: any) => {
-                    const isRecommended = activeQuote?.recommended_limit === parseInt(limit);
-                    
-                    return (
-                      <div 
-                        key={limit} 
-                        className={`flex justify-between items-center p-3 rounded-lg border ${
-                          isRecommended 
-                            ? 'bg-dsi-selected/10 border-dsi-selected text-dsi-selected' 
-                            : 'bg-dsi-background/30 border-dsi-outline/10 hover:border-dsi-outline/30'
-                        } transition-all`}
-                      >
+            pt-dsi-pad pb-dsi-pad
+            ">
+
+            {/* =======================================================================
+                COMPONENT C: LIMIT OPTIONS
+                ======================================================================= */}
+            <div className="pl-dsi-pad pr-dsi-pad w-full space-y-2">
+              {limitOptions.length > 0 ? (
+                limitOptions.map((option) => {
+                  const isCurrentRecommended = recommendedLimit === option.limit;
+
+                  return (
+                    <div
+                      key={option.limit}
+                      className={`p-dsi-pad rounded-lg border ${
+                        isCurrentRecommended
+                          ? 'border-dsi-selected text-dsi-selected'
+                          : 'border-dsi-outline/10 hover:border-dsi-selected hover:text-dsi-selected'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">{parseInt(limit).toLocaleString(undefined, { maximumFractionDigits: 0 })} Limit</span>
-                          {isRecommended && (
-                            <span className="text-[10px] uppercase font-bold tracking-wider bg-dsi-selected text-dsi-background px-1.5 py-0.5 rounded">
-                              Recommended
+
+
+                          {option.label === 'Upper' && !isCurrentRecommended && (
+                            <span className="uppercase font-bold">
+                              Upper
                             </span>
                           )}
+                          {option.label === 'Lower' && !isCurrentRecommended && (
+                            <span className="uppercase font-bold">
+                              Lower
+                            </span>
+                          )}
+
+                          <span className="text-sm">{option.limit.toLocaleString(undefined, { maximumFractionDigits: 0 })} Limit</span>
+
                         </div>
                         <span className="font-bold">
-                          {premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          {option.premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                       </div>
-                    );
-                  })
+
+                      <div className="flex justify-between items-center pt-1">
+                        <span className="text-xs text-wrap">{option.rationale}</span>
+                        <span className="text-xs pl-2">ROL {(option.rol * 100).toFixed(1)}%</span>
+                      </div>
+
+                      {!isCurrentRecommended && (
+                        <div className="pt-2">
+                          <button
+                            disabled={isSelectingLimit}
+                            onClick={() => handleSelectOption(option.limit)}
+                            className="
+                              flex items-center gap-1
+                              text-xs uppercase font-bold tracking-wider 
+                              border border-dsi-outline/30 rounded
+                              px-2 py-1
+                              hover:bg-dsi-selected/10 hover:text-dsi-selected hover:border-dsi-selected
+                              disabled:opacity-50 disabled:cursor-not-allowed
+                            "
+                          >
+                            <Check className="w-3 h-3" />
+                            {isSelectingLimit ? 'Selecting...' : 'Select Option'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
-                <div className="flex h-40 items-center justify-center opacity-50 italic text-sm border border-dashed border-dsi-outline/20 rounded-lg">
-                  No alternative limit options generated.
+                <div className="flex h-24 items-center justify-center opacity-50 italic text-sm border border-dashed border-dsi-outline/20 rounded-lg">
+                  No limit options available.
                 </div>
               )}
             </div>
           </div>
+
         </div>
 
       </div>
