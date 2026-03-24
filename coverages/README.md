@@ -88,6 +88,41 @@ limit_configuration:
   valid_deductibles: [10000, 25000, 50000]
 ```
 
+## Calibration Harness
+
+Every config must pass the calibration harness before deployment. The harness generates synthetic fixtures across the full parameter space and validates that pricing outputs are sensible.
+
+```bash
+# Calibrate all coverages
+python -m infrastructure.builder.cli calibrate
+
+# Calibrate a single coverage
+python -m infrastructure.builder.cli calibrate energy
+
+# Direct invocation
+python -m layers.risk.calibration_harness
+```
+
+### Per-Config Guardrails
+
+Each configuration has independently tuned guardrails in its `guardrails:` section:
+
+| Guardrail | Description | Range |
+|-----------|-------------|-------|
+| `max_premium_to_limit_ratio` | Premium cap as fraction of limit | 0.15 – 0.80 |
+| `max_premium_to_revenue_ratio` | Premium cap as fraction of revenue | 0.001 – 0.002 |
+| `modifier_floor` / `modifier_cap` | Bounds on categorical modifier product | 0.1 – 2.5 |
+
+These values are calibrated per-config using natural P/L distributions from the harness. When adding or modifying a config, run the harness and adjust guardrails until the config passes (guardrail hit rate < 15%).
+
+### Workflow After Config Changes
+
+1. Edit `config.yaml` (rates, damping, guardrails, tier bands)
+2. Run `python -m infrastructure.builder.cli calibrate {coverage}`
+3. If calibration fails, adjust `max_premium_to_limit_ratio` or `basis_damping`
+4. Run `python coverages/doc_generator.py` to regenerate `logic.md`
+5. Run `pytest tests/ -x` to verify unit tests still pass
+
 ## Related Documentation
 
 - [Premium Calculation Methodology](../docs/overview/Premium_Calculation_Methodology.md)

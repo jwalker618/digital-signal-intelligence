@@ -151,11 +151,14 @@ python -m infrastructure.builder.cli expand \
     --write
 ```
 
-### Step 3: Review and Validate
+### Step 3: Review, Validate, and Calibrate
 
 ```bash
 # Validate the generated config
 python -m infrastructure.builder.cli validate coverages/pi/config.yaml
+
+# Run calibration harness (automatically runs after --write, but can be run manually)
+python -m infrastructure.builder.cli calibrate pi
 
 # Regenerate logic.md documentation
 python coverages/doc_generator.py
@@ -163,6 +166,8 @@ python coverages/doc_generator.py
 # Run project assessment
 python development/project/assessments/scripts/assess_project.py
 ```
+
+> **Note:** The calibration harness runs automatically when using `expand --write` or `build --write`. If calibration fails, adjust the config's `max_premium_to_limit_ratio` or `basis_damping` values and re-run until the guardrail hit rate is below 15%.
 
 ### Step 4: Register New Modules
 
@@ -458,10 +463,19 @@ When the registry is unavailable, the builder falls back to its built-in signal 
 # Run builder tests (24 tests)
 python -m pytest tests/unit/test_coverage_builder_v2.py -v
 
+# Run calibration harness tests (30 tests)
+python -m pytest tests/unit/test_calibration_harness.py -v
+
 # Validate all existing configs
 for config in coverages/*/config.yaml; do
     python -m infrastructure.builder.cli validate "$config"
 done
+
+# Run calibration harness across all configs (~140K fixtures)
+python -m infrastructure.builder.cli calibrate
+
+# Calibrate a single coverage
+python -m infrastructure.builder.cli calibrate energy --json
 ```
 
 ## Files
