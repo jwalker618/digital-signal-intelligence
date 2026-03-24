@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { ShieldAlert, Edit3, Check, X, AlertTriangle, ArrowRight, Layers, Eye, Flame, Paperclip } from "lucide-react";
+import {
+  ShieldAlert, Edit3, Check, X, AlertTriangle, ArrowRight,
+  Layers, Eye, Flame, Paperclip, Clock, User
+} from "lucide-react";
+
+const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
+  modifier:      { bg: 'bg-blue-500/15', text: 'text-blue-400' },
+  referral:      { bg: 'bg-amber-500/15', text: 'text-amber-400' },
+  refer:         { bg: 'bg-amber-500/15', text: 'text-amber-400' },
+  tier_override: { bg: 'bg-rose-500/15', text: 'text-rose-400' },
+  flag:          { bg: 'bg-slate-500/15', text: 'text-slate-400' },
+  note:          { bg: 'bg-slate-500/15', text: 'text-slate-400' },
+};
 
 export default function ReferralTab() {
   const {
@@ -31,39 +43,54 @@ export default function ReferralTab() {
   if (!activeSubmission) return null;
 
   const handleOverride = async () => {
-    // Make sure we have the required IDs before submitting
     if (!overrideModal?.signal) return;
     await submitSignalOverride(
-        activeQuote.quote_id,      
-        overrideModal.signal.signal_id,  
-        auditedValue, 
+        activeQuote.quote_id,
+        overrideModal.signal.signal_id,
+        auditedValue,
         rationale
     );
-    setOverrideModal(null); // Close modal on success
+    setOverrideModal(null);
   };
 
   const handleFinalDecision = async (decision: string) => {
     if (!activeSubmission.referral_id) return;
     await updateDecision(activeSubmission.referral_id, decision);
-    navigateBack(); 
+    navigateBack();
   };
 
   const modelSignals = referralSignals.filter((s: any) => s.in_model !== false);
   const cacheOnlySignals = referralSignals.filter((s: any) => s.in_model === false);
   const displayedSignals = showAllSignals ? referralSignals : modelSignals;
 
+  // Count overrides applied so far
+  const overrideCount = referralSignals.filter((s: any) => s.is_overridden).length;
+  const flaggedCount = referralSignals.filter((s: any) => s.is_flagged && !s.is_overridden).length;
+
+  // Referral-triggering conditions from activeVersion
+  const signalConditions = activeVersion?.signal_conditions || [];
+  const queryConditions = activeVersion?.query_conditions || [];
+  const referralConditions = useMemo(() => {
+    return [...signalConditions, ...queryConditions].filter((c: any) => {
+      const action = typeof c.action === 'string' ? c.action.toLowerCase() : (c.action?.value || '');
+      return action === 'referral' || action === 'refer';
+    });
+  }, [signalConditions, queryConditions]);
+
+  // Referral reasons
+  const reasons = activeSubmission.referral_reasons || activeVersion?.referral_reasons || [];
+
   return (
     <div className="
-      w-full no-scrollbar 
+      w-full no-scrollbar
       animate-in fade-in duration-500 pb-12"
       >
-      {/* STICKY WRAPPER: Acts as a solid curtain to hide scrolling content */}
+      {/* STICKY WRAPPER */}
       <div className="
-        sticky top-0 z-20 
-        bg-dsi-background 
+        sticky top-0 z-20
+        bg-dsi-background
         pt-3 pb-2"
-        >  
-
+        >
         {/* SECTION HEADER */}
         <div className="
           flex gap-dsi-pad
@@ -72,12 +99,10 @@ export default function ReferralTab() {
           overflow-x-hidden whitespace-nowrap border-collapse
           bg-dsi-analysis/60
           pl-dsi-pad
-          pt-2 pb-2    
-        "
-        >
+          pt-2 pb-2
+        ">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
-
         {/* KEY INFORMATION CARD */}
         <div className="
           grid grid-cols-[10%_35%_55%] grid-rows-1
@@ -85,64 +110,178 @@ export default function ReferralTab() {
           overflow-x-hidden whitespace-nowrap border-collapse
           rounded-b-xl
           bg-dsi-analysis shadow-sm
-          pt-2 pb-2" 
-        >  
+          pt-2 pb-2"
+        >
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
             <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
           </div>
-          
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
             {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
-              <span className="">
+              <span>
                 <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
                 <span className="pl-2 pr-2"> </span>
                 <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
               </span>
             )}
             {activeQuote.status === 'bound' && (
-              <span className="">
+              <span>
                   <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
                   <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
               </span>
             )}
           </div>
-          
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
             <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
             <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
           </div>
-
         </div>
       </div>
 
-      {/* 1. WHY WAS IT REFERRED? */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="
-          flex gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad
-          pt-2 pb-2    
-        ">
-          <ShieldAlert className="icon text-rose-500"/><span className="text-sm">Referral Triggers</span>
+      {/* =======================================================================
+          REFERRAL CONTEXT HEADER
+          ======================================================================= */}
+      <div className="
+        flex items-stretch gap-4
+        rounded-xl border-2 border-amber-500/30 bg-amber-500/5
+        px-dsi-pad py-4 mt-2 mb-4
+      ">
+        {/* Status badge */}
+        <div className="flex items-center gap-3 pr-6 border-r border-amber-500/20">
+          <ShieldAlert className="w-8 h-8 text-amber-400" />
+          <div>
+            <span className="text-lg font-black uppercase tracking-wider text-amber-400">
+              {typeof activeReferral === 'object' && activeReferral?.status
+                ? activeReferral.status.replace(/_/g, ' ')
+                : 'Referred'}
+            </span>
+            {typeof activeReferral === 'object' && activeReferral?.priority != null && (
+              <span className="block text-[10px] opacity-50">
+                Priority: {activeReferral.priority}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="
-          flex flex-col flex-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-4 pb-4
-        ">
-          <ul className="list-disc pl-10 pr-dsi-pad space-y-1 text-sm opacity-80 text-wrap">
-            {activeSubmission.referral_reasons?.map((reason: string, i: number) => (
-              <li key={i}>{reason}</li>
-            )) || <li>Manual Underwriter Referral</li>}
-          </ul>
+
+        {/* Audit progress */}
+        <div className="flex items-center gap-6 px-4">
+          <div className="text-center">
+            <span className="block text-xl font-black text-dsi-selected">{flaggedCount}</span>
+            <span className="block text-[10px] uppercase opacity-50">Flagged</span>
+          </div>
+          <div className="text-center">
+            <span className="block text-xl font-black text-emerald-400">{overrideCount}</span>
+            <span className="block text-[10px] uppercase opacity-50">Audited</span>
+          </div>
+          <div className="text-center">
+            <span className="block text-xl font-black opacity-60">{modelSignals.length}</span>
+            <span className="block text-[10px] uppercase opacity-50">Total Signals</span>
+          </div>
         </div>
+
+        {/* Referral meta */}
+        <div className="flex items-center gap-4 ml-auto text-xs opacity-50">
+          {typeof activeReferral === 'object' && activeReferral?.assigned_to && (
+            <span className="flex items-center gap-1">
+              <User className="w-3 h-3" /> {activeReferral.assigned_to}
+            </span>
+          )}
+          {typeof activeReferral === 'object' && activeReferral?.created_at && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" /> {new Date(activeReferral.created_at).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 1. REFERRAL TRIGGERS + CONDITIONS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
+
+        {/* Why was it referred */}
+        <div className="flex flex-col">
+          <div className="
+            flex gap-dsi-pad
+            rounded-t-xl
+            border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          ">
+            <ShieldAlert className="icon text-rose-500"/><span className="text-sm">Referral Triggers</span>
+          </div>
+          <div className="
+            flex flex-col flex-1
+            border-b-3 border-dsi-contrast-background
+            overflow-x-hidden border-collapse
+            rounded-b-xl
+            bg-dsi-analysis shadow-sm
+            pt-4 pb-4
+          ">
+            {reasons.length > 0 ? (
+              <ul className="list-disc pl-10 pr-dsi-pad space-y-1.5 text-sm opacity-80 text-wrap">
+                {reasons.map((reason: string, i: number) => (
+                  <li key={i}>{reason}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="pl-dsi-pad text-sm opacity-50 italic">Manual Underwriter Referral</p>
+            )}
+          </div>
+        </div>
+
+        {/* Referral-triggering conditions */}
+        <div className="flex flex-col">
+          <div className="
+            flex gap-dsi-pad
+            rounded-t-xl
+            border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          ">
+            <AlertTriangle className="icon text-amber-400"/>
+            <span className="text-sm">Triggering Conditions ({referralConditions.length})</span>
+          </div>
+          <div className="
+            flex flex-col flex-1
+            border-b-3 border-dsi-contrast-background
+            overflow-y-auto border-collapse
+            rounded-b-xl
+            bg-dsi-analysis shadow-sm
+            pt-2 pb-2
+            max-h-[240px]
+          ">
+            {referralConditions.length > 0 ? (
+              <div className="space-y-0">
+                {referralConditions.map((cond: any, idx: number) => {
+                  const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
+                  const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
+                  return (
+                    <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${colors.text}`} />
+                        <div className="min-w-0">
+                          <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
+                          <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0 ${colors.bg} ${colors.text}`}>
+                        {actionKey.replace('_', ' ')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-20 opacity-50 text-sm italic">
+                No referral-type conditions triggered.
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* 2. THE SIGNAL AUDIT GRID */}
@@ -154,7 +293,7 @@ export default function ReferralTab() {
           overflow-x-hidden whitespace-nowrap border-collapse
           bg-dsi-analysis/60
           pl-dsi-pad pr-dsi-pad
-          pt-2 pb-2    
+          pt-2 pb-2
         ">
           <div className="flex items-center gap-dsi-pad">
             <Layers className="icon"/><span className="text-sm">Signal Audit Matrix</span>
@@ -162,7 +301,7 @@ export default function ReferralTab() {
               ({modelSignals.length} in model)
             </span>
           </div>
-          
+
           {cacheOnlySignals.length > 0 && (
             <button
               onClick={() => setShowAllSignals(!showAllSignals)}
@@ -197,7 +336,7 @@ export default function ReferralTab() {
                 <th className="py-2 pl-dsi-pad pr-dsi-pad font-normal text-left">Signal Name</th>
                 <th className="py-2 px-2 font-normal text-center">Proxy Tier</th>
                 <th className="py-2 px-2 font-normal text-center border-r border-dsi-outline/10">Absent</th>
-                
+
                 <th className="py-2 px-2 font-normal text-right">Inferred Val</th>
                 <th className="py-2 px-2 font-normal text-right">Conf</th>
                 <th className="py-2 px-2 font-normal text-right">Weight</th>
@@ -209,7 +348,7 @@ export default function ReferralTab() {
                 <th className="py-2 px-2 font-normal text-center">Action</th>
               </tr>
             </thead>
-            
+
             <tbody>
               {displayedSignals.length === 0 ? (
                 <tr>
@@ -225,7 +364,7 @@ export default function ReferralTab() {
 
                     return (
                       <tr key={idx} className={`border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'bg-rose-500/5' : ''} ${sig.is_overridden ? 'bg-emerald-500/5' : ''}`}>
-                        
+
                         <td className="py-2 pl-dsi-pad pr-dsi-pad text-sm">
                           <div className="flex items-center gap-2">
                             {isHighImpact && <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" title="High Impact Signal" />}
@@ -254,7 +393,7 @@ export default function ReferralTab() {
                         <td className={`py-2 px-2 text-right text-xs ${sig.confidence < 0.7 ? 'text-yellow-500 font-bold' : 'opacity-70'}`}>
                           {(sig.confidence * 100).toFixed(0)}%
                         </td>
-                        
+
                         <td className={`py-2 px-2 text-right text-xs ${isHighImpact ? 'font-bold' : 'opacity-70'}`}>
                           {sig.weight?.toFixed(2)}
                         </td>
@@ -276,7 +415,7 @@ export default function ReferralTab() {
                           ) : "—"}
                         </td>
                         <td className="py-2 px-2 text-center">
-                          <button 
+                          <button
                             onClick={() => { setOverrideModal({ isOpen: true, signal: sig }); setAuditedValue(sig.inferred_value); }}
                             className="p-1 hover:text-dsi-selected transition-colors"
                             title="Audit Signal"
@@ -303,35 +442,42 @@ export default function ReferralTab() {
             overflow-x-hidden whitespace-nowrap border-collapse
             bg-dsi-analysis/60
             pl-dsi-pad
-            pt-2 pb-2    
+            pt-2 pb-2
           ">
             <Check className="icon"/><span className="text-sm">Final Decision Actions</span>
           </div>
           <div className="
-            flex flex-row items-center justify-end gap-4
+            flex flex-row items-center justify-between gap-4
             border-b-3 border-dsi-contrast-background
             overflow-x-hidden whitespace-nowrap border-collapse
             rounded-b-xl
             bg-dsi-analysis shadow-sm
             pt-4 pb-4 pl-dsi-pad pr-dsi-pad
           ">
-            <button
-              onClick={() => handleFinalDecision("decline")}
-              className="flex items-center gap-2 px-6 py-2 border border-rose-500/50 text-rose-500 rounded font-semibold hover:bg-rose-500/10 transition-colors"
-            >
-              <X className="w-5 h-5" /> Decline Risk
-            </button>
-            <button
-              onClick={() => handleFinalDecision("approve")}
-              className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded font-semibold hover:bg-emerald-500 transition-colors"
-            >
-              <Check className="w-5 h-5" /> Approve & Bind
-            </button>
+            <div className="text-sm opacity-60 text-wrap">
+              {overrideCount > 0
+                ? `${overrideCount} signal${overrideCount !== 1 ? 's' : ''} audited. ${flaggedCount > 0 ? `${flaggedCount} flagged signal${flaggedCount !== 1 ? 's' : ''} remaining.` : 'All flagged signals addressed.'}`
+                : `${flaggedCount} flagged signal${flaggedCount !== 1 ? 's' : ''} pending audit.`}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => handleFinalDecision("decline")}
+                className="flex items-center gap-2 px-6 py-2 border border-rose-500/50 text-rose-500 rounded font-semibold hover:bg-rose-500/10 transition-colors"
+              >
+                <X className="w-5 h-5" /> Decline Risk
+              </button>
+              <button
+                onClick={() => handleFinalDecision("approve")}
+                className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded font-semibold hover:bg-emerald-500 transition-colors"
+              >
+                <Check className="w-5 h-5" /> Approve & Bind
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* OVERRIDE MODAL (Kept identical layout but ensuring z-index stays high) */}
+      {/* OVERRIDE MODAL */}
       {overrideModal?.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-dsi-contrast-background/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-dsi-background border border-dsi-outline rounded-2xl shadow-2xl flex flex-col overflow-hidden">
