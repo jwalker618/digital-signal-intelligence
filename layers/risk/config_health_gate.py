@@ -470,6 +470,75 @@ class ConfigHealthGate:
 
         return results
 
+    def run_deep_calibration(
+        self,
+        coverage_filter: Optional[str] = None,
+    ) -> "CalibrationReport":
+        """Run comprehensive calibration using the CalibrationHarness.
+
+        This is a deeper check than run_all_checks(). It exercises the full
+        parameter space (every product type, exposure size, limit cohort,
+        deductible, and modifier scenario) and produces a detailed report.
+
+        Use this for:
+        - Validating new configs created by the builder
+        - Pre-commit validation of config changes
+        - Periodic calibration audits
+
+        Args:
+            coverage_filter: If set, only calibrate this coverage_id.
+
+        Returns:
+            CalibrationReport from the harness.
+        """
+        from layers.risk.calibration_harness import CalibrationHarness
+
+        harness = CalibrationHarness()
+        report = harness.run_all(coverage_filter=coverage_filter)
+
+        # Update quarantine status based on calibration results
+        for key, cal_result in report.config_results.items():
+            if not cal_result.passed:
+                fail_reasons = []
+                if cal_result.guardrail_hit_pct > 15.0:
+                    fail_reasons.append(
+                        "guardrail hit rate {:.1f}%".format(cal_result.guardrail_hit_pct)
+                    )
+                if cal_result.error_count > 0:
+                    fail_reasons.append(
+                        "{} pricing errors".format(cal_result.error_count)
+                    )
+                for f in cal_result.failures:
+                    if f.severity == "FAIL":
+                        fail_reasons.append(f.detail[:80])
+
+                result = HealthCheckResult(
+                    coverage_id=cal_result.coverage_id,
+                    config_id=cal_result.config_id,
+                    passed=False,
+                    reason="DEEP CALIBRATION FAILED: {}".format("; ".join(fail_reasons[:3])),
+                    fixture_count=cal_result.fixture_count,
+                    failures=[f.detail for f in cal_result.failures],
+                )
+                self._results[key] = result
+                self._quarantined[key] = result
+                logger.warning(
+                    "Deep calibration FAILED for %s: %s",
+                    key, result.reason,
+                )
+            else:
+                # If deep calibration passes, clear any quarantine
+                result = HealthCheckResult(
+                    coverage_id=cal_result.coverage_id,
+                    config_id=cal_result.config_id,
+                    passed=True,
+                    fixture_count=cal_result.fixture_count,
+                )
+                self._results[key] = result
+                self._quarantined.pop(key, None)
+
+        return report
+
     def format_summary(self) -> str:
         """Format a human-readable summary of all health check results."""
         lines = []
