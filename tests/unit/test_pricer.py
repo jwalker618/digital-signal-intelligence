@@ -721,7 +721,7 @@ class TestTierMargin:
         assert margin.adjacent_worse_tier == 3
 
     def test_tier_margin_best_tier_no_better(self, pricer, sample_config):
-        """Best tier should have no adjacent_better_tier."""
+        """Best tier should have no adjacent_better_tier but still show distance."""
         result = pricer.price_submission(
             pure_composite_score=950,
             signal_tier_overrides=[],
@@ -734,7 +734,9 @@ class TestTierMargin:
         margin = result.tier_margin
         assert margin.tier_id == 1  # best tier
         assert margin.adjacent_better_tier is None
-        assert margin.distance_to_better_tier is None
+        # Distance always populated — shows headroom within the tier
+        assert margin.distance_to_better_tier >= 0
+        assert margin.distance_to_worse_tier >= 0
 
 
 class TestParametricOnlyILF:

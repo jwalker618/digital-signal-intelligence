@@ -222,13 +222,11 @@ class TestVersionUpdates:
             score_based_tier=2,
             final_tier=2,
             base_premium=35000.0,
-            limit_premiums={1000000: 29750.0, 5000000: 74375.0},
         )
 
         assert updated.score_based_tier == 2
         assert updated.final_tier == 2
         assert updated.base_premium == 35000.0
-        assert updated.limit_premiums[1000000] == 29750.0
 
     def test_update_version_decision(self, data_manager, sample_version):
         """Should update version with decision."""

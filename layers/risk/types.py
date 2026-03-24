@@ -885,8 +885,6 @@ class ModelVersion:
     base_premium_derivation: Optional[BasePremiumDerivation] = None
     modifiers_applied: List[AppliedModifier] = field(default_factory=list)
     premium_after_modifiers: float = 0.0
-    limit_premiums: Dict[str, float] = field(default_factory=dict)
-    limit_premium_details: List[Any] = field(default_factory=list)  # List[LimitPremiumDetail]
     final_premium: float = 0.0
     uncapped_premium: Optional[float] = None  # Pre-guardrail premium (set when capped)
 
@@ -1022,8 +1020,8 @@ class TierMarginContext:
     tier_min: float                    # Current tier's lower bound
     tier_max: float                    # Current tier's upper bound
     percentile_in_tier: float          # 0.0 = at min, 1.0 = at max
-    distance_to_better_tier: Optional[float] = None   # Points below current tier min (None if best tier)
-    distance_to_worse_tier: Optional[float] = None     # Points above current tier max (None if worst tier)
+    distance_to_better_tier: float = 0.0               # Points from lower tier boundary (headroom in best tier)
+    distance_to_worse_tier: float = 0.0                # Points from upper tier boundary (headroom in worst tier)
     adjacent_better_tier: Optional[int] = None         # Tier ID of next better tier
     adjacent_worse_tier: Optional[int] = None          # Tier ID of next worse tier
 

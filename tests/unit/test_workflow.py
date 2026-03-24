@@ -497,7 +497,6 @@ class TestReferralProcessing:
             coverage="aerospace",
             configuration="aerospace_general",
             entity_id="test",
-            limit_premiums={1000000: 25000.0},
         )
         mock_data_manager.get_latest_version.return_value = version
         mock_data_manager.create_version.return_value = version
@@ -521,7 +520,6 @@ class TestReferralProcessing:
             coverage="aerospace",
             configuration="aerospace_general",
             entity_id="test",
-            limit_premiums={1000000: 25000.0},
         )
         mock_data_manager.get_latest_version.return_value = version
         mock_data_manager.create_version.return_value = version
