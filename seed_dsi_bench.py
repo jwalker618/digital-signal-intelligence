@@ -2398,9 +2398,33 @@ def build_rol_recommendation(limit_premiums, requested_limit):
 def build_loss_propensity(co, group_scores):
     """Build loss propensity columns derived from actual signal group scores.
 
-    Uses the loss_weight from each group to compute a weighted loss propensity
-    score, then maps to bands and multipliers — same logic as the real
-    LossCorrelationScorer.
+    Loss Modifier Calculation Chain
+    ================================
+    The loss modifier combines FREQUENCY and SEVERITY propensity, both derived
+    from signal group scores:
+
+    1. FREQUENCY PROPENSITY (weight: 0.6 in combined modifier):
+       - Input: signal group scores weighted by each group's loss_weight
+       - Inverted: high risk_score (good) → low frequency propensity (good)
+       - loss_propensity_score = 100 - weighted_avg(group_scores)
+       - Mapped to band: very_low / low / moderate / elevated / high
+       - Band → frequency_multiplier (0.60 .. 1.50)
+
+    2. SEVERITY PROPENSITY (weight: 0.4 in combined modifier):
+       - Slight random offset from frequency score
+       - severity_propensity_score
+       - Mapped to band: minimal / moderate / significant / severe / catastrophic
+       - Band → severity_multiplier (0.70 .. 1.50)
+
+    3. COMBINED MODIFIER:
+       loss_combined_modifier = (frequency_multiplier × 0.6) + (severity_multiplier × 0.4)
+       This is what gets applied to the premium as the "loss_propensity" modifier.
+
+    4. TREND / VELOCITY (freq/sev splits + combined):
+       - Previous scores: random jitter from current (simulates prior period)
+       - Velocity: rate of change in points/month
+       - Trend direction: stable / improving / deteriorating
+       - Combined values are weighted averages (0.6 freq + 0.4 sev)
     """
     # Derive loss propensity score from group scores using loss weights
     loss_weighted_sum = 0.0
@@ -2474,52 +2498,93 @@ def build_loss_propensity(co, group_scores):
         "loss_severity_multiplier": sev_mult,
         "loss_combined_modifier": combined,
         "loss_group_scores": loss_group_scores,
-        "loss_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
-        "loss_frequency_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
-        "loss_severity_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
-        "loss_previous_score": round(max(0, min(100, loss_score + random.uniform(-12, 12))), 1) if random.random() > 0.3 else None,
-        "loss_previous_frequency_score": round(max(0, min(100, loss_score + random.uniform(-15, 15))), 1),
-        "loss_previous_severity_score": round(max(0, min(100, sev_score + random.uniform(-15, 15))), 1),
-        "loss_score_velocity": round(random.uniform(-3, 3), 2) if random.random() > 0.3 else None,
-        "loss_frequency_velocity": round(random.uniform(-3, 3), 2),
-        "loss_severity_velocity": round(random.uniform(-3, 3), 2),
-        "loss_last_refresh": NOW - timedelta(days=random.randint(1, 30)) if random.random() > 0.3 else None,
+        # --- Previous period scores (freq/sev splits + combined) ---
+        "loss_previous_frequency_score": (prev_freq := round(max(0, min(100, loss_score + random.uniform(-15, 15))), 1)),
+        "loss_previous_severity_score": (prev_sev := round(max(0, min(100, sev_score + random.uniform(-15, 15))), 1)),
+        "loss_previous_score": round(prev_freq * 0.6 + prev_sev * 0.4, 1),
+        # --- Velocity: rate of change in score (points/month) ---
+        "loss_frequency_velocity": (freq_vel := round(random.uniform(-3, 3), 2)),
+        "loss_severity_velocity": (sev_vel := round(random.uniform(-3, 3), 2)),
+        "loss_score_velocity": round(freq_vel * 0.6 + sev_vel * 0.4, 2),
+        # --- Trend direction: derived from velocity ---
+        "loss_frequency_trend_direction": (freq_trend := random.choice(["stable", "improving", "deteriorating"])),
+        "loss_severity_trend_direction": (sev_trend := random.choice(["stable", "improving", "deteriorating"])),
+        "loss_trend_direction": (
+            "stable" if freq_trend == sev_trend == "stable"
+            else "improving" if freq_trend == "improving" and sev_trend != "deteriorating"
+            else "deteriorating" if freq_trend == "deteriorating" or sev_trend == "deteriorating"
+            else "mixed"
+        ),
+        "loss_last_refresh": NOW - timedelta(days=random.randint(1, 30)),
         "correlation_matrix_version": "v1.0.0",
     }
 
 
-_EXPOSURE_BANDS = [
-    # (band_id, label, min_value, max_value, base_magnitude, modifier)
-    (1, "Minimal",    0,              0,              10.0, 0.80),
-    (1, "Small",      0,              50_000_000,     20.0, 0.85),
-    (2, "Mid-Market", 50_000_000,     500_000_000,    40.0, 0.95),
-    (3, "Large",      500_000_000,    5_000_000_000,  60.0, 1.05),
-    (4, "Major",      5_000_000_000,  50_000_000_000, 80.0, 1.15),
-    (5, "Mega",       50_000_000_000, None,           95.0, 1.30),
-]
+def build_exposure_assessment(co, config):
+    """Build exposure assessment columns keyed for ModelVersionRecord kwargs.
 
+    Exposure Modifier Calculation Chain
+    ====================================
+    The exposure modifier is a weighted combination of SIZE and COMPLEXITY,
+    both driven by config-defined bands:
 
-def build_exposure_assessment(co):
-    """Build exposure assessment columns keyed for ModelVersionRecord kwargs."""
+    1. SIZE (weight from config, e.g. 0.6):
+       - Input: exposure_value (revenue, hull_value, or TIV)
+       - Matched to a config size band via implied_thresholds
+       - Band provides: label, score range, modifier
+       - Size score: interpolated within the matched band's score range
+
+    2. COMPLEXITY (weight from config, e.g. 0.4):
+       - Input: derived from industry + size_band heuristics
+       - Matched to a config complexity band via score thresholds
+       - Band provides: label, score range, modifier
+
+    3. COMBINED MODIFIER:
+       combined = (size_modifier × size_weight) + (complexity_modifier × complexity_weight)
+       This is what gets applied to the premium as the "exposure" modifier.
+    """
     # Use revenue or hull_value as the primary exposure metric
     exposure_value = co.get("revenue", 0) or co.get("hull_value", 0) or co.get("tiv", 0) or 0
 
-    # Find matching band
-    matched = _EXPOSURE_BANDS[-1]  # default Mega
-    if exposure_value <= 0:
-        matched = _EXPOSURE_BANDS[0]
-    else:
-        for band in _EXPOSURE_BANDS[1:]:
-            bid, label, bmin, bmax, mag, mod = band
-            if bmax is None or exposure_value < bmax:
-                matched = band
+    # --- SIZE: match to config-defined bands via implied_thresholds ---
+    size_band_id = 1
+    size_band_label = "UNKNOWN"
+    size_modifier = 1.0
+    size_score = 50.0
+    size_weight = 0.6  # default
+    size_band_boundaries = {"min_value": 0, "max_value": None, "modifier": 1.0}
+
+    if config.exposure and config.exposure.size:
+        size_weight = config.exposure.size.weight
+        # Match exposure_value to a size band using implied_thresholds
+        matched_size = config.exposure.size.bands[-1]  # default: largest band
+        for band in config.exposure.size.bands:
+            thresholds = band.interpretation.application.implied_thresholds
+            if thresholds:
+                band_max = thresholds.get("max")
+                if band_max is not None and exposure_value <= band_max:
+                    matched_size = band
+                    break
+            else:
+                # No thresholds — match by score range (fallback)
+                matched_size = band
                 break
 
-    band_id, band_label, band_min, band_max, magnitude, modifier = matched
+        size_band_id = matched_size.id
+        size_band_label = matched_size.label
+        size_modifier = matched_size.interpretation.application.applied
+        # Interpolate score within the band's score range
+        s_min = matched_size.interpretation.bands.min
+        s_max = matched_size.interpretation.bands.max
+        size_score = round(s_min + random.uniform(0, s_max - s_min), 1)
+        thresholds = matched_size.interpretation.application.implied_thresholds or {}
+        size_band_boundaries = {
+            "min_value": thresholds.get("min", 0),
+            "max_value": thresholds.get("max"),
+            "modifier": size_modifier,
+        }
 
-    magnitude_score = round(magnitude + random.uniform(-5, 5), 1)
-
-    # Complexity score: derived from industry + size_band heuristic
+    # --- COMPLEXITY: derive score from industry/size heuristic, match to config band ---
     industry = co.get("industry", "OTHER")
     complexity_base = {"TECHNOLOGY": 65, "HEALTHCARE": 60, "ENERGY": 55, "FINANCIAL_SERVICES": 70,
                        "MANUFACTURING": 50, "RETAIL": 40, "PROFESSIONAL_SERVICES": 45}.get(industry, 45)
@@ -2527,56 +2592,53 @@ def build_exposure_assessment(co):
         co.get("size_band", "MEDIUM"), 5)
     complexity_score = round(max(0, min(100, complexity_base + size_bump + random.uniform(-8, 8))), 1)
 
-    # Components breakdown — three-pillar structure for exposure
-    size_factor = round(magnitude_score / 100.0, 4)
-    growth_factor = round(random.uniform(0.8, 1.3), 4)
-    concentration_factor = round(random.uniform(0.7, 1.2), 4)
+    complexity_band_id = 1
+    complexity_band_label = "UNKNOWN"
+    complexity_modifier = 1.0
+    complexity_weight = 0.4  # default
 
-    # Determine complexity band from score
-    complexity_bands = [
-        (1, "Simple",    0, 25, 0.90),
-        (2, "Moderate", 25, 50, 1.00),
-        (3, "Complex",  50, 75, 1.10),
-        (4, "Highly Complex", 75, 100, 1.20),
-    ]
-    complexity_band = complexity_bands[-1]
-    for cb in complexity_bands:
-        if complexity_score < cb[3]:
-            complexity_band = cb
-            break
-    c_id, c_label, c_min, c_max, c_modifier = complexity_band
+    if config.exposure and config.exposure.complexity:
+        complexity_weight = config.exposure.complexity.weight
+        matched_complexity = config.exposure.complexity.bands[-1]
+        for band in config.exposure.complexity.bands:
+            if complexity_score <= band.interpretation.bands.max:
+                matched_complexity = band
+                break
+        complexity_band_id = matched_complexity.id
+        complexity_band_label = matched_complexity.label
+        complexity_modifier = matched_complexity.interpretation.application.applied
+
+    # --- COMBINED MODIFIER (weighted average of size + complexity) ---
+    combined_modifier = round(
+        size_modifier * size_weight + complexity_modifier * complexity_weight,
+        4,
+    )
 
     return {
         "exposure_value": float(exposure_value),
-        "exposure_band_id": band_id,
-        "exposure_band_label": band_label,
-        "exposure_band_boundaries": {
-            "min_value": band_min,
-            "max_value": band_max,
-            "modifier": modifier,
-        },
-        "exposure_magnitude_score": magnitude_score,
+        "exposure_band_id": size_band_id,
+        "exposure_band_label": size_band_label,
+        "exposure_band_boundaries": size_band_boundaries,
+        "exposure_magnitude_score": size_score,
         "exposure_complexity_score": complexity_score,
-        "exposure_modifier": modifier,
+        "exposure_modifier": combined_modifier,
         "exposure_assessment_method": "config_band_lookup",
         "exposure_components": {
             "size": {
-                "score": magnitude_score,
-                "band_id": band_id,
-                "band_label": band_label,
-                "factor": size_factor,
+                "score": size_score,
+                "band_id": size_band_id,
+                "band_label": size_band_label,
+                "modifier": size_modifier,
+                "weight": size_weight,
             },
             "complexity": {
                 "score": complexity_score,
-                "band_id": c_id,
-                "band_label": c_label,
-                "factor": c_modifier,
+                "band_id": complexity_band_id,
+                "band_label": complexity_band_label,
+                "modifier": complexity_modifier,
+                "weight": complexity_weight,
             },
-            "adjustments": {
-                "growth_factor": growth_factor,
-                "concentration_factor": concentration_factor,
-            },
-            "combined_modifier": modifier,
+            "combined_modifier": combined_modifier,
         },
     }
 
@@ -2723,7 +2785,7 @@ def seed_data():
             # Build loss propensity + exposure assessment BEFORE pricing
             # so their modifiers feed into the premium calculation
             loss_kwargs = build_loss_propensity(co, group_scores)
-            exposure_kwargs = build_exposure_assessment(co)
+            exposure_kwargs = build_exposure_assessment(co, config)
 
             # Combine signal + query + loss + exposure modifiers (same as workflow.py)
             all_modifiers = signal_modifiers + query_result.modifiers
@@ -2744,7 +2806,7 @@ def seed_data():
                     "name": "exposure",
                     "factor": exposure_kwargs["exposure_modifier"],
                     "confidence": 0.85,
-                    "source": "traditional",
+                    "source": "exposure",
                     "source_id": "exposure",
                 })
 
@@ -2919,6 +2981,38 @@ def seed_data():
             premium_was_capped = pricing_result.premium_was_capped
             guardrail_warnings = pricing_result.guardrail_warnings or []
 
+            # --- Extract single final_premium_detail for the selected limit ---
+            final_premium_detail_json = {}
+            if pricing_result.limit_premium_details:
+                # Find the detail matching the requested/final limit
+                target_limit = requested_limit
+                for lpd in pricing_result.limit_premium_details:
+                    if lpd.limit == target_limit:
+                        final_premium_detail_json = {
+                            "limit": lpd.limit,
+                            "deductible": lpd.deductible,
+                            "attachment_point": lpd.attachment_point,
+                            "ilf_factor": lpd.ilf_factor,
+                            "deductible_factor": lpd.deductible_factor,
+                            "premium_before_scaling": lpd.premium_before_scaling,
+                            "premium_after_scaling": lpd.premium_after_scaling,
+                            "uncapped_premium": lpd.uncapped_premium,
+                        }
+                        break
+                # Fallback: use the first detail if no exact match
+                if not final_premium_detail_json and pricing_result.limit_premium_details:
+                    lpd = pricing_result.limit_premium_details[0]
+                    final_premium_detail_json = {
+                        "limit": lpd.limit,
+                        "deductible": lpd.deductible,
+                        "attachment_point": lpd.attachment_point,
+                        "ilf_factor": lpd.ilf_factor,
+                        "deductible_factor": lpd.deductible_factor,
+                        "premium_before_scaling": lpd.premium_before_scaling,
+                        "premium_after_scaling": lpd.premium_after_scaling,
+                        "uncapped_premium": lpd.uncapped_premium,
+                    }
+
             # --- Phase A: Tier margin context ---
             tier_margin_kwargs = build_tier_margin(composite, final_tier, config)
 
@@ -2961,6 +3055,7 @@ def seed_data():
                 modifiers_applied=modifiers_applied_json,
                 premium_after_modifiers=premium_after_mods,
                 final_premium=final_premium,
+                final_premium_detail=final_premium_detail_json,
                 uncapped_premium=uncapped_premium,
                 premium_was_capped=premium_was_capped,
                 guardrail_warnings=guardrail_warnings,
