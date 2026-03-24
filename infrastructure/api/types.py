@@ -472,6 +472,16 @@ class ModelVersionDBRecord(BaseModel):
     score_based_tier: Optional[int] = None
     final_tier: Optional[int] = None
     tier_label: Optional[str] = None
+
+    tier_margin_percentile: Optional[float] = None 
+    tier_margin_tier_min: Optional[float] = None
+    tier_margin_tier_max: Optional[float] = None
+    tier_margin_distance_better: Optional[float] = None
+    tier_margin_distance_worse: Optional[float] = None
+    tier_margin_adjacent_better: Optional[float] = None
+    tier_margin_adjacent_worse: Optional[float] = None
+    tier_band_interpretation: Dict[str, Any] = Field(default_factory=dict)
+
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
     base_premium_derivation: Dict[str, Any] = Field(default_factory=dict)
@@ -480,13 +490,28 @@ class ModelVersionDBRecord(BaseModel):
     final_premium: Optional[float] = None
     final_premium_detail: Dict[str, Any] = Field(default_factory=dict)
     uncapped_premium: Optional[float] = None
+
+    guardrail_warnings: List[Note] = Field(default_factory=list)
+
     ilf_factor: Optional[float] = None
     ilf_method: Optional[str] = None
     ilf_anchor_limit: Optional[float] = None
+
+    rol_upper_limit: Optional[float] = None
+    rol_upper_premium: Optional[float] = None
+    rol_upper_rol: Optional[float] = None
+    rol_upper_rationale: Optional[str] = None
+    rol_lower_limit: Optional[float] = None
+    rol_lower_premium: Optional[float] = None
+    rol_lower_rol: Optional[float] = None
+    rol_lower_rationale: Optional[str] = None
+    rol_structure_type: Optional[str] = None
+
     decision: Optional[DecisionType] = None
     auto_approve: bool = False
     referral_reasons: List[str] = Field(default_factory=list)
     notes: List[Note] = Field(default_factory=list)
+
     loss_propensity_score: Optional[float] = None
     severity_propensity_score: Optional[float] = None
     loss_propensity_band: Optional[str] = None
@@ -495,6 +520,7 @@ class ModelVersionDBRecord(BaseModel):
     loss_cohort_code: Optional[str] = None
     loss_cohort_name: Optional[str] = None
     loss_cohort_confidence: Optional[float] = None
+
     loss_frequency_multiplier: Optional[float] = None
     loss_severity_multiplier: Optional[float] = None
     loss_combined_modifier: Optional[float] = None
@@ -505,18 +531,24 @@ class ModelVersionDBRecord(BaseModel):
     loss_previous_score: Optional[float] = None
     loss_previous_frequency_score: Optional[float] = None
     loss_previous_severity_score: Optional[float] = None
+
     loss_score_velocity: Optional[float] = None
     loss_frequency_velocity: Optional[float] = None
     loss_severity_velocity: Optional[float] = None
     loss_last_refresh: Optional[datetime] = None
     correlation_matrix_version: Optional[str] = None
+    loss_band_interpretation: Dict[str, Any] = Field(default_factory=dict)
+
     exposure_value: Optional[float] = None
     exposure_band_id: Optional[int] = None
     exposure_band_label: Optional[str] = None
     exposure_band_boundaries: Dict[str, Any] = Field(default_factory=dict)
     exposure_size_score: Optional[float] = None
+    exposure_complexity_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
     exposure_assessment_method: Optional[str] = None
+    exposure_components: Dict[str, Any] = Field(default_factory=dict)
+    exposure_band_interpretation: Dict[str, Any] = Field(default_factory=dict)
 
 @maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",

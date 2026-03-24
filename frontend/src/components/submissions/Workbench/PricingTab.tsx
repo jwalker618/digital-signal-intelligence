@@ -16,6 +16,8 @@ export default function PricingTab() {
     categorcial: true,
     signal: true,
     query: true,
+    loss: true,
+    exposure: true,
   });
 
   const toggleGroup = (group: string) => {
@@ -49,19 +51,19 @@ export default function PricingTab() {
       .sort((a, b) => a.before - b.before);
   };
 
-  // extract categorical changes
+  // extract modifiers
   const categoricalItems = extractModifiers(activeVersion.modifiers_applied, 'categorical');
-
-  // extract signal changes
   const signalItems = extractModifiers(activeVersion.modifiers_applied, 'signal_condition');
-
-  // extract direct changes
   const directItems = extractModifiers(activeVersion.modifiers_applied,'direct_query');
+  const lossItems = extractModifiers(activeVersion.modifiers_applied,'loss_propensity');
+  const exposureItems = extractModifiers(activeVersion.modifiers_applied,'exposure');
 
   // Calculate Group Totals
   const categoricalTotal = categoricalItems.reduce((acc, item) => acc + item.impact, 0);
   const signalTotal = signalItems.reduce((acc, item) => acc + item.impact, 0);
   const directTotal = directItems.reduce((acc, item) => acc + item.impact, 0);
+  const lossTotal = lossItems.reduce((acc, item) => acc + item.impact, 0);
+  const exposureTotal = exposureItems.reduce((acc, item) => acc + item.impact, 0);
 
   // =======================================================================
   // KPI CALCULATIONS
@@ -79,6 +81,8 @@ export default function PricingTab() {
   const premiumAfterCategorical = basePremium + categoricalTotal;
   const premiumAfterSignal = premiumAfterCategorical + signalTotal;
   const premiumAfterDirect = premiumAfterSignal + directTotal;
+  const premiumAfterLoss = premiumAfterDirect + lossTotal;
+  const premiumAfterExposure = premiumAfterLoss + exposureTotal;
 
   return (
     <div className="
@@ -276,7 +280,7 @@ export default function PricingTab() {
               {/* BASE PREMIUM */}
               <div className="
                 border-b-1 border-dsi-outline/50
-                pb-2
+                pb-dsi-pad
               "
               >
                 <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-3">
@@ -290,7 +294,7 @@ export default function PricingTab() {
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse 
-                    text-xs text-center border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Basis
                   </div>
                   <div className="
@@ -308,7 +312,7 @@ export default function PricingTab() {
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse 
-                    text-xs text-center border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Rate
                   </div>
                   <div className="
@@ -326,7 +330,7 @@ export default function PricingTab() {
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse 
-                    text-xs text-center border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
                     >Result
                   </div>
                   <div className="
@@ -545,6 +549,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
+                border-b border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -620,34 +625,246 @@ export default function PricingTab() {
                 </div>
               )}
 
+
+              {/* ==============================================
+                  LOSS HEADER
+                  ============================================== */}
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse
+                hover:text-dsi-selected cursor-pointer
+                border-b border-dsi-outline/10
+                flex gap-dsi-pad
+                text-sm
+                pt-dsi-pad pb-dsi-pad
+                "
+                onClick={() => toggleGroup('loss')}
+                >
+                  {expandedGroups.loss ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Loss Analysis
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-xs text-center content-center
+                "
+                onClick={() => toggleGroup('loss')}
+                >
+                  {lossItems.length} items
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-right font-bold content-center
+                "
+                onClick={() => toggleGroup('loss')}
+                >
+                  {lossTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
+                "
+                onClick={() => toggleGroup('loss')}
+                >
+                  {premiumAfterLoss.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+
+              {/* ==============================================
+                  GROUP BODY: Loss Items 
+                  ============================================== */}
+              {expandedGroups.loss && lossItems.map((mod, idx) => (
+                <div key={`cat-${idx}`} className="contents">
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    title={mod.name}
+                    >
+                    {mod.name}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-center text-xs content-center bg-dsi-background/30"
+                    >
+                    {Number(mod.multiplier).toFixed(3)}x
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30"
+                    >
+                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
+                    >
+                    -
+                  </div>
+                </div>
+              ))}
+
+              {expandedGroups.loss && lossItems.length === 0 && (
+                <div className="
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
+                  >
+                  No modifiers applied.
+                </div>
+              )}
+
+              {/* ==============================================
+                  EXPOSURE HEADER
+                  ============================================== */}
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse
+                hover:text-dsi-selected cursor-pointer
+                flex gap-dsi-pad
+                text-sm
+                pt-dsi-pad pb-dsi-pad
+                "
+                onClick={() => toggleGroup('exposure')}
+                >
+                  {expandedGroups.exposure ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Exposure Analysis
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-xs text-center content-center
+                "
+                onClick={() => toggleGroup('exposure')}
+                >
+                  {exposureItems.length} items
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                text-right font-bold content-center
+                "
+                onClick={() => toggleGroup('exposure')}
+                >
+                  {exposureTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="
+                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
+                "
+                onClick={() => toggleGroup('exposure')}
+                >
+                  {premiumAfterExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+
+              {/* ==============================================
+                  GROUP BODY: Exposure Items 
+                  ============================================== */}
+              {expandedGroups.exposure && exposureItems.map((mod, idx) => (
+                <div key={`cat-${idx}`} className="contents">
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30" 
+                    title={mod.name}
+                    >
+                    {mod.name}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-center text-xs content-center bg-dsi-background/30"
+                    >
+                    {Number(mod.multiplier).toFixed(3)}x
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30"
+                    >
+                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
+                    >
+                    -
+                  </div>
+                </div>
+              ))}
+
+              {expandedGroups.exposure && exposureItems.length === 0 && (
+                <div className="
+                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse 
+                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
+                  >
+                  No modifiers applied.
+                </div>
+              )}
+
             </div>
             
-            {/* LOADED PREMIUM */}
-            <div className="
-              border-t-1 border-dsi-outline/50
-              pt-2 pb-2
-            "
-            >
-              <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-1">
-                
-                {/* row 1 */}
-                <div className="
-                  overflow-x-hidden whitespace-nowrap border-collapse
-                  flex gap-dsi-pad text-sm"
-                  >
-                    <WeightTilde className="icon"/> Loaded Premium before ILF
-                </div>
-                <div></div>
-                <div></div>
-                <div className="
-                  overflow-x-hidden whitespace-nowrap border-collapse 
-                  pl-dsi-pad pr-dsi-pad text-right"
-                  >{activeVersion.premium_after_modifiers.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              {/* LOADED PREMIUM */}
+              <div className="
+                border-t-1 border-dsi-outline/50
+                pt-dsi-pad pb-dsi-pad
+              "
+              >
+                <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-3">
+                  
+                  {/* row 1 */}
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse
+                    flex gap-dsi-pad text-sm"
+                    >
+                      <WeightTilde className="icon"/> Final Premium Calculation
+                  </div>
+                  <div></div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    >Loaded Premium
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.final_premium_detail.premium_before_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+
+                  {/* row 2 */}
+                  <div></div>
+                  <div></div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    >ILF Factor
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.final_premium_detail.ilf_factor.toFixed(3)}x
+                  </div>
+
+                  {/* row 3 */}
+                  <div></div>
+                  <div></div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    >Deductible Factor
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.final_premium_detail.deductible_factor.toFixed(3)}x
+                  </div>
+
+                  {/* row 4 */}
+                  <div></div>
+                  <div></div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    >Final Premium
+                  </div>
+                  <div className="
+                    overflow-x-hidden whitespace-nowrap border-collapse 
+                    pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
+                    >{activeVersion.final_premium_detail.premium_after_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
                 </div>
 
               </div>
 
-            </div>
+
+
           </div>
         </div>
       </div>

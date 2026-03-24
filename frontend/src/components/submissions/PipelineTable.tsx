@@ -96,8 +96,8 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                 <th className="py-3 px-2">Coverage</th>
                 <th className="py-3 px-2 text-wrap">Pure Composite Score</th>
                 <th className="py-3 px-2 text-center">Tier</th>
-                <th className="py-3 px-2 text-center">Gross Premium $</th>
-                <th className="py-3 px-2 text-center">Limit $</th>
+                <th className="py-3 px-2 text-center">Gross Premium</th>
+                <th className="py-3 px-2 text-center">Limit</th>
                 <th className="py-3 px-2 text-center">
                   {type === "full" ? "Decision" : "Quick Actions"}
                 </th>
@@ -123,8 +123,8 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                     <td className="py-3 px-2">{sub.coverage_configuration}</td>
                     <td className="py-3 px-2 text-right">{sub.pure_composite_score.toFixed(0)}</td>
                     <td className="py-3 px-2 text-right">{sub.final_tier}</td>
-                    <td className="py-3 px-2 text-right">${premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="py-3 px-2 text-right">${limit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td className="py-3 px-2 text-right">{premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td className="py-3 px-2 text-right">{limit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
 
                     <td className="py-3 px-2">
                       {type === "full" ? 
