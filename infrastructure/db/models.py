@@ -322,7 +322,7 @@ class ModelVersionRecord(Base):
     uncapped_premium = Column(Float, nullable=True)
 
     # Guardrail detail
-    guardrail_warnings = Column(JSONB, default=list)  # List of guardrail trigger messages
+    guardrail_warnings = Column(JSONB, default=list)  # List[Note]-shaped: [{"note": ..., "source": ...}]
     premium_was_capped = Column(Boolean, default=False)
 
     # ILF (Increased Limit Factor) audit

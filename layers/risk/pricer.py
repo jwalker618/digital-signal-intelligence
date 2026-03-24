@@ -140,26 +140,25 @@ class ModelPricer:
         uncapped_premium = final_premium
 
         # Guardrail checks on final premium
-        guardrail_warnings: List[str] = []
+        guardrail_warnings: List[Dict[str, str]] = []
         premium_was_capped = False
         guardrails = config.guardrails
 
         if modifier_was_clamped:
-            guardrail_warnings.append(
-                f"MODIFIER_CLAMPED: total_modifier clamped to "
-                f"[{guardrails.modifier_floor}, {guardrails.modifier_cap}]"
-            )
+            guardrail_warnings.append({
+                "note": f"total_modifier clamped to [{guardrails.modifier_floor}, {guardrails.modifier_cap}]",
+                "source": "modifier_clamp",
+            })
 
         # Cap premium vs limit
         requested_limit = submission_data.get("limit", 0)
         if requested_limit and requested_limit > 0:
             max_premium_by_limit = requested_limit * guardrails.max_premium_to_limit_ratio
             if final_premium > max_premium_by_limit:
-                guardrail_warnings.append(
-                    f"PREMIUM_CAPPED_BY_LIMIT: {final_premium:.0f} exceeds "
-                    f"{guardrails.max_premium_to_limit_ratio:.0%} of limit {requested_limit:.0f}, "
-                    f"capped to {max_premium_by_limit:.0f}"
-                )
+                guardrail_warnings.append({
+                    "note": f"{final_premium:.0f} exceeds {guardrails.max_premium_to_limit_ratio:.0%} of limit {requested_limit:.0f}, capped to {max_premium_by_limit:.0f}",
+                    "source": "premium_cap_by_limit",
+                })
                 final_premium = max_premium_by_limit
                 premium_was_capped = True
                 # Also cap limit_premiums
@@ -174,11 +173,10 @@ class ModelPricer:
         if revenue and revenue > 0:
             max_premium_by_revenue = revenue * guardrails.max_premium_to_revenue_ratio
             if final_premium > max_premium_by_revenue:
-                guardrail_warnings.append(
-                    f"PREMIUM_CAPPED_BY_REVENUE: {final_premium:.0f} exceeds "
-                    f"{guardrails.max_premium_to_revenue_ratio:.2%} of revenue {revenue:.0f}, "
-                    f"capped to {max_premium_by_revenue:.0f}"
-                )
+                guardrail_warnings.append({
+                    "note": f"{final_premium:.0f} exceeds {guardrails.max_premium_to_revenue_ratio:.2%} of revenue {revenue:.0f}, capped to {max_premium_by_revenue:.0f}",
+                    "source": "premium_cap_by_revenue",
+                })
                 final_premium = max_premium_by_revenue
                 premium_was_capped = True
                 for lim_key in limit_premiums:
@@ -189,7 +187,7 @@ class ModelPricer:
             logger.warning(
                 "Guardrails triggered for %s/%s: %s",
                 config.coverage_id, config.config_id,
-                "; ".join(guardrail_warnings),
+                "; ".join(w["note"] for w in guardrail_warnings),
             )
 
         # If premium was capped, record uncapped values on limit details
