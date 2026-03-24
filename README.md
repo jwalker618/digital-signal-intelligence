@@ -425,10 +425,10 @@ print(f"Composite Score: {result.composite_score}/1000")
 print(f"Tier: {result.tier} ({result.tier_label})")
 print(f"Decision: {result.decision.value}")
 print(f"Premium: ${result.recommended_premium:,.0f}")
-print(f"Premium options: {result.premium_options}")
 
 # Access full audit trail
 version = result.model_version
+print(f"Limit premiums: {version.limit_premiums}")
 print(f"Signal coverage: {version.signal_coverage:.0%}")
 print(f"Confidence: {version.confidence:.0%}")
 ```

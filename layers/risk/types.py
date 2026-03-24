@@ -1129,7 +1129,6 @@ class WorkflowResult:
     notes: List[str] = field(default_factory=list)
 
     # For API response
-    premium_options: Dict[str, float] = field(default_factory=dict)
     recommended_limit: float = 0.0
     recommended_premium: float = 0.0
 
