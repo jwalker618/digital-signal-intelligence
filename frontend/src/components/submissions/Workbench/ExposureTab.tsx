@@ -29,7 +29,7 @@ export default function ExposureTab() {
   if (!activeSubmission || !activeVersion) return null;
 
   const activePoint = [{
-    x_magnitude: activeVersion.exposure_magnitude_score || 0,
+    x_magnitude: activeVersion.exposure_size_score || 0,
     y_composite: activeVersion.pure_composite_score || 0,
     name: "Current Submission"
   }];
@@ -145,7 +145,7 @@ export default function ExposureTab() {
             <div>
               <span className="opacity-70 block text-xs mb-1">Magnitude Score</span>
               <span className="font-bold text-lg">
-                {activeVersion.exposure_magnitude_score?.toFixed(1) || "0.0"}
+                {activeVersion.exposure_size_score?.toFixed(1) || "0.0"}
               </span>
             </div>
             <div>

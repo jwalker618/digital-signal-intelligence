@@ -309,7 +309,7 @@ async def select_limit_option(
         exposure_value=old_model.exposure_value,
         exposure_band_id=old_model.exposure_band_id,
         exposure_band_label=old_model.exposure_band_label,
-        exposure_magnitude_score=old_model.exposure_magnitude_score,
+        exposure_size_score=old_model.exposure_size_score,
         exposure_modifier=old_model.exposure_modifier,
         exposure_assessment_method=old_model.exposure_assessment_method,
     )

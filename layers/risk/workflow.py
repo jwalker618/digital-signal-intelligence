@@ -562,7 +562,7 @@ class WorkflowEngine:
             primary_exposure = exposure_result.components.get("primary_exposure", 0.0)
             model_version.exposure_value = primary_exposure
             model_version.exposure_modifier = exposure_result.factor
-            model_version.exposure_magnitude_score = exposure_result.components.get(
+            model_version.exposure_size_score = exposure_result.components.get(
                 "size_factor", 1.0
             ) * 50  # normalize to 0-100 scale
             model_version.exposure_complexity_score = exposure_result.components.get(

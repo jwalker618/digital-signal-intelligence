@@ -384,7 +384,7 @@ class ModelVersionRecord(Base):
     exposure_band_id = Column(Integer)
     exposure_band_label = Column(String(100))
     exposure_band_boundaries = Column(JSONB)          # {min_value, max_value, modifier} — snapshot of band at execution time
-    exposure_magnitude_score = Column(Float)          # 0-100 normalised size score
+    exposure_size_score = Column(Float)              # 0-100 normalised size score
     exposure_complexity_score = Column(Float)          # 0-100 normalised complexity score
     exposure_modifier = Column(Float)                 # Multiplier applied to premium
     exposure_assessment_method = Column(String(50))   # config_band_lookup, signal_composite, etc.

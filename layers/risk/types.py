@@ -920,7 +920,7 @@ class ModelVersion:
     # Exposure Assessment Outputs
     exposure_value: Optional[float] = None              # Primary exposure metric (TIV, revenue)
     exposure_modifier: Optional[float] = None           # Actual pricing factor applied
-    exposure_magnitude_score: Optional[float] = None    # 0-100 normalised size score
+    exposure_size_score: Optional[float] = None    # 0-100 normalised size score
     exposure_complexity_score: Optional[float] = None   # 0-100 normalised complexity score
     exposure_assessment_method: Optional[str] = None    # "streamlined" or "full"
     exposure_band_id: Optional[int] = None
