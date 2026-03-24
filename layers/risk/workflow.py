@@ -406,7 +406,7 @@ class WorkflowEngine:
                 "name": r.modifier_type,
                 "factor": r.factor,
                 "confidence": r.confidence,
-                "source": "traditional",
+                "source": r.modifier_type,  # e.g. "exposure", "loss_history"
                 "source_id": r.modifier_type,
             }
             for r in traditional_modifier_results

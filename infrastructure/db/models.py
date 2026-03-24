@@ -318,6 +318,7 @@ class ModelVersionRecord(Base):
     modifiers_applied = Column(JSONB, default=list)
     premium_after_modifiers = Column(Float)
     final_premium = Column(Float)
+    final_premium_detail = Column(JSONB, default=dict)  # ILF/deductible breakdown for the selected limit
     uncapped_premium = Column(Float, nullable=True)
 
     # Guardrail detail
