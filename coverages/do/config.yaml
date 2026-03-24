@@ -1334,11 +1334,11 @@ directors_officers:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
-      basis_damping: 0.65
+      basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
+      max_premium_to_limit_ratio: 0.55
       max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 10.0
   do_sme:
@@ -1984,7 +1984,7 @@ directors_officers:
           - deductible: 100000
             factor: 0.7
       taxes_fees_rate: 0.05
-      basis_damping: 0.65
+      basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

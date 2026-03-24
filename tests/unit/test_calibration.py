@@ -93,14 +93,18 @@ class TestCyberGeneralCalibration:
         return load_config("cyber", "cyber_general")
 
     def test_midmarket_t3_base_premium(self, config):
-        """$500M revenue, MEDIUM, T3, $1M limit → base premium $20K-$80K."""
+        """$500M revenue, MEDIUM, T3, $1M limit → base premium $5K-$50K.
+
+        With basis_damping=0.75 applied to revenue, effective_basis is
+        sub-linear: $1M × (500)^0.75 = ~$105M, base = $105M × 0.00008 ≈ $8.5K.
+        """
         result = price_scenario(
             config, score=575,
             submission_data={"revenue": 500_000_000, "limit": 1_000_000, "deductible": 50_000,
                              "product_type": "cyber_liability"},
             categorical_modifiers=[("size_band", "MEDIUM", 1.0)],
         )
-        assert 10_000 <= result["base_premium"] <= 100_000, (
+        assert 5_000 <= result["base_premium"] <= 50_000, (
             f"Base premium {result['base_premium']:.0f} outside expected range for mid-market cyber"
         )
 

@@ -1362,8 +1362,8 @@ aerospace:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
-      max_premium_to_revenue_ratio: 0.001
+      max_premium_to_limit_ratio: 0.60
+      max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 5.0
   aerospace_sme:
     metadata:

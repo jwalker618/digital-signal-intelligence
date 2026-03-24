@@ -116,7 +116,10 @@ class ModelPricer:
         )
 
         # Ensure minimum premium
+        at_min_premium = False
         if config.metadata.min_premium > 0:
+            if premium_after_modifiers < config.metadata.min_premium:
+                at_min_premium = True
             premium_after_modifiers = max(premium_after_modifiers, config.metadata.min_premium)
 
         # Step 12: Scale to limit bands
@@ -169,8 +172,14 @@ class ModelPricer:
                         limit_premiums[lim_key] = round(cap, 2)
 
         # Cap premium vs revenue
+        # Exception: if the premium is at the min_premium floor, the revenue
+        # guardrail should not cap it further. The min_premium represents the
+        # minimum underwriting/binding cost — capping it below that floor
+        # contradicts the config's intent and produces premiums that can't
+        # cover admin costs. The limit guardrail still applies because if
+        # limit × ratio < min_premium, the limit is genuinely too small.
         revenue = submission_data.get("revenue", 0)
-        if revenue and revenue > 0:
+        if revenue and revenue > 0 and not at_min_premium:
             max_premium_by_revenue = revenue * guardrails.max_premium_to_revenue_ratio
             if final_premium > max_premium_by_revenue:
                 guardrail_warnings.append({
@@ -400,19 +409,15 @@ class ModelPricer:
             damping = config.pricing.basis_damping
             limit = submission_data.get("limit", 0)
 
-            # Sub-linear damping for total-value bases (tiv, hull_value, total_assets).
-            # When TIV ($85B) vastly exceeds the coverage limit ($500M), linear
-            # rate × TIV produces absurd premiums because you're insuring a tiny
-            # fraction of the total value. Damping converts to:
+            # Sub-linear damping when basis vastly exceeds coverage limit.
+            # When basis ($85B TIV, $200B revenue) vastly exceeds the limit
+            # ($500M), linear rate × basis produces absurd premiums. Damping
+            # converts to:
             #   effective_basis = limit × (basis / limit) ^ damping
-            # With damping=0.5 the premium grows as sqrt of the TIV/limit ratio.
-            #
-            # Revenue and other business metrics are NOT damped because they
-            # represent risk exposure, not an insurable total from which the
-            # limit is a sub-portion.
-            TOTAL_VALUE_BASES = {"tiv", "hull_value", "total_assets"}
+            # With damping=0.5 the premium grows as sqrt of the basis/limit
+            # ratio, keeping premiums proportional to exposure without
+            # producing P/L ratios above 100%.
             if (damping < 1.0
-                    and rate_basis in TOTAL_VALUE_BASES
                     and limit > 0
                     and basis_value > limit):
                 effective_basis = limit * (basis_value / limit) ** damping

@@ -871,14 +871,15 @@ class CalibrationHarness:
         # (controlling for same product type, exposure, limit, deductible, modifier)
         self._check_monotonicity(result, successful)
 
-        # Check 4: No absurd premiums (> 50% of limit)
+        # Check 4: No absurd premiums (exceeding the configured limit ratio)
+        pl_cap = config.guardrails.max_premium_to_limit_ratio
         for r in successful:
-            if r.fixture.limit > 0 and r.premium > r.fixture.limit * 0.50:
+            if r.fixture.limit > 0 and r.premium > r.fixture.limit * pl_cap:
                 result.failures.append(ValidationFailure(
                     fixture_label=r.fixture.label,
-                    check="premium_exceeds_50pct_limit",
+                    check="premium_exceeds_limit_ratio",
                     detail=(
-                        f"Premium ${r.premium:,.0f} exceeds 50% of "
+                        f"Premium ${r.premium:,.0f} exceeds {pl_cap:.0%} of "
                         f"limit ${r.fixture.limit:,.0f} "
                         f"(P/L={r.pl_ratio:.2%})"
                     ),

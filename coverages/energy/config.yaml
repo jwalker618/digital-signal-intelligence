@@ -1465,8 +1465,8 @@ energy:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
-      max_premium_to_revenue_ratio: 0.001
+      max_premium_to_limit_ratio: 0.40
+      max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 5.0
   energy_upstream_deepwater:
     metadata:
@@ -2590,7 +2590,7 @@ energy:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
+      max_premium_to_limit_ratio: 0.50
       max_premium_to_revenue_ratio: 0.001
       max_ilf_factor: 5.0
   energy_upstream_onshore:
@@ -3908,7 +3908,7 @@ energy:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
+      max_premium_to_limit_ratio: 0.20
       max_premium_to_revenue_ratio: 0.001
       max_ilf_factor: 5.0
   energy_upstream_unconventional:
@@ -5262,7 +5262,7 @@ energy:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
+      max_premium_to_limit_ratio: 0.30
       max_premium_to_revenue_ratio: 0.001
       max_ilf_factor: 5.0
   energy_midstream:
@@ -7797,7 +7797,7 @@ energy:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
+      max_premium_to_limit_ratio: 0.25
       max_premium_to_revenue_ratio: 0.001
       max_ilf_factor: 5.0
   energy_offshore_wind:
@@ -9146,7 +9146,7 @@ energy:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
+      max_premium_to_limit_ratio: 0.30
       max_premium_to_revenue_ratio: 0.001
       max_ilf_factor: 5.0
   energy_onshore_renewable:
@@ -11795,7 +11795,7 @@ energy:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.15
+      max_premium_to_limit_ratio: 0.35
       max_premium_to_revenue_ratio: 0.001
       max_ilf_factor: 5.0
   energy_sme:
