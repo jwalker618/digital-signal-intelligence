@@ -20,6 +20,7 @@ from layers.risk.calibration_harness import (
     generate_fixtures_for_config,
     _extract_categorical_groups,
     _build_modifier_scenario,
+    _get_routing_bounds,
     EXPOSURE_SIZE_BANDS,
     LIMIT_COHORTS,
     MODIFIER_SCENARIOS,
@@ -133,6 +134,103 @@ class TestFixtureGeneration:
 
         # At least 4 non-DECLINE tiers × multiple combos
         assert len(fixtures) >= 100
+
+
+# ---------------------------------------------------------------------------
+# Routing constraint tests
+# ---------------------------------------------------------------------------
+
+class TestRoutingConstraints:
+    """Tests that routing constraints correctly filter fixture generation."""
+
+    def test_deepwater_no_micro_small_fixtures(self):
+        """energy_upstream_deepwater requires tiv > $100M — no MICRO/SMALL fixtures."""
+        config = get_config("energy", "energy_upstream_deepwater")
+        fixtures = generate_fixtures_for_config("energy", "energy_upstream_deepwater", config)
+
+        sizes = set(f.exposure_size_label for f in fixtures)
+        assert "MICRO" not in sizes, "MICRO ($500K) should be excluded by tiv > $100M constraint"
+        assert "SMALL" not in sizes, "SMALL ($5M) should be excluded by tiv > $100M constraint"
+        assert "MEDIUM" not in sizes, "MEDIUM ($50M) should be excluded by tiv > $100M constraint"
+        # LARGE ($500M) should be the minimum
+        assert "LARGE" in sizes or any("ROUTED" in s for s in sizes)
+
+    def test_deepwater_routing_bounds_extracted(self):
+        """Should extract tiv > 100M as basis floor for deepwater."""
+        config = get_config("energy", "energy_upstream_deepwater")
+        floor, ceiling = _get_routing_bounds(config, "tiv")
+        assert floor >= 100_000_000
+        assert ceiling == 0  # No upper bound on TIV
+
+    def test_energy_sme_caps_exposure_sizes(self):
+        """energy_sme requires tiv <= $100M — no LARGE/MEGA/ULTRA fixtures."""
+        config = get_config("energy", "energy_sme")
+        fixtures = generate_fixtures_for_config("energy", "energy_sme", config)
+
+        sizes = set(f.exposure_size_label for f in fixtures)
+        assert "LARGE" not in sizes, "LARGE ($500M) exceeds tiv <= $100M"
+        assert "MEGA" not in sizes
+        assert "ULTRA" not in sizes
+
+    def test_aerospace_sme_limit_constraint(self):
+        """aerospace_sme requires limit <= $10M — no large limit fixtures."""
+        config = get_config("aerospace", "aerospace_sme")
+        fixtures = generate_fixtures_for_config("aerospace", "aerospace_sme", config)
+
+        for f in fixtures:
+            assert f.limit <= 10_000_000, (
+                f"Fixture {f.label} has limit ${f.limit:,.0f} "
+                f"exceeding aerospace_sme routing constraint (limit <= $10M)"
+            )
+
+    def test_marine_sme_hull_constraint(self):
+        """marine_sme requires hull_value <= $50M — exposure values capped."""
+        config = get_config("marine", "marine_sme")
+        fixtures = generate_fixtures_for_config("marine", "marine_sme", config)
+
+        for f in fixtures:
+            hv = f.submission_data.get("hull_value", 0)
+            if hv > 0:
+                assert hv <= 50_000_000, (
+                    f"Fixture {f.label} has hull_value ${hv:,.0f} "
+                    f"exceeding marine_sme routing constraint (hull_value <= $50M)"
+                )
+
+    def test_pi_sme_categorical_handled(self):
+        """pi_sme uses categorical basis — should generate fixtures without errors."""
+        config = get_config("pi", "pi_sme")
+        fixtures = generate_fixtures_for_config("pi", "pi_sme", config)
+
+        assert len(fixtures) > 0
+        # Should not have a numeric "categorical" field in submission data
+        # that the pricer would try to multiply against
+        for f in fixtures[:10]:
+            # Categorical configs should be treated as PREMIUM_BASE
+            assert f.exposure_size_label == "N/A", (
+                f"Categorical config should have N/A exposure, got {f.exposure_size_label}"
+            )
+
+    def test_fi_general_uses_total_assets(self):
+        """fi_general uses total_assets as basis — fixtures should populate it."""
+        config = get_config("fi", "fi_general")
+        fixtures = generate_fixtures_for_config("fi", "fi_general", config)
+
+        for f in fixtures[:20]:
+            assert "total_assets" in f.submission_data, (
+                f"fi_general fixture missing total_assets: {f.label}"
+            )
+            # AUM routing constraint is > $500M but total_assets is the basis
+            # (they're different fields — AUM is routing, total_assets is pricing)
+
+    def test_configs_without_numeric_constraints_still_generate_all_sizes(self):
+        """Configs with only categorical constraints should test full size range."""
+        config = get_config("energy", "energy_downstream")
+        fixtures = generate_fixtures_for_config("energy", "energy_downstream", config)
+
+        # energy_downstream only has operation_segment constraint, no TIV floor
+        sizes = set(f.exposure_size_label for f in fixtures)
+        assert "MICRO" in sizes, "Should include MICRO — no numeric basis constraint"
+        assert "ULTRA" in sizes, "Should include ULTRA — no numeric basis constraint"
 
 
 # ---------------------------------------------------------------------------

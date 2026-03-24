@@ -375,11 +375,13 @@ def generate_fixtures_for_config(
 ) -> List[CalibrationFixture]:
     """Generate comprehensive calibration fixtures for a single config.
 
-    Produces fixtures across the full parameter space:
+    Produces fixtures across the full parameter space, filtered by routing
+    constraints so only submissions that would actually reach this config
+    in production are tested:
     - Every product type
     - Every non-DECLINE tier
-    - Multiple exposure sizes
-    - Multiple limit cohorts
+    - Multiple exposure sizes (within routing bounds)
+    - Multiple limit cohorts (within routing bounds)
     - Multiple modifier scenarios
     """
     fixtures = []
@@ -408,6 +410,17 @@ def generate_fixtures_for_config(
     basis_field = first_app.basis or "tiv"
     is_multiplier = first_app.method == PricingMethod.MULTIPLIER
 
+    # Handle categorical basis: the pricer falls back to PREMIUM_BASE
+    # because submission_data won't have a numeric "categorical" field.
+    # Treat these like PREMIUM_BASE configs with a synthetic base.
+    is_categorical = basis_field in ("categorical", "category")
+    if is_categorical:
+        is_multiplier = False
+
+    # Extract routing constraints to filter fixture parameters
+    basis_floor, basis_ceiling = _get_routing_bounds(config, basis_field)
+    limit_floor, limit_ceiling = _get_routing_bounds(config, "limit")
+
     # Build deductible options from product type configs
     deductible_options_map = {}
     for pt in product_types:
@@ -418,7 +431,7 @@ def generate_fixtures_for_config(
         else:
             deductible_options_map[pt] = [config.pricing.base_deductible_reference]
 
-    # Choose limit options based on config type
+    # Choose limit options based on config type, filtered by routing constraints
     limit_config = config.limit_configuration
     if limit_config and limit_config.type == LimitConfigType.BUNDLED and limit_config.packages:
         limit_options = sorted(set(pkg.limit for pkg in limit_config.packages))
@@ -427,14 +440,32 @@ def generate_fixtures_for_config(
         total = sum(l.limit for l in (limit_config.layers or []))
         limit_options = [total] if total > 0 else [10_000_000]
     else:
-        # DECOUPLED: use our standard cohorts, filtered to sensible range
-        limit_options = LIMIT_COHORTS
+        # DECOUPLED: use our standard cohorts, filtered by routing constraints
+        limit_options = [
+            lim for lim in LIMIT_COHORTS
+            if lim >= limit_floor and (limit_ceiling == 0 or lim <= limit_ceiling)
+        ]
+        if not limit_options:
+            # If all standard cohorts are outside routing bounds, generate
+            # sensible options within the constraint range
+            limit_options = _generate_range_options(limit_floor, limit_ceiling or 500_000_000)
 
-    # Choose exposure sizes based on method
+    # Choose exposure sizes based on method, filtered by routing constraints
     if is_multiplier:
-        exposure_sizes = EXPOSURE_SIZE_BANDS
+        exposure_sizes = [
+            (label, val) for label, val in EXPOSURE_SIZE_BANDS
+            if val >= basis_floor and (basis_ceiling == 0 or val <= basis_ceiling)
+        ]
+        if not exposure_sizes:
+            # Generate exposure sizes within routing bounds
+            exposure_sizes = [
+                (f"ROUTED_{i+1}", val)
+                for i, val in enumerate(
+                    _generate_range_options(basis_floor, basis_ceiling or 100_000_000_000)
+                )
+            ]
     else:
-        # PREMIUM_BASE configs don't use basis field — use one dummy size
+        # PREMIUM_BASE or categorical: no basis field needed
         exposure_sizes = [("N/A", 0)]
 
     # Build categorical modifier scenarios
@@ -468,7 +499,8 @@ def generate_fixtures_for_config(
                                 # Revenue is typically 2-10x the insured value
                                 submission["revenue"] = max(basis_value * 3, limit * 10)
                             else:
-                                # PREMIUM_BASE: provide revenue for guardrail checks
+                                # PREMIUM_BASE or categorical: provide revenue for
+                                # guardrail checks, proportional to the limit
                                 submission["revenue"] = limit * 20
 
                             # Build categorical outputs for this modifier scenario
@@ -558,6 +590,57 @@ def _build_modifier_scenario(
         ))
 
     return outputs
+
+
+def _get_routing_bounds(
+    config: CoverageConfig,
+    field_name: str,
+) -> Tuple[int, int]:
+    """Extract floor/ceiling bounds for a field from routing constraints.
+
+    Returns (floor, ceiling) where 0 = unbounded.
+    """
+    floor = 0
+    ceiling = 0
+
+    for rc in config.metadata.routing_constraints:
+        if rc.field != field_name:
+            continue
+        try:
+            val = int(rc.value) if isinstance(rc.value, (int, float)) else 0
+        except (ValueError, TypeError):
+            continue
+
+        op = rc.operator.value if hasattr(rc.operator, "value") else str(rc.operator)
+        if op in (">", ">="):
+            floor = max(floor, val)
+        elif op in ("<", "<="):
+            ceiling = val if ceiling == 0 else min(ceiling, val)
+
+    return floor, ceiling
+
+
+def _generate_range_options(floor: int, ceiling: int) -> List[int]:
+    """Generate sensible test values within a routing constraint range.
+
+    Produces 3-5 logarithmically spaced values between floor and ceiling.
+    """
+    if floor <= 0:
+        floor = 1_000_000
+    if ceiling <= floor:
+        ceiling = floor * 100
+
+    options = []
+    current = floor
+    while current <= ceiling and len(options) < 5:
+        options.append(current)
+        current *= 5  # Rough log spacing: 5x steps
+
+    # Always include the ceiling if not already there
+    if options and options[-1] != ceiling:
+        options.append(ceiling)
+
+    return options
 
 
 # ---------------------------------------------------------------------------
