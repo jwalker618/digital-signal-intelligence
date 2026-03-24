@@ -149,7 +149,6 @@ class QuoteRepository:
         """Create a new quote.
 
         Scoring / tier / decision data lives on the linked ModelVersionRecord.
-        Limit premiums live on ModelVersionRecord.limit_premiums.
         """
         quote = Quote(
             quote_code=generate_id("quo"),

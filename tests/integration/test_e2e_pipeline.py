@@ -84,7 +84,6 @@ class TestCyberE2E:
             skip_input_validation=True,
         )
 
-        assert isinstance(result.model_version.limit_premiums, dict)
         assert result.recommended_premium >= 0
 
     def test_cyber_model_version_captured(self):

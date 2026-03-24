@@ -2264,37 +2264,49 @@ def build_tier_margin(composite, final_tier, config):
     adjacent_better = bands[band_idx - 1].id if band_idx > 0 else None
     adjacent_worse = bands[band_idx + 1].id if band_idx < len(bands) - 1 else None
 
-    distance_better = composite - tier_min if band_idx > 0 else None
-    distance_worse = tier_max - composite if band_idx < len(bands) - 1 else None
+    # Always compute distances — even at boundary tiers these show
+    # headroom within the tier (e.g. 150 points from ceiling in best tier)
+    distance_better = composite - tier_min
+    distance_worse = tier_max - composite
 
     return {
         "tier_margin_percentile": round(percentile, 4),
         "tier_margin_tier_min": tier_min,
         "tier_margin_tier_max": tier_max,
-        "tier_margin_distance_better": round(distance_better, 2) if distance_better is not None else None,
-        "tier_margin_distance_worse": round(distance_worse, 2) if distance_worse is not None else None,
+        "tier_margin_distance_better": round(distance_better, 2),
+        "tier_margin_distance_worse": round(distance_worse, 2),
         "tier_margin_adjacent_better": adjacent_better,
         "tier_margin_adjacent_worse": adjacent_worse,
     }
 
 
 def build_tier_band_interpretation(final_tier, config):
-    """Snapshot the full tier band config for the current tier into JSONB."""
-    band = config.get_tier_band(final_tier)
-    if band is None:
+    """Snapshot ALL tier bands from config, marking the current tier.
+
+    Provides full tier landscape so underwriters can see adjacent tiers'
+    actions, score ranges, and pricing applications alongside the current tier.
+    """
+    if not config.risk_tier_bands or not config.risk_tier_bands.bands:
         return None
+
+    def _band_dict(band):
+        return {
+            "tier_id": band.id,
+            "label": band.label,
+            "description": band.description,
+            "action": band.interpretation.action.value,
+            "bands": {"min": band.interpretation.bands.min, "max": band.interpretation.bands.max},
+            "application": {
+                "method": band.interpretation.application.method.value if hasattr(band.interpretation.application.method, 'value') else str(band.interpretation.application.method),
+                "value": band.interpretation.application.value,
+                "applied": band.interpretation.application.applied,
+                "basis": band.interpretation.application.basis,
+            },
+        }
+
     return {
-        "tier_id": band.id,
-        "label": band.label,
-        "description": band.description,
-        "action": band.interpretation.action.value,
-        "bands": {"min": band.interpretation.bands.min, "max": band.interpretation.bands.max},
-        "application": {
-            "method": band.interpretation.application.method.value if hasattr(band.interpretation.application.method, 'value') else str(band.interpretation.application.method),
-            "value": band.interpretation.application.value,
-            "applied": band.interpretation.application.applied,
-            "basis": band.interpretation.application.basis,
-        },
+        "current_tier": final_tier,
+        "tiers": [_band_dict(b) for b in config.risk_tier_bands.bands],
     }
 
 
@@ -2463,8 +2475,14 @@ def build_loss_propensity(co, group_scores):
         "loss_combined_modifier": combined,
         "loss_group_scores": loss_group_scores,
         "loss_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
+        "loss_frequency_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
+        "loss_severity_trend_direction": random.choice(["stable", "improving", "deteriorating"]),
         "loss_previous_score": round(max(0, min(100, loss_score + random.uniform(-12, 12))), 1) if random.random() > 0.3 else None,
+        "loss_previous_frequency_score": round(max(0, min(100, loss_score + random.uniform(-15, 15))), 1),
+        "loss_previous_severity_score": round(max(0, min(100, sev_score + random.uniform(-15, 15))), 1),
         "loss_score_velocity": round(random.uniform(-3, 3), 2) if random.random() > 0.3 else None,
+        "loss_frequency_velocity": round(random.uniform(-3, 3), 2),
+        "loss_severity_velocity": round(random.uniform(-3, 3), 2),
         "loss_last_refresh": NOW - timedelta(days=random.randint(1, 30)) if random.random() > 0.3 else None,
         "correlation_matrix_version": "v1.0.0",
     }
@@ -2509,10 +2527,24 @@ def build_exposure_assessment(co):
         co.get("size_band", "MEDIUM"), 5)
     complexity_score = round(max(0, min(100, complexity_base + size_bump + random.uniform(-8, 8))), 1)
 
-    # Components breakdown
+    # Components breakdown — three-pillar structure for exposure
     size_factor = round(magnitude_score / 100.0, 4)
     growth_factor = round(random.uniform(0.8, 1.3), 4)
     concentration_factor = round(random.uniform(0.7, 1.2), 4)
+
+    # Determine complexity band from score
+    complexity_bands = [
+        (1, "Simple",    0, 25, 0.90),
+        (2, "Moderate", 25, 50, 1.00),
+        (3, "Complex",  50, 75, 1.10),
+        (4, "Highly Complex", 75, 100, 1.20),
+    ]
+    complexity_band = complexity_bands[-1]
+    for cb in complexity_bands:
+        if complexity_score < cb[3]:
+            complexity_band = cb
+            break
+    c_id, c_label, c_min, c_max, c_modifier = complexity_band
 
     return {
         "exposure_value": float(exposure_value),
@@ -2528,9 +2560,23 @@ def build_exposure_assessment(co):
         "exposure_modifier": modifier,
         "exposure_assessment_method": "config_band_lookup",
         "exposure_components": {
-            "size_factor": size_factor,
-            "growth_factor": growth_factor,
-            "concentration_factor": concentration_factor,
+            "size": {
+                "score": magnitude_score,
+                "band_id": band_id,
+                "band_label": band_label,
+                "factor": size_factor,
+            },
+            "complexity": {
+                "score": complexity_score,
+                "band_id": c_id,
+                "band_label": c_label,
+                "factor": c_modifier,
+            },
+            "adjustments": {
+                "growth_factor": growth_factor,
+                "concentration_factor": concentration_factor,
+            },
+            "combined_modifier": modifier,
         },
     }
 
@@ -2674,8 +2720,33 @@ def seed_data():
             # --- PRODUCTION QUERY EVALUATION (Step 7) ---
             query_result = run_production_query_evaluation(config, direct_query_responses)
 
-            # Combine signal + query modifiers (same as workflow.py line 378)
+            # Build loss propensity + exposure assessment BEFORE pricing
+            # so their modifiers feed into the premium calculation
+            loss_kwargs = build_loss_propensity(co, group_scores)
+            exposure_kwargs = build_exposure_assessment(co)
+
+            # Combine signal + query + loss + exposure modifiers (same as workflow.py)
             all_modifiers = signal_modifiers + query_result.modifiers
+
+            # Add loss propensity modifier if non-neutral
+            if loss_kwargs["loss_combined_modifier"] != 1.0:
+                all_modifiers.append({
+                    "name": "loss_propensity",
+                    "factor": loss_kwargs["loss_combined_modifier"],
+                    "confidence": loss_kwargs["loss_confidence"],
+                    "source": "loss_propensity",
+                    "source_id": "loss_propensity",
+                })
+
+            # Add exposure modifier if non-neutral
+            if abs(exposure_kwargs["exposure_modifier"] - 1.0) > 0.001:
+                all_modifiers.append({
+                    "name": "exposure",
+                    "factor": exposure_kwargs["exposure_modifier"],
+                    "confidence": 0.85,
+                    "source": "traditional",
+                    "source_id": "exposure",
+                })
 
             # --- PRODUCTION PRICING (Steps 8-12) ---
             pricing_result = run_production_pricing(
@@ -2722,9 +2793,7 @@ def seed_data():
 
             discovery = build_discovery_output(co)
 
-            # Build loss propensity + exposure assessment
-            loss_kwargs = build_loss_propensity(co, group_scores)
-            exposure_kwargs = build_exposure_assessment(co)
+            # loss_kwargs and exposure_kwargs already computed above (before pricing)
 
             # Serialise production dataclass outputs to dicts for JSONB storage
             signal_outputs_json = [
@@ -2838,26 +2907,12 @@ def seed_data():
                         "applied": qc.action_value > score_based_tier,
                     })
 
-            # Zero premium for declines
-            final_premium = pricing_result.final_premium if decision_str != "decline" else 0
-            base_premium = pricing_result.base_premium if decision_str != "decline" else 0
-            premium_after_mods = pricing_result.premium_after_modifiers if decision_str != "decline" else 0
-            limit_premiums = pricing_result.limit_premiums if decision_str != "decline" else {}
-
-            # --- Phase A: Serialise limit_premium_details from PricingResult ---
-            limit_premium_details_json = []
-            if pricing_result.limit_premium_details and decision_str != "decline":
-                for lpd in pricing_result.limit_premium_details:
-                    limit_premium_details_json.append({
-                        "limit": lpd.limit,
-                        "deductible": lpd.deductible,
-                        "attachment_point": lpd.attachment_point,
-                        "ilf_factor": lpd.ilf_factor,
-                        "deductible_factor": lpd.deductible_factor,
-                        "premium_before_scaling": lpd.premium_before_scaling,
-                        "premium_after_scaling": lpd.premium_after_scaling,
-                        "uncapped_premium": lpd.uncapped_premium,
-                    })
+            # Always preserve computed premiums — even declined risks have
+            # indicative pricing (a different ROL option might be in appetite)
+            final_premium = pricing_result.final_premium
+            base_premium = pricing_result.base_premium
+            premium_after_mods = pricing_result.premium_after_modifiers
+            limit_premiums = pricing_result.limit_premiums
 
             # --- Phase A: Uncapped premium & guardrail detail ---
             uncapped_premium = pricing_result.uncapped_premium
@@ -2905,8 +2960,6 @@ def seed_data():
                 base_premium_derivation=asdict(pricing_result.base_premium_derivation) if pricing_result.base_premium_derivation else None,
                 modifiers_applied=modifiers_applied_json,
                 premium_after_modifiers=premium_after_mods,
-                limit_premiums=limit_premiums,
-                limit_premium_details=limit_premium_details_json or [],
                 final_premium=final_premium,
                 uncapped_premium=uncapped_premium,
                 premium_was_capped=premium_was_capped,

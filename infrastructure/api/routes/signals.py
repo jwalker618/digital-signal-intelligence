@@ -337,7 +337,6 @@ async def override_signal(
         query_conditions=old_model.query_conditions,
         tier_overrides=old_model.tier_overrides,
         modifiers_applied=old_model.modifiers_applied,
-        limit_premiums=old_model.limit_premiums,
         referral_reasons=old_model.referral_reasons,
         notes=(old_model.notes or []) + [
             f"Signal override: {request.signal_code} changed from {original_score} to {request.audited_value}"

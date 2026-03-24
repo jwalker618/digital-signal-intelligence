@@ -287,19 +287,18 @@ class ModelPricer:
         )
 
         adjacent_better = None
-        distance_better = None
         adjacent_worse = None
-        distance_worse = None
 
         if current_idx is not None:
             if current_idx > 0:
-                better_band = bands[current_idx - 1]
-                adjacent_better = better_band.id
-                distance_better = score - tier_min  # points above better tier's range
+                adjacent_better = bands[current_idx - 1].id
             if current_idx < len(bands) - 1:
-                worse_band = bands[current_idx + 1]
-                adjacent_worse = worse_band.id
-                distance_worse = tier_max - score  # points below worse tier
+                adjacent_worse = bands[current_idx + 1].id
+
+        # Always compute distances — even at boundary tiers these show
+        # headroom within the tier (e.g. 150 points from ceiling in best tier)
+        distance_better = score - tier_min
+        distance_worse = tier_max - score
 
         return TierMarginContext(
             score=score,
@@ -307,8 +306,8 @@ class ModelPricer:
             tier_min=tier_min,
             tier_max=tier_max,
             percentile_in_tier=round(percentile, 3),
-            distance_to_better_tier=round(distance_better, 1) if distance_better is not None else None,
-            distance_to_worse_tier=round(distance_worse, 1) if distance_worse is not None else None,
+            distance_to_better_tier=round(distance_better, 1),
+            distance_to_worse_tier=round(distance_worse, 1),
             adjacent_better_tier=adjacent_better,
             adjacent_worse_tier=adjacent_worse,
         )

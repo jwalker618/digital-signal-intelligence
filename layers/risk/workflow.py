@@ -480,8 +480,6 @@ class WorkflowEngine:
             base_premium_derivation=pricing_result.base_premium_derivation,
             modifiers_applied=pricing_result.modifiers_applied,
             premium_after_modifiers=pricing_result.premium_after_modifiers,
-            limit_premiums=pricing_result.limit_premiums,
-            limit_premium_details=pricing_result.limit_premium_details,
             final_premium=pricing_result.final_premium,
             uncapped_premium=pricing_result.uncapped_premium,
             decision=decision,
@@ -545,6 +543,13 @@ class WorkflowEngine:
             model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
             model_version.loss_previous_score = loss_propensity_result.previous_combined_score
             model_version.loss_score_velocity = loss_propensity_result.combined_score_velocity
+            # Frequency / severity split
+            model_version.loss_previous_frequency_score = getattr(loss_propensity_result, 'previous_frequency_score', None)
+            model_version.loss_previous_severity_score = getattr(loss_propensity_result, 'previous_severity_score', None)
+            model_version.loss_frequency_velocity = getattr(loss_propensity_result, 'frequency_score_velocity', None)
+            model_version.loss_severity_velocity = getattr(loss_propensity_result, 'severity_score_velocity', None)
+            model_version.loss_frequency_trend_direction = getattr(loss_propensity_result, 'frequency_trend_direction', None)
+            model_version.loss_severity_trend_direction = getattr(loss_propensity_result, 'severity_trend_direction', None)
             model_version.loss_last_refresh = loss_propensity_result.calculated_at
             model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
 
@@ -1041,7 +1046,6 @@ class WorkflowEngine:
             base_premium_method=latest.base_premium_method,
             modifiers_applied=latest.modifiers_applied,
             premium_after_modifiers=latest.premium_after_modifiers,
-            limit_premiums=latest.limit_premiums,
             final_premium=final_premium,
             decision=new_decision,
             auto_approve=auto_approve,

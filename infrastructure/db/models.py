@@ -317,8 +317,6 @@ class ModelVersionRecord(Base):
     base_premium_derivation = Column(JSONB, default=dict)
     modifiers_applied = Column(JSONB, default=list)
     premium_after_modifiers = Column(Float)
-    limit_premiums = Column(JSONB, default=dict)
-    limit_premium_details = Column(JSONB, default=list)
     final_premium = Column(Float)
     uncapped_premium = Column(Float, nullable=True)
 
@@ -365,9 +363,15 @@ class ModelVersionRecord(Base):
     loss_severity_multiplier = Column(Float)
     loss_combined_modifier = Column(Float)
     loss_group_scores = Column(JSONB)                 # {group: {freq_score, sev_score, weight, ...}}
-    loss_trend_direction = Column(String(50))        # improving / stable / deteriorating
-    loss_previous_score = Column(Float)
-    loss_score_velocity = Column(Float)
+    loss_trend_direction = Column(String(50))        # improving / stable / deteriorating (combined)
+    loss_frequency_trend_direction = Column(String(50))  # frequency-specific trend
+    loss_severity_trend_direction = Column(String(50))   # severity-specific trend
+    loss_previous_score = Column(Float)              # combined previous score (deprecated, kept for compat)
+    loss_previous_frequency_score = Column(Float)    # previous period frequency propensity score
+    loss_previous_severity_score = Column(Float)     # previous period severity propensity score
+    loss_score_velocity = Column(Float)              # combined velocity (deprecated, kept for compat)
+    loss_frequency_velocity = Column(Float)          # frequency score velocity (points/month)
+    loss_severity_velocity = Column(Float)           # severity score velocity (points/month)
     loss_last_refresh = Column(DateTime(timezone=True))
     correlation_matrix_version = Column(String(100))
     loss_band_interpretation = Column(JSONB)          # Full loss tier band config snapshot: {bands, constraints, frequency_modifier, severity_modifier}
