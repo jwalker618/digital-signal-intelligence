@@ -56,6 +56,51 @@ When starting any DSI work:
 | 23 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` (R8) |
 | V4 | Multi-Configuration Multiplexer | ✅ Complete | `development/project/version/active/phase_v4.md` |
 
+### DSI Comprehensive Upgrade (Phases A-E) (Complete)
+
+| Phase | Name | Status | Development documentation |
+|-|-|-|-|
+| A | Foundation & Transparency | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase A) |
+| B | Scoring Completeness | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase B) |
+| C | ROL Engine | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase C) |
+| D | Config Strictness & Cleanup | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase D) |
+| E | Tower & Subscription Market Structure | ✅ Complete | `development/project/phase_e_design.md` |
+
+**Phase A Deliverables — Foundation & Transparency:**
+- ✅ A1: `uncapped_premium` field added to PricingResult and ModelVersion — captures pre-guardrail premium for audit trail
+- ✅ A2: `LimitPremiumDetail` replaces flat `Dict[str, float]` — stores discrete `ilf_factor` and `deductible_factor` per limit option
+- ✅ A3: Modifier visibility with before/after premium tracking — dual-exposure disconnect fixed (display values now match pricing factors)
+- ✅ A4: `TierMarginContext` added — distance to adjacent tier boundaries, percentile within current tier
+- ✅ A5: Table-based ILF removed — parametric-only enforcement in schema and ILFCurve
+- ✅ A6: Comprehensive unit tests for all Phase A features
+
+**Phase B Deliverables — Scoring Completeness:**
+- ✅ B1: `evaluate_signal_conditions()` extended to process loss and exposure dimension score_conditions (not just risk)
+- ✅ B2: Exposure dimension breakdown surfaced — magnitude vs complexity scores persisted separately, component factors tracked
+- ✅ B3: Loss score fields clarified — renamed for semantic clarity, individual frequency/severity trend fields added
+- ✅ B4: Unit tests for loss/exposure score_conditions evaluation and dimension breakdown output
+
+**Phase C Deliverables — ROL Engine:**
+- ✅ C1: ROL curve validator (`layers/risk/rol_validator.py`) — replaces PremiumValidator entirely, per-coverage ROL appetite bands, signature supports `attachment=0` for tower compatibility
+- ✅ C2: Dual recommendation engine (`layers/risk/rol_recommender.py`) — upper/lower ROL-optimal limit recommendations with `attachment`, `participation_pct`, `structure_type` fields for Phase E compatibility
+- ✅ C3: Limit re-calculation method — reprice with different limit selection without re-running entire workflow
+- ✅ C4: ConfigHealthGate updated to use ROL validator for boot-time config validation
+- ✅ C5: PremiumValidator removed — fully replaced by ROL validator
+- ✅ C6: Unit tests for ROL validator, dual recommender, re-calculation, and ConfigHealthGate ROL integration
+
+**Phase D Deliverables — Config Strictness & Cleanup:**
+- ✅ D1: `extra="forbid"` added to key Pydantic schema models — unknown YAML fields now rejected
+- ✅ D2: Comparison operators standardized — aliases removed, single canonical form enforced
+- ✅ D3: Cross-coverage field consistency validation added to builder/validator
+- ✅ D4: All 7 coverage config YAML files cleaned up — pass strict `extra="forbid"` validation
+
+**Phase E Deliverables — Tower & Subscription Market Structure:**
+- ✅ E1: Design review documented (`development/project/phase_e_design.md`) — tower/subscription architecture, ILF derivation, order/line model
+- ✅ E2: Tower layer schema — `TOWER` type in `LimitConfigType`, `TowerLayer` model with attachment/limit, bespoke tower support with validation (ordering, overlap detection, ILF range coverage)
+- ✅ E3: Multi-layer pricing engine — tower pricing via `ILF(attachment + limit) - ILF(attachment)` from existing cumulative curves, per-layer premium and ROL
+- ✅ E4: Subscription participation — `SUBSCRIPTION` type with order/line model, `LineRole` enum (LEAD/FOLLOW), lead loading factor, `SubscriptionOrder` and `SubscriptionLine` models
+- ✅ E5: `LayerPremiumDetail` output type — composing ILF differentials, order/line premiums, lead/follow roles; `DualRecommendation` extended with `structure_type`, `layers`, `signed_line`, `role`
+
 ### DSI Comprehensive Restructure (Complete)
 
 | Phase | Name | Status | Development documentation |
@@ -400,9 +445,13 @@ Apply all modifiers in sequence:
 
 Scale premium across all relevant limit bands per configuration:
 
-- Apply ILF (Increased Limit Factor) tables
-- Generate premium for each limit option
+- Apply parametric ILF (Increased Limit Factor) curves
+- Generate premium for each limit option with full `LimitPremiumDetail` breakdown
 - Apply deductible credits per limit
+- **Tower mode (Phase E)**: Price each layer via `ILF(attachment + limit) - ILF(attachment)`, generate `LayerPremiumDetail` per layer
+- **Subscription mode (Phase E)**: Price at 100% order level, then allocate to line with lead/follow loading
+- ROL validation per limit option (or per layer for towers)
+- Dual recommendation engine produces upper/lower ROL-optimal limits
 
 ### Step 13: Output Decision
 
@@ -457,6 +506,7 @@ digital-signal-intelligence/
 │
 ├── development/                     # Development documentation
 │   ├── project/                     # Phase documents and assessments
+│   │   ├── phase_e_design.md        ✅ PHASE E - Tower/subscription design document
 │   │   ├── version/                 # Phase documentation by version
 │   │   │   ├── 1/                   # Legacy phase docs (1-20)
 │   │   │   ├── 2/                   # Restructure phases (R1-R11, P1-P7)
@@ -546,13 +596,16 @@ digital-signal-intelligence/
 ├── layers/                          # Assessment layer implementations
 │   ├── __init__.py
 │   ├── risk/                        ✅ Risk scoring layer (14-step workflow)
-│   │   ├── types.py                 ✅ All dataclasses
+│   │   ├── types.py                 ✅ All dataclasses (incl. LimitPremiumDetail, LayerPremiumDetail, TierMarginContext)
 │   │   ├── config_manager.py        ✅ Config hashing/storage
+│   │   ├── config_health_gate.py    ✅ Boot-time config validation (ROL-based, Phase C)
 │   │   ├── model_data.py            ✅ Model data file management
-│   │   ├── scorer.py                ✅ Steps 4-6
+│   │   ├── scorer.py                ✅ Steps 4-6 (risk/loss/exposure score_conditions, Phase B)
 │   │   ├── query_evaluator.py       ✅ Step 7
-│   │   ├── pricer.py                ✅ Steps 8-12
+│   │   ├── pricer.py                ✅ Steps 8-12 (ILF transparency, tower/subscription pricing, Phase A/E)
 │   │   ├── workflow.py              ✅ Full orchestration + Step 0
+│   │   ├── rol_validator.py         ✅ PHASE C - ROL curve validator (replaces PremiumValidator)
+│   │   ├── rol_recommender.py       ✅ PHASE C - Dual recommendation engine (upper/lower ROL-optimal)
 │   │   └── modifiers/               ✅ PHASE 7 - Traditional modifiers
 │   │
 │   ├── exposure/                    ✅ Exposure scorer + types (v2.0 tier bands)
@@ -659,7 +712,7 @@ Common concepts appear across multiple coverages with different signal paths. Re
 
 **CRITICAL: The YAML config is the single source of truth. Never hardcode values that exist in config.**
 
-**Reference:** `coverages/master_config_layout.yaml` - VERSION 2.0
+**Reference:** `coverages/master_config_layout.yaml` - VERSION 2.3
 
 ```yaml
 coverage:                          # Domain (e.g., aerospace, cyber, marine)
@@ -796,6 +849,67 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
         bands: [...]
 ```
 
+### Limit Configuration Types
+
+DSI supports four limit configuration modes:
+
+| Type | Description | Use Case |
+|-|-|-|
+| `BUNDLED` | Menu pricing with pre-defined packages | Simple products |
+| `DECOUPLED` | Independent limit/deductible selection | Standard commercial |
+| `TOWER` | Stacked excess layers with attachment points | Large commercial, specialty |
+| `SUBSCRIPTION` | Order/line model with participation percentages | Subscription/syndicate markets |
+
+#### Tower Configuration (Phase E)
+
+```yaml
+limit_configuration:
+  type: TOWER
+  layers:
+    - id: 1
+      label: Primary
+      attachment: 0
+      limit: 10000000
+    - id: 2
+      label: First Excess
+      attachment: 10000000
+      limit: 15000000
+    - id: 3
+      label: Second Excess
+      attachment: 25000000
+      limit: 25000000
+```
+
+Tower pricing derives from existing cumulative ILF curves:
+```
+layer_premium = base_premium × [ILF(attachment + limit) - ILF(attachment)]
+```
+
+**Bespoke towers** are supported — arbitrary attachment/limit combinations with no requirement for standard layer structures. Validation ensures layers are ordered by attachment, non-overlapping within the same product, and ILF curves cover the full range.
+
+#### Subscription Configuration (Phase E)
+
+```yaml
+limit_configuration:
+  type: SUBSCRIPTION
+  total_limit: 50000000
+  order_premium: 2500000    # 100% premium for the order
+
+subscription_line:
+  minimum_line: 0.05        # 5% minimum participation
+  maximum_line: 0.25        # 25% maximum participation
+  signed_line: 0.15         # actual signed line
+  role: LEAD                # LEAD or FOLLOW
+```
+
+- **Order**: 100% terms — total limit, premium, attachment, layer structure
+- **Line**: Insurer's participation — `line_premium = signed_line × order_premium × lead_loading`
+- **Lead**: Sets terms, handles claims, commands loading factor (e.g. 1.05–1.15)
+- **Follow**: Takes lead's terms at par, no loading applied
+- ROL is always calculated at the 100% order level
+
+Tower and subscription compose: each tower layer has an order-level premium, and the insurer takes a line on one or more layers.
+
 ### score_conditions Evaluation Rules
 
 1. **Applies to:** signal_registry signals and groups ONLY (NOT tier bands)
@@ -857,6 +971,32 @@ coverage:                          # Domain (e.g., aerospace, cyber, marine)
 1. **Output ranges, not points**: Acknowledge uncertainty with bounded estimates
 1. **High exposure + low confidence = referral**: Prevent auto-pricing uncertain large risks
 1. **Complexity multiplies exposure**: More complex structures require higher pricing adjustment
+
+### Pricing Transparency Rules (Phase A)
+
+1. **Uncapped premium captured**: Pre-guardrail premium stored for audit trail (`uncapped_premium` field)
+1. **ILF is transparent**: Each limit option stores discrete `ilf_factor` and `deductible_factor` via `LimitPremiumDetail`
+1. **Modifiers are categorized**: Each modifier tracked with before/after premium impact
+1. **Tier margins provided**: Distance to adjacent tier boundaries and percentile within tier available
+1. **Parametric ILF only**: Table-based ILF removed — all curves must be parametric (5 curve types)
+
+### ROL Engine Rules (Phase C)
+
+1. **ROL validates pricing**: ROL curve validator replaces PremiumValidator — per-coverage appetite bands
+1. **Dual recommendations**: Upper (best value) and lower (minimum adequate) limits recommended by ROL analysis
+1. **Re-pricing without re-scoring**: Limit re-calculation method allows different limit selection without full workflow re-run
+1. **ConfigHealthGate uses ROL**: Boot-time config validation uses ROL validator, not PremiumValidator
+
+### Tower & Subscription Rules (Phase E)
+
+1. **ILF curves are cumulative**: Tower layer pricing = `ILF(A+L) - ILF(A)` — no new curve types needed
+1. **Order is the pricing unit**: ROL, ILF, and premium all apply at the 100% order level
+1. **Line is the allocation unit**: Insurer books `signed_line × order_premium × lead_loading`
+1. **Lead commands loading**: Lead insurer receives configurable loading factor; follow at par
+1. **Bespoke towers supported**: Arbitrary attachment/limit combinations — no standard structure required
+1. **Tower validation**: Layers ordered by attachment, non-overlapping, ILF curves cover full range
+1. **Ground-up unchanged**: TOWER and SUBSCRIPTION are additive — existing BUNDLED/DECOUPLED paths unchanged
+1. **Tower + subscription compose**: Multi-layer order with partial line on selected layers
 
 -----
 
@@ -984,6 +1124,10 @@ The current development plan is defined in `development/project/version/active/`
 | Compile Rust dsi_core wheel | P7 | Medium | Run `maturin develop` to activate Rust speedups |
 | Implement paid extractors (Shodan, VirusTotal, D&B) | V3-4 | Low | See `development/extractor_implementation_plan.md` |
 | Tag v1.0.0 release | V3-6 | Medium | After V3-1 test fixes complete |
+| Author phase_7_spec.yaml | F1 | Medium | Convert `phase_7.md` prose to expansion spec YAML |
+| Execute Phase 6 PI expansion | F2 | Medium | 11 new PI sub-configurations via expansion pipeline |
+| Execute Phase 7 Cyber expansion | F3 | Medium | 10 new Cyber sub-configurations |
+| Validate expanded configs | F4 | Medium | All expanded configs must pass ConfigHealthGate + ROL validator |
 
 ### Optional Enhancements
 

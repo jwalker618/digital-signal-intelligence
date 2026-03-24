@@ -173,7 +173,7 @@ These are two completely disconnected lookup tables producing opposite direction
 
 ## IMPLEMENTATION PHASES
 
-### Phase A: Foundation & Transparency (Do First)
+### Phase A: Foundation & Transparency ✅ COMPLETE
 *These are prerequisite fixes that make everything else measurable.*
 
 | # | Item | Files | Effort |
@@ -185,7 +185,7 @@ These are two completely disconnected lookup tables producing opposite direction
 | A5 | **Remove table-based ILF** — enforce parametric-only in schema, remove table support from ILFCurve, update any configs/tests using table ILF | config_schema.py, pricer.py, config YAMLs | Medium |
 | A6 | **Phase A tests** — unit tests for uncapped premium capture, ILF transparency output (including component field storage), modifier categorization, tier margin calculations. Update existing tests that use table-based ILF | tests/unit/test_pricer.py, tests/unit/test_config_health_gate.py | Medium |
 
-### Phase B: Scoring Completeness
+### Phase B: Scoring Completeness ✅ COMPLETE
 *Wire up capabilities that exist in schema but aren't executing.*
 
 | # | Item | Files | Effort |
@@ -195,7 +195,7 @@ These are two completely disconnected lookup tables producing opposite direction
 | B3 | **Clarify loss score fields** — rename for clarity, add individual frequency/severity trend fields | loss/types.py, workflow.py | Small |
 | B4 | **Phase B tests** — unit tests for loss/exposure score_conditions evaluation, exposure dimension breakdown output, loss field clarity | tests/unit/test_scorer.py, tests/unit/test_workflow.py | Medium |
 
-### Phase C: ROL Engine (Core Upgrade)
+### Phase C: ROL Engine ✅ COMPLETE
 *Replaces PremiumValidator and limit recommendation logic entirely.*
 
 | # | Item | Files | Effort |
@@ -207,7 +207,7 @@ These are two completely disconnected lookup tables producing opposite direction
 | C5 | **Remove PremiumValidator** — fully replaced by ROL validator, not alongside it | premium_validator.py (delete), workflow.py | Small |
 | C6 | **ROL engine tests** — unit tests for ROL validator, dual recommender, re-calculation, and ConfigHealthGate ROL integration | NEW: tests/unit/test_rol_validator.py, tests/unit/test_rol_recommender.py | Large |
 
-### Phase D: Config Strictness & Cleanup
+### Phase D: Config Strictness & Cleanup ✅ COMPLETE
 *Tighten validation and clean up existing configs.*
 
 | # | Item | Files | Effort |
@@ -217,8 +217,8 @@ These are two completely disconnected lookup tables producing opposite direction
 | D3 | **Cross-coverage field consistency validation** | builder/validator.py | Medium |
 | D4 | **Clean up existing config YAML files** — audit all coverage configs against strict schema, remove extraneous fields, fix inconsistencies, ensure all pass `extra="forbid"` validation | coverages/*/config.yaml | Medium |
 
-### Phase E: Market Structure
-*Major architectural addition for tower/subscription markets. Requires design review before implementation.*
+### Phase E: Market Structure ✅ COMPLETE
+*Major architectural addition for tower/subscription markets.*
 
 | # | Item | Files | Effort |
 |---|------|-------|--------|
@@ -259,17 +259,15 @@ These small design decisions are built into Phases A-C to avoid rework when Phas
 
 ```
 Phase A (Foundation)  ──→  Phase C (ROL Engine)  ──→  Phase E (Market Structure)
-                                │
+       ✅                        ✅                         ✅
 Phase B (Scoring) ──────────────┤
-                                │
+       ✅                       │
                                 ├──→  Phase D (Config Strictness)  ──→  Phase F (Builder Execution)
+                                            ✅                              🔲 Not Started
 ```
 
-**Phases A and B** can be developed concurrently — no dependencies.
-**Phase C** depends on A1 (uncapped premium) and A2 (ILF transparency).
-**Phase D** can run in parallel with C.
-**Phase E** depends on C (ROL engine) being stable. Requires E1 design review before implementation.
-**Phase F** depends on D (strict schema) to ensure expanded configs meet new standards.
+**Phases A-E**: All complete as of March 2026.
+**Phase F**: Pending — depends on D (strict schema) to ensure expanded configs meet new standards.
 
 ---
 
