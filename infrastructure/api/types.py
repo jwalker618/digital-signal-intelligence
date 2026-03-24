@@ -187,7 +187,7 @@ class LossPropensitySummary(BaseModel):
 class ExposureSummary(BaseModel):
     exposure_value: Optional[float] = None
     exposure_band_label: Optional[str] = None
-    exposure_magnitude_score: Optional[float] = None
+    exposure_size_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
 
 # --- C. Composite Read Models (Aggregated Responses) ---
@@ -514,7 +514,7 @@ class ModelVersionDBRecord(BaseModel):
     exposure_band_id: Optional[int] = None
     exposure_band_label: Optional[str] = None
     exposure_band_boundaries: Dict[str, Any] = Field(default_factory=dict)
-    exposure_magnitude_score: Optional[float] = None
+    exposure_size_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
     exposure_assessment_method: Optional[str] = None
 
@@ -532,7 +532,7 @@ class ModelVersionDBRecord(BaseModel):
                                         "loss_last_refresh","correlation_matrix_version", 
                                         
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
                                       ])
 class ModelVersionDBRecord_BaseOnly(BaseModel):
     version_code: str
@@ -583,7 +583,7 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
                                         "loss_last_refresh","correlation_matrix_version",  
                                         
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
                                         ])
 class ModelVersionDBRecord_DetailOnly(BaseModel):
     version_code: str
@@ -611,7 +611,7 @@ class ModelVersionDBRecord_DetailOnly(BaseModel):
                                         "loss_last_refresh","correlation_matrix_version", 
                                         
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
                                       ])
 class ModelVersionDBRecord_CommentaryOnly(BaseModel):
     version_code: str 
@@ -631,7 +631,7 @@ class ModelVersionDBRecord_CommentaryOnly(BaseModel):
                                         "referral_reasons", "notes",
                                 
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_magnitude_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
                                       ])
 class ModelVersionDBRecord_LossOnly(BaseModel):
     version_code: str 
@@ -685,7 +685,7 @@ class ModelVersionDBRecord_ExposureOnly(BaseModel):
     exposure_band_id: Optional[int] = None
     exposure_band_label: Optional[str] = None
     exposure_band_boundaries: Dict[str, Any] = Field(default_factory=dict)
-    exposure_magnitude_score: Optional[float] = None
+    exposure_size_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
     exposure_assessment_method: Optional[str] = None
 

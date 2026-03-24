@@ -242,7 +242,7 @@ async def get_exposure_scatter_data(
     query = (
         select(
             ModelVersionRecord.version_code,
-            ModelVersionRecord.exposure_magnitude_score.label("x_magnitude"),
+            ModelVersionRecord.exposure_size_score.label("x_magnitude"),
             ModelVersionRecord.pure_composite_score.label("y_composite"),
             ModelVersionRecord.decision
         )
@@ -309,7 +309,7 @@ async def get_exposure_tier_distribution(
     query = (
         select(
             ModelVersionRecord.final_tier.label("tier"),
-            func.avg(ModelVersionRecord.exposure_magnitude_score).label("avg_magnitude"),
+            func.avg(ModelVersionRecord.exposure_size_score).label("avg_magnitude"),
             func.count(ModelVersionRecord.id).label("peer_count")
         )
         .select_from(ModelVersionRecord)

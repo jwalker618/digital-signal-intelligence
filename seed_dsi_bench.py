@@ -2619,7 +2619,7 @@ def build_exposure_assessment(co, config):
         "exposure_band_id": size_band_id,
         "exposure_band_label": size_band_label,
         "exposure_band_boundaries": size_band_boundaries,
-        "exposure_magnitude_score": size_score,
+        "exposure_size_score": size_score,
         "exposure_complexity_score": complexity_score,
         "exposure_modifier": combined_modifier,
         "exposure_assessment_method": "config_band_lookup",
