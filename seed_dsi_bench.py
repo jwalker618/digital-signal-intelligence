@@ -67,7 +67,7 @@ from layers.risk.appetite import evaluate_appetite
 from layers.risk.scorer import ModelScorer
 from layers.risk.pricer import ModelPricer
 from layers.risk.query_evaluator import QueryEvaluator
-from layers.risk.premium_validator import PremiumValidator
+from layers.risk.rol_validator import ROLValidator
 from layers.risk.types import SignalOutput, CategoricalOutput, utcnow
 
 # =============================================================================
@@ -1460,7 +1460,7 @@ COMPANIES = [
         "description": "Big 4 firm, comprehensive QC, some audit-related claims.",
         "signal_profile": "pi_strong",
         "product_type": "errors_omissions",
-        "limit": 250_000_000,
+        "limit": 150_000_000,
         "deductible": 1_000_000,
     },
     {
@@ -1482,7 +1482,7 @@ COMPANIES = [
         "description": "Material audit failures (Carillion, Wirecard), regulatory scrutiny.",
         "signal_profile": "pi_elevated",
         "product_type": "professional_liability",
-        "limit": 200_000_000,
+        "limit": 150_000_000,
         "deductible": 1_000_000,
         "referral_reasons": ["Audit failure history (Carillion)", "FRC regulatory investigation", "Elevated malpractice claims frequency"],
     },
@@ -2437,8 +2437,8 @@ def seed_data():
 
         stats = {"approve": 0, "refer": 0, "decline": 0, "outside_appetite": 0}
         coverage_counts = {}
-        validation_inputs = []  # Collected for premium accumulation validation
-        _premium_validator = PremiumValidator()
+        validation_inputs = []  # Collected for ROL validation
+        _rol_validator = ROLValidator()
 
         for i, co in enumerate(COMPANIES, 1):
             coverage_key = f"{co['coverage']}/{co['configuration']}"
@@ -2631,11 +2631,11 @@ def seed_data():
 
             # Determine ILF method and anchor from the curve config
             _pt_pricing = config.pricing.by_product_type.get(product_type)
-            if _pt_pricing and _pt_pricing.ilf_curve.is_parametric:
+            if _pt_pricing:
                 ilf_method = f"parametric:{_pt_pricing.ilf_curve.curve}"
                 ilf_anchor = _pt_pricing.ilf_curve.anchor_limit
             else:
-                ilf_method = "table"
+                ilf_method = "unknown"
                 ilf_anchor = config.pricing.base_limit_reference
 
             # Build tier override audit records
@@ -2937,10 +2937,28 @@ def seed_data():
             print(f"  Outside appetite (skipped): {stats['outside_appetite']}")
         print("=" * 70)
 
-        # Premium accumulation validation
+        # ROL validation summary
         if validation_inputs:
-            reports, summary = _premium_validator.validate_batch(validation_inputs)
-            print("\n" + _premium_validator.format_batch_summary(reports, summary))
+            ok = warn = fail = 0
+            for vi in validation_inputs:
+                limit = int(vi["submission_data"].get("limit", 0))
+                premium = vi["pricing_result"].final_premium
+                if limit > 0:
+                    r = _rol_validator.validate_rol(premium, limit)
+                    if r.severity == "OK":
+                        ok += 1
+                    elif r.severity == "WARNING":
+                        warn += 1
+                    else:
+                        fail += 1
+            total = ok + warn + fail
+            print(f"\n  ROL Validation: {total} checked — "
+                  f"{ok} OK, {warn} WARNING, {fail} FAIL")
+
+        # =================================================================
+        # Phase E Demonstration — Tower, Subscription, Lead/Follow
+        # =================================================================
+        _demonstrate_phase_e(config_cache=_config_cache)
 
     except Exception as e:
         db.rollback()
@@ -2950,6 +2968,244 @@ def seed_data():
         raise
     finally:
         db.close()
+
+
+def _demonstrate_phase_e(config_cache=None):
+    """Demonstrate Phase E concepts: towers, subscriptions, lead/follow, bespoke, LayerPremiumDetail.
+
+    Uses the production ModelPricer to run tower and subscription pricing,
+    printing detailed per-layer breakdowns.
+    """
+    from infrastructure.models.config_schema import (
+        LimitConfiguration, LimitConfigType, TowerLayer,
+        SubscriptionOrder, SubscriptionLine, LineRole,
+        CoverageConfig as PydanticCoverageConfig,
+        Pricing, ProductTypePricing, ILFCurve, DeductibleFactor,
+        RiskTierBands, RiskTierBand, RiskTierInterpretation,
+        TierBandRange, TierAction, RiskTierApplication, PricingMethod,
+        ConfigMetadata, Groups,
+    )
+    from layers.risk.pricer import ModelPricer
+    from layers.risk.rol_validator import ROLValidator
+
+    pricer = ModelPricer()
+    validator = ROLValidator()
+
+    print("\n" + "=" * 70)
+    print("  PHASE E — Tower & Subscription Market Structure Demos")
+    print("=" * 70)
+
+    # Shared pricing config for demos
+    _ilf = ILFCurve(anchor_limit=1_000_000, curve="power", params={"alpha": 0.569})
+    _ded_factors = [
+        DeductibleFactor(deductible=25_000, factor=1.0),
+        DeductibleFactor(deductible=50_000, factor=0.95),
+        DeductibleFactor(deductible=100_000, factor=0.90),
+    ]
+    _pricing = Pricing(
+        base_limit_reference=1_000_000,
+        base_deductible_reference=25_000,
+        by_product_type={
+            "cyber_liability": ProductTypePricing(
+                ilf_curve=_ilf,
+                deductible_factors=_ded_factors,
+                lead_loading_factor=1.10,
+            ),
+        },
+    )
+    _tier_bands = RiskTierBands(bands=[
+        RiskTierBand(id=1, label="PREFERRED", interpretation=RiskTierInterpretation(
+            bands=TierBandRange(min=700, max=1000), action=TierAction.APPROVE,
+            application=RiskTierApplication(method=PricingMethod.PREMIUM_BASE, value=50000),
+        )),
+        RiskTierBand(id=2, label="STANDARD", interpretation=RiskTierInterpretation(
+            bands=TierBandRange(min=500, max=699), action=TierAction.APPROVE,
+            application=RiskTierApplication(method=PricingMethod.PREMIUM_BASE, value=75000),
+        )),
+        RiskTierBand(id=3, label="REFER", interpretation=RiskTierInterpretation(
+            bands=TierBandRange(min=300, max=499), action=TierAction.REFER,
+            application=RiskTierApplication(method=PricingMethod.PREMIUM_BASE, value=100000),
+        )),
+    ])
+
+    # ── E2 Example 1: Standard contiguous tower ──
+    print("\n  [E2] Standard Contiguous Tower (Primary $1M + $4M xs $1M + $5M xs $5M)")
+    tower_config = _build_demo_config(
+        _pricing, _tier_bands,
+        limit_configuration=LimitConfiguration(
+            type=LimitConfigType.TOWER,
+            layers=[
+                TowerLayer(id=1, label="Primary", attachment=0, limit=1_000_000),
+                TowerLayer(id=2, label="1st Excess", attachment=1_000_000, limit=4_000_000),
+                TowerLayer(id=3, label="2nd Excess", attachment=5_000_000, limit=5_000_000),
+            ],
+        ),
+    )
+    layers = pricer.price_tower_layers(
+        premium=50_000,
+        submission_data={"deductible": 25_000, "product_type": "cyber_liability"},
+        config=tower_config,
+    )
+    _print_layer_breakdown(layers, "Standard Tower")
+
+    # ── E2 Example 2: Bespoke tower with gap ──
+    print("\n  [E2] Bespoke Tower with Gap (Primary $500K, gap $500K-$2M, Excess $3M xs $2M)")
+    bespoke_config = _build_demo_config(
+        _pricing, _tier_bands,
+        limit_configuration=LimitConfiguration(
+            type=LimitConfigType.TOWER,
+            layers=[
+                TowerLayer(id=1, label="Primary", attachment=0, limit=500_000),
+                TowerLayer(id=2, label="Excess (above gap)", attachment=2_000_000, limit=3_000_000),
+            ],
+        ),
+    )
+    bespoke_layers = pricer.price_tower_layers(
+        premium=50_000,
+        submission_data={"deductible": 25_000, "product_type": "cyber_liability"},
+        config=bespoke_config,
+    )
+    _print_layer_breakdown(bespoke_layers, "Bespoke Tower (gap)")
+
+    # ── E3 Example: Cumulative ILF differential ──
+    print("\n  [E3] Cumulative ILF Differential Pricing")
+    _ilf_demo = tower_config.pricing.by_product_type["cyber_liability"].ilf_curve
+    demo_points = [0, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000]
+    print(f"        {'Limit':>12s}  {'Cumul. ILF':>10s}  {'Standard ILF':>12s}")
+    for pt in demo_points:
+        cum = _ilf_demo.get_cumulative_factor(pt)
+        std = _ilf_demo.get_factor_for_limit(pt) if pt > 0 else 0.0
+        print(f"        ${pt:>11,d}  {cum:>10.4f}  {std:>12.4f}")
+
+    # ── E4 Example 1: Subscription — Follow line ──
+    print("\n  [E4] Subscription Order/Line — FOLLOW (10% signed line)")
+    sub_follow_config = _build_demo_config(
+        _pricing, _tier_bands,
+        limit_configuration=LimitConfiguration(
+            type=LimitConfigType.SUBSCRIPTION,
+            subscription_order=SubscriptionOrder(total_limit=10_000_000),
+            subscription_line=SubscriptionLine(
+                minimum_line=0.05, maximum_line=0.25,
+                signed_line=0.10, role=LineRole.FOLLOW,
+            ),
+        ),
+    )
+    follow_layers = pricer.price_tower_layers(
+        premium=50_000,
+        submission_data={"deductible": 25_000, "product_type": "cyber_liability"},
+        config=sub_follow_config,
+    )
+    _print_layer_breakdown(follow_layers, "Subscription FOLLOW")
+
+    # ── E4 Example 2: Subscription — Lead line ──
+    print("\n  [E4] Subscription Order/Line — LEAD (15% signed line, 1.10x loading)")
+    sub_lead_config = _build_demo_config(
+        _pricing, _tier_bands,
+        limit_configuration=LimitConfiguration(
+            type=LimitConfigType.SUBSCRIPTION,
+            subscription_order=SubscriptionOrder(total_limit=10_000_000),
+            subscription_line=SubscriptionLine(
+                minimum_line=0.10, maximum_line=0.30,
+                signed_line=0.15, role=LineRole.LEAD,
+            ),
+        ),
+    )
+    lead_layers = pricer.price_tower_layers(
+        premium=50_000,
+        submission_data={"deductible": 25_000, "product_type": "cyber_liability"},
+        config=sub_lead_config,
+    )
+    _print_layer_breakdown(lead_layers, "Subscription LEAD")
+
+    # ── E4+E2 Example: Tower with subscription allocation ──
+    print("\n  [E4+E2] Tower with Subscription Line (FOLLOW 10% on each layer)")
+    tower_sub_config = _build_demo_config(
+        _pricing, _tier_bands,
+        limit_configuration=LimitConfiguration(
+            type=LimitConfigType.TOWER,
+            layers=[
+                TowerLayer(id=1, label="Primary", attachment=0, limit=1_000_000),
+                TowerLayer(id=2, label="1st Excess", attachment=1_000_000, limit=4_000_000),
+                TowerLayer(id=3, label="2nd Excess", attachment=5_000_000, limit=5_000_000),
+            ],
+            subscription_order=SubscriptionOrder(total_limit=10_000_000),
+            subscription_line=SubscriptionLine(
+                minimum_line=0.05, maximum_line=0.20,
+                signed_line=0.10, role=LineRole.FOLLOW,
+            ),
+        ),
+    )
+    tower_sub_layers = pricer.price_tower_layers(
+        premium=50_000,
+        submission_data={"deductible": 25_000, "product_type": "cyber_liability"},
+        config=tower_sub_config,
+    )
+    _print_layer_breakdown(tower_sub_layers, "Tower + Subscription")
+
+    # ── E5 Example: LayerPremiumDetail output fields ──
+    if tower_sub_layers:
+        print("\n  [E5] LayerPremiumDetail Output Fields (first layer):")
+        lp = tower_sub_layers[0]
+        for field_name in [
+            "layer_id", "layer_label", "attachment", "limit",
+            "order_premium", "signed_line", "role", "lead_loading",
+            "line_premium", "rol", "ilf_top", "ilf_bottom", "layer_ilf",
+        ]:
+            val = getattr(lp, field_name, "N/A")
+            if isinstance(val, float):
+                print(f"        {field_name:<20s} = {val:,.6f}")
+            else:
+                print(f"        {field_name:<20s} = {val}")
+
+    # ── ROL validation on tower layers ──
+    print("\n  [E3] ROL Validation per Tower Layer:")
+    for lp in layers:
+        rol_result = validator.validate_rol(lp.order_premium, lp.limit, lp.attachment)
+        print(f"        {lp.layer_label:<15s} ROL={lp.rol:.4f}  "
+              f"Severity={rol_result.severity:<8s} {rol_result.reason}")
+
+    print("\n  Phase E demonstration complete.\n")
+
+
+def _build_demo_config(pricing, tier_bands, limit_configuration):
+    """Build a minimal Pydantic CoverageConfig for Phase E demos."""
+    from infrastructure.models.config_schema import (
+        CoverageConfig as PydanticCoverageConfig,
+        ConfigMetadata, Groups, Guardrails,
+    )
+    return PydanticCoverageConfig(
+        coverage_id="demo",
+        config_id="demo_general",
+        metadata=ConfigMetadata(name="Phase E Demo", version="1.0.0", product_types=["cyber_liability"]),
+        signal_registry=[],
+        groups=Groups(),
+        risk_tier_bands=tier_bands,
+        pricing=pricing,
+        guardrails=Guardrails(),
+        limit_configuration=limit_configuration,
+    )
+
+
+def _print_layer_breakdown(layers, label):
+    """Print a table of layer pricing details."""
+    if not layers:
+        print(f"        (No layers generated for {label})")
+        return
+    print(f"        {'Layer':<15s} {'Attach':>10s} {'Limit':>10s} "
+          f"{'ILF Diff':>8s} {'Order Prem':>11s} {'Line%':>6s} {'Role':>6s} "
+          f"{'Loading':>7s} {'Line Prem':>11s} {'ROL':>8s}")
+    for lp in layers:
+        print(f"        {lp.layer_label:<15s} ${lp.attachment:>9,d} ${lp.limit:>9,d} "
+              f"{lp.layer_ilf:>8.4f} ${lp.order_premium:>10,.0f} "
+              f"{lp.signed_line:>5.0%} {lp.role:>6s} "
+              f"{lp.lead_loading:>6.2f}x ${lp.line_premium:>10,.0f} "
+              f"{lp.rol:>7.4f}")
+    total_order = sum(lp.order_premium for lp in layers)
+    total_line = sum(lp.line_premium for lp in layers)
+    print(f"        {'TOTAL':<15s} {'':>10s} {'':>10s} "
+          f"{'':>8s} ${total_order:>10,.0f} "
+          f"{'':>6s} {'':>6s} "
+          f"{'':>7s} ${total_line:>10,.0f}")
 
 
 if __name__ == "__main__":

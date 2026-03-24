@@ -4,6 +4,8 @@ Tests for DSI Coverage Builder (Phase 13)
 Tests for LLM-assisted coverage building.
 """
 
+import asyncio
+
 import pytest
 import yaml
 
@@ -15,6 +17,7 @@ from infrastructure.builder import (
     SignalRecommendation,
     SignalSelection,
     ValidationResult,
+    ValidationIssue,
     ValidationSeverity,
     BuildStage,
     # Components
@@ -149,44 +152,80 @@ class TestConfigValidator:
     def test_validate_valid_config(self, validator):
         """Should validate correct configuration."""
         config = """
-coverage:
-  id: test_coverage
-  name: Test Coverage
-  description: A test coverage
-
-signal_groups:
-  technical:
-    weight: 0.5
-    signals:
-      - security_headers
-      - tls_config
-  financial:
-    weight: 0.5
-    signals:
-      - revenue_growth
-
-scoring:
-  composite_method: weighted_average
-  scale:
-    min: 300
-    max: 850
-
-tiers:
-  1:
-    min_score: 780
-    label: PREFERRED
-  2:
-    min_score: 680
-    label: STANDARD
-  3:
-    min_score: 580
-    label: STANDARD_PLUS
-  4:
-    min_score: 480
-    label: ELEVATED
-  5:
-    min_score: 0
-    label: HIGH_RISK
+test_coverage:
+  test_coverage_general:
+    metadata:
+      name: Test Coverage
+      version: "1.0"
+    signal_registry:
+      - id: security_headers
+        three_layer_assessment:
+          group_id: technical
+      - id: tls_config
+        three_layer_assessment:
+          group_id: technical
+      - id: revenue_growth
+        three_layer_assessment:
+          group_id: financial
+    groups:
+      three_layer_assessment:
+        - id: technical
+          risk:
+            weight: 0.5
+        - id: financial
+          risk:
+            weight: 0.5
+    risk_tier_bands:
+      bands:
+        - tier: 1
+          interpretation:
+            bands: {min: 780, max: 850}
+            action: APPROVE
+            application: {applied: true}
+        - tier: 2
+          interpretation:
+            bands: {min: 680, max: 779}
+            action: APPROVE
+            application: {applied: true}
+        - tier: 3
+          interpretation:
+            bands: {min: 580, max: 679}
+            action: REFER
+            application: {applied: true}
+        - tier: 4
+          interpretation:
+            bands: {min: 480, max: 579}
+            action: REFER
+            application: {applied: true}
+        - tier: 5
+          interpretation:
+            bands: {min: 0, max: 479}
+            action: DECLINE
+            application: {applied: true}
+    loss_tier_bands:
+      bands:
+        - tier: 1
+          label: low
+          interpretation:
+            application:
+              frequency_modifier: 0.8
+              severity_modifier: 0.9
+        - tier: 2
+          label: high
+          interpretation:
+            application:
+              frequency_modifier: 1.2
+              severity_modifier: 1.1
+      constraints:
+        floor: 0.5
+        cap: 2.0
+    exposure:
+      size:
+        weight: 0.5
+        bands: []
+      complexity:
+        weight: 0.5
+        bands: []
 """
 
         result = validator.validate_yaml(config)
@@ -197,16 +236,18 @@ tiers:
     def test_validate_missing_required_keys(self, validator):
         """Should detect missing required keys."""
         config = """
-coverage:
-  id: test
-  name: Test
+test:
+  test_general:
+    metadata:
+      name: Test
+      version: "1.0"
 """
 
         result = validator.validate_yaml(config)
 
         assert result.valid is False
         assert result.error_count > 0
-        assert any("signal_groups" in i.message for i in result.issues)
+        assert any("signal_registry" in i.message for i in result.issues)
 
     def test_validate_invalid_yaml(self, validator):
         """Should detect invalid YAML."""
@@ -220,61 +261,99 @@ coverage:
     def test_validate_weight_sum(self, validator):
         """Should check weight sums."""
         config = """
-coverage:
-  id: test
-  name: Test
-  description: Test
-
-signal_groups:
-  group1:
-    weight: 0.3
-    signals: [a]
-  group2:
-    weight: 0.3
-    signals: [b]
-
-scoring:
-  composite_method: weighted_average
-
-tiers:
-  1:
-    min_score: 700
+test:
+  test_general:
+    metadata:
+      name: Test
+      version: "1.0"
+    signal_registry:
+      - signal_id: a
+        three_layer_assessment:
+          group_id: group1
+      - signal_id: b
+        three_layer_assessment:
+          group_id: group2
+    groups:
+      three_layer_assessment:
+        - id: group1
+          risk:
+            weight: 0.3
+        - id: group2
+          risk:
+            weight: 0.3
+    risk_tier_bands:
+      bands:
+        - tier: 1
+          min_score: 700
+          action: APPROVE
+    loss_tier_bands:
+      bands:
+        - tier: 1
+          min_score: 0
+    exposure:
+      size:
+        weight: 0.5
+      complexity:
+        weight: 0.5
 """
 
         result = validator.validate_yaml(config)
 
         # Should warn about weights not summing to 1.0
-        weight_issues = [i for i in result.issues if "weight" in i.category.lower()]
+        weight_issues = [i for i in result.issues if "weight" in i.message.lower()]
         assert len(weight_issues) > 0
 
     def test_validate_tier_ordering(self, validator):
-        """Should check tier score ordering."""
+        """Should detect tier band issues."""
         config = """
-coverage:
-  id: test
-  name: Test
-  description: Test
-
-signal_groups:
-  group1:
-    weight: 1.0
-    signals: [a]
-
-scoring:
-  composite_method: weighted_average
-
-tiers:
-  1:
-    min_score: 500
-  2:
-    min_score: 700
+test:
+  test_general:
+    metadata:
+      name: Test
+      version: "1.0"
+    signal_registry:
+      - signal_id: a
+        three_layer_assessment:
+          group_id: group1
+    groups:
+      three_layer_assessment:
+        - id: group1
+          risk:
+            weight: 1.0
+    risk_tier_bands:
+      bands:
+        - tier: 1
+          interpretation:
+            bands:
+              min: 700
+              max: 850
+            action: APPROVE
+            application:
+              applied: true
+        - tier: 2
+          interpretation:
+            bands:
+              min: 500
+              max: 900
+            action: APPROVE
+            application:
+              applied: true
+    loss_tier_bands:
+      bands:
+        - tier: 1
+          min_score: 0
+    exposure:
+      size:
+        weight: 0.5
+      complexity:
+        weight: 0.5
 """
 
         result = validator.validate_yaml(config)
 
-        # Should error about tier ordering
+        # Should warn about tier band overlap
         tier_issues = [i for i in result.issues if "tier" in i.category.lower()]
-        assert any("min_score" in str(i.message) for i in tier_issues)
+        assert any("overlap" in str(i.message).lower() or "band" in str(i.message).lower() for i in tier_issues)
 
 
 # =============================================================================
@@ -288,20 +367,18 @@ class TestCoverageBuilder:
     def builder(self):
         return CoverageBuilder()
 
-    @pytest.mark.asyncio
-    async def test_analyze_industry(self, builder):
+    def test_analyze_industry(self, builder):
         """Should analyze industry."""
-        analysis = await builder.analyze_industry(
+        analysis = asyncio.run(builder.analyze_industry(
             "financial_services",
             examples=["JPMorgan", "Goldman Sachs"],
-        )
+        ))
 
         assert analysis.industry == "financial_services"
         assert len(analysis.key_risk_factors) > 0
         assert len(analysis.relevant_categories) > 0
 
-    @pytest.mark.asyncio
-    async def test_select_signals(self, builder):
+    def test_select_signals(self, builder):
         """Should select signals based on analysis."""
         analysis = IndustryAnalysis(
             industry="technology",
@@ -318,15 +395,18 @@ class TestCoverageBuilder:
             target_market="US",
         )
 
-        selections = await builder.select_signals(analysis, spec)
+        selections = asyncio.run(builder.select_signals(analysis, spec))
 
         assert len(selections) > 0
-        # Weights should sum to ~1.0
-        total_weight = sum(s.weight for s in selections)
-        assert 0.99 <= total_weight <= 1.01
+        # Weights should sum to ~1.0 within each group
+        from collections import defaultdict
+        groups = defaultdict(float)
+        for s in selections:
+            groups[s.group_id] += s.weight
+        for group_id, total in groups.items():
+            assert 0.99 <= total <= 1.01, f"Group {group_id} weights sum to {total}"
 
-    @pytest.mark.asyncio
-    async def test_generate_config(self, builder):
+    def test_generate_config(self, builder):
         """Should generate valid config."""
         spec = CoverageSpec(
             name="Test Coverage",
@@ -350,50 +430,91 @@ class TestCoverageBuilder:
             ),
         ]
 
-        config_yaml = await builder.generate_config(spec, selections)
+        config_yaml = asyncio.run(builder.generate_config(spec, selections))
 
         # Should be valid YAML
         config = yaml.safe_load(config_yaml)
-        assert "coverage" in config
-        assert "signal_groups" in config
-        assert "tiers" in config
+        # v2.2 config uses coverage_id as top-level key
+        assert "test_coverage" in config
+        # Inner config has signal_registry
+        inner = config["test_coverage"]["test_coverage_general"]
+        assert "signal_registry" in inner
 
-    @pytest.mark.asyncio
-    async def test_validate_config(self, builder):
+    def test_validate_config(self, builder):
         """Should validate configuration."""
         valid_config = """
-coverage:
-  id: test
-  name: Test
-  description: Test
-
-signal_groups:
-  group1:
-    weight: 1.0
-    signals: [a, b, c]
-
-scoring:
-  composite_method: weighted_average
-
-tiers:
-  1:
-    min_score: 700
-  2:
-    min_score: 600
-  3:
-    min_score: 500
-  4:
-    min_score: 400
-  5:
-    min_score: 0
+test:
+  test_general:
+    metadata:
+      name: Test
+      version: "1.0"
+    signal_registry:
+      - id: a
+        three_layer_assessment:
+          group_id: group1
+      - id: b
+        three_layer_assessment:
+          group_id: group1
+      - id: c
+        three_layer_assessment:
+          group_id: group1
+    groups:
+      three_layer_assessment:
+        - id: group1
+          risk:
+            weight: 1.0
+    risk_tier_bands:
+      bands:
+        - tier: 1
+          interpretation:
+            bands: {min: 700, max: 850}
+            action: APPROVE
+            application: {applied: true}
+        - tier: 2
+          interpretation:
+            bands: {min: 600, max: 699}
+            action: APPROVE
+            application: {applied: true}
+        - tier: 3
+          interpretation:
+            bands: {min: 500, max: 599}
+            action: REFER
+            application: {applied: true}
+        - tier: 4
+          interpretation:
+            bands: {min: 400, max: 499}
+            action: REFER
+            application: {applied: true}
+        - tier: 5
+          interpretation:
+            bands: {min: 0, max: 399}
+            action: DECLINE
+            application: {applied: true}
+    loss_tier_bands:
+      bands:
+        - tier: 1
+          label: low
+          interpretation:
+            application:
+              frequency_modifier: 0.8
+              severity_modifier: 0.9
+      constraints:
+        floor: 0.5
+        cap: 2.0
+    exposure:
+      size:
+        weight: 0.5
+        bands: []
+      complexity:
+        weight: 0.5
+        bands: []
 """
 
-        result = await builder.validate_config(valid_config)
+        result = asyncio.run(builder.validate_config(valid_config))
 
         assert result.valid is True
 
-    @pytest.mark.asyncio
-    async def test_create_coverage_full(self, builder):
+    def test_create_coverage_full(self, builder):
         """Should create complete coverage."""
         spec = CoverageSpec(
             name="Test Energy",
@@ -403,7 +524,7 @@ tiers:
             tier_strategy="standard",
         )
 
-        result = await builder.create_coverage(spec)
+        result = asyncio.run(builder.create_coverage(spec))
 
         assert result.coverage_name == "Test Energy"
         assert len(result.config_yaml) > 0

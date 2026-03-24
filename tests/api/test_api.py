@@ -285,7 +285,7 @@ class TestAPITypes:
 
     def test_submission_request_validation(self):
         """Should validate submission request."""
-        from api.types import SubmissionRequest
+        from infrastructure.api.types import SubmissionRequest
 
         # Valid request
         request = SubmissionRequest(
@@ -298,7 +298,7 @@ class TestAPITypes:
 
     def test_quote_response_structure(self):
         """Should create valid quote response."""
-        from api.types import QuoteResponse, QuoteStatus
+        from infrastructure.api.types import QuoteResponse, QuoteStatus
 
         response = QuoteResponse(
             quote_code="quo_123",
@@ -316,7 +316,7 @@ class TestAPITypes:
 
     def test_referral_decision_types(self):
         """Should have valid referral decision types."""
-        from api.types import ReferralDecisionType
+        from infrastructure.api.types import ReferralDecisionType
 
         assert ReferralDecisionType.APPROVE == "approve"
         assert ReferralDecisionType.DECLINE == "decline"
@@ -332,7 +332,7 @@ class TestAuthentication:
 
     def test_create_access_token(self):
         """Should create valid JWT token."""
-        from api.auth.jwt_auth import create_access_token, decode_token
+        from infrastructure.api.auth.jwt_auth import create_access_token, decode_token
 
         token = create_access_token(
             user_id="user_123",
@@ -352,7 +352,7 @@ class TestAuthentication:
 
     def test_validate_api_key(self):
         """Should validate API keys."""
-        from api.auth.api_key import validate_api_key
+        from infrastructure.api.auth.api_key import validate_api_key
 
         # Test demo key
         result = validate_api_key("demo_key")
@@ -365,7 +365,7 @@ class TestAuthentication:
 
     def test_permissions_enum(self):
         """Should have valid permissions."""
-        from api.auth.jwt_auth import Permission
+        from infrastructure.api.auth.jwt_auth import Permission
 
         assert Permission.SUBMIT == "submit"
         assert Permission.REFERRAL == "referral"

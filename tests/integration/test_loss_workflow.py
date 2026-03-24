@@ -174,7 +174,7 @@ class TestWorkflowWithLossCorrelation:
 
         assert engine.enable_loss_correlation == False
 
-    @patch('layers.risk.workflow.load_coverage_config')
+    @patch('layers.risk.workflow.get_config')
     @patch('layers.risk.workflow.WebsiteDiscoveryEngine')
     def test_calculate_loss_propensity_method(
         self,

@@ -303,7 +303,9 @@ class ModelVersionRecord(Base):
     modifiers_applied = Column(JSONB, default=list)
     premium_after_modifiers = Column(Float)
     limit_premiums = Column(JSONB, default=dict)
+    limit_premium_details = Column(JSONB, default=list)
     final_premium = Column(Float)
+    uncapped_premium = Column(Float, nullable=True)
 
     # ILF (Increased Limit Factor) audit
     ilf_factor = Column(Float)                       # The ILF multiplier applied at the requested limit

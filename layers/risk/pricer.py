@@ -21,10 +21,14 @@ from infrastructure.models.config_schema import (
     TierAction,
     PricingMethod,
     LimitConfigType,
+    LineRole,
 )
 
 from .types import (
     PricingResult,
+    LimitPremiumDetail,
+    LayerPremiumDetail,
+    TierMarginContext,
     AppliedModifier,
     BasePremiumDerivation,
     CategoricalOutput,
@@ -86,6 +90,11 @@ class ModelPricer:
         # Step 9: Get final tier band
         final_tier_band = config.get_tier_band(final_tier)
 
+        # Calculate tier margin context
+        tier_margin = self.calculate_tier_margin(
+            pure_composite_score, score_based_band, config
+        )
+
         # Step 10: Calculate base premium
         tier_label = final_tier_band.label if final_tier_band else f"TIER_{final_tier}"
         base_premium, method, base_premium_derivation = self.calculate_base_premium(
@@ -111,7 +120,7 @@ class ModelPricer:
             premium_after_modifiers = max(premium_after_modifiers, config.metadata.min_premium)
 
         # Step 12: Scale to limit bands
-        limit_premiums = self.scale_to_limits(
+        limit_premiums, limit_details = self.scale_to_limits(
             premium=premium_after_modifiers,
             submission_data=submission_data,
             config=config,
@@ -126,6 +135,9 @@ class ModelPricer:
             else:
                 first_limit = min(limit_premiums.keys(), key=lambda x: float(x))
                 final_premium = limit_premiums[first_limit]
+
+        # Capture pre-guardrail premium before any capping
+        uncapped_premium = final_premium
 
         # Guardrail checks on final premium
         guardrail_warnings: List[str] = []
@@ -180,6 +192,16 @@ class ModelPricer:
                 "; ".join(guardrail_warnings),
             )
 
+        # If premium was capped, record uncapped values on limit details
+        if premium_was_capped:
+            for detail in limit_details:
+                detail.uncapped_premium = detail.premium_after_scaling
+            # Update limit detail premiums to match capped limit_premiums
+            for detail in limit_details:
+                capped_val = limit_premiums.get(str(detail.limit))
+                if capped_val is not None:
+                    detail.premium_after_scaling = capped_val
+
         return PricingResult(
             tier_overrides_considered=all_overrides,
             max_tier_override=max_override,
@@ -187,6 +209,7 @@ class ModelPricer:
             final_tier=final_tier,
             tier_label=tier_label,
             tier_config=None,  # Deprecated: use config.get_tier_band() directly
+            tier_margin=tier_margin,
             base_premium=base_premium,
             base_premium_method=method,
             base_premium_derivation=base_premium_derivation,
@@ -194,7 +217,9 @@ class ModelPricer:
             total_modifier=total_modifier,
             premium_after_modifiers=premium_after_modifiers,
             limit_premiums=limit_premiums,
+            limit_premium_details=limit_details,
             final_premium=final_premium,
+            uncapped_premium=uncapped_premium if premium_was_capped else None,
             guardrail_warnings=guardrail_warnings,
             modifier_was_clamped=modifier_was_clamped,
             premium_was_capped=premium_was_capped,
@@ -237,6 +262,56 @@ class ModelPricer:
             RiskTierBand or None
         """
         return config.get_tier_band(tier)
+
+    def calculate_tier_margin(
+        self,
+        score: float,
+        tier_band: RiskTierBand,
+        config: CoverageConfig
+    ) -> TierMarginContext:
+        """
+        Calculate how close a score is to adjacent tier boundaries.
+
+        Provides underwriter context like "barely Tier 3, 12 points from Tier 2".
+        """
+        tier_min = tier_band.interpretation.bands.min
+        tier_max = tier_band.interpretation.bands.max
+        tier_range = tier_max - tier_min
+
+        percentile = (score - tier_min) / tier_range if tier_range > 0 else 0.5
+
+        # Find adjacent tiers
+        bands = sorted(config.risk_tier_bands.bands, key=lambda b: b.id)
+        current_idx = next(
+            (i for i, b in enumerate(bands) if b.id == tier_band.id), None
+        )
+
+        adjacent_better = None
+        distance_better = None
+        adjacent_worse = None
+        distance_worse = None
+
+        if current_idx is not None:
+            if current_idx > 0:
+                better_band = bands[current_idx - 1]
+                adjacent_better = better_band.id
+                distance_better = score - tier_min  # points above better tier's range
+            if current_idx < len(bands) - 1:
+                worse_band = bands[current_idx + 1]
+                adjacent_worse = worse_band.id
+                distance_worse = tier_max - score  # points below worse tier
+
+        return TierMarginContext(
+            score=score,
+            tier_id=tier_band.id,
+            tier_min=tier_min,
+            tier_max=tier_max,
+            percentile_in_tier=round(percentile, 3),
+            distance_to_better_tier=round(distance_better, 1) if distance_better is not None else None,
+            distance_to_worse_tier=round(distance_worse, 1) if distance_worse is not None else None,
+            adjacent_better_tier=adjacent_better,
+            adjacent_worse_tier=adjacent_worse,
+        )
 
     def resolve_tier_overrides(
         self,
@@ -454,7 +529,7 @@ class ModelPricer:
         premium: float,
         submission_data: Dict[str, Any],
         config: CoverageConfig
-    ) -> Dict[str, float]:
+    ) -> Tuple[Dict[str, float], List[LimitPremiumDetail]]:
         """
         Step 12: Scale premium across limit bands.
 
@@ -467,14 +542,15 @@ class ModelPricer:
             config: Coverage configuration (Pydantic compiled)
 
         Returns:
-            Dictionary of limit -> premium
+            Tuple of (limit -> premium dict, list of LimitPremiumDetail)
         """
         limit_config = config.limit_configuration
         if limit_config is None:
-            return {}
+            return {}, []
 
         product_type = self._resolve_product_type(submission_data, config)
         limit_premiums: Dict[str, float] = {}
+        limit_details: List[LimitPremiumDetail] = []
 
         if limit_config.type == LimitConfigType.BUNDLED and limit_config.packages:
             # BUNDLED: fixed limit/deductible packages
@@ -483,6 +559,14 @@ class ModelPricer:
                 ded_factor = config.get_deductible_factor(product_type, pkg.deductible)
                 limit_premium = premium * ilf * ded_factor
                 limit_premiums[str(pkg.limit)] = round(limit_premium, 2)
+                limit_details.append(LimitPremiumDetail(
+                    limit=pkg.limit,
+                    deductible=pkg.deductible,
+                    ilf_factor=ilf,
+                    deductible_factor=ded_factor,
+                    premium_before_scaling=premium,
+                    premium_after_scaling=round(limit_premium, 2),
+                ))
 
         elif limit_config.type == LimitConfigType.DECOUPLED:
             # DECOUPLED: independent limit/deductible selection
@@ -501,8 +585,148 @@ class ModelPricer:
                 ilf = config.get_ilf(product_type, limit)
                 limit_premium = premium * ilf * ded_factor
                 limit_premiums[str(limit)] = round(limit_premium, 2)
+                limit_details.append(LimitPremiumDetail(
+                    limit=limit,
+                    deductible=base_deductible,
+                    ilf_factor=ilf,
+                    deductible_factor=ded_factor,
+                    premium_before_scaling=premium,
+                    premium_after_scaling=round(limit_premium, 2),
+                ))
 
-        return limit_premiums
+        elif limit_config.type == LimitConfigType.TOWER and limit_config.layers:
+            # TOWER: stacked excess layers priced via ILF differentials
+            base_deductible = int(
+                submission_data.get("deductible", config.pricing.base_deductible_reference)
+            )
+            ded_factor = config.get_deductible_factor(product_type, base_deductible)
+
+            for layer in limit_config.layers:
+                ilf_top = config.get_cumulative_ilf(product_type, layer.attachment + layer.limit)
+                ilf_bottom = config.get_cumulative_ilf(product_type, layer.attachment)
+                layer_ilf = ilf_top - ilf_bottom
+                layer_premium = premium * layer_ilf * ded_factor
+
+                limit_premiums[str(layer.limit)] = round(layer_premium, 2)
+                limit_details.append(LimitPremiumDetail(
+                    limit=layer.limit,
+                    deductible=base_deductible,
+                    attachment_point=layer.attachment,
+                    ilf_factor=layer_ilf,
+                    deductible_factor=ded_factor,
+                    premium_before_scaling=premium,
+                    premium_after_scaling=round(layer_premium, 2),
+                ))
+
+        elif limit_config.type == LimitConfigType.SUBSCRIPTION:
+            # SUBSCRIPTION: order-level pricing, then line allocation
+            order = limit_config.subscription_order
+            if order:
+                ilf = config.get_ilf(product_type, order.total_limit)
+                base_deductible = int(
+                    submission_data.get("deductible", config.pricing.base_deductible_reference)
+                )
+                ded_factor = config.get_deductible_factor(product_type, base_deductible)
+                order_premium = premium * ilf * ded_factor
+
+                limit_premiums[str(order.total_limit)] = round(order_premium, 2)
+                limit_details.append(LimitPremiumDetail(
+                    limit=order.total_limit,
+                    deductible=base_deductible,
+                    ilf_factor=ilf,
+                    deductible_factor=ded_factor,
+                    premium_before_scaling=premium,
+                    premium_after_scaling=round(order_premium, 2),
+                ))
+
+        return limit_premiums, limit_details
+
+    def price_tower_layers(
+        self,
+        premium: float,
+        submission_data: Dict[str, Any],
+        config: CoverageConfig,
+    ) -> List[LayerPremiumDetail]:
+        """Price tower layers and return detailed layer-level breakdown.
+
+        This produces LayerPremiumDetail objects with ILF components, order
+        premiums, and (if subscription line is present) line-level allocation.
+        """
+        limit_config = config.limit_configuration
+        if limit_config is None or limit_config.type not in (
+            LimitConfigType.TOWER, LimitConfigType.SUBSCRIPTION
+        ):
+            return []
+
+        product_type = self._resolve_product_type(submission_data, config)
+        base_deductible = int(
+            submission_data.get("deductible", config.pricing.base_deductible_reference)
+        )
+        ded_factor = config.get_deductible_factor(product_type, base_deductible)
+
+        # Resolve subscription line parameters
+        line = limit_config.subscription_line
+        signed_line = line.signed_line if line and line.signed_line else 1.0
+        role = line.role.value if line else "FOLLOW"
+
+        # Resolve lead loading
+        prod_pricing = config.pricing.by_product_type.get(product_type)
+        lead_loading = 1.0
+        if role == "LEAD" and prod_pricing:
+            lead_loading = prod_pricing.lead_loading_factor
+
+        layer_details: List[LayerPremiumDetail] = []
+
+        if limit_config.type == LimitConfigType.TOWER and limit_config.layers:
+            for layer in limit_config.layers:
+                ilf_top = config.get_cumulative_ilf(product_type, layer.attachment + layer.limit)
+                ilf_bottom = config.get_cumulative_ilf(product_type, layer.attachment)
+                layer_ilf = ilf_top - ilf_bottom
+                order_prem = round(premium * layer_ilf * ded_factor, 2)
+                line_prem = round(order_prem * signed_line * lead_loading, 2)
+                rol = order_prem / layer.limit if layer.limit > 0 else 0.0
+
+                layer_details.append(LayerPremiumDetail(
+                    layer_id=layer.id,
+                    layer_label=layer.label,
+                    attachment=layer.attachment,
+                    limit=layer.limit,
+                    order_premium=order_prem,
+                    signed_line=signed_line,
+                    role=role,
+                    lead_loading=lead_loading,
+                    line_premium=line_prem,
+                    rol=rol,
+                    ilf_top=ilf_top,
+                    ilf_bottom=ilf_bottom,
+                    layer_ilf=layer_ilf,
+                ))
+
+        elif limit_config.type == LimitConfigType.SUBSCRIPTION:
+            order = limit_config.subscription_order
+            if order:
+                ilf = config.get_ilf(product_type, order.total_limit)
+                order_prem = round(premium * ilf * ded_factor, 2)
+                line_prem = round(order_prem * signed_line * lead_loading, 2)
+                rol = order_prem / order.total_limit if order.total_limit > 0 else 0.0
+
+                layer_details.append(LayerPremiumDetail(
+                    layer_id=1,
+                    layer_label="Primary",
+                    attachment=0,
+                    limit=order.total_limit,
+                    order_premium=order_prem,
+                    signed_line=signed_line,
+                    role=role,
+                    lead_loading=lead_loading,
+                    line_premium=line_prem,
+                    rol=rol,
+                    ilf_top=ilf,
+                    ilf_bottom=0.0,
+                    layer_ilf=ilf,
+                ))
+
+        return layer_details
 
     def _resolve_product_type(
         self,
@@ -547,6 +771,44 @@ class ModelPricer:
         hull_factor = hull_value / 1_000_000
 
         return base_rate * hull_factor
+
+    def reprice_at_limit(
+        self,
+        premium_after_modifiers: float,
+        new_limit: int,
+        deductible: int,
+        config: CoverageConfig,
+        submission_data: Optional[Dict[str, Any]] = None,
+    ) -> LimitPremiumDetail:
+        """Re-price at a different limit without re-running the full workflow.
+
+        Takes the premium after modifiers (pre-ILF) and applies ILF and
+        deductible factor for the new limit. This enables quick what-if
+        analysis and the recommendation engine to evaluate arbitrary limits.
+
+        Args:
+            premium_after_modifiers: Premium after all modifiers but before ILF
+            new_limit: Target limit
+            deductible: Deductible amount
+            config: Coverage configuration
+            submission_data: Optional submission data for product_type resolution
+
+        Returns:
+            LimitPremiumDetail for the requested limit
+        """
+        product_type = self._resolve_product_type(submission_data or {}, config)
+        ilf = config.get_ilf(product_type, new_limit)
+        ded_factor = config.get_deductible_factor(product_type, deductible)
+        limit_premium = premium_after_modifiers * ilf * ded_factor
+
+        return LimitPremiumDetail(
+            limit=new_limit,
+            deductible=deductible,
+            ilf_factor=ilf,
+            deductible_factor=ded_factor,
+            premium_before_scaling=premium_after_modifiers,
+            premium_after_scaling=round(limit_premium, 2),
+        )
 
 
 # Singleton instance for convenience

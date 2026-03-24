@@ -5,6 +5,60 @@ All notable changes to the Digital Signal Intelligence project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-24
+
+### Added
+
+- **Phase A: Foundation & Transparency**
+  - `uncapped_premium` field on PricingResult and ModelVersion — captures pre-guardrail premium for audit trail
+  - `LimitPremiumDetail` structured output replacing flat `Dict[str, float]` — stores discrete `ilf_factor` and `deductible_factor` per limit option
+  - Modifier visibility — each modifier categorized with before/after premium tracking
+  - `TierMarginContext` — distance to adjacent tier boundaries, percentile within current tier
+  - Table-based ILF removed — parametric-only enforcement in schema and ILFCurve
+  - Comprehensive unit tests for all Phase A features
+
+- **Phase B: Scoring Completeness**
+  - `evaluate_signal_conditions()` extended to process loss and exposure dimension score_conditions (previously only risk)
+  - Exposure dimension breakdown surfaced — magnitude vs complexity scores persisted separately
+  - Loss score fields clarified with semantic naming and individual frequency/severity trend fields
+  - Unit tests for loss/exposure score_conditions and dimension breakdown output
+
+- **Phase C: ROL Engine**
+  - ROL curve validator (`layers/risk/rol_validator.py`) — replaces PremiumValidator, per-coverage ROL appetite bands
+  - Dual recommendation engine (`layers/risk/rol_recommender.py`) — upper/lower ROL-optimal limit recommendations
+  - Limit re-calculation method — reprice with different limit selection without re-running entire workflow
+  - ConfigHealthGate updated to use ROL validator for boot-time config validation
+  - PremiumValidator removed entirely
+  - Comprehensive unit tests for ROL validator, dual recommender, and re-calculation
+
+- **Phase D: Config Strictness & Cleanup**
+  - `extra="forbid"` added to key Pydantic schema models — unknown YAML fields now rejected
+  - Comparison operators standardized — aliases removed, single canonical form enforced
+  - Cross-coverage field consistency validation in builder/validator
+  - All 7 coverage config YAML files cleaned up to pass strict validation
+
+- **Phase E: Tower & Subscription Market Structure**
+  - Tower (excess-of-loss) layer support: `TOWER` type in `LimitConfigType`, `TowerLayer` model with attachment/limit
+  - Multi-layer pricing engine: tower pricing via `ILF(attachment + limit) - ILF(attachment)` from existing cumulative curves
+  - Bespoke tower support: arbitrary attachment/limit combinations with validation (ordering, overlap, ILF range)
+  - Subscription market: `SUBSCRIPTION` type with order/line model, `SubscriptionOrder` and `SubscriptionLine` models
+  - Lead/follow role: `LineRole` enum, configurable lead loading factor
+  - `LayerPremiumDetail` output type — per-layer ILF differentials, order/line premiums, lead/follow roles
+  - `DualRecommendation` extended with `structure_type`, `layers`, `signed_line`, `role` fields
+  - Design document: `development/project/phase_e_design.md`
+  - Phase E seed script demonstrations
+
+### Changed
+- Config schema version updated to v2.3 (added `expectation_level`, tower/subscription types, strict validation)
+- Pricing engine (`pricer.py`) now polymorphic for ground-up, tower, and subscription limit configurations
+- ConfigHealthGate uses ROL validator instead of PremiumValidator
+- All coverage configs pass strict `extra="forbid"` schema validation
+
+### Removed
+- PremiumValidator (replaced by ROL curve validator)
+- Table-based ILF support (parametric-only)
+- `_EXPOSURE_BANDS` display table (dual-exposure disconnect eliminated)
+
 ## [0.3.0] - 2026-02-21
 
 ### Added
@@ -130,6 +184,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.4.0 | 2026-03-24 | Phases A-E: pricing transparency, ROL engine, config strictness, tower/subscription markets |
 | 0.3.0 | 2026-02-21 | Three-layer assessment, production readiness, deployment infrastructure |
 | 0.2.0 | 2025-12-28 | Architecture refactor with technical_pricing |
 | 0.1.0 | 2025-11-22 | Initial release with 3 pricing models |

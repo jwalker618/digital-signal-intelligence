@@ -271,11 +271,11 @@ class LossPropensityResult:
     severity_multiplier: float
     combined_loss_modifier: float
 
-    # Monitoring
+    # Monitoring — Combined Loss Propensity Trends
     trend_direction: TrendDirection
-    score_velocity: float  # points per month
+    combined_score_velocity: float  # Combined loss propensity score change in points per month
     days_since_last_assessment: int
-    previous_score: Optional[float]
+    previous_combined_score: Optional[float]  # Prior period's combined loss propensity score
 
     # Referral triggers
     referral_triggered: bool
@@ -286,6 +286,12 @@ class LossPropensityResult:
     signal_results: List[LossSignalResult]
     calculated_at: datetime
     config_version: str
+
+    # Monitoring — Individual Dimension Trends (frequency/severity)
+    previous_frequency_score: Optional[float] = None
+    previous_severity_score: Optional[float] = None
+    frequency_score_velocity: Optional[float] = None  # Frequency score change in points per month
+    severity_score_velocity: Optional[float] = None    # Severity score change in points per month
     correlation_matrix_version: Optional[str] = None
 
 

@@ -422,7 +422,7 @@ class TestLossHistoryInput:
     def test_has_data_with_policy_years(self):
         """Policy years should indicate data is available."""
         loss_input = LossHistoryInput(
-            policy_years=[PolicyYear(year=2023, premium=100_000, incurred_losses=50_000)]
+            policy_years=[PolicyYear(year=2023, premium=100_000, incurred_losses=50_000, paid_losses=40_000)]
         )
         assert loss_input.has_data is True
 
@@ -435,8 +435,8 @@ class TestLossHistoryInput:
         """Overall loss ratio should be calculated correctly."""
         loss_input = LossHistoryInput(
             policy_years=[
-                PolicyYear(year=2023, premium=100_000, incurred_losses=50_000),
-                PolicyYear(year=2022, premium=100_000, incurred_losses=50_000),
+                PolicyYear(year=2023, premium=100_000, incurred_losses=50_000, paid_losses=40_000),
+                PolicyYear(year=2022, premium=100_000, incurred_losses=50_000, paid_losses=40_000),
             ]
         )
         assert loss_input.overall_loss_ratio == 0.5  # 100k / 200k

@@ -17,9 +17,14 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Union
 import logging
 import math
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 _logger = logging.getLogger("dsi.config_schema")
+
+
+class StrictModel(BaseModel):
+    """Base model that rejects unknown fields in YAML config."""
+    model_config = ConfigDict(extra="forbid")
 
 
 # =============================================================================
@@ -62,9 +67,7 @@ class ComparisonOperator(str, Enum):
     GTE = ">="
     EQ = "=="
     NEQ = "!="
-    EQ_SINGLE = "="  # Alias accepted from YAML configs
     IN = "in"  # Membership test for list values
-    IN_UPPER = "IN"  # Uppercase alias for 'in'
 
 
 class ExpectationLevel(str, Enum):
@@ -80,6 +83,14 @@ class LimitConfigType(str, Enum):
     """Limit configuration modes."""
     BUNDLED = "BUNDLED"      # Menu pricing with packages
     DECOUPLED = "DECOUPLED"  # Independent limit/deductible selection
+    TOWER = "TOWER"          # Stacked excess layers
+    SUBSCRIPTION = "SUBSCRIPTION"  # Order/line subscription market
+
+
+class LineRole(str, Enum):
+    """Lead vs follow role on a subscription line."""
+    LEAD = "LEAD"
+    FOLLOW = "FOLLOW"
 
 
 class PricingMethod(str, Enum):
@@ -93,7 +104,7 @@ class PricingMethod(str, Enum):
 # SCORE CONDITIONS
 # =============================================================================
 
-class ScoreCondition(BaseModel):
+class ScoreCondition(StrictModel):
     """Banded score condition for signals and groups."""
     threshold: int
     comparison: ComparisonOperator
@@ -115,13 +126,13 @@ class ScoreCondition(BaseModel):
 # METADATA
 # =============================================================================
 
-class MinimumViableInputField(BaseModel):
+class MinimumViableInputField(StrictModel):
     """Required input field specification."""
     field: str
     description: str = ""
 
 
-class RoutingConstraint(BaseModel):
+class RoutingConstraint(StrictModel):
     """Hard filter for multiplexer candidate selection."""
     field: str
     operator: ComparisonOperator
@@ -129,7 +140,7 @@ class RoutingConstraint(BaseModel):
     required_in_input: bool = False
 
 
-class ConfigMetadata(BaseModel):
+class ConfigMetadata(StrictModel):
     """Configuration metadata block."""
     name: str
     description: Optional[str] = None
@@ -159,8 +170,10 @@ class ConfigMetadata(BaseModel):
 # DIRECT QUERIES
 # =============================================================================
 
-class QueryCondition(BaseModel):
+class QueryCondition(StrictModel):
     """Condition for a direct query response."""
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
     # Return value is the trigger (True/False from user)
     return_value: bool = Field(alias="return")
     action: ScoreConditionAction
@@ -168,11 +181,8 @@ class QueryCondition(BaseModel):
     applied: Optional[float] = None
     note: Optional[str] = None
 
-    class Config:
-        populate_by_name = True
 
-
-class DirectQuery(BaseModel):
+class DirectQuery(StrictModel):
     """Binary question that cannot be externally observed."""
     id: str
     question: str
@@ -183,7 +193,7 @@ class DirectQuery(BaseModel):
 # SIGNAL REGISTRY - CATEGORICAL
 # =============================================================================
 
-class CategoryFeature(BaseModel):
+class CategoryFeature(StrictModel):
     """Category value and its pricing impact."""
     cat: str
     label: Optional[str] = None
@@ -191,7 +201,7 @@ class CategoryFeature(BaseModel):
     value: Optional[float] = None    # Base premium value
 
 
-class SignalCategories(BaseModel):
+class SignalCategories(StrictModel):
     """Categorical signal definition."""
     group_id: str
     source: Optional[str] = None  # e.g., "metadata.field_name"
@@ -202,20 +212,20 @@ class SignalCategories(BaseModel):
 # SIGNAL REGISTRY - THREE LAYER ASSESSMENT
 # =============================================================================
 
-class MetadataBand(BaseModel):
+class MetadataBand(StrictModel):
     """Numeric metadata band mapping."""
     min: int
     max: Optional[int] = None  # None = no upper limit
     score: int = Field(ge=0, le=100)
 
 
-class MetadataCategory(BaseModel):
+class MetadataCategory(StrictModel):
     """Text metadata category mapping."""
     match: Optional[str] = None  # None = default/catch-all
     score: int = Field(ge=0, le=100)
 
 
-class DimensionBlock(BaseModel):
+class DimensionBlock(StrictModel):
     """Single dimension within three-layer assessment."""
     source: Optional[str] = None  # Default: "score"
     bands: Optional[List[MetadataBand]] = None  # For numeric metadata
@@ -225,19 +235,19 @@ class DimensionBlock(BaseModel):
     score_conditions: Optional[List[ScoreCondition]] = None
 
 
-class LossDimension(BaseModel):
+class LossDimension(StrictModel):
     """Loss dimension with frequency and severity."""
     frequency: Optional[DimensionBlock] = None
     severity: Optional[DimensionBlock] = None
 
 
-class ExposureDimension(BaseModel):
+class ExposureDimension(StrictModel):
     """Exposure dimension with size and complexity."""
     size: Optional[DimensionBlock] = None
     complexity: Optional[DimensionBlock] = None
 
 
-class ThreeLayerAssessment(BaseModel):
+class ThreeLayerAssessment(StrictModel):
     """Three-layer assessment block for a signal."""
     group_id: str
     risk: Optional[DimensionBlock] = None
@@ -249,7 +259,7 @@ class ThreeLayerAssessment(BaseModel):
 # SIGNAL REGISTRY - COMPLETE SIGNAL
 # =============================================================================
 
-class SignalDefinition(BaseModel):
+class SignalDefinition(StrictModel):
     """Complete signal definition in signal_registry."""
     id: str
     inference_utility_function: str
@@ -273,7 +283,7 @@ class SignalDefinition(BaseModel):
 # GROUPS
 # =============================================================================
 
-class CategoryGroup(BaseModel):
+class CategoryGroup(StrictModel):
     """Categorical group definition."""
     id: str
     label: str
@@ -282,13 +292,13 @@ class CategoryGroup(BaseModel):
     default_cat: str
 
 
-class GroupDimension(BaseModel):
+class GroupDimension(StrictModel):
     """Dimension block for a three-layer assessment group."""
     weight: float = Field(ge=0.0, le=1.0)
     score_conditions: Optional[List[ScoreCondition]] = None
 
 
-class ThreeLayerAssessmentGroup(BaseModel):
+class ThreeLayerAssessmentGroup(StrictModel):
     """Three-layer assessment group definition."""
     id: str
     label: Optional[str] = None
@@ -298,7 +308,7 @@ class ThreeLayerAssessmentGroup(BaseModel):
     exposure: Optional[GroupDimension] = None
 
 
-class Groups(BaseModel):
+class Groups(StrictModel):
     """Groups section containing categories and three-layer assessment."""
     categories: List[CategoryGroup] = Field(default_factory=list)
     three_layer_assessment: List[ThreeLayerAssessmentGroup] = Field(default_factory=list)
@@ -308,13 +318,13 @@ class Groups(BaseModel):
 # TIER BANDS
 # =============================================================================
 
-class TierBandRange(BaseModel):
+class TierBandRange(StrictModel):
     """Score range for a tier band."""
     min: int
     max: int
 
 
-class RiskTierApplication(BaseModel):
+class RiskTierApplication(StrictModel):
     """Application block for risk tier."""
     method: PricingMethod = PricingMethod.PREMIUM_BASE
     value: Optional[int] = None    # For PREMIUM_BASE
@@ -322,14 +332,14 @@ class RiskTierApplication(BaseModel):
     basis: Optional[str] = None      # For MULTIPLIER
 
 
-class RiskTierInterpretation(BaseModel):
+class RiskTierInterpretation(StrictModel):
     """Interpretation block for risk tier."""
     bands: TierBandRange
     action: TierAction
     application: RiskTierApplication
 
 
-class RiskTierBand(BaseModel):
+class RiskTierBand(StrictModel):
     """Single risk tier band definition."""
     id: int
     label: str
@@ -337,7 +347,7 @@ class RiskTierBand(BaseModel):
     interpretation: RiskTierInterpretation
 
 
-class RiskTierBands(BaseModel):
+class RiskTierBands(StrictModel):
     """Risk tier bands section."""
     bands: List[RiskTierBand]
 
@@ -349,19 +359,19 @@ class RiskTierBands(BaseModel):
         return self.bands[-1].id  # Default to last tier
 
 
-class LossTierApplication(BaseModel):
+class LossTierApplication(StrictModel):
     """Application block for loss tier."""
     frequency_modifier: float
     severity_modifier: float
 
 
-class LossTierInterpretation(BaseModel):
+class LossTierInterpretation(StrictModel):
     """Interpretation block for loss tier."""
     bands: TierBandRange
     application: LossTierApplication
 
 
-class LossTierBand(BaseModel):
+class LossTierBand(StrictModel):
     """Single loss tier band definition."""
     id: int
     label: str
@@ -369,13 +379,13 @@ class LossTierBand(BaseModel):
     interpretation: LossTierInterpretation
 
 
-class LossTierConstraints(BaseModel):
+class LossTierConstraints(StrictModel):
     """Loss tier modifier constraints."""
     floor: float = 0.75
     cap: float = 1.50
 
 
-class LossTierBands(BaseModel):
+class LossTierBands(StrictModel):
     """Loss tier bands section."""
     bands: List[LossTierBand]
     constraints: LossTierConstraints = Field(default_factory=LossTierConstraints)
@@ -385,7 +395,7 @@ class LossTierBands(BaseModel):
 # EXPOSURE
 # =============================================================================
 
-class ExposureBandApplication(BaseModel):
+class ExposureBandApplication(StrictModel):
     """Application block for exposure band."""
     method: PricingMethod = PricingMethod.MODIFIER
     applied: float
@@ -393,13 +403,14 @@ class ExposureBandApplication(BaseModel):
     implied_thresholds: Optional[Dict[str, Optional[int]]] = None
 
 
-class ExposureBandInterpretation(BaseModel):
+class ExposureBandInterpretation(StrictModel):
     """Interpretation block for exposure band."""
     bands: TierBandRange
     application: ExposureBandApplication
+    implied_thresholds: Optional[Dict[str, Optional[int]]] = None  # Some configs place this here
 
 
-class ExposureBand(BaseModel):
+class ExposureBand(StrictModel):
     """Single exposure band definition."""
     id: int
     label: str
@@ -407,13 +418,13 @@ class ExposureBand(BaseModel):
     interpretation: ExposureBandInterpretation
 
 
-class ExposureDimensionConfig(BaseModel):
+class ExposureDimensionConfig(StrictModel):
     """Exposure dimension configuration (size or complexity)."""
     weight: float = Field(ge=0.0, le=1.0)
     bands: List[ExposureBand]
 
 
-class Exposure(BaseModel):
+class Exposure(StrictModel):
     """Exposure section with size and complexity."""
     size: Optional[ExposureDimensionConfig] = None
     complexity: Optional[ExposureDimensionConfig] = None
@@ -432,15 +443,52 @@ class Exposure(BaseModel):
 # LIMIT CONFIGURATION
 # =============================================================================
 
-class LimitPackage(BaseModel):
+class LimitPackage(StrictModel):
     """Bundled limit/deductible package."""
     id: Union[int, str]
     label: str
     limit: int
     deductible: int
+    target_segment: Optional[str] = None  # Optional description of target segment
 
 
-class LimitConfiguration(BaseModel):
+class TowerLayer(StrictModel):
+    """A single layer in a tower (excess-of-loss) structure."""
+    id: int
+    label: str
+    attachment: int = Field(ge=0)
+    limit: int = Field(gt=0)
+
+
+class SubscriptionOrder(StrictModel):
+    """Order-level terms for a subscription market (100% basis)."""
+    total_limit: int = Field(gt=0)
+    order_premium: Optional[float] = None  # Set by pricing engine if not explicit
+
+
+class SubscriptionLine(StrictModel):
+    """Insurer's line on a subscription order."""
+    minimum_line: float = Field(gt=0.0, le=1.0)
+    maximum_line: float = Field(gt=0.0, le=1.0)
+    signed_line: Optional[float] = None  # Actual signed %, between min and max
+    role: LineRole = LineRole.FOLLOW
+
+    @model_validator(mode="after")
+    def validate_line_bounds(self) -> "SubscriptionLine":
+        if self.maximum_line < self.minimum_line:
+            raise ValueError(
+                f"maximum_line ({self.maximum_line}) must be >= minimum_line ({self.minimum_line})"
+            )
+        if self.signed_line is not None:
+            if not (self.minimum_line <= self.signed_line <= self.maximum_line):
+                raise ValueError(
+                    f"signed_line ({self.signed_line}) must be between "
+                    f"minimum_line ({self.minimum_line}) and maximum_line ({self.maximum_line})"
+                )
+        return self
+
+
+class LimitConfiguration(StrictModel):
     """Limit and deductible configuration."""
     type: LimitConfigType = LimitConfigType.DECOUPLED
 
@@ -454,6 +502,13 @@ class LimitConfiguration(BaseModel):
 
     # Legacy: explicit list of limits (still supported, overrides min/max)
     valid_limits: Optional[List[int]] = None
+
+    # For TOWER mode — stacked excess layers (bespoke bandings supported)
+    layers: Optional[List[TowerLayer]] = None
+
+    # For SUBSCRIPTION mode — order/line model
+    subscription_order: Optional[SubscriptionOrder] = None
+    subscription_line: Optional[SubscriptionLine] = None
 
     @model_validator(mode="after")
     def validate_mode(self) -> "LimitConfiguration":
@@ -469,7 +524,29 @@ class LimitConfiguration(BaseModel):
                 )
             if not self.valid_deductibles:
                 raise ValueError("DECOUPLED mode requires 'valid_deductibles'")
+        if self.type == LimitConfigType.TOWER:
+            if not self.layers or len(self.layers) == 0:
+                raise ValueError("TOWER mode requires 'layers'")
+            self._validate_tower_layers()
+        if self.type == LimitConfigType.SUBSCRIPTION:
+            if not self.subscription_order:
+                raise ValueError("SUBSCRIPTION mode requires 'subscription_order'")
         return self
+
+    def _validate_tower_layers(self) -> None:
+        """Validate bespoke tower layer ordering and no overlaps."""
+        if not self.layers:
+            return
+        sorted_layers = sorted(self.layers, key=lambda l: l.attachment)
+        for i, layer in enumerate(sorted_layers):
+            if i > 0:
+                prev = sorted_layers[i - 1]
+                prev_top = prev.attachment + prev.limit
+                if layer.attachment < prev_top:
+                    raise ValueError(
+                        f"Tower layers overlap: layer '{prev.label}' ends at {prev_top} "
+                        f"but layer '{layer.label}' attaches at {layer.attachment}"
+                    )
 
     def generate_limit_options(self, requested_limit: Optional[int] = None) -> List[int]:
         """
@@ -515,11 +592,6 @@ class LimitConfiguration(BaseModel):
 # =============================================================================
 # PRICING
 # =============================================================================
-
-class ILFCurveFactor(BaseModel):
-    """Single point on ILF curve (legacy table format)."""
-    limit: int
-    factor: float
 
 
 # ---- Parametric ILF raw curve functions ------------------------------------
@@ -575,42 +647,26 @@ _CURVE_REGISTRY: Dict[str, Callable] = {
 }
 
 
-class ILFCurve(BaseModel):
+class ILFCurve(StrictModel):
     """
-    Increased Limit Factor curve — parametric or legacy table.
+    Increased Limit Factor curve — parametric only.
 
-    Parametric (preferred):
+    Supported curve types: bounded_exponential, power, logarithmic, pareto, iso_pareto.
+
+    Example:
         anchor_limit: 5000000
         curve: bounded_exponential
         params:
             max_ilf: 3.0
             k: 1.2
-
-    Legacy table (still supported):
-        base_limit: 1000000
-        factors:
-            - {limit: 1000000, factor: 1.0}
-            - {limit: 5000000, factor: 2.15}
     """
-    # Parametric fields
-    anchor_limit: Optional[int] = None
-    curve: Optional[str] = None
+    anchor_limit: int
+    curve: str
     params: Optional[Dict[str, float]] = None
-
-    # Legacy table fields
-    base_limit: Optional[int] = None
-    factors: Optional[List[ILFCurveFactor]] = None
 
     @model_validator(mode="after")
     def validate_curve_config(self) -> "ILFCurve":
-        has_parametric = self.curve is not None and self.anchor_limit is not None
-        has_table = self.factors is not None and self.base_limit is not None
-        if not has_parametric and not has_table:
-            raise ValueError(
-                "ILFCurve must specify either (anchor_limit + curve + params) "
-                "or (base_limit + factors)"
-            )
-        if has_parametric and self.curve not in _CURVE_REGISTRY:
+        if self.curve not in _CURVE_REGISTRY:
             raise ValueError(
                 f"Unknown ILF curve type '{self.curve}'. "
                 f"Valid types: {list(_CURVE_REGISTRY.keys())}"
@@ -619,23 +675,11 @@ class ILFCurve(BaseModel):
 
     @property
     def is_parametric(self) -> bool:
-        return self.curve is not None and self.anchor_limit is not None
+        """Always True — table-based ILF has been removed."""
+        return True
 
     def get_factor_for_limit(self, limit: int) -> float:
         """Get ILF factor for a given limit."""
-        if self.is_parametric:
-            return self._parametric_factor(limit)
-        return self._table_factor(limit)
-
-    def _parametric_factor(self, limit: int) -> float:
-        """
-        Evaluate the parametric curve at the given limit.
-
-        Uniform anchor normalisation: ILF = raw(L) / raw(anchor).
-        This guarantees ILF(anchor) = 1.0 for every curve type.
-        A floor of 1.0 ensures limits below anchor never produce ILF < 1.
-        An optional 'cap' parameter in params bounds the maximum ILF.
-        """
         curve_fn = _CURVE_REGISTRY[self.curve]
         params = dict(self.params or {})
 
@@ -659,42 +703,41 @@ class ILFCurve(BaseModel):
         # Floor at 1.0
         return max(ilf, 1.0)
 
-    def _table_factor(self, limit: int) -> float:
-        """Legacy: interpolate from factor table."""
-        if not self.factors:
-            return 1.0
+    def get_cumulative_factor(self, limit: int) -> float:
+        """Get cumulative ILF factor for tower layer pricing.
 
-        for f in self.factors:
-            if f.limit == limit:
-                return f.factor
-
-        sorted_factors = sorted(self.factors, key=lambda x: x.limit)
-
-        if limit < sorted_factors[0].limit:
-            return sorted_factors[0].factor
-        if limit > sorted_factors[-1].limit:
-            return sorted_factors[-1].factor
-
-        for i in range(len(sorted_factors) - 1):
-            if sorted_factors[i].limit <= limit <= sorted_factors[i + 1].limit:
-                low = sorted_factors[i]
-                high = sorted_factors[i + 1]
-                ratio = (limit - low.limit) / (high.limit - low.limit)
-                return low.factor + ratio * (high.factor - low.factor)
-
-        return 1.0
+        Unlike get_factor_for_limit(), this does NOT floor at 1.0.
+        This is required for tower pricing where the layer premium is
+        derived from ILF(A+L) - ILF(A), and ILF(0) must be 0.0 (not 1.0).
+        """
+        if limit <= 0:
+            return 0.0
+        curve_fn = _CURVE_REGISTRY[self.curve]
+        params = dict(self.params or {})
+        cap = params.pop("cap", None)
+        anchor = float(self.anchor_limit)
+        raw_at_limit = curve_fn(float(limit), anchor, **params)
+        raw_at_anchor = curve_fn(anchor, anchor, **params)
+        if raw_at_anchor == 0:
+            ilf = 1.0
+        else:
+            ilf = raw_at_limit / raw_at_anchor
+        if cap is not None:
+            ilf = min(ilf, cap)
+        return ilf
 
 
-class DeductibleFactor(BaseModel):
+class DeductibleFactor(StrictModel):
     """Deductible adjustment factor."""
     deductible: int
     factor: float
 
 
-class ProductTypePricing(BaseModel):
+class ProductTypePricing(StrictModel):
     """Pricing parameters for a product type."""
     ilf_curve: ILFCurve
     deductible_factors: List[DeductibleFactor]
+    lead_loading_factor: float = Field(default=1.0, ge=1.0, le=2.0)
 
     def get_deductible_factor(self, deductible: int) -> float:
         """Get deductible factor for a given deductible."""
@@ -705,7 +748,7 @@ class ProductTypePricing(BaseModel):
         return 1.0
 
 
-class Pricing(BaseModel):
+class Pricing(StrictModel):
     """Pricing section."""
     base_limit_reference: int = 1000000
     base_deductible_reference: int = 50000
@@ -725,7 +768,7 @@ class Pricing(BaseModel):
 # GUARDRAILS
 # =============================================================================
 
-class Guardrails(BaseModel):
+class Guardrails(StrictModel):
     """
     Runtime pricing guardrails.
 
@@ -756,7 +799,7 @@ class Guardrails(BaseModel):
 # COMPLETE COVERAGE CONFIG
 # =============================================================================
 
-class CoverageConfig(BaseModel):
+class CoverageConfig(StrictModel):
     """
     Complete coverage configuration.
 
@@ -807,39 +850,12 @@ class CoverageConfig(BaseModel):
         base_limit = self.pricing.base_limit_reference
         for prod_name, prod_pricing in self.pricing.by_product_type.items():
             ilf = prod_pricing.ilf_curve
-            if ilf.is_parametric:
-                # Parametric curves normalise to 1.0 at anchor_limit by construction
-                if ilf.anchor_limit != base_limit:
-                    _logger.info(
-                        f"Product '{prod_name}' parametric anchor_limit ({ilf.anchor_limit}) "
-                        f"differs from base_limit_reference ({base_limit})"
-                    )
-            else:
-                anchor_factor = None
-                for f in ilf.factors:
-                    if f.limit == base_limit:
-                        anchor_factor = f.factor
-                        break
-                if anchor_factor is None:
-                    errors.append(
-                        f"Product '{prod_name}' ILF curve missing base_limit_reference ({base_limit})"
-                    )
-                elif anchor_factor != 1.0:
-                    errors.append(
-                        f"Product '{prod_name}' ILF anchor at {base_limit} should be 1.0, got {anchor_factor}"
-                    )
-
-        # Validate ILF factors within guardrail bounds
-        max_ilf = self.guardrails.max_ilf_factor
-        for prod_name, prod_pricing in self.pricing.by_product_type.items():
-            ilf = prod_pricing.ilf_curve
-            if not ilf.is_parametric and ilf.factors:
-                for f in ilf.factors:
-                    if f.factor > max_ilf:
-                        errors.append(
-                            f"Product '{prod_name}' ILF factor {f.factor} at limit "
-                            f"{f.limit:,} exceeds max_ilf_factor ({max_ilf})"
-                        )
+            # Parametric curves normalise to 1.0 at anchor_limit by construction
+            if ilf.anchor_limit != base_limit:
+                _logger.info(
+                    f"Product '{prod_name}' parametric anchor_limit ({ilf.anchor_limit}) "
+                    f"differs from base_limit_reference ({base_limit})"
+                )
 
         # Validate deductible anchor
         base_ded = self.pricing.base_deductible_reference
@@ -921,6 +937,12 @@ class CoverageConfig(BaseModel):
             return 1.0
         return self.pricing.by_product_type[product_type].ilf_curve.get_factor_for_limit(limit)
 
+    def get_cumulative_ilf(self, product_type: str, limit: int) -> float:
+        """Get cumulative ILF for tower layer pricing (no floor at 1.0)."""
+        if product_type not in self.pricing.by_product_type:
+            return 0.0 if limit <= 0 else 1.0
+        return self.pricing.by_product_type[product_type].ilf_curve.get_cumulative_factor(limit)
+
     def get_deductible_factor(self, product_type: str, deductible: int) -> float:
         """Get deductible factor for product type and deductible."""
         if product_type not in self.pricing.by_product_type:
@@ -932,7 +954,7 @@ class CoverageConfig(BaseModel):
 # COVERAGE WRAPPER
 # =============================================================================
 
-class Coverage(BaseModel):
+class Coverage(StrictModel):
     """
     Top-level coverage containing one or more configurations.
 

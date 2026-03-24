@@ -220,7 +220,7 @@ class LossMonitoringEngine:
 
         # Check for velocity spike
         if self.config.alert_on_velocity_spike:
-            if current.score_velocity >= self.config.velocity_spike_threshold:
+            if current.combined_score_velocity >= self.config.velocity_spike_threshold:
                 alerts.append(DeteriorationAlert(
                     entity_id=entity_id,
                     alert_type='warning',
@@ -230,7 +230,7 @@ class LossMonitoringEngine:
                     days_elapsed=days_elapsed,
                     current_band=current.loss_propensity_band.value,
                     previous_band=previous.loss_propensity_band.value,
-                    trigger_reason=f"Rapid deterioration: {current.score_velocity:.1f} points/month",
+                    trigger_reason=f"Rapid deterioration: {current.combined_score_velocity:.1f} points/month",
                     recommended_action="Monitor closely for continued deterioration",
                     created_at=datetime.utcnow()
                 ))
@@ -296,7 +296,7 @@ class LossMonitoringEngine:
         for entity_id, result in self.result_cache.items():
             if result.trend_direction == TrendDirection.DETERIORATING:
                 # Check velocity (convert to monthly equivalent)
-                if result.score_velocity >= min_score_delta / 30:
+                if result.combined_score_velocity >= min_score_delta / 30:
                     deteriorating.append(entity_id)
 
         return deteriorating
@@ -319,7 +319,7 @@ class LossMonitoringEngine:
         for entity_id, result in self.result_cache.items():
             if result.trend_direction == TrendDirection.IMPROVING:
                 # Check velocity (convert to monthly equivalent)
-                if abs(result.score_velocity) >= min_score_delta / 30:
+                if abs(result.combined_score_velocity) >= min_score_delta / 30:
                     improving.append(entity_id)
 
         return improving

@@ -37,7 +37,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
-from infrastructure.models.config_schema import CoverageConfig
+from infrastructure.models.config_schema import CoverageConfig, LimitConfigType
 
 logger = logging.getLogger("dsi.config_health_gate")
 
@@ -251,7 +251,6 @@ class ConfigHealthGate:
         """
         # Lazy imports to avoid circular dependencies
         from layers.risk.pricer import ModelPricer
-        from layers.risk.premium_validator import PremiumValidator, DEFAULT_LIMIT_COHORTS
 
         key = f"{coverage_id}/{config_id}"
 
@@ -294,16 +293,24 @@ class ConfigHealthGate:
             return result
 
         pricer = ModelPricer()
-        # Use wider target bands for health gate — synthetic fixtures lack
-        # the categorical modifiers that compress real premiums. The gate
-        # catches broken calibration, not edge-case P/L at limit extremes.
-        gate_cohorts = []
-        for c in DEFAULT_LIMIT_COHORTS:
-            widened = dict(c)
-            widened["target_min"] = c["target_min"] * 0.5
-            widened["target_max"] = min(c["target_max"] * 1.5, 0.35)
-            gate_cohorts.append(widened)
-        validator = PremiumValidator(limit_cohorts=gate_cohorts)
+        # Use ROL validator with widened appetite bands for health gate —
+        # synthetic fixtures lack categorical modifiers that compress real
+        # premiums. The gate catches broken calibration, not edge-case ROL.
+        from layers.risk.rol_validator import ROLValidator, ROLAppetiteBand, DEFAULT_ROL_APPETITE
+        widened_bands = []
+        for b in DEFAULT_ROL_APPETITE:
+            widened_bands.append(ROLAppetiteBand(
+                label=b.label,
+                attachment_min=b.attachment_min,
+                attachment_max=b.attachment_max,
+                limit_min=b.limit_min,
+                limit_max=b.limit_max,
+                rol_floor=b.rol_floor * 0.5,
+                rol_ceiling=min(b.rol_ceiling * 1.5, 0.35),
+                warning_floor=b.warning_floor * 0.5,
+                warning_ceiling=min(b.warning_ceiling * 1.5, 0.40),
+            ))
+        rol_validator = ROLValidator(appetite_bands=widened_bands)
         failures = []
         guardrail_primary_count = 0
         outside_target_count = 0
@@ -321,38 +328,53 @@ class ConfigHealthGate:
                     config=config,
                 )
 
-                report = validator.validate_pricing(
-                    config=config,
-                    pricing_result=pricing_result,
-                    submission_data=fixture["submission_data"],
-                    entity_name=fixture["label"],
-                )
+                limit = int(fixture["submission_data"].get("limit", 0))
+                premium = pricing_result.final_premium
 
-                # Check for guardrail as primary control
-                has_primary = any(
-                    "primary pricing control" in w.message
-                    for w in report.warnings
+                # For tower configs, validate ROL per layer from limit_details
+                if (config.limit_configuration
+                        and config.limit_configuration.type == LimitConfigType.TOWER
+                        and pricing_result.limit_premium_details):
+                    # Use worst-case ROL across layers for gate purposes
+                    layer_results = []
+                    for ld in pricing_result.limit_premium_details:
+                        lr = rol_validator.validate_rol(
+                            ld.premium_after_scaling,
+                            ld.limit,
+                            attachment=ld.attachment_point or 0,
+                        )
+                        layer_results.append(lr)
+                    # Use the first layer's result as representative
+                    rol_result = layer_results[0] if layer_results else rol_validator.validate_rol(premium, limit)
+                else:
+                    rol_result = rol_validator.validate_rol(premium, limit)
+
+                # Guardrail is "primary control" when premium was capped AND
+                # the ROL is still outside appetite (capping wasn't enough)
+                has_primary = (
+                    pricing_result.premium_was_capped
+                    and not rol_result.within_appetite
                 )
                 if has_primary:
                     guardrail_primary_count += 1
                     failures.append(
                         "{}: guardrail is primary pricing control "
-                        "(P/L={:.4f}, cap={:.3f})".format(
+                        "(ROL={:.4f}, ceiling={:.3f})".format(
                             fixture["label"],
-                            report.premium_to_limit_ratio,
-                            report.target_max,
+                            rol_result.rol,
+                            rol_result.rol_ceiling,
                         )
                     )
 
-                if not report.within_target:
+                if not rol_result.within_appetite:
                     outside_target_count += 1
                     if not has_primary:
                         failures.append(
-                            "{}: P/L {:.4f} outside target [{:.3f}, {:.3f}]".format(
+                            "{}: ROL {:.4f} outside appetite [{:.3f}, {:.3f}]".format(
                                 fixture["label"],
-                                report.premium_to_limit_ratio,
-                                report.target_min,
-                                report.target_max,
+                                rol_result.rol,
+                                rol_result.rol_floor,
+                                rol_result.rol_ceiling,
                             )
                         )
 

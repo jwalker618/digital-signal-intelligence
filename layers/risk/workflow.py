@@ -45,6 +45,8 @@ from .scorer import ModelScorer, get_scorer
 from .query_evaluator import QueryEvaluator, get_query_evaluator
 from .appetite import evaluate_appetite
 from .pricer import ModelPricer, get_pricer
+from .rol_validator import ROLValidator
+from .rol_recommender import ROLRecommender
 from .modifiers import (
     TraditionalModifier,
     TraditionalModifierResult,
@@ -400,7 +402,13 @@ class WorkflowEngine:
 
         # Convert traditional modifier results to query_modifiers format
         traditional_modifiers_for_pricer = [
-            {"name": r.modifier_type, "factor": r.factor, "confidence": r.confidence}
+            {
+                "name": r.modifier_type,
+                "factor": r.factor,
+                "confidence": r.confidence,
+                "source": "traditional",
+                "source_id": r.modifier_type,
+            }
             for r in traditional_modifier_results
             if r.has_impact  # Only include modifiers with actual impact
         ]
@@ -414,6 +422,8 @@ class WorkflowEngine:
                 "name": "loss_propensity",
                 "factor": loss_propensity_result.combined_loss_modifier,
                 "confidence": loss_propensity_result.loss_confidence,
+                "source": "loss_propensity",
+                "source_id": "loss_propensity",
             }
             all_modifiers.append(loss_modifier)
 
@@ -464,13 +474,16 @@ class WorkflowEngine:
             score_based_tier=pricing_result.score_based_tier,
             final_tier=pricing_result.final_tier,
             tier_label=pricing_result.tier_label,
+            tier_margin=pricing_result.tier_margin,
             base_premium=pricing_result.base_premium,
             base_premium_method=pricing_result.base_premium_method,
             base_premium_derivation=pricing_result.base_premium_derivation,
             modifiers_applied=pricing_result.modifiers_applied,
             premium_after_modifiers=pricing_result.premium_after_modifiers,
             limit_premiums=pricing_result.limit_premiums,
+            limit_premium_details=pricing_result.limit_premium_details,
             final_premium=pricing_result.final_premium,
+            uncapped_premium=pricing_result.uncapped_premium,
             decision=decision,
             auto_approve=auto_approve,
             referral_reasons=all_referrals,
@@ -479,15 +492,20 @@ class WorkflowEngine:
             signal_coverage=scoring_result.signal_coverage,
         )
 
-        # Determine recommended option
+        # Determine recommended option via ROL-driven dual recommendation
         recommended_limit = 0.0
         recommended_premium = pricing_result.final_premium
         if pricing_result.limit_premiums:
-            # Recommend middle limit option
-            limits = sorted([float(k) for k in pricing_result.limit_premiums.keys()])
-            mid_index = len(limits) // 2
-            recommended_limit = limits[mid_index]
-            recommended_premium = pricing_result.limit_premiums[str(int(recommended_limit))]
+            rol_validator = ROLValidator()
+            rol_recommender = ROLRecommender(validator=rol_validator)
+            requested_limit = int(submission_data.get("limit", 0))
+            dual_rec = rol_recommender.recommend(
+                limit_premiums=pricing_result.limit_premiums,
+                requested_limit=requested_limit,
+            )
+            # Use upper recommendation as the primary recommendation
+            recommended_limit = float(dual_rec.upper.limit)
+            recommended_premium = dual_rec.upper.premium
 
         logger.info(
             f"Workflow complete: score={scoring_result.pure_composite_score:.0f}, "
@@ -525,8 +543,8 @@ class WorkflowEngine:
                 )
             }
             model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
-            model_version.loss_previous_score = loss_propensity_result.previous_score
-            model_version.loss_score_velocity = loss_propensity_result.score_velocity
+            model_version.loss_previous_score = loss_propensity_result.previous_combined_score
+            model_version.loss_score_velocity = loss_propensity_result.combined_score_velocity
             model_version.loss_last_refresh = loss_propensity_result.calculated_at
             model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
 
@@ -542,35 +560,44 @@ class WorkflowEngine:
             model_version.exposure_magnitude_score = exposure_result.components.get(
                 "size_factor", 1.0
             ) * 50  # normalize to 0-100 scale
+            model_version.exposure_complexity_score = exposure_result.components.get(
+                "complexity_score", None
+            )
             model_version.exposure_assessment_method = (
                 "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
                 else "full"
             )
-            # Map exposure value to band and persist boundaries
-            _EXPOSURE_BANDS = [
-                (1, "Minimal",    0,              0,              0.80),
-                (1, "Small",      0,              50_000_000,     0.85),
-                (2, "Mid-Market", 50_000_000,     500_000_000,    0.95),
-                (3, "Large",      500_000_000,    5_000_000_000,  1.05),
-                (4, "Major",      5_000_000_000,  50_000_000_000, 1.15),
-                (5, "Mega",       50_000_000_000, None,           1.30),
+            # Persist component factors for transparency
+            model_version.exposure_components = {
+                k: v for k, v in exposure_result.components.items()
+                if k not in ("primary_exposure", "mode")
+            }
+            # Map exposure value to band label for display context
+            # Band modifier is the ACTUAL pricing factor — not a separate lookup
+            _EXPOSURE_BAND_LABELS = [
+                (1, "Minimal",    0,              0),
+                (1, "Small",      0,              50_000_000),
+                (2, "Mid-Market", 50_000_000,     500_000_000),
+                (3, "Large",      500_000_000,    5_000_000_000),
+                (4, "Major",      5_000_000_000,  50_000_000_000),
+                (5, "Mega",       50_000_000_000, None),
             ]
-            matched = _EXPOSURE_BANDS[-1]  # default to Mega
+            matched = _EXPOSURE_BAND_LABELS[-1]  # default to Mega
             if primary_exposure <= 0:
-                matched = _EXPOSURE_BANDS[0]
+                matched = _EXPOSURE_BAND_LABELS[0]
             else:
-                for band in _EXPOSURE_BANDS[1:]:
-                    bid, label, bmin, bmax, mod = band
+                for band in _EXPOSURE_BAND_LABELS[1:]:
+                    bid, label, bmin, bmax = band
                     if bmax is None or primary_exposure < bmax:
                         matched = band
                         break
-            bid, blabel, bmin, bmax, bmod = matched
+            bid, blabel, bmin, bmax = matched
             model_version.exposure_band_id = bid
             model_version.exposure_band_label = blabel
             model_version.exposure_band_boundaries = {
                 "min_value": bmin,
                 "max_value": bmax,
-                "modifier": bmod,
+                "modifier": exposure_result.factor,  # actual pricing factor, not a display value
             }
 
         return WorkflowResult(

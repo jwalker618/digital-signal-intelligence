@@ -156,9 +156,9 @@ class LossCorrelationScorer:
             severity_multiplier=severity_multiplier,
             combined_loss_modifier=combined_modifier,
             trend_direction=trend_direction,
-            score_velocity=score_velocity,
+            combined_score_velocity=score_velocity,
             days_since_last_assessment=self._days_since_last(previous_result),
-            previous_score=previous_result.loss_propensity_score if previous_result else None,
+            previous_combined_score=previous_result.loss_propensity_score if previous_result else None,
             referral_triggered=referral_triggered,
             referral_reasons=referral_reasons,
             flags=flags,
@@ -298,7 +298,10 @@ class LossCorrelationScorer:
         """Map score to severity band."""
         for band in self.config.severity_bands:
             if band.min_score <= score < band.max_score:
-                return SeverityPropensityBand(band.name)
+                try:
+                    return SeverityPropensityBand(band.name)
+                except ValueError:
+                    break
 
         # Default based on score
         if score < 20:

@@ -764,7 +764,7 @@ class TestMultiplexerIntegration:
             "market": "us",
         }
 
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             multiplexer.execute(
                 coverage_id="cyber",
                 user_input=user_input,
@@ -787,7 +787,7 @@ class TestMultiplexerIntegration:
             "market": "us",
         }
 
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             multiplexer.execute(
                 coverage_id="cyber",
                 user_input=user_input,

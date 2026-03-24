@@ -66,7 +66,7 @@ class TestBuilderV2Output:
 
     def test_generates_nested_structure(self, builder, cyber_spec):
         """Config must be nested as coverage_id → config_name → sections."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         assert result.success
@@ -76,7 +76,7 @@ class TestBuilderV2Output:
 
     def test_has_all_required_sections(self, builder, cyber_spec):
         """Inner config must have all required v2.0 sections."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -85,14 +85,14 @@ class TestBuilderV2Output:
         required = [
             "metadata", "direct_queries", "signal_registry",
             "groups", "risk_tier_bands", "loss_tier_bands",
-            "exposure", "limit_bandings", "pricing",
+            "exposure", "limit_configuration", "pricing",
         ]
         for section in required:
             assert section in inner, f"Missing section: {section}"
 
     def test_metadata_has_required_fields(self, builder, cyber_spec):
         """Metadata section must have name, version, and V4 multiplexer fields."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -114,7 +114,7 @@ class TestBuilderV2Output:
 
     def test_signal_registry_uses_three_layer_assessment(self, builder, cyber_spec):
         """Signals must use three_layer_assessment (not signal_groups + signal_features)."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -142,7 +142,7 @@ class TestBuilderV2Output:
 
     def test_groups_has_categories_and_tla(self, builder, cyber_spec):
         """Groups must have categories and three_layer_assessment sub-sections."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -168,7 +168,7 @@ class TestBuilderV2Output:
 
     def test_risk_tier_bands_have_interpretation(self, builder, cyber_spec):
         """Risk tier bands must use interpretation blocks with action."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -194,7 +194,7 @@ class TestBuilderV2Output:
 
     def test_loss_tier_bands_have_freq_sev_modifiers(self, builder, cyber_spec):
         """Loss tier bands must have frequency_modifier and severity_modifier."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -212,7 +212,7 @@ class TestBuilderV2Output:
 
     def test_exposure_has_size_and_complexity(self, builder, cyber_spec):
         """Exposure must have nested size and complexity with weights summing to 1.0."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -236,7 +236,7 @@ class TestBuilderV2Output:
 
     def test_direct_queries_use_query_condition(self, builder, cyber_spec):
         """Direct queries must use query_condition (not bands)."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -253,7 +253,7 @@ class TestBuilderV2Output:
 
     def test_pricing_section_present(self, builder, cyber_spec):
         """Config must include pricing with ILF curve and V5 anchors."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -262,22 +262,23 @@ class TestBuilderV2Output:
         # V5 Pricing Anchors
         assert "base_limit_reference" in pricing
         assert "base_deductible_reference" in pricing
-        assert "ilf_curve" in pricing
-        # V5: deductible_factors replaces deductible_credits
-        assert "deductible_factors" in pricing
-        assert "deductible_credits" not in pricing  # Deprecated
+        assert "by_product_type" in pricing
         assert "taxes_fees_rate" in pricing
 
-        # Validate deductible_factors structure
-        for factor in pricing["deductible_factors"]:
-            assert "deductible" in factor
-            assert "factor" in factor
+        # ILF curve and deductible_factors are nested under by_product_type
+        for product_type, product_pricing in pricing["by_product_type"].items():
+            assert "ilf_curve" in product_pricing
+            assert "deductible_factors" in product_pricing
+            for factor in product_pricing["deductible_factors"]:
+                assert "deductible" in factor
+                assert "factor" in factor
 
-        # Validate anchor deductible has factor 1.00
+        # Validate anchor deductible has factor 1.00 in each product type
         anchor_ded = pricing["base_deductible_reference"]
-        anchor_factors = [f for f in pricing["deductible_factors"] if f["deductible"] == anchor_ded]
-        assert len(anchor_factors) == 1
-        assert anchor_factors[0]["factor"] == 1.00
+        for product_type, product_pricing in pricing["by_product_type"].items():
+            anchor_factors = [f for f in product_pricing["deductible_factors"] if f["deductible"] == anchor_ded]
+            assert len(anchor_factors) == 1
+            assert anchor_factors[0]["factor"] == 1.00
 
 
 # ---------------------------------------------------------------------------
@@ -289,7 +290,7 @@ class TestScoreConditionConstraints:
 
     def test_score_conditions_no_decline(self, builder, cyber_spec):
         """score_conditions must not use DECLINE (tier-level only)."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -314,7 +315,7 @@ class TestScoreConditionConstraints:
     def test_score_conditions_valid_actions(self, builder, cyber_spec):
         """score_conditions actions must be FLAG | MODIFIER | REFER."""
         valid_actions = {"FLAG", "MODIFIER", "REFER"}
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -328,7 +329,7 @@ class TestScoreConditionConstraints:
 
     def test_decline_only_in_tier_bands(self, builder, cyber_spec):
         """DECLINE should only appear in risk_tier_bands."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         config = yaml.safe_load(result.config_yaml)
@@ -351,7 +352,7 @@ class TestV2Validator:
 
     def test_validates_builder_output(self, builder, validator, cyber_spec):
         """Builder output must pass its own validator."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(cyber_spec)
         )
         validation = validator.validate_yaml(result.config_yaml)
@@ -538,7 +539,7 @@ class TestMultipleIndustries:
 
     def test_casualty_coverage(self, builder, casualty_spec, validator):
         """Casualty coverage should build and validate."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(casualty_spec)
         )
         assert result.success
@@ -555,7 +556,7 @@ class TestMultipleIndustries:
             target_market="US enterprise",
             min_signals=5,
         )
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(spec)
         )
         assert result.success
@@ -573,7 +574,7 @@ class TestMultipleIndustries:
             target_market="Global enterprise",
             min_signals=5,
         )
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             builder.create_coverage(spec)
         )
         assert result.success

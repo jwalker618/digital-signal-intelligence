@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.3.0|
-|Date|February 2026|
+|Version|0.4.0|
+|Date|March 2026|
 |Classification|overview|
 
 ---
@@ -44,6 +44,8 @@ DSI systematically harvests these signals, scores them consistently, and convert
 | [Methodology Defense](development/retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
 | [Case Studies](docs/case_studies/) | Worked examples | Underwriters |
 | [Interactive Demo](demo/index.html) | Hands-on exploration | All stakeholders |
+| [Tower/Subscription Design](development/project/phase_e_design.md) | Market structure architecture | Engineering |
+| [Upgrade Plan](DSI_UPGRADE_PLAN.md) | Phases A-F implementation roadmap | Engineering |
 | [SKILL.md](SKILL.md) | Architecture & development guide | Engineering |
 
 ### Why This Matters
@@ -111,6 +113,10 @@ DSI augments (not replaces) traditional underwriting by adding a third analytica
 │                              ↓                                      │
 │                    TIER ASSIGNMENT (1-5)                            │
 │                              ↓                                      │
+│              PRICING: Ground-Up / Tower / Subscription              │
+│                              ↓                                      │
+│             ROL VALIDATION + DUAL RECOMMENDATION                    │
+│                              ↓                                      │
 │                    PRICING DECISION                                 │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -155,6 +161,36 @@ Breach History: 1     →      60/100
 | **3** | 500-649 | Elevated | Manual review, +15-30% loading |
 | **4** | 350-499 | High Risk | Senior review, +30-60% loading |
 | **5** | 0-349 | Critical | Decline or special terms only |
+
+#### Premium Options & Market Structures
+
+DSI generates comprehensive premium options with full transparency at every step.
+
+**Pricing Transparency (Phase A):**
+- Each limit option includes a `LimitPremiumDetail` with discrete `ilf_factor`, `deductible_factor`, and before/after premium values
+- `uncapped_premium` captured before guardrail application for audit trail
+- Modifier visibility — each modifier tracked with categorized before/after premium impact
+- Tier margin context — distance to adjacent tier boundaries and percentile within current tier
+- Parametric ILF curves only (table-based ILF removed)
+
+**ROL Engine (Phase C):**
+- Rate-on-Line (ROL) curve validator replaces legacy PremiumValidator
+- Dual recommendation engine — upper (best ROL value) and lower (minimum adequate) limits
+- Limit re-pricing without full workflow re-run
+
+**Market Structures (Phase E):**
+
+| Structure | Description | Premium Calculation |
+|-|-|-|
+| **Ground-Up** | Single-layer, full participation (default) | `base × ILF(limit) × deductible_factor` |
+| **Tower** | Stacked excess layers with attachment points | `base × [ILF(A+L) - ILF(A)]` per layer |
+| **Subscription** | Order/line model with insurer participation % | `signed_line × order_premium × lead_loading` |
+
+Tower and subscription compose — an insurer can take a line on one or more layers of a tower.
+
+**Lead vs Follow:**
+- **Lead**: Sets terms, handles claims, commands configurable loading (e.g. +5-15%)
+- **Follow**: Takes lead's terms at par, no loading applied
 
 ---
 
@@ -205,6 +241,9 @@ digital-signal-intelligence/
 │
 ├── layers/                      # Assessment layers
 │   ├── risk/                    # Risk scoring (14-step workflow)
+│   │   ├── pricer.py            # Premium calc (ground-up, tower, subscription)
+│   │   ├── rol_validator.py     # ROL curve validator (Phase C)
+│   │   └── rol_recommender.py   # Dual recommendation engine (Phase C)
 │   ├── exposure/                # Exposure Shadow Layer (Phase 17)
 │   └── loss/                    # Loss Correlation Layer (Phase 16)
 │
@@ -286,7 +325,10 @@ print(f"Premium: ${result.recommended_premium}") # → Premium: $125,000
 - Content-addressable configuration storage
 - Full audit trail with model versioning
 - Automatic tier-to-decision mapping
-- Multiple premium options by limit band
+- Multiple premium options by limit band with full `LimitPremiumDetail` breakdown
+- Tower (excess-of-loss) and subscription (order/line) market structure support
+- ROL-based pricing validation and dual recommendation engine
+- Uncapped premium capture, modifier visibility, tier margin context
 
 #### 3. Signal Architecture (`signals/`)
 

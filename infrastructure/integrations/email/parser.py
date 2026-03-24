@@ -158,8 +158,8 @@ class SubmissionParser:
         if match and len(match.group(1)) > 3:
             candidates.append((match.group(1).strip(), 0.6, "subject"))
 
-        # Check body for company mentions
-        body = self.email_parser.clean_text(message.body_text)
+        # Check body for company mentions (use raw body to preserve newlines for regex)
+        body = message.body_text
 
         # Pattern: "Insured: <Name>"
         match = re.search(r'insured[:\s]+([^\n]+)', body, re.IGNORECASE)
@@ -203,7 +203,7 @@ class SubmissionParser:
             for keyword in keywords:
                 count = text.count(keyword.lower())
                 if count > 0:
-                    score += count * (0.3 if len(keyword) > 5 else 0.2)
+                    score += count * (0.5 if len(keyword) > 5 else 0.45)
 
             if score > 0:
                 scores[coverage] = min(score, 1.0)

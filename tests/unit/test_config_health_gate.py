@@ -36,7 +36,6 @@ from infrastructure.models.config_schema import (
     Pricing,
     ProductTypePricing,
     ILFCurve,
-    ILFCurveFactor,
     DeductibleFactor,
     LimitConfiguration,
     LimitConfigType,
@@ -89,13 +88,11 @@ def _make_healthy_config():
             base_deductible_reference=10_000,
             by_product_type={
                 "standard": ProductTypePricing(
-                    ilf_curve=ILFCurve(base_limit=5_000_000, factors=[
-                        ILFCurveFactor(limit=1_000_000, factor=0.6),
-                        ILFCurveFactor(limit=5_000_000, factor=1.0),
-                        ILFCurveFactor(limit=25_000_000, factor=2.0),
-                        ILFCurveFactor(limit=50_000_000, factor=2.8),
-                        ILFCurveFactor(limit=250_000_000, factor=5.0),
-                    ]),
+                    ilf_curve=ILFCurve(
+                        anchor_limit=5_000_000,
+                        curve="power",
+                        params={"alpha": 0.5},
+                    ),
                     deductible_factors=[
                         DeductibleFactor(deductible=5_000, factor=1.1),
                         DeductibleFactor(deductible=10_000, factor=1.0),
@@ -136,12 +133,11 @@ def _make_broken_config():
             base_deductible_reference=10_000,
             by_product_type={
                 "standard": ProductTypePricing(
-                    ilf_curve=ILFCurve(base_limit=5_000_000, factors=[
-                        ILFCurveFactor(limit=1_000_000, factor=0.6),
-                        ILFCurveFactor(limit=5_000_000, factor=1.0),
-                        ILFCurveFactor(limit=50_000_000, factor=3.0),
-                        ILFCurveFactor(limit=250_000_000, factor=6.0),
-                    ]),
+                    ilf_curve=ILFCurve(
+                        anchor_limit=5_000_000,
+                        curve="power",
+                        params={"alpha": 0.5},
+                    ),
                     deductible_factors=[
                         DeductibleFactor(deductible=10_000, factor=1.0),
                     ],
