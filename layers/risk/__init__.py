@@ -130,19 +130,6 @@ from .workflow import (
     run_assessment,
 )
 
-# Backward compatibility - re-export DSIPricingEngine from dsi_config_model
-try:
-    from .dsi_config_model import (
-        DSIPricingEngine,
-        DSIAssessment,
-        ModelConfig,
-        SignalInput,
-        DirectInquiryInput,
-    )
-except ImportError:
-    # dsi_config_model may not be available in all contexts
-    pass
-
 __all__ = [
     # Enums
     "DecisionType",

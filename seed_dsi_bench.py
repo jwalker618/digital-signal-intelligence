@@ -24,7 +24,7 @@ Coverage lines seeded:
 Each company entry creates:
   1. Submission (with submission_data and direct_query_responses)
   2. ModelVersionRecord (full signal_outputs, group_scores, conditions, pricing)
-  3. Quote (with premium_options, composite_score, confidence)
+  3. Quote (with recommended premium/limit, composite_score, confidence)
   4. Referral (for refer/decline decisions)
   5. SignalCache entries (per-signal cached data)
   5b. ModelVersionSignal entries (config-to-signal binding — which signals each model used)
@@ -68,6 +68,7 @@ from layers.risk.scorer import ModelScorer
 from layers.risk.pricer import ModelPricer
 from layers.risk.query_evaluator import QueryEvaluator
 from layers.risk.rol_validator import ROLValidator
+from layers.risk.rol_recommender import ROLRecommender
 from layers.risk.types import SignalOutput, CategoricalOutput, utcnow
 
 # =============================================================================
@@ -2235,6 +2236,153 @@ def build_discovery_output(co):
     }
 
 
+def build_tier_margin(composite, final_tier, config):
+    """Build tier margin context from composite score and config tier bands.
+
+    Computes percentile within current tier, distances to adjacent tier
+    boundaries, and adjacent tier IDs — same as pricer.calculate_tier_margin().
+    """
+    bands = config.risk_tier_bands.bands
+    current_band = None
+    band_idx = None
+    for idx, band in enumerate(bands):
+        if band.id == final_tier:
+            current_band = band
+            band_idx = idx
+            break
+
+    if current_band is None:
+        return {}
+
+    tier_min = current_band.interpretation.bands.min
+    tier_max = current_band.interpretation.bands.max
+    span = tier_max - tier_min
+    percentile = (composite - tier_min) / span if span > 0 else 0.5
+    percentile = max(0.0, min(1.0, percentile))
+
+    # Adjacent tiers (lower ID = better tier)
+    adjacent_better = bands[band_idx - 1].id if band_idx > 0 else None
+    adjacent_worse = bands[band_idx + 1].id if band_idx < len(bands) - 1 else None
+
+    distance_better = composite - tier_min if band_idx > 0 else None
+    distance_worse = tier_max - composite if band_idx < len(bands) - 1 else None
+
+    return {
+        "tier_margin_percentile": round(percentile, 4),
+        "tier_margin_tier_min": tier_min,
+        "tier_margin_tier_max": tier_max,
+        "tier_margin_distance_better": round(distance_better, 2) if distance_better is not None else None,
+        "tier_margin_distance_worse": round(distance_worse, 2) if distance_worse is not None else None,
+        "tier_margin_adjacent_better": adjacent_better,
+        "tier_margin_adjacent_worse": adjacent_worse,
+    }
+
+
+def build_tier_band_interpretation(final_tier, config):
+    """Snapshot the full tier band config for the current tier into JSONB."""
+    band = config.get_tier_band(final_tier)
+    if band is None:
+        return None
+    return {
+        "tier_id": band.id,
+        "label": band.label,
+        "description": band.description,
+        "action": band.interpretation.action.value,
+        "bands": {"min": band.interpretation.bands.min, "max": band.interpretation.bands.max},
+        "application": {
+            "method": band.interpretation.application.method.value if hasattr(band.interpretation.application.method, 'value') else str(band.interpretation.application.method),
+            "value": band.interpretation.application.value,
+            "applied": band.interpretation.application.applied,
+            "basis": band.interpretation.application.basis,
+        },
+    }
+
+
+def build_loss_band_interpretation(config):
+    """Snapshot loss tier band config into JSONB for audit trail."""
+    if not config.loss_tier_bands:
+        return None
+    result = {"bands": [], "constraints": None}
+    for band in config.loss_tier_bands.bands:
+        result["bands"].append({
+            "id": band.id,
+            "label": band.label,
+            "bands": {"min": band.interpretation.bands.min, "max": band.interpretation.bands.max},
+            "frequency_modifier": band.interpretation.application.frequency_modifier,
+            "severity_modifier": band.interpretation.application.severity_modifier,
+        })
+    if config.loss_tier_bands.constraints:
+        c = config.loss_tier_bands.constraints
+        result["constraints"] = {
+            "floor": c.floor,
+            "cap": c.cap,
+        }
+    return result
+
+
+def build_exposure_band_interpretation(config):
+    """Snapshot exposure config (size/complexity bands) into JSONB."""
+    if not config.exposure:
+        return None
+    result = {}
+    if config.exposure.size:
+        result["size"] = {
+            "weight": config.exposure.size.weight,
+            "bands": [
+                {
+                    "id": b.id, "label": b.label,
+                    "bands": {"min": b.interpretation.bands.min, "max": b.interpretation.bands.max},
+                    "modifier": b.interpretation.application.applied,
+                }
+                for b in config.exposure.size.bands
+            ],
+        }
+    if config.exposure.complexity:
+        result["complexity"] = {
+            "weight": config.exposure.complexity.weight,
+            "bands": [
+                {
+                    "id": b.id, "label": b.label,
+                    "bands": {"min": b.interpretation.bands.min, "max": b.interpretation.bands.max},
+                    "modifier": b.interpretation.application.applied,
+                }
+                for b in config.exposure.complexity.bands
+            ],
+        }
+    return result if result else None
+
+
+def build_rol_recommendation(limit_premiums, requested_limit):
+    """Build ROL dual recommendation from limit_premiums menu.
+
+    Returns dict of rol_* columns for ModelVersionRecord, or empty dict.
+    """
+    if not limit_premiums:
+        return {}
+
+    recommender = ROLRecommender(validator=ROLValidator())
+    try:
+        rec = recommender.recommend(
+            limit_premiums=limit_premiums,
+            requested_limit=requested_limit,
+        )
+    except Exception as e:
+        logger.warning("ROL recommendation failed: %s", e)
+        return {}
+
+    return {
+        "rol_upper_limit": rec.upper.limit if rec.upper.limit > 0 else None,
+        "rol_upper_premium": rec.upper.premium if rec.upper.limit > 0 else None,
+        "rol_upper_rol": rec.upper.rol if rec.upper.limit > 0 else None,
+        "rol_upper_rationale": rec.upper.rationale or None,
+        "rol_lower_limit": rec.lower.limit if rec.lower.limit > 0 else None,
+        "rol_lower_premium": rec.lower.premium if rec.lower.limit > 0 else None,
+        "rol_lower_rol": rec.lower.rol if rec.lower.limit > 0 else None,
+        "rol_lower_rationale": rec.lower.rationale or None,
+        "rol_structure_type": rec.structure_type,
+    }
+
+
 def build_loss_propensity(co, group_scores):
     """Build loss propensity columns derived from actual signal group scores.
 
@@ -2351,6 +2499,21 @@ def build_exposure_assessment(co):
 
     band_id, band_label, band_min, band_max, magnitude, modifier = matched
 
+    magnitude_score = round(magnitude + random.uniform(-5, 5), 1)
+
+    # Complexity score: derived from industry + size_band heuristic
+    industry = co.get("industry", "OTHER")
+    complexity_base = {"TECHNOLOGY": 65, "HEALTHCARE": 60, "ENERGY": 55, "FINANCIAL_SERVICES": 70,
+                       "MANUFACTURING": 50, "RETAIL": 40, "PROFESSIONAL_SERVICES": 45}.get(industry, 45)
+    size_bump = {"ENTERPRISE": 15, "LARGE": 10, "MEDIUM": 5, "SMALL": 0, "MICRO": -5}.get(
+        co.get("size_band", "MEDIUM"), 5)
+    complexity_score = round(max(0, min(100, complexity_base + size_bump + random.uniform(-8, 8))), 1)
+
+    # Components breakdown
+    size_factor = round(magnitude_score / 100.0, 4)
+    growth_factor = round(random.uniform(0.8, 1.3), 4)
+    concentration_factor = round(random.uniform(0.7, 1.2), 4)
+
     return {
         "exposure_value": float(exposure_value),
         "exposure_band_id": band_id,
@@ -2360,9 +2523,15 @@ def build_exposure_assessment(co):
             "max_value": band_max,
             "modifier": modifier,
         },
-        "exposure_magnitude_score": round(magnitude + random.uniform(-5, 5), 1),
+        "exposure_magnitude_score": magnitude_score,
+        "exposure_complexity_score": complexity_score,
         "exposure_modifier": modifier,
         "exposure_assessment_method": "config_band_lookup",
+        "exposure_components": {
+            "size_factor": size_factor,
+            "growth_factor": growth_factor,
+            "concentration_factor": concentration_factor,
+        },
     }
 
 
@@ -2675,6 +2844,39 @@ def seed_data():
             premium_after_mods = pricing_result.premium_after_modifiers if decision_str != "decline" else 0
             limit_premiums = pricing_result.limit_premiums if decision_str != "decline" else {}
 
+            # --- Phase A: Serialise limit_premium_details from PricingResult ---
+            limit_premium_details_json = []
+            if pricing_result.limit_premium_details and decision_str != "decline":
+                for lpd in pricing_result.limit_premium_details:
+                    limit_premium_details_json.append({
+                        "limit": lpd.limit,
+                        "deductible": lpd.deductible,
+                        "attachment_point": lpd.attachment_point,
+                        "ilf_factor": lpd.ilf_factor,
+                        "deductible_factor": lpd.deductible_factor,
+                        "premium_before_scaling": lpd.premium_before_scaling,
+                        "premium_after_scaling": lpd.premium_after_scaling,
+                        "uncapped_premium": lpd.uncapped_premium,
+                    })
+
+            # --- Phase A: Uncapped premium & guardrail detail ---
+            uncapped_premium = pricing_result.uncapped_premium
+            premium_was_capped = pricing_result.premium_was_capped
+            guardrail_warnings = pricing_result.guardrail_warnings or []
+
+            # --- Phase A: Tier margin context ---
+            tier_margin_kwargs = build_tier_margin(composite, final_tier, config)
+
+            # --- Phase A: Tier band config snapshot ---
+            tier_band_snap = build_tier_band_interpretation(final_tier, config)
+
+            # --- Phase A: Loss/exposure band config snapshots ---
+            loss_band_snap = build_loss_band_interpretation(config)
+            exposure_band_snap = build_exposure_band_interpretation(config)
+
+            # --- Phase C: ROL dual recommendation ---
+            rol_kwargs = build_rol_recommendation(limit_premiums, requested_limit)
+
             mv = ModelVersionRecord(
                 id=mv_id,
                 version_code=f"mv_{_hex(8)}",
@@ -2704,15 +2906,28 @@ def seed_data():
                 modifiers_applied=modifiers_applied_json,
                 premium_after_modifiers=premium_after_mods,
                 limit_premiums=limit_premiums,
+                limit_premium_details=limit_premium_details_json or [],
                 final_premium=final_premium,
+                uncapped_premium=uncapped_premium,
+                premium_was_capped=premium_was_capped,
+                guardrail_warnings=guardrail_warnings,
                 ilf_factor=ilf_factor,
                 ilf_method=ilf_method,
                 ilf_anchor_limit=ilf_anchor,
+                # Tier band config snapshot
+                tier_band_interpretation=tier_band_snap,
+                # Loss/exposure band config snapshots
+                loss_band_interpretation=loss_band_snap,
+                exposure_band_interpretation=exposure_band_snap,
                 decision=decision_enum,
                 auto_approve=auto_approve,
                 referral_reasons=referral_reasons,
                 notes=[{"note": co.get("description", ""), "source": "seed_script"}],
                 created_by="seed_dsi_bench",
+                # Tier margin context (Phase A)
+                **tier_margin_kwargs,
+                # ROL recommendation (Phase C)
+                **rol_kwargs,
                 # Loss propensity columns
                 **loss_kwargs,
                 # Exposure assessment columns
@@ -2741,7 +2956,6 @@ def seed_data():
                 status=quote_status,
                 recommended_premium=rec_premium,
                 recommended_limit=rec_limit,
-                premium_options=limit_premiums,
                 valid_from=NOW,
                 valid_until=NOW + timedelta(days=30),
             )

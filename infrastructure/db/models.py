@@ -187,7 +187,6 @@ class Quote(Base):
     # Pricing summary (denormalised for fast list queries)
     recommended_premium = Column(Float)
     recommended_limit = Column(Float)
-    premium_options = Column(JSONB, default=dict)  # {limit: premium}
 
     # Validity
     valid_from = Column(DateTime(timezone=True), server_default=func.now())
@@ -296,6 +295,22 @@ class ModelVersionRecord(Base):
     final_tier = Column(Integer)
     tier_label = Column(String(50))
 
+    # =========================================================================
+    # TIER MARGIN CONTEXT (Phase A4)
+    # =========================================================================
+    tier_margin_percentile = Column(Float)           # 0.0 = at tier min, 1.0 = at tier max
+    tier_margin_tier_min = Column(Float)              # Lower bound of current tier
+    tier_margin_tier_max = Column(Float)              # Upper bound of current tier
+    tier_margin_distance_better = Column(Float)       # Points from better tier boundary (null if best)
+    tier_margin_distance_worse = Column(Float)        # Points from worse tier boundary (null if worst)
+    tier_margin_adjacent_better = Column(Integer)     # ID of next better tier (null if best)
+    tier_margin_adjacent_worse = Column(Integer)      # ID of next worse tier (null if worst)
+
+    # =========================================================================
+    # TIER BAND CONFIG SNAPSHOT (Phase A — rich config context)
+    # =========================================================================
+    tier_band_interpretation = Column(JSONB)          # Full tier band config: {action, bands, application, label}
+
     # Pricing
     base_premium = Column(Float)
     base_premium_method = Column(String(50))
@@ -307,10 +322,27 @@ class ModelVersionRecord(Base):
     final_premium = Column(Float)
     uncapped_premium = Column(Float, nullable=True)
 
+    # Guardrail detail
+    guardrail_warnings = Column(JSONB, default=list)  # List of guardrail trigger messages
+    premium_was_capped = Column(Boolean, default=False)
+
     # ILF (Increased Limit Factor) audit
     ilf_factor = Column(Float)                       # The ILF multiplier applied at the requested limit
-    ilf_method = Column(String(50))                  # table, interpolated, or extrapolated
+    ilf_method = Column(String(50))                  # parametric curve type used
     ilf_anchor_limit = Column(Float)                 # The limit where ILF = 1.0 (e.g. 10_000_000)
+
+    # =========================================================================
+    # ROL RECOMMENDATION (Phase C — dual recommendation engine)
+    # =========================================================================
+    rol_upper_limit = Column(Float)                  # Upper recommendation: best ROL value limit
+    rol_upper_premium = Column(Float)                # Premium at upper recommended limit
+    rol_upper_rol = Column(Float)                    # ROL at upper recommended limit
+    rol_upper_rationale = Column(Text)               # Why this limit was recommended
+    rol_lower_limit = Column(Float)                  # Lower recommendation: minimum adequate limit
+    rol_lower_premium = Column(Float)                # Premium at lower recommended limit
+    rol_lower_rol = Column(Float)                    # ROL at lower recommended limit
+    rol_lower_rationale = Column(Text)               # Why this limit was recommended
+    rol_structure_type = Column(String(50))           # ground_up, tower, subscription
 
     # Decision
     decision = Column(SQLEnum(DecisionType))
@@ -338,6 +370,7 @@ class ModelVersionRecord(Base):
     loss_score_velocity = Column(Float)
     loss_last_refresh = Column(DateTime(timezone=True))
     correlation_matrix_version = Column(String(100))
+    loss_band_interpretation = Column(JSONB)          # Full loss tier band config snapshot: {bands, constraints, frequency_modifier, severity_modifier}
 
     # =========================================================================
     # EXPOSURE ASSESSMENT (three-pillar: exposure)
@@ -346,9 +379,12 @@ class ModelVersionRecord(Base):
     exposure_band_id = Column(Integer)
     exposure_band_label = Column(String(100))
     exposure_band_boundaries = Column(JSONB)          # {min_value, max_value, modifier} — snapshot of band at execution time
-    exposure_magnitude_score = Column(Float)          # 0-100 normalised
+    exposure_magnitude_score = Column(Float)          # 0-100 normalised size score
+    exposure_complexity_score = Column(Float)          # 0-100 normalised complexity score
     exposure_modifier = Column(Float)                 # Multiplier applied to premium
     exposure_assessment_method = Column(String(50))   # config_band_lookup, signal_composite, etc.
+    exposure_components = Column(JSONB)                # {size_factor, growth_factor, concentration_factor, ...}
+    exposure_band_interpretation = Column(JSONB)       # Full exposure config snapshot: {size_bands, complexity_bands, weights}
 
     # Audit
     created_by = Column(String(100))

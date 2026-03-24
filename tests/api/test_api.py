@@ -93,7 +93,6 @@ class MockTestClient:
                 "tier": 2,
                 "tier_label": "STANDARD",
                 "decision": "approve",
-                "premium_options": {"1000000": 12500, "2000000": 18750},
                 "recommended_premium": 18750,
                 "created_at": datetime.utcnow().isoformat(),
             })
@@ -217,14 +216,6 @@ class TestQuoteEndpoints:
         assert data["quote_code"] == "quo_test123"
         assert "composite_score" in data
         assert "tier" in data
-        assert "premium_options" in data
-
-    def test_quote_has_premium_options(self, client):
-        """Should include premium options."""
-        response = client.get("/api/v1/quotes/quo_test123")
-
-        data = response.json()
-        assert len(data["premium_options"]) > 0
 
 
 # =============================================================================
@@ -396,7 +387,6 @@ class TestAPIIntegration:
         # 3. Get quote (if ready)
         quote_response = client.get("/api/v1/quotes/quo_test123")
         assert quote_response.status_code == 200
-        assert "premium_options" in quote_response.json()
 
     def test_referral_workflow(self, client):
         """Test referral processing workflow."""

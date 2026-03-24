@@ -104,7 +104,6 @@ def workflow_result_to_quote(
         "decision": decision_map.get(result.decision, "refer"),
         "auto_approve": result.auto_approve,
         "referral_reasons": result.referral_reasons,
-        "premium_options": result.premium_options,
         "recommended_premium": result.recommended_premium,
         "recommended_limit": result.recommended_limit,
         "discovery": (
@@ -261,7 +260,6 @@ async def _persist_quote(quote_code: str, quote_data: Dict[str, Any]) -> None:
                                 model_version_id=mv.id,
                                 recommended_premium=quote_data.get("recommended_premium", 0),
                                 recommended_limit=quote_data.get("recommended_limit"),
-                                premium_options=quote_data.get("premium_options", {}),
                             )
                             await session.commit()
                     return
@@ -496,7 +494,6 @@ async def create_multi_coverage_submission(
                 tier=result.tier,
                 tier_label=result.tier_label,
                 decision=decision_map.get(result.decision, "refer"),
-                premium_options=result.premium_options,
                 recommended_premium=result.recommended_premium,
                 recommended_limit=result.recommended_limit,
                 base_premium=None,

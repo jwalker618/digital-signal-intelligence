@@ -190,7 +190,6 @@ class QuoteResponse(BaseModel):
     tier: int
     tier_label: str
     decision: DecisionType
-    premium_options: Dict[str, float] = Field(default_factory=dict)
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
     base_premium: Optional[float] = None
@@ -414,7 +413,6 @@ class QuoteRecord(BaseModel):
     status: QuoteStatus
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
-    premium_options: Dict[str, Any] = Field(default_factory=dict)
     valid_from: datetime
     valid_until: Optional[datetime] = None
     bound_at: Optional[datetime] = None

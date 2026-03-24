@@ -142,7 +142,6 @@ class QuoteRepository:
         submission_id: uuid.UUID,
         model_version_id: uuid.UUID,
         recommended_premium: float,
-        premium_options: Dict[str, float],
         recommended_limit: Optional[float] = None,
         valid_days: int = 30,
         status: Optional[QuoteStatus] = None,
@@ -150,6 +149,7 @@ class QuoteRepository:
         """Create a new quote.
 
         Scoring / tier / decision data lives on the linked ModelVersionRecord.
+        Limit premiums live on ModelVersionRecord.limit_premiums.
         """
         quote = Quote(
             quote_code=generate_id("quo"),
@@ -158,7 +158,6 @@ class QuoteRepository:
             status=status or QuoteStatus.READY,
             recommended_premium=recommended_premium,
             recommended_limit=recommended_limit,
-            premium_options=premium_options,
             valid_until=datetime.utcnow() + timedelta(days=valid_days),
         )
         self.db.add(quote)
