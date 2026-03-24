@@ -1233,7 +1233,7 @@ energy:
               max: 100
             application:
               method: MODIFIER
-              applied: 2.5
+              applied: 1.3
               implied_thresholds:
                 min: 250000000
                 max: 1000000000
@@ -1461,12 +1461,13 @@ energy:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.40
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 5.0
   energy_upstream_deepwater:
     metadata:
       name: DSI Energy Upstream Deepwater Pricing Model
@@ -2585,12 +2586,13 @@ energy:
           - deductible: 10000000
             factor: 0.65
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.50
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_upstream_onshore:
     metadata:
       name: DSI Energy Upstream Onshore Pricing Model
@@ -3902,12 +3904,13 @@ energy:
           - deductible: 1000000
             factor: 0.65
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.20
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_upstream_unconventional:
     metadata:
       name: DSI Energy Upstream Unconventional Pricing Model
@@ -5255,12 +5258,13 @@ energy:
           - deductible: 1000000
             factor: 0.68
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.30
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_midstream:
     metadata:
       name: DSI Energy Midstream Pricing Model
@@ -6511,12 +6515,13 @@ energy:
           - deductible: 1000000
             factor: 0.68
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_downstream:
     metadata:
       name: DSI Energy Downstream Pricing Model
@@ -7788,12 +7793,13 @@ energy:
           - deductible: 2500000
             factor: 0.62
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.25
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_offshore_wind:
     metadata:
       name: DSI Energy Offshore Wind Pricing Model
@@ -9136,12 +9142,13 @@ energy:
           - deductible: 5000000
             factor: 0.65
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.30
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_onshore_renewable:
     metadata:
       name: DSI Energy Onshore Renewable Pricing Model
@@ -10457,12 +10464,13 @@ energy:
           - deductible: 5000000
             factor: 0.65
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_storage:
     metadata:
       name: DSI Energy Storage Pricing Model
@@ -11783,12 +11791,13 @@ energy:
           - deductible: 2500000
             factor: 0.58
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0
   energy_sme:
     metadata:
       name: DSI Energy SME Pricing Model
@@ -12649,9 +12658,10 @@ energy:
           - deductible: 500000
             factor: 0.7
       taxes_fees_rate: 0.05
+      basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.005
-      max_ilf_factor: 65.0
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.001
+      max_ilf_factor: 5.0

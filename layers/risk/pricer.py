@@ -116,7 +116,10 @@ class ModelPricer:
         )
 
         # Ensure minimum premium
+        at_min_premium = False
         if config.metadata.min_premium > 0:
+            if premium_after_modifiers < config.metadata.min_premium:
+                at_min_premium = True
             premium_after_modifiers = max(premium_after_modifiers, config.metadata.min_premium)
 
         # Step 12: Scale to limit bands
@@ -169,8 +172,14 @@ class ModelPricer:
                         limit_premiums[lim_key] = round(cap, 2)
 
         # Cap premium vs revenue
+        # Exception: if the premium is at the min_premium floor, the revenue
+        # guardrail should not cap it further. The min_premium represents the
+        # minimum underwriting/binding cost — capping it below that floor
+        # contradicts the config's intent and produces premiums that can't
+        # cover admin costs. The limit guardrail still applies because if
+        # limit × ratio < min_premium, the limit is genuinely too small.
         revenue = submission_data.get("revenue", 0)
-        if revenue and revenue > 0:
+        if revenue and revenue > 0 and not at_min_premium:
             max_premium_by_revenue = revenue * guardrails.max_premium_to_revenue_ratio
             if final_premium > max_premium_by_revenue:
                 guardrail_warnings.append({
@@ -382,7 +391,7 @@ class ModelPricer:
 
         app = tier_band.interpretation.application
 
-        # MULTIPLIER: rate × basis value
+        # MULTIPLIER: rate × basis value (with sub-linear damping for large bases)
         if app.method == PricingMethod.MULTIPLIER:
             rate_basis = app.basis or "tiv"
             basis_value = submission_data.get(rate_basis, 0)
@@ -397,7 +406,25 @@ class ModelPricer:
                 return result, "default", derivation
 
             rate = app.applied or 0
-            base_premium = basis_value * rate
+            damping = config.pricing.basis_damping
+            limit = submission_data.get("limit", 0)
+
+            # Sub-linear damping when basis vastly exceeds coverage limit.
+            # When basis ($85B TIV, $200B revenue) vastly exceeds the limit
+            # ($500M), linear rate × basis produces absurd premiums. Damping
+            # converts to:
+            #   effective_basis = limit × (basis / limit) ^ damping
+            # With damping=0.5 the premium grows as sqrt of the basis/limit
+            # ratio, keeping premiums proportional to exposure without
+            # producing P/L ratios above 100%.
+            if (damping < 1.0
+                    and limit > 0
+                    and basis_value > limit):
+                effective_basis = limit * (basis_value / limit) ** damping
+            else:
+                effective_basis = basis_value
+
+            base_premium = effective_basis * rate
             derivation = BasePremiumDerivation(
                 method="MULTIPLIER", basis_field=rate_basis,
                 basis_value=basis_value, rate=rate,
@@ -545,6 +572,8 @@ class ModelPricer:
         if limit_config is None:
             return {}, []
 
+        max_ilf = config.guardrails.max_ilf_factor if config.guardrails else 10.0
+
         product_type = self._resolve_product_type(submission_data, config)
         limit_premiums: Dict[str, float] = {}
         limit_details: List[LimitPremiumDetail] = []
@@ -552,7 +581,7 @@ class ModelPricer:
         if limit_config.type == LimitConfigType.BUNDLED and limit_config.packages:
             # BUNDLED: fixed limit/deductible packages
             for pkg in limit_config.packages:
-                ilf = config.get_ilf(product_type, pkg.limit)
+                ilf = min(config.get_ilf(product_type, pkg.limit), max_ilf)
                 ded_factor = config.get_deductible_factor(product_type, pkg.deductible)
                 limit_premium = premium * ilf * ded_factor
                 limit_premiums[str(pkg.limit)] = round(limit_premium, 2)
@@ -579,7 +608,7 @@ class ModelPricer:
             )
 
             for limit in limit_options:
-                ilf = config.get_ilf(product_type, limit)
+                ilf = min(config.get_ilf(product_type, limit), max_ilf)
                 limit_premium = premium * ilf * ded_factor
                 limit_premiums[str(limit)] = round(limit_premium, 2)
                 limit_details.append(LimitPremiumDetail(
@@ -619,7 +648,7 @@ class ModelPricer:
             # SUBSCRIPTION: order-level pricing, then line allocation
             order = limit_config.subscription_order
             if order:
-                ilf = config.get_ilf(product_type, order.total_limit)
+                ilf = min(config.get_ilf(product_type, order.total_limit), max_ilf)
                 base_deductible = int(
                     submission_data.get("deductible", config.pricing.base_deductible_reference)
                 )
@@ -655,6 +684,8 @@ class ModelPricer:
         ):
             return []
 
+        max_ilf = config.guardrails.max_ilf_factor if config.guardrails else 10.0
+
         product_type = self._resolve_product_type(submission_data, config)
         base_deductible = int(
             submission_data.get("deductible", config.pricing.base_deductible_reference)
@@ -678,7 +709,7 @@ class ModelPricer:
             for layer in limit_config.layers:
                 ilf_top = config.get_cumulative_ilf(product_type, layer.attachment + layer.limit)
                 ilf_bottom = config.get_cumulative_ilf(product_type, layer.attachment)
-                layer_ilf = ilf_top - ilf_bottom
+                layer_ilf = min(ilf_top - ilf_bottom, max_ilf)
                 order_prem = round(premium * layer_ilf * ded_factor, 2)
                 line_prem = round(order_prem * signed_line * lead_loading, 2)
                 rol = order_prem / layer.limit if layer.limit > 0 else 0.0
@@ -702,7 +733,7 @@ class ModelPricer:
         elif limit_config.type == LimitConfigType.SUBSCRIPTION:
             order = limit_config.subscription_order
             if order:
-                ilf = config.get_ilf(product_type, order.total_limit)
+                ilf = min(config.get_ilf(product_type, order.total_limit), max_ilf)
                 order_prem = round(premium * ilf * ded_factor, 2)
                 line_prem = round(order_prem * signed_line * lead_loading, 2)
                 rol = order_prem / order.total_limit if order.total_limit > 0 else 0.0
@@ -794,7 +825,8 @@ class ModelPricer:
             LimitPremiumDetail for the requested limit
         """
         product_type = self._resolve_product_type(submission_data or {}, config)
-        ilf = config.get_ilf(product_type, new_limit)
+        max_ilf = config.guardrails.max_ilf_factor if config.guardrails else 10.0
+        ilf = min(config.get_ilf(product_type, new_limit), max_ilf)
         ded_factor = config.get_deductible_factor(product_type, deductible)
         limit_premium = premium_after_modifiers * ilf * ded_factor
 
