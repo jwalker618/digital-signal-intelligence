@@ -2,21 +2,27 @@
 DSI Appetite Evaluator — Step 0 Pre-qualification Gate
 
 Evaluates whether a submission falls within underwriting appetite BEFORE
-the model runs. This is distinct from pricing configuration:
+the model runs.
 
-  - appetite.yaml  → Underwriting owns. "Do we write this at all?"
-  - config.yaml    → Actuarial owns. "How do we price it?"
+Appetite is now entity-scoped and lives in commercial entity definitions
+(commercial/entities/{entity}.yaml), alongside distribution, commission,
+and other commercial terms. Each entity declares per-coverage appetite
+constraints within its CoverageBinding.
 
-Appetite is defined per coverage (not per config) because it reflects
-the book-level risk appetite, not the model calibration.
+Legacy support:
+    Per-coverage appetite.yaml files (coverages/{coverage}/appetite.yaml)
+    are still loaded as a fallback when no entity is provided. These are
+    deprecated and will be removed in a future release.
 
 Usage:
-    from layers.risk.appetite import evaluate_appetite
+    # New: entity-based appetite evaluation
+    from infrastructure.models.commercial_schema import load_entity
+    entity = load_entity("mga_us_cyber")
+    fit, reasons = entity.evaluate_appetite("cyber", submission_data)
 
+    # Legacy: coverage-based appetite evaluation (deprecated)
+    from layers.risk.appetite import evaluate_appetite
     result = evaluate_appetite("cyber", submission_data)
-    if not result.fit:
-        # Outside appetite — do not run the model
-        print(result.reasons)
 """
 
 import logging
@@ -40,7 +46,7 @@ COVERAGE_DIR_ALIASES = {
 
 
 # =============================================================================
-# SCHEMA
+# LEGACY SCHEMA (deprecated — use CommercialEntity.evaluate_appetite instead)
 # =============================================================================
 
 class AppetiteConstraint(BaseModel):
@@ -89,7 +95,7 @@ def _resolve_coverage_dir(coverage: str) -> str:
 
 
 def load_appetite(coverage: str) -> Optional[CoverageAppetite]:
-    """Load appetite.yaml for a coverage.
+    """Load appetite.yaml for a coverage (legacy).
 
     Returns None if no appetite file exists (no constraints enforced).
     """
@@ -98,6 +104,11 @@ def load_appetite(coverage: str) -> Optional[CoverageAppetite]:
 
     if not appetite_path.exists():
         return None
+
+    logger.debug(
+        "Loading legacy appetite.yaml for %s — consider migrating to "
+        "commercial entity definitions", coverage
+    )
 
     with open(appetite_path) as f:
         raw = yaml.safe_load(f)
@@ -154,16 +165,28 @@ def _evaluate_constraint(
 def evaluate_appetite(
     coverage: str,
     submission_data: Dict[str, Any],
+    entity=None,
 ) -> AppetiteResult:
     """Evaluate whether a submission falls within underwriting appetite.
+
+    If an entity is provided, uses the entity's per-coverage appetite
+    constraints (new approach). Otherwise falls back to legacy per-coverage
+    appetite.yaml files.
 
     Args:
         coverage: Coverage identifier (e.g., "cyber", "marine")
         submission_data: Submission fields including limit, revenue, tiv, etc.
+        entity: Optional CommercialEntity for entity-scoped evaluation.
 
     Returns:
         AppetiteResult with fit=True if within appetite, fit=False with reasons if not.
     """
+    # New: entity-based appetite
+    if entity is not None:
+        fit, reasons = entity.evaluate_appetite(coverage, submission_data)
+        return AppetiteResult(fit=fit, reasons=reasons, coverage=coverage)
+
+    # Legacy: per-coverage appetite.yaml
     appetite = load_appetite(coverage)
     if appetite is None:
         return AppetiteResult(fit=True, coverage=coverage)

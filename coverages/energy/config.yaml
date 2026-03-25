@@ -1460,7 +1460,6 @@ energy:
             factor: 0.7
           - deductible: 1000000
             factor: 0.7
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -2585,7 +2584,6 @@ energy:
             factor: 0.8
           - deductible: 10000000
             factor: 0.65
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -3903,7 +3901,6 @@ energy:
             factor: 0.72
           - deductible: 1000000
             factor: 0.65
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -5257,7 +5254,6 @@ energy:
             factor: 0.78
           - deductible: 1000000
             factor: 0.68
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -6514,7 +6510,6 @@ energy:
             factor: 0.78
           - deductible: 1000000
             factor: 0.68
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -7792,7 +7787,6 @@ energy:
             factor: 0.72
           - deductible: 2500000
             factor: 0.62
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -9141,7 +9135,6 @@ energy:
             factor: 0.75
           - deductible: 5000000
             factor: 0.65
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -10463,7 +10456,6 @@ energy:
             factor: 0.8
           - deductible: 5000000
             factor: 0.65
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -11790,7 +11782,6 @@ energy:
             factor: 0.7
           - deductible: 2500000
             factor: 0.58
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -12657,7 +12648,6 @@ energy:
             factor: 0.82
           - deductible: 500000
             factor: 0.7
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1

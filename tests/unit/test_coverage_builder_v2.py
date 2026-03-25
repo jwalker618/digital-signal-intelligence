@@ -263,7 +263,7 @@ class TestBuilderV2Output:
         assert "base_limit_reference" in pricing
         assert "base_deductible_reference" in pricing
         assert "by_product_type" in pricing
-        assert "taxes_fees_rate" in pricing
+
 
         # ILF curve and deductible_factors are nested under by_product_type
         for product_type, product_pricing in pricing["by_product_type"].items():

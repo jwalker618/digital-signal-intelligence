@@ -1434,7 +1434,6 @@ marine:
             factor: 0.7
           - deductible: 1000000
             factor: 0.7
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -2017,7 +2016,6 @@ marine:
             factor: 0.85
           - deductible: 50000
             factor: 0.7
-      taxes_fees_rate: 0.03
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

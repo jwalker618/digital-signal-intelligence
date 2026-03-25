@@ -1333,7 +1333,6 @@ directors_officers:
             factor: 0.7
           - deductible: 1000000
             factor: 0.7
-      taxes_fees_rate: 0.05
       basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
@@ -1983,7 +1982,6 @@ directors_officers:
             factor: 0.8
           - deductible: 100000
             factor: 0.7
-      taxes_fees_rate: 0.05
       basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1

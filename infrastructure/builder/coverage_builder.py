@@ -869,7 +869,7 @@ class CoverageBuilder:
             "base_limit_reference": spec.base_limit_reference,
             "base_deductible_reference": spec.base_deductible_reference,
             "by_product_type": {},
-            "taxes_fees_rate": 0.05,
+
         }
         
         # Phase 5: Curves must be nested by product type

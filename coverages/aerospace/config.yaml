@@ -1357,7 +1357,6 @@ aerospace:
             factor: 0.82
           - deductible: 500000
             factor: 0.72
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -2180,7 +2179,6 @@ aerospace:
             factor: 0.93
           - deductible: 25000
             factor: 0.87
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1

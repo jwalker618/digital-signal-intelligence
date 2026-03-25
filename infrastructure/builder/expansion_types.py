@@ -223,7 +223,6 @@ class PricingSpec:
     """Complete pricing configuration."""
     base_limit_reference: int = 10_000_000
     base_deductible_reference: int = 50_000
-    taxes_fees_rate: float = 0.05
     by_product_type: List[ProductPricing] = field(default_factory=list)
 
 

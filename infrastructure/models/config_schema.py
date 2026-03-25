@@ -498,10 +498,15 @@ class LimitConfiguration(StrictModel):
     # For DECOUPLED mode — programmatic limit generation
     min_limit: Optional[int] = None
     max_limit: Optional[int] = None
-    valid_deductibles: Optional[List[int]] = None
 
-    # Legacy: explicit list of limits (still supported, overrides min/max)
+    # Deductible range (replaces hard valid_deductibles list)
+    # The pricer interpolates between deductible_factors reference points
+    min_deductible: Optional[int] = None
+    max_deductible: Optional[int] = None
+
+    # Legacy: explicit lists (still supported, overrides min/max)
     valid_limits: Optional[List[int]] = None
+    valid_deductibles: Optional[List[int]] = None  # deprecated: use min/max_deductible
 
     # For TOWER mode — stacked excess layers (bespoke bandings supported)
     layers: Optional[List[TowerLayer]] = None
@@ -522,8 +527,13 @@ class LimitConfiguration(StrictModel):
                     "DECOUPLED mode requires either (min_limit + max_limit) "
                     "or valid_limits"
                 )
-            if not self.valid_deductibles:
-                raise ValueError("DECOUPLED mode requires 'valid_deductibles'")
+            has_ded_range = self.min_deductible is not None and self.max_deductible is not None
+            has_ded_list = self.valid_deductibles is not None and len(self.valid_deductibles) > 0
+            if not has_ded_range and not has_ded_list:
+                raise ValueError(
+                    "DECOUPLED mode requires either (min_deductible + max_deductible) "
+                    "or valid_deductibles"
+                )
         if self.type == LimitConfigType.TOWER:
             if not self.layers or len(self.layers) == 0:
                 raise ValueError("TOWER mode requires 'layers'")
@@ -740,11 +750,47 @@ class ProductTypePricing(StrictModel):
     lead_loading_factor: float = Field(default=1.0, ge=1.0, le=2.0)
 
     def get_deductible_factor(self, deductible: int) -> float:
-        """Get deductible factor for a given deductible."""
-        for f in self.deductible_factors:
+        """Get deductible factor for a given deductible, interpolating between reference points.
+
+        Uses log-linear interpolation between the two nearest reference deductibles,
+        matching the approach used for ILF curves. If the deductible falls outside
+        the reference range, the nearest boundary factor is returned (no extrapolation).
+        """
+        if not self.deductible_factors:
+            return 1.0
+
+        # Sort reference points by deductible
+        sorted_refs = sorted(self.deductible_factors, key=lambda f: f.deductible)
+
+        # Exact match — fast path
+        for f in sorted_refs:
             if f.deductible == deductible:
                 return f.factor
-        # Default to 1.0 if not found
+
+        # Below minimum reference — clamp to lowest factor
+        if deductible <= sorted_refs[0].deductible:
+            return sorted_refs[0].factor
+
+        # Above maximum reference — clamp to highest factor
+        if deductible >= sorted_refs[-1].deductible:
+            return sorted_refs[-1].factor
+
+        # Find bracketing reference points and interpolate log-linearly
+        import math
+        for i in range(len(sorted_refs) - 1):
+            lo = sorted_refs[i]
+            hi = sorted_refs[i + 1]
+            if lo.deductible < deductible < hi.deductible:
+                # Log-linear interpolation: factor = lo.factor * (hi.factor/lo.factor)^t
+                # where t = log(ded/lo.ded) / log(hi.ded/lo.ded)
+                if lo.factor <= 0 or hi.factor <= 0:
+                    # Fallback to linear if factors aren't positive
+                    t = (deductible - lo.deductible) / (hi.deductible - lo.deductible)
+                    return round(lo.factor + t * (hi.factor - lo.factor), 6)
+                log_t = math.log(deductible / lo.deductible) / math.log(hi.deductible / lo.deductible)
+                return round(lo.factor * (hi.factor / lo.factor) ** log_t, 6)
+
+        # Shouldn't reach here, but safety fallback
         return 1.0
 
 
@@ -753,7 +799,6 @@ class Pricing(StrictModel):
     base_limit_reference: int = 1000000
     base_deductible_reference: int = 50000
     by_product_type: Dict[str, ProductTypePricing]
-    taxes_fees_rate: float = 0.05
     basis_damping: float = Field(
         default=0.5, ge=0.0, le=1.0,
         description="Sub-linear exponent for total-value bases (tiv, hull_value, total_assets). "

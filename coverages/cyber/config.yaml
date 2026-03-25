@@ -1270,7 +1270,6 @@ cyber:
             factor: 0.55
           - deductible: 1000000
             factor: 0.45
-      taxes_fees_rate: 0.05
       basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
@@ -1985,7 +1984,6 @@ cyber:
             factor: 0.92
           - deductible: 25000
             factor: 0.85
-      taxes_fees_rate: 0.05
       basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1

@@ -555,10 +555,14 @@ class ModelPricer:
         config: CoverageConfig
     ) -> Tuple[Dict[str, float], List[LimitPremiumDetail]]:
         """
-        Step 12: Scale premium across limit bands.
+        Step 12: Scale premium to the submission's limit/deductible.
 
-        Uses ILF (Increased Limit Factor) curves from Pydantic pricing config
-        to calculate premium for each available limit option.
+        The pricer produces a technical premium for a single limit/deductible
+        pair. Distribution concerns (tower layers, subscription lines, bundled
+        packages) are handled by the premium assembly layer.
+
+        For DECOUPLED configs, also generates contextual limit options around
+        the requested limit to support what-if analysis.
 
         Args:
             premium: Premium after modifiers
@@ -573,40 +577,42 @@ class ModelPricer:
             return {}, []
 
         max_ilf = config.guardrails.max_ilf_factor if config.guardrails else 10.0
-
         product_type = self._resolve_product_type(submission_data, config)
+
+        base_deductible = int(
+            submission_data.get("deductible", config.pricing.base_deductible_reference)
+        )
+        ded_factor = config.get_deductible_factor(product_type, base_deductible)
+
         limit_premiums: Dict[str, float] = {}
         limit_details: List[LimitPremiumDetail] = []
 
+        # Generate limit options: DECOUPLED generates a range, others use the
+        # requested limit. Tower/subscription distribution is a commercial
+        # concern handled by PremiumAssembler, not here.
+        requested_limit = submission_data.get("limit")
+
         if limit_config.type == LimitConfigType.BUNDLED and limit_config.packages:
-            # BUNDLED: fixed limit/deductible packages
+            # BUNDLED: price each package (these are fixed limit/ded combos)
             for pkg in limit_config.packages:
                 ilf = min(config.get_ilf(product_type, pkg.limit), max_ilf)
-                ded_factor = config.get_deductible_factor(product_type, pkg.deductible)
-                limit_premium = premium * ilf * ded_factor
+                pkg_ded_factor = config.get_deductible_factor(product_type, pkg.deductible)
+                limit_premium = premium * ilf * pkg_ded_factor
                 limit_premiums[str(pkg.limit)] = round(limit_premium, 2)
                 limit_details.append(LimitPremiumDetail(
                     limit=pkg.limit,
                     deductible=pkg.deductible,
                     ilf_factor=ilf,
-                    deductible_factor=ded_factor,
+                    deductible_factor=pkg_ded_factor,
                     premium_before_scaling=premium,
                     premium_after_scaling=round(limit_premium, 2),
                 ))
 
         elif limit_config.type == LimitConfigType.DECOUPLED:
-            # DECOUPLED: independent limit/deductible selection
-            base_deductible = int(
-                submission_data.get("deductible", config.pricing.base_deductible_reference)
-            )
-            ded_factor = config.get_deductible_factor(product_type, base_deductible)
-
-            # Generate contextual limit options (programmatic or explicit)
-            requested_limit = submission_data.get("limit")
+            # DECOUPLED: generate contextual limit options around requested limit
             limit_options = limit_config.generate_limit_options(
                 requested_limit=int(requested_limit) if requested_limit else None
             )
-
             for limit in limit_options:
                 ilf = min(config.get_ilf(product_type, limit), max_ilf)
                 limit_premium = premium * ilf * ded_factor
@@ -620,49 +626,21 @@ class ModelPricer:
                     premium_after_scaling=round(limit_premium, 2),
                 ))
 
-        elif limit_config.type == LimitConfigType.TOWER and limit_config.layers:
-            # TOWER: stacked excess layers priced via ILF differentials
-            base_deductible = int(
-                submission_data.get("deductible", config.pricing.base_deductible_reference)
-            )
-            ded_factor = config.get_deductible_factor(product_type, base_deductible)
-
-            for layer in limit_config.layers:
-                ilf_top = config.get_cumulative_ilf(product_type, layer.attachment + layer.limit)
-                ilf_bottom = config.get_cumulative_ilf(product_type, layer.attachment)
-                layer_ilf = ilf_top - ilf_bottom
-                layer_premium = premium * layer_ilf * ded_factor
-
-                limit_premiums[str(layer.limit)] = round(layer_premium, 2)
+        else:
+            # TOWER / SUBSCRIPTION / other: price at the requested limit only.
+            # Distribution structure (layers, lines) handled by PremiumAssembler.
+            if requested_limit:
+                limit = int(requested_limit)
+                ilf = min(config.get_ilf(product_type, limit), max_ilf)
+                limit_premium = premium * ilf * ded_factor
+                limit_premiums[str(limit)] = round(limit_premium, 2)
                 limit_details.append(LimitPremiumDetail(
-                    limit=layer.limit,
-                    deductible=base_deductible,
-                    attachment_point=layer.attachment,
-                    ilf_factor=layer_ilf,
-                    deductible_factor=ded_factor,
-                    premium_before_scaling=premium,
-                    premium_after_scaling=round(layer_premium, 2),
-                ))
-
-        elif limit_config.type == LimitConfigType.SUBSCRIPTION:
-            # SUBSCRIPTION: order-level pricing, then line allocation
-            order = limit_config.subscription_order
-            if order:
-                ilf = min(config.get_ilf(product_type, order.total_limit), max_ilf)
-                base_deductible = int(
-                    submission_data.get("deductible", config.pricing.base_deductible_reference)
-                )
-                ded_factor = config.get_deductible_factor(product_type, base_deductible)
-                order_premium = premium * ilf * ded_factor
-
-                limit_premiums[str(order.total_limit)] = round(order_premium, 2)
-                limit_details.append(LimitPremiumDetail(
-                    limit=order.total_limit,
+                    limit=limit,
                     deductible=base_deductible,
                     ilf_factor=ilf,
                     deductible_factor=ded_factor,
                     premium_before_scaling=premium,
-                    premium_after_scaling=round(order_premium, 2),
+                    premium_after_scaling=round(limit_premium, 2),
                 ))
 
         return limit_premiums, limit_details
@@ -673,11 +651,21 @@ class ModelPricer:
         submission_data: Dict[str, Any],
         config: CoverageConfig,
     ) -> List[LayerPremiumDetail]:
-        """Price tower layers and return detailed layer-level breakdown.
+        """Price tower layers (deprecated — use PremiumAssembler instead).
 
-        This produces LayerPremiumDetail objects with ILF components, order
-        premiums, and (if subscription line is present) line-level allocation.
+        Tower/subscription distribution is now handled by the premium assembly
+        layer (layers.risk.premium_assembly.PremiumAssembler). This method is
+        retained for backward compatibility with existing callers but delegates
+        to single-limit pricing internally.
         """
+        import warnings
+        warnings.warn(
+            "price_tower_layers is deprecated. Use PremiumAssembler for "
+            "tower/subscription distribution.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         limit_config = config.limit_configuration
         if limit_config is None or limit_config.type not in (
             LimitConfigType.TOWER, LimitConfigType.SUBSCRIPTION
@@ -685,19 +673,16 @@ class ModelPricer:
             return []
 
         max_ilf = config.guardrails.max_ilf_factor if config.guardrails else 10.0
-
         product_type = self._resolve_product_type(submission_data, config)
         base_deductible = int(
             submission_data.get("deductible", config.pricing.base_deductible_reference)
         )
         ded_factor = config.get_deductible_factor(product_type, base_deductible)
 
-        # Resolve subscription line parameters
         line = limit_config.subscription_line
         signed_line = line.signed_line if line and line.signed_line else 1.0
         role = line.role.value if line else "FOLLOW"
 
-        # Resolve lead loading
         prod_pricing = config.pricing.by_product_type.get(product_type)
         lead_loading = 1.0
         if role == "LEAD" and prod_pricing:

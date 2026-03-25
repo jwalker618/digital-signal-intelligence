@@ -1299,7 +1299,6 @@ professional_indemnity:
             factor: 0.7
           - deductible: 1000000
             factor: 0.6
-      taxes_fees_rate: 0.05
       basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
@@ -1524,7 +1523,6 @@ professional_indemnity:
             factor: 0.9
           - deductible: 50000
             factor: 0.8
-      taxes_fees_rate: 0.05
       basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1

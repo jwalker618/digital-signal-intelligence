@@ -1,0 +1,76 @@
+# Example: Lloyd's Syndicate — Subscription Market
+#
+# This entity writes energy, marine, and aerospace through the London
+# subscription market. It participates as a follower on large programs
+# with a typical 10% signed line.
+
+entity:
+  id: syndicate_example
+  name: "Example Syndicate 1234"
+  market: lloyds
+  base_currency: GBP
+
+  coverages:
+    - coverage: energy
+      configs:
+        - energy_general
+        - energy_upstream_deepwater
+        - energy_upstream_onshore
+        - energy_upstream_unconventional
+        - energy_midstream
+        - energy_downstream
+        - energy_offshore_wind
+        - energy_onshore_renewable
+        - energy_storage
+      max_single_limit: 500_000_000    # £500M max per risk
+      constraints:
+        - field: tiv
+          operator: "<="
+          value: 100_000_000_000
+          reason: "TIV exceeds energy underwriting authority — requires syndicate structure"
+
+    - coverage: marine
+      configs:
+        - marine_general
+      max_single_limit: 250_000_000
+      constraints:
+        - field: hull_value
+          operator: "<="
+          value: 5_000_000_000
+          reason: "Hull value exceeds marine underwriting authority"
+
+    - coverage: aerospace
+      configs:
+        - aerospace_general
+      max_single_limit: 1_000_000_000
+      constraints:
+        - field: hull_value
+          operator: "<="
+          value: 10_000_000_000
+          reason: "Hull value exceeds aerospace underwriting authority"
+
+  distribution:
+    type: SUBSCRIPTION
+    subscription:
+      minimum_line: 0.05
+      maximum_line: 0.25
+      default_signed_line: 0.10
+      role: FOLLOW
+      lead_loading_factor: 1.0         # No loading for follower
+
+  commission:
+    brokerage_rate: 0.20               # 20% brokerage
+    overrider_rate: 0.025              # 2.5% overrider
+    profit_commission_rate: 0.15       # 15% profit commission
+    profit_commission_threshold: 0.70  # Triggers below 70% loss ratio
+
+  taxes_and_levies:
+    insurance_premium_tax_rate: 0.12   # UK IPT 12%
+    regulatory_levy_rate: 0.01         # Lloyd's central fund
+
+  fronting:
+    enabled: false
+
+  pricing_adjustments:
+    offered_premium_discretion: 0.10   # ±10% underwriter discretion
+    minimum_gross_premium: 7500        # £7,500 minimum

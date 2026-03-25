@@ -635,7 +635,6 @@
               factor: {float}
 
       # Shared parameters (apply to all product types)
-      taxes_fees_rate: {float}             # e.g., 0.05 = 5%
 
     # =========================================================================
     # GUARDRAILS
