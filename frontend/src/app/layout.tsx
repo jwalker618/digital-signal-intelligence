@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
+import { UserProvider } from "@/context/UserContext";
 import "./globals.css";
 
 // 1. Font Configuration
@@ -72,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning> 
       <body className={`${ibmPlex.variable} ${inter.variable} font-ibm h-screen w-screen overflow-hidden`}>
-
+        <UserProvider>
         <div className="relative h-full w-full">
 
           {/* SIDEBAR — overlays content when expanded */}
@@ -316,6 +317,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
 
         </div>
+        </UserProvider>
       </body>
     </html>
   );
