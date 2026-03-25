@@ -13,6 +13,7 @@ import LossTab from "@/components/submissions/workbench/LossTab";
 import ExposureTab from "@/components/submissions/workbench/ExposureTab";
 import ReferralTab from "@/components/submissions/workbench/ReferralTab";
 import ModelVersionsTab from "@/components/submissions/workbench/ModelVersionsTab";
+import ScenarioTab from "@/components/submissions/workbench/ScenarioTab";
 
 export default function WorkbenchView() {
   const { 
@@ -53,6 +54,8 @@ export default function WorkbenchView() {
         return <ExposureTab/>;
       case "Referral Actions":
         return <ReferralTab/>;
+      case "Scenarios":
+        return <ScenarioTab/>;
       case "Model Versions":
         return <ModelVersionsTab/>;
       default:
