@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   Target, Activity, Paperclip, AlertTriangle, ShieldAlert,
-  Gauge, Layers, ListFilter
+  Gauge, Layers, ChevronDown, ChevronRight, MessageSquare, ArrowUp
 } from "lucide-react";
-import { useState } from "react";
-
 import { formatNum } from "@/lib/format";
 
 const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
@@ -21,8 +19,7 @@ const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
 
 export default function RiskTab() {
   const { activeSubmission, activeVersion, activeQuote, riskSignals, isFetchingRiskSignals, fetchRiskSignals } = useDsiStore();
-
-  const [filterMode, setFilterMode] = useState<'all' | 'impact' | 'conditions'>('all');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (activeVersion?.version_code) {
@@ -30,11 +27,16 @@ export default function RiskTab() {
     }
   }, [activeVersion?.version_code, fetchRiskSignals]);
 
+  const toggleGroup = (group: string) => {
+    setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  // Conditions indexed by source
   const signalConditions = activeVersion?.signal_conditions || [];
   const queryConditions = activeVersion?.query_conditions || [];
   const allConditions = [...signalConditions, ...queryConditions];
 
-  const conditionsBySignal = useMemo(() => {
+  const conditionsBySource = useMemo(() => {
     const map: Record<string, any[]> = {};
     for (const c of allConditions) {
       const key = c.source_id || c.signal_id || '';
@@ -44,33 +46,68 @@ export default function RiskTab() {
     return map;
   }, [allConditions]);
 
-  // Sort signals by group then contribution
-  const sortedSignals = useMemo(() => {
-    if (!riskSignals || riskSignals.length === 0) return [];
-    const sorted = [...riskSignals].sort((a: any, b: any) => {
-      if (a.group_code < b.group_code) return -1;
-      if (a.group_code > b.group_code) return 1;
-      return (b.contribution || 0) - (a.contribution || 0);
-    });
-    return sorted;
-  }, [riskSignals]);
-
-  // Apply filters
-  const displayedSignals = useMemo(() => {
-    if (filterMode === 'all') return sortedSignals;
-    if (filterMode === 'conditions') {
-      return sortedSignals.filter((sig: any) => conditionsBySignal[sig.code] || conditionsBySignal[sig.signal_id]);
-    }
-    if (filterMode === 'impact') {
-      const sorted = [...sortedSignals].sort((a: any, b: any) => Math.abs(b.contribution || 0) - Math.abs(a.contribution || 0));
-      return sorted.filter((sig: any, idx: number) => Math.abs(sig.contribution || 0) >= 2.0 || idx < 5);
-    }
-    return sortedSignals;
-  }, [sortedSignals, filterMode, conditionsBySignal]);
-
-  // Group scores for summary table
+  // Group scores + signals per group
   const groupScores = activeVersion?.group_scores || {};
   const groupEntries = Object.entries(groupScores).sort(([, a]: any, [, b]: any) => (b?.risk_contribution || 0) - (a?.risk_contribution || 0));
+
+  const signalsByGroup = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const sig of (riskSignals || [])) {
+      const group = sig.group_code || 'ungrouped';
+      if (!map[group]) map[group] = [];
+      map[group].push(sig);
+    }
+    // Sort each group's signals by contribution descending
+    for (const group of Object.keys(map)) {
+      map[group].sort((a: any, b: any) => (b.contribution || 0) - (a.contribution || 0));
+    }
+    return map;
+  }, [riskSignals]);
+
+  // Direct queries (separate from signal conditions)
+  const directQueries = useMemo(() => {
+    return (activeVersion?.query_conditions || []).filter((c: any) =>
+      c.source_type === 'direct_query'
+    );
+  }, [activeVersion?.query_conditions]);
+
+  // Tier improvement paths
+  const tierBands = activeVersion?.tier_band_interpretation?.tiers || [];
+  const currentTier = activeVersion?.score_based_tier || activeVersion?.final_tier;
+  const currentScore = activeVersion?.pure_composite_score || 0;
+
+  const improvementPaths = useMemo(() => {
+    if (!currentTier || currentTier <= 1 || tierBands.length === 0) return [];
+    // Find tiers better than current (lower tier_id = better)
+    const betterTiers = tierBands
+      .filter((t: any) => t.tier_id < currentTier)
+      .sort((a: any, b: any) => b.tier_id - a.tier_id); // closest first
+
+    return betterTiers.map((t: any) => {
+      const targetMax = t.bands?.max ?? 0;
+      const ptsNeeded = currentScore > targetMax ? currentScore - targetMax : 0;
+      return {
+        tier_id: t.tier_id,
+        label: t.label,
+        action: t.action,
+        target_range: `${t.bands?.min ?? 0} – ${t.bands?.max ?? 0}`,
+        pts_needed: Math.round(ptsNeeded),
+      };
+    });
+  }, [currentTier, currentScore, tierBands]);
+
+  // Top group levers (highest contribution = most room to improve)
+  const topLevers = useMemo(() => {
+    return groupEntries
+      .filter(([, gs]: any) => (gs?.risk_contribution || 0) > 0)
+      .slice(0, 3)
+      .map(([groupId, gs]: any) => ({
+        group: groupId,
+        contribution: gs.risk_contribution || 0,
+        score: gs.risk_score || 0,
+        weight: gs.risk_weight || 0,
+      }));
+  }, [groupEntries]);
 
   if (!activeSubmission || !activeVersion) return null;
 
@@ -82,139 +119,86 @@ export default function RiskTab() {
   const hasTierMargin = marginPct != null && tierMin != null && tierMax != null;
 
   return (
-    <div className="
-      w-full no-scrollbar
-      animate-in fade-in duration-500 pb-12"
-      >
-      {/* STICKY WRAPPER */}
-      <div className="
-        sticky top-0 z-20
-        bg-dsi-background
-        pt-3 pb-2"
-        >
-        <div className="
-          flex gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad
-          pt-2 pb-2
-        ">
+    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
+
+      {/* STICKY HEADER */}
+      <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
+        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
-        <div className="
-          grid grid-cols-[10%_35%_55%] grid-rows-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-2 pb-2"
-        >
+        <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
+            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
                 <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
               </span>
             )}
-            {activeQuote.status === 'bound' && (
+            {activeQuote?.status === 'bound' && (
               <span>
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
+                <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
               </span>
             )}
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
+            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
+            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
           </div>
         </div>
       </div>
 
-      {/* =======================================================================
-          ASSESSMENT SUMMARY KPIs
-          ======================================================================= */}
+      {/* KPIs */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="
-          flex items-center gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad pr-dsi-pad
-          pt-2 pb-2
-        ">
+        <div className="flex items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
           <Target className="icon"/><span className="text-sm">Risk Assessment Results</span>
         </div>
-        <div className="
-          flex flex-col flex-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-4 pb-4
-        ">
+        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 pl-dsi-pad pr-dsi-pad">
             <div>
               <span className="opacity-70 block text-xs mb-1">Score-Based Tier</span>
-              <span className="font-bold text-lg text-dsi-selected">
-                Tier {activeVersion.score_based_tier || activeVersion.final_tier}
-              </span>
+              <span className="font-bold text-lg text-dsi-selected">Tier {activeVersion.score_based_tier || activeVersion.final_tier}</span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Final Tier</span>
-              <span className="font-bold text-lg text-dsi-selected">
-                Tier {activeVersion.final_tier}
-              </span>
+              <span className="font-bold text-lg text-dsi-selected">Tier {activeVersion.final_tier}</span>
               <span className="block text-[10px] opacity-40 uppercase">{activeVersion.tier_label}</span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Composite Score</span>
-              <span className="font-bold text-xl">
-                {formatNum(activeVersion.pure_composite_score, 1)}
-              </span>
+              <span className="font-bold text-xl">{formatNum(activeVersion.pure_composite_score, 1)}</span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Confidence</span>
-              <span className="font-bold text-lg">
-                {((activeVersion.confidence || 0) * 100).toFixed(0)}%
-              </span>
+              <span className="font-bold text-lg">{((activeVersion.confidence || 0) * 100).toFixed(0)}%</span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Signal Coverage</span>
-              <span className="font-bold text-lg">
-                {((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%
-              </span>
+              <span className="font-bold text-lg">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* =======================================================================
-          TIER POSITION & CONDITIONS
+          TIER POSITION + IMPROVEMENT PATHS & CONDITIONS
           ======================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
 
-        {/* TIER MARGIN GAUGE */}
+        {/* TIER GAUGE + IMPROVEMENT PATHS */}
         <div className="flex flex-col">
-          <div className="
-            flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2
-          ">
+          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <Gauge className="icon"/><span className="text-sm">Tier Position</span>
           </div>
-          <div className="
-            flex flex-col flex-1 border-b-3 border-dsi-contrast-background
-            overflow-x-hidden border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4
-          ">
+          <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-hidden border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
             {hasTierMargin ? (
               <div className="pl-dsi-pad pr-dsi-pad space-y-4">
+                {/* Gauge bar */}
                 <div>
                   <div className="flex justify-between text-xs opacity-60 mb-1">
                     <span>Tier {activeVersion.tier_margin_adjacent_better ?? '–'} boundary</span>
@@ -234,6 +218,8 @@ export default function RiskTab() {
                     <span>{formatNum(tierMax, 0)}</span>
                   </div>
                 </div>
+
+                {/* Distance metrics */}
                 <div className="grid grid-cols-3 gap-4 text-wrap">
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-60 block mb-1">Position in Tier</span>
@@ -259,6 +245,37 @@ export default function RiskTab() {
                     )}
                   </div>
                 </div>
+
+                {/* E1: Tier improvement paths */}
+                {improvementPaths.length > 0 && (
+                  <div className="border-t border-dsi-outline/20 pt-3">
+                    <span className="text-xs opacity-60 block mb-2 flex items-center gap-1">
+                      <ArrowUp className="w-3 h-3" /> Paths to Improve
+                    </span>
+                    <div className="space-y-2">
+                      {improvementPaths.map((path: any) => (
+                        <div key={path.tier_id} className="border border-dsi-outline/15 rounded-lg p-2.5 text-wrap">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-bold">Tier {path.tier_id} — {path.label}</span>
+                            <span className="text-xs text-dsi-positive font-bold">-{path.pts_needed} pts needed</span>
+                          </div>
+                          <span className="text-[10px] opacity-40">Score range: {path.target_range} ({path.action})</span>
+                          {topLevers.length > 0 && (
+                            <div className="mt-1.5 text-[10px] opacity-50">
+                              <span>Top levers: </span>
+                              {topLevers.map((l, i) => (
+                                <span key={l.group}>
+                                  {i > 0 && ', '}
+                                  <span className="font-semibold">{l.group}</span> ({formatNum(l.contribution, 0)} pts)
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
@@ -268,20 +285,14 @@ export default function RiskTab() {
           </div>
         </div>
 
-        {/* SIGNAL CONDITIONS */}
+        {/* CONDITIONS + DIRECT QUERIES */}
         <div className="flex flex-col">
-          <div className="
-            flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2
-          ">
+          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <AlertTriangle className="icon"/>
             <span className="text-sm">Active Conditions ({allConditions.length})</span>
           </div>
-          <div className="
-            flex flex-col flex-1 border-b-3 border-dsi-contrast-background
-            border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2
-          ">
-            {allConditions.length === 0 ? (
+          <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2 overflow-y-auto max-h-[500px]">
+            {allConditions.length === 0 && directQueries.length === 0 ? (
               <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
                 No conditions triggered.
               </div>
@@ -314,6 +325,28 @@ export default function RiskTab() {
                     </div>
                   );
                 })}
+
+                {/* E5: Direct Queries */}
+                {directQueries.length > 0 && (
+                  <div className="border-t border-dsi-outline/20 mt-1">
+                    <div className="px-dsi-pad py-2">
+                      <span className="text-xs opacity-50 flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" /> Direct Queries ({directQueries.length})
+                      </span>
+                    </div>
+                    {directQueries.map((q: any, idx: number) => (
+                      <div key={`dq-${idx}`} className="px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">{q.source_name || q.source_id}</span>
+                          <span className={`text-xs font-bold ${q.response === true || q.response === 'yes' ? 'text-dsi-positive' : q.response === false || q.response === 'no' ? 'text-dsi-negative' : 'opacity-70'}`}>
+                            {typeof q.response === 'boolean' ? (q.response ? 'Yes' : 'No') : String(q.response ?? 'N/A')}
+                          </span>
+                        </div>
+                        {q.note && <span className="text-[10px] opacity-40 block mt-0.5">{q.note}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -321,159 +354,127 @@ export default function RiskTab() {
       </div>
 
       {/* =======================================================================
-          GROUP SCORE SUMMARY
-          ======================================================================= */}
-      {groupEntries.length > 0 && (
-        <div className="flex flex-col pt-2 pb-2">
-          <div className="
-            flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2
-          ">
-            <Layers className="icon"/><span className="text-sm">Group Score Summary</span>
-          </div>
-          <div className="
-            flex flex-col flex-1 border-b-3 border-dsi-contrast-background
-            overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2
-          ">
-            <table className="w-full text-sm text-left whitespace-nowrap">
-              <thead>
-                <tr className="text-center text-sm underline opacity-70">
-                  <th className="py-2 pl-dsi-pad pr-2 font-normal text-left">Group</th>
-                  <th className="py-2 px-2 font-normal text-right">Risk Score</th>
-                  <th className="py-2 px-2 font-normal text-right">Risk Weight</th>
-                  <th className="py-2 px-2 font-normal text-right">Contribution</th>
-                  <th className="py-2 px-2 font-normal text-center">Coverage</th>
-                  <th className="py-2 px-2 font-normal text-right border-l border-dsi-outline/20">Loss Weight</th>
-                  <th className="py-2 pr-dsi-pad font-normal text-right">Exposure Weight</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupEntries.map(([groupId, gs]: [string, any]) => (
-                  <tr key={groupId} className="border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors">
-                    <td className="py-2 pl-dsi-pad pr-2 font-semibold truncate max-w-[160px]" title={groupId}>{groupId}</td>
-                    <td className="py-2 px-2 text-right">{formatNum(gs.risk_score, 1)}</td>
-                    <td className="py-2 px-2 text-right opacity-60">{formatNum(gs.risk_weight, 2)}</td>
-                    <td className="py-2 px-2 text-right font-bold">{formatNum(gs.risk_contribution, 1)}</td>
-                    <td className="py-2 px-2 text-center">
-                      <span className={`text-xs ${gs.coverage_ratio >= 1 ? 'text-dsi-positive' : gs.coverage_ratio >= 0.5 ? 'text-dsi-warning' : 'text-dsi-negative'}`}>
-                        {gs.signal_count || 0}/{gs.expected_signal_count || 0}
-                      </span>
-                    </td>
-                    <td className="py-2 px-2 text-right border-l border-dsi-outline/20">
-                      {gs.loss_weight != null && gs.loss_weight > 0 ? (
-                        <span className="text-dsi-info font-bold">{formatNum(gs.loss_weight, 2)}</span>
-                      ) : (
-                        <span className="opacity-20">–</span>
-                      )}
-                    </td>
-                    <td className="py-2 pr-dsi-pad text-right">
-                      {gs.exposure_weight != null && gs.exposure_weight > 0 ? (
-                        <span className="text-dsi-info font-bold">{formatNum(gs.exposure_weight, 2)}</span>
-                      ) : (
-                        <span className="opacity-20">–</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* =======================================================================
-          SIGNAL TABLE — read-only
+          GROUP → SIGNAL ACCORDION (E2, E3, E4)
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="
-          flex justify-between items-center gap-dsi-pad
-          rounded-t-xl border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60
-          pl-dsi-pad pr-dsi-pad pt-2 pb-2
-        ">
-          <div className="flex items-center gap-dsi-pad">
-            <Target className="icon"/><span className="text-sm">Signal Breakdown</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <ListFilter className="w-3 h-3 opacity-50" />
-            <div className="flex items-center gap-1 border border-dsi-outline/20 rounded p-0.5">
-              <button onClick={() => setFilterMode('all')} className={`px-2 py-1 rounded transition-colors ${filterMode === 'all' ? 'bg-dsi-selected/20 text-dsi-selected font-semibold' : 'opacity-50 hover:opacity-100'}`}>All</button>
-              <button onClick={() => setFilterMode('impact')} className={`px-2 py-1 rounded transition-colors ${filterMode === 'impact' ? 'bg-dsi-selected/20 text-dsi-selected font-semibold' : 'opacity-50 hover:opacity-100'}`}>High Impact</button>
-              <button onClick={() => setFilterMode('conditions')} className={`px-2 py-1 rounded transition-colors ${filterMode === 'conditions' ? 'bg-dsi-selected/20 text-dsi-selected font-semibold' : 'opacity-50 hover:opacity-100'}`}>Active Conditions</button>
-            </div>
-          </div>
+        <div className="flex items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+          <Layers className="icon"/><span className="text-sm">Group & Signal Breakdown</span>
         </div>
+        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
 
-        <div className="
-          flex flex-col flex-1 border-b-3 border-dsi-contrast-background
-          overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4
-        ">
           {isFetchingRiskSignals ? (
             <div className="flex flex-col items-center justify-center py-10 opacity-50 space-y-4">
               <Activity className="w-6 h-6 animate-spin" />
             </div>
+          ) : groupEntries.length === 0 ? (
+            <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">No group data available.</div>
           ) : (
             <div className="w-full">
-              <table className="w-full text-sm text-left whitespace-nowrap">
-                <thead>
-                  <tr className="text-center text-sm underline opacity-70">
-                    <th className="py-2 pl-dsi-pad pr-dsi-pad font-normal text-left">Group</th>
-                    <th className="py-2 px-2 font-normal text-right">Grp Wgt</th>
-                    <th className="py-2 px-2 font-normal text-left">Signal Code</th>
-                    <th className="py-2 px-2 font-normal">Proxy Tier</th>
-                    <th className="py-2 px-2 font-normal text-center">Absent?</th>
-                    <th className="py-2 px-2 font-normal text-right">Score</th>
-                    <th className="py-2 px-2 font-normal text-right">Sig Wgt</th>
-                    <th className="py-2 pr-dsi-pad font-normal text-right">Contribution</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedSignals.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="py-8 text-center text-dsi-selected opacity-50 italic">
-                        No signals match the current filter.
-                      </td>
-                    </tr>
-                  ) : (
-                    displayedSignals.map((sig: any, idx: number) => {
-                      const isNewGroup = idx === 0 || displayedSignals[idx - 1].group_code !== sig.group_code;
-                      const hasCondition = conditionsBySignal[sig.code] || conditionsBySignal[sig.signal_id];
-                      return (
-                        <tr
-                          key={`${sig.code}-${idx}`}
-                          className={`
-                            border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors
-                            ${isNewGroup && idx !== 0 ? 'border-t-1 border-t-dsi-outline/50' : ''}
-                            ${hasCondition ? 'bg-dsi-warning/5' : ''}
-                          `}
-                        >
-                          <td className="py-2 pl-dsi-pad pr-dsi-pad opacity-70 truncate max-w-[120px]" title={sig.group_code}>
-                            {isNewGroup ? sig.group_code : ''}
-                          </td>
-                          <td className="py-2 px-2 text-right opacity-50">
-                            {isNewGroup ? formatNum(sig.group_weight, 2) : ''}
-                          </td>
-                          <td className="py-2 px-2 font-semibold">
-                            <div className="flex items-center gap-1.5">
-                              {sig.code}
-                              {hasCondition && (
-                                <AlertTriangle className="w-3 h-3 text-dsi-warning shrink-0" title="Has active condition" />
-                              )}
+              {/* Column headers */}
+              <div className="grid grid-cols-[1fr_80px_80px_80px_70px_70px_70px] gap-0 text-[11px] underline opacity-70 px-dsi-pad py-2">
+                <span>Group / Signal</span>
+                <span className="text-right">Score</span>
+                <span className="text-right">Weight</span>
+                <span className="text-right">Contribution</span>
+                <span className="text-center">Coverage</span>
+                <span className="text-right">Loss Wgt</span>
+                <span className="text-right">Exp Wgt</span>
+              </div>
+
+              {groupEntries.map(([groupId, gs]: [string, any]) => {
+                const isExpanded = expandedGroups[groupId] ?? false;
+                const signals = signalsByGroup[groupId] || [];
+                const groupConditions = conditionsBySource[groupId] || [];
+
+                return (
+                  <div key={groupId}>
+                    {/* GROUP ROW — clickable header */}
+                    <div
+                      onClick={() => toggleGroup(groupId)}
+                      className="grid grid-cols-[1fr_80px_80px_80px_70px_70px_70px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+                        <span className="font-bold text-sm">{groupId}</span>
+                        {/* E4: Group-level condition badges */}
+                        {groupConditions.length > 0 && (
+                          <span className="text-[10px] bg-dsi-warning/10 text-dsi-warning px-1.5 py-0.5 rounded font-bold">
+                            {groupConditions.length} cond
+                          </span>
+                        )}
+                        <span className="text-[10px] opacity-40 ml-1">({signals.length} signals)</span>
+                      </div>
+                      <span className="text-right text-sm">{formatNum(gs.risk_score, 1)}</span>
+                      <span className="text-right text-sm opacity-60">{formatNum(gs.risk_weight, 2)}</span>
+                      <span className="text-right text-sm font-bold">{formatNum(gs.risk_contribution, 1)}</span>
+                      <span className="text-center">
+                        <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-positive' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-warning' : 'text-dsi-negative'}`}>
+                          {gs.signal_count || 0}/{gs.expected_signal_count || 0}
+                        </span>
+                      </span>
+                      <span className="text-right">
+                        {gs.loss_weight != null && gs.loss_weight > 0
+                          ? <span className="text-dsi-info font-bold text-xs">{formatNum(gs.loss_weight, 2)}</span>
+                          : <span className="opacity-20 text-xs">–</span>}
+                      </span>
+                      <span className="text-right">
+                        {gs.exposure_weight != null && gs.exposure_weight > 0
+                          ? <span className="text-dsi-info font-bold text-xs">{formatNum(gs.exposure_weight, 2)}</span>
+                          : <span className="opacity-20 text-xs">–</span>}
+                      </span>
+                    </div>
+
+                    {/* E4: Group-level conditions (shown when expanded) */}
+                    {isExpanded && groupConditions.length > 0 && (
+                      <div className="ml-8 mr-dsi-pad mb-1">
+                        {groupConditions.map((cond: any, cidx: number) => {
+                          const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
+                          const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
+                          return (
+                            <div key={`gc-${cidx}`} className="flex items-center gap-2 py-1 text-xs">
+                              <ShieldAlert className={`w-3 h-3 shrink-0 ${colors.text}`} />
+                              <span className="opacity-70 truncate">{cond.note || cond.source_name || 'Condition'}</span>
+                              <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${colors.bg} ${colors.text}`}>
+                                {actionKey.replace('_', ' ')}
+                              </span>
                             </div>
-                          </td>
-                          <td className="py-2 px-2 opacity-80 text-center">{sig.proxy_tier || "-"}</td>
-                          <td className="py-2 px-2 text-center">
-                            {sig.was_absent ? <span className="text-dsi-negative">Yes</span> : <span className="opacity-30">No</span>}
-                          </td>
-                          <td className="py-2 px-2 text-right">{formatNum(sig.score, 1)}</td>
-                          <td className="py-2 px-2 text-right opacity-50">{formatNum(sig.weight, 2)}</td>
-                          <td className="py-2 pr-dsi-pad text-right font-bold">{formatNum(sig.contribution, 2)}</td>
-                        </tr>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* SIGNAL ROWS (expanded) */}
+                    {isExpanded && signals.map((sig: any, sidx: number) => {
+                      const sigConditions = conditionsBySource[sig.code] || conditionsBySource[sig.signal_id] || [];
+                      return (
+                        <div
+                          key={`${sig.code}-${sidx}`}
+                          className={`grid grid-cols-[1fr_80px_80px_80px_70px_70px_70px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sigConditions.length > 0 ? 'border-l-2 border-l-dsi-warning' : ''}`}
+                        >
+                          <div className="flex items-center gap-2 pl-6">
+                            <span className="text-sm">{sig.code}</span>
+                            {sigConditions.length > 0 && (
+                              <AlertTriangle className="w-3 h-3 text-dsi-warning shrink-0" title="Has active condition" />
+                            )}
+                            {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
+                            {sig.proxy_tier && <span className="text-[10px] opacity-30">T{sig.proxy_tier}</span>}
+                          </div>
+                          <span className="text-right text-sm">{formatNum(sig.score, 1)}</span>
+                          <span className="text-right text-sm opacity-50">{formatNum(sig.weight, 2)}</span>
+                          <span className="text-right text-sm">{formatNum(sig.contribution, 2)}</span>
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
                       );
-                    })
-                  )}
-                </tbody>
-              </table>
+                    })}
+
+                    {isExpanded && signals.length === 0 && (
+                      <div className="pl-12 py-2 text-xs opacity-40 italic">No signals in this group.</div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
