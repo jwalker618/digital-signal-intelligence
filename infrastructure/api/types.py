@@ -550,6 +550,13 @@ class ModelVersionDBRecord(BaseModel):
     exposure_components: Dict[str, Any] = Field(default_factory=dict)
     exposure_band_interpretation: Dict[str, Any] = Field(default_factory=dict)
 
+    # Config snapshots for client-side scenario recalculation
+    loss_correlation_config: Dict[str, Any] = Field(default_factory=dict)
+    ilf_curve_config: Dict[str, Any] = Field(default_factory=dict)
+    deductible_factor_table: Dict[str, Any] = Field(default_factory=dict)
+    exposure_modifier_config: Dict[str, Any] = Field(default_factory=dict)
+    guardrails_config: Dict[str, Any] = Field(default_factory=dict)
+
 @maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
 
