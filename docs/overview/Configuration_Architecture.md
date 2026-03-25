@@ -64,6 +64,18 @@ DSI uses a layered architecture that separates concerns and enables different sp
 │  Contains: Locked snapshot of config + analysis at deployment           │
 │  Changes: Never (immutable once deployed)                               │
 └─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ priced through
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     COMMERCIAL ENTITY                                   │
+│                (commercial/entities/{entity}.yaml)                      │
+│                                                                         │
+│  Owned by: Distribution / Underwriting Management                       │
+│  Defines: Appetite, distribution, commission, taxes, FX, discretion     │
+│  Changes: Occasionally (new entities, authority changes)                │
+│  See: docs/overview/Commercial_Entity_Schema.md                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -414,9 +426,11 @@ The same signals serve:
 | Coverage Config | Product/Actuarial | Signals, weights, bands | Regularly |
 | Analysis Output | Data Science | Empirical parameters | Periodically |
 | Model Version | Governance | Locked snapshot | Never |
+| Commercial Entity | Distribution/UW Mgmt | Appetite, commission, taxes, distribution | Occasionally |
 
 This architecture enables:
 - **Separation of concerns**: Different specialists own different layers
 - **Unified signals**: Collect once, interpret for risk/loss/exposure
+- **Technical/commercial separation**: Pricing engine produces a USD technical premium; commercial entities handle distribution economics, FX, and offered premium independently
 - **Full auditability**: Every component recorded at atomic level
 - **World Model readiness**: Graph schema enables causal simulation

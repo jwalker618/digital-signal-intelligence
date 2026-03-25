@@ -206,7 +206,6 @@ def adapt_config_for_scorer(config: PydanticCoverageConfig) -> Dict[str, Any]:
         "pricing": {
             "base_limit_reference": config.pricing.base_limit_reference,
             "base_deductible_reference": config.pricing.base_deductible_reference,
-            "taxes_fees_rate": config.pricing.taxes_fees_rate,
             "by_product_type": {
                 pt: {
                     "ilf_curve": {

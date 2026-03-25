@@ -1357,7 +1357,6 @@ aerospace:
             factor: 0.82
           - deductible: 500000
             factor: 0.72
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1
@@ -2104,24 +2103,11 @@ aerospace:
               method: MODIFIER
               applied: 1.15
     limit_configuration:
-      type: BUNDLED
-      packages:
-      - id: 1
-        label: STARTER
-        limit: 1000000
-        deductible: 2500
-      - id: 2
-        label: STANDARD
-        limit: 2000000
-        deductible: 5000
-      - id: 3
-        label: ENHANCED
-        limit: 5000000
-        deductible: 10000
-      - id: 4
-        label: PREMIUM
-        limit: 10000000
-        deductible: 25000
+      type: DECOUPLED
+      min_limit: 1000000
+      max_limit: 10000000
+      min_deductible: 2500
+      max_deductible: 25000
     pricing:
       base_limit_reference: 5000000
       base_deductible_reference: 10000
@@ -2180,7 +2166,6 @@ aerospace:
             factor: 0.93
           - deductible: 25000
             factor: 0.87
-      taxes_fees_rate: 0.05
       basis_damping: 0.5
     guardrails:
       modifier_floor: 0.1

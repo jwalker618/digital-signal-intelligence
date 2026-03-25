@@ -333,7 +333,6 @@ cyber_japan:                          # coverage_id (snake_case of name)
         base_limit: 1000000
         factors: [...]
       deductible_credits: [...]
-      taxes_fees_rate: 0.05
 ```
 
 ### Step 4: Place the Config

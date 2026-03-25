@@ -1151,6 +1151,9 @@ class WorkflowResult:
     missing_inputs: List[str] = field(default_factory=list)
     is_valid: bool = True
 
+    # Premium assembly (commercial terms applied to technical premium)
+    premium_breakdown: Optional[Any] = None  # PremiumBreakdown from premium_assembly
+
 
 # Backward compatibility aliases
 LimitBand = LimitBandConfig

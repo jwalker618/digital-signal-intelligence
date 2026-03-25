@@ -14,7 +14,8 @@ from pydantic import BaseModel, Field
 # Import ORM models for alignment mapping
 from infrastructure.db.models import (
     User, APIKey, Submission, Quote, Referral, ModelVersionRecord,
-    Signal, SignalSource, SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog
+    Signal, SignalSource, SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog,
+    CommercialTermsRecord, RiskTermsRecord,
 )
 
 def maps_to(orm_model: Type, exclude: List[str] = None):
@@ -783,3 +784,97 @@ class AuditLogRecord(BaseModel):
     user_agent: Optional[str] = None
     details: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
+
+
+# =============================================================================
+# COMMERCIAL TERMS
+# =============================================================================
+
+@maps_to(CommercialTermsRecord, exclude=["id", "offered_premium_set_by"])
+class CommercialTermsDBRecord(BaseModel):
+    """Full commercial terms projection for API responses."""
+    model_version_id: str
+    entity_id: str
+    entity_name: Optional[str] = None
+    entity_market: Optional[str] = None
+    base_currency: str = "USD"
+    fx_rate_to_usd: Optional[float] = None
+    fx_rate_source: Optional[str] = None
+    fx_rate_date: Optional[datetime] = None
+    technical_premium_usd: Optional[float] = None
+    technical_premium_local: Optional[float] = None
+    distribution_type: Optional[str] = None
+    signed_line: Optional[float] = None
+    role: Optional[str] = None
+    lead_loading_factor: Optional[float] = 1.0
+    net_premium: Optional[float] = None
+    deductions: Dict[str, Any] = Field(default_factory=dict)
+    total_commission: Optional[float] = None
+    taxes_and_levies: Dict[str, Any] = Field(default_factory=dict)
+    total_taxes: Optional[float] = None
+    gross_premium: Optional[float] = None
+    offered_premium: Optional[float] = None
+    offered_premium_discretion: Optional[float] = None
+    offered_premium_rationale: Optional[str] = None
+    offered_premium_set_at: Optional[datetime] = None
+    minimum_gross_premium: Optional[float] = None
+    at_minimum_premium: bool = False
+    written_date: Optional[datetime] = None
+    earned_start: Optional[datetime] = None
+    earned_end: Optional[datetime] = None
+    earned_method: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class OfferedPremiumRequest(BaseModel):
+    """Request to set/update the offered premium on commercial terms."""
+    offered_premium: float = Field(gt=0, description="Offered premium amount")
+    offered_premium_rationale: Optional[str] = Field(
+        default=None, description="Rationale for the premium adjustment"
+    )
+
+
+class OfferedPremiumResponse(BaseModel):
+    """Response after setting offered premium."""
+    commercial_terms_id: str
+    offered_premium: float
+    offered_premium_discretion: float
+    gross_premium: float
+    offered_premium_rationale: Optional[str] = None
+    offered_premium_set_at: datetime
+
+
+class EarnedPeriodRequest(BaseModel):
+    """Request to set the earned period on commercial terms."""
+    written_date: Optional[datetime] = None
+    earned_start: datetime
+    earned_end: datetime
+    earned_method: str = Field(
+        default="pro_rata",
+        description="Earning method: pro_rata, risks_attaching, losses_occurring"
+    )
+
+
+@maps_to(RiskTermsRecord, exclude=["id", "commercial_terms_id"])
+class RiskTermsDBRecord(BaseModel):
+    """Risk terms projection for API responses."""
+    deductible_type: Optional[str] = None
+    deductible_amount: Optional[float] = None
+    deductible_currency: str = "USD"
+    deductible_basis: Optional[str] = None
+    sir_amount: Optional[float] = None
+    sir_applies: bool = False
+    waiting_period_hours: Optional[float] = None
+    waiting_period_type: Optional[str] = None
+    aggregate_limit: Optional[float] = None
+    aggregate_deductible: Optional[float] = None
+    aggregate_basis: Optional[str] = None
+    reinstatements: Optional[int] = None
+    reinstatement_rate: Optional[float] = None
+    attachment_point: Optional[float] = None
+    layer_limit: Optional[float] = None
+    sub_limits: list = Field(default_factory=list)
+    coverage_terms: Dict[str, Any] = Field(default_factory=dict)
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None

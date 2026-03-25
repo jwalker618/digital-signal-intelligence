@@ -1,0 +1,84 @@
+# Example: US MGA — Direct Binding Authority (Cyber)
+#
+# This entity writes cyber and D&O through a US-based MGA with
+# delegated binding authority. Offers bundled packages for SME
+# alongside decoupled limits for mid-market.
+
+entity:
+  id: mga_us_cyber
+  name: "US Cyber MGA"
+  market: us
+  base_currency: USD
+
+  coverages:
+    - coverage: cyber
+      configs:
+        - cyber_general
+        - cyber_sme
+      max_single_limit: 25_000_000
+      constraints:
+        - field: revenue
+          operator: "<="
+          value: 10_000_000_000
+          reason: "Revenue exceeds MGA cyber binding authority"
+
+    - coverage: directors_officers
+      configs:
+        - do_general
+        - do_sme
+      max_single_limit: 25_000_000
+      constraints:
+        - field: revenue
+          operator: "<="
+          value: 5_000_000_000
+          reason: "Revenue exceeds MGA D&O binding authority"
+
+  # Distribution defines how the entity offers limits to the market.
+  # The pricer computes for any limit/deductible within the config's
+  # min/max range; distribution determines what's offered.
+  distribution:
+    type: BUNDLED
+    bundled:
+      packages:
+        - id: 1
+          label: STARTER
+          limit: 250_000
+          deductible: 1_000
+        - id: 2
+          label: BASIC
+          limit: 500_000
+          deductible: 2_500
+        - id: 3
+          label: STANDARD
+          limit: 1_000_000
+          deductible: 5_000
+        - id: 4
+          label: ENHANCED
+          limit: 2_000_000
+          deductible: 10_000
+        - id: 5
+          label: PREMIER
+          limit: 5_000_000
+          deductible: 25_000
+    decoupled:
+      min_limit: 250_000
+      max_limit: 25_000_000
+      min_deductible: 1_000
+      max_deductible: 500_000
+
+  commission:
+    brokerage_rate: 0.15               # 15% brokerage
+    overrider_rate: 0.0
+    profit_commission_rate: 0.0
+
+  taxes_and_levies:
+    insurance_premium_tax_rate: 0.03   # US state avg ~3%
+    stamp_duty_rate: 0.0
+    regulatory_levy_rate: 0.0
+
+  fronting:
+    enabled: false
+
+  pricing_adjustments:
+    offered_premium_discretion: 0.05   # ±5% discretion
+    minimum_gross_premium: 2500        # $2,500 minimum

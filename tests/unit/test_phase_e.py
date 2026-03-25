@@ -232,61 +232,50 @@ class TestTowerPricing:
             ),
         )
 
-    def test_tower_produces_per_layer_premiums(self, pricer, tower_config):
-        """Each tower layer gets its own premium from ILF differential."""
+    def test_tower_produces_single_limit_premium(self, pricer, tower_config):
+        """Tower config produces a single technical premium at the total limit.
+
+        Per-layer decomposition is now handled by PremiumAssembler,
+        not the pricer. The pricer prices at the requested limit.
+        """
+        total_limit = 10_000_000  # 1M + 4M + 5M
+        premium = 50000.0
+        limit_premiums, limit_details = pricer.scale_to_limits(
+            premium, {"deductible": 25000, "limit": total_limit}, tower_config
+        )
+        assert len(limit_details) == 1
+        assert limit_details[0].limit == total_limit
+
+    def test_tower_ilf_at_total_limit(self, pricer, tower_config):
+        """Technical premium uses ILF at the total program limit."""
+        total_limit = 10_000_000
+        premium = 50000.0
+        _, details = pricer.scale_to_limits(
+            premium, {"deductible": 25000, "limit": total_limit}, tower_config
+        )
+        detail = details[0]
+        expected_ilf = tower_config.get_ilf("liability", total_limit)
+        assert abs(detail.ilf_factor - expected_ilf) < 0.001
+
+    def test_tower_with_deductible_factor(self, pricer, tower_config):
+        """Deductible factor applies to tower technical premium."""
+        total_limit = 10_000_000
+        _, details_25k = pricer.scale_to_limits(
+            50000, {"deductible": 25000, "limit": total_limit}, tower_config
+        )
+        _, details_50k = pricer.scale_to_limits(
+            50000, {"deductible": 50000, "limit": total_limit}, tower_config
+        )
+        # 50k deductible should produce lower premium than 25k
+        assert details_50k[0].premium_after_scaling < details_25k[0].premium_after_scaling
+
+    def test_tower_no_limit_returns_empty(self, pricer, tower_config):
+        """Without a requested limit, tower returns empty (assembly handles distribution)."""
         premium = 50000.0
         limit_premiums, limit_details = pricer.scale_to_limits(
             premium, {"deductible": 25000}, tower_config
         )
-        assert len(limit_details) == 3
-        # Each detail has an attachment_point
-        assert limit_details[0].attachment_point == 0
-        assert limit_details[1].attachment_point == 1_000_000
-        assert limit_details[2].attachment_point == 5_000_000
-
-    def test_layer_ilf_differential(self, pricer, tower_config):
-        """Layer premium = base_premium * [cumILF(A+L) - cumILF(A)]."""
-        premium = 50000.0
-        _, details = pricer.scale_to_limits(premium, {"deductible": 25000}, tower_config)
-
-        # Primary layer: cumILF(1M) - cumILF(0) = 1.0 - 0.0 = 1.0
-        primary = details[0]
-        ilf_at_1m = tower_config.get_cumulative_ilf("liability", 1_000_000)
-        ilf_at_0 = tower_config.get_cumulative_ilf("liability", 0)
-        expected_ilf = ilf_at_1m - ilf_at_0
-        assert abs(primary.ilf_factor - expected_ilf) < 0.001
-
-    def test_sum_of_layers_equals_full_program(self, pricer, tower_config):
-        """Sum of layer premiums = premium * cumulative_ILF(program_top)."""
-        premium = 50000.0
-        _, details = pricer.scale_to_limits(premium, {"deductible": 25000}, tower_config)
-
-        total_layer_premium = sum(d.premium_after_scaling for d in details)
-        # Cumulative ILF at program top (10M) minus ILF at 0 (= 0.0)
-        full_cum_ilf = tower_config.get_cumulative_ilf("liability", 10_000_000)
-        full_premium = premium * full_cum_ilf * 1.0  # ded_factor=1.0 at 25k
-        assert abs(total_layer_premium - full_premium) < 1.0
-
-    def test_tower_with_deductible_factor(self, pricer, tower_config):
-        """Deductible factor applies to tower layer premiums."""
-        _, details_25k = pricer.scale_to_limits(50000, {"deductible": 25000}, tower_config)
-        _, details_50k = pricer.scale_to_limits(50000, {"deductible": 50000}, tower_config)
-        # 50k deductible has factor 0.90, so all premiums should be 90% of 25k
-        for d25, d50 in zip(details_25k, details_50k):
-            assert abs(d50.premium_after_scaling - d25.premium_after_scaling * 0.90) < 1.0
-
-    def test_tower_rol_validation(self, pricer, tower_config):
-        """ROL validator works per-layer with attachment."""
-        premium = 50000.0
-        _, details = pricer.scale_to_limits(premium, {"deductible": 25000}, tower_config)
-        validator = ROLValidator()
-        for detail in details:
-            result = validator.validate_rol(
-                premium=detail.premium_after_scaling,
-                limit=detail.limit,
-                attachment=detail.attachment_point or 0,
-            )
-            assert result.rol > 0
+        assert len(limit_details) == 0
 
 
 # =============================================================================
@@ -463,10 +452,10 @@ class TestSubscriptionPricing:
         )
 
     def test_order_level_pricing(self, pricer, subscription_config):
-        """scale_to_limits prices at the order (100%) level."""
+        """scale_to_limits prices at the requested limit (single-limit pricing)."""
         premium = 50000.0
         limit_premiums, details = pricer.scale_to_limits(
-            premium, {"deductible": 25000}, subscription_config
+            premium, {"deductible": 25000, "limit": 10_000_000}, subscription_config
         )
         assert len(details) == 1
         assert details[0].limit == 10_000_000

@@ -27,9 +27,18 @@ class PricingMethod(str, Enum):
 
 
 class LimitConfigType(str, Enum):
-    """Limit configuration mode."""
+    """Limit configuration mode.
+
+    DECOUPLED is the standard mode for all new configs. BUNDLED remains
+    supported for backward compatibility. TOWER and SUBSCRIPTION are
+    preserved for reading existing configs but should not be used for
+    new configurations — distribution structure now lives in commercial
+    entity YAML (commercial/entities/*.yaml) via DistributionType.
+    """
     BUNDLED = "BUNDLED"
     DECOUPLED = "DECOUPLED"
+    TOWER = "TOWER"
+    SUBSCRIPTION = "SUBSCRIPTION"
 
 
 # =============================================================================
@@ -223,7 +232,6 @@ class PricingSpec:
     """Complete pricing configuration."""
     base_limit_reference: int = 10_000_000
     base_deductible_reference: int = 50_000
-    taxes_fees_rate: float = 0.05
     by_product_type: List[ProductPricing] = field(default_factory=list)
 
 

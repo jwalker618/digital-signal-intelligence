@@ -542,7 +542,7 @@ class ConfigYAMLGenerator:
             "base_limit_reference": pricing.base_limit_reference,
             "base_deductible_reference": pricing.base_deductible_reference,
             "by_product_type": by_product,
-            "taxes_fees_rate": pricing.taxes_fees_rate,
+
         }
 
     def _dump_yaml(self, data: Dict) -> str:
@@ -1027,7 +1027,7 @@ def _parse_pricing(raw: Dict) -> PricingSpec:
     pricing = PricingSpec(
         base_limit_reference=raw.get("base_limit_reference", 10_000_000),
         base_deductible_reference=raw.get("base_deductible_reference", 50_000),
-        taxes_fees_rate=raw.get("taxes_fees_rate", 0.05),
+
     )
     for pt_raw in raw.get("by_product_type", []):
         from .expansion_types import ILFCurve
@@ -1175,9 +1175,19 @@ class CoverageExpansionGenerator:
             ),
         }
 
-        # 5. Write files if requested
+        # 5. Generate __init__.py updates for new signal modules
+        init_updates = self._generate_init_updates(result.generated_files)
+        if init_updates:
+            result.generated_files.update(init_updates)
+            result.stats["init_files_updated"] = len(init_updates)
+
+        # 6. Write files if requested
         if write and not dry_run:
             self._write_files(result)
+            # 7. Post-write verification
+            verification = self._verify_generation(result)
+            if verification:
+                result.stats["verification_warnings"] = verification
 
         return result
 
@@ -1222,22 +1232,162 @@ class CoverageExpansionGenerator:
 
         return errors
 
+    def _generate_init_updates(self, generated_files: Dict[str, str]) -> Dict[str, str]:
+        """Generate __init__.py updates to register new signal modules.
+
+        For each directory containing generated signal files, ensures the
+        directory's __init__.py imports the new module.
+        """
+        init_updates: Dict[str, str] = {}
+
+        for rel_path in generated_files:
+            if not rel_path.endswith(".py") or "__init__" in rel_path:
+                continue
+
+            dir_path = self.output_dir / Path(rel_path).parent
+            init_path = dir_path / "__init__.py"
+            module_name = Path(rel_path).stem
+
+            # Build the import line
+            import_line = f"from . import {module_name}"
+
+            if init_path.exists():
+                existing = init_path.read_text()
+                if import_line not in existing and module_name not in existing:
+                    # Append import to existing __init__.py
+                    rel_init = str(Path(rel_path).parent / "__init__.py")
+                    updated = existing.rstrip() + f"\n{import_line}\n"
+                    init_updates[rel_init] = updated
+            else:
+                # Create new __init__.py with the import
+                rel_init = str(Path(rel_path).parent / "__init__.py")
+                init_updates[rel_init] = f'"""{Path(rel_path).parent.name} — auto-generated."""\n{import_line}\n'
+
+        return init_updates
+
+    def _verify_generation(self, result: ExpansionResult) -> List[str]:
+        """Post-write verification: file existence, signal registration, and smoke test."""
+        warnings = []
+
+        # 1. Check all generated files exist on disk
+        for rel_path in result.generated_files:
+            full_path = self.output_dir / rel_path
+            if not full_path.exists():
+                warnings.append(f"Generated file not found on disk: {rel_path}")
+
+        # 2. Verify signal count matches spec
+        expected_signals = sum(len(g.signals) for g in self.spec.new_signal_groups)
+        if expected_signals > 0:
+            actual_signals = 0
+            for rel_path, content in result.generated_files.items():
+                if "inference" in rel_path and rel_path.endswith(".py"):
+                    actual_signals += content.count("def infer_")
+
+            if actual_signals != expected_signals:
+                warnings.append(
+                    f"Signal count mismatch: spec defines {expected_signals} signals, "
+                    f"but {actual_signals} inference functions generated"
+                )
+
+        # 3. Verify config YAML is valid and parseable
+        if result.config_yaml:
+            try:
+                parsed = yaml.safe_load(result.config_yaml)
+                if parsed is None:
+                    warnings.append("Generated config YAML is empty")
+                else:
+                    config_count = len(parsed) if isinstance(parsed, dict) else 0
+                    expected_configs = len(self.spec.configurations)
+                    if config_count != expected_configs:
+                        warnings.append(
+                            f"Config count mismatch: spec defines {expected_configs} configs, "
+                            f"but YAML contains {config_count}"
+                        )
+            except yaml.YAMLError as e:
+                warnings.append(f"Generated config YAML is invalid: {e}")
+
+        # 4. Signal registration verification — check each new signal appears
+        #    in the config YAML's signal_registry for at least one config
+        if result.config_yaml and expected_signals > 0:
+            config_yaml_content = result.config_yaml
+            for group in self.spec.new_signal_groups:
+                for signal in group.signals:
+                    if signal.code not in config_yaml_content:
+                        warnings.append(
+                            f"Signal '{signal.code}' defined in spec but not found "
+                            f"in generated config YAML signal_registry"
+                        )
+
+        # 5. Smoke test — try to import generated Python modules
+        for rel_path, content in result.generated_files.items():
+            if not rel_path.endswith(".py") or "__init__" in rel_path:
+                continue
+            full_path = self.output_dir / rel_path
+            if not full_path.exists():
+                continue
+            try:
+                import ast
+                ast.parse(content, filename=rel_path)
+            except SyntaxError as e:
+                warnings.append(
+                    f"Syntax error in generated file {rel_path}: "
+                    f"line {e.lineno}: {e.msg}"
+                )
+
+        # 6. Schema validation — try loading generated YAML through Pydantic
+        if result.config_yaml:
+            try:
+                parsed = yaml.safe_load(result.config_yaml)
+                if parsed and isinstance(parsed, dict):
+                    from infrastructure.models.config_schema import CoverageConfig
+                    coverage_key = self.spec.coverage_key
+                    for config_id, config_data in parsed.items():
+                        try:
+                            CoverageConfig(
+                                coverage_id=coverage_key,
+                                config_id=config_id,
+                                **config_data,
+                            )
+                        except Exception as e:
+                            warnings.append(
+                                f"Schema validation failed for {config_id}: {e}"
+                            )
+            except Exception:
+                pass  # YAML parse errors already caught above
+
+        return warnings
+
     def _write_files(self, result: ExpansionResult):
-        """Write generated files to disk."""
-        # Write config YAML
+        """Write generated files to disk with proper incremental merging.
+
+        Config YAML: If existing config exists, merge new configs into it
+        (preserving existing configs). If not, create new file.
+        Signal code: Write to appropriate directories, creating parents.
+        __init__.py: Merge imports into existing files or create new ones.
+        """
         coverage_dir = self.spec.coverage_line.replace(" ", "_").lower()
         config_path = self.output_dir / "coverages" / coverage_dir / "config.yaml"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
 
         if self.existing_config:
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            config_path.write_text(result.config_yaml)
+            # Incremental merge: load existing, add new configs, write combined
+            new_configs = yaml.safe_load(result.config_yaml) or {}
+            merged = dict(self.existing_config)  # copy existing
+            for config_id, config_data in new_configs.items():
+                if config_id in merged:
+                    # Config already exists — update it
+                    merged[config_id] = config_data
+                else:
+                    # New config — add it
+                    merged[config_id] = config_data
+            config_path.write_text(yaml.dump(
+                merged, default_flow_style=False, sort_keys=False, allow_unicode=True,
+            ))
         else:
-            # Append mode — write new configs section
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(config_path, "a") as f:
-                f.write("\n" + result.config_yaml)
+            # No existing config — write the generated YAML directly
+            config_path.write_text(result.config_yaml)
 
-        # Write code files
+        # Write code files (including __init__.py updates)
         for rel_path, content in result.generated_files.items():
             full_path = self.output_dir / rel_path
             full_path.parent.mkdir(parents=True, exist_ok=True)
