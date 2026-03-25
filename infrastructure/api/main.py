@@ -396,7 +396,7 @@ async def api_info():
 # =============================================================================
 
 # Import routers after app is created to avoid circular imports
-from .routes import submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals
+from .routes import submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals, commercial
 
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
@@ -406,6 +406,7 @@ app.include_router(simulate.router, prefix="/api/v1", tags=["Simulate"])
 app.include_router(frontend.router, prefix="/api/v1", tags=["Frontend"])
 app.include_router(modelversion.router, prefix="/api/v1", tags=["ModelVersion"])
 app.include_router(signals.router, prefix="/api/v1", tags=["Signals"])
+app.include_router(commercial.router, prefix="/api/v1", tags=["Commercial"])
 
 # =============================================================================
 # METRICS ENDPOINT

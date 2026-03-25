@@ -29,6 +29,9 @@ Each company entry creates:
   5. SignalCache entries (per-signal cached data)
   5b. ModelVersionSignal entries (config-to-signal binding — which signals each model used)
   6. SignalAuditRecord (override examples for referred cases)
+  7. AuditLog entry
+  8. CommercialTermsRecord (entity economics, FX, commission, taxes, offered premium)
+  9. RiskTermsRecord (deductible nuance, SIR, waiting periods, sub-limits, coverage terms)
 
 Run:
   python seed_dsi_bench.py
@@ -55,6 +58,8 @@ from infrastructure.db.models import (
     SignalAuditRecord,
     User,
     AuditLog,
+    CommercialTermsRecord,
+    RiskTermsRecord,
     SubmissionStatus,
     QuoteStatus,
     DecisionType,
@@ -70,6 +75,15 @@ from layers.risk.query_evaluator import QueryEvaluator
 from layers.risk.rol_validator import ROLValidator
 from layers.risk.rol_recommender import ROLRecommender
 from layers.risk.types import SignalOutput, CategoricalOutput, utcnow
+
+# Commercial terms and FX
+from infrastructure.models.commercial_schema import (
+    CommercialEntity,
+    load_entity,
+    load_all_entities,
+)
+from layers.risk.fx import FXConverter, StaticRateProvider, Currency
+from layers.risk.premium_assembly import PremiumAssembler
 
 # =============================================================================
 # HELPERS
@@ -2649,6 +2663,299 @@ def build_exposure_assessment(co, config):
 
 
 # =============================================================================
+# COMMERCIAL TERMS HELPERS
+# =============================================================================
+
+# Maps coverage → commercial entity ID for seed data.
+# The MGA writes cyber + D&O, the syndicate writes energy + marine + aerospace.
+# FI and PI get a generated direct-writer entity.
+COVERAGE_ENTITY_MAP = {
+    "cyber": "mga_us_cyber",
+    "directors_officers": "mga_us_cyber",
+    "energy": "syndicate_example",
+    "marine": "syndicate_example",
+    "aerospace": "syndicate_example",
+    "financial_institutions": None,  # Direct writer (generated)
+    "professional_indemnity": None,  # Direct writer (generated)
+}
+
+
+def _get_entity_for_coverage(coverage: str, _entity_cache: dict = {}) -> CommercialEntity:
+    """Get the commercial entity for a coverage, loading from YAML or generating."""
+    if coverage in _entity_cache:
+        return _entity_cache[coverage]
+
+    entity_id = COVERAGE_ENTITY_MAP.get(coverage)
+    entity = None
+    if entity_id:
+        entity = load_entity(entity_id)
+
+    if entity is None:
+        # Generate a simple direct-writer entity for unmapped coverages
+        from infrastructure.models.commercial_schema import (
+            CoverageBinding, DistributionConfig, DistributionType,
+            CommissionStructure, TaxesAndLevies, PricingAdjustments,
+        )
+        entity = CommercialEntity(
+            id=f"direct_{coverage}",
+            name=f"Direct Writer ({coverage.replace('_', ' ').title()})",
+            market="us",
+            base_currency="USD",
+            coverages=[
+                CoverageBinding(coverage=coverage, max_single_limit=500_000_000),
+            ],
+            distribution=DistributionConfig(type=DistributionType.DIRECT),
+            commission=CommissionStructure(brokerage_rate=0.15),
+            taxes_and_levies=TaxesAndLevies(insurance_premium_tax_rate=0.04),
+            pricing_adjustments=PricingAdjustments(
+                offered_premium_discretion=0.10,
+                minimum_gross_premium=5000,
+            ),
+        )
+
+    _entity_cache[coverage] = entity
+    return entity
+
+
+def build_commercial_terms(
+    mv_id,
+    entity: CommercialEntity,
+    technical_premium_usd: float,
+    submission_data: dict,
+    config,
+    uw_user_id,
+) -> tuple:
+    """Build CommercialTermsRecord and RiskTermsRecord for a seeded company.
+
+    Returns (CommercialTermsRecord, RiskTermsRecord).
+    """
+    fx_converter = FXConverter(StaticRateProvider())
+    assembler = PremiumAssembler(fx_converter)
+
+    breakdown = assembler.assemble(
+        technical_premium_usd=technical_premium_usd,
+        submission_data=submission_data,
+        config=config,
+        entity=entity,
+    )
+
+    # FX context
+    target_ccy = entity.base_currency.upper()
+    if target_ccy != "USD":
+        try:
+            fx_rate = fx_converter._provider.get_rate(Currency.USD, Currency(target_ccy))
+        except (ValueError, KeyError):
+            fx_rate = 1.0
+    else:
+        fx_rate = 1.0
+
+    # Deductions breakdown (JSONB)
+    deductions = {
+        "brokerage": {
+            "rate": entity.commission.brokerage_rate,
+            "amount": breakdown.commission.brokerage,
+        },
+    }
+    if entity.commission.overrider_rate > 0:
+        deductions["overrider"] = {
+            "rate": entity.commission.overrider_rate,
+            "amount": breakdown.commission.overrider,
+        }
+    if entity.fronting.enabled:
+        deductions["fronting_fee"] = {
+            "rate": entity.fronting.fronting_fee_rate,
+            "amount": breakdown.commission.fronting_fee,
+        }
+    if entity.commission.profit_commission_rate > 0:
+        deductions["profit_commission"] = {
+            "rate": entity.commission.profit_commission_rate,
+            "threshold": entity.commission.profit_commission_threshold,
+            "amount": 0.0,  # Earned at reporting time
+        }
+
+    # Taxes breakdown (JSONB)
+    taxes_json = {
+        "ipt": {
+            "rate": entity.taxes_and_levies.insurance_premium_tax_rate,
+            "amount": breakdown.taxes.insurance_premium_tax,
+        },
+    }
+    if entity.taxes_and_levies.stamp_duty_rate > 0:
+        taxes_json["stamp_duty"] = {
+            "rate": entity.taxes_and_levies.stamp_duty_rate,
+            "amount": breakdown.taxes.stamp_duty,
+        }
+    if entity.taxes_and_levies.regulatory_levy_rate > 0:
+        taxes_json["regulatory_levy"] = {
+            "rate": entity.taxes_and_levies.regulatory_levy_rate,
+            "amount": breakdown.taxes.regulatory_levy,
+        }
+
+    # Distribution
+    dist = entity.distribution
+    signed_line = 1.0
+    role = None
+    lead_loading = 1.0
+    if dist.subscription:
+        signed_line = dist.subscription.default_signed_line
+        role = dist.subscription.role.value
+        if dist.subscription.role.value == "LEAD":
+            lead_loading = dist.subscription.lead_loading_factor
+
+    # Offered premium — apply random discretion within allowed range
+    discretion_range = entity.pricing_adjustments.offered_premium_discretion
+    if discretion_range > 0:
+        discretion_applied = round(random.uniform(-discretion_range, discretion_range), 4)
+    else:
+        discretion_applied = 0.0
+    offered_premium = round(breakdown.gross_premium * (1 + discretion_applied), 2)
+
+    # Minimum premium enforcement
+    min_gross = entity.pricing_adjustments.minimum_gross_premium
+    at_minimum = breakdown.gross_premium <= min_gross if min_gross > 0 else False
+
+    # Written/earned dates
+    inception = NOW + timedelta(days=random.randint(7, 90))
+    expiry = inception + timedelta(days=365)
+
+    ct = CommercialTermsRecord(
+        id=_uid(),
+        model_version_id=mv_id,
+        entity_id=entity.id,
+        entity_name=entity.name,
+        entity_market=entity.market,
+        base_currency=entity.base_currency,
+        fx_rate_to_usd=fx_rate,
+        fx_rate_source="static_reference",
+        fx_rate_date=NOW,
+        technical_premium_usd=technical_premium_usd,
+        technical_premium_local=breakdown.technical_premium_local,
+        distribution_type=dist.type.value,
+        signed_line=signed_line,
+        role=role,
+        lead_loading_factor=lead_loading,
+        net_premium=breakdown.net_premium,
+        deductions=deductions,
+        total_commission=breakdown.commission.total_commission,
+        taxes_and_levies=taxes_json,
+        total_taxes=breakdown.taxes.total_taxes,
+        gross_premium=breakdown.gross_premium,
+        offered_premium=offered_premium,
+        offered_premium_discretion=discretion_applied,
+        offered_premium_rationale=(
+            "Seed: underwriter discretion applied within entity guidelines"
+            if discretion_applied != 0 else None
+        ),
+        offered_premium_set_by=uw_user_id if discretion_applied != 0 else None,
+        offered_premium_set_at=NOW if discretion_applied != 0 else None,
+        minimum_gross_premium=min_gross if min_gross > 0 else None,
+        at_minimum_premium=at_minimum,
+        written_date=NOW,
+        earned_start=inception,
+        earned_end=expiry,
+        earned_method="pro_rata",
+    )
+
+    # Risk terms — deductible nuance from submission data
+    deductible = submission_data.get("deductible", 50_000)
+    limit = submission_data.get("limit", 10_000_000)
+    coverage = submission_data.get("coverage", "")
+
+    # Determine deductible type based on coverage
+    deductible_types = {
+        "cyber": ("per_occurrence", "each_and_every_loss"),
+        "directors_officers": ("per_occurrence", "each_and_every_claim"),
+        "financial_institutions": ("aggregate", "per_policy_period"),
+        "professional_indemnity": ("per_occurrence", "each_and_every_claim"),
+        "energy": ("per_occurrence", "each_and_every_loss"),
+        "marine": ("franchise", "each_and_every_loss"),
+        "aerospace": ("per_occurrence", "each_and_every_loss"),
+    }
+    ded_type, ded_basis = deductible_types.get(coverage, ("per_occurrence", "each_and_every_loss"))
+
+    # Waiting period for cyber (business interruption)
+    waiting_hours = None
+    waiting_type = None
+    if coverage == "cyber":
+        waiting_hours = random.choice([8.0, 12.0, 24.0, 48.0])
+        waiting_type = "business_interruption"
+
+    # SIR for D&O and PI
+    sir_applies = coverage in ("directors_officers", "professional_indemnity")
+    sir_amount = deductible * 0.5 if sir_applies else None
+
+    # Aggregate for FI
+    aggregate_limit = limit * 2 if coverage == "financial_institutions" else None
+    aggregate_deductible = deductible * 3 if coverage == "financial_institutions" else None
+
+    # Sub-limits based on coverage type
+    sub_limits_map = {
+        "cyber": [
+            {"peril": "ransomware", "sub_limit": int(limit * 0.5), "sub_deductible": deductible},
+            {"peril": "business_interruption", "sub_limit": int(limit * 0.75), "sub_deductible": deductible},
+            {"peril": "regulatory_fines", "sub_limit": int(limit * 0.25), "sub_deductible": 0},
+        ],
+        "energy": [
+            {"peril": "well_control", "sub_limit": int(limit * 0.5), "sub_deductible": deductible * 2},
+            {"peril": "pollution", "sub_limit": int(limit * 0.25), "sub_deductible": deductible * 5},
+        ],
+        "marine": [
+            {"peril": "salvage", "sub_limit": int(limit * 0.1), "sub_deductible": 0},
+        ],
+    }
+    sub_limits = sub_limits_map.get(coverage, [])
+
+    # Coverage terms
+    coverage_terms_map = {
+        "cyber": {
+            "extensions": ["social_engineering", "reputational_harm", "system_failure"],
+            "exclusions": ["war", "infrastructure_failure", "prior_known_events"],
+        },
+        "directors_officers": {
+            "extensions": ["entity_coverage", "employment_practices"],
+            "exclusions": ["fraud", "criminal_acts", "prior_knowledge"],
+        },
+        "energy": {
+            "extensions": ["operators_extra_expense", "control_of_well"],
+            "exclusions": ["war", "nuclear", "gradual_pollution"],
+        },
+        "marine": {
+            "extensions": ["sue_and_labour", "general_average"],
+            "exclusions": ["war", "strikes", "malicious_damage"],
+        },
+        "aerospace": {
+            "extensions": ["passenger_liability", "war_risks"],
+            "exclusions": ["nuclear", "war_on_ground"],
+        },
+    }
+    coverage_terms = coverage_terms_map.get(coverage, {"extensions": [], "exclusions": []})
+
+    rt = RiskTermsRecord(
+        id=_uid(),
+        commercial_terms_id=ct.id,
+        deductible_type=ded_type,
+        deductible_amount=float(deductible),
+        deductible_currency=entity.base_currency,
+        deductible_basis=ded_basis,
+        sir_amount=float(sir_amount) if sir_amount else None,
+        sir_applies=sir_applies,
+        waiting_period_hours=waiting_hours,
+        waiting_period_type=waiting_type,
+        aggregate_limit=float(aggregate_limit) if aggregate_limit else None,
+        aggregate_deductible=float(aggregate_deductible) if aggregate_deductible else None,
+        aggregate_basis="per_policy_period" if aggregate_limit else None,
+        reinstatements=random.choice([0, 1, 2]) if coverage in ("energy", "marine", "aerospace") else 0,
+        reinstatement_rate=1.0 if coverage in ("energy", "marine", "aerospace") else None,
+        attachment_point=None,  # Ground-up for primary layer
+        layer_limit=float(limit),
+        sub_limits=sub_limits,
+        coverage_terms=coverage_terms,
+    )
+
+    return ct, rt
+
+
+# =============================================================================
 # SEED FUNCTION
 # =============================================================================
 
@@ -3285,6 +3592,20 @@ def seed_data():
             )
             db.add(audit_log)
 
+            # === 8. COMMERCIAL TERMS & RISK TERMS ===
+            entity = _get_entity_for_coverage(co["coverage"])
+            ct, rt = build_commercial_terms(
+                mv_id=mv_id,
+                entity=entity,
+                technical_premium_usd=final_premium,
+                submission_data=submission_data,
+                config=config,
+                uw_user_id=uw_user_id,
+            )
+            db.add(ct)
+            db.add(rt)
+            db.flush()
+
         # -----------------------------------------------------------------
         # Commit everything
         # -----------------------------------------------------------------
@@ -3307,6 +3628,9 @@ def seed_data():
         print(f"\n  Signal cache entries: ~{total_signals}")
         print(f"  Users created: 3 (system, underwriter, analyst)")
         print(f"  Referrals created: {stats['refer'] + stats['decline']}")
+        seeded_count = len(COMPANIES) - stats.get("outside_appetite", 0)
+        print(f"  Commercial terms created: {seeded_count}")
+        print(f"  Risk terms created: {seeded_count}")
         if stats.get("outside_appetite", 0) > 0:
             print(f"  Outside appetite (skipped): {stats['outside_appetite']}")
         print("=" * 70)

@@ -574,3 +574,170 @@ class AuditLog(Base):
         Index("ix_audit_logs_resource", "resource_type", "resource_code"),
         Index("ix_audit_logs_user", "user_id", "created_at"),
     )
+
+
+# =============================================================================
+# COMMERCIAL TERMS — entity-level economics applied to technical premium
+# =============================================================================
+
+class CommercialTermsRecord(Base):
+    """Commercial terms for a pricing entity.
+
+    Captures the entity-level economics that transform technical premium
+    into gross/reporting premium. Linked to model_version (which holds
+    the technical premium) to form the complete pricing picture.
+
+    model_versions = technical premium (actuarial)
+    commercial_terms = gross/reporting premium (commercial)
+    """
+    __tablename__ = "commercial_terms"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id"),
+        nullable=False,
+        index=True,
+    )
+
+    # Entity identification
+    entity_id = Column(String(100), nullable=False, index=True)
+    entity_name = Column(String(255))
+    entity_market = Column(String(50))  # lloyds, us, eu, apac
+
+    # Currency context
+    base_currency = Column(String(3), nullable=False, default="USD")
+    fx_rate_to_usd = Column(Float)  # Rate used at execution time
+    fx_rate_source = Column(String(100))  # static, ecb, bloomberg
+    fx_rate_date = Column(DateTime(timezone=True))
+
+    # Technical premium (USD) — snapshot from model_version for convenience
+    technical_premium_usd = Column(Float)
+
+    # Technical premium in entity currency
+    technical_premium_local = Column(Float)
+
+    # Distribution structure
+    distribution_type = Column(String(50))  # SUBSCRIPTION, TOWER, BUNDLED, DECOUPLED, DIRECT
+    signed_line = Column(Float)  # Participation fraction (1.0 = ground-up/100%)
+    role = Column(String(20))  # LEAD, FOLLOW
+    lead_loading_factor = Column(Float, default=1.0)
+
+    # Net premium = technical × signed_line × lead_loading
+    net_premium = Column(Float)
+
+    # Deductions — JSONB because there are many types and they vary by entity
+    # Structure: {"brokerage": {"rate": 0.20, "amount": 1234.56},
+    #             "overrider": {"rate": 0.025, "amount": ...},
+    #             "fronting_fee": {"rate": 0.05, "amount": ...},
+    #             "profit_commission": {"rate": 0.15, "threshold": 0.70, "amount": ...}}
+    deductions = Column(JSONB, default=dict)
+    total_commission = Column(Float)
+
+    # Taxes and levies — JSONB for same reasons as deductions
+    # Structure: {"ipt": {"rate": 0.12, "amount": ...},
+    #             "stamp_duty": {"rate": 0.005, "amount": ...},
+    #             "regulatory_levy": {"rate": 0.01, "amount": ...}}
+    taxes_and_levies = Column(JSONB, default=dict)
+    total_taxes = Column(Float)
+
+    # Gross premium = net + commission + taxes
+    gross_premium = Column(Float)
+
+    # Offered premium — underwriter discretion applied to gross
+    offered_premium = Column(Float)
+    offered_premium_discretion = Column(Float)  # ±% discretion applied
+    offered_premium_rationale = Column(Text)  # Why this discretion was chosen
+    offered_premium_set_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    offered_premium_set_at = Column(DateTime(timezone=True))
+
+    # Minimum premium enforcement
+    minimum_gross_premium = Column(Float)
+    at_minimum_premium = Column(Boolean, default=False)
+
+    # Written/earned — time values
+    written_date = Column(DateTime(timezone=True))  # When premium is written
+    earned_start = Column(DateTime(timezone=True))  # Earning period start (inception)
+    earned_end = Column(DateTime(timezone=True))  # Earning period end (expiry)
+    earned_method = Column(String(50))  # pro_rata, risks_attaching, etc.
+
+    # Audit
+    created_by = Column(String(100))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    model_version = relationship("ModelVersionRecord", backref="commercial_terms")
+
+    __table_args__ = (
+        Index("ix_commercial_terms_entity", "entity_id", "created_at"),
+    )
+
+
+# =============================================================================
+# RISK TERMS — deductible nuance and reporting-side risk structure
+# =============================================================================
+
+class RiskTermsRecord(Base):
+    """Risk terms capturing deductible and coverage nuance for reporting.
+
+    This is the reporting/market-facing view of the risk structure.
+    The pricer handles deductible factors via interpolation; this table
+    captures the contractual nuance that matters for claims, bordereaux,
+    and regulatory reporting.
+
+    Linked to commercial_terms because risk structure is an entity-level
+    concern (different entities may write the same risk with different terms).
+    """
+    __tablename__ = "risk_terms"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    commercial_terms_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("commercial_terms.id"),
+        nullable=False,
+        index=True,
+    )
+
+    # Deductible structure
+    deductible_type = Column(String(50))  # per_occurrence, aggregate, franchise, nil
+    deductible_amount = Column(Float)
+    deductible_currency = Column(String(3), default="USD")
+    deductible_basis = Column(String(100))  # each_and_every_loss, per_policy_period, etc.
+
+    # Self-Insured Retention (SIR) — distinct from deductible
+    sir_amount = Column(Float)
+    sir_applies = Column(Boolean, default=False)
+
+    # Waiting period (time-based deductible, common in cyber/BI)
+    waiting_period_hours = Column(Float)
+    waiting_period_type = Column(String(50))  # business_interruption, contingent_bi, etc.
+
+    # Aggregate limits/deductibles
+    aggregate_limit = Column(Float)
+    aggregate_deductible = Column(Float)
+    aggregate_basis = Column(String(100))  # per_policy_period, per_location, etc.
+
+    # Reinstatement provisions
+    reinstatements = Column(Integer)  # Number of reinstatements (0 = none)
+    reinstatement_rate = Column(Float)  # % of premium per reinstatement
+
+    # Co-insurance / layering context
+    attachment_point = Column(Float)  # For excess layers
+    layer_limit = Column(Float)  # Limit of this specific layer
+
+    # Sub-limits — JSONB for flexibility
+    # Structure: [{"peril": "flood", "sub_limit": 5000000, "sub_deductible": 100000}, ...]
+    sub_limits = Column(JSONB, default=list)
+
+    # Coverage extensions/exclusions — JSONB
+    # Structure: {"extensions": ["cyber_terrorism", "social_engineering"],
+    #             "exclusions": ["war", "nuclear"]}
+    coverage_terms = Column(JSONB, default=dict)
+
+    # Audit
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    commercial_terms = relationship("CommercialTermsRecord", backref="risk_terms")

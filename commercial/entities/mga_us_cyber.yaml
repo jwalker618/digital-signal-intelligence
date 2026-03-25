@@ -1,8 +1,8 @@
 # Example: US MGA — Direct Binding Authority (Cyber)
 #
 # This entity writes cyber and D&O through a US-based MGA with
-# delegated binding authority. Uses bundled packages for SME and
-# decoupled limits for mid-market.
+# delegated binding authority. Offers bundled packages for SME
+# alongside decoupled limits for mid-market.
 
 entity:
   id: mga_us_cyber
@@ -33,8 +33,33 @@ entity:
           value: 5_000_000_000
           reason: "Revenue exceeds MGA D&O binding authority"
 
+  # Distribution defines how the entity offers limits to the market.
+  # The pricer computes for any limit/deductible within the config's
+  # min/max range; distribution determines what's offered.
   distribution:
-    type: DECOUPLED
+    type: BUNDLED
+    bundled:
+      packages:
+        - id: 1
+          label: STARTER
+          limit: 250_000
+          deductible: 1_000
+        - id: 2
+          label: BASIC
+          limit: 500_000
+          deductible: 2_500
+        - id: 3
+          label: STANDARD
+          limit: 1_000_000
+          deductible: 5_000
+        - id: 4
+          label: ENHANCED
+          limit: 2_000_000
+          deductible: 10_000
+        - id: 5
+          label: PREMIER
+          limit: 5_000_000
+          deductible: 25_000
     decoupled:
       min_limit: 250_000
       max_limit: 25_000_000

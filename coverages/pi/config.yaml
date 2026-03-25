@@ -1479,28 +1479,11 @@ professional_indemnity:
               method: MODIFIER
               applied: 1.25
     limit_configuration:
-      type: BUNDLED
-      packages:
-      - id: 1
-        label: STARTER
-        limit: 250000
-        deductible: 2500
-      - id: 2
-        label: BASIC
-        limit: 500000
-        deductible: 5000
-      - id: 3
-        label: STANDARD
-        limit: 1000000
-        deductible: 10000
-      - id: 4
-        label: ENHANCED
-        limit: 2000000
-        deductible: 25000
-      - id: 5
-        label: PREMIER
-        limit: 5000000
-        deductible: 50000
+      type: DECOUPLED
+      min_limit: 250000
+      max_limit: 5000000
+      min_deductible: 2500
+      max_deductible: 50000
     pricing:
       base_limit_reference: 1000000
       base_deductible_reference: 10000

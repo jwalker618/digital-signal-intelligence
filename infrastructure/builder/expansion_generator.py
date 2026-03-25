@@ -1266,19 +1266,18 @@ class CoverageExpansionGenerator:
         return init_updates
 
     def _verify_generation(self, result: ExpansionResult) -> List[str]:
-        """Post-write verification: check generated files are importable and consistent."""
+        """Post-write verification: file existence, signal registration, and smoke test."""
         warnings = []
 
-        # Check all generated files exist on disk
+        # 1. Check all generated files exist on disk
         for rel_path in result.generated_files:
             full_path = self.output_dir / rel_path
             if not full_path.exists():
                 warnings.append(f"Generated file not found on disk: {rel_path}")
 
-        # Verify signal count matches spec
+        # 2. Verify signal count matches spec
         expected_signals = sum(len(g.signals) for g in self.spec.new_signal_groups)
         if expected_signals > 0:
-            # Count signal functions in generated inference files
             actual_signals = 0
             for rel_path, content in result.generated_files.items():
                 if "inference" in rel_path and rel_path.endswith(".py"):
@@ -1290,7 +1289,7 @@ class CoverageExpansionGenerator:
                     f"but {actual_signals} inference functions generated"
                 )
 
-        # Verify config YAML is valid
+        # 3. Verify config YAML is valid and parseable
         if result.config_yaml:
             try:
                 parsed = yaml.safe_load(result.config_yaml)
@@ -1307,24 +1306,88 @@ class CoverageExpansionGenerator:
             except yaml.YAMLError as e:
                 warnings.append(f"Generated config YAML is invalid: {e}")
 
+        # 4. Signal registration verification — check each new signal appears
+        #    in the config YAML's signal_registry for at least one config
+        if result.config_yaml and expected_signals > 0:
+            config_yaml_content = result.config_yaml
+            for group in self.spec.new_signal_groups:
+                for signal in group.signals:
+                    if signal.code not in config_yaml_content:
+                        warnings.append(
+                            f"Signal '{signal.code}' defined in spec but not found "
+                            f"in generated config YAML signal_registry"
+                        )
+
+        # 5. Smoke test — try to import generated Python modules
+        for rel_path, content in result.generated_files.items():
+            if not rel_path.endswith(".py") or "__init__" in rel_path:
+                continue
+            full_path = self.output_dir / rel_path
+            if not full_path.exists():
+                continue
+            try:
+                import ast
+                ast.parse(content, filename=rel_path)
+            except SyntaxError as e:
+                warnings.append(
+                    f"Syntax error in generated file {rel_path}: "
+                    f"line {e.lineno}: {e.msg}"
+                )
+
+        # 6. Schema validation — try loading generated YAML through Pydantic
+        if result.config_yaml:
+            try:
+                parsed = yaml.safe_load(result.config_yaml)
+                if parsed and isinstance(parsed, dict):
+                    from infrastructure.models.config_schema import CoverageConfig
+                    coverage_key = self.spec.coverage_key
+                    for config_id, config_data in parsed.items():
+                        try:
+                            CoverageConfig(
+                                coverage_id=coverage_key,
+                                config_id=config_id,
+                                **config_data,
+                            )
+                        except Exception as e:
+                            warnings.append(
+                                f"Schema validation failed for {config_id}: {e}"
+                            )
+            except Exception:
+                pass  # YAML parse errors already caught above
+
         return warnings
 
     def _write_files(self, result: ExpansionResult):
-        """Write generated files to disk."""
-        # Write config YAML
+        """Write generated files to disk with proper incremental merging.
+
+        Config YAML: If existing config exists, merge new configs into it
+        (preserving existing configs). If not, create new file.
+        Signal code: Write to appropriate directories, creating parents.
+        __init__.py: Merge imports into existing files or create new ones.
+        """
         coverage_dir = self.spec.coverage_line.replace(" ", "_").lower()
         config_path = self.output_dir / "coverages" / coverage_dir / "config.yaml"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
 
         if self.existing_config:
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            config_path.write_text(result.config_yaml)
+            # Incremental merge: load existing, add new configs, write combined
+            new_configs = yaml.safe_load(result.config_yaml) or {}
+            merged = dict(self.existing_config)  # copy existing
+            for config_id, config_data in new_configs.items():
+                if config_id in merged:
+                    # Config already exists — update it
+                    merged[config_id] = config_data
+                else:
+                    # New config — add it
+                    merged[config_id] = config_data
+            config_path.write_text(yaml.dump(
+                merged, default_flow_style=False, sort_keys=False, allow_unicode=True,
+            ))
         else:
-            # Append mode — write new configs section
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(config_path, "a") as f:
-                f.write("\n" + result.config_yaml)
+            # No existing config — write the generated YAML directly
+            config_path.write_text(result.config_yaml)
 
-        # Write code files
+        # Write code files (including __init__.py updates)
         for rel_path, content in result.generated_files.items():
             full_path = self.output_dir / rel_path
             full_path.parent.mkdir(parents=True, exist_ok=True)

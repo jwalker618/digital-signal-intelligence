@@ -12583,33 +12583,11 @@ energy:
               method: MODIFIER
               applied: 1.6
     limit_configuration:
-      type: BUNDLED
-      packages:
-      - id: STARTER
-        label: Starter Package
-        limit: 5000000
-        deductible: 25000
-        target_segment: Micro operators (<$50M TIV)
-      - id: STANDARD
-        label: Standard Package
-        limit: 10000000
-        deductible: 50000
-        target_segment: Small operators ($50-100M TIV)
-      - id: ENHANCED
-        label: Enhanced Package
-        limit: 25000000
-        deductible: 100000
-        target_segment: Mid-size operators ($100-250M TIV)
-      - id: PREMIUM
-        label: Premium Package
-        limit: 50000000
-        deductible: 250000
-        target_segment: Larger SME ($250-500M TIV)
-      - id: ENTERPRISE
-        label: Enterprise Package
-        limit: 100000000
-        deductible: 500000
-        target_segment: Upper SME boundary
+      type: DECOUPLED
+      min_limit: 5000000
+      max_limit: 100000000
+      min_deductible: 25000
+      max_deductible: 500000
     pricing:
       by_product_type:
         combined_property_liability:
