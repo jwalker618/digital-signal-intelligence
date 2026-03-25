@@ -1998,7 +1998,7 @@ def resolve_signal_scores(profile_name):
     return resolved
 
 
-def build_synthetic_signal_outputs(config, resolved_scores, default_score=50.0):
+def build_synthetic_signal_outputs(config, resolved_scores, default_score=50.0, jitter=5):
     """Build SignalOutput dataclass instances using the production config's signal registry.
 
     Iterates every signal in config.signal_registry that has three_layer_assessment.
@@ -2012,6 +2012,8 @@ def build_synthetic_signal_outputs(config, resolved_scores, default_score=50.0):
             Tier-aligned defaults (e.g. 82 for tier 1, 35 for tier 5)
             prevent score compression where sparse profiles drag composites
             away from the intended tier band.
+        jitter: Random variance applied to default scores (±jitter).
+            Use 5 for curated profiles, 15 for synthetic companies.
     """
     signal_outputs = []
 
@@ -2032,7 +2034,7 @@ def build_synthetic_signal_outputs(config, resolved_scores, default_score=50.0):
                     score = v
                     break
         if score is None:
-            score = _score(default_score, 5)  # Jittered default aligned to intended tier
+            score = _score(default_score, jitter)  # Jittered default aligned to intended tier
 
         signal_outputs.append(SignalOutput(
             signal_id=signal_def.id,
@@ -2680,12 +2682,21 @@ COVERAGE_ENTITY_MAP = {
 }
 
 
-def _get_entity_for_coverage(coverage: str, _entity_cache: dict = {}) -> CommercialEntity:
-    """Get the commercial entity for a coverage, loading from YAML or generating."""
-    if coverage in _entity_cache:
-        return _entity_cache[coverage]
+def _get_entity_for_coverage(
+    coverage: str, entity_override: str = None, _entity_cache: dict = {},
+) -> CommercialEntity:
+    """Get the commercial entity for a coverage, loading from YAML or generating.
 
-    entity_id = COVERAGE_ENTITY_MAP.get(coverage)
+    Args:
+        coverage: Coverage identifier.
+        entity_override: If provided, load this entity ID instead of using the
+            coverage→entity mapping. Used by synthetic companies.
+    """
+    cache_key = entity_override or coverage
+    if cache_key in _entity_cache:
+        return _entity_cache[cache_key]
+
+    entity_id = entity_override or COVERAGE_ENTITY_MAP.get(coverage)
     entity = None
     if entity_id:
         entity = load_entity(entity_id)
@@ -2713,7 +2724,7 @@ def _get_entity_for_coverage(coverage: str, _entity_cache: dict = {}) -> Commerc
             ),
         )
 
-    _entity_cache[coverage] = entity
+    _entity_cache[cache_key] = entity
     return entity
 
 
@@ -2959,9 +2970,17 @@ def build_commercial_terms(
 # SEED FUNCTION
 # =============================================================================
 
-def seed_data():
+def seed_data(
+    include_synthetic: bool = False,
+    synthetic_only: bool = False,
+    synthetic_count: int = 1000,
+    synthetic_seed: int = 42,
+):
     print("=" * 70)
     print("  DSI COMPREHENSIVE BENCH SEED")
+    if include_synthetic:
+        mode = "synthetic only" if synthetic_only else f"curated + {synthetic_count} synthetic"
+        print(f"  Mode: {mode} (seed={synthetic_seed})")
     print("=" * 70)
 
     engine = create_engine(DATABASE_URL_SYNC)
@@ -3016,9 +3035,24 @@ def seed_data():
         print(f"   Created 3 users (system, underwriter, analyst)")
 
         # -----------------------------------------------------------------
+        # Build the company list (curated + optional synthetic)
+        # -----------------------------------------------------------------
+        all_companies = []
+        if not synthetic_only:
+            all_companies.extend(COMPANIES)
+
+        if include_synthetic:
+            from synthetic_generator import generate_synthetic_companies
+            synth = generate_synthetic_companies(
+                count=synthetic_count, seed=synthetic_seed,
+            )
+            all_companies.extend(synth)
+            print(f"   Generated {len(synth)} synthetic companies")
+
+        # -----------------------------------------------------------------
         # Seed each company
         # -----------------------------------------------------------------
-        print(f"\n[2/2] Seeding {len(COMPANIES)} companies across all coverages...\n")
+        print(f"\n[2/2] Seeding {len(all_companies)} companies across all coverages...\n")
 
         # Caches for signal/source reference table IDs (populated on first encounter)
         _signal_id_cache = {}   # signal_code -> signals.id
@@ -3029,7 +3063,8 @@ def seed_data():
         validation_inputs = []  # Collected for ROL validation
         _rol_validator = ROLValidator()
 
-        for i, co in enumerate(COMPANIES, 1):
+        for i, co in enumerate(all_companies, 1):
+            is_synthetic = co.get("_synthetic", False)
             coverage_key = f"{co['coverage']}/{co['configuration']}"
             coverage_counts[coverage_key] = coverage_counts.get(coverage_key, 0) + 1
 
@@ -3038,7 +3073,9 @@ def seed_data():
 
             # === 1. SUBMISSION ===
             sub_id = _uid()
-            processing_start = NOW - timedelta(minutes=random.randint(5, 60))
+            # Synthetic companies have temporal spread; curated use NOW
+            ref_time = co.get("_created_at", NOW) if is_synthetic else NOW
+            processing_start = ref_time - timedelta(minutes=random.randint(5, 60))
             processing_end = processing_start + timedelta(seconds=random.randint(3, 45))
 
             submission_data = build_submission_data(co)
@@ -3078,17 +3115,23 @@ def seed_data():
             mv_id = _uid()
 
             # Roll all signal scores ONCE — every table uses these same values
-            resolved_scores = resolve_signal_scores(co.get("signal_profile", ""))
-
-            # Tier-aligned default score for signals not covered by the profile.
-            # Prevents score compression where sparse profiles drag composites
-            # away from the intended tier band (e.g. tier 1 entities scoring 560
-            # instead of 800+ because 18 uncovered signals all default to 50).
-            tier_default_scores = {1: 82, 2: 68, 3: 50, 4: 35, 5: 20}
-            default_score = tier_default_scores.get(co.get("tier", 3), 50)
+            if is_synthetic:
+                # Synthetic companies use a target score instead of named profiles.
+                # Generate per-signal scores from a normal distribution centered
+                # on the target, giving natural variation within the tier band.
+                target = co.get("_target_signal_score", 50)
+                resolved_scores = {}
+                default_score = max(5, min(95, target))
+            else:
+                resolved_scores = resolve_signal_scores(co.get("signal_profile", ""))
+                # Tier-aligned default score for signals not covered by the profile.
+                tier_default_scores = {1: 82, 2: 68, 3: 50, 4: 35, 5: 20}
+                default_score = tier_default_scores.get(co.get("tier", 3), 50)
 
             # Build synthetic SignalOutput instances from config signal registry
-            signal_outputs = build_synthetic_signal_outputs(config, resolved_scores, default_score)
+            # Synthetic companies get wider jitter (±15) for natural variation
+            sig_jitter = 15 if is_synthetic else 5
+            signal_outputs = build_synthetic_signal_outputs(config, resolved_scores, default_score, jitter=sig_jitter)
 
             # Build categorical outputs from config definitions
             categorical_outputs = build_synthetic_categorical_outputs(config, co)
@@ -3168,9 +3211,13 @@ def seed_data():
             # otherwise use production-derived referrals
             referral_reasons = co.get("referral_reasons", all_referrals) if decision_str != "approve" else []
 
-            print(f"   [{i:2d}/{len(COMPANIES)}] {co['entity_name']:<30s} "
-                  f"| {coverage_key:<30s} | Tier {final_tier} ({pricing_result.tier_label}) "
-                  f"| {decision_str.upper():<8s} | ${pricing_result.final_premium:,.0f}")
+            # Print progress — show every curated company, every 50th synthetic
+            total_co = len(all_companies)
+            if not is_synthetic or i % 50 == 0 or i == total_co:
+                tag = " [S]" if is_synthetic else ""
+                print(f"   [{i:>4d}/{total_co}] {co['entity_name']:<30s} "
+                      f"| {coverage_key:<30s} | Tier {final_tier} ({pricing_result.tier_label}) "
+                      f"| {decision_str.upper():<8s} | ${pricing_result.final_premium:,.0f}{tag}")
 
             discovery = build_discovery_output(co)
 
@@ -3593,7 +3640,12 @@ def seed_data():
             db.add(audit_log)
 
             # === 8. COMMERCIAL TERMS & RISK TERMS ===
-            entity = _get_entity_for_coverage(co["coverage"])
+            if is_synthetic and co.get("_entity_id"):
+                entity = _get_entity_for_coverage(
+                    co["coverage"], entity_override=co["_entity_id"]
+                )
+            else:
+                entity = _get_entity_for_coverage(co["coverage"])
             ct, rt = build_commercial_terms(
                 mv_id=mv_id,
                 entity=entity,
@@ -3614,7 +3666,7 @@ def seed_data():
         print("\n" + "=" * 70)
         print("  SEED COMPLETE")
         print("=" * 70)
-        print(f"\n  Companies seeded: {len(COMPANIES)}")
+        print(f"\n  Companies seeded: {len(all_companies)}")
         print(f"  Decisions: {stats}")
         print(f"\n  Coverage breakdown:")
         for cov, count in sorted(coverage_counts.items()):
@@ -3622,13 +3674,13 @@ def seed_data():
 
         total_signals = sum(
             len(sigs)
-            for co in COMPANIES
+            for co in all_companies
             for sigs in SIGNAL_PROFILES.get(co.get("signal_profile", ""), {}).values()
         )
         print(f"\n  Signal cache entries: ~{total_signals}")
         print(f"  Users created: 3 (system, underwriter, analyst)")
         print(f"  Referrals created: {stats['refer'] + stats['decline']}")
-        seeded_count = len(COMPANIES) - stats.get("outside_appetite", 0)
+        seeded_count = len(all_companies) - stats.get("outside_appetite", 0)
         print(f"  Commercial terms created: {seeded_count}")
         print(f"  Risk terms created: {seeded_count}")
         if stats.get("outside_appetite", 0) > 0:
@@ -3656,7 +3708,8 @@ def seed_data():
         # =================================================================
         # Phase E Demonstration — Tower, Subscription, Lead/Follow
         # =================================================================
-        _demonstrate_phase_e(config_cache=_config_cache)
+        if not synthetic_only:
+            _demonstrate_phase_e(config_cache=_config_cache)
 
     except Exception as e:
         db.rollback()
@@ -3907,4 +3960,22 @@ def _print_layer_breakdown(layers, label):
 
 
 if __name__ == "__main__":
-    seed_data()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="DSI Bench Seed Script")
+    parser.add_argument("--synthetic", action="store_true",
+                        help="Include synthetic companies alongside curated seed data")
+    parser.add_argument("--synthetic-only", action="store_true",
+                        help="Only seed synthetic companies (skip curated)")
+    parser.add_argument("--count", type=int, default=1000,
+                        help="Number of synthetic companies (default: 1000)")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed for reproducibility (default: 42)")
+    args = parser.parse_args()
+
+    seed_data(
+        include_synthetic=args.synthetic or args.synthetic_only,
+        synthetic_only=args.synthetic_only,
+        synthetic_count=args.count,
+        synthetic_seed=args.seed,
+    )

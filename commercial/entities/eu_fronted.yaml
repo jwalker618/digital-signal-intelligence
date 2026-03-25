@@ -1,0 +1,68 @@
+# EU Fronted Arrangement — Cross-border Cyber & D&O
+#
+# A fronted arrangement where an EU-licensed carrier issues the
+# policy and cedes 100% to the risk carrier. Includes fronting
+# fee and EU-specific taxes. Common for US/UK carriers writing
+# EU-domiciled risks post-Solvency II.
+
+entity:
+  id: eu_fronted
+  name: "EU Fronted Program"
+  market: eu
+  base_currency: EUR
+
+  coverages:
+    - coverage: cyber
+      configs:
+        - cyber_general
+        - cyber_sme
+      max_single_limit: 50_000_000
+      constraints:
+        - field: revenue
+          operator: "<="
+          value: 20_000_000_000
+          reason: "Revenue exceeds EU fronted binding authority"
+
+    - coverage: directors_officers
+      configs:
+        - do_general
+        - do_sme
+      max_single_limit: 50_000_000
+      constraints:
+        - field: revenue
+          operator: "<="
+          value: 15_000_000_000
+          reason: "Revenue exceeds EU D&O fronted authority"
+
+    - coverage: professional_indemnity
+      configs:
+        - pi_general
+        - pi_sme
+      max_single_limit: 25_000_000
+      constraints:
+        - field: revenue
+          operator: "<="
+          value: 10_000_000_000
+          reason: "Revenue exceeds EU PI fronted authority"
+
+  distribution:
+    type: DIRECT
+
+  commission:
+    brokerage_rate: 0.175
+    overrider_rate: 0.015
+    profit_commission_rate: 0.0
+
+  taxes_and_levies:
+    insurance_premium_tax_rate: 0.19  # German IPT
+    stamp_duty_rate: 0.0
+    regulatory_levy_rate: 0.008
+
+  fronting:
+    enabled: true
+    fronting_fee_rate: 0.05
+    fronting_carrier: "Allianz SE"
+
+  pricing_adjustments:
+    offered_premium_discretion: 0.05
+    minimum_gross_premium: 3000

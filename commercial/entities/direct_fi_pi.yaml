@@ -1,0 +1,53 @@
+# Direct Writer — Financial Institutions & Professional Indemnity
+#
+# A US-based direct writer covering FI and PI through its own
+# paper. No subscription market involvement — ground-up 100% writer
+# with standard US tax and commission structure.
+
+entity:
+  id: direct_fi_pi
+  name: "Direct Writer (FI/PI)"
+  market: us
+  base_currency: USD
+
+  coverages:
+    - coverage: financial_institutions
+      configs:
+        - fi_general
+        - fi_sme
+      max_single_limit: 500_000_000
+      constraints:
+        - field: total_assets
+          operator: "<="
+          value: 3_000_000_000_000
+          reason: "Total assets exceed direct writing authority"
+
+    - coverage: professional_indemnity
+      configs:
+        - pi_general
+        - pi_sme
+      max_single_limit: 100_000_000
+      constraints:
+        - field: revenue
+          operator: "<="
+          value: 50_000_000_000
+          reason: "Revenue exceeds PI direct writing authority"
+
+  distribution:
+    type: DIRECT
+
+  commission:
+    brokerage_rate: 0.125
+    overrider_rate: 0.0
+    profit_commission_rate: 0.0
+
+  taxes_and_levies:
+    insurance_premium_tax_rate: 0.04
+    regulatory_levy_rate: 0.005
+
+  fronting:
+    enabled: false
+
+  pricing_adjustments:
+    offered_premium_discretion: 0.075
+    minimum_gross_premium: 5000
