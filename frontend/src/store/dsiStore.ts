@@ -38,6 +38,7 @@ export interface DsiState {
   // RiskTab
   riskSignals: any[];
   isFetchingRiskSignals: boolean;
+  riskSignalsVersionCode: string | null;  // Cache key
   fetchRiskSignals: (versionCode: string) => Promise<void>;
 
   // LossTab
@@ -110,6 +111,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   // Default Risk Tab
   riskSignals: [],
   isFetchingRiskSignals: false,
+  riskSignalsVersionCode: null,
 
   // Default Loss Tab
   lossCohortBenchmarks: [],
@@ -157,22 +159,26 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   }, 
 
   fetchRiskSignals: async (versionCode: string) => {
+    // Skip if already fetched for this version
+    if (get().riskSignalsVersionCode === versionCode && get().riskSignals.length > 0) return;
     set({ isFetchingRiskSignals: true });
     try {
       const res = await fetch(`http://localhost:8000/api/v1/frontend/${versionCode}/signals`);
       if (res.ok) {
         const data = await res.json();
-        set({ riskSignals: data, isFetchingRiskSignals: false });
+        set({ riskSignals: data, isFetchingRiskSignals: false, riskSignalsVersionCode: versionCode });
       } else {
-        set({ riskSignals: [], isFetchingRiskSignals: false });
+        set({ riskSignals: [], isFetchingRiskSignals: false, riskSignalsVersionCode: null });
       }
     } catch (err) {
       console.error("Failed to fetch risk signals:", err);
-      set({ riskSignals: [], isFetchingRiskSignals: false });
+      set({ riskSignals: [], isFetchingRiskSignals: false, riskSignalsVersionCode: null });
     }
   },
 
   fetchLossAnalytics: async (coverage: string, daysFilter = 365) => {
+    // Skip if already have data for this coverage
+    if (get().lossCohortBenchmarks.length > 0) return;
     set({ isFetchingLossAnalytics: true });
     
     try {
@@ -209,6 +215,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   },
 
   fetchExposureAnalytics: async (coverage: string, daysFilter = 365) => {
+    // Skip if already have data for this coverage
+    if (get().exposureBandBenchmarks.length > 0) return;
     set({ isFetchingExposureAnalytics: true });
     
     try {
@@ -385,7 +393,14 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   },
 
   fetchCoreSubmissionDetail: async (row: any) => {
-    set({ isLoading: true, error: null });
+    // Clear cached tab data when switching submissions
+    set({
+      isLoading: true, error: null,
+      riskSignals: [], riskSignalsVersionCode: null,
+      lossCohortBenchmarks: [], lossTrendDistribution: [], lossScatterData: [],
+      exposureBandBenchmarks: [], exposureTierDistribution: [], exposureScatterData: [],
+      modelVersions: [], auditLogs: [],
+    });
     try {
       
       const safeFetch = (url) => fetch(url).then(res => res.ok ? res.json() : null).catch(() => null);
