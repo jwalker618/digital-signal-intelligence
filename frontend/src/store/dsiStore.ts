@@ -69,6 +69,10 @@ export interface DsiState {
   fetchReferralSignals: (versionCode: string) => Promise<void>;
   submitSignalOverride: (quoteCode: string, signalCode: string, auditedValue: number, rationale: string) => Promise<void>;
 
+  // Limit Selection
+  isSelectingLimit: boolean;
+  selectLimitOption: (quoteCode: string, selectedLimit: number, rationale?: string) => Promise<void>;
+
 }
 
 export const useDsiStore = create<DsiState>((set, get) => ({

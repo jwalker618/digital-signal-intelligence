@@ -2369,6 +2369,114 @@ def build_exposure_band_interpretation(config):
     return result if result else None
 
 
+def build_loss_correlation_config():
+    """Snapshot the loss correlation calculation config for client-side recalculation.
+
+    Captures: band thresholds, multiplier maps, combination weights, and caps.
+    This allows the frontend ScenarioTab to recalculate loss_combined_modifier
+    from overridden signal scores without a backend round-trip.
+    """
+    return {
+        "frequency_weight": 0.6,
+        "severity_weight": 0.4,
+        "frequency_impact_floor": 0.60,
+        "frequency_impact_cap": 1.50,
+        "severity_impact_floor": 0.70,
+        "severity_impact_cap": 1.50,
+        "propensity_bands": [
+            {"name": "very_low", "min_score": 0, "max_score": 20, "frequency_multiplier": 0.60},
+            {"name": "low", "min_score": 20, "max_score": 40, "frequency_multiplier": 0.80},
+            {"name": "moderate", "min_score": 40, "max_score": 60, "frequency_multiplier": 1.00},
+            {"name": "elevated", "min_score": 60, "max_score": 80, "frequency_multiplier": 1.25},
+            {"name": "high", "min_score": 80, "max_score": 100, "frequency_multiplier": 1.50},
+        ],
+        "severity_bands": [
+            {"name": "minimal", "min_score": 0, "max_score": 20, "severity_multiplier": 0.70},
+            {"name": "moderate", "min_score": 20, "max_score": 40, "severity_multiplier": 0.90},
+            {"name": "significant", "min_score": 40, "max_score": 60, "severity_multiplier": 1.10},
+            {"name": "severe", "min_score": 60, "max_score": 80, "severity_multiplier": 1.30},
+            {"name": "catastrophic", "min_score": 80, "max_score": 100, "severity_multiplier": 1.50},
+        ],
+    }
+
+
+def build_ilf_curve_config(config, product_type):
+    """Snapshot ILF curve parameters for client-side limit recalculation."""
+    pt_pricing = config.pricing.by_product_type.get(product_type) if config.pricing else None
+    if not pt_pricing or not pt_pricing.ilf_curve:
+        return None
+    curve = pt_pricing.ilf_curve
+    return {
+        "anchor_limit": curve.anchor_limit,
+        "curve": curve.curve,
+        "params": curve.params or {},
+    }
+
+
+def build_deductible_factor_table(config):
+    """Snapshot all deductible factor tables across product types."""
+    if not config.pricing or not config.pricing.by_product_type:
+        return None
+    result = {}
+    for pt_name, pt_pricing in config.pricing.by_product_type.items():
+        if pt_pricing.deductible_factors:
+            result[pt_name] = [
+                {"deductible": df.deductible, "factor": df.factor}
+                for df in pt_pricing.deductible_factors
+            ]
+    return result if result else None
+
+
+def build_exposure_modifier_config(config):
+    """Snapshot exposure modifier config (size curve, thresholds) for client-side recalc."""
+    # For config-band-based exposure (the common path in DSI)
+    # the exposure_band_interpretation already captures the band lookup.
+    # This captures any additional traditional modifier config if present.
+    if not config.exposure:
+        return None
+    result = {
+        "method": "config_band_lookup",
+    }
+    # If size bands exist, snapshot as a simple lookup
+    if config.exposure.size and config.exposure.size.bands:
+        result["size_curve"] = [
+            {
+                "label": b.label,
+                "min": b.interpretation.bands.min,
+                "max": b.interpretation.bands.max,
+                "modifier": b.interpretation.application.applied,
+            }
+            for b in config.exposure.size.bands
+        ]
+        result["size_weight"] = config.exposure.size.weight
+    if config.exposure.complexity and config.exposure.complexity.bands:
+        result["complexity_curve"] = [
+            {
+                "label": b.label,
+                "min": b.interpretation.bands.min,
+                "max": b.interpretation.bands.max,
+                "modifier": b.interpretation.application.applied,
+            }
+            for b in config.exposure.complexity.bands
+        ]
+        result["complexity_weight"] = config.exposure.complexity.weight
+    return result
+
+
+def build_guardrails_config(config):
+    """Snapshot guardrail thresholds for client-side premium capping."""
+    if not config.guardrails:
+        return None
+    g = config.guardrails
+    return {
+        "modifier_floor": g.modifier_floor,
+        "modifier_cap": g.modifier_cap,
+        "max_premium_to_limit_ratio": g.max_premium_to_limit_ratio,
+        "max_premium_to_revenue_ratio": g.max_premium_to_revenue_ratio,
+        "max_ilf_factor": g.max_ilf_factor,
+    }
+
+
 def build_rol_recommendation(limit_premiums, requested_limit):
     """Build ROL dual recommendation from limit_premiums menu.
 
@@ -3035,6 +3143,13 @@ def seed_data():
             loss_band_snap = build_loss_band_interpretation(config)
             exposure_band_snap = build_exposure_band_interpretation(config)
 
+            # --- Config snapshots for client-side scenario recalculation ---
+            loss_corr_config = build_loss_correlation_config()
+            ilf_curve_snap = build_ilf_curve_config(config, product_type)
+            ded_factor_snap = build_deductible_factor_table(config)
+            exposure_mod_snap = build_exposure_modifier_config(config)
+            guardrails_snap = build_guardrails_config(config)
+
             # --- Phase C: ROL dual recommendation ---
             rol_kwargs = build_rol_recommendation(limit_premiums, requested_limit)
 
@@ -3079,6 +3194,12 @@ def seed_data():
                 # Loss/exposure band config snapshots
                 loss_band_interpretation=loss_band_snap,
                 exposure_band_interpretation=exposure_band_snap,
+                # Config snapshots for scenario recalculation
+                loss_correlation_config=loss_corr_config,
+                ilf_curve_config=ilf_curve_snap,
+                deductible_factor_table=ded_factor_snap,
+                exposure_modifier_config=exposure_mod_snap,
+                guardrails_config=guardrails_snap,
                 decision=decision_enum,
                 auto_approve=auto_approve,
                 referral_reasons=referral_reasons,

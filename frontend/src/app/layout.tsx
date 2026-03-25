@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 import { 
   PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine, MoreVertical,
-  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt
+  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt, FlaskConical
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
@@ -143,6 +143,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           { name: "Risk Assessment", icon: ChartNoAxesGantt },
                           { name: "Loss Assessment", icon: TrendingUpDown },
                           { name: "Exposure Assessment", icon: Globe },
+                          { name: "Scenarios", icon: FlaskConical },
                           { name: "Referral Actions", icon: UserStar },
                           { name: "Model Versions", icon: FileStack },
                         ].map((item) => (

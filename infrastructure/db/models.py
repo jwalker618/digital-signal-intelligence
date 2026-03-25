@@ -391,6 +391,15 @@ class ModelVersionRecord(Base):
     exposure_components = Column(JSONB)                # {size_factor, growth_factor, concentration_factor, ...}
     exposure_band_interpretation = Column(JSONB)       # Full exposure config snapshot: {size_bands, complexity_bands, weights}
 
+    # =========================================================================
+    # CONFIG SNAPSHOTS — for full client-side scenario recalculation
+    # =========================================================================
+    loss_correlation_config = Column(JSONB)    # Loss correlation groups, weights, band thresholds, multiplier maps
+    ilf_curve_config = Column(JSONB)           # ILF curve type, params (q/b/alpha/k), anchor limit
+    deductible_factor_table = Column(JSONB)    # {product_type: [{deductible, factor}, ...]}
+    exposure_modifier_config = Column(JSONB)   # Size curve, growth/concentration thresholds
+    guardrails_config = Column(JSONB)          # modifier_floor, modifier_cap, premium ratio caps
+
     # Audit
     created_by = Column(String(100))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
