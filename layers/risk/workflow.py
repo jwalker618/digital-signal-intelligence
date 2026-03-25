@@ -1,10 +1,10 @@
 """
-DSI Model Layer - Workflow Engine (Phase 4 + 6 + 7)
+DSI Model Layer - Workflow Engine
 
-Orchestrates the complete 14-step workflow:
+Orchestrates the complete workflow:
 
 0. Website Discovery (Phase 6)
-0a. Appetite Check — pre-qualification gate (underwriting authority)
+0a. Appetite Check — pre-qualification gate (entity-scoped)
 1. Model Configuration Instantiation
 2. Model Data File Creation
 3. Minimum Viable Input Verification
@@ -19,6 +19,8 @@ Orchestrates the complete 14-step workflow:
 11. Modifier Application
 12. Limit Band Scaling
 13. Output Decision
+14. Premium Assembly (FX, distribution, commission, taxes → gross premium)
+    Only runs when a CommercialEntity is provided.
 
 This is the main entry point for running DSI assessments.
 """
@@ -45,6 +47,8 @@ from .scorer import ModelScorer, get_scorer
 from .query_evaluator import QueryEvaluator, get_query_evaluator
 from .appetite import evaluate_appetite
 from .pricer import ModelPricer, get_pricer
+from .fx import FXConverter, get_fx_converter
+from .premium_assembly import PremiumAssembler
 from .rol_validator import ROLValidator
 from .rol_recommender import ROLRecommender
 from .modifiers import (
@@ -231,10 +235,17 @@ class WorkflowEngine:
         entity_name: Optional[str] = None,
         domain_hint: Optional[str] = None,
         country_hint: Optional[str] = None,
-        skip_discovery: bool = False
+        skip_discovery: bool = False,
+        # Commercial entity (Step 14)
+        commercial_entity=None,
     ) -> WorkflowResult:
         """
-        Execute the complete 14-step workflow.
+        Execute the complete workflow.
+
+        Steps 0-13 produce a technical premium in USD. When a commercial_entity
+        is provided, Step 14 runs premium assembly to convert technical premium
+        into a gross premium in the entity's base currency, applying FX,
+        distribution structure, commission, and taxes.
 
         Args:
             entity_id: The entity being assessed
@@ -249,9 +260,13 @@ class WorkflowEngine:
             domain_hint: Optional domain hint (e.g., "example.com")
             country_hint: Optional country hint (e.g., "UK", "US")
             skip_discovery: Skip Step 0 discovery if domain is known
+            commercial_entity: Optional CommercialEntity for premium assembly.
+                When provided, appetite is entity-scoped and gross premium is
+                calculated via PremiumAssembler.
 
         Returns:
-            WorkflowResult with complete assessment
+            WorkflowResult with complete assessment (includes premium_breakdown
+            when commercial_entity is provided)
 
         Raises:
             MissingInputError: If required inputs missing (Step 3)
@@ -275,7 +290,7 @@ class WorkflowEngine:
         )
 
         # Step 0a: Appetite Check — pre-qualification gate
-        appetite_result = evaluate_appetite(coverage, submission_data)
+        appetite_result = evaluate_appetite(coverage, submission_data, entity=commercial_entity)
         if not appetite_result.fit:
             logger.info(
                 "Submission outside appetite for %s: %s",
@@ -505,6 +520,28 @@ class WorkflowEngine:
             recommended_limit = float(dual_rec.upper.limit)
             recommended_premium = dual_rec.upper.premium
 
+        # Step 14: Premium Assembly (when commercial entity provided)
+        premium_breakdown = None
+        if commercial_entity is not None:
+            try:
+                assembler = PremiumAssembler(get_fx_converter())
+                premium_breakdown = assembler.assemble(
+                    technical_premium_usd=pricing_result.final_premium,
+                    submission_data=submission_data,
+                    config=config,
+                    entity=commercial_entity,
+                )
+                logger.info(
+                    "Premium assembly: technical=%.0f USD → gross=%.2f %s (entity=%s)",
+                    pricing_result.final_premium,
+                    premium_breakdown.gross_premium,
+                    premium_breakdown.currency,
+                    commercial_entity.id,
+                )
+            except Exception as e:
+                logger.warning("Premium assembly failed for entity %s: %s",
+                               commercial_entity.id, e)
+
         logger.info(
             f"Workflow complete: score={scoring_result.pure_composite_score:.0f}, "
             f"tier={pricing_result.final_tier} ({pricing_result.tier_label}), "
@@ -624,6 +661,8 @@ class WorkflowEngine:
             discovered_domain=discovery_output.discovered_domain if discovery_output else None,
             discovery_confidence=discovery_output.confidence.value if discovery_output else None,
             discovery_warnings=discovery_output.warnings if discovery_output else [],
+            # Premium assembly (Step 14)
+            premium_breakdown=premium_breakdown,
         )
 
     def verify_inputs(

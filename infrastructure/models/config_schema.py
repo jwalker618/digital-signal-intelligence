@@ -80,11 +80,21 @@ class ExpectationLevel(str, Enum):
 
 
 class LimitConfigType(str, Enum):
-    """Limit configuration modes."""
+    """Limit configuration modes.
+
+    All coverage configs should use DECOUPLED. The pricer prices any
+    limit/deductible within the config's min/max range; distribution
+    structure (tower layers, subscription lines, bundled packages) is
+    now a commercial concern defined in entity YAML.
+
+    TOWER and SUBSCRIPTION are retained for backward compatibility
+    with test fixtures and legacy configs but should not be used for
+    new configurations.
+    """
     BUNDLED = "BUNDLED"      # Menu pricing with packages
     DECOUPLED = "DECOUPLED"  # Independent limit/deductible selection
-    TOWER = "TOWER"          # Stacked excess layers
-    SUBSCRIPTION = "SUBSCRIPTION"  # Order/line subscription market
+    TOWER = "TOWER"          # Stacked excess layers (legacy — use entity distribution)
+    SUBSCRIPTION = "SUBSCRIPTION"  # Order/line subscription market (legacy — use entity distribution)
 
 
 class LineRole(str, Enum):
