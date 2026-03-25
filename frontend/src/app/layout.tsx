@@ -73,14 +73,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning> 
       <body className={`${ibmPlex.variable} ${inter.variable} font-ibm h-screen w-screen overflow-hidden`}>
 
-        <div className="flex h-full w-full">
+        <div className="relative h-full w-full">
 
-          {/* SIDEBAR */}
+          {/* SIDEBAR — overlays content when expanded */}
           <aside
             ref={sidebarRef}
             className={`
-              relative h-full shrink-0 transition-all duration-300
-              bg-dsi-contrast-background 
+              absolute top-0 left-0 h-full z-30 shrink-0 transition-all duration-300
+              bg-dsi-contrast-background
               text-dsi-background
               border-r-3 border-dsi-outline
               ${isOpen ? "w-[50%]" : "w-[5%]"}
@@ -242,12 +242,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             )}
           </aside>
 
-          {/* CONTENT AREA */}
-          <main 
-            className="flex-1 h-full bg-dsi-background text-dsi-contrast-background overflow-hidden flex flex-col"
-            style={{ 
-              // Broadcasts your exact math globally to all child components!
-              '--cw': collapsedWidthPx ? `${collapsedWidthPx}px` : '80px' 
+          {/* CONTENT AREA — fixed width, positioned after collapsed sidebar */}
+          <main
+            className="absolute top-0 right-0 h-full bg-dsi-background text-dsi-contrast-background overflow-hidden flex flex-col transition-none"
+            style={{
+              left: collapsedWidthPx ? `${collapsedWidthPx}px` : '5%',
+              '--cw': collapsedWidthPx ? `${collapsedWidthPx}px` : '80px'
             } as React.CSSProperties}
           >
 

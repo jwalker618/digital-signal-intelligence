@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 
 const DECISION_BADGE: Record<string, { bg: string; text: string }> = {
-  approve: { bg: 'bg-emerald-500/15', text: 'text-emerald-400' },
-  refer: { bg: 'bg-amber-500/15', text: 'text-amber-400' },
-  decline: { bg: 'bg-rose-500/15', text: 'text-rose-400' },
+  approve: { bg: 'bg-dsi-positive/15', text: 'text-dsi-positive' },
+  refer: { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
+  decline: { bg: 'bg-dsi-negative/15', text: 'text-dsi-negative' },
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -152,7 +152,7 @@ export default function ModelVersionsTab() {
                           </span>
                         </div>
                         {mv.is_latest && (
-                          <span className="text-[10px] bg-green-500/10 text-green-500 px-2 py-0.5 rounded font-bold uppercase">
+                          <span className="text-[10px] bg-dsi-positive/10 text-dsi-positive px-2 py-0.5 rounded font-bold uppercase">
                             Active
                           </span>
                         )}
@@ -167,7 +167,7 @@ export default function ModelVersionsTab() {
                               {mv.composite_score?.toFixed(1) || "N/A"}
                             </span>
                             {scoreDelta != null && Math.abs(scoreDelta) > 0.1 && (
-                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
                                 {scoreDelta > 0 ? '+' : ''}{scoreDelta.toFixed(1)}
                               </span>
                             )}
@@ -180,7 +180,7 @@ export default function ModelVersionsTab() {
                               {mv.tier} ({mv.tier_label})
                             </span>
                             {tierChanged && (
-                              <span className="text-[10px] text-amber-400 font-bold">
+                              <span className="text-[10px] text-dsi-warning font-bold">
                                 was {prevVersion.tier}
                               </span>
                             )}
@@ -207,10 +207,10 @@ export default function ModelVersionsTab() {
                           <span>Cov: {(mv.signal_coverage * 100).toFixed(0)}%</span>
                         )}
                         {condCount > 0 && (
-                          <span className="text-amber-400/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
+                          <span className="text-dsi-warning/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
                         )}
                         {referralCount > 0 && (
-                          <span className="text-rose-400/70">{referralCount} referral flag{referralCount !== 1 ? 's' : ''}</span>
+                          <span className="text-dsi-negative/70">{referralCount} referral flag{referralCount !== 1 ? 's' : ''}</span>
                         )}
                         {notesCount > 0 && (
                           <span className="flex items-center gap-0.5">

@@ -8,16 +8,15 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-const formatNum = (num: number | null | undefined, decimals = 1) =>
-  num !== null && num !== undefined ? Number(num).toFixed(decimals) : "-";
+import { formatNum } from "@/lib/format";
 
 const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
-  modifier:      { bg: 'bg-blue-500/15', text: 'text-blue-400' },
-  referral:      { bg: 'bg-amber-500/15', text: 'text-amber-400' },
-  refer:         { bg: 'bg-amber-500/15', text: 'text-amber-400' },
-  tier_override: { bg: 'bg-rose-500/15', text: 'text-rose-400' },
-  flag:          { bg: 'bg-slate-500/15', text: 'text-slate-400' },
-  note:          { bg: 'bg-slate-500/15', text: 'text-slate-400' },
+  modifier:      { bg: 'bg-dsi-info/15', text: 'text-dsi-info' },
+  referral:      { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
+  refer:         { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
+  tier_override: { bg: 'bg-dsi-negative/15', text: 'text-dsi-negative' },
+  flag:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
+  note:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
 };
 
 export default function RiskTab() {
@@ -223,7 +222,7 @@ export default function RiskTab() {
                     <span>Tier {activeVersion.tier_margin_adjacent_worse ?? '–'} boundary</span>
                   </div>
                   <div className="relative h-6 bg-dsi-background rounded-full overflow-hidden border border-dsi-outline/20">
-                    <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600/40 via-slate-500/40 to-rose-600/40 rounded-full" style={{ width: '100%' }} />
+                    <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-dsi-positive/40 via-dsi-muted/40 to-dsi-negative/40 rounded-full" style={{ width: '100%' }} />
                     <div className="absolute top-0 bottom-0 w-0.5 bg-dsi-selected z-10" style={{ left: `${Math.max(2, Math.min(98, (marginPct || 0) * 100))}%` }}>
                       <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-dsi-selected whitespace-nowrap">
                         {formatNum(activeVersion.pure_composite_score, 0)}
@@ -243,7 +242,7 @@ export default function RiskTab() {
                   </div>
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-60 block mb-1">To Better Tier</span>
-                    <span className={`font-bold text-lg ${distBetter != null && distBetter < 20 ? 'text-emerald-400' : ''}`}>
+                    <span className={`font-bold text-lg ${distBetter != null && distBetter < 20 ? 'text-dsi-positive' : ''}`}>
                       {distBetter != null ? `${formatNum(distBetter, 0)} pts` : 'N/A'}
                     </span>
                     {activeVersion.tier_margin_adjacent_better != null && (
@@ -252,7 +251,7 @@ export default function RiskTab() {
                   </div>
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-60 block mb-1">To Worse Tier</span>
-                    <span className={`font-bold text-lg ${distWorse != null && distWorse < 20 ? 'text-rose-400' : ''}`}>
+                    <span className={`font-bold text-lg ${distWorse != null && distWorse < 20 ? 'text-dsi-negative' : ''}`}>
                       {distWorse != null ? `${formatNum(distWorse, 0)} pts` : 'N/A'}
                     </span>
                     {activeVersion.tier_margin_adjacent_worse != null && (
@@ -356,20 +355,20 @@ export default function RiskTab() {
                     <td className="py-2 px-2 text-right opacity-60">{formatNum(gs.risk_weight, 2)}</td>
                     <td className="py-2 px-2 text-right font-bold">{formatNum(gs.risk_contribution, 1)}</td>
                     <td className="py-2 px-2 text-center">
-                      <span className={`text-xs ${gs.coverage_ratio >= 1 ? 'text-emerald-400' : gs.coverage_ratio >= 0.5 ? 'text-amber-400' : 'text-rose-400'}`}>
+                      <span className={`text-xs ${gs.coverage_ratio >= 1 ? 'text-dsi-positive' : gs.coverage_ratio >= 0.5 ? 'text-dsi-warning' : 'text-dsi-negative'}`}>
                         {gs.signal_count || 0}/{gs.expected_signal_count || 0}
                       </span>
                     </td>
                     <td className="py-2 px-2 text-right border-l border-dsi-outline/20">
                       {gs.loss_weight != null && gs.loss_weight > 0 ? (
-                        <span className="text-blue-400 font-bold">{formatNum(gs.loss_weight, 2)}</span>
+                        <span className="text-dsi-info font-bold">{formatNum(gs.loss_weight, 2)}</span>
                       ) : (
                         <span className="opacity-20">–</span>
                       )}
                     </td>
                     <td className="py-2 pr-dsi-pad text-right">
                       {gs.exposure_weight != null && gs.exposure_weight > 0 ? (
-                        <span className="text-purple-400 font-bold">{formatNum(gs.exposure_weight, 2)}</span>
+                        <span className="text-dsi-info font-bold">{formatNum(gs.exposure_weight, 2)}</span>
                       ) : (
                         <span className="opacity-20">–</span>
                       )}
@@ -445,7 +444,7 @@ export default function RiskTab() {
                           className={`
                             border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors
                             ${isNewGroup && idx !== 0 ? 'border-t-1 border-t-dsi-outline/50' : ''}
-                            ${hasCondition ? 'bg-amber-500/5' : ''}
+                            ${hasCondition ? 'bg-dsi-warning/5' : ''}
                           `}
                         >
                           <td className="py-2 pl-dsi-pad pr-dsi-pad opacity-70 truncate max-w-[120px]" title={sig.group_code}>
@@ -458,13 +457,13 @@ export default function RiskTab() {
                             <div className="flex items-center gap-1.5">
                               {sig.code}
                               {hasCondition && (
-                                <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" title="Has active condition" />
+                                <AlertTriangle className="w-3 h-3 text-dsi-warning shrink-0" title="Has active condition" />
                               )}
                             </div>
                           </td>
                           <td className="py-2 px-2 opacity-80 text-center">{sig.proxy_tier || "-"}</td>
                           <td className="py-2 px-2 text-center">
-                            {sig.was_absent ? <span className="text-rose-400">Yes</span> : <span className="opacity-30">No</span>}
+                            {sig.was_absent ? <span className="text-dsi-negative">Yes</span> : <span className="opacity-30">No</span>}
                           </td>
                           <td className="py-2 px-2 text-right">{formatNum(sig.score, 1)}</td>
                           <td className="py-2 px-2 text-right opacity-50">{formatNum(sig.weight, 2)}</td>

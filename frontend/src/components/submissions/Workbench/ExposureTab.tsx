@@ -10,20 +10,8 @@ import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, ReferenceLine, Label
 } from "recharts";
-
-const DECISION_COLORS: Record<string, string> = {
-  approve: '#10b981',
-  refer: '#f59e0b',
-  decline: '#f43f5e',
-};
-
-const getDecisionColor = (decision: string | undefined) => {
-  if (!decision) return '#475569';
-  return DECISION_COLORS[decision.toLowerCase()] || '#475569';
-};
-
-const formatNum = (num: number | null | undefined, decimals = 1) =>
-  num !== null && num !== undefined ? Number(num).toFixed(decimals) : "-";
+import { getDecisionColor, tooltipStyle, CHART_GRID_COLOR, CHART_AXIS_COLOR, CHART_SUBJECT_COLOR, CHART_PEER_COLOR } from "@/lib/chartConfig";
+import { formatNum } from "@/lib/format";
 
 export default function ExposureTab() {
   const {
@@ -50,14 +38,6 @@ export default function ExposureTab() {
     y_composite: activeVersion.pure_composite_score || 0,
     name: "Current Submission"
   }];
-
-  const tooltipStyle = {
-    backgroundColor: '#0f172a',
-    borderColor: '#334155',
-    color: '#f8fafc',
-    borderRadius: '8px',
-    fontSize: '12px'
-  };
 
   // Subject values for reference lines
   const subjectModifier = activeVersion.exposure_modifier || 1.0;
@@ -278,7 +258,7 @@ export default function ExposureTab() {
                   </div>
                   <div className="relative h-6 bg-dsi-background rounded-full overflow-hidden border border-dsi-outline/20">
                     <div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600/30 via-slate-500/30 to-amber-600/30 rounded-full"
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-dsi-positive/30 via-dsi-muted/30 to-dsi-warning/30 rounded-full"
                       style={{ width: '100%' }}
                     />
                     {/* Position marker */}
@@ -446,30 +426,30 @@ export default function ExposureTab() {
               pt-4 pb-4
             ">
               <div className="pl-dsi-pad pr-dsi-pad flex gap-4 mb-2 text-[10px] uppercase tracking-wider">
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span> Approve</span>
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-amber-500"></span> Refer</span>
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-rose-500"></span> Decline</span>
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-slate-500"></span> Unknown</span>
+                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-approve"></span> Approve</span>
+                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-refer"></span> Refer</span>
+                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-decline"></span> Decline</span>
+                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-muted"></span> Unknown</span>
               </div>
               <div className="pl-dsi-pad pr-dsi-pad h-[400px] w-full relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <ScatterChart margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-chart-grid)" opacity={0.5} />
                     <XAxis
                       type="number"
                       dataKey="x_magnitude"
                       name="Magnitude Score"
-                      stroke="#94a3b8"
-                      tick={{ fill: '#94a3b8', fontSize: 12 }}
-                      label={{ value: 'Exposure Magnitude Score (0-100)', position: 'insideBottom', offset: -15, fill: '#94a3b8', fontSize: 12 }}
+                      stroke="var(--dsi-chart-axis)"
+                      tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
+                      label={{ value: 'Exposure Magnitude Score (0-100)', position: 'insideBottom', offset: -15, fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
                     />
                     <YAxis
                       type="number"
                       dataKey="y_composite"
                       name="Risk Score"
-                      stroke="#94a3b8"
-                      tick={{ fill: '#94a3b8', fontSize: 12 }}
-                      label={{ value: 'Pure Composite Score (0-1000)', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 12 }}
+                      stroke="var(--dsi-chart-axis)"
+                      tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
+                      label={{ value: 'Pure Composite Score (0-1000)', angle: -90, position: 'insideLeft', fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
                     />
                     <RechartsTooltip
                       cursor={{ strokeDasharray: '3 3' }}
@@ -479,13 +459,13 @@ export default function ExposureTab() {
                     {/* Subject crosshair reference lines */}
                     <ReferenceLine
                       x={activeVersion.exposure_size_score || 0}
-                      stroke="#3b82f6"
+                      stroke="var(--dsi-chart-subject)"
                       strokeDasharray="4 4"
                       strokeOpacity={0.6}
                     />
                     <ReferenceLine
                       y={activeVersion.pure_composite_score || 0}
-                      stroke="#3b82f6"
+                      stroke="var(--dsi-chart-subject)"
                       strokeDasharray="4 4"
                       strokeOpacity={0.6}
                     />
@@ -499,7 +479,7 @@ export default function ExposureTab() {
                         isAnimationActive={false}
                       />
                     ))}
-                    <Scatter name="Active Submission" data={activePoint} fill="#3b82f6" shape="star" />
+                    <Scatter name="Active Submission" data={activePoint} fill="var(--dsi-chart-subject)" shape="star" />
                   </ScatterChart>
                 </ResponsiveContainer>
               </div>
@@ -537,12 +517,12 @@ export default function ExposureTab() {
                   {exposureBandBenchmarks.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={exposureBandBenchmarks} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
-                        <XAxis dataKey="band_label" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                        <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} domain={['auto', 'auto']} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--dsi-chart-grid)" opacity={0.5} />
+                        <XAxis dataKey="band_label" stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
+                        <YAxis stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }} domain={['auto', 'auto']} />
                         <RechartsTooltip
                           contentStyle={tooltipStyle}
-                          cursor={{ fill: '#1e293b', opacity: 0.4 }}
+                          cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
                           formatter={(value: any, name: string) => {
                             if (name === 'avg_modifier') return [`${Number(value).toFixed(3)}x`, 'Avg Modifier'];
                             return [value, name];
@@ -556,17 +536,17 @@ export default function ExposureTab() {
                         {/* Subject modifier reference line */}
                         <ReferenceLine
                           y={subjectModifier}
-                          stroke="#3b82f6"
+                          stroke="var(--dsi-chart-subject)"
                           strokeDasharray="6 3"
                           strokeWidth={2}
                         >
-                          <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="#3b82f6" fontSize={11} />
+                          <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
                         </ReferenceLine>
                         <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
                           label={({ x, y, width, index }: any) => {
                             const entry = exposureBandBenchmarks[index];
                             return (
-                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="#94a3b8" fontSize={10}>
+                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="var(--dsi-chart-axis)" fontSize={10}>
                                 n={entry?.peer_count}
                               </text>
                             );
@@ -575,7 +555,7 @@ export default function ExposureTab() {
                           {exposureBandBenchmarks.map((entry: any, index: number) => (
                             <Cell
                               key={`cell-${index}`}
-                              fill={entry.band_label === activeVersion.exposure_band_label ? '#3b82f6' : '#475569'}
+                              fill={entry.band_label === activeVersion.exposure_band_label ? 'var(--dsi-chart-subject)' : 'var(--dsi-chart-peer)'}
                             />
                           ))}
                         </Bar>
@@ -614,12 +594,12 @@ export default function ExposureTab() {
                   {exposureTierDistribution.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={exposureTierDistribution} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
-                        <XAxis dataKey="tier" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                        <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} domain={[0, 100]} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--dsi-chart-grid)" opacity={0.5} />
+                        <XAxis dataKey="tier" stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
+                        <YAxis stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }} domain={[0, 100]} />
                         <RechartsTooltip
                           contentStyle={tooltipStyle}
-                          cursor={{ fill: '#1e293b', opacity: 0.4 }}
+                          cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
                           formatter={(value: any, name: string) => [Number(value).toFixed(1), name === 'avg_magnitude' ? 'Avg Magnitude' : name]}
                           labelFormatter={(label) => {
                             const match = exposureTierDistribution.find((d: any) => d.tier === label);
@@ -629,17 +609,17 @@ export default function ExposureTab() {
                         {/* Subject magnitude reference line */}
                         <ReferenceLine
                           y={subjectMagnitude}
-                          stroke="#3b82f6"
+                          stroke="var(--dsi-chart-subject)"
                           strokeDasharray="6 3"
                           strokeWidth={2}
                         >
-                          <Label value={`Subject ${subjectMagnitude.toFixed(1)}`} position="right" fill="#3b82f6" fontSize={11} />
+                          <Label value={`Subject ${subjectMagnitude.toFixed(1)}`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
                         </ReferenceLine>
-                        <Bar dataKey="avg_magnitude" fill="#64748b" radius={[4, 4, 0, 0]}
+                        <Bar dataKey="avg_magnitude" fill="var(--dsi-chart-peer)" radius={[4, 4, 0, 0]}
                           label={({ x, y, width, index }: any) => {
                             const entry = exposureTierDistribution[index];
                             return (
-                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="#94a3b8" fontSize={10}>
+                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="var(--dsi-chart-axis)" fontSize={10}>
                                 n={entry?.peer_count}
                               </text>
                             );
@@ -648,7 +628,7 @@ export default function ExposureTab() {
                            {exposureTierDistribution.map((entry: any, index: number) => (
                             <Cell
                               key={`cell-${index}`}
-                              fill={entry.tier === `Tier ${activeVersion.final_tier}` ? '#3b82f6' : '#475569'}
+                              fill={entry.tier === `Tier ${activeVersion.final_tier}` ? 'var(--dsi-chart-subject)' : 'var(--dsi-chart-peer)'}
                             />
                           ))}
                         </Bar>
@@ -695,14 +675,14 @@ export default function ExposureTab() {
                     const isModifier = actionKey === 'modifier';
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
-                    const tagColor = isModifier ? 'bg-blue-500/15 text-blue-400' :
-                                     isReferral ? 'bg-amber-500/15 text-amber-400' :
-                                     isTierOverride ? 'bg-rose-500/15 text-rose-400' :
-                                     'bg-slate-500/15 text-slate-400';
+                    const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
+                                     isReferral ? 'bg-dsi-warning/15 text-dsi-warning' :
+                                     isTierOverride ? 'bg-dsi-negative/15 text-dsi-negative' :
+                                     'bg-dsi-muted/15 text-dsi-muted';
                     return (
                       <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-amber-400' : isModifier ? 'text-blue-400' : 'text-slate-400'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-warning' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>

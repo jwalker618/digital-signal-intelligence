@@ -8,12 +8,12 @@ import {
 } from "lucide-react";
 
 const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
-  modifier:      { bg: 'bg-blue-500/15', text: 'text-blue-400' },
-  referral:      { bg: 'bg-amber-500/15', text: 'text-amber-400' },
-  refer:         { bg: 'bg-amber-500/15', text: 'text-amber-400' },
-  tier_override: { bg: 'bg-rose-500/15', text: 'text-rose-400' },
-  flag:          { bg: 'bg-slate-500/15', text: 'text-slate-400' },
-  note:          { bg: 'bg-slate-500/15', text: 'text-slate-400' },
+  modifier:      { bg: 'bg-dsi-info/15', text: 'text-dsi-info' },
+  referral:      { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
+  refer:         { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
+  tier_override: { bg: 'bg-dsi-negative/15', text: 'text-dsi-negative' },
+  flag:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
+  note:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
 };
 
 export default function ReferralTab() {
@@ -143,14 +143,14 @@ export default function ReferralTab() {
           ======================================================================= */}
       <div className="
         flex items-stretch gap-4
-        rounded-xl border-2 border-amber-500/30 bg-amber-500/5
+        rounded-xl border-2 border-dsi-warning/30 bg-dsi-warning/5
         px-dsi-pad py-4 mt-2 mb-4
       ">
         {/* Status badge */}
-        <div className="flex items-center gap-3 pr-6 border-r border-amber-500/20">
-          <ShieldAlert className="w-8 h-8 text-amber-400" />
+        <div className="flex items-center gap-3 pr-6 border-r border-dsi-warning/20">
+          <ShieldAlert className="w-8 h-8 text-dsi-warning" />
           <div>
-            <span className="text-lg font-black uppercase tracking-wider text-amber-400">
+            <span className="text-lg font-black uppercase tracking-wider text-dsi-warning">
               {typeof activeReferral === 'object' && activeReferral?.status
                 ? activeReferral.status.replace(/_/g, ' ')
                 : 'Referred'}
@@ -170,7 +170,7 @@ export default function ReferralTab() {
             <span className="block text-[10px] uppercase opacity-50">Flagged</span>
           </div>
           <div className="text-center">
-            <span className="block text-xl font-black text-emerald-400">{overrideCount}</span>
+            <span className="block text-xl font-black text-dsi-positive">{overrideCount}</span>
             <span className="block text-[10px] uppercase opacity-50">Audited</span>
           </div>
           <div className="text-center">
@@ -208,7 +208,7 @@ export default function ReferralTab() {
             pl-dsi-pad
             pt-2 pb-2
           ">
-            <ShieldAlert className="icon text-rose-500"/><span className="text-sm">Referral Triggers</span>
+            <ShieldAlert className="icon text-dsi-negative"/><span className="text-sm">Referral Triggers</span>
           </div>
           <div className="
             flex flex-col flex-1
@@ -241,7 +241,7 @@ export default function ReferralTab() {
             pl-dsi-pad
             pt-2 pb-2
           ">
-            <AlertTriangle className="icon text-amber-400"/>
+            <AlertTriangle className="icon text-dsi-warning"/>
             <span className="text-sm">Triggering Conditions ({referralConditions.length})</span>
           </div>
           <div className="
@@ -363,25 +363,25 @@ export default function ReferralTab() {
                     const isHighImpact = idx < 3 && Math.abs(sig.contribution_to_score) > 10;
 
                     return (
-                      <tr key={idx} className={`border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'bg-rose-500/5' : ''} ${sig.is_overridden ? 'bg-emerald-500/5' : ''}`}>
+                      <tr key={idx} className={`border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'bg-dsi-negative/5' : ''} ${sig.is_overridden ? 'bg-dsi-positive/5' : ''}`}>
 
                         <td className="py-2 pl-dsi-pad pr-dsi-pad text-sm">
                           <div className="flex items-center gap-2">
-                            {isHighImpact && <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" title="High Impact Signal" />}
-                            {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />}
-                            {sig.is_overridden && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-                            <span className={`truncate max-w-[180px] ${isHighImpact ? 'text-orange-400 font-bold' : ''}`} title={sig.signal_name}>
+                            {isHighImpact && <Flame className="w-3.5 h-3.5 text-dsi-warning shrink-0" title="High Impact Signal" />}
+                            {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3.5 h-3.5 text-dsi-warning shrink-0" />}
+                            {sig.is_overridden && <Check className="w-3.5 h-3.5 text-dsi-positive shrink-0" />}
+                            <span className={`truncate max-w-[180px] ${isHighImpact ? 'text-dsi-warning font-bold' : ''}`} title={sig.signal_name}>
                               {sig.signal_name.replace(/_/g, ' ')}
                             </span>
                           </div>
                         </td>
                         <td className="py-2 px-2 text-center text-xs opacity-70">{sig.proxy_tier || "—"}</td>
                         <td className="py-2 px-2 text-center border-r border-dsi-outline/10">
-                          {sig.was_absent ? <span className="text-rose-400 font-bold">YES</span> : <span className="opacity-30">NO</span>}
+                          {sig.was_absent ? <span className="text-dsi-negative font-bold">YES</span> : <span className="opacity-30">NO</span>}
                         </td>
 
                         <td className="py-2 px-2 text-right flex flex-col items-end">
-                          <span className={`font-bold ${sig.is_overridden ? 'text-emerald-500' : ''}`}>
+                          <span className={`font-bold ${sig.is_overridden ? 'text-dsi-positive' : ''}`}>
                             {sig.score?.toFixed(2)}
                           </span>
                           {sig.is_overridden && (
@@ -390,18 +390,18 @@ export default function ReferralTab() {
                             </span>
                           )}
                         </td>
-                        <td className={`py-2 px-2 text-right text-xs ${sig.confidence < 0.7 ? 'text-yellow-500 font-bold' : 'opacity-70'}`}>
+                        <td className={`py-2 px-2 text-right text-xs ${sig.confidence < 0.7 ? 'text-dsi-warning font-bold' : 'opacity-70'}`}>
                           {(sig.confidence * 100).toFixed(0)}%
                         </td>
 
                         <td className={`py-2 px-2 text-right text-xs ${isHighImpact ? 'font-bold' : 'opacity-70'}`}>
                           {sig.weight?.toFixed(2)}
                         </td>
-                        <td className={`py-2 px-2 text-right text-xs border-r border-dsi-outline/10 ${isHighImpact ? 'font-bold text-orange-400' : 'opacity-70'}`}>
+                        <td className={`py-2 px-2 text-right text-xs border-r border-dsi-outline/10 ${isHighImpact ? 'font-bold text-dsi-warning' : 'opacity-70'}`}>
                           {sig.contribution_to_score > 0 ? '+' : ''}{sig.contribution_to_score?.toFixed(1)}
                         </td>
 
-                        <td className="py-2 px-2 text-right font-bold text-emerald-500">
+                        <td className="py-2 px-2 text-right font-bold text-dsi-positive">
                           {sig.is_overridden ? sig.audited_value?.toFixed(2) : "—"}
                         </td>
                         <td className="py-2 pl-dsi-pad pr-dsi-pad text-xs opacity-80 truncate max-w-[150px]" title={sig.override_rationale}>
@@ -409,7 +409,7 @@ export default function ReferralTab() {
                         </td>
                         <td className="py-2 px-2 text-center text-xs">
                           {sig.score_impact ? (
-                            <span className={`px-1.5 py-0.5 rounded font-bold ${sig.score_impact > 0 ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                            <span className={`px-1.5 py-0.5 rounded font-bold ${sig.score_impact > 0 ? 'bg-dsi-negative/10 text-dsi-negative' : 'bg-dsi-positive/10 text-dsi-positive'}`}>
                               {sig.score_impact > 0 ? '+' : ''}{sig.score_impact.toFixed(1)}
                             </span>
                           ) : "—"}
@@ -462,13 +462,13 @@ export default function ReferralTab() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => handleFinalDecision("decline")}
-                className="flex items-center gap-2 px-6 py-2 border border-rose-500/50 text-rose-500 rounded font-semibold hover:bg-rose-500/10 transition-colors"
+                className="flex items-center gap-2 px-6 py-2 border border-dsi-negative/50 text-dsi-negative rounded font-semibold hover:bg-dsi-negative/10 transition-colors"
               >
                 <X className="w-5 h-5" /> Decline Risk
               </button>
               <button
                 onClick={() => handleFinalDecision("approve")}
-                className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded font-semibold hover:bg-emerald-500 transition-colors"
+                className="flex items-center gap-2 px-6 py-2 bg-dsi-positive text-white rounded font-semibold hover:bg-dsi-positive transition-colors"
               >
                 <Check className="w-5 h-5" /> Approve & Bind
               </button>

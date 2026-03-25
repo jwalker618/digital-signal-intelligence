@@ -18,7 +18,7 @@ const fmtDollar = (num: number | null | undefined) =>
 
 const deltaClass = (scenario: number, original: number) => {
   if (Math.abs(scenario - original) < 0.01) return '';
-  return scenario > original ? 'text-rose-400' : 'text-emerald-400';
+  return scenario > original ? 'text-dsi-negative' : 'text-dsi-positive';
 };
 
 const deltaPrefix = (scenario: number, original: number) => {
@@ -182,7 +182,7 @@ export default function ScenarioTab() {
                     </span>
                   )}
                   {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
-                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
                       → Tier {scenario.tier.tier_id}
                     </span>
                   )}
@@ -417,10 +417,10 @@ export default function ScenarioTab() {
 
               {/* D6: Guardrails */}
               {scenario.guardrails.warnings.length > 0 && (
-                <div className="px-dsi-pad py-2 border-t border-amber-500/20 bg-amber-500/5">
+                <div className="px-dsi-pad py-2 border-t border-dsi-warning/20 bg-dsi-warning/5">
                   <div className="flex items-center gap-2 mb-1">
-                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-xs font-bold text-amber-400">Guardrails Active</span>
+                    <ShieldAlert className="w-3.5 h-3.5 text-dsi-warning" />
+                    <span className="text-xs font-bold text-dsi-warning">Guardrails Active</span>
                   </div>
                   {scenario.guardrails.warnings.map((w, i) => (
                     <p key={i} className="text-xs opacity-70 text-wrap ml-5">{w}</p>
