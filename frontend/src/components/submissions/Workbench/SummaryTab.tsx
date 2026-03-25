@@ -3,20 +3,23 @@
 import { useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import Modal from "@/components/Modal";
-import { 
-  Activity, Shield, Calculator, BarChart3, TrendingUp, 
-  X, User, Search, MessageSquare, Plus, Paperclip 
+import {
+  User, Search, MessageSquare, Plus, Paperclip,
+  ShieldCheck, ShieldAlert, AlertTriangle, TrendingUp, BarChart3
 } from "lucide-react";
+
+const DECISION_STYLE: Record<string, { bg: string; text: string; border: string }> = {
+  approve: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  refer: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
+  decline: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30' },
+};
 
 export default function SummaryTab() {
   const { activeSubmission, activeQuote, activeVersion } = useDsiStore();
 
-  // Modal States
   const [isWhoOpen, setIsWhoOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
-  
-  // Local Notes State (to handle UI updates before backend saves)
   const [localNotes, setLocalNotes] = useState<any[]>(activeVersion?.notes || []);
   const [newNoteText, setNewNoteText] = useState("");
 
@@ -28,20 +31,30 @@ export default function SummaryTab() {
     );
   }
 
-  // --- HELPERS ---
   const formatKey = (key: string) => key.replace(/_/g, ' ').toUpperCase();
-  
+
   const handleAddNote = () => {
     if (!newNoteText.trim()) return;
     const newNote = {
       text: newNoteText,
-      source: "Underwriter_UI", // In production, grab active user ID from auth context
+      source: "Underwriter_UI",
       timestamp: new Date().toISOString()
     };
     setLocalNotes([...localNotes, newNote]);
     setNewNoteText("");
-    // TODO: Dispatch a store action here to save the note to the backend
   };
+
+  const decision = (activeVersion.decision || 'unknown').toLowerCase();
+  const dStyle = DECISION_STYLE[decision] || { bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/30' };
+
+  // Conditions & referral reasons
+  const signalConditions = activeVersion.signal_conditions || [];
+  const queryConditions = activeVersion.query_conditions || [];
+  const allConditions = [...signalConditions, ...queryConditions];
+  const referralReasons = activeVersion.referral_reasons || activeSubmission.referral_reasons || [];
+
+  // Guardrails
+  const guardrails = activeVersion.guardrail_warnings || [];
 
   return (
     <div className="
@@ -49,13 +62,12 @@ export default function SummaryTab() {
       border-collapse whitespace-nowrap
       animate-in fade-in duration-500 pb-12"
     >
-      {/* STICKY WRAPPER: Acts as a solid curtain to hide scrolling content */}
+      {/* STICKY WRAPPER */}
       <div className="
-        sticky top-0 z-20 
-        bg-dsi-background 
+        sticky top-0 z-20
+        bg-dsi-background
         pt-3 pb-2"
-        >  
-
+        >
         {/* SECTION HEADER */}
         <div className="
           flex gap-dsi-pad
@@ -64,12 +76,10 @@ export default function SummaryTab() {
           overflow-x-hidden whitespace-nowrap border-collapse
           bg-dsi-analysis/60
           pl-dsi-pad
-          pt-2 pb-2    
-        "
-        >
+          pt-2 pb-2
+        ">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
-
         {/* KEY INFORMATION CARD */}
         <div className="
           grid grid-cols-[10%_35%_55%] grid-rows-1
@@ -77,106 +87,165 @@ export default function SummaryTab() {
           overflow-x-hidden whitespace-nowrap border-collapse
           rounded-b-xl
           bg-dsi-analysis shadow-sm
-          pt-2 pb-2" 
-        >  
+          pt-2 pb-2"
+        >
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
             <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
           </div>
-          
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
             {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
-              <span className="">
+              <span>
                 <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
                 <span className="pl-2 pr-2"> </span>
                 <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
               </span>
             )}
             {activeQuote.status === 'bound' && (
-              <span className="">
+              <span>
                   <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
                   <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
               </span>
             )}
           </div>
-          
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
             <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
             <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
           </div>
-
         </div>
       </div>
-      
-      {/* TWO-COLUMN LAYOUT */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        
-        {/* =======================================================================
-            LEFT COLUMN: CONTEXT SIDEBAR (Who they are, Discovery, Notes)
-            ======================================================================= */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-4">
-          
-          {/* Who They Are */}
-          <div 
+
+      {/* =======================================================================
+          HERO: DECISION BANNER
+          ======================================================================= */}
+      <div className={`
+        flex items-center justify-between gap-6
+        rounded-xl border-2 ${dStyle.border} ${dStyle.bg}
+        px-dsi-pad py-5 mt-2 mb-4
+      `}>
+        {/* Decision badge */}
+        <div className="flex items-center gap-4">
+          {decision === 'approve' ? <ShieldCheck className={`w-10 h-10 ${dStyle.text}`} /> :
+           decision === 'refer' ? <ShieldAlert className={`w-10 h-10 ${dStyle.text}`} /> :
+           <AlertTriangle className={`w-10 h-10 ${dStyle.text}`} />}
+          <div>
+            <span className={`text-2xl font-black uppercase tracking-wider ${dStyle.text}`}>
+              {activeVersion.decision || 'Pending'}
+            </span>
+            {activeVersion.auto_approve && (
+              <span className="block text-[10px] opacity-50">Auto-approved by engine</span>
+            )}
+          </div>
+        </div>
+
+        {/* Hero numbers */}
+        <div className="flex items-center gap-8">
+          <div className="text-right">
+            <span className="block text-[10px] uppercase tracking-wider opacity-50">Final Tier</span>
+            <span className="text-2xl font-black text-dsi-selected">
+              Tier {activeVersion.final_tier}
+            </span>
+            <span className="block text-[10px] opacity-40 uppercase">{activeVersion.tier_label}</span>
+          </div>
+          <div className="w-px h-10 bg-dsi-outline/20" />
+          <div className="text-right">
+            <span className="block text-[10px] uppercase tracking-wider opacity-50">Composite Score</span>
+            <span className="text-2xl font-black text-dsi-selected">
+              {activeVersion.pure_composite_score?.toFixed(1) || "N/A"}
+            </span>
+            <span className="block text-[10px] opacity-40">{((activeVersion.confidence || 0) * 100).toFixed(0)}% confidence</span>
+          </div>
+          <div className="w-px h-10 bg-dsi-outline/20" />
+          <div className="text-right">
+            <span className="block text-[10px] uppercase tracking-wider opacity-50">Final Premium</span>
+            <span className="text-2xl font-black text-dsi-selected">
+              {activeVersion.final_premium ? `$${activeVersion.final_premium.toLocaleString()}` :
+               activeVersion.premium_after_modifiers ? `$${activeVersion.premium_after_modifiers.toLocaleString()}` :
+               'Pending'}
+            </span>
+            <span className="block text-[10px] opacity-40">
+              {activeQuote?.recommended_limit ? `$${activeQuote.recommended_limit.toLocaleString()} limit` : ''}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* =======================================================================
+          TWO-COLUMN: CONTEXT CARDS + ASSESSMENT SNAPSHOT
+          ======================================================================= */}
+      <div className="flex flex-col lg:flex-row gap-4">
+
+        {/* LEFT: Context sidebar — compact clickable cards */}
+        <div className="w-full lg:w-1/3 flex flex-col gap-3">
+
+          <div
             onClick={() => setIsWhoOpen(true)}
-            className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm"
+            className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold tracking-wide flex items-center gap-2">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold flex items-center gap-2">
                 <User className="w-4 h-4 text-dsi-selected" /> Who they are
               </h3>
-              <span className="text-xs opacity-50 group-hover:opacity-100 transition-opacity text-dsi-selected">View Details &rarr;</span>
+              <span className="text-xs opacity-50 group-hover:opacity-100 text-dsi-selected">View &rarr;</span>
             </div>
-            <p className="text-xs opacity-70 line-clamp-2">
-              {activeSubmission.entity_name} • {activeSubmission.submission_data?.industry || 'Unknown Industry'} • {activeSubmission.submission_data?.geography || 'Unknown Geo'}
+            <p className="text-xs opacity-70 line-clamp-2 text-wrap">
+              {activeSubmission.entity_name} &bull; {activeSubmission.submission_data?.industry || 'Unknown Industry'} &bull; {activeSubmission.submission_data?.geography || 'Unknown Geo'}
             </p>
           </div>
 
-          {/* Discovery */}
-          <div 
+          <div
             onClick={() => setIsDiscoveryOpen(true)}
-            className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm"
+            className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold tracking-wide flex items-center gap-2">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold flex items-center gap-2">
                 <Search className="w-4 h-4 text-dsi-selected" /> Discovery
               </h3>
-              <span className="text-xs opacity-50 group-hover:opacity-100 transition-opacity text-dsi-selected">View Output &rarr;</span>
+              <span className="text-xs opacity-50 group-hover:opacity-100 text-dsi-selected">View &rarr;</span>
             </div>
-            <p className="text-xs opacity-70 line-clamp-2">
-              {activeVersion.discovery_output?.domain || 'No domain discovered'} • Confidence: {activeVersion.discovery_output?.confidence || 'N/A'}
+            <p className="text-xs opacity-70 line-clamp-2 text-wrap">
+              {activeVersion.discovery_output?.domain || 'No domain discovered'} &bull; Confidence: {activeVersion.discovery_output?.confidence || 'N/A'}
             </p>
           </div>
 
-          {/* Notes */}
-          <div 
+          <div
             onClick={() => setIsNotesOpen(true)}
-            className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm"
+            className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold tracking-wide flex items-center gap-2">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-dsi-selected" /> Notes
               </h3>
-              <span className="text-xs opacity-50 group-hover:opacity-100 transition-opacity text-dsi-selected">Manage Notes &rarr;</span>
+              <span className="text-xs opacity-50 group-hover:opacity-100 text-dsi-selected">Manage &rarr;</span>
             </div>
             <p className="text-xs opacity-70">
               {localNotes.length} Note(s) recorded on this version.
             </p>
           </div>
 
+          {/* Guardrail warnings if any */}
+          {guardrails.length > 0 && (
+            <div className="border border-amber-500/30 bg-amber-500/5 rounded-xl p-4">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-amber-400 mb-2">
+                <AlertTriangle className="w-4 h-4" /> Guardrail Warnings
+              </h3>
+              <div className="space-y-1">
+                {guardrails.map((g: any, i: number) => (
+                  <p key={i} className="text-xs opacity-80 text-wrap">
+                    {typeof g === 'object' ? g.note || g.text : g}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* =======================================================================
-            RIGHT COLUMN: ANALYTICAL NARRATIVE
-            ======================================================================= */}
-        <div className="w-full lg:w-2/3 flex flex-col gap-6">
+        {/* RIGHT: Assessment snapshot */}
+        <div className="w-full lg:w-2/3 flex flex-col gap-4">
 
-          {/* 1. SUBMISSION AT A GLANCE */}
+          {/* Quick context row */}
           <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis shadow-sm">
-            <h3 className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-4 border-b border-dsi-outline/10 pb-2">
-              Submission at a Glance
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 text-sm">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 text-sm">
               <div>
                 <span className="opacity-50 block text-xs mb-1">Coverage</span>
                 <span className="font-semibold">{activeSubmission.coverage}</span>
@@ -190,187 +259,96 @@ export default function SummaryTab() {
                 <span className="font-semibold">{activeSubmission.submission_data?.product_type || 'N/A'}</span>
               </div>
               <div>
-                <span className="opacity-50 block text-xs mb-1">Rec. Premium</span>
-                <span className="font-mono font-semibold text-dsi-selected">
-                  {activeQuote?.recommended_premium ? `$${activeQuote.recommended_premium.toLocaleString()}` : 'Pending'}
-                </span>
+                <span className="opacity-50 block text-xs mb-1">Signal Coverage</span>
+                <span className="font-semibold">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span>
               </div>
               <div>
-                <span className="opacity-50 block text-xs mb-1">Rec. Limit</span>
-                <span className="font-mono font-semibold">
-                  {activeQuote?.recommended_limit ? `$${activeQuote.recommended_limit.toLocaleString()}` : 'Pending'}
-                </span>
+                <span className="opacity-50 block text-xs mb-1">Loss Band</span>
+                <span className="font-semibold uppercase">{activeVersion.loss_propensity_band?.replace(/_/g, ' ') || 'N/A'}</span>
               </div>
               <div>
-                <span className="opacity-50 block text-xs mb-1">Decision</span>
-                <span className="uppercase font-bold tracking-wider">{activeVersion.decision}</span>
+                <span className="opacity-50 block text-xs mb-1">Exposure Band</span>
+                <span className="font-semibold uppercase">{activeVersion.exposure_band_label || 'N/A'}</span>
               </div>
             </div>
           </div>
 
-          {/* 2. KEY METRICS GRID */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis flex flex-col justify-between shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-2">Confidence</span>
-              <span className="text-2xl font-mono font-bold text-dsi-selected">{((activeVersion.confidence || 0) * 100).toFixed(0)}%</span>
-            </div>
-            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis flex flex-col justify-between shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-2">Signal Coverage</span>
-              <span className="text-2xl font-mono font-bold text-dsi-selected">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span>
-            </div>
-            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis flex flex-col justify-between shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-2">Composite Score</span>
-              <span className="text-2xl font-mono font-bold text-dsi-selected">{activeVersion.pure_composite_score?.toFixed(1) || "N/A"}</span>
-            </div>
-            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis flex flex-col justify-between shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-2">Score-Based Tier</span>
-              <span className="text-2xl font-mono font-bold text-dsi-selected">Tier {activeVersion.score_based_tier || activeVersion.final_tier}</span>
-            </div>
-            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis flex flex-col justify-between shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-2">Final Tier</span>
-              <span className="text-2xl font-mono font-bold text-dsi-selected">Tier {activeVersion.final_tier}</span>
-            </div>
-            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis flex flex-col justify-between shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-50 mb-2">Tier Label</span>
-              <span className="text-lg font-bold text-dsi-selected uppercase truncate" title={activeVersion.tier_label}>{activeVersion.tier_label}</span>
-            </div>
-          </div>
-
-          {/* 3. LOSS & EXPOSURE */}
+          {/* Loss + Exposure summary — condensed single row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis shadow-sm">
-              <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
-                <TrendingUp className="w-4 h-4 text-dsi-selected" /> Loss Propensity
+            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis shadow-sm">
+              <h3 className="text-xs font-bold flex items-center gap-2 mb-3 opacity-60 uppercase tracking-wider">
+                <TrendingUp className="w-3.5 h-3.5 text-dsi-selected" /> Loss Summary
               </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="opacity-50 block text-xs">Cohort ID</span>
-                  <span className="font-mono font-semibold">{activeVersion.loss_cohort_name || "Unknown"}</span>
-                </div>
-                <div>
-                  <span className="opacity-50 block text-xs">Propensity Band</span>
-                  <span className="font-mono font-semibold text-dsi-selected">{activeVersion.loss_propensity_band || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="opacity-50 block text-xs">Cohort Confidence</span>
-                  <span className="font-mono font-semibold">
-                    {((activeVersion.loss_confidence || 0) * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div>
-                  <span className="opacity-50 block text-xs">Score Velocity</span>
-                  <span className={`font-mono font-bold ${activeVersion.loss_score_velocity > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                    {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || 0}
-                  </span>
-                </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="opacity-60">Combined Modifier</span>
+                <span className="font-bold">{activeVersion.loss_combined_modifier?.toFixed(3) || '1.000'}x</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="opacity-60">Trend</span>
+                <span className={`font-bold ${
+                  activeVersion.loss_trend_direction?.toLowerCase().includes('improv') ? 'text-emerald-400' :
+                  activeVersion.loss_trend_direction?.toLowerCase().includes('deter') ? 'text-rose-400' : 'opacity-70'
+                }`}>
+                  {activeVersion.loss_trend_direction?.replace(/_/g, ' ') || 'Stable'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="opacity-60">Cohort</span>
+                <span className="font-bold text-xs">{activeVersion.loss_cohort_name || 'Unknown'}</span>
               </div>
             </div>
 
-            <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis shadow-sm">
-              <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
-                <BarChart3 className="w-4 h-4 text-dsi-selected" /> Exposure Assessment
+            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis shadow-sm">
+              <h3 className="text-xs font-bold flex items-center gap-2 mb-3 opacity-60 uppercase tracking-wider">
+                <BarChart3 className="w-3.5 h-3.5 text-dsi-selected" /> Exposure Summary
               </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="opacity-50 block text-xs">Exposure Value (TIV/Rev)</span>
-                  <span className="font-mono font-semibold">${(activeVersion.exposure_value || 0).toLocaleString()}</span>
-                </div>
-                <div>
-                  <span className="opacity-50 block text-xs">Band Label</span>
-                  <span className="font-mono font-semibold text-dsi-selected">{activeVersion.exposure_band_label || "N/A"}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="opacity-50 block text-xs">Calculated Modifier</span>
-                  <span className="font-mono font-semibold">{activeVersion.exposure_modifier?.toFixed(3) || "1.000"}x</span>
-                </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="opacity-60">Exposure Value</span>
+                <span className="font-bold">${(activeVersion.exposure_value || 0).toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="opacity-60">Modifier</span>
+                <span className="font-bold">{activeVersion.exposure_modifier?.toFixed(3) || '1.000'}x</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="opacity-60">Method</span>
+                <span className="font-bold text-xs uppercase">{activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || 'N/A'}</span>
               </div>
             </div>
           </div>
 
-          {/* 4. SIGNAL GROUPS */}
-          <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis shadow-sm">
-            <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
-              <Activity className="w-4 h-4 text-dsi-selected" /> Signal Group Breakdown
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-              {Object.entries(activeVersion.group_scores || {}).length === 0 ? (
-                <div className="text-xs opacity-50 italic col-span-2">No group score data available.</div>
-              ) : (
-                Object.entries(activeVersion.group_scores).map(([group, groupData]: any) => {
-                  const displayScore = groupData?.risk_score || groupData?.loss_score || 0;
+          {/* Active conditions & referral flags */}
+          {(allConditions.length > 0 || referralReasons.length > 0) && (
+            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis shadow-sm">
+              <h3 className="text-xs font-bold flex items-center gap-2 mb-3 opacity-60 uppercase tracking-wider">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" /> Active Flags & Conditions
+              </h3>
+              <div className="space-y-1.5">
+                {referralReasons.map((r: string, i: number) => (
+                  <div key={`ref-${i}`} className="flex items-center gap-2 text-sm text-wrap">
+                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 shrink-0">referral</span>
+                    <span className="opacity-80">{r}</span>
+                  </div>
+                ))}
+                {allConditions.slice(0, 5).map((c: any, i: number) => {
+                  const actionKey = typeof c.action === 'string' ? c.action.toLowerCase() : (c.action?.value || 'note');
                   return (
-                    <div key={group} className="w-full">
-                      <div className="flex justify-between text-xs font-semibold mb-1">
-                        <span className="uppercase tracking-wider">{group.replace(/_/g, ' ')}</span>
-                        <span className="font-mono">{displayScore.toFixed(1)}</span>
-                      </div>
-                      <div className="w-full bg-dsi-outline/10 rounded-full h-1.5 overflow-hidden">
-                        <div 
-                          className="bg-dsi-selected h-1.5 rounded-full" 
-                          style={{ width: `${Math.min(100, displayScore)}%` }}
-                        ></div>
-                      </div>
+                    <div key={`cond-${i}`} className="flex items-center gap-2 text-sm text-wrap">
+                      <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0 ${
+                        actionKey === 'modifier' ? 'bg-blue-500/15 text-blue-400' :
+                        actionKey === 'tier_override' ? 'bg-rose-500/15 text-rose-400' :
+                        'bg-slate-500/15 text-slate-400'
+                      }`}>{actionKey.replace('_', ' ')}</span>
+                      <span className="opacity-80 truncate">{c.note || c.source_name || 'Condition'}</span>
                     </div>
                   );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* 5. PRICING ANATOMY */}
-          <div className="border border-dsi-outline/20 rounded-xl p-5 bg-dsi-analysis shadow-sm">
-            <h3 className="text-sm font-bold tracking-wide flex items-center gap-2 mb-4 border-b border-dsi-outline/10 pb-2">
-              <Calculator className="w-4 h-4 text-dsi-selected" /> Pricing Anatomy
-            </h3>
-            
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Modifiers Table */}
-              <div className="flex-1">
-                <h4 className="text-xs uppercase tracking-wider opacity-50 mb-2">Applied Modifiers</h4>
-                {activeVersion.modifiers_applied?.length > 0 ? (
-                  <table className="w-full text-sm font-mono text-left">
-                    <tbody>
-                      {activeVersion.modifiers_applied.map((mod: any, idx: number) => (
-                        <tr key={idx} className="border-b border-dsi-outline/5">
-                          <td className="py-2 opacity-80">{mod.note || mod.source}</td>
-                          <td className="py-2 text-right">
-                            {Number(mod.applied ?? 1.0).toFixed(3)}x
-                          </td>
-                        </tr>
-                      ))}
-                      <tr className="bg-dsi-selected/5 font-bold">
-                        <td className="py-2 px-2">Base Premium</td>
-                        <td className="py-2 px-2 text-right">${activeVersion.base_premium?.toLocaleString()}</td>
-                      </tr>
-                      <tr className="bg-dsi-selected/10 font-bold text-dsi-selected">
-                        <td className="py-2 px-2">Final Premium</td>
-                        <td className="py-2 px-2 text-right">${activeVersion.premium_after_modifiers?.toLocaleString()}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="text-xs opacity-50 italic">No modifiers applied.</div>
-                )}
-              </div>
-
-              {/* Premium Options */}
-              <div className="flex-1 border-t md:border-t-0 md:border-l border-dsi-outline/10 pt-4 md:pt-0 md:pl-8">
-                <h4 className="text-xs uppercase tracking-wider opacity-50 mb-2">Limit Options</h4>
-                {Object.keys(activeVersion.limit_premiums || {}).length > 0 ? (
-                  <div className="space-y-2 font-mono text-sm">
-                    {Object.entries(activeVersion.limit_premiums).map(([limit, premium]: any) => (
-                      <div key={limit} className="flex justify-between p-2 rounded hover:bg-dsi-selected/5">
-                        <span>${parseInt(limit).toLocaleString()} Limit</span>
-                        <span className="font-bold text-dsi-selected">${premium.toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-xs opacity-50 italic">No alternative limit options generated.</div>
+                })}
+                {allConditions.length > 5 && (
+                  <span className="text-xs opacity-40">+{allConditions.length - 5} more conditions (see Risk tab)</span>
                 )}
               </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>
@@ -378,8 +356,6 @@ export default function SummaryTab() {
       {/* =======================================================================
           MODALS
           ======================================================================= */}
-      
-      {/* 1. Who They Are Modal */}
       <Modal isOpen={isWhoOpen} onClose={() => setIsWhoOpen(false)} title="Submission Data" icon={User}>
         <div className="space-y-3 font-mono text-sm">
           {Object.entries(activeSubmission.submission_data || {})
@@ -398,7 +374,6 @@ export default function SummaryTab() {
         </div>
       </Modal>
 
-      {/* 2. Discovery Modal */}
       <Modal isOpen={isDiscoveryOpen} onClose={() => setIsDiscoveryOpen(false)} title="Discovery Output" icon={Search}>
         <div className="space-y-3 font-mono text-sm">
           {Object.entries(activeVersion.discovery_output || {}).map(([key, val]) => (
@@ -413,20 +388,16 @@ export default function SummaryTab() {
         </div>
       </Modal>
 
-      {/* 3. Notes Modal */}
       <Modal isOpen={isNotesOpen} onClose={() => setIsNotesOpen(false)} title="Model Version Notes" icon={MessageSquare}>
         <div className="flex flex-col h-[50vh]">
-          {/* Notes List */}
           <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
             {localNotes.length === 0 ? (
               <div className="text-center opacity-50 italic pt-10">No notes recorded yet.</div>
             ) : (
               localNotes.map((note: any, i: number) => {
-                // Handle raw backend string format vs UI object format
                 const isObj = typeof note === 'object' && note !== null;
                 const text = isObj ? note.text : note;
                 const source = isObj ? note.source : "System / Engine";
-                
                 return (
                   <div key={i} className="bg-dsi-background/50 rounded-lg p-3 border border-dsi-outline/10 text-sm">
                     <div className="text-xs opacity-50 mb-1.5 flex items-center gap-2">
@@ -438,18 +409,16 @@ export default function SummaryTab() {
               })
             )}
           </div>
-
-          {/* Add Note Input */}
           <div className="pt-4 border-t border-dsi-outline/10 flex gap-2">
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={newNoteText}
               onChange={(e) => setNewNoteText(e.target.value)}
               placeholder="Add a new note..."
               className="flex-1 bg-dsi-background/50 border border-dsi-outline/20 rounded p-2 text-sm text-dsi-selected outline-none focus:border-dsi-selected"
               onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
             />
-            <button 
+            <button
               onClick={handleAddNote}
               disabled={!newNoteText.trim()}
               className="bg-dsi-selected text-dsi-background px-3 rounded flex items-center justify-center disabled:opacity-50 hover:opacity-90 transition-opacity"
