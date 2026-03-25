@@ -72,6 +72,20 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("list-industries", help="List available industry profiles")
     subparsers.add_parser("list-signals", help="List available signal groups")
 
+    # --- calibrate command ---
+    cal_cmd = subparsers.add_parser(
+        "calibrate",
+        help="Run calibration harness to validate pricing across all configs",
+    )
+    cal_cmd.add_argument(
+        "coverage", nargs="?", default=None,
+        help="Coverage to calibrate (default: all)",
+    )
+    cal_cmd.add_argument(
+        "--json", action="store_true", dest="json_output",
+        help="Output result as JSON",
+    )
+
     return parser
 
 
@@ -154,6 +168,18 @@ async def cmd_build(args) -> int:
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 file_path.write_text(content)
                 print(f"  Generated: {file_path}")
+
+            # Run calibration harness on the new coverage
+            coverage_id = result.coverage_name.lower().replace(" ", "_")
+            print(f"\n  Running calibration harness on {coverage_id}...")
+            from layers.risk.calibration_harness import CalibrationHarness
+            harness = CalibrationHarness()
+            cal_report = harness.run_all(coverage_filter=coverage_id)
+            if cal_report.passed:
+                print(f"  Calibration: PASSED ({cal_report.total_fixtures} fixtures)")
+            else:
+                print(f"  Calibration: FAILED")
+                print(cal_report.format_summary())
         elif result.config_yaml and not args.write:
             print()
             print("--- Generated Config (use --write to save) ---")
@@ -263,6 +289,18 @@ def cmd_expand(args) -> int:
 
         if args.write and not args.dry_run:
             print(f"\n  Files written to: {args.output_dir}")
+
+            # Run calibration harness on the expanded coverage
+            coverage_id = spec.coverage_line
+            print(f"\n  Running calibration harness on {coverage_id}...")
+            from layers.risk.calibration_harness import CalibrationHarness
+            harness = CalibrationHarness()
+            cal_report = harness.run_all(coverage_filter=coverage_id)
+            if cal_report.passed:
+                print(f"  Calibration: PASSED ({cal_report.total_fixtures} fixtures)")
+            else:
+                print(f"  Calibration: FAILED")
+                print(cal_report.format_summary())
         elif not args.write:
             print(f"\n  Use --write to save files to disk")
 
@@ -311,6 +349,21 @@ def cmd_list_signals() -> int:
     return 0
 
 
+def cmd_calibrate(args) -> int:
+    """Run calibration harness across all (or filtered) configurations."""
+    from layers.risk.calibration_harness import CalibrationHarness
+
+    harness = CalibrationHarness()
+    report = harness.run_all(coverage_filter=args.coverage)
+
+    if args.json_output:
+        print(report.to_json())
+    else:
+        print(report.format_summary())
+
+    return 0 if report.passed else 1
+
+
 def main():
     parser = build_parser()
     args = parser.parse_args()
@@ -325,6 +378,8 @@ def main():
         return cmd_expand(args)
     elif args.command == "validate":
         return cmd_validate(args)
+    elif args.command == "calibrate":
+        return cmd_calibrate(args)
     elif args.command == "list-industries":
         return cmd_list_industries()
     elif args.command == "list-signals":

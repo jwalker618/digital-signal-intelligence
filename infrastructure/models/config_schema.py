@@ -754,6 +754,12 @@ class Pricing(StrictModel):
     base_deductible_reference: int = 50000
     by_product_type: Dict[str, ProductTypePricing]
     taxes_fees_rate: float = 0.05
+    basis_damping: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="Sub-linear exponent for total-value bases (tiv, hull_value, total_assets). "
+        "When basis_value >> limit, effective_basis = limit × (basis/limit)^damping. "
+        "1.0 = linear (no damping), 0.5 = moderate sqrt (default), 0.3 = heavy."
+    )
 
     @field_validator("by_product_type")
     @classmethod

@@ -1128,7 +1128,7 @@ directors_officers:
               max: 100
             application:
               method: MODIFIER
-              applied: 2.5
+              applied: 1.3
               implied_thresholds:
                 min: 250000000
                 max: 1000000000
@@ -1334,11 +1334,12 @@ directors_officers:
           - deductible: 1000000
             factor: 0.7
       taxes_fees_rate: 0.05
+      basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.55
+      max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 10.0
   do_sme:
     metadata:
@@ -1983,9 +1984,10 @@ directors_officers:
           - deductible: 100000
             factor: 0.7
       taxes_fees_rate: 0.05
+      basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 10.0

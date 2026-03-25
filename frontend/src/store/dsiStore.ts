@@ -30,6 +30,11 @@ export interface DsiState {
   isLoading: boolean;
   error: string | null;
 
+
+  // PricingTab
+  isSelectingLimit: boolean;
+  selectLimitOption: (quoteCode: string, selectedLimit: number, rationale?: string) => Promise<void>;
+
   // RiskTab
   riskSignals: any[];
   isFetchingRiskSignals: boolean;

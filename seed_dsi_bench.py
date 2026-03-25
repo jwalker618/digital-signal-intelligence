@@ -1984,15 +1984,20 @@ def resolve_signal_scores(profile_name):
     return resolved
 
 
-def build_synthetic_signal_outputs(config, resolved_scores):
+def build_synthetic_signal_outputs(config, resolved_scores, default_score=50.0):
     """Build SignalOutput dataclass instances using the production config's signal registry.
 
     Iterates every signal in config.signal_registry that has three_layer_assessment.
-    Uses resolved_scores for signals we have profile data for; defaults to 50
-    for signals not covered by the profile (matches production scorer behaviour).
+    Uses resolved_scores for signals we have profile data for; defaults to
+    default_score for signals not covered by the profile.
 
-    Returns (signal_outputs, categorical_outputs) matching the production
-    ScoringResult structure.
+    Args:
+        config: Compiled coverage config
+        resolved_scores: Dict keyed by (group_id, signal_id) -> score
+        default_score: Score used for signals not in the profile.
+            Tier-aligned defaults (e.g. 82 for tier 1, 35 for tier 5)
+            prevent score compression where sparse profiles drag composites
+            away from the intended tier band.
     """
     signal_outputs = []
 
@@ -2013,7 +2018,7 @@ def build_synthetic_signal_outputs(config, resolved_scores):
                     score = v
                     break
         if score is None:
-            score = 50.0  # Default for signals not in profile
+            score = _score(default_score, 5)  # Jittered default aligned to intended tier
 
         signal_outputs.append(SignalOutput(
             signal_id=signal_def.id,
@@ -2768,8 +2773,15 @@ def seed_data():
             # Roll all signal scores ONCE — every table uses these same values
             resolved_scores = resolve_signal_scores(co.get("signal_profile", ""))
 
+            # Tier-aligned default score for signals not covered by the profile.
+            # Prevents score compression where sparse profiles drag composites
+            # away from the intended tier band (e.g. tier 1 entities scoring 560
+            # instead of 800+ because 18 uncovered signals all default to 50).
+            tier_default_scores = {1: 82, 2: 68, 3: 50, 4: 35, 5: 20}
+            default_score = tier_default_scores.get(co.get("tier", 3), 50)
+
             # Build synthetic SignalOutput instances from config signal registry
-            signal_outputs = build_synthetic_signal_outputs(config, resolved_scores)
+            signal_outputs = build_synthetic_signal_outputs(config, resolved_scores, default_score)
 
             # Build categorical outputs from config definitions
             categorical_outputs = build_synthetic_categorical_outputs(config, co)

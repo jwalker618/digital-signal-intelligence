@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import {
   Calculator, HandCoins, ChevronDown,
   ChevronRight, ArrowRightToLine, Paperclip,
-  SquareMenu, PenLine, WeightTilde, Check
+  ShieldEllipsis, PenLine, WeightTilde, Check, CircleEllipsis
 } from "lucide-react";
 
 export default function PricingTab() {
@@ -13,11 +13,11 @@ export default function PricingTab() {
 
   // Accordion state for the grouped modifiers
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    categorcial: true,
-    signal: true,
-    query: true,
-    loss: true,
-    exposure: true,
+    categorical: false,
+    signal: false,
+    direct: false,
+    loss: false,
+    exposure: false,
   });
 
   const toggleGroup = (group: string) => {
@@ -105,19 +105,6 @@ export default function PricingTab() {
         rol: activeVersion.rol_lower_rol || (activeVersion.rol_lower_premium / activeVersion.rol_lower_limit),
         rationale: activeVersion.rol_lower_rationale || '',
         label: 'Lower'
-      });
-    }
-  }
-
-  if (recommendedLimit && recommendedPremium) {
-    const isDuplicate = limitOptions.some(o => o.limit === recommendedLimit);
-    if (!isDuplicate) {
-      limitOptions.push({
-        limit: recommendedLimit,
-        premium: recommendedPremium,
-        rol: recommendedPremium / recommendedLimit,
-        rationale: 'Model recommended option',
-        label: 'Recommended'
       });
     }
   }
@@ -241,7 +228,7 @@ export default function PricingTab() {
                 pb-dsi-pad
               "
               >
-                <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-3">
+                <div className="grid grid-cols-[50%_10%_20%_20%]">
 
                   {/* row 1 */}
                   <div className="
@@ -337,7 +324,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -349,6 +336,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('categorical')}
                 >
@@ -356,7 +344,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('categorical')}
@@ -365,7 +353,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('categorical')}
@@ -422,7 +410,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -434,6 +422,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('signal')}
                 >
@@ -441,7 +430,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('signal')}
@@ -450,7 +439,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('signal')}
@@ -507,7 +496,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -519,6 +508,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('direct')}
                 >
@@ -526,7 +516,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('direct')}
@@ -535,7 +525,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('direct')}
@@ -592,7 +582,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -604,6 +594,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('loss')}
                 >
@@ -611,7 +602,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('loss')}
@@ -620,7 +611,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-b border-dsi-outline/10
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('loss')}
@@ -676,6 +667,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse
                 hover:text-dsi-selected cursor-pointer
+                border-t border-dsi-outline/10
                 flex gap-dsi-pad
                 text-sm
                 pt-dsi-pad pb-dsi-pad
@@ -687,6 +679,7 @@ export default function PricingTab() {
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
                 text-xs text-center content-center
+                border-t border-dsi-outline/10
                 "
                 onClick={() => toggleGroup('exposure')}
                 >
@@ -694,6 +687,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 text-right font-bold content-center
                 "
                 onClick={() => toggleGroup('exposure')}
@@ -702,6 +696,7 @@ export default function PricingTab() {
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
+                border-t border-dsi-outline/10
                 pl-dsi-pad pr-dsi-pad text-right text-sm content-center
                 "
                 onClick={() => toggleGroup('exposure')}
@@ -753,13 +748,13 @@ export default function PricingTab() {
 
             </div>
 
-              {/* LOADED PREMIUM */}
+              {/* FINAL PREMIUM CALCULATION */}
               <div className="
                 border-t-1 border-dsi-outline/50
                 pt-dsi-pad pb-dsi-pad
               "
               >
-                <div className="grid grid-cols-[50%_10%_20%_20%] grid-rows-3">
+                <div className="grid grid-cols-[50%_10%_20%_20%]">
 
                   {/* row 1 */}
                   <div className="
@@ -808,7 +803,49 @@ export default function PricingTab() {
                     >{activeVersion.final_premium_detail.deductible_factor.toFixed(3)}x
                   </div>
 
-                  {/* row 4 */}
+                  {/* GUARDRAILS */}
+                  {activeVersion.guardrail_warnings && activeVersion.guardrail_warnings.length > 0 && (
+                    <div className="contents">
+                      <div className="pt-2"></div>
+                      <div className="pt-2"></div>
+                      <div className="pt-2"></div>
+                      <div className="pt-2"></div>
+                      
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+
+                      <div className="
+                        flex gap-dsi-pad text-sm
+                        overflow-x-hidden whitespace-nowrap border-collapse"
+                        >
+                          <ShieldEllipsis className="icon"/> Guardrails Applied
+                      </div>
+                      <div></div>
+                      <div className="
+                        overflow-x-hidden whitespace-nowrap border-collapse
+                        text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50
+                        "
+                        >Uncapped Premium *
+                      </div>
+                      <div className="
+                        overflow-x-hidden whitespace-nowrap border-collapse
+                        pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected line-through
+                        "
+                        >{activeVersion.uncapped_premium?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </div>
+                      
+                      {activeVersion.guardrail_warnings.map((warning: any, i: number) => (
+                        <div key={i} className="col-span-4 text-xs pl-dsi-indent text-wrap italic text-dsi-selected pt-1">
+                          * {warning.note}
+                        </div>
+                      ))}
+                      <div className="col-span-4 pb-2"></div>
+                    </div>
+                  )}
+
+                  {/* Final Premium */}
                   <div></div>
                   <div></div>
                   <div className="
@@ -821,173 +858,170 @@ export default function PricingTab() {
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
                     >{activeVersion.final_premium_detail.premium_after_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
+                  
                 </div>
 
               </div>
-
-
 
           </div>
         </div>
       </div>
 
-        {/* RIGHT COLUMN: Recommended Quote Details + Limit Options */}
-        <div className="flex flex-col gap-2">
+
+        {/* RIGHT COLUMN: Recommended Quote Details + Limit Options (Merged) */}
+        <div className="flex flex-col">
 
           {/* SECTION HEADER: Recommended Quote Details */}
-          <div>
-            <div className="
-              flex gap-dsi-pad
-              rounded-t-xl
-              border-b-1 border-dsi-outline/50
-              overflow-x-hidden whitespace-nowrap border-collapse
-              bg-dsi-analysis/60
-              pl-dsi-pad
-              pt-2 pb-2
+          <div className="
+            flex gap-dsi-pad
+            rounded-t-xl
+            border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          "
+          >
+            <HandCoins className="icon"/><span className="text-sm">Recommended Quote Details</span>
+          </div>
+
+          {/* TOP BODY: KPIs (No rounding, no bottom shadow) */}
+          <div className="
+            flex flex-col
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis
             "
             >
-              <HandCoins className="icon"/><span className="text-sm">Recommended Quote Details</span>
-            </div>
-
-            {/* RECOMMENDED QUOTE KPIs: Final Premium + Final Limit only */}
+            {/* RECOMMENDED QUOTE KPIs */}
             <div className="
-              border-b-3 border-dsi-contrast-background
-              overflow-x-hidden whitespace-nowrap border-collapse
-              rounded-b-xl
-              bg-dsi-analysis shadow-sm
-              pt-2 pb-2"
+              grid grid-cols-2 grid-rows-1
+              pl-dsi-pad
+              pt-2 pb-4"
               >
               <div className="
-                grid grid-cols-2 grid-rows-1
-                pl-dsi-pad
-                pt-1 pb-1"
+                bg-dsi-selected/10 border-r-1 border-dsi-outline/50
+                overflow-x-hidden whitespace-nowrap border-collapse
+                pb-2 pt-1
+                text-dsi-selected"
                 >
-                <div className="
-                  bg-dsi-selected/10 border-r-1 border-dsi-outline/50
-                  overflow-x-hidden whitespace-nowrap border-collapse
-                  text-dsi-selected"
-                  >
-                  <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
-                    Final Premium
-                  </div>
-                  <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
-                    {recommendedPremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </div>
+                <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
+                  Final Premium
                 </div>
-                <div className="
-                  bg-dsi-selected/10
-                  overflow-x-hidden whitespace-nowrap border-collapse
-                  text-dsi-selected
-                  mr-3"
-                  >
-                  <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
-                    Final Limit
-                  </div>
-                  <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
-                    {recommendedLimit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </div>
+                <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
+                  {recommendedPremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </div>
+              </div>
+              <div className="
+                bg-dsi-selected/10
+                overflow-x-hidden whitespace-nowrap border-collapse
+                text-dsi-selected
+                mr-3"
+                >
+                <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
+                  Final Limit
+                </div>
+                <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
+                  {recommendedLimit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* SECTION HEADER: Limit Options */}
-          <div>
-            <div className="
-              flex gap-dsi-pad
-              rounded-t-xl
-              border-b-1 border-dsi-outline/50
-              overflow-x-hidden whitespace-nowrap border-collapse
-              bg-dsi-analysis/60
-              pl-dsi-pad
-              pt-2 pb-2
-            "
-            >
-              <SquareMenu className="icon"/><span className="text-sm">Limit Options</span>
-            </div>
+          {/* INNER SECTION HEADER: Calculated Quote Options (No top rounding) */}
+          <div className="
+            flex gap-dsi-pad
+            border-t-1 border-b-1 border-dsi-outline/50
+            overflow-x-hidden whitespace-nowrap border-collapse
+            bg-dsi-analysis/60
+            pl-dsi-pad
+            pt-2 pb-2
+          "
+          >
+            <CircleEllipsis className="icon"/><span className="text-sm">Calculated Quote Options</span>
+          </div>
+
+          {/* BOTTOM BODY: Limit Options (Has bottom rounding & flex-1 to stretch) */}
+          <div className="
+            flex flex-col flex-1
+            border-b-3 border-dsi-contrast-background
+            overflow-x-hidden whitespace-nowrap border-collapse
+            rounded-b-xl
+            bg-dsi-analysis shadow-sm
+            pt-dsi-pad pb-dsi-pad
+            ">
 
             {/* =======================================================================
                 COMPONENT C: LIMIT OPTIONS
                 ======================================================================= */}
-            <div className="
-              flex flex-col
-              border-b-3 border-dsi-contrast-background
-              overflow-x-hidden whitespace-nowrap border-collapse
-              rounded-b-xl
-              bg-dsi-analysis shadow-sm
-              pt-2 pb-2">
+            <div className="pl-dsi-pad pr-dsi-pad w-full space-y-2">
+              {limitOptions.length > 0 ? (
+                limitOptions.map((option) => {
+                  const isCurrentRecommended = recommendedLimit === option.limit;
 
-              <div className="pl-dsi-pad pr-dsi-pad w-full space-y-2">
-                {limitOptions.length > 0 ? (
-                  limitOptions.map((option) => {
-                    const isCurrentRecommended = recommendedLimit === option.limit;
+                  return (
+                    <div
+                      key={option.limit}
+                      className={`p-dsi-pad rounded-lg border ${
+                        isCurrentRecommended
+                          ? 'border-dsi-selected text-dsi-selected'
+                          : 'border-dsi-outline/10 hover:border-dsi-selected hover:text-dsi-selected'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
 
-                    return (
-                      <div
-                        key={option.limit}
-                        className={`p-3 rounded-lg border ${
-                          isCurrentRecommended
-                            ? 'bg-dsi-selected/10 border-dsi-selected text-dsi-selected'
-                            : 'bg-dsi-background/30 border-dsi-outline/10 hover:border-dsi-outline/30'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{option.limit.toLocaleString(undefined, { maximumFractionDigits: 0 })} Limit</span>
-                            {isCurrentRecommended && (
-                              <span className="text-[10px] uppercase font-bold tracking-wider bg-dsi-selected text-dsi-background px-1.5 py-0.5 rounded">
-                                Current
-                              </span>
-                            )}
-                            {option.label === 'Upper' && !isCurrentRecommended && (
-                              <span className="text-[10px] uppercase font-bold tracking-wider bg-dsi-outline/20 px-1.5 py-0.5 rounded">
-                                Upper
-                              </span>
-                            )}
-                            {option.label === 'Lower' && !isCurrentRecommended && (
-                              <span className="text-[10px] uppercase font-bold tracking-wider bg-dsi-outline/20 px-1.5 py-0.5 rounded">
-                                Lower
-                              </span>
-                            )}
-                          </div>
-                          <span className="font-bold">
-                            {option.premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </span>
+
+                          {option.label === 'Upper' && !isCurrentRecommended && (
+                            <span className="uppercase font-bold">
+                              Upper
+                            </span>
+                          )}
+                          {option.label === 'Lower' && !isCurrentRecommended && (
+                            <span className="uppercase font-bold">
+                              Lower
+                            </span>
+                          )}
+
+                          <span className="text-sm">{option.limit.toLocaleString(undefined, { maximumFractionDigits: 0 })} Limit</span>
+
                         </div>
-
-                        <div className="flex justify-between items-center pt-1">
-                          <span className="text-xs text-wrap">{option.rationale}</span>
-                          <span className="text-xs pl-2">ROL {(option.rol * 100).toFixed(1)}%</span>
-                        </div>
-
-                        {!isCurrentRecommended && (
-                          <div className="pt-2">
-                            <button
-                              disabled={isSelectingLimit}
-                              onClick={() => handleSelectOption(option.limit)}
-                              className="
-                                flex items-center gap-1
-                                text-xs uppercase font-bold tracking-wider
-                                border border-dsi-outline/30 rounded
-                                px-2 py-1
-                                hover:bg-dsi-selected/10 hover:text-dsi-selected hover:border-dsi-selected
-                                disabled:opacity-50 disabled:cursor-not-allowed
-                              "
-                            >
-                              <Check className="w-3 h-3" />
-                              {isSelectingLimit ? 'Selecting...' : 'Select Option'}
-                            </button>
-                          </div>
-                        )}
+                        <span className="font-bold">
+                          {option.premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </span>
                       </div>
-                    );
-                  })
-                ) : (
-                  <div className="flex h-24 items-center justify-center opacity-50 italic text-sm border border-dashed border-dsi-outline/20 rounded-lg">
-                    No limit options available.
-                  </div>
-                )}
-              </div>
+
+                      <div className="flex justify-between items-center pt-1">
+                        <span className="text-xs text-wrap">{option.rationale}</span>
+                        <span className="text-xs pl-2">ROL {(option.rol * 100).toFixed(1)}%</span>
+                      </div>
+
+                      {!isCurrentRecommended && (
+                        <div className="pt-2">
+                          <button
+                            disabled={isSelectingLimit}
+                            onClick={() => handleSelectOption(option.limit)}
+                            className="
+                              flex items-center gap-1
+                              text-xs uppercase font-bold tracking-wider 
+                              border border-dsi-outline/30 rounded
+                              px-2 py-1
+                              hover:bg-dsi-selected/10 hover:text-dsi-selected hover:border-dsi-selected
+                              disabled:opacity-50 disabled:cursor-not-allowed
+                            "
+                          >
+                            <Check className="w-3 h-3" />
+                            {isSelectingLimit ? 'Selecting...' : 'Select Option'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex h-24 items-center justify-center opacity-50 italic text-sm border border-dashed border-dsi-outline/20 rounded-lg">
+                  No limit options available.
+                </div>
+              )}
             </div>
           </div>
 

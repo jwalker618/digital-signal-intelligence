@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   Target, Activity, Calculator, RotateCcw, Paperclip,
-  AlertTriangle, ShieldAlert, ChevronUp, ChevronDown, Gauge, Layers
+  AlertTriangle, ShieldAlert, ChevronUp, ChevronDown, Gauge, ListFilter
 } from "lucide-react";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ export default function RiskTab() {
   const { activeSubmission, activeVersion, activeQuote, riskSignals, isFetchingRiskSignals, fetchRiskSignals } = useDsiStore();
 
   const [scenarioOverrides, setScenarioOverrides] = useState<Record<string, number>>({});
+  const [filterMode, setFilterMode] = useState<'all' | 'impact' | 'conditions'>('all');
 
   useEffect(() => {
     if (activeVersion?.version_code) {
@@ -133,6 +134,23 @@ export default function RiskTab() {
     }
     return map;
   }, [allConditions]);
+
+  // ─── Apply UI Filters to Enriched Signals ────────────────────────────────
+  const displayedSignals = useMemo(() => {
+    if (filterMode === 'all') return enrichedSignals;
+    
+    if (filterMode === 'conditions') {
+      return enrichedSignals.filter((sig: any) => conditionsBySignal[sig.code] || conditionsBySignal[sig.signal_id]);
+    }
+    
+    if (filterMode === 'impact') {
+      const sorted = [...enrichedSignals].sort((a: any, b: any) => Math.abs(b.contribution || 0) - Math.abs(a.contribution || 0));
+      // Return anything moving the score by > 2.0, or at least the top 5 movers so the list isn't empty
+      return sorted.filter((sig: any, idx: number) => Math.abs(sig.contribution || 0) >= 2.0 || idx < 5);
+    }
+    
+    return enrichedSignals;
+  }, [enrichedSignals, filterMode, conditionsBySignal]);
 
   if (!activeSubmission || !activeVersion) return null;
 
@@ -413,11 +431,10 @@ export default function RiskTab() {
           <div className="
             flex flex-col flex-1
             border-b-3 border-dsi-contrast-background
-            overflow-y-auto border-collapse
+            border-collapse
             rounded-b-xl
             bg-dsi-analysis shadow-sm
             pt-2 pb-2
-            max-h-[320px]
           ">
             {allConditions.length === 0 ? (
               <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
@@ -460,92 +477,47 @@ export default function RiskTab() {
       </div>
 
       {/* =======================================================================
-          GROUP SCORES — cross-pillar weights
-          ======================================================================= */}
-      {activeVersion.group_scores && Object.keys(activeVersion.group_scores).length > 0 && (
-        <div className="flex flex-col pt-2 pb-2">
-          <div className="
-            flex gap-dsi-pad
-            rounded-t-xl
-            border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse
-            bg-dsi-analysis/60
-            pl-dsi-pad
-            pt-2 pb-2
-          ">
-            <Layers className="icon"/><span className="text-sm">Group Score Summary</span>
-          </div>
-          <div className="
-            flex flex-col flex-1
-            border-b-3 border-dsi-contrast-background
-            overflow-x-auto whitespace-nowrap border-collapse
-            rounded-b-xl
-            bg-dsi-analysis shadow-sm
-            pt-2 pb-2
-          ">
-            <table className="w-full text-sm text-left whitespace-nowrap">
-              <thead>
-                <tr className="text-center text-sm underline opacity-70">
-                  <th className="py-2 pl-dsi-pad pr-2 font-normal text-left">Group</th>
-                  <th className="py-2 px-2 font-normal text-right">Risk Score</th>
-                  <th className="py-2 px-2 font-normal text-right">Risk Weight</th>
-                  <th className="py-2 px-2 font-normal text-right">Contribution</th>
-                  <th className="py-2 px-2 font-normal text-center">Coverage</th>
-                  <th className="py-2 px-2 font-normal text-right border-l border-dsi-outline/20">Loss Weight</th>
-                  <th className="py-2 pr-dsi-pad font-normal text-right">Exposure Weight</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(activeVersion.group_scores)
-                  .sort(([, a]: any, [, b]: any) => (b?.risk_contribution || 0) - (a?.risk_contribution || 0))
-                  .map(([groupId, gs]: [string, any]) => (
-                    <tr key={groupId} className="border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors">
-                      <td className="py-2 pl-dsi-pad pr-2 font-semibold truncate max-w-[160px]" title={groupId}>{groupId}</td>
-                      <td className="py-2 px-2 text-right">{formatNum(gs.risk_score, 1)}</td>
-                      <td className="py-2 px-2 text-right opacity-60">{formatNum(gs.risk_weight, 2)}</td>
-                      <td className="py-2 px-2 text-right font-bold">{formatNum(gs.risk_contribution, 1)}</td>
-                      <td className="py-2 px-2 text-center">
-                        <span className={`text-xs ${gs.coverage_ratio >= 1 ? 'text-emerald-400' : gs.coverage_ratio >= 0.5 ? 'text-amber-400' : 'text-rose-400'}`}>
-                          {gs.signal_count || 0}/{gs.expected_signal_count || 0}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2 text-right border-l border-dsi-outline/20">
-                        {gs.loss_weight != null && gs.loss_weight > 0 ? (
-                          <span className="text-blue-400 font-bold">{formatNum(gs.loss_weight, 2)}</span>
-                        ) : (
-                          <span className="opacity-20">–</span>
-                        )}
-                      </td>
-                      <td className="py-2 pr-dsi-pad text-right">
-                        {gs.exposure_weight != null && gs.exposure_weight > 0 ? (
-                          <span className="text-purple-400 font-bold">{formatNum(gs.exposure_weight, 2)}</span>
-                        ) : (
-                          <span className="opacity-20">–</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* =======================================================================
           SIGNAL TABLE WITH SCENARIO INPUTS
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
         <div className="
-          flex gap-dsi-pad
+          flex justify-between items-center gap-dsi-pad
           rounded-t-xl
           border-b-1 border-dsi-outline/50
           overflow-x-hidden whitespace-nowrap border-collapse
           bg-dsi-analysis/60
-          pl-dsi-pad
+          pl-dsi-pad pr-dsi-pad
           pt-2 pb-2
         ">
-          <Calculator className="icon"/><span className="text-sm">Signal Breakdown & Scenario Sandbox</span>
+          <div className="flex items-center gap-dsi-pad">
+            <Calculator className="icon"/><span className="text-sm">Signal Breakdown & Scenario Sandbox</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs">
+            <ListFilter className="w-3 h-3 opacity-50" />
+            <div className="flex items-center gap-1 border border-dsi-outline/20 rounded p-0.5">
+              <button 
+                onClick={() => setFilterMode('all')} 
+                className={`px-2 py-1 rounded transition-colors ${filterMode === 'all' ? 'bg-dsi-selected/20 text-dsi-selected font-semibold' : 'opacity-50 hover:opacity-100'}`}
+              >
+                All
+              </button>
+              <button 
+                onClick={() => setFilterMode('impact')} 
+                className={`px-2 py-1 rounded transition-colors ${filterMode === 'impact' ? 'bg-dsi-selected/20 text-dsi-selected font-semibold' : 'opacity-50 hover:opacity-100'}`}
+              >
+                High Impact
+              </button>
+              <button 
+                onClick={() => setFilterMode('conditions')} 
+                className={`px-2 py-1 rounded transition-colors ${filterMode === 'conditions' ? 'bg-dsi-selected/20 text-dsi-selected font-semibold' : 'opacity-50 hover:opacity-100'}`}
+              >
+                Active Conditions
+              </button>
+            </div>
+          </div>
         </div>
+
         <div className="
           flex flex-col flex-1
           border-b-3 border-dsi-contrast-background
@@ -576,97 +548,105 @@ export default function RiskTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {enrichedSignals.map((sig: any, idx: number) => {
-                    const isNewGroup = idx === 0 || enrichedSignals[idx - 1].group_code !== sig.group_code;
-                    const hasCondition = conditionsBySignal[sig.code] || conditionsBySignal[sig.signal_id];
-                    const currentScenarioScore = scenarioOverrides[sig.code] !== undefined ? scenarioOverrides[sig.code] : (sig.score || 0);
+                  {displayedSignals.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="py-8 text-center text-dsi-selected opacity-50 italic">
+                        No signals match the current filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    displayedSignals.map((sig: any, idx: number) => {
+                      const isNewGroup = idx === 0 || displayedSignals[idx - 1].group_code !== sig.group_code;
+                      const hasCondition = conditionsBySignal[sig.code] || conditionsBySignal[sig.signal_id];
+                      const currentScenarioScore = scenarioOverrides[sig.code] !== undefined ? scenarioOverrides[sig.code] : (sig.score || 0);
 
-                    return (
-                      <tr
-                        key={`${sig.code}-${idx}`}
-                        className={`
-                          border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors
-                          ${isNewGroup && idx !== 0 ? 'border-t-1 border-t-dsi-outline/50' : ''}
-                          ${hasCondition ? 'bg-amber-500/5' : ''}
-                        `}
-                      >
-                        <td className="py-2 pl-dsi-pad pr-dsi-pad opacity-70 truncate max-w-[120px]" title={sig.group_code}>
-                          {isNewGroup ? sig.group_code : ''}
-                        </td>
-                        <td className="py-2 px-2 text-right opacity-50">
-                          {isNewGroup ? formatNum(sig.group_weight, 2) : ''}
-                        </td>
-                        <td className="py-2 px-2 font-semibold">
-                          <div className="flex items-center gap-1.5">
-                            {sig.code}
-                            {hasCondition && (
-                              <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" title="Has active condition" />
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-2 px-2 opacity-80 text-center">
-                          {sig.proxy_tier || "-"}
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          {sig.was_absent ? <span className="text-rose-400">Yes</span> : <span className="opacity-30">No</span>}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          {formatNum(sig.score, 1)}
-                        </td>
-                        <td className="py-2 px-2 text-right opacity-50">
-                          {formatNum(sig.weight, 2)}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          {formatNum(sig.contribution, 2)}
-                        </td>
+                      return (
+                        <tr
+                          key={`${sig.code}-${idx}`}
+                          className={`
+                            border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors
+                            ${isNewGroup && idx !== 0 ? 'border-t-1 border-t-dsi-outline/50' : ''}
+                            ${hasCondition ? 'bg-amber-500/5' : ''}
+                          `}
+                        >
+                          <td className="py-2 pl-dsi-pad pr-dsi-pad opacity-70 truncate max-w-[120px]" title={sig.group_code}>
+                            {isNewGroup ? sig.group_code : ''}
+                          </td>
+                          <td className="py-2 px-2 text-right opacity-50">
+                            {isNewGroup ? formatNum(sig.group_weight, 2) : ''}
+                          </td>
+                          <td className="py-2 px-2 font-semibold">
+                            <div className="flex items-center gap-1.5">
+                              {sig.code}
+                              {hasCondition && (
+                                <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" title="Has active condition" />
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 opacity-80 text-center">
+                            {sig.proxy_tier || "-"}
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            {sig.was_absent ? <span className="text-rose-400">Yes</span> : <span className="opacity-30">No</span>}
+                          </td>
+                          <td className="py-2 px-2 text-right">
+                            {formatNum(sig.score, 1)}
+                          </td>
+                          <td className="py-2 px-2 text-right opacity-50">
+                            {formatNum(sig.weight, 2)}
+                          </td>
+                          <td className="py-2 px-2 text-right">
+                            {formatNum(sig.contribution, 2)}
+                          </td>
 
-                        {/* Scenario Input: stepper + text field */}
-                        <td className="py-1 px-2 border-l border-dsi-outline/20">
-                          <div className="flex items-center justify-center gap-0.5">
-                            <button
-                              onClick={() => handleStep(sig.code, sig.score || 0, -1)}
-                              className="p-0.5 rounded hover:bg-dsi-outline/20 transition-colors text-dsi-selected/60 hover:text-dsi-selected"
-                              title="Decrease score"
-                            >
-                              <ChevronDown className="w-3.5 h-3.5" />
-                            </button>
-                            <input
-                              type="number"
-                              className={`
-                                w-16 bg-dsi-background border rounded px-1.5 py-1 text-center text-sm outline-none transition-all
-                                [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
-                                ${sig.is_overridden ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20 focus:border-dsi-selected/50'}
-                              `}
-                              value={sig.is_overridden ? currentScenarioScore : ''}
-                              placeholder={formatNum(sig.score, 1)}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setScenarioOverrides(prev => {
-                                  const next = { ...prev };
-                                  if (val === "") {
-                                    delete next[sig.code];
-                                  } else {
-                                    next[sig.code] = parseFloat(val);
-                                  }
-                                  return next;
-                                });
-                              }}
-                            />
-                            <button
-                              onClick={() => handleStep(sig.code, sig.score || 0, 1)}
-                              className="p-0.5 rounded hover:bg-dsi-outline/20 transition-colors text-dsi-selected/60 hover:text-dsi-selected"
-                              title="Increase score"
-                            >
-                              <ChevronUp className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                        <td className={`py-2 pr-dsi-pad text-right font-bold ${sig.is_overridden ? 'text-dsi-selected' : ''}`}>
-                          {formatNum(sig.scenario_contribution, 2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          {/* Scenario Input: stepper + text field */}
+                          <td className="py-1 px-2 border-l border-dsi-outline/20">
+                            <div className="flex items-center justify-center gap-0.5">
+                              <button
+                                onClick={() => handleStep(sig.code, sig.score || 0, -1)}
+                                className="p-0.5 rounded hover:bg-dsi-outline/20 transition-colors text-dsi-selected/60 hover:text-dsi-selected"
+                                title="Decrease score"
+                              >
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </button>
+                              <input
+                                type="number"
+                                className={`
+                                  w-16 bg-dsi-background border rounded px-1.5 py-1 text-center text-sm outline-none transition-all
+                                  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+                                  ${sig.is_overridden ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20 focus:border-dsi-selected/50'}
+                                `}
+                                value={sig.is_overridden ? currentScenarioScore : ''}
+                                placeholder={formatNum(sig.score, 1)}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setScenarioOverrides(prev => {
+                                    const next = { ...prev };
+                                    if (val === "") {
+                                      delete next[sig.code];
+                                    } else {
+                                      next[sig.code] = parseFloat(val);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                              />
+                              <button
+                                onClick={() => handleStep(sig.code, sig.score || 0, 1)}
+                                className="p-0.5 rounded hover:bg-dsi-outline/20 transition-colors text-dsi-selected/60 hover:text-dsi-selected"
+                                title="Increase score"
+                              >
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                          <td className={`py-2 pr-dsi-pad text-right font-bold ${sig.is_overridden ? 'text-dsi-selected' : ''}`}>
+                            {formatNum(sig.scenario_contribution, 2)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
