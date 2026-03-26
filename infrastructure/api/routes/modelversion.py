@@ -156,7 +156,7 @@ async def get_submission_modelversion_base(
     db: AsyncSession = Depends(get_async_db),
 ) -> ModelVersionDBRecord_BaseOnly:
     """Get model version details by code."""
-    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id_id == Submission.id).where(Submission.submission_code_code == submission_code))
+    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id == Submission.id).where(Submission.submission_code_code == submission_code))
 
     result = await db.execute(query)
     record = result.scalar_one_or_none()
@@ -172,7 +172,7 @@ async def get_submission_modelversion_detail(
     db: AsyncSession = Depends(get_async_db),
 ) -> ModelVersionDBRecord_DetailOnly:
     """Get model version details by code."""
-    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id_id == Submission.id).where(Submission.submission_code_code == submission_code))
+    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id == Submission.id).where(Submission.submission_code_code == submission_code))
 
     result = await db.execute(query)
     record = result.scalar_one_or_none()
@@ -188,7 +188,7 @@ async def get_submission_modelversion_commentary(
     db: AsyncSession = Depends(get_async_db),
 ) -> ModelVersionDBRecord_CommentaryOnly:
     """Get model version details by code."""
-    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id_id == Submission.id).where(Submission.submission_code_code == submission_code))
+    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id == Submission.id).where(Submission.submission_code_code == submission_code))
 
     result = await db.execute(query)
     record = result.scalar_one_or_none()
@@ -204,7 +204,7 @@ async def get_submission_modelversion_loss(
     db: AsyncSession = Depends(get_async_db),
 ) -> ModelVersionDBRecord_LossOnly:
     """Get model version details by code."""
-    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id_id == Submission.id).where(Submission.submission_code_code == submission_code))
+    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id == Submission.id).where(Submission.submission_code_code == submission_code))
 
     result = await db.execute(query)
     record = result.scalar_one_or_none()
@@ -220,7 +220,7 @@ async def get_submission_modelversion_exposure(
     db: AsyncSession = Depends(get_async_db),
 ) -> ModelVersionDBRecord_ExposureOnly:
     """Get model version details by code."""
-    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id_id == Submission.id).where(Submission.submission_code_code == submission_code))
+    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id == Submission.id).where(Submission.submission_code_code == submission_code))
 
     row = (await db.execute(query)).first()
     if not row:
