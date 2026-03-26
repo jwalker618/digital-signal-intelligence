@@ -31,10 +31,32 @@ export default function RiskTab() {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
   };
 
-  // Conditions indexed by source
+  // Conditions indexed by source + grouped by type for accordion
   const signalConditions = activeVersion?.signal_conditions || [];
   const queryConditions = activeVersion?.query_conditions || [];
   const allConditions = [...signalConditions, ...queryConditions];
+
+  const conditionsByType = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    for (const c of allConditions) {
+      const type = c.source_type || 'other';
+      if (!groups[type]) groups[type] = [];
+      groups[type].push(c);
+    }
+    return groups;
+  }, [allConditions]);
+
+  // Aggregate modifier value per condition type
+  const conditionTypeSummary = useMemo(() => {
+    return Object.entries(conditionsByType).map(([type, conds]) => {
+      const modifiers = conds.filter((c: any) => {
+        const a = typeof c.action === 'string' ? c.action.toLowerCase() : (c.action?.value || '');
+        return a === 'modifier';
+      });
+      const modProduct = modifiers.reduce((acc: number, c: any) => acc * (c.action_value || 1), 1);
+      return { type, count: conds.length, modifierCount: modifiers.length, aggregateModifier: modProduct };
+    });
+  }, [conditionsByType]);
 
   const conditionsBySource = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -49,6 +71,27 @@ export default function RiskTab() {
   // Group scores + signals per group
   const groupScores = activeVersion?.group_scores || {};
   const groupEntries = Object.entries(groupScores).sort(([, a]: any, [, b]: any) => (b?.risk_contribution || 0) - (a?.risk_contribution || 0));
+
+  // Loss/exposure band lookup helpers
+  const lossBands = activeVersion?.loss_band_interpretation?.bands || [];
+  const lossPropensityScore = activeVersion?.loss_propensity_score || 0;
+  const lookupLossBand = (score: number) => {
+    for (const b of lossBands) {
+      if (score >= (b.bands?.min ?? 0) && score <= (b.bands?.max ?? 100)) return b;
+    }
+    return null;
+  };
+  const currentLossBand = lookupLossBand(lossPropensityScore);
+
+  const expBands = activeVersion?.exposure_band_interpretation?.size?.bands || [];
+  const expSizeScore = activeVersion?.exposure_size_score || 0;
+  const lookupExpBand = (score: number) => {
+    for (const b of expBands) {
+      if (score >= (b.bands?.min ?? 0) && score <= (b.bands?.max ?? 100)) return b;
+    }
+    return null;
+  };
+  const currentExpBand = lookupExpBand(expSizeScore);
 
   const signalsByGroup = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -84,8 +127,8 @@ export default function RiskTab() {
       .sort((a: any, b: any) => b.tier_id - a.tier_id); // closest first
 
     return betterTiers.map((t: any) => {
-      const targetMax = t.bands?.max ?? 0;
-      const ptsNeeded = currentScore > targetMax ? currentScore - targetMax : 0;
+      const targetMin = t.bands?.min ?? 0;
+      const ptsNeeded = currentScore < targetMin ? targetMin - currentScore : 0;
       return {
         tier_id: t.tier_id,
         label: t.label,
@@ -257,7 +300,7 @@ export default function RiskTab() {
                         <div key={path.tier_id} className="border border-dsi-outline/15 rounded-lg p-2.5 text-wrap">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-bold">Tier {path.tier_id} — {path.label}</span>
-                            <span className="text-xs text-dsi-positive font-bold">-{path.pts_needed} pts needed</span>
+                            <span className="text-xs text-dsi-positive font-bold">+{path.pts_needed} pts needed</span>
                           </div>
                           <span className="text-[10px] opacity-40">Score range: {path.target_range} ({path.action})</span>
                           {topLevers.length > 0 && (
@@ -285,68 +328,80 @@ export default function RiskTab() {
           </div>
         </div>
 
-        {/* CONDITIONS + DIRECT QUERIES */}
+        {/* CONDITIONS — accordion by type */}
         <div className="flex flex-col">
           <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <AlertTriangle className="icon"/>
             <span className="text-sm">Active Conditions ({allConditions.length})</span>
           </div>
           <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2 overflow-y-auto max-h-[500px]">
-            {allConditions.length === 0 && directQueries.length === 0 ? (
+            {conditionTypeSummary.length === 0 ? (
               <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">
                 No conditions triggered.
               </div>
             ) : (
-              <div className="space-y-0">
-                {allConditions.map((cond: any, idx: number) => {
-                  const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
-                  const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
+              <div>
+                {conditionTypeSummary.map(({ type, count, modifierCount, aggregateModifier }) => {
+                  const isExpanded = expandedGroups[`cond_${type}`] ?? false;
+                  const conds = conditionsByType[type] || [];
+                  const typeLabel = type.replace(/_/g, ' ');
                   return (
-                    <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${colors.text}`} />
-                        <div className="min-w-0">
-                          <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
-                          <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
+                    <div key={type}>
+                      {/* Type header — clickable */}
+                      <div
+                        onClick={() => toggleGroup(`cond_${type}`)}
+                        className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+                          <span className="text-sm font-bold capitalize">{typeLabel}</span>
+                          <span className="text-[10px] opacity-40">({count})</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {modifierCount > 0 && (
+                            <span className="text-[10px] bg-dsi-info/15 text-dsi-info px-1.5 py-0.5 rounded font-bold">
+                              {modifierCount} modifier{modifierCount > 1 ? 's' : ''} ({(aggregateModifier * 100).toFixed(0)}%)
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${colors.bg} ${colors.text}`}>
-                          {actionKey.replace('_', ' ')}
-                        </span>
-                        {cond.action_value != null && typeof cond.action_value === 'number' && (
-                          <span className="text-xs font-bold opacity-70 w-16 text-right">
-                            {actionKey === 'modifier' ? `${(cond.action_value * 100).toFixed(0)}%` :
-                             actionKey === 'tier_override' ? `→ T${cond.action_value}` :
-                             cond.action_value}
-                          </span>
-                        )}
-                      </div>
+
+                      {/* Expanded detail */}
+                      {isExpanded && conds.map((cond: any, cidx: number) => {
+                        const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
+                        const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
+                        return (
+                          <div key={cidx} className="flex items-center justify-between px-dsi-pad py-2 pl-8 bg-dsi-background/10 border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <ShieldAlert className={`w-3 h-3 shrink-0 ${colors.text}`} />
+                              <div className="min-w-0">
+                                <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
+                                <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
+                                {type === 'direct_query' && (
+                                  <span className={`text-xs font-bold ${cond.response === true || cond.response === 'yes' ? 'text-dsi-positive' : cond.response === false || cond.response === 'no' ? 'text-dsi-negative' : 'opacity-70'}`}>
+                                    Response: {typeof cond.response === 'boolean' ? (cond.response ? 'Yes' : 'No') : String(cond.response ?? 'N/A')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${colors.bg} ${colors.text}`}>
+                                {actionKey.replace('_', ' ')}
+                              </span>
+                              {cond.action_value != null && typeof cond.action_value === 'number' && (
+                                <span className="text-xs font-bold opacity-70 w-16 text-right">
+                                  {actionKey === 'modifier' ? `${(cond.action_value * 100).toFixed(0)}%` :
+                                   actionKey === 'tier_override' ? `→ T${cond.action_value}` :
+                                   cond.action_value}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })}
-
-                {/* E5: Direct Queries */}
-                {directQueries.length > 0 && (
-                  <div className="border-t border-dsi-outline/20 mt-1">
-                    <div className="px-dsi-pad py-2">
-                      <span className="text-xs opacity-50 flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3" /> Direct Queries ({directQueries.length})
-                      </span>
-                    </div>
-                    {directQueries.map((q: any, idx: number) => (
-                      <div key={`dq-${idx}`} className="px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">{q.source_name || q.source_id}</span>
-                          <span className={`text-xs font-bold ${q.response === true || q.response === 'yes' ? 'text-dsi-positive' : q.response === false || q.response === 'no' ? 'text-dsi-negative' : 'opacity-70'}`}>
-                            {typeof q.response === 'boolean' ? (q.response ? 'Yes' : 'No') : String(q.response ?? 'N/A')}
-                          </span>
-                        </div>
-                        {q.note && <span className="text-[10px] opacity-40 block mt-0.5">{q.note}</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -371,14 +426,14 @@ export default function RiskTab() {
           ) : (
             <div className="w-full">
               {/* Column headers */}
-              <div className="grid grid-cols-[1fr_80px_80px_80px_70px_70px_70px] gap-0 text-[11px] underline opacity-70 px-dsi-pad py-2">
+              <div className="grid grid-cols-[1fr_80px_80px_80px_70px_100px_100px] gap-0 text-[11px] underline opacity-70 px-dsi-pad py-2">
                 <span>Group / Signal</span>
                 <span className="text-right">Score</span>
                 <span className="text-right">Weight</span>
                 <span className="text-right">Contribution</span>
                 <span className="text-center">Coverage</span>
-                <span className="text-right">Loss Wgt</span>
-                <span className="text-right">Exp Wgt</span>
+                <span className="text-right">Loss Impact</span>
+                <span className="text-right">Exposure Impact</span>
               </div>
 
               {groupEntries.map(([groupId, gs]: [string, any]) => {
@@ -391,7 +446,7 @@ export default function RiskTab() {
                     {/* GROUP ROW — clickable header */}
                     <div
                       onClick={() => toggleGroup(groupId)}
-                      className="grid grid-cols-[1fr_80px_80px_80px_70px_70px_70px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors"
+                      className="grid grid-cols-[1fr_80px_80px_80px_70px_100px_100px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
@@ -412,15 +467,25 @@ export default function RiskTab() {
                           {gs.signal_count || 0}/{gs.expected_signal_count || 0}
                         </span>
                       </span>
-                      <span className="text-right">
-                        {gs.loss_weight != null && gs.loss_weight > 0
-                          ? <span className="text-dsi-info font-bold text-xs">{formatNum(gs.loss_weight, 2)}</span>
-                          : <span className="opacity-20 text-xs">–</span>}
+                      <span className="text-right text-xs text-wrap">
+                        {gs.loss_weight != null && gs.loss_weight > 0 ? (
+                          <span>
+                            <span className="font-bold text-dsi-info">{formatNum(gs.loss_weight, 2)}</span>
+                            {currentLossBand && (
+                              <span className="block text-[9px] opacity-50 uppercase">{currentLossBand.label} ({currentLossBand.frequency_modifier}x)</span>
+                            )}
+                          </span>
+                        ) : <span className="opacity-20">–</span>}
                       </span>
-                      <span className="text-right">
-                        {gs.exposure_weight != null && gs.exposure_weight > 0
-                          ? <span className="text-dsi-info font-bold text-xs">{formatNum(gs.exposure_weight, 2)}</span>
-                          : <span className="opacity-20 text-xs">–</span>}
+                      <span className="text-right text-xs text-wrap">
+                        {gs.exposure_weight != null && gs.exposure_weight > 0 ? (
+                          <span>
+                            <span className="font-bold text-dsi-info">{formatNum(gs.exposure_weight, 2)}</span>
+                            {currentExpBand && (
+                              <span className="block text-[9px] opacity-50 uppercase">{currentExpBand.label} ({currentExpBand.modifier}x)</span>
+                            )}
+                          </span>
+                        ) : <span className="opacity-20">–</span>}
                       </span>
                     </div>
 
@@ -449,7 +514,7 @@ export default function RiskTab() {
                       return (
                         <div
                           key={`${sig.code}-${sidx}`}
-                          className={`grid grid-cols-[1fr_80px_80px_80px_70px_70px_70px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sigConditions.length > 0 ? 'border-l-2 border-l-dsi-warning' : ''}`}
+                          className={`grid grid-cols-[1fr_80px_80px_80px_70px_100px_100px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sigConditions.length > 0 ? 'border-l-2 border-l-dsi-warning' : ''}`}
                         >
                           <div className="flex items-center gap-2 pl-6">
                             <span className="text-sm">{sig.code}</span>
