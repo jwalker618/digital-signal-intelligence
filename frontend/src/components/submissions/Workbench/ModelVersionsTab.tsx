@@ -26,7 +26,7 @@ export default function ModelVersionsTab() {
     if (activeSubmission?.submission_code) {
       fetchHistory(activeSubmission.submission_code);
     }
-  }, [activeSubmission, fetchHistory]);
+  }, [activeSubmission?.submission_code, fetchHistory]);
 
   return (
     <div className="
