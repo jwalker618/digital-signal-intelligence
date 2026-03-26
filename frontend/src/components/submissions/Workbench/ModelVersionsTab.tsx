@@ -110,10 +110,14 @@ export default function ModelVersionsTab() {
             {modelVersions.map((mv: any, i: number) => {
               // Compute delta from previous version (next in array since latest is first)
               const prevVersion = modelVersions[i + 1] || null;
-              const scoreDelta = prevVersion && mv.composite_score != null && prevVersion.composite_score != null
-                ? mv.composite_score - prevVersion.composite_score
+              const mvScore = mv.pure_composite_score ?? mv.composite_score;
+              const prevScore = prevVersion?.pure_composite_score ?? prevVersion?.composite_score;
+              const scoreDelta = prevVersion && mvScore != null && prevScore != null
+                ? mvScore - prevScore
                 : null;
-              const tierChanged = prevVersion && mv.tier !== prevVersion.tier;
+              const mvTier = mv.final_tier ?? mv.tier;
+              const prevTier = prevVersion?.final_tier ?? prevVersion?.tier;
+              const tierChanged = prevVersion && mvTier !== prevTier;
 
               const decision = (mv.decision || '').toLowerCase();
               const badge = DECISION_BADGE[decision];
@@ -164,7 +168,7 @@ export default function ModelVersionsTab() {
                           <div className="text-xs opacity-50 uppercase tracking-wider mb-0.5">Score</div>
                           <div className="flex items-baseline gap-1.5">
                             <span className="text-xl font-bold text-dsi-selected">
-                              {mv.composite_score?.toFixed(1) || "N/A"}
+                              {mvScore?.toFixed(1) || "N/A"}
                             </span>
                             {scoreDelta != null && Math.abs(scoreDelta) > 0.1 && (
                               <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
@@ -177,11 +181,11 @@ export default function ModelVersionsTab() {
                           <div className="text-xs opacity-50 uppercase tracking-wider mb-0.5">Tier</div>
                           <div className="flex items-baseline gap-1.5">
                             <span className="text-sm font-bold text-dsi-selected">
-                              {mv.tier} ({mv.tier_label})
+                              Tier {mvTier} ({mv.tier_label})
                             </span>
                             {tierChanged && (
                               <span className="text-[10px] text-dsi-warning font-bold">
-                                was {prevVersion.tier}
+                                was Tier {prevTier}
                               </span>
                             )}
                           </div>

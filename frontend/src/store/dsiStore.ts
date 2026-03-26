@@ -257,8 +257,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       const res = await fetch(`http://localhost:8000/api/v1/modelversion/${submissionCode}/submissionshistory/all`);
       if (res.ok) {
         const data = await res.json();
-        // Endpoint returns a single version or array — normalize to array
-        const versions = Array.isArray(data) ? data : (data?.versions || [data]);
+        // Endpoint returns list[ModelVersionDBRecord]
+        const versions = Array.isArray(data) ? data : [];
         set({ modelVersions: versions, auditLogs: [] });
       }
     } catch {
