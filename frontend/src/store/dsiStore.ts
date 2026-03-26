@@ -251,6 +251,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   auditLogs: [],
 
   fetchHistory: async (submissionCode: string) => {
+    // Skip if already have versions loaded
+    if (get().modelVersions.length > 0) return;
     try {
       const res = await fetch(`http://localhost:8000/api/v1/modelversion/${submissionCode}/submissionshistory/all`);
       if (res.ok) {
@@ -259,8 +261,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
         const versions = Array.isArray(data) ? data : (data?.versions || [data]);
         set({ modelVersions: versions, auditLogs: [] });
       }
-    } catch (err) {
-      console.error("Failed to fetch history", err);
+    } catch {
+      // Silently fail — endpoint may not be available
     }
   },
 
