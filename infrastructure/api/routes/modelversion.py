@@ -8,6 +8,7 @@ Strictly integrated with PostgreSQL via SQLAlchemy AsyncSession.
 import logging
 
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -232,3 +233,36 @@ async def get_submission_modelversion_exposure(
         raise HTTPException(status_code=404, detail="Model version not found")
 
     return record
+
+
+# =============================================================================
+# NOTES
+# =============================================================================
+
+class AddNoteRequest(BaseModel):
+    note: str
+    source: str = "underwriter"
+
+
+@router.post("/modelversion/{version_code}/notes")
+async def add_note(
+    version_code: str,
+    request: AddNoteRequest,
+    db: AsyncSession = Depends(get_async_db),
+):
+    """Append a note to a model version's notes array."""
+    query = select(ModelVersionRecord).where(ModelVersionRecord.version_code == version_code)
+    result = await db.execute(query)
+    record = result.scalar_one_or_none()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Model version not found")
+
+    existing_notes = record.notes or []
+    new_note = {"note": request.note, "source": request.source}
+    record.notes = existing_notes + [new_note]
+
+    await db.commit()
+    await db.refresh(record)
+
+    return {"status": "ok", "notes": record.notes}
