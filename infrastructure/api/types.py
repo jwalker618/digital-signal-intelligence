@@ -463,7 +463,7 @@ class ModelVersionDBRecord(BaseModel):
     discovery_output: Optional[Dict[str, Any]] = None
     signal_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     categorical_outputs: List[Dict[str, Any]] = Field(default_factory=list)
-    group_scores: Dict[str, Any] = Field(default_factory=dict)
+    group_scores: Optional[Dict[str, Any]] = None
     pure_composite_score: Optional[float] = None
     confidence: Optional[float] = None
     signal_coverage: Optional[float] = None
@@ -481,15 +481,15 @@ class ModelVersionDBRecord(BaseModel):
     tier_margin_distance_worse: Optional[float] = None
     tier_margin_adjacent_better: Optional[float] = None
     tier_margin_adjacent_worse: Optional[float] = None
-    tier_band_interpretation: Dict[str, Any] = Field(default_factory=dict)
+    tier_band_interpretation: Optional[Dict[str, Any]] = None
 
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
-    base_premium_derivation: Dict[str, Any] = Field(default_factory=dict)
+    base_premium_derivation: Optional[Dict[str, Any]] = None
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     final_premium: Optional[float] = None
-    final_premium_detail: Dict[str, Any] = Field(default_factory=dict)
+    final_premium_detail: Optional[Dict[str, Any]] = None
     uncapped_premium: Optional[float] = None
 
     guardrail_warnings: List[Note] = Field(default_factory=list)
@@ -525,7 +525,7 @@ class ModelVersionDBRecord(BaseModel):
     loss_frequency_multiplier: Optional[float] = None
     loss_severity_multiplier: Optional[float] = None
     loss_combined_modifier: Optional[float] = None
-    loss_group_scores: Dict[str, Any] = Field(default_factory=dict)
+    loss_group_scores: Optional[Dict[str, Any]] = None
     loss_trend_direction: Optional[str] = None
     loss_frequency_trend_direction: Optional[str] = None
     loss_severity_trend_direction: Optional[str] = None
@@ -538,25 +538,25 @@ class ModelVersionDBRecord(BaseModel):
     loss_severity_velocity: Optional[float] = None
     loss_last_refresh: Optional[datetime] = None
     correlation_matrix_version: Optional[str] = None
-    loss_band_interpretation: Dict[str, Any] = Field(default_factory=dict)
+    loss_band_interpretation: Optional[Dict[str, Any]] = None
 
     exposure_value: Optional[float] = None
     exposure_band_id: Optional[int] = None
     exposure_band_label: Optional[str] = None
-    exposure_band_boundaries: Dict[str, Any] = Field(default_factory=dict)
+    exposure_band_boundaries: Optional[Dict[str, Any]] = None
     exposure_size_score: Optional[float] = None
     exposure_complexity_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
     exposure_assessment_method: Optional[str] = None
-    exposure_components: Dict[str, Any] = Field(default_factory=dict)
-    exposure_band_interpretation: Dict[str, Any] = Field(default_factory=dict)
+    exposure_components: Optional[Dict[str, Any]] = None
+    exposure_band_interpretation: Optional[Dict[str, Any]] = None
 
     # Config snapshots for client-side scenario recalculation
-    loss_correlation_config: Dict[str, Any] = Field(default_factory=dict)
-    ilf_curve_config: Dict[str, Any] = Field(default_factory=dict)
-    deductible_factor_table: Dict[str, Any] = Field(default_factory=dict)
-    exposure_modifier_config: Dict[str, Any] = Field(default_factory=dict)
-    guardrails_config: Dict[str, Any] = Field(default_factory=dict)
+    loss_correlation_config: Optional[Dict[str, Any]] = None
+    ilf_curve_config: Optional[Dict[str, Any]] = None
+    deductible_factor_table: Optional[Dict[str, Any]] = None
+    exposure_modifier_config: Optional[Dict[str, Any]] = None
+    guardrails_config: Optional[Dict[str, Any]] = None
 
 @maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
                                         "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
@@ -592,11 +592,11 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
     tier_label: Optional[str] = None
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
-    base_premium_derivation: Dict[str, Any] = Field(default_factory=dict)
+    base_premium_derivation: Optional[Dict[str, Any]] = None
     modifiers_applied: List[Dict[str, Any]] = Field(default_factory=list)
     premium_after_modifiers: Optional[float] = None
     final_premium: Optional[float] = None
-    final_premium_detail: Dict[str, Any] = Field(default_factory=dict)
+    final_premium_detail: Optional[Dict[str, Any]] = None
     uncapped_premium: Optional[float] = None
     ilf_factor: Optional[float] = None
     ilf_method: Optional[str] = None
@@ -630,7 +630,7 @@ class ModelVersionDBRecord_DetailOnly(BaseModel):
     discovery_output: Optional[Dict[str, Any]] = None
     signal_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     categorical_outputs: List[Dict[str, Any]] = Field(default_factory=list)
-    group_scores: Dict[str, Any] = Field(default_factory=dict)
+    group_scores: Optional[Dict[str, Any]] = None
 
 @maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
                                         "version_number", "version_type", "is_latest", "coverage", "configuration_name",
@@ -686,7 +686,7 @@ class ModelVersionDBRecord_LossOnly(BaseModel):
     loss_frequency_multiplier: Optional[float] = None
     loss_severity_multiplier: Optional[float] = None
     loss_combined_modifier: Optional[float] = None
-    loss_group_scores: Dict[str, Any] = Field(default_factory=dict)
+    loss_group_scores: Optional[Dict[str, Any]] = None
     loss_trend_direction: Optional[str] = None
     loss_frequency_trend_direction: Optional[str] = None
     loss_severity_trend_direction: Optional[str] = None
@@ -724,7 +724,7 @@ class ModelVersionDBRecord_ExposureOnly(BaseModel):
     exposure_value: Optional[float] = None
     exposure_band_id: Optional[int] = None
     exposure_band_label: Optional[str] = None
-    exposure_band_boundaries: Dict[str, Any] = Field(default_factory=dict)
+    exposure_band_boundaries: Optional[Dict[str, Any]] = None
     exposure_size_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
     exposure_assessment_method: Optional[str] = None
