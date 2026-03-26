@@ -1,7 +1,7 @@
 """Add config snapshot JSONB columns for client-side scenario recalculation
 
-Revision ID: 007
-Revises: 006
+Revision ID: 008
+Revises: 007
 Create Date: 2026-03-25
 
 Changes:
@@ -19,8 +19,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 
 # revision identifiers, used by Alembic.
-revision: str = "007"
-down_revision: str = "006"
+revision: str = "008"
+down_revision: str = "007"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
