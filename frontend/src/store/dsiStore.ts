@@ -70,6 +70,9 @@ export interface DsiState {
   fetchReferralSignals: (versionCode: string) => Promise<void>;
   submitSignalOverride: (quoteCode: string, signalCode: string, auditedValue: number, rationale: string) => Promise<void>;
 
+  // Notes
+  addNote: (versionCode: string, note: string, source?: string) => Promise<void>;
+
   // Limit Selection
   isSelectingLimit: boolean;
   selectLimitOption: (quoteCode: string, selectedLimit: number, rationale?: string) => Promise<void>;
@@ -262,6 +265,26 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to fetch history", err);
+    }
+  },
+
+  addNote: async (versionCode: string, note: string, source = "underwriter") => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/modelversion/${versionCode}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note, source }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Update activeVersion notes in place
+        const av = get().activeVersion as any;
+        if (av) {
+          set({ activeVersion: { ...av, notes: data.notes } });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to add note:", err);
     }
   },
 
