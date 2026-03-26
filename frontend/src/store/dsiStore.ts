@@ -73,10 +73,6 @@ export interface DsiState {
   // Notes
   addNote: (versionCode: string, note: string, source?: string) => Promise<void>;
 
-  // Limit Selection
-  isSelectingLimit: boolean;
-  selectLimitOption: (quoteCode: string, selectedLimit: number, rationale?: string) => Promise<void>;
-
 }
 
 export const useDsiStore = create<DsiState>((set, get) => ({
@@ -291,7 +287,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   fetchReferralSignals: async (submissionCode: string) => {
     set({ isFetchingSignals: true });
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/model_versions/${submissionCode}/submissionshistory/all`);
+      const res = await fetch(`http://localhost:8000/api/v1/modelversion/${submissionCode}/submissionshistory/all`);
       if (!res.ok) throw new Error("Failed to fetch signals");
       const data = await res.json();
       set({ referralSignals: data.signals || [], isFetchingSignals: false });
