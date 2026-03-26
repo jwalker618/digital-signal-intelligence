@@ -153,29 +153,29 @@ export default function PricingTab() {
           pt-2 pb-2"
         >
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
+            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
           </div>
 
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <span className="">
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
                 <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
               </span>
             )}
-            {activeQuote.status === 'bound' && (
+            {activeQuote?.status === 'bound' && (
               <span className="">
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
+                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
               </span>
             )}
           </div>
 
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
+            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
+            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
           </div>
 
         </div>
@@ -235,7 +235,7 @@ export default function PricingTab() {
                     overflow-x-hidden whitespace-nowrap border-collapse
                     flex gap-dsi-pad text-sm"
                     >
-                      <ArrowRightToLine className="icon"/> Tier {activeVersion.final_tier} Base Premium using {activeVersion.base_premium_derivation.method} methodology
+                      <ArrowRightToLine className="icon"/> Tier {activeVersion.final_tier} Base Premium using {activeVersion?.base_premium_derivation?.method || 'N/A'} methodology
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -245,12 +245,12 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-sm text-right uppercase bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.base_premium_derivation.basis_field} @
+                    >{activeVersion?.base_premium_derivation?.basis_field || 'N/A'} @
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.base_premium_derivation.basis_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{(activeVersion?.base_premium_derivation?.basis_value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
 
                   {/* row 2 */}
@@ -268,7 +268,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.base_premium_derivation.rate}x
+                    >{activeVersion?.base_premium_derivation?.rate || 'N/A'}x
                   </div>
 
                   {/* row 3 */}
@@ -286,7 +286,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.base_premium_derivation.result.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{(activeVersion?.base_premium_derivation?.result || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
                 </div>
 
@@ -772,7 +772,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.final_premium_detail.premium_before_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{(activeVersion?.final_premium_detail?.premium_before_scaling || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
 
                   {/* row 2 */}
@@ -786,7 +786,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.final_premium_detail.ilf_factor.toFixed(3)}x
+                    >{(activeVersion?.final_premium_detail?.ilf_factor || 0).toFixed(3)}x
                   </div>
 
                   {/* row 3 */}
@@ -800,7 +800,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.final_premium_detail.deductible_factor.toFixed(3)}x
+                    >{(activeVersion?.final_premium_detail?.deductible_factor || 0).toFixed(3)}x
                   </div>
 
                   {/* GUARDRAILS */}
@@ -856,7 +856,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.final_premium_detail.premium_after_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{(activeVersion?.final_premium_detail?.premium_after_scaling || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
                   
                 </div>

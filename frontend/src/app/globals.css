@@ -9,13 +9,33 @@
   --color-dsi-analysis: var(--dsi-analysis);
   --color-dsi-contrast-analysis: var(--dsi-contrast-analysis);
 
+  /* Semantic colours — status, decisions, charts */
+  --color-dsi-positive: var(--dsi-positive);
+  --color-dsi-negative: var(--dsi-negative);
+  --color-dsi-warning: var(--dsi-warning);
+  --color-dsi-info: var(--dsi-info);
+  --color-dsi-muted: var(--dsi-muted);
+
+  /* Decision-specific */
+  --color-dsi-approve: var(--dsi-approve);
+  --color-dsi-refer: var(--dsi-refer);
+  --color-dsi-decline: var(--dsi-decline);
+
+  /* Chart surface */
+  --color-dsi-chart-grid: var(--dsi-chart-grid);
+  --color-dsi-chart-axis: var(--dsi-chart-axis);
+  --color-dsi-chart-tooltip-bg: var(--dsi-chart-tooltip-bg);
+  --color-dsi-chart-tooltip-border: var(--dsi-chart-tooltip-border);
+  --color-dsi-chart-subject: var(--dsi-chart-subject);
+  --color-dsi-chart-peer: var(--dsi-chart-peer);
+
   /* PROGRAMMATIC SPACING ENGINE */
   /* This creates native Tailwind classes like p-dsi-pad, left-dsi-pad, px-dsi-main */
   --spacing-dsi-pad: 1rem;          /* '4' (16px) */
   --spacing-dsi-main: 1.5rem;       /* '6' (24px) */
   --spacing-dsi-gap: 2rem;          /* '8' (32px) */
-  --spacing-dsi-padicon: 2.25rem;   /* '9' (36px) */  
-  --spacing-dsi-indent: 3rem;       /* '12'(48px) */  
+  --spacing-dsi-padicon: 2.25rem;   /* '9' (36px) */
+  --spacing-dsi-indent: 3rem;       /* '12'(48px) */
 
   /* FONTS */
   --font-ibm: var(--font-ibm), ui-sans-serif, system-ui, sans-serif;
@@ -29,6 +49,26 @@
   --dsi-selected: #0A1A2F;
   --dsi-analysis: #BCB7AF;
   --dsi-contrast-analysis: #DBD6CD;
+
+  /* Semantic — light */
+  --dsi-positive: #059669;
+  --dsi-negative: #dc2626;
+  --dsi-warning: #d97706;
+  --dsi-info: #2563eb;
+  --dsi-muted: #64748b;
+
+  /* Decisions — light */
+  --dsi-approve: #059669;
+  --dsi-refer: #d97706;
+  --dsi-decline: #dc2626;
+
+  /* Charts — light */
+  --dsi-chart-grid: #94a3b8;
+  --dsi-chart-axis: #64748b;
+  --dsi-chart-tooltip-bg: #1e293b;
+  --dsi-chart-tooltip-border: #475569;
+  --dsi-chart-subject: #2563eb;
+  --dsi-chart-peer: #475569;
 }
 
 .dark {
@@ -38,6 +78,26 @@
   --dsi-selected: #FFFFFF;
   --dsi-analysis: #07738A;
   --dsi-contrast-analysis: #06859B;
+
+  /* Semantic — dark */
+  --dsi-positive: #10b981;
+  --dsi-negative: #f43f5e;
+  --dsi-warning: #f59e0b;
+  --dsi-info: #3b82f6;
+  --dsi-muted: #94a3b8;
+
+  /* Decisions — dark */
+  --dsi-approve: #10b981;
+  --dsi-refer: #f59e0b;
+  --dsi-decline: #f43f5e;
+
+  /* Charts — dark */
+  --dsi-chart-grid: #334155;
+  --dsi-chart-axis: #94a3b8;
+  --dsi-chart-tooltip-bg: #0f172a;
+  --dsi-chart-tooltip-border: #334155;
+  --dsi-chart-subject: #3b82f6;
+  --dsi-chart-peer: #475569;
 }
 
 .no-scrollbar {

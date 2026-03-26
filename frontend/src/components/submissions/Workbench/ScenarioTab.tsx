@@ -4,30 +4,16 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   Paperclip, RotateCcw, Activity, ChevronUp, ChevronDown,
-  AlertTriangle, ArrowDown, ShieldAlert, FlaskConical, Calculator
+  ChevronRight, ShieldAlert, FlaskConical, ArrowRightToLine, PenLine, Shield
 } from "lucide-react";
-import { runFullCascade, ScenarioOverrides, ScenarioResult } from "@/lib/scenarioEngine";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const fmt = (num: number | null | undefined, d = 1) =>
-  num != null ? Number(num).toFixed(d) : "-";
+import { runFullCascade, distributeGroupOverride, ScenarioOverrides, ScenarioResult } from "@/lib/scenarioEngine";
+import { formatNum } from "@/lib/format";
 
 const fmtDollar = (num: number | null | undefined) =>
   num != null ? `$${Number(num).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "-";
 
-const deltaClass = (scenario: number, original: number) => {
-  if (Math.abs(scenario - original) < 0.01) return '';
-  return scenario > original ? 'text-rose-400' : 'text-emerald-400';
-};
-
-const deltaPrefix = (scenario: number, original: number) => {
-  const diff = scenario - original;
-  if (Math.abs(diff) < 0.01) return '';
-  return diff > 0 ? '+' : '';
-};
-
-// ─── Component ───────────────────────────────────────────────────────────────
+const deltaColor = (s: number, o: number) =>
+  Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-dsi-negative' : 'text-dsi-positive';
 
 export default function ScenarioTab() {
   const {
@@ -35,33 +21,34 @@ export default function ScenarioTab() {
     riskSignals, isFetchingRiskSignals, fetchRiskSignals
   } = useDsiStore();
 
-  // ── Override state ──
   const [signalOverrides, setSignalOverrides] = useState<Record<string, number>>({});
   const [lossModifierOverride, setLossModifierOverride] = useState<number | null>(null);
   const [exposureModifierOverride, setExposureModifierOverride] = useState<number | null>(null);
   const [limitOverride, setLimitOverride] = useState<number | null>(null);
   const [deductibleOverride, setDeductibleOverride] = useState<number | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (activeVersion?.version_code) {
-      fetchRiskSignals(activeVersion.version_code);
-    }
+    if (activeVersion?.version_code) fetchRiskSignals(activeVersion.version_code);
   }, [activeVersion?.version_code, fetchRiskSignals]);
 
-  // ── Signal stepper ──
-  const handleStep = useCallback((sigCode: string, origScore: number, direction: 1 | -1) => {
+  const toggleGroup = (g: string) => setExpandedGroups(p => ({ ...p, [g]: !p[g] }));
+
+  const handleStep = useCallback((sigCode: string, origScore: number, dir: 1 | -1) => {
     setSignalOverrides(prev => {
-      const current = prev[sigCode] !== undefined ? prev[sigCode] : origScore;
-      const next = Math.round((current + direction) * 10) / 10;
-      if (Math.abs(next - origScore) < 0.05) {
-        const { [sigCode]: _, ...rest } = prev;
-        return rest;
-      }
+      const cur = prev[sigCode] !== undefined ? prev[sigCode] : origScore;
+      const next = Math.round((cur + dir) * 10) / 10;
+      if (Math.abs(next - origScore) < 0.05) { const { [sigCode]: _, ...rest } = prev; return rest; }
       return { ...prev, [sigCode]: Math.max(0, Math.min(100, next)) };
     });
   }, []);
 
-  // ── Reset ──
+  // F2: Group-level override — distributes proportionally
+  const handleGroupOverride = useCallback((groupCode: string, targetScore: number) => {
+    if (!riskSignals) return;
+    setSignalOverrides(prev => distributeGroupOverride(riskSignals, groupCode, targetScore, prev));
+  }, [riskSignals]);
+
   const resetAll = () => {
     setSignalOverrides({});
     setLossModifierOverride(null);
@@ -71,69 +58,82 @@ export default function ScenarioTab() {
   };
 
   const hasAnyOverride = Object.keys(signalOverrides).length > 0
-    || lossModifierOverride !== null
-    || exposureModifierOverride !== null
-    || limitOverride !== null
-    || deductibleOverride !== null;
+    || lossModifierOverride !== null || exposureModifierOverride !== null
+    || limitOverride !== null || deductibleOverride !== null;
 
-  // ── Full cascade recalculation ──
   const scenario: ScenarioResult | null = useMemo(() => {
     if (!activeVersion || !riskSignals) return null;
-    const overrides: ScenarioOverrides = {
-      signalOverrides,
-      lossModifierOverride,
-      exposureModifierOverride,
-      limitOverride,
-      deductibleOverride,
-    };
-    return runFullCascade(riskSignals, activeVersion, overrides);
+    return runFullCascade(riskSignals, activeVersion, {
+      signalOverrides, lossModifierOverride, exposureModifierOverride, limitOverride, deductibleOverride,
+    });
   }, [activeVersion, riskSignals, signalOverrides, lossModifierOverride, exposureModifierOverride, limitOverride, deductibleOverride]);
 
-  // ── Sorted signals for table ──
-  const sortedSignals = useMemo(() => {
-    if (!riskSignals || riskSignals.length === 0) return [];
-    return [...riskSignals].sort((a: any, b: any) => {
-      if (a.group_code < b.group_code) return -1;
-      if (a.group_code > b.group_code) return 1;
-      return (b.contribution || 0) - (a.contribution || 0);
-    });
+  // Group signals for accordion
+  const groupScores = activeVersion?.group_scores || {};
+  const groupEntries = Object.entries(groupScores).sort(([, a]: any, [, b]: any) => (b?.risk_contribution || 0) - (a?.risk_contribution || 0));
+
+  const signalsByGroup = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const sig of (riskSignals || [])) {
+      const g = sig.group_code || 'ungrouped';
+      if (!map[g]) map[g] = [];
+      map[g].push(sig);
+    }
+    for (const g of Object.keys(map)) map[g].sort((a: any, b: any) => (b.contribution || 0) - (a.contribution || 0));
+    return map;
   }, [riskSignals]);
 
+  // Calculate scenario group scores for display
+  const scenarioGroupScores = useMemo(() => {
+    const result: Record<string, number> = {};
+    for (const [groupId] of groupEntries) {
+      const sigs = signalsByGroup[groupId] || [];
+      const totalW = sigs.reduce((s: number, sig: any) => s + (sig.weight || 0), 0);
+      if (totalW === 0) { result[groupId] = 0; continue; }
+      let score = 0;
+      for (const sig of sigs) {
+        const sc = signalOverrides[sig.code] !== undefined ? signalOverrides[sig.code] : (sig.score || 0);
+        score += (sc * (sig.weight || 0)) / totalW;
+      }
+      result[groupId] = score;
+    }
+    return result;
+  }, [groupEntries, signalsByGroup, signalOverrides]);
+
   if (!activeSubmission || !activeVersion) return null;
+
+  // Loss correlation detail
+  const lossConfig = activeVersion.loss_correlation_config;
+  const lossBandInterp = activeVersion.loss_band_interpretation;
+
+  // Exposure band detail
+  const expBandInterp = activeVersion.exposure_band_interpretation;
 
   return (
     <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
 
-      {/* ════════════════════════════════════════════════════════════════════
-          STICKY HEADER
-          ════════════════════════════════════════════════════════════════════ */}
+      {/* STICKY HEADER */}
       <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
         <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
         <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
+            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
                 <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
-              </span>
-            )}
-            {activeQuote.status === 'bound' && (
-              <span>
-                <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
               </span>
             )}
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
+            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
+            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
           </div>
         </div>
       </div>
@@ -145,9 +145,9 @@ export default function ScenarioTab() {
         </div>
       ) : (
         <>
-          {/* ════════════════════════════════════════════════════════════════
-              COHORT C: SIGNAL OVERRIDE TABLE
-              ════════════════════════════════════════════════════════════════ */}
+          {/* ══════════════════════════════════════════════════════════════
+              F1/F2: GROUP → SIGNAL ACCORDION WITH OVERRIDES
+              ══════════════════════════════════════════════════════════════ */}
           <div className="flex flex-col pt-2 pb-2">
             <div className="flex justify-between items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
               <div className="flex items-center gap-dsi-pad">
@@ -165,24 +165,24 @@ export default function ScenarioTab() {
               )}
             </div>
 
-            {/* Composite score comparison header */}
+            {/* Composite comparison header */}
             <div className="grid grid-cols-2 gap-4 bg-dsi-analysis border-x border-dsi-outline/10 px-dsi-pad py-3">
               <div>
                 <span className="opacity-50 block text-xs mb-1">Original Composite</span>
-                <span className="font-bold text-xl">{fmt(scenario.original_composite, 1)}</span>
+                <span className="font-bold text-xl">{formatNum(scenario.original_composite, 1)}</span>
                 <span className="text-xs opacity-40 ml-2">Tier {scenario.original_tier}</span>
               </div>
               <div>
                 <span className="text-dsi-selected block text-xs mb-1 font-bold">Scenario Composite</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-bold text-2xl text-dsi-selected">{fmt(scenario.composite_score, 1)}</span>
+                  <span className="font-bold text-2xl text-dsi-selected">{formatNum(scenario.composite_score, 1)}</span>
                   {Math.abs(scenario.composite_score - scenario.original_composite) > 0.1 && (
-                    <span className={`text-xs font-bold ${deltaClass(scenario.composite_score, scenario.original_composite)}`}>
-                      ({deltaPrefix(scenario.composite_score, scenario.original_composite)}{fmt(scenario.composite_score - scenario.original_composite, 1)})
+                    <span className={`text-xs font-bold ${deltaColor(scenario.composite_score, scenario.original_composite)}`}>
+                      ({scenario.composite_score > scenario.original_composite ? '+' : ''}{formatNum(scenario.composite_score - scenario.original_composite, 1)})
                     </span>
                   )}
                   {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
-                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
                       → Tier {scenario.tier.tier_id}
                     </span>
                   )}
@@ -190,237 +190,321 @@ export default function ScenarioTab() {
               </div>
             </div>
 
-            {/* Signal table */}
-            <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-0 pb-4">
-              <table className="w-full text-sm text-left whitespace-nowrap">
-                <thead>
-                  <tr className="text-center text-sm underline opacity-70">
-                    <th className="py-2 pl-dsi-pad pr-dsi-pad font-normal text-left">Group</th>
-                    <th className="py-2 px-2 font-normal text-right">Grp Wgt</th>
-                    <th className="py-2 px-2 font-normal text-left">Signal Code</th>
-                    <th className="py-2 px-2 font-normal text-right">Score</th>
-                    <th className="py-2 px-2 font-normal text-right">Weight</th>
-                    <th className="py-2 px-2 font-normal text-right">Contrib</th>
-                    <th className="py-2 px-2 font-normal text-center text-dsi-selected border-l border-dsi-outline/20">Scenario</th>
-                    <th className="py-2 pr-dsi-pad font-normal text-right text-dsi-selected">New Contrib</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedSignals.map((sig: any, idx: number) => {
-                    const isNewGroup = idx === 0 || sortedSignals[idx - 1].group_code !== sig.group_code;
-                    const currentScore = signalOverrides[sig.code] !== undefined ? signalOverrides[sig.code] : (sig.score || 0);
-                    const isOverridden = signalOverrides[sig.code] !== undefined;
+            {/* Group accordion */}
+            <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-0 pb-2">
+              {/* Column headers */}
+              <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 text-[11px] underline opacity-70 px-dsi-pad py-2">
+                <span>Group / Signal</span>
+                <span className="text-right">Orig Score</span>
+                <span className="text-right">Weight</span>
+                <span className="text-right">Contribution</span>
+                <span className="text-center text-dsi-selected">Scenario</span>
+                <span className="text-right text-dsi-selected">New Score</span>
+              </div>
 
-                    // Recalc contribution for this signal
-                    const groupStats: Record<string, number> = {};
-                    sortedSignals.filter((s: any) => s.group_code === sig.group_code).forEach((s: any) => {
-                      groupStats[s.group_code] = (groupStats[s.group_code] || 0) + (s.weight || 0);
-                    });
-                    const totalGW = groupStats[sig.group_code] || 1;
-                    const scenarioContrib = ((currentScore * (sig.weight || 0)) / totalGW) * (sig.group_weight || 0) * 10;
+              {groupEntries.map(([groupId, gs]: [string, any]) => {
+                const isExpanded = expandedGroups[groupId] ?? false;
+                const signals = signalsByGroup[groupId] || [];
+                const origGroupScore = gs?.risk_score || 0;
+                const scenGroupScore = scenarioGroupScores[groupId] || origGroupScore;
+                const groupChanged = Math.abs(scenGroupScore - origGroupScore) > 0.1;
 
-                    return (
-                      <tr key={`${sig.code}-${idx}`} className={`border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors ${isNewGroup && idx !== 0 ? 'border-t-1 border-t-dsi-outline/50' : ''}`}>
-                        <td className="py-2 pl-dsi-pad pr-dsi-pad opacity-70 truncate max-w-[120px]">{isNewGroup ? sig.group_code : ''}</td>
-                        <td className="py-2 px-2 text-right opacity-50">{isNewGroup ? fmt(sig.group_weight, 2) : ''}</td>
-                        <td className="py-2 px-2 font-semibold">{sig.code}</td>
-                        <td className="py-2 px-2 text-right">{fmt(sig.score, 1)}</td>
-                        <td className="py-2 px-2 text-right opacity-50">{fmt(sig.weight, 2)}</td>
-                        <td className="py-2 px-2 text-right">{fmt(sig.contribution, 2)}</td>
-                        <td className="py-1 px-2 border-l border-dsi-outline/20">
+                return (
+                  <div key={groupId}>
+                    {/* GROUP HEADER */}
+                    <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors">
+                      <div className="flex items-center gap-2" onClick={() => toggleGroup(groupId)}>
+                        {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+                        <span className="font-bold text-sm">{groupId}</span>
+                        <span className="text-[10px] opacity-40">({signals.length})</span>
+                      </div>
+                      <span className="text-right text-sm" onClick={() => toggleGroup(groupId)}>{formatNum(origGroupScore, 1)}</span>
+                      <span className="text-right text-sm opacity-60" onClick={() => toggleGroup(groupId)}>{formatNum(gs?.risk_weight, 2)}</span>
+                      <span className="text-right text-sm font-bold" onClick={() => toggleGroup(groupId)}>{formatNum(gs?.risk_contribution, 1)}</span>
+                      {/* F2: Group-level override input */}
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button onClick={() => handleGroupOverride(groupId, scenGroupScore - 1)} className="p-0.5 rounded hover:bg-dsi-outline/20 text-dsi-selected/60 hover:text-dsi-selected">
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                        <input
+                          type="number"
+                          className={`w-16 bg-dsi-background border rounded px-1.5 py-1 text-center text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${groupChanged ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
+                          value={groupChanged ? Math.round(scenGroupScore * 10) / 10 : ''}
+                          placeholder={formatNum(origGroupScore, 1)}
+                          onChange={(e) => {
+                            if (e.target.value === '') {
+                              // Reset group signals to originals
+                              setSignalOverrides(prev => {
+                                const next = { ...prev };
+                                signals.forEach((s: any) => delete next[s.code]);
+                                return next;
+                              });
+                            } else {
+                              handleGroupOverride(groupId, parseFloat(e.target.value));
+                            }
+                          }}
+                        />
+                        <button onClick={() => handleGroupOverride(groupId, scenGroupScore + 1)} className="p-0.5 rounded hover:bg-dsi-outline/20 text-dsi-selected/60 hover:text-dsi-selected">
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <span className={`text-right text-sm font-bold ${groupChanged ? 'text-dsi-selected' : ''}`}>
+                        {formatNum(scenGroupScore, 1)}
+                      </span>
+                    </div>
+
+                    {/* SIGNAL ROWS */}
+                    {isExpanded && signals.map((sig: any, sidx: number) => {
+                      const isOverridden = signalOverrides[sig.code] !== undefined;
+                      const currentScore = isOverridden ? signalOverrides[sig.code] : (sig.score || 0);
+                      return (
+                        <div key={`${sig.code}-${sidx}`} className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors">
+                          <div className="flex items-center gap-2 pl-6">
+                            <span className="text-sm">{sig.code}</span>
+                            {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
+                          </div>
+                          <span className="text-right text-sm">{formatNum(sig.score, 1)}</span>
+                          <span className="text-right text-sm opacity-50">{formatNum(sig.weight, 2)}</span>
+                          <span className="text-right text-sm">{formatNum(sig.contribution, 2)}</span>
                           <div className="flex items-center justify-center gap-0.5">
-                            <button onClick={() => handleStep(sig.code, sig.score || 0, -1)} className="p-0.5 rounded hover:bg-dsi-outline/20 transition-colors text-dsi-selected/60 hover:text-dsi-selected">
-                              <ChevronDown className="w-3.5 h-3.5" />
+                            <button onClick={() => handleStep(sig.code, sig.score || 0, -1)} className="p-0.5 rounded hover:bg-dsi-outline/20 text-dsi-selected/60 hover:text-dsi-selected">
+                              <ChevronDown className="w-3 h-3" />
                             </button>
                             <input
                               type="number"
-                              className={`w-16 bg-dsi-background border rounded px-1.5 py-1 text-center text-sm outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isOverridden ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20 focus:border-dsi-selected/50'}`}
+                              className={`w-14 bg-dsi-background border rounded px-1 py-0.5 text-center text-xs outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isOverridden ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20 focus:border-dsi-selected/50'}`}
                               value={isOverridden ? currentScore : ''}
-                              placeholder={fmt(sig.score, 1)}
+                              placeholder={formatNum(sig.score, 1)}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setSignalOverrides(prev => {
                                   const next = { ...prev };
-                                  if (val === "") { delete next[sig.code]; }
-                                  else { next[sig.code] = parseFloat(val); }
+                                  if (val === '') delete next[sig.code];
+                                  else next[sig.code] = parseFloat(val);
                                   return next;
                                 });
                               }}
                             />
-                            <button onClick={() => handleStep(sig.code, sig.score || 0, 1)} className="p-0.5 rounded hover:bg-dsi-outline/20 transition-colors text-dsi-selected/60 hover:text-dsi-selected">
-                              <ChevronUp className="w-3.5 h-3.5" />
+                            <button onClick={() => handleStep(sig.code, sig.score || 0, 1)} className="p-0.5 rounded hover:bg-dsi-outline/20 text-dsi-selected/60 hover:text-dsi-selected">
+                              <ChevronUp className="w-3 h-3" />
                             </button>
                           </div>
-                        </td>
-                        <td className={`py-2 pr-dsi-pad text-right font-bold ${isOverridden ? 'text-dsi-selected' : ''}`}>
-                          {fmt(scenarioContrib, 2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          <span className={`text-right text-sm ${isOverridden ? 'font-bold text-dsi-selected' : ''}`}>
+                            {formatNum(currentScore, 1)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* ════════════════════════════════════════════════════════════════
-              COHORT E: DIRECT OVERRIDE CONTROLS
-              ════════════════════════════════════════════════════════════════ */}
-          <div className="flex flex-col pt-2 pb-2">
-            <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-              <Calculator className="icon"/><span className="text-sm">Direct Overrides</span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm px-dsi-pad py-4">
-
-              {/* Loss modifier */}
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Loss Modifier</span>
-                <div className="flex items-center gap-1">
+          {/* ══════════════════════════════════════════════════════════════
+              F3/F4: LOSS & EXPOSURE MODIFIER DETAIL
+              ══════════════════════════════════════════════════════════════ */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
+            {/* Loss modifier detail */}
+            <div className="flex flex-col">
+              <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+                <Shield className="icon"/><span className="text-sm">Loss Modifier</span>
+              </div>
+              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad space-y-3">
+                {/* Calculated path */}
+                {scenario.loss_modifier ? (
+                  <div className="border border-dsi-outline/20 rounded-lg p-3 space-y-2 text-wrap">
+                    <span className="text-xs opacity-60 block">Calculated from signal overrides</span>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div><span className="text-[10px] opacity-50 block">Propensity</span><span className="font-bold">{formatNum(scenario.loss_modifier.propensity_score, 1)}</span> <span className="text-[10px] opacity-40 uppercase">{scenario.loss_modifier.propensity_band}</span></div>
+                      <div><span className="text-[10px] opacity-50 block">Freq Mult</span><span className="font-bold">{formatNum(scenario.loss_modifier.frequency_multiplier, 3)}x</span></div>
+                      <div><span className="text-[10px] opacity-50 block">Sev Mult</span><span className="font-bold">{formatNum(scenario.loss_modifier.severity_multiplier, 3)}x</span></div>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-dsi-outline/10">
+                      <span className="text-xs opacity-60">Combined</span>
+                      <span className={`font-bold text-lg ${deltaColor(scenario.scenario_loss_combined, scenario.original_loss_combined)}`}>
+                        {formatNum(scenario.scenario_loss_combined, 3)}x
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border border-dsi-outline/20 rounded-lg p-3 text-wrap">
+                    <span className="text-xs opacity-60 block mb-1">Original: {formatNum(scenario.original_loss_combined, 3)}x</span>
+                    <span className="text-[10px] opacity-40">{lossConfig ? 'Adjust signals above to recalculate' : 'Loss correlation config not available — override directly'}</span>
+                  </div>
+                )}
+                {/* Direct override */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs opacity-60 shrink-0">Override:</span>
                   <input
                     type="number" step="0.01"
                     className={`w-20 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${lossModifierOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
                     value={lossModifierOverride ?? ''}
-                    placeholder={fmt(activeVersion.loss_combined_modifier, 3)}
+                    placeholder={formatNum(scenario.scenario_loss_combined, 3)}
                     onChange={(e) => setLossModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
                   <span className="text-xs opacity-40">x</span>
                 </div>
-                <span className="text-[10px] opacity-30 block mt-1">Original: {fmt(activeVersion.loss_combined_modifier, 3)}x</span>
               </div>
+            </div>
 
-              {/* Exposure modifier */}
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Exposure Modifier</span>
-                <div className="flex items-center gap-1">
+            {/* Exposure modifier detail */}
+            <div className="flex flex-col">
+              <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+                <Shield className="icon"/><span className="text-sm">Exposure Modifier</span>
+              </div>
+              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad space-y-3">
+                <div className="border border-dsi-outline/20 rounded-lg p-3 text-wrap">
+                  <span className="text-xs opacity-60 block mb-2">Band lookup from exposure value</span>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div><span className="text-[10px] opacity-50 block">Value</span><span className="font-bold">{fmtDollar(activeVersion?.exposure_value)}</span></div>
+                    <div><span className="text-[10px] opacity-50 block">Band</span><span className="font-bold uppercase">{activeVersion?.exposure_band_label || 'N/A'}</span></div>
+                    <div><span className="text-[10px] opacity-50 block">Modifier</span><span className="font-bold">{formatNum(scenario.original_exposure_modifier, 3)}x</span></div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs opacity-60 shrink-0">Override:</span>
                   <input
                     type="number" step="0.01"
                     className={`w-20 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${exposureModifierOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
                     value={exposureModifierOverride ?? ''}
-                    placeholder={fmt(activeVersion.exposure_modifier, 3)}
+                    placeholder={formatNum(scenario.original_exposure_modifier, 3)}
                     onChange={(e) => setExposureModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
                   <span className="text-xs opacity-40">x</span>
                 </div>
-                <span className="text-[10px] opacity-30 block mt-1">Original: {fmt(activeVersion.exposure_modifier, 3)}x</span>
-              </div>
-
-              {/* Limit */}
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Policy Limit</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs opacity-40">$</span>
-                  <input
-                    type="number" step="1000000"
-                    className={`w-28 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${limitOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                    value={limitOverride ?? ''}
-                    placeholder={String(activeVersion.final_premium_detail?.limit || activeVersion.ilf_anchor_limit || '')}
-                    onChange={(e) => setLimitOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
-                  />
+                {/* Limit + Deductible side by side */}
+                <div className="grid grid-cols-2 gap-3 border-t border-dsi-outline/10 pt-3">
+                  <div>
+                    <span className="text-xs opacity-60 block mb-1">Policy Limit</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs opacity-40">$</span>
+                      <input type="number" step="1000000"
+                        className={`w-full bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${limitOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
+                        value={limitOverride ?? ''}
+                        placeholder={String(activeVersion?.final_premium_detail?.limit || '')}
+                        onChange={(e) => setLimitOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
+                      />
+                    </div>
+                    <span className="text-[10px] opacity-30 block mt-1">ILF: {formatNum(activeVersion?.ilf_factor, 3)}x</span>
+                  </div>
+                  <div>
+                    <span className="text-xs opacity-60 block mb-1">Deductible</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs opacity-40">$</span>
+                      <input type="number" step="25000"
+                        className={`w-full bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${deductibleOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
+                        value={deductibleOverride ?? ''}
+                        placeholder={String(activeVersion?.final_premium_detail?.deductible || '')}
+                        onChange={(e) => setDeductibleOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
+                      />
+                    </div>
+                    <span className="text-[10px] opacity-30 block mt-1">Factor: {formatNum(activeVersion?.final_premium_detail?.deductible_factor, 3)}x</span>
+                  </div>
                 </div>
-                <span className="text-[10px] opacity-30 block mt-1">ILF: {fmt(activeVersion.ilf_factor, 3)}x @ anchor {fmtDollar(activeVersion.ilf_anchor_limit)}</span>
               </div>
-
-              {/* Deductible */}
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Deductible</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs opacity-40">$</span>
-                  <input
-                    type="number" step="25000"
-                    className={`w-28 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${deductibleOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                    value={deductibleOverride ?? ''}
-                    placeholder={String(activeVersion.final_premium_detail?.deductible || '')}
-                    onChange={(e) => setDeductibleOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
-                  />
-                </div>
-                <span className="text-[10px] opacity-30 block mt-1">Factor: {fmt(activeVersion.final_premium_detail?.deductible_factor, 3)}x</span>
-              </div>
-
             </div>
           </div>
 
-          {/* ════════════════════════════════════════════════════════════════
-              COHORT D: CASCADE WATERFALL
-              ════════════════════════════════════════════════════════════════ */}
+          {/* ══════════════════════════════════════════════════════════════
+              F5: PRICING CASCADE (PricingTab style)
+              ══════════════════════════════════════════════════════════════ */}
           <div className="flex flex-col pt-2 pb-2">
             <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-              <ArrowDown className="icon"/><span className="text-sm">Pricing Cascade</span>
+              <PenLine className="icon"/><span className="text-sm">Pricing Cascade — Original vs Scenario</span>
             </div>
             <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
 
-              {/* Header row */}
-              <div className="grid grid-cols-[1fr_140px_30px_140px] gap-2 px-dsi-pad pb-2 mb-2 border-b border-dsi-outline/20 text-xs uppercase tracking-wider opacity-50">
-                <span>Stage</span>
-                <span className="text-right">Original</span>
-                <span></span>
-                <span className="text-right font-bold text-dsi-selected opacity-100">Scenario</span>
+              {/* Grid: matching PricingTab cols */}
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad">
+
+                {/* TIER */}
+                <div className="flex gap-dsi-pad text-sm pb-2">
+                  <ArrowRightToLine className="icon"/> Tier Assignment
+                </div>
+                <div className="text-xs text-right pr-dsi-pad border-r border-dsi-outline/50 content-center">Original</div>
+                <div className="text-sm text-right bg-dsi-selected/5 content-center">Tier {scenario.original_tier}</div>
+                <div className={`pl-dsi-pad pr-dsi-pad text-right text-sm font-bold bg-dsi-selected/10 content-center ${scenario.tier && scenario.tier.tier_id !== scenario.original_tier ? 'text-dsi-selected' : ''}`}>
+                  {scenario.tier ? `Tier ${scenario.tier.tier_id}` : `Tier ${scenario.original_tier}`}
+                  {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
+                    <span className="text-[10px] ml-1 opacity-60">({scenario.tier.label})</span>
+                  )}
+                </div>
+
+                {/* BASE PREMIUM */}
+                <div className="flex gap-dsi-pad text-sm pt-3 pb-2 border-t border-dsi-outline/10">
+                  <ArrowRightToLine className="icon"/> Base Premium
+                </div>
+                <div className="text-xs text-right pr-dsi-pad border-r border-dsi-outline/50 border-t border-dsi-outline/10 content-center pt-3">
+                  {activeVersion?.base_premium_method || ''}
+                </div>
+                <div className="text-sm text-right bg-dsi-selected/5 border-t border-dsi-outline/10 content-center pt-3">
+                  {fmtDollar(scenario.original_base_premium)}
+                </div>
+                <div className={`pl-dsi-pad pr-dsi-pad text-right text-sm font-bold bg-dsi-selected/10 border-t border-dsi-outline/10 content-center pt-3 ${Math.abs(scenario.base_premium - scenario.original_base_premium) > 1 ? 'text-dsi-selected' : ''}`}>
+                  {fmtDollar(scenario.base_premium)}
+                </div>
+
+                {/* MODIFIERS */}
+                <div className="flex gap-dsi-pad text-sm pt-3 pb-2 border-t border-dsi-outline/10">
+                  <PenLine className="icon"/> Adjustments
+                </div>
+                <div className="text-xs text-center border-t border-dsi-outline/10 content-center pt-3">Factor</div>
+                <div className="text-xs text-right border-t border-dsi-outline/10 content-center pt-3">Original</div>
+                <div className="text-xs text-right pr-dsi-pad border-t border-dsi-outline/10 content-center pt-3 text-dsi-selected font-bold">Scenario</div>
               </div>
 
-              {/* D1: Tier */}
-              <CascadeRow
-                label="Tier Assignment"
-                sublabel={scenario.tier ? `${scenario.tier.action} — ${scenario.tier.label}` : ''}
-                original={`Tier ${scenario.original_tier}`}
-                scenarioVal={scenario.tier ? `Tier ${scenario.tier.tier_id}` : `Tier ${scenario.original_tier}`}
-                changed={scenario.tier !== null && scenario.tier.tier_id !== scenario.original_tier}
-              />
+              {/* Modifier rows */}
+              {scenario.waterfall.map((step, idx) => {
+                const changed = Math.abs(step.scenario_factor - step.original_factor) > 0.001;
+                return (
+                  <div key={idx} className="contents">
+                    <div className={`grid grid-cols-[50%_10%_20%_20%] px-dsi-pad ${changed ? 'bg-dsi-selected/5' : ''}`}>
+                      <div className="text-xs pl-dsi-padicon py-1.5 truncate" title={step.name}>{step.name}</div>
+                      <div className="text-center text-xs content-center">{step.scenario_factor.toFixed(3)}x</div>
+                      <div className="text-right text-xs content-center">{step.original_factor.toFixed(3)}x</div>
+                      <div className={`pr-dsi-pad text-right text-xs content-center font-bold ${changed ? 'text-dsi-selected' : ''}`}>
+                        {step.scenario_factor.toFixed(3)}x
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
 
-              {/* D2: Base Premium */}
-              <CascadeRow
-                label="Base Premium"
-                sublabel={activeVersion.base_premium_method || ''}
-                original={fmtDollar(scenario.original_base_premium)}
-                scenarioVal={fmtDollar(scenario.base_premium)}
-                changed={Math.abs(scenario.base_premium - scenario.original_base_premium) > 1}
-              />
-
-              {/* D3: Modifier Waterfall */}
-              {scenario.waterfall.map((step, idx) => (
-                <CascadeRow
-                  key={idx}
-                  label={step.name}
-                  sublabel={step.source}
-                  original={`${step.original_factor.toFixed(3)}x`}
-                  scenarioVal={`${step.scenario_factor.toFixed(3)}x`}
-                  changed={Math.abs(step.scenario_factor - step.original_factor) > 0.001}
-                  indent
-                />
-              ))}
-
-              {/* Premium after modifiers subtotal */}
-              <div className="grid grid-cols-[1fr_140px_30px_140px] gap-2 px-dsi-pad py-2 border-t border-dsi-outline/20 bg-dsi-background/20">
-                <span className="text-sm font-bold">Premium After Modifiers</span>
-                <span className="text-right text-sm font-bold">{fmtDollar(activeVersion.premium_after_modifiers)}</span>
-                <span className="text-center opacity-30">→</span>
-                <span className={`text-right text-sm font-bold ${deltaClass(scenario.premium_after_modifiers, activeVersion.premium_after_modifiers || 0)}`}>
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad border-t border-dsi-outline/20 pt-2 mt-1">
+                <div className="text-sm font-bold py-1">Premium After Modifiers</div>
+                <div></div>
+                <div className="text-right text-sm">{fmtDollar(activeVersion?.premium_after_modifiers)}</div>
+                <div className={`pr-dsi-pad text-right text-sm font-bold ${deltaColor(scenario.premium_after_modifiers, activeVersion?.premium_after_modifiers || 0)}`}>
                   {fmtDollar(scenario.premium_after_modifiers)}
-                </span>
+                </div>
               </div>
 
-              {/* D4: ILF */}
-              <CascadeRow
-                label="ILF Factor"
-                sublabel={activeVersion.ilf_method || ''}
-                original={`${fmt(scenario.original_ilf_factor, 3)}x`}
-                scenarioVal={`${fmt(scenario.ilf_factor, 3)}x`}
-                changed={Math.abs(scenario.ilf_factor - scenario.original_ilf_factor) > 0.001}
-              />
+              {/* ILF + DEDUCTIBLE + GUARDRAILS */}
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad border-t border-dsi-outline/10 pt-2 mt-1">
+                <div className="text-xs py-1 pl-dsi-padicon">ILF Factor ({activeVersion?.ilf_method || 'N/A'})</div>
+                <div className="text-center text-xs content-center">{formatNum(scenario.ilf_factor, 3)}x</div>
+                <div className="text-right text-xs content-center">{formatNum(scenario.original_ilf_factor, 3)}x</div>
+                <div className={`pr-dsi-pad text-right text-xs content-center font-bold ${Math.abs(scenario.ilf_factor - scenario.original_ilf_factor) > 0.001 ? 'text-dsi-selected' : ''}`}>
+                  {formatNum(scenario.ilf_factor, 3)}x
+                </div>
+              </div>
 
-              {/* D5: Deductible */}
-              <CascadeRow
-                label="Deductible Factor"
-                sublabel=""
-                original={`${fmt(scenario.original_deductible_factor, 3)}x`}
-                scenarioVal={`${fmt(scenario.deductible_factor, 3)}x`}
-                changed={Math.abs(scenario.deductible_factor - scenario.original_deductible_factor) > 0.001}
-              />
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad">
+                <div className="text-xs py-1 pl-dsi-padicon">Deductible Factor</div>
+                <div className="text-center text-xs content-center">{formatNum(scenario.deductible_factor, 3)}x</div>
+                <div className="text-right text-xs content-center">{formatNum(scenario.original_deductible_factor, 3)}x</div>
+                <div className={`pr-dsi-pad text-right text-xs content-center font-bold ${Math.abs(scenario.deductible_factor - scenario.original_deductible_factor) > 0.001 ? 'text-dsi-selected' : ''}`}>
+                  {formatNum(scenario.deductible_factor, 3)}x
+                </div>
+              </div>
 
-              {/* D6: Guardrails */}
+              {/* Guardrails */}
               {scenario.guardrails.warnings.length > 0 && (
-                <div className="px-dsi-pad py-2 border-t border-amber-500/20 bg-amber-500/5">
+                <div className="mx-dsi-pad mt-2 p-2 border border-dsi-warning/20 bg-dsi-warning/5 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
-                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-xs font-bold text-amber-400">Guardrails Active</span>
+                    <ShieldAlert className="w-3.5 h-3.5 text-dsi-warning" />
+                    <span className="text-xs font-bold text-dsi-warning">Guardrails Active</span>
                   </div>
                   {scenario.guardrails.warnings.map((w, i) => (
                     <p key={i} className="text-xs opacity-70 text-wrap ml-5">{w}</p>
@@ -428,24 +512,23 @@ export default function ScenarioTab() {
                 </div>
               )}
 
-              {/* D7: Final Premium */}
-              <div className="grid grid-cols-[1fr_140px_30px_140px] gap-2 px-dsi-pad py-4 border-t-2 border-dsi-outline/30 bg-dsi-background/30">
-                <span className="text-lg font-black">Final Premium</span>
-                <span className="text-right text-lg font-bold">{fmtDollar(scenario.original_final_premium)}</span>
-                <span className="text-center opacity-30 text-lg">→</span>
-                <span className={`text-right text-lg font-black ${deltaClass(scenario.final_premium, scenario.original_final_premium)}`}>
+              {/* FINAL PREMIUM */}
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad border-t-2 border-dsi-outline/30 pt-3 mt-3">
+                <div className="text-lg font-black py-1">Final Premium</div>
+                <div></div>
+                <div className="text-right text-lg font-bold content-center">{fmtDollar(scenario.original_final_premium)}</div>
+                <div className={`pr-dsi-pad text-right text-lg font-black content-center ${deltaColor(scenario.final_premium, scenario.original_final_premium)}`}>
                   {fmtDollar(scenario.final_premium)}
-                </span>
+                </div>
               </div>
 
-              {/* Delta summary */}
               {Math.abs(scenario.final_premium - scenario.original_final_premium) > 1 && (
-                <div className="px-dsi-pad pt-2 text-right">
-                  <span className={`text-sm font-bold ${deltaClass(scenario.final_premium, scenario.original_final_premium)}`}>
-                    {deltaPrefix(scenario.final_premium, scenario.original_final_premium)}
-                    {fmtDollar(scenario.final_premium - scenario.original_final_premium)}
-                    {' '}({deltaPrefix(scenario.final_premium, scenario.original_final_premium)}
-                    {scenario.original_final_premium > 0 ? ((scenario.final_premium - scenario.original_final_premium) / scenario.original_final_premium * 100).toFixed(1) : '0'}%)
+                <div className="px-dsi-pad pt-1 text-right">
+                  <span className={`text-sm font-bold ${deltaColor(scenario.final_premium, scenario.original_final_premium)}`}>
+                    {scenario.final_premium > scenario.original_final_premium ? '+' : ''}{fmtDollar(scenario.final_premium - scenario.original_final_premium)}
+                    {scenario.original_final_premium > 0 && (
+                      <span className="ml-1">({scenario.final_premium > scenario.original_final_premium ? '+' : ''}{((scenario.final_premium - scenario.original_final_premium) / scenario.original_final_premium * 100).toFixed(1)}%)</span>
+                    )}
                   </span>
                 </div>
               )}
@@ -454,24 +537,6 @@ export default function ScenarioTab() {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-// ─── Cascade Row Sub-component ───────────────────────────────────────────────
-
-function CascadeRow({ label, sublabel, original, scenarioVal, changed, indent }: {
-  label: string; sublabel: string; original: string; scenarioVal: string; changed: boolean; indent?: boolean;
-}) {
-  return (
-    <div className={`grid grid-cols-[1fr_140px_30px_140px] gap-2 px-dsi-pad py-2 border-b border-dsi-outline/5 hover:bg-dsi-background/10 transition-colors ${changed ? 'bg-dsi-selected/5' : ''}`}>
-      <div className={indent ? 'pl-4' : ''}>
-        <span className="text-sm">{label}</span>
-        {sublabel && <span className="text-[10px] opacity-30 block">{sublabel}</span>}
-      </div>
-      <span className="text-right text-sm opacity-70">{original}</span>
-      <span className="text-center opacity-30">→</span>
-      <span className={`text-right text-sm font-bold ${changed ? 'text-dsi-selected' : ''}`}>{scenarioVal}</span>
     </div>
   );
 }

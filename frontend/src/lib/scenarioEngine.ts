@@ -80,6 +80,55 @@ export interface ScenarioResult {
   original_final_premium: number;
 }
 
+// ─── Group-level override distribution ────────────────────────────────────────
+
+/**
+ * Distributes a group-level score delta proportionally across all signals
+ * in the group based on their weights.
+ *
+ * Example: if group has signals weighted 0.5, 0.3, 0.2 and user sets
+ * group score to X (delta = +10 from current), signals get +5, +3, +2.
+ */
+export function distributeGroupOverride(
+  signals: any[],
+  groupCode: string,
+  targetGroupScore: number,
+  existingOverrides: Record<string, number>
+): Record<string, number> {
+  const groupSignals = signals.filter((s: any) => (s.group_code || 'ungrouped') === groupCode);
+  if (groupSignals.length === 0) return existingOverrides;
+
+  // Calculate current group score from signal scores (with existing overrides)
+  const totalWeight = groupSignals.reduce((sum: number, s: any) => sum + (s.weight || 0), 0);
+  if (totalWeight === 0) return existingOverrides;
+
+  let currentGroupScore = 0;
+  for (const sig of groupSignals) {
+    const score = existingOverrides[sig.code] !== undefined ? existingOverrides[sig.code] : (sig.score || 0);
+    currentGroupScore += (score * (sig.weight || 0)) / totalWeight;
+  }
+
+  const delta = targetGroupScore - currentGroupScore;
+  if (Math.abs(delta) < 0.01) return existingOverrides;
+
+  const newOverrides = { ...existingOverrides };
+  for (const sig of groupSignals) {
+    const weight = sig.weight || 0;
+    const proportion = weight / totalWeight;
+    const origScore = sig.score || 0;
+    const currentScore = existingOverrides[sig.code] !== undefined ? existingOverrides[sig.code] : origScore;
+    const newScore = Math.max(0, Math.min(100, currentScore + delta * proportion));
+
+    if (Math.abs(newScore - origScore) < 0.05) {
+      delete newOverrides[sig.code];
+    } else {
+      newOverrides[sig.code] = Math.round(newScore * 10) / 10;
+    }
+  }
+
+  return newOverrides;
+}
+
 // ─── A1: Composite Score ─────────────────────────────────────────────────────
 
 export function recalcCompositeScore(

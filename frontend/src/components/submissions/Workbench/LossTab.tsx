@@ -10,20 +10,8 @@ import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, ReferenceLine, Label
 } from "recharts";
-
-const DECISION_COLORS: Record<string, string> = {
-  approve: '#10b981',
-  refer: '#f59e0b',
-  decline: '#f43f5e',
-};
-
-const getDecisionColor = (decision: string | undefined) => {
-  if (!decision) return '#475569';
-  return DECISION_COLORS[decision.toLowerCase()] || '#475569';
-};
-
-const formatNum = (num: number | null | undefined, decimals = 1) =>
-  num !== null && num !== undefined ? Number(num).toFixed(decimals) : "-";
+import { DECISION_COLORS, getDecisionColor, tooltipStyle, CHART_GRID_COLOR, CHART_AXIS_COLOR, CHART_SUBJECT_COLOR, CHART_PEER_COLOR } from "@/lib/chartConfig";
+import { formatNum } from "@/lib/format";
 
 export default function LossTab() {
   const {
@@ -50,14 +38,6 @@ export default function LossTab() {
     y_severity: activeVersion.severity_propensity_score || 0,
     name: "Current Submission"
   }];
-
-  const tooltipStyle = {
-    backgroundColor: '#0f172a',
-    borderColor: '#334155',
-    color: '#f8fafc',
-    borderRadius: '8px',
-    fontSize: '12px'
-  };
 
   // Subject's modifier for reference line on cohort chart
   const subjectModifier = activeVersion.loss_combined_modifier || 1.0;
@@ -108,8 +88,8 @@ export default function LossTab() {
 
   const getTrendIcon = (trend: string) => {
     const t = trend?.toLowerCase() || '';
-    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-emerald-400" />;
-    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-rose-400" />;
+    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-dsi-positive" />;
+    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-dsi-negative" />;
     return <Minus className="w-4 h-4 opacity-50" />;
   };
 
@@ -120,7 +100,7 @@ export default function LossTab() {
     return 'Stable';
   };
 
-  const getVelocityColor = (v: number) => v > 0 ? 'text-rose-400' : v < 0 ? 'text-emerald-400' : 'opacity-50';
+  const getVelocityColor = (v: number) => v > 0 ? 'text-dsi-negative' : v < 0 ? 'text-dsi-positive' : 'opacity-50';
 
   return (
     <div className="
@@ -158,29 +138,29 @@ export default function LossTab() {
           pt-2 pb-2"
         >
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
+            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
           </div>
 
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <span className="">
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
                 <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
               </span>
             )}
-            {activeQuote.status === 'bound' && (
+            {activeQuote?.status === 'bound' && (
               <span className="">
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
+                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
               </span>
             )}
           </div>
 
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
+            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
+            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
           </div>
 
         </div>
@@ -258,7 +238,7 @@ export default function LossTab() {
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Score Velocity</span>
-              <span className={`font-bold text-lg ${activeVersion.loss_score_velocity > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+              <span className={`font-bold text-lg ${activeVersion.loss_score_velocity > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
                 {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
               </span>
             </div>
@@ -316,30 +296,30 @@ export default function LossTab() {
                 pt-4 pb-4
               ">
                 <div className="pl-dsi-pad pr-dsi-pad flex gap-4 mb-2 text-[10px] uppercase tracking-wider">
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span> Approve</span>
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-amber-500"></span> Refer</span>
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-rose-500"></span> Decline</span>
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-slate-500"></span> Unknown</span>
+                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-approve"></span> Approve</span>
+                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-refer"></span> Refer</span>
+                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-decline"></span> Decline</span>
+                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-muted"></span> Unknown</span>
                 </div>
                 <div className="pl-dsi-pad pr-dsi-pad h-[400px] w-full relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-chart-grid)" opacity={0.5} />
                       <XAxis
                         type="number"
                         dataKey="x_propensity"
                         name="Frequency (Propensity)"
-                        stroke="#94a3b8"
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                        label={{ value: 'Loss Propensity Score', position: 'insideBottom', offset: -15, fill: '#94a3b8', fontSize: 12 }}
+                        stroke="var(--dsi-chart-axis)"
+                        tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
+                        label={{ value: 'Loss Propensity Score', position: 'insideBottom', offset: -15, fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
                       />
                       <YAxis
                         type="number"
                         dataKey="y_severity"
                         name="Severity"
-                        stroke="#94a3b8"
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                        label={{ value: 'Severity Score', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 12 }}
+                        stroke="var(--dsi-chart-axis)"
+                        tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
+                        label={{ value: 'Severity Score', angle: -90, position: 'insideLeft', fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
                       />
                       <RechartsTooltip
                         cursor={{ strokeDasharray: '3 3' }}
@@ -349,13 +329,13 @@ export default function LossTab() {
                       {/* Subject crosshair reference lines */}
                       <ReferenceLine
                         x={activeVersion.loss_propensity_score || 0}
-                        stroke="#3b82f6"
+                        stroke="var(--dsi-chart-subject)"
                         strokeDasharray="4 4"
                         strokeOpacity={0.6}
                       />
                       <ReferenceLine
                         y={activeVersion.severity_propensity_score || 0}
-                        stroke="#3b82f6"
+                        stroke="var(--dsi-chart-subject)"
                         strokeDasharray="4 4"
                         strokeOpacity={0.6}
                       />
@@ -369,7 +349,7 @@ export default function LossTab() {
                           isAnimationActive={false}
                         />
                       ))}
-                      <Scatter name="Active Submission" data={activePoint} fill="#3b82f6" shape="star" />
+                      <Scatter name="Active Submission" data={activePoint} fill="var(--dsi-chart-subject)" shape="star" />
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
@@ -463,15 +443,15 @@ export default function LossTab() {
                       <span className="text-xs opacity-70 block mb-2">Book-wide Trend ({trendTotal} peers)</span>
                       <div className="flex gap-3 text-xs">
                         <span className="flex items-center gap-1">
-                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span className="inline-block w-2 h-2 rounded-full bg-dsi-approve"></span>
                           {getTrendCount('improv')} improving
                         </span>
                         <span className="flex items-center gap-1">
-                          <span className="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
+                          <span className="inline-block w-2 h-2 rounded-full bg-dsi-muted"></span>
                           {getTrendCount('stable')} stable
                         </span>
                         <span className="flex items-center gap-1">
-                          <span className="inline-block w-2 h-2 rounded-full bg-rose-500"></span>
+                          <span className="inline-block w-2 h-2 rounded-full bg-dsi-decline"></span>
                           {getTrendCount('deter')} deteriorating
                         </span>
                       </div>
@@ -515,22 +495,22 @@ export default function LossTab() {
                   {lossCohortBenchmarks.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={lossCohortBenchmarks} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--dsi-chart-grid)" opacity={0.5} />
                         <XAxis
                           dataKey="cohort_name"
-                          stroke="#94a3b8"
-                          tick={{ fill: '#94a3b8', fontSize: 11 }}
+                          stroke="var(--dsi-chart-axis)"
+                          tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }}
                           interval={0}
                           tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
                         />
                         <YAxis
-                          stroke="#94a3b8"
-                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          stroke="var(--dsi-chart-axis)"
+                          tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
                           domain={['auto', 'auto']}
                         />
                         <RechartsTooltip
                           contentStyle={tooltipStyle}
-                          cursor={{ fill: '#1e293b', opacity: 0.4 }}
+                          cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
                           formatter={(value: any, name: string) => {
                             if (name === 'avg_modifier') return [`${Number(value).toFixed(3)}x`, 'Avg Modifier'];
                             return [value, name];
@@ -543,17 +523,17 @@ export default function LossTab() {
                         {/* Subject modifier reference line */}
                         <ReferenceLine
                           y={subjectModifier}
-                          stroke="#3b82f6"
+                          stroke="var(--dsi-chart-subject)"
                           strokeDasharray="6 3"
                           strokeWidth={2}
                         >
-                          <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="#3b82f6" fontSize={11} />
+                          <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
                         </ReferenceLine>
                         <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
                           label={({ x, y, width, index }: any) => {
                             const entry = lossCohortBenchmarks[index];
                             return (
-                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="#94a3b8" fontSize={10}>
+                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="var(--dsi-chart-axis)" fontSize={10}>
                                 n={entry?.peer_count}
                               </text>
                             );
@@ -562,7 +542,7 @@ export default function LossTab() {
                           {lossCohortBenchmarks.map((entry: any, index: number) => (
                             <Cell
                               key={`cell-${index}`}
-                              fill={entry.cohort_name === activeVersion.loss_cohort_name ? '#3b82f6' : '#475569'}
+                              fill={entry.cohort_name === activeVersion.loss_cohort_name ? 'var(--dsi-chart-subject)' : 'var(--dsi-chart-peer)'}
                             />
                           ))}
                         </Bar>
@@ -619,7 +599,7 @@ export default function LossTab() {
                                 className="h-full rounded-full transition-all"
                                 style={{
                                   width: `${Math.min(100, Math.max(2, freqScore))}%`,
-                                  backgroundColor: freqScore > 70 ? '#f43f5e' : freqScore > 40 ? '#f59e0b' : '#10b981'
+                                  backgroundColor: freqScore > 70 ? 'var(--dsi-negative)' : freqScore > 40 ? 'var(--dsi-warning)' : 'var(--dsi-positive)'
                                 }}
                               />
                             </div>
@@ -633,7 +613,7 @@ export default function LossTab() {
                                 className="h-full rounded-full transition-all"
                                 style={{
                                   width: `${Math.min(100, Math.max(2, sevScore))}%`,
-                                  backgroundColor: sevScore > 70 ? '#f43f5e' : sevScore > 40 ? '#f59e0b' : '#10b981'
+                                  backgroundColor: sevScore > 70 ? 'var(--dsi-negative)' : sevScore > 40 ? 'var(--dsi-warning)' : 'var(--dsi-positive)'
                                 }}
                               />
                             </div>
@@ -685,14 +665,14 @@ export default function LossTab() {
                     const isModifier = actionKey === 'modifier';
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
-                    const tagColor = isModifier ? 'bg-blue-500/15 text-blue-400' :
-                                     isReferral ? 'bg-amber-500/15 text-amber-400' :
-                                     isTierOverride ? 'bg-rose-500/15 text-rose-400' :
-                                     'bg-slate-500/15 text-slate-400';
+                    const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
+                                     isReferral ? 'bg-dsi-warning/15 text-dsi-warning' :
+                                     isTierOverride ? 'bg-dsi-negative/10 text-dsi-negative' :
+                                     'bg-dsi-muted/15 text-dsi-muted';
                     return (
                       <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-amber-400' : isModifier ? 'text-blue-400' : 'text-slate-400'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-warning' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>

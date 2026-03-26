@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 
 const DECISION_BADGE: Record<string, { bg: string; text: string }> = {
-  approve: { bg: 'bg-emerald-500/15', text: 'text-emerald-400' },
-  refer: { bg: 'bg-amber-500/15', text: 'text-amber-400' },
-  decline: { bg: 'bg-rose-500/15', text: 'text-rose-400' },
+  approve: { bg: 'bg-dsi-positive/15', text: 'text-dsi-positive' },
+  refer: { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
+  decline: { bg: 'bg-dsi-negative/15', text: 'text-dsi-negative' },
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -61,27 +61,27 @@ export default function ModelVersionsTab() {
           pt-2 pb-2"
         >
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
+            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
                 <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
               </span>
             )}
-            {activeQuote.status === 'bound' && (
+            {activeQuote?.status === 'bound' && (
               <span>
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
+                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
               </span>
             )}
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
+            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
+            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function ModelVersionsTab() {
                           </span>
                         </div>
                         {mv.is_latest && (
-                          <span className="text-[10px] bg-green-500/10 text-green-500 px-2 py-0.5 rounded font-bold uppercase">
+                          <span className="text-[10px] bg-dsi-positive/10 text-dsi-positive px-2 py-0.5 rounded font-bold uppercase">
                             Active
                           </span>
                         )}
@@ -167,7 +167,7 @@ export default function ModelVersionsTab() {
                               {mv.composite_score?.toFixed(1) || "N/A"}
                             </span>
                             {scoreDelta != null && Math.abs(scoreDelta) > 0.1 && (
-                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
                                 {scoreDelta > 0 ? '+' : ''}{scoreDelta.toFixed(1)}
                               </span>
                             )}
@@ -180,7 +180,7 @@ export default function ModelVersionsTab() {
                               {mv.tier} ({mv.tier_label})
                             </span>
                             {tierChanged && (
-                              <span className="text-[10px] text-amber-400 font-bold">
+                              <span className="text-[10px] text-dsi-warning font-bold">
                                 was {prevVersion.tier}
                               </span>
                             )}
@@ -207,10 +207,10 @@ export default function ModelVersionsTab() {
                           <span>Cov: {(mv.signal_coverage * 100).toFixed(0)}%</span>
                         )}
                         {condCount > 0 && (
-                          <span className="text-amber-400/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
+                          <span className="text-dsi-warning/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
                         )}
                         {referralCount > 0 && (
-                          <span className="text-rose-400/70">{referralCount} referral flag{referralCount !== 1 ? 's' : ''}</span>
+                          <span className="text-dsi-negative/70">{referralCount} referral flag{referralCount !== 1 ? 's' : ''}</span>
                         )}
                         {notesCount > 0 && (
                           <span className="flex items-center gap-0.5">
@@ -225,7 +225,7 @@ export default function ModelVersionsTab() {
                           {mv.created_by === "system" ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
                           {mv.created_by}
                         </span>
-                        <span>{new Date(mv.created_at).toLocaleString()}</span>
+                        <span>{mv.created_at ? new Date(mv.created_at).toLocaleString() : 'N/A'}</span>
                       </div>
                     </div>
 

@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 
 const DECISION_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  approve: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-  refer: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
-  decline: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30' },
+  approve: { bg: 'bg-dsi-positive/10', text: 'text-dsi-positive', border: 'border-dsi-positive/30' },
+  refer: { bg: 'bg-dsi-warning/10', text: 'text-dsi-warning', border: 'border-dsi-warning/30' },
+  decline: { bg: 'bg-dsi-negative/10', text: 'text-dsi-negative', border: 'border-dsi-negative/30' },
 };
 
 export default function SummaryTab() {
@@ -45,13 +45,9 @@ export default function SummaryTab() {
   };
 
   const decision = (activeVersion.decision || 'unknown').toLowerCase();
-  const dStyle = DECISION_STYLE[decision] || { bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/30' };
+  const dStyle = DECISION_STYLE[decision] || { bg: 'bg-dsi-muted/10', text: 'text-dsi-muted', border: 'border-dsi-muted/30' };
 
-  // Conditions & referral reasons
-  const signalConditions = activeVersion.signal_conditions || [];
-  const queryConditions = activeVersion.query_conditions || [];
-  const allConditions = [...signalConditions, ...queryConditions];
-  const referralReasons = activeVersion.referral_reasons || activeSubmission.referral_reasons || [];
+  // Guardrails
 
   // Guardrails
   const guardrails = activeVersion.guardrail_warnings || [];
@@ -90,27 +86,27 @@ export default function SummaryTab() {
           pt-2 pb-2"
         >
           <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote.status}</span>
+            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote.status === 'draft' || activeQuote.status === 'ready') && (
+            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_from).toLocaleDateString()};</span>
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
                 <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{new Date(activeQuote.valid_until).toLocaleDateString()}</span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
               </span>
             )}
-            {activeQuote.status === 'bound' && (
+            {activeQuote?.status === 'bound' && (
               <span>
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote.policy_number || 'Pending'}</span>
+                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
               </span>
             )}
           </div>
           <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission.submission_code}</span>
+            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
             <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote.quote_code}</span>
+            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
           </div>
         </div>
       </div>
@@ -208,25 +204,43 @@ export default function SummaryTab() {
             </p>
           </div>
 
-          <div
-            onClick={() => setIsNotesOpen(true)}
-            className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm"
-          >
-            <div className="flex items-center justify-between mb-1">
+          <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis shadow-sm">
+            <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-dsi-selected" /> Notes
+                <MessageSquare className="w-4 h-4 text-dsi-selected" /> Notes ({localNotes.length})
               </h3>
-              <span className="text-xs opacity-50 group-hover:opacity-100 text-dsi-selected">Manage &rarr;</span>
+              <button onClick={() => setIsNotesOpen(true)} className="text-xs opacity-50 hover:opacity-100 text-dsi-selected">
+                Manage &rarr;
+              </button>
             </div>
-            <p className="text-xs opacity-70">
-              {localNotes.length} Note(s) recorded on this version.
-            </p>
+            {localNotes.length === 0 ? (
+              <p className="text-xs opacity-50 italic">No notes recorded.</p>
+            ) : (
+              <div className="space-y-2">
+                {localNotes.slice(-3).map((note: any, i: number) => {
+                  const isObj = typeof note === 'object' && note !== null;
+                  const text = isObj ? (note.note || note.text) : note;
+                  const source = isObj ? note.source : "System";
+                  return (
+                    <div key={i} className="bg-dsi-background/30 rounded p-2 text-wrap">
+                      <span className="text-[10px] opacity-40 block mb-0.5">{source}</span>
+                      <span className="text-xs leading-relaxed line-clamp-2">{text}</span>
+                    </div>
+                  );
+                })}
+                {localNotes.length > 3 && (
+                  <button onClick={() => setIsNotesOpen(true)} className="text-[10px] opacity-40 hover:opacity-70">
+                    +{localNotes.length - 3} more...
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Guardrail warnings if any */}
           {guardrails.length > 0 && (
-            <div className="border border-amber-500/30 bg-amber-500/5 rounded-xl p-4">
-              <h3 className="text-sm font-bold flex items-center gap-2 text-amber-400 mb-2">
+            <div className="border border-dsi-warning/30 bg-dsi-warning/5 rounded-xl p-4">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-dsi-warning mb-2">
                 <AlertTriangle className="w-4 h-4" /> Guardrail Warnings
               </h3>
               <div className="space-y-1">
@@ -286,8 +300,8 @@ export default function SummaryTab() {
               <div className="flex items-center justify-between text-sm mt-1">
                 <span className="opacity-60">Trend</span>
                 <span className={`font-bold ${
-                  activeVersion.loss_trend_direction?.toLowerCase().includes('improv') ? 'text-emerald-400' :
-                  activeVersion.loss_trend_direction?.toLowerCase().includes('deter') ? 'text-rose-400' : 'opacity-70'
+                  activeVersion.loss_trend_direction?.toLowerCase().includes('improv') ? 'text-dsi-positive' :
+                  activeVersion.loss_trend_direction?.toLowerCase().includes('deter') ? 'text-dsi-negative' : 'opacity-70'
                 }`}>
                   {activeVersion.loss_trend_direction?.replace(/_/g, ' ') || 'Stable'}
                 </span>
@@ -316,39 +330,6 @@ export default function SummaryTab() {
               </div>
             </div>
           </div>
-
-          {/* Active conditions & referral flags */}
-          {(allConditions.length > 0 || referralReasons.length > 0) && (
-            <div className="border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis shadow-sm">
-              <h3 className="text-xs font-bold flex items-center gap-2 mb-3 opacity-60 uppercase tracking-wider">
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" /> Active Flags & Conditions
-              </h3>
-              <div className="space-y-1.5">
-                {referralReasons.map((r: string, i: number) => (
-                  <div key={`ref-${i}`} className="flex items-center gap-2 text-sm text-wrap">
-                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 shrink-0">referral</span>
-                    <span className="opacity-80">{r}</span>
-                  </div>
-                ))}
-                {allConditions.slice(0, 5).map((c: any, i: number) => {
-                  const actionKey = typeof c.action === 'string' ? c.action.toLowerCase() : (c.action?.value || 'note');
-                  return (
-                    <div key={`cond-${i}`} className="flex items-center gap-2 text-sm text-wrap">
-                      <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0 ${
-                        actionKey === 'modifier' ? 'bg-blue-500/15 text-blue-400' :
-                        actionKey === 'tier_override' ? 'bg-rose-500/15 text-rose-400' :
-                        'bg-slate-500/15 text-slate-400'
-                      }`}>{actionKey.replace('_', ' ')}</span>
-                      <span className="opacity-80 truncate">{c.note || c.source_name || 'Condition'}</span>
-                    </div>
-                  );
-                })}
-                {allConditions.length > 5 && (
-                  <span className="text-xs opacity-40">+{allConditions.length - 5} more conditions (see Risk tab)</span>
-                )}
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
