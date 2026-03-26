@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import PipelineTable from "@/components/submissions/PipelineTable";
-import WorkbenchView from "@/components/submissions/WorkbenchView"; 
+import WorkbenchView from "@/components/submissions/WorkbenchView";
+import WorldEngineView from "@/components/worldengine/WorldEngineView"; 
 
 export default function Home() {
   const { 
@@ -31,6 +32,8 @@ export default function Home() {
       return <PipelineTable type="full" />;
     case "Performance Metrics":
       return <div className="p-8 text-dsi-selected">Analytics Dashboard Under Construction</div>;
+    case "World Engine":
+      return <WorldEngineView />;
     default:
       return <PipelineTable type="referral" />;
   }

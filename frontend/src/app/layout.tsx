@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 import { 
   PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine, MoreVertical,
-  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt, FlaskConical
+  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt, FlaskConical, Orbit
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
@@ -207,6 +207,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           ))}
                         </ul>
                       )}
+
+                      {/* WORLD ENGINE — top-level item */}
+                      <button
+                        onClick={() => {
+                          setActiveMenu("World Engine");
+                          setIsOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 py-2 mt-4 ${
+                          activeMenu === "World Engine"
+                            ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
+                            : "text-dsi-background hover:text-dsi-selected"
+                        }`}
+                      >
+                        <Orbit className="icon shrink-0" />
+                        <span className="text-sm tracking-wider">World Engine</span>
+                      </button>
                     </>
 
                   )}
