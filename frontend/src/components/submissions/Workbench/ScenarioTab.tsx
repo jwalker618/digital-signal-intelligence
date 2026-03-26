@@ -302,45 +302,39 @@ export default function ScenarioTab() {
           </div>
 
           {/* ══════════════════════════════════════════════════════════════
-              F3/F4: LOSS & EXPOSURE MODIFIER DETAIL
+              F3/F4: LOSS & EXPOSURE MODIFIER CALCULATION BREAKDOWN
               ══════════════════════════════════════════════════════════════ */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
-            {/* Loss modifier detail */}
+            {/* Loss modifier calculation */}
             <div className="flex flex-col">
               <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-                <Shield className="icon"/><span className="text-sm">Loss Modifier</span>
+                <Shield className="icon"/><span className="text-sm">Loss Modifier Calculation</span>
               </div>
-              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad space-y-3">
-                {/* Calculated path */}
-                {scenario.loss_modifier ? (
-                  <div className="border border-dsi-outline/20 rounded-lg p-3 space-y-2 text-wrap">
-                    <span className="text-xs opacity-60 block">Calculated from signal overrides</span>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div><span className="text-[10px] opacity-50 block">Propensity</span><span className="font-bold">{formatNum(scenario.loss_modifier.propensity_score, 1)}</span> <span className="text-[10px] opacity-40 uppercase">{scenario.loss_modifier.propensity_band}</span></div>
-                      <div><span className="text-[10px] opacity-50 block">Freq Mult</span><span className="font-bold">{formatNum(scenario.loss_modifier.frequency_multiplier, 3)}x</span></div>
-                      <div><span className="text-[10px] opacity-50 block">Sev Mult</span><span className="font-bold">{formatNum(scenario.loss_modifier.severity_multiplier, 3)}x</span></div>
-                    </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-dsi-outline/10">
-                      <span className="text-xs opacity-60">Combined</span>
-                      <span className={`font-bold text-lg ${deltaColor(scenario.scenario_loss_combined, scenario.original_loss_combined)}`}>
-                        {formatNum(scenario.scenario_loss_combined, 3)}x
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="border border-dsi-outline/20 rounded-lg p-3 text-wrap">
-                    <span className="text-xs opacity-60 block mb-1">Original: {formatNum(scenario.original_loss_combined, 3)}x</span>
-                    <span className="text-[10px] opacity-40">{lossConfig ? 'Adjust signals above to recalculate' : 'Loss correlation config not available — override directly'}</span>
-                  </div>
-                )}
-                {/* Direct override */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs opacity-60 shrink-0">Override:</span>
-                  <input
-                    type="number" step="0.01"
+              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4 px-dsi-pad">
+                {/* Waterfall grid */}
+                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
+                  <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
+                </div>
+                <CalcRow label="Signal-weighted avg" sublabel="Loss group scores" original={formatNum(100 - (activeVersion?.loss_propensity_score || 50), 1)} scenario={scenario.loss_modifier ? formatNum(100 - scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
+                <CalcRow label="Propensity Score" sublabel="Inverted (100 - avg)" original={formatNum(activeVersion?.loss_propensity_score, 1)} scenario={scenario.loss_modifier ? formatNum(scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
+                <CalcRow label="Propensity Band" sublabel="" original={activeVersion?.loss_propensity_band?.replace(/_/g, ' ')?.toUpperCase() || 'N/A'} scenario={scenario.loss_modifier?.propensity_band?.replace(/_/g, ' ')?.toUpperCase() || '-'} changed={scenario.loss_modifier != null && scenario.loss_modifier.propensity_band !== activeVersion?.loss_propensity_band} />
+                <CalcRow label="Frequency Multiplier" sublabel={`Weight: ${formatNum(lossConfig?.frequency_weight, 2)}`} original={`${formatNum(activeVersion?.loss_frequency_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNum(scenario.loss_modifier.frequency_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
+                <CalcRow label="Severity Multiplier" sublabel={`Weight: ${formatNum(lossConfig?.severity_weight, 2)}`} original={`${formatNum(activeVersion?.loss_severity_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNum(scenario.loss_modifier.severity_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
+                {/* Combined result */}
+                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t-2 border-dsi-outline/20 mt-1">
+                  <span className="text-sm font-bold">Combined Modifier</span>
+                  <span className="text-right text-sm font-bold">{formatNum(scenario.original_loss_combined, 3)}x</span>
+                  <span className="text-center opacity-30">→</span>
+                  <span className={`text-right text-sm font-bold ${deltaColor(scenario.scenario_loss_combined, scenario.original_loss_combined)}`}>
+                    {formatNum(scenario.scenario_loss_combined, 3)}x
+                  </span>
+                </div>
+                {/* Override input */}
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-dsi-outline/10">
+                  <span className="text-xs opacity-60 shrink-0">Direct override:</span>
+                  <input type="number" step="0.01"
                     className={`w-20 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${lossModifierOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                    value={lossModifierOverride ?? ''}
-                    placeholder={formatNum(scenario.scenario_loss_combined, 3)}
+                    value={lossModifierOverride ?? ''} placeholder={formatNum(scenario.scenario_loss_combined, 3)}
                     onChange={(e) => setLossModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
                   <span className="text-xs opacity-40">x</span>
@@ -348,45 +342,50 @@ export default function ScenarioTab() {
               </div>
             </div>
 
-            {/* Exposure modifier detail */}
+            {/* Exposure modifier calculation */}
             <div className="flex flex-col">
               <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-                <Shield className="icon"/><span className="text-sm">Exposure Modifier</span>
+                <Shield className="icon"/><span className="text-sm">Exposure & Scaling</span>
               </div>
-              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad space-y-3">
-                <div className="border border-dsi-outline/20 rounded-lg p-3 text-wrap">
-                  <span className="text-xs opacity-60 block mb-2">Band lookup from exposure value</span>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div><span className="text-[10px] opacity-50 block">Value</span><span className="font-bold">{fmtDollar(activeVersion?.exposure_value)}</span></div>
-                    <div><span className="text-[10px] opacity-50 block">Band</span><span className="font-bold uppercase">{activeVersion?.exposure_band_label || 'N/A'}</span></div>
-                    <div><span className="text-[10px] opacity-50 block">Modifier</span><span className="font-bold">{formatNum(scenario.original_exposure_modifier, 3)}x</span></div>
-                  </div>
+              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4 px-dsi-pad">
+                {/* Exposure waterfall */}
+                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
+                  <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs opacity-60 shrink-0">Override:</span>
-                  <input
-                    type="number" step="0.01"
+                <CalcRow label="Exposure Value" sublabel="TIV / Revenue" original={fmtDollar(activeVersion?.exposure_value)} scenario={fmtDollar(activeVersion?.exposure_value)} changed={false} />
+                <CalcRow label="Size Score" sublabel="" original={formatNum(activeVersion?.exposure_size_score, 1)} scenario={formatNum(activeVersion?.exposure_size_score, 1)} changed={false} />
+                <CalcRow label="Exposure Band" sublabel="" original={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} scenario={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} changed={false} />
+                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t border-dsi-outline/20">
+                  <span className="text-sm font-bold">Exposure Modifier</span>
+                  <span className="text-right text-sm font-bold">{formatNum(scenario.original_exposure_modifier, 3)}x</span>
+                  <span className="text-center opacity-30">→</span>
+                  <span className={`text-right text-sm font-bold ${deltaColor(scenario.scenario_exposure_modifier, scenario.original_exposure_modifier)}`}>
+                    {formatNum(scenario.scenario_exposure_modifier, 3)}x
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1 pt-2 border-t border-dsi-outline/10">
+                  <span className="text-xs opacity-60 shrink-0">Direct override:</span>
+                  <input type="number" step="0.01"
                     className={`w-20 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${exposureModifierOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                    value={exposureModifierOverride ?? ''}
-                    placeholder={formatNum(scenario.original_exposure_modifier, 3)}
+                    value={exposureModifierOverride ?? ''} placeholder={formatNum(scenario.original_exposure_modifier, 3)}
                     onChange={(e) => setExposureModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
                   <span className="text-xs opacity-40">x</span>
                 </div>
-                {/* Limit + Deductible side by side */}
-                <div className="grid grid-cols-2 gap-3 border-t border-dsi-outline/10 pt-3">
+
+                {/* Limit + Deductible */}
+                <div className="grid grid-cols-2 gap-3 border-t border-dsi-outline/10 pt-3 mt-3">
                   <div>
                     <span className="text-xs opacity-60 block mb-1">Policy Limit</span>
                     <div className="flex items-center gap-1">
                       <span className="text-xs opacity-40">$</span>
                       <input type="number" step="1000000"
                         className={`w-full bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${limitOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                        value={limitOverride ?? ''}
-                        placeholder={String(activeVersion?.final_premium_detail?.limit || '')}
+                        value={limitOverride ?? ''} placeholder={String(activeVersion?.final_premium_detail?.limit || '')}
                         onChange={(e) => setLimitOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                       />
                     </div>
-                    <span className="text-[10px] opacity-30 block mt-1">ILF: {formatNum(activeVersion?.ilf_factor, 3)}x</span>
+                    <span className="text-[10px] opacity-30 block mt-1">ILF: {formatNum(activeVersion?.ilf_factor, 3)}x → {formatNum(scenario.ilf_factor, 3)}x</span>
                   </div>
                   <div>
                     <span className="text-xs opacity-60 block mb-1">Deductible</span>
@@ -394,12 +393,11 @@ export default function ScenarioTab() {
                       <span className="text-xs opacity-40">$</span>
                       <input type="number" step="25000"
                         className={`w-full bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${deductibleOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                        value={deductibleOverride ?? ''}
-                        placeholder={String(activeVersion?.final_premium_detail?.deductible || '')}
+                        value={deductibleOverride ?? ''} placeholder={String(activeVersion?.final_premium_detail?.deductible || '')}
                         onChange={(e) => setDeductibleOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                       />
                     </div>
-                    <span className="text-[10px] opacity-30 block mt-1">Factor: {formatNum(activeVersion?.final_premium_detail?.deductible_factor, 3)}x</span>
+                    <span className="text-[10px] opacity-30 block mt-1">Factor: {formatNum(activeVersion?.final_premium_detail?.deductible_factor, 3)}x → {formatNum(scenario.deductible_factor, 3)}x</span>
                   </div>
                 </div>
               </div>
@@ -537,6 +535,24 @@ export default function ScenarioTab() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// ─── Calculation Row Sub-component ───────────────────────────────────────────
+
+function CalcRow({ label, sublabel, original, scenario, changed }: {
+  label: string; sublabel: string; original: string; scenario: string; changed: boolean;
+}) {
+  return (
+    <div className={`grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-1.5 border-b border-dsi-outline/5 ${changed ? 'bg-dsi-selected/5' : ''}`}>
+      <div>
+        <span className="text-xs">{label}</span>
+        {sublabel && <span className="text-[10px] opacity-30 block">{sublabel}</span>}
+      </div>
+      <span className="text-right text-xs opacity-70">{original}</span>
+      <span className="text-center opacity-30 text-xs">→</span>
+      <span className={`text-right text-xs font-bold ${changed ? 'text-dsi-selected' : ''}`}>{scenario}</span>
     </div>
   );
 }

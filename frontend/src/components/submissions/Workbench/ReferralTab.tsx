@@ -169,53 +169,61 @@ export default function ReferralTab() {
         </div>
       </div>
 
-      {/* TRIGGERS + CONDITIONS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
-        <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <ShieldAlert className="icon text-dsi-negative"/><span className="text-sm">Referral Triggers</span>
-          </div>
-          <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-hidden border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
-            {reasons.length > 0 ? (
-              <ul className="list-disc pl-10 pr-dsi-pad space-y-1.5 text-sm opacity-80 text-wrap">
-                {reasons.map((reason: string, i: number) => (<li key={i}>{reason}</li>))}
-              </ul>
-            ) : (
-              <p className="pl-dsi-pad text-sm opacity-50 italic">Manual Underwriter Referral</p>
-            )}
-          </div>
+      {/* TRIGGERS + CONDITIONS — accordion style */}
+      <div className="flex flex-col pt-2 pb-2">
+        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+          <ShieldAlert className="icon text-dsi-negative"/><span className="text-sm">Referral Context</span>
         </div>
-        <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <AlertTriangle className="icon text-dsi-warning"/>
-            <span className="text-sm">Triggering Conditions ({referralConditions.length})</span>
+        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
+          {/* Triggers — expandable */}
+          <div onClick={() => toggleGroup('triggers')} className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors">
+            <div className="flex items-center gap-2">
+              {expandedGroups['triggers'] ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+              <span className="text-sm font-bold">Referral Triggers</span>
+              <span className="text-[10px] opacity-40">({reasons.length})</span>
+            </div>
           </div>
-          <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-y-auto border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2 max-h-[240px]">
-            {referralConditions.length > 0 ? (
-              <div className="space-y-0">
-                {referralConditions.map((cond: any, idx: number) => {
-                  const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
-                  const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
-                  return (
-                    <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${colors.text}`} />
-                        <div className="min-w-0">
-                          <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
-                          <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
-                        </div>
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0 ${colors.bg} ${colors.text}`}>
-                        {actionKey.replace('_', ' ')}
-                      </span>
-                    </div>
-                  );
-                })}
+          {expandedGroups['triggers'] && (
+            <div className="pl-8 pr-dsi-pad py-2 bg-dsi-background/10 text-wrap">
+              {reasons.length > 0 ? (
+                <ul className="list-disc pl-4 space-y-1 text-sm opacity-80">
+                  {reasons.map((r: string, i: number) => <li key={i}>{r}</li>)}
+                </ul>
+              ) : (
+                <p className="text-sm opacity-50 italic">Manual Underwriter Referral</p>
+              )}
+            </div>
+          )}
+
+          {/* Conditions — expandable */}
+          <div onClick={() => toggleGroup('ref_conditions')} className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors">
+            <div className="flex items-center gap-2">
+              {expandedGroups['ref_conditions'] ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+              <span className="text-sm font-bold">Triggering Conditions</span>
+              <span className="text-[10px] opacity-40">({referralConditions.length})</span>
+            </div>
+          </div>
+          {expandedGroups['ref_conditions'] && referralConditions.map((cond: any, idx: number) => {
+            const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
+            const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
+            return (
+              <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 pl-8 bg-dsi-background/10 border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <ShieldAlert className={`w-3 h-3 shrink-0 ${colors.text}`} />
+                  <div className="min-w-0">
+                    <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
+                    <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0 ${colors.bg} ${colors.text}`}>
+                  {actionKey.replace('_', ' ')}
+                </span>
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-20 opacity-50 text-sm italic">No referral-type conditions triggered.</div>
-            )}
-          </div>
+            );
+          })}
+          {expandedGroups['ref_conditions'] && referralConditions.length === 0 && (
+            <div className="pl-8 py-3 text-xs opacity-40 italic">No referral-type conditions triggered.</div>
+          )}
         </div>
       </div>
 
