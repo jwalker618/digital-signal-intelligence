@@ -140,7 +140,7 @@ async def get_submission_modelversion_all(
     db: AsyncSession = Depends(get_async_db),
 ) -> ModelVersionDBRecord:
     """Get model version details by code."""
-    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id_id == Submission.id).where(Submission.submission_code_code == submission_code))
+    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id == Submission.id).where(Submission.submission_code_code == submission_code))
 
     result = await db.execute(query)
     record = result.scalar_one_or_none()
