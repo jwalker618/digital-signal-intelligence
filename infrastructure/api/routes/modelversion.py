@@ -134,21 +134,26 @@ async def get_modelversion_exposure(
 
     return record
 
-@router.get("/modelversion/{submission_code}/submissionshistory/all", response_model=ModelVersionDBRecord)
+@router.get("/modelversion/{submission_code}/submissionshistory/all", response_model=list[ModelVersionDBRecord])
 async def get_submission_modelversion_all(
     submission_code: str,
     db: AsyncSession = Depends(get_async_db),
-) -> ModelVersionDBRecord:
-    """Get model version details by code."""
-    query = (select(ModelVersionRecord).join(Submission, ModelVersionRecord.submission_id == Submission.id).where(Submission.submission_code == submission_code))
+) -> list[ModelVersionDBRecord]:
+    """Get all model versions for a submission, ordered by version number descending."""
+    query = (
+        select(ModelVersionRecord)
+        .join(Submission, ModelVersionRecord.submission_id == Submission.id)
+        .where(Submission.submission_code == submission_code)
+        .order_by(ModelVersionRecord.version_number.desc())
+    )
 
     result = await db.execute(query)
-    record = result.scalar_one_or_none()
+    records = result.scalars().all()
 
-    if not record:
-        raise HTTPException(status_code=404, detail="Model version not found")
+    if not records:
+        raise HTTPException(status_code=404, detail="No model versions found for submission")
 
-    return record
+    return records
 
 @router.get("/modelversion/{submission_code}/submissionshistory/base", response_model=ModelVersionDBRecord_BaseOnly)
 async def get_submission_modelversion_base(
