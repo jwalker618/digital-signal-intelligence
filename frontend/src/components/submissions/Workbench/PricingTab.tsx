@@ -856,7 +856,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
-                    >{activeVersion.final_premium_detail.premium_after_scaling.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{(activeVersion?.final_premium_detail?.premium_after_scaling || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
                   
                 </div>
