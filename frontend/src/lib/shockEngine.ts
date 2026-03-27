@@ -1,15 +1,13 @@
 /**
  * shockEngine.ts — Pure functions for portfolio-level shock simulation.
- *
- * Takes pipeline submissions, applies a shock scenario to a filtered scope,
- * and returns before/after comparison data.
+ * Supports multiple simultaneous shocks and emerging scenario generation.
  */
 
 export interface ShockScenario {
   id: string;
   name: string;
   description: string;
-  magnitude: number; // points to degrade composite score
+  magnitude: number;
 }
 
 export const SHOCK_SCENARIOS: ShockScenario[] = [
@@ -20,6 +18,12 @@ export const SHOCK_SCENARIOS: ShockScenario[] = [
   { id: 'market', name: 'Market Downturn', description: 'Sector-wide financial stress reduces operational resilience.', magnitude: 15 },
   { id: 'peer_breach', name: 'Data Breach (Industry Peer)', description: 'Major competitor suffers high-profile data breach. Increased threat landscape.', magnitude: 18 },
 ];
+
+export interface ActiveShock {
+  scenario: ShockScenario;
+  scope: string;
+  magnitude: number;
+}
 
 export interface ShockedSubmission {
   original: any;
@@ -33,14 +37,13 @@ export interface ShockedSubmission {
   shocked_decision: string;
   decision_changed: boolean;
   premium_delta: number;
+  shocks_applied: string[]; // which shocks hit this submission
 }
 
 export interface ShockResult {
-  scenario: ShockScenario;
-  scope: string;
+  shocks: ActiveShock[];
   affected: ShockedSubmission[];
   unaffected: any[];
-  // Aggregates
   total_affected: number;
   total_unaffected: number;
   tier_migrations: number;
@@ -48,15 +51,10 @@ export interface ShockResult {
   aggregate_premium_before: number;
   aggregate_premium_after: number;
   premium_delta: number;
-  // Tier distribution before/after
   tier_dist_before: Record<number, number>;
   tier_dist_after: Record<number, number>;
 }
 
-/**
- * Simple tier lookup from score using common tier band ranges.
- * Uses the seeder's default tier structure.
- */
 function tierFromScore(score: number): { tier: number; decision: string } {
   if (score >= 800) return { tier: 1, decision: 'approve' };
   if (score >= 650) return { tier: 2, decision: 'approve' };
@@ -65,10 +63,6 @@ function tierFromScore(score: number): { tier: number; decision: string } {
   return { tier: 5, decision: 'decline' };
 }
 
-/**
- * Rough premium adjustment based on tier change.
- * Tier degradation increases premium, improvement decreases.
- */
 function premiumForTier(basePremium: number, originalTier: number, newTier: number): number {
   const tierMultipliers: Record<number, number> = { 1: 0.7, 2: 0.85, 3: 1.0, 4: 1.25, 5: 1.6 };
   const origMult = tierMultipliers[originalTier] || 1.0;
@@ -76,14 +70,14 @@ function premiumForTier(basePremium: number, originalTier: number, newTier: numb
   return basePremium * (newMult / origMult);
 }
 
-export function applyShock(
+/**
+ * Apply multiple shocks simultaneously. Each shock degrades scores
+ * for submissions within its scope. Shocks stack additively.
+ */
+export function applyMultipleShocks(
   submissions: any[],
-  scenario: ShockScenario,
-  scope: string, // 'all' or a coverage type
-  customMagnitude?: number
+  shocks: ActiveShock[]
 ): ShockResult {
-  const magnitude = customMagnitude ?? scenario.magnitude;
-
   const affected: ShockedSubmission[] = [];
   const unaffected: any[] = [];
   const tierDistBefore: Record<number, number> = {};
@@ -93,22 +87,29 @@ export function applyShock(
     const score = sub.pure_composite_score ?? 0;
     const tier = sub.final_tier ?? tierFromScore(score).tier;
     const premium = sub.recommended_premium ?? 0;
+    const cov = (sub.coverage_configuration || '').toLowerCase();
 
-    // Count before distribution
     tierDistBefore[tier] = (tierDistBefore[tier] || 0) + 1;
 
-    // Check if in scope
-    const inScope = scope === 'all' ||
-      (sub.coverage_configuration || '').toLowerCase().includes(scope.toLowerCase());
+    // Determine total degradation from all applicable shocks
+    let totalDegradation = 0;
+    const appliedShockNames: string[] = [];
 
-    if (!inScope) {
+    for (const shock of shocks) {
+      const inScope = shock.scope === 'all' || cov.includes(shock.scope.toLowerCase());
+      if (inScope) {
+        totalDegradation += shock.magnitude;
+        appliedShockNames.push(shock.scenario.name);
+      }
+    }
+
+    if (totalDegradation === 0) {
       unaffected.push(sub);
       tierDistAfter[tier] = (tierDistAfter[tier] || 0) + 1;
       continue;
     }
 
-    // Apply shock — degrade score
-    const shockedScore = Math.max(0, score - magnitude);
+    const shockedScore = Math.max(0, score - totalDegradation);
     const shockedResult = tierFromScore(shockedScore);
     const shockedPremium = premiumForTier(premium, tier, shockedResult.tier);
 
@@ -126,6 +127,7 @@ export function applyShock(
       shocked_decision: shockedResult.decision,
       decision_changed: shockedResult.decision !== (sub.decision || 'unknown').toLowerCase(),
       premium_delta: Math.round(shockedPremium - premium),
+      shocks_applied: appliedShockNames,
     });
   }
 
@@ -133,9 +135,8 @@ export function applyShock(
   const aggPremAfter = affected.reduce((s, a) => s + (a.original.recommended_premium || 0) + a.premium_delta, 0);
 
   return {
-    scenario,
-    scope,
-    affected: affected.sort((a, b) => a.score_delta - b.score_delta), // most degraded first
+    shocks,
+    affected: affected.sort((a, b) => a.score_delta - b.score_delta),
     unaffected,
     total_affected: affected.length,
     total_unaffected: unaffected.length,
@@ -147,4 +148,120 @@ export function applyShock(
     tier_dist_before: tierDistBefore,
     tier_dist_after: tierDistAfter,
   };
+}
+
+// ─── Emerging Scenarios ──────────────────────────────────────────────────────
+
+export interface EmergingScenario {
+  id: string;
+  name: string;
+  description: string;
+  likelihood: number; // 0-1
+  likelihood_label: string;
+  affected_scope: string;
+  estimated_magnitude: number;
+  time_horizon: string;
+  source: string;
+}
+
+/**
+ * Generate emerging scenarios based on portfolio composition.
+ * These simulate what a continuous monitoring engine would surface.
+ */
+export function generateEmergingScenarios(submissions: any[]): EmergingScenario[] {
+  const covCounts: Record<string, number> = {};
+  const tierCounts: Record<number, number> = {};
+  let totalPremium = 0;
+  let avgScore = 0;
+
+  for (const sub of submissions) {
+    const cov = (sub.coverage_configuration || '').split(' / ')[0];
+    covCounts[cov] = (covCounts[cov] || 0) + 1;
+    const tier = sub.final_tier || 0;
+    tierCounts[tier] = (tierCounts[tier] || 0) + 1;
+    totalPremium += sub.recommended_premium || 0;
+    avgScore += sub.pure_composite_score || 0;
+  }
+  avgScore = submissions.length > 0 ? avgScore / submissions.length : 0;
+
+  const total = submissions.length || 1;
+  const scenarios: EmergingScenario[] = [];
+
+  // Find dominant coverage
+  const sortedCovs = Object.entries(covCounts).sort((a, b) => b[1] - a[1]);
+  const dominantCov = sortedCovs[0];
+
+  if (dominantCov && dominantCov[1] / total > 0.25) {
+    scenarios.push({
+      id: 'concentration_risk',
+      name: `${dominantCov[0]} Concentration Risk`,
+      description: `${((dominantCov[1] / total) * 100).toFixed(0)}% of portfolio concentrated in ${dominantCov[0]}. A sector-wide event would disproportionately impact the book.`,
+      likelihood: 0.35 + Math.random() * 0.3,
+      likelihood_label: 'Moderate',
+      affected_scope: dominantCov[0],
+      estimated_magnitude: 20,
+      time_horizon: '6-12 months',
+      source: 'Concentration Analysis',
+    });
+  }
+
+  // High tier 4/5 count
+  const weakRisks = (tierCounts[4] || 0) + (tierCounts[5] || 0);
+  if (weakRisks > total * 0.15) {
+    scenarios.push({
+      id: 'tail_risk_cluster',
+      name: 'Tail Risk Cluster Deterioration',
+      description: `${weakRisks} submissions (${((weakRisks / total) * 100).toFixed(0)}%) in Tier 4-5. Correlated deterioration could trigger multiple claims simultaneously.`,
+      likelihood: 0.2 + Math.random() * 0.25,
+      likelihood_label: 'Elevated',
+      affected_scope: 'all',
+      estimated_magnitude: 15,
+      time_horizon: '3-6 months',
+      source: 'Tail Risk Monitor',
+    });
+  }
+
+  // Regulatory landscape
+  scenarios.push({
+    id: 'regulatory_tightening',
+    name: 'Regulatory Tightening Wave',
+    description: 'Emerging global regulatory frameworks (NIS2, SEC cyber rules, DORA) expected to increase compliance burdens across the portfolio.',
+    likelihood: 0.6 + Math.random() * 0.2,
+    likelihood_label: 'High',
+    affected_scope: 'all',
+    estimated_magnitude: 18,
+    time_horizon: '3-9 months',
+    source: 'Regulatory Intelligence',
+  });
+
+  // Technology supply chain
+  if (covCounts['Cyber'] > 0 || covCounts['Technology'] > 0) {
+    scenarios.push({
+      id: 'cloud_provider_incident',
+      name: 'Major Cloud Provider Incident',
+      description: 'Elevated threat indicators suggest increased probability of significant cloud infrastructure disruption affecting multiple portfolio entities.',
+      likelihood: 0.15 + Math.random() * 0.2,
+      likelihood_label: 'Low-Moderate',
+      affected_scope: sortedCovs.find(([c]) => c.includes('Cyber') || c.includes('Tech'))?.[0] || 'all',
+      estimated_magnitude: 28,
+      time_horizon: '1-3 months',
+      source: 'Threat Intelligence',
+    });
+  }
+
+  // AI disruption
+  scenarios.push({
+    id: 'ai_liability_emergence',
+    name: 'AI Liability Claims Emergence',
+    description: 'Growing adoption of AI tools creates new liability vectors. Early claims signals detected across professional indemnity and D&O exposures.',
+    likelihood: 0.25 + Math.random() * 0.2,
+    likelihood_label: 'Moderate',
+    affected_scope: 'all',
+    estimated_magnitude: 12,
+    time_horizon: '6-18 months',
+    source: 'Emerging Risk Analysis',
+  });
+
+  // Sort by likelihood descending
+  return scenarios.sort((a, b) => b.likelihood - a.likelihood);
 }
