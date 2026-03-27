@@ -43,7 +43,6 @@ export default function SummaryTab() {
 
   const decision = (activeVersion.decision || 'unknown').toLowerCase();
   const dStyle = DECISION_STYLE[decision] || { bg: 'bg-dsi-muted/10', text: 'text-dsi-muted', border: 'border-dsi-muted/30' };
-  const guardrails = activeVersion.guardrail_warnings || [];
   const notes = activeVersion.notes || [];
 
   return (
@@ -246,20 +245,6 @@ export default function SummaryTab() {
           </div>
         </div>
       </div>
-
-      {/* Guardrail warnings */}
-      {guardrails.length > 0 && (
-        <div className="border border-dsi-warning/30 bg-dsi-warning/5 rounded-xl p-4 mb-4">
-          <h3 className="text-sm font-bold flex items-center gap-2 text-dsi-warning mb-2">
-            <AlertTriangle className="w-4 h-4" /> Guardrail Warnings
-          </h3>
-          <div className="space-y-1">
-            {guardrails.map((g: any, i: number) => (
-              <p key={i} className="text-xs opacity-80 text-wrap">{typeof g === 'object' ? g.note || g.text : g}</p>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ═══════════════════════════════════════════════════════════════════
           NOTES — full width, inline add, persisted to DB
