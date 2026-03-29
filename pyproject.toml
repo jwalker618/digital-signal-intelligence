@@ -115,13 +115,6 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--showlocals",
-    "--cov=signal_architecture",
-    "--cov=infrastructure",
-    "--cov=layers",
-    "--cov=coverages",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
 ]
 testpaths = [
     "tests",
