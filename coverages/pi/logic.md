@@ -273,7 +273,7 @@ This configuration contains **5 signals** distributed as follows:
 
 ### Routing Protocol (Multiplexer)
 - `profession_segment == ACCOUNTING`
-- `sub_profession_type IN ['AUDIT_PUBLIC', 'AUDIT_PRIVATE']`
+- `sub_profession_type in ['AUDIT_PUBLIC', 'AUDIT_PRIVATE']`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -403,7 +403,7 @@ This configuration contains **0 signals** distributed as follows:
 
 ### Routing Protocol (Multiplexer)
 - `profession_segment == DESIGN_CONSTRUCTION`
-- `sub_profession_type IN ['ARCHITECTURE', 'LANDSCAPE', 'INTERIOR_DESIGN']`
+- `sub_profession_type in ['ARCHITECTURE', 'LANDSCAPE', 'INTERIOR_DESIGN']`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -471,7 +471,7 @@ This configuration contains **6 signals** distributed as follows:
 
 ### Routing Protocol (Multiplexer)
 - `profession_segment == DESIGN_CONSTRUCTION`
-- `sub_profession_type IN ['STRUCTURAL', 'GEOTECHNICAL', 'CIVIL', 'MECHANICAL', 'ELECTRICAL', 'ENVIRONMENTAL_ENG']`
+- `sub_profession_type in ['STRUCTURAL', 'GEOTECHNICAL', 'CIVIL', 'MECHANICAL', 'ELECTRICAL', 'ENVIRONMENTAL_ENG']`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
