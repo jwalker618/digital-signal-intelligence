@@ -15,6 +15,15 @@ entity:
       configs:
         - cyber_general
         - cyber_sme
+        - cyber_healthcare
+        - cyber_financial_services
+        - cyber_critical_infrastructure
+        - cyber_technology
+        - cyber_digital_platform
+        - cyber_manufacturing
+        - cyber_retail
+        - cyber_public_sector
+        - cyber_professional_services
       max_single_limit: 25_000_000
       constraints:
         - field: revenue
