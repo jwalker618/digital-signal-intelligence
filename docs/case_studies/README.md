@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.1.0|
-|Date|January 2025|
+|Version|0.4.0|
+|Date|March 2026|
 |Classification|case-studies|
 
 ---
@@ -35,19 +35,6 @@ The `retrospective_loss_case_studies.pdf` examines major insurance losses across
 - Observable signals existed **before** each incident
 - Core DSI principle "absence is signal" proves especially valuable
 - Cross-coverage signals identified patterns across multiple cases
-
-## Related Documents
-
-Supporting documentation in `/development_docs/`:
-
-| Document | Purpose |
-|----------|---------|
-| `historical_loss_analysis.md` | Detailed signal-by-signal analysis |
-| `signal_mapping_to_historical_loss.md` | Mapping of DSI signals to case studies |
-| `dsi_retrospective_case_study_detail.md` | Detailed cyber case study validation |
-| `dsi_retrospective_case_study_executive_summary.md` | Executive summary of cyber validation |
-| `dsi_retrospective_methodology.md` | Methodology defense document |
-| `dsi_client_assessment_samples.md` | Sample client assessments (Petrobras, PEMEX, Boeing) |
 
 ## Usage
 

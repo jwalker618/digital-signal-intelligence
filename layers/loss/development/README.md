@@ -53,20 +53,15 @@ The `development/plan.md` contains:
 ## Planned File Structure
 
 ```
-technical_pricing/
-└── model/
-    └── loss_correlation/
-        ├── __init__.py
-        ├── types.py              # All dataclasses and enums
-        ├── scorer.py             # Loss propensity calculation
-        ├── matrix.py             # Correlation matrix management
-        ├── monitoring.py         # Continuous monitoring engine
-        └── integration.py        # Pricing integration patterns
+layers/
+└── loss/
+    ├── __init__.py
+    ├── types.py              # All dataclasses and enums
+    ├── config_adapter.py     # Loss config adapter (v2.0 tier bands)
+    └── development/          # Specification documents
 ```
 
 ## References
 
-- **SKILL.md Phase 16** - Detailed specification
-- **development/plan.md** - Implementation plan with code
-- **development_docs/historical_loss_analysis.md** - Signal-to-loss evidence
-- **development_docs/signal_mapping_to_historical_loss.md** - Signal paths
+- **SKILL.md** - Architecture documentation
+- **layers/loss/** - Implementation
