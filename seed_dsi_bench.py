@@ -1432,6 +1432,36 @@ COMPANIES = [
     },
 
     # -------------------------------------------------------------------------
+    # MARINE SME
+    # -------------------------------------------------------------------------
+    {
+        "entity_name": "Blue Coast Ferries",
+        "domain": "bluecoastferries.com",
+        "ticker": None,
+        "coverage": "marine",
+        "configuration": "marine_sme",
+        "tier": 1,
+        "decision": "approve",
+        "premium": 45_000,
+        "revenue": 25_000_000,
+        "industry": "FERRY_OPERATOR",
+        "size_band": "SMALL",
+        "geography": "US",
+        "operator_type": "INDEPENDENT",
+        "vessel_category": "FERRY",
+        "trading_pattern": "COASTAL",
+        "flag_state_quality": "WHITE_LIST",
+        "fleet_age_band": "AGE_5_10",
+        "description": "Small coastal ferry operator, clean safety record.",
+        "signal_profile": "sme_clean",
+        "product_type": "hull_machinery",
+        "limit": 5_000_000,
+        "deductible": 25_000,
+        "hull_value": 15_000_000,
+        "tiv": 15_000_000,
+    },
+
+    # -------------------------------------------------------------------------
     # PROFESSIONAL INDEMNITY GENERAL
     # -------------------------------------------------------------------------
     {
@@ -2153,6 +2183,31 @@ COMPANIES = [
         "deductible": 500_000,
         "hull_value": 8_000_000_000,
         "referral_reasons": ["Fatal hull loss (JT610, 2018)", "ICAO safety audit concerns", "Maintenance quality deficiencies", "Rapid fleet expansion without proportional training"],
+    },
+
+    # -------------------------------------------------------------------------
+    # AEROSPACE SME
+    # -------------------------------------------------------------------------
+    {
+        "entity_name": "SkyWest Airlines",
+        "domain": "skywest.com",
+        "ticker": "SKYW",
+        "coverage": "aerospace",
+        "configuration": "aerospace_sme",
+        "tier": 1,
+        "decision": "approve",
+        "premium": 85_000,
+        "revenue": 3_200_000_000,
+        "industry": "REGIONAL_AIRLINE",
+        "size_band": "MEDIUM",
+        "geography": "US",
+        "description": "Regional airline, strong safety record, modern fleet.",
+        "signal_profile": "aero_good",
+        "product_type": "aviation_hull",
+        "limit": 5_000_000,
+        "deductible": 50_000,
+        "hull_value": 500_000_000,
+        "tiv": 500_000_000,
     },
 ]
 
