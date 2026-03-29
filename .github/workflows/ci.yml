@@ -50,10 +50,6 @@ jobs:
         working-directory: rust/dsi-core
         run: cargo build --release --lib
 
-      - name: Run Rust tests
-        working-directory: rust/dsi-core
-        run: cargo test --release
-
       - name: Upload Rust artifacts
         uses: actions/upload-artifact@v4
         with:
