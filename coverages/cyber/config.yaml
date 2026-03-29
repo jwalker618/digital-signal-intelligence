@@ -2,7 +2,8 @@ cyber:
   cyber_general:
     metadata:
       name: DSI Cyber Technical Pricing Model
-      description: Cyber liability model based on externally observable technical signals
+      description: Cyber liability model based on externally observable technical
+        signals
       version: 2.3.0
       product_types:
       - cyber_liability
@@ -19,7 +20,8 @@ cyber:
         - field: client_name
           description: Client name (domain optional for discovery)
         - field: product_type
-          description: 'One of: cyber_liability, network_security, privacy_liability, cyber_extortion'
+          description: 'One of: cyber_liability, network_security, privacy_liability,
+            cyber_extortion'
         - field: limit
           description: Requested limit in USD
         - field: revenue
@@ -1280,7 +1282,8 @@ cyber:
   cyber_sme:
     metadata:
       name: Cyber SME Automated Pricing Model
-      description: Cyber liability model for SME segment - automated underwriting for small businesses
+      description: Cyber liability model for SME segment - automated underwriting
+        for small businesses
       version: 2.3.0
       product_types:
       - cyber_liability
@@ -1973,4 +1976,4594 @@ cyber:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.15
       max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
+  cyber_healthcare:
+    metadata:
+      name: DSI Cyber Healthcare Model
+      description: Health systems, hospitals, pharma, health tech
+      version: 2.3.0
+      product_types:
+      - cyber_liability
+      - privacy_liability
+      - network_security
+      applicable_markets: &id001
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required: &id002
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: cyber_liability, network_security, privacy_liability'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD (MULTIPLIER basis)
+      min_premium: 50000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: industry_sector
+        operator: ==
+        value: HEALTHCARE
+        required_in_input: true
+      - field: revenue
+        operator: '>'
+        value: 50000000
+        required_in_input: false
+    direct_queries:
+    - id: hipaa_risk_assessment
+      question: Has a NIST CSF-aligned HIPAA risk analysis been completed in the past
+        12 months?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: No current HIPAA risk assessment
+    - id: phi_encrypted_rest
+      question: Is all PHI encrypted at rest across all storage systems?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.2
+        note: PHI not encrypted at rest
+    - id: medical_device_inventory
+      question: Do you maintain a complete inventory of all connected medical devices?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No connected medical device inventory
+    - id: patient_portal_mfa
+      question: Is MFA enabled for all patient portal access?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: Patient portal lacks MFA
+    signal_registry:
+    - id: connected_medical_device_security
+      inference_utility_function: connected_medical_device_security_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: health_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: ehr_system_resilience
+      inference_utility_function: ehr_system_resilience_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: health_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: hipaa_compliance_depth
+      inference_utility_function: hipaa_compliance_depth_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: health_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 4
+            note: HIPAA compliance critically deficient
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: clinical_system_segmentation
+      inference_utility_function: clinical_system_segmentation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: health_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: phi_data_volume
+      inference_utility_function: phi_data_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: health_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.3
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: hhs_breach_portal_history
+      inference_utility_function: hhs_breach_portal_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: health_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: FLAG
+            note: Multiple HHS breach portal entries
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: health_data_security
+        label: Health Data Security
+        description: 'Healthcare-specific data security signals: PHI, medical devices,
+          EHR, HIPAA'
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.001
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.003
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0045
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.006
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: &id003
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      - 500000000
+      - 1000000000
+      valid_deductibles: &id004
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: &id005
+          - deductible: 10000
+            factor: 1.3
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.9
+          - deductible: 250000
+            factor: 0.8
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.6
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: &id006
+          - deductible: 10000
+            factor: 1.3
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.9
+          - deductible: 250000
+            factor: 0.8
+          - deductible: 500000
+            factor: 0.7
+          - deductible: 1000000
+            factor: 0.6
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_financial_services:
+    metadata:
+      name: DSI Cyber Financial Services Model
+      description: Banks, insurers, payment processors, fintech
+      version: 2.3.0
+      product_types:
+      - cyber_liability
+      - network_security
+      - privacy_liability
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 75000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: industry_sector
+        operator: ==
+        value: FINANCIAL_SERVICES
+        required_in_input: true
+      - field: revenue
+        operator: '>'
+        value: 50000000
+        required_in_input: false
+    direct_queries:
+    - id: swift_csp_compliant
+      question: Is the organization SWIFT CSP compliant?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Not SWIFT CSP compliant
+    - id: real_time_fraud_monitoring
+      question: Is real-time transaction fraud monitoring deployed?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.25
+        note: No real-time fraud monitoring
+    - id: third_party_risk_programme
+      question: Is there a formal third-party cyber risk management programme?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No third-party risk programme
+    - id: segregation_of_duties
+      question: Are privileged access controls and segregation of duties enforced?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: Weak access controls
+    signal_registry:
+    - id: payment_system_architecture
+      inference_utility_function: payment_system_architecture_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: financial_system_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: swift_controls
+      inference_utility_function: swift_controls_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: financial_system_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: pci_compliance_depth
+      inference_utility_function: pci_compliance_depth_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: financial_system_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 4
+            note: PCI compliance critically deficient
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: transaction_fraud_controls
+      inference_utility_function: transaction_fraud_controls_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: financial_system_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: core_banking_resilience
+      inference_utility_function: core_banking_resilience_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: financial_system_security
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: regulatory_examination_history
+      inference_utility_function: regulatory_examination_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: financial_system_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: financial_system_security
+        label: Financial System Security
+        description: Payment systems, regulatory compliance, transaction controls
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.001
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0016
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0028
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0042
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0056
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_critical_infrastructure:
+    metadata:
+      name: DSI Cyber Critical Infrastructure Model
+      description: Utilities, telecom, water, transportation
+      version: 2.3.0
+      product_types:
+      - cyber_liability
+      - network_security
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 100000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value:
+        - UTILITIES
+        - TELECOM
+        - WATER
+        - TRANSPORTATION
+        required_in_input: true
+      - field: revenue
+        operator: '>'
+        value: 50000000
+        required_in_input: false
+    direct_queries:
+    - id: ot_network_segmented
+      question: Is the OT network segmented from the IT network?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: OT not segmented from IT
+    - id: sis_independent
+      question: Are safety instrumented systems independent from process control?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: SIS not independent
+    - id: ot_patching_programme
+      question: Is there a formal OT patching programme?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.3
+        note: No OT patching programme
+    - id: manual_override_capability
+      question: Can critical systems be operated manually if digital systems fail?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.2
+        note: No manual override capability
+    - id: cisa_coordination
+      question: Does the organization participate in CISA coordination?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No CISA coordination
+    signal_registry:
+    - id: ot_network_segmentation
+      inference_utility_function: ot_network_segmentation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: ot_ics_security
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 4
+            note: OT network not segmented from IT
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: scada_security_posture
+      inference_utility_function: scada_security_posture_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: ot_ics_security
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: safety_instrumented_system
+      inference_utility_function: safety_instrumented_system_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: ot_ics_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: ot_patching_cadence
+      inference_utility_function: ot_patching_cadence_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: ot_ics_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: nerc_cip_compliance
+      inference_utility_function: nerc_cip_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: ot_ics_security
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: ot_ics_security
+        label: OT/ICS Security
+        description: Operational technology and industrial control system security
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.25
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.1
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0012
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.002
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0035
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0052
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.007
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.5
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_technology:
+    metadata:
+      name: DSI Cyber Technology Model
+      description: SaaS, software vendors, MSPs, IT services
+      version: 2.3.0
+      product_types:
+      - cyber_liability
+      - network_security
+      - privacy_liability
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 50000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value:
+        - TECHNOLOGY
+        - SOFTWARE
+        - IT_SERVICES
+        - MSP
+        required_in_input: true
+    direct_queries:
+    - id: secure_sdlc_implemented
+      question: Is a secure software development lifecycle (SDLC) implemented?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: No secure SDLC
+    - id: sbom_generated
+      question: Are software bills of materials (SBOMs) generated for releases?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No SBOM generation
+    - id: tenant_isolation_validated
+      question: Has tenant isolation been validated by independent assessment?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.2
+        note: Tenant isolation not validated
+    - id: incident_notification_sla
+      question: Are customer incident notification SLAs contractually defined?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No incident notification SLAs
+    signal_registry:
+    - id: secure_sdlc_maturity
+      inference_utility_function: secure_sdlc_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: product_supply_chain_security
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 4
+            note: No secure SDLC process
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: sbom_coverage
+      inference_utility_function: sbom_coverage_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: product_supply_chain_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: tenant_isolation_strength
+      inference_utility_function: tenant_isolation_strength_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: product_supply_chain_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: dependency_vulnerability_exposure
+      inference_utility_function: dependency_vulnerability_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: product_supply_chain_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: api_security_posture
+      inference_utility_function: api_security_posture_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: product_supply_chain_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: incident_notification_capability
+      inference_utility_function: incident_notification_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: product_supply_chain_security
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: product_supply_chain_security
+        label: Product & Supply Chain Security
+        description: Software product security, SDLC, supply chain, tenant isolation
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0011
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0019
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0032
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0048
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0064
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_digital_platform:
+    metadata:
+      name: DSI Cyber Digital Platform Model
+      description: Marketplaces, social media, adtech, media platforms
+      version: 2.3.0
+      product_types:
+      - cyber_liability
+      - privacy_liability
+      - network_security
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 50000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value:
+        - DIGITAL_PLATFORM
+        - MEDIA
+        - ADTECH
+        - SOCIAL
+        required_in_input: true
+    direct_queries:
+    - id: mfa_available_all_users
+      question: Is MFA available to all platform users?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.25
+        note: MFA not available to all users
+    - id: credential_breach_checking
+      question: Does the platform check credentials against known breach databases?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No credential breach checking
+    - id: data_retention_policy
+      question: Is there a documented data retention and deletion policy?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: No data retention policy
+    - id: child_user_protections
+      question: Are COPPA/age-appropriate design protections implemented?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: No child user protections
+    signal_registry:
+    - id: user_authentication_strength
+      inference_utility_function: user_authentication_strength_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: platform_user_security
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: data_retention_practices
+      inference_utility_function: data_retention_practices_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: platform_user_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: credential_breach_monitoring
+      inference_utility_function: credential_breach_monitoring_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: platform_user_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: content_moderation_capability
+      inference_utility_function: content_moderation_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: platform_user_security
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: user_data_encryption
+      inference_utility_function: user_data_encryption_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: platform_user_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: third_party_data_sharing
+      inference_utility_function: third_party_data_sharing_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: platform_user_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: platform_user_security
+        label: Platform User Security
+        description: User data protection, content moderation, platform integrity
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0008
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0015
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0025
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0038
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_manufacturing:
+    metadata:
+      name: DSI Cyber Manufacturing Model
+      description: Manufacturing with OT/IT convergence risk
+      version: 2.3.0
+      product_types: &id007
+      - cyber_liability
+      - network_security
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 50000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value:
+        - MANUFACTURING
+        - INDUSTRIAL
+        required_in_input: true
+    direct_queries:
+    - id: production_ot_segmented_query
+      question: Is the production OT network segmented from corporate IT?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Production OT not segmented
+    - id: production_recovery_tested
+      question: Has production disaster recovery been tested in the past 12 months?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.25
+        note: Production DR not tested
+    - id: ransomware_playbook
+      question: Does the organization have a ransomware-specific response playbook?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No ransomware playbook
+    - id: itar_ear_controls
+      question: If applicable, are ITAR/EAR cybersecurity controls implemented?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: Missing ITAR/EAR controls
+    signal_registry:
+    - id: production_ot_segmentation
+      inference_utility_function: production_ot_segmentation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: manufacturing_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Production OT not segmented
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: production_recovery_capability
+      inference_utility_function: production_recovery_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: manufacturing_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: ip_protection_controls
+      inference_utility_function: ip_protection_controls_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: manufacturing_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: supply_chain_digital_risk
+      inference_utility_function: supply_chain_digital_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: manufacturing_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: ransomware_preparedness
+      inference_utility_function: ransomware_preparedness_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: manufacturing_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: manufacturing_operations_security
+        label: Manufacturing Operations Security
+        description: OT/IT convergence, production continuity, IP protection
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.001
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.003
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0045
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.006
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_retail:
+    metadata:
+      name: DSI Cyber Retail Model
+      description: Retail, e-commerce, hospitality
+      version: 2.3.0
+      product_types: *id007
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value:
+        - RETAIL
+        - ECOMMERCE
+        - HOSPITALITY
+        required_in_input: true
+    direct_queries:
+    - id: p2pe_deployed
+      question: Is point-to-point encryption deployed across all POS terminals?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.1
+        note: P2PE not deployed
+    - id: ecommerce_skimming_protection
+      question: Are e-commerce anti-skimming protections deployed?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No e-commerce anti-skimming
+    - id: store_network_segmented_query
+      question: Are store networks segmented from corporate and POS systems?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.2
+        note: Store networks not segmented
+    - id: automated_deprovisioning
+      question: Is access deprovisioning automated for departing employees?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No automated deprovisioning
+    signal_registry:
+    - id: point_to_point_encryption
+      inference_utility_function: point_to_point_encryption_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: retail_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: ecommerce_security_posture
+      inference_utility_function: ecommerce_security_posture_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: retail_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: store_network_isolation
+      inference_utility_function: store_network_isolation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: retail_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: loyalty_data_protection
+      inference_utility_function: loyalty_data_protection_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: retail_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: pci_assessment_status
+      inference_utility_function: pci_assessment_status_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: retail_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: access_provisioning_automation
+      inference_utility_function: access_provisioning_automation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: retail_operations_security
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: retail_operations_security
+        label: Retail Operations Security
+        description: PCI compliance, payment security, e-commerce, store networks
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0008
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0013
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0033
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0044
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_public_sector:
+    metadata:
+      name: DSI Cyber Public Sector Model
+      description: Government, education, nonprofits
+      version: 2.3.0
+      product_types: *id007
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 15000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value:
+        - GOVERNMENT
+        - EDUCATION
+        - NONPROFIT
+        required_in_input: true
+    direct_queries:
+    - id: essential_services_continuity_plan
+      question: Is there a tested continuity plan for essential citizen services?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: No essential services continuity plan
+    - id: ms_isac_member
+      question: Is the organization an MS-ISAC member?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: Not MS-ISAC member
+    - id: legacy_system_remediation
+      question: Is there a funded plan to remediate end-of-life systems?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No legacy system remediation plan
+    - id: ransom_payment_authority
+      question: Is there a defined governance process for ransomware payment decisions?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No ransom payment governance
+    signal_registry:
+    - id: essential_services_continuity
+      inference_utility_function: essential_services_continuity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_sector_cyber_posture
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 4
+            note: No essential services continuity plan
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: legacy_system_exposure
+      inference_utility_function: legacy_system_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_sector_cyber_posture
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: ms_isac_participation
+      inference_utility_function: ms_isac_participation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_sector_cyber_posture
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: citizen_data_volume
+      inference_utility_function: citizen_data_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_sector_cyber_posture
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.3
+    - id: ransomware_payment_governance
+      inference_utility_function: ransomware_payment_governance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_sector_cyber_posture
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: cyber_incident_response_maturity
+      inference_utility_function: cyber_incident_response_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_sector_cyber_posture
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: public_sector_cyber_posture
+        label: Public Sector Cyber Posture
+        description: Government/education cyber security, essential services, legacy
+          systems
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0006
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0011
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0027
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0036
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  cyber_professional_services:
+    metadata:
+      name: DSI Cyber Professional Services Model
+      description: Law firms, consultancies, accounting firms
+      version: 2.3.0
+      product_types: *id007
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 2
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value:
+        - LEGAL
+        - CONSULTING
+        - ACCOUNTING
+        required_in_input: true
+      - field: revenue
+        operator: '>'
+        value: 50000000
+        required_in_input: false
+    direct_queries:
+    - id: email_dmarc_enforced
+      question: Is DMARC at enforcement level (reject/quarantine) for all domains?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.2
+        note: DMARC not at enforcement
+    - id: ethical_walls_capability_query
+      question: Are information barriers (ethical walls) implemented between client
+        matters?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: No ethical wall capability
+    - id: client_data_encrypted_rest
+      question: Is all client data encrypted at rest?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: Client data not encrypted at rest
+    - id: wire_transfer_verification
+      question: Are wire transfer verification procedures in place to prevent BEC?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 1.25
+        note: No wire transfer verification
+    signal_registry:
+    - id: client_data_classification
+      inference_utility_function: client_data_classification_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: professional_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: ethical_wall_capability
+      inference_utility_function: ethical_wall_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: professional_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: email_security_posture
+      inference_utility_function: email_security_posture_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: professional_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: client_data_encryption_at_rest
+      inference_utility_function: client_data_encryption_at_rest_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: professional_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wire_transfer_controls
+      inference_utility_function: wire_transfer_controls_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: professional_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: remote_access_security
+      inference_utility_function: remote_access_security_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: professional_data_security
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: professional_data_security
+        label: Professional Data Security
+        description: Client confidentiality, ethical walls, privileged communication
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: public_record
+        label: Public Record
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: structured_data
+        label: Structured Data
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: security_posture
+        label: Security Posture
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0008
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0013
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0033
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0044
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: *id003
+      valid_deductibles: *id004
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 50000
+      by_product_type:
+        cyber_liability:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id005
+        network_security:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors: *id006
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
       max_ilf_factor: 10.0
