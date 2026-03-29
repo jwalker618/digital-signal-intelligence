@@ -1,5 +1,5 @@
 # DSI Logic Document: `CYBER`
-*Generated: 2026-03-06*
+*Generated: 2026-03-29*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -67,13 +67,13 @@ This configuration contains **44 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
-**1. The Pricing Anchor:** The Base Rate of `0.25%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$50,000` Deductible.
+**1. The Pricing Anchor:** The Base Rate of `0.008%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$50,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `revenue` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0025 = **$25,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$25,000**.
+  - Base Premium = $10,000,000 Ã— 8e-05 = **$800**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$800**.
 
 ---
 
@@ -129,7 +129,7 @@ This configuration contains **15 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$4,000` purchases exactly the `$1,000,000` Limit / `$5,000` Deductible Base Package.
 **2. Theoretical Execution:**

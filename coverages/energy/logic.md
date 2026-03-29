@@ -1,5 +1,5 @@
 # DSI Logic Document: `ENERGY`
-*Generated: 2026-03-06*
+*Generated: 2026-03-29*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -77,12 +77,12 @@ This configuration contains **47 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.18%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0018 = **$18,000**
+  - Base Premium = $10,000,000 Ã— 0.0018 = **$18,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$18,000**.
 
 ---
@@ -92,7 +92,7 @@ This configuration contains **47 signals** distributed as follows:
 
 ### Routing Protocol (Multiplexer)
 - `tiv > 100000000`
-- `operation_segment = UPSTREAM_DEEPWATER`
+- `operation_segment == UPSTREAM_DEEPWATER`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -149,12 +149,12 @@ This configuration contains **35 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.16%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$1,000,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0016 = **$16,000**
+  - Base Premium = $10,000,000 Ã— 0.0016 = **$16,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$16,000**.
 
 ---
@@ -163,7 +163,7 @@ This configuration contains **35 signals** distributed as follows:
 *Conventional onshore E&P â€” Permian, Oklahoma, Louisiana conventional operations*
 
 ### Routing Protocol (Multiplexer)
-- `operation_segment = UPSTREAM_CONVENTIONAL`
+- `operation_segment == UPSTREAM_CONVENTIONAL`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -226,12 +226,12 @@ This configuration contains **49 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.16%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0016 = **$16,000**
+  - Base Premium = $10,000,000 Ã— 0.0016 = **$16,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$16,000**.
 
 ---
@@ -240,7 +240,7 @@ This configuration contains **49 signals** distributed as follows:
 *Tight oil, shale gas, and hydraulic fracturing operations*
 
 ### Routing Protocol (Multiplexer)
-- `operation_segment = UPSTREAM_UNCONVENTIONAL`
+- `operation_segment == UPSTREAM_UNCONVENTIONAL`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -303,12 +303,12 @@ This configuration contains **52 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.22%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0022 = **$22,000**
+  - Base Premium = $10,000,000 Ã— 0.0022 = **$22,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$22,000**.
 
 ---
@@ -380,12 +380,12 @@ This configuration contains **48 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.12%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0012 = **$12,000**
+  - Base Premium = $10,000,000 Ã— 0.0012 = **$12,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$12,000**.
 
 ---
@@ -457,12 +457,12 @@ This configuration contains **49 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.22%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0022 = **$22,000**
+  - Base Premium = $10,000,000 Ã— 0.0022 = **$22,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$22,000**.
 
 ---
@@ -471,8 +471,8 @@ This configuration contains **49 signals** distributed as follows:
 *Offshore wind farms â€” maritime construction + technology risk*
 
 ### Routing Protocol (Multiplexer)
-- `operation_segment = RENEWABLE`
-- `technology_type = OFFSHORE_WIND`
+- `operation_segment == RENEWABLE`
+- `technology_type == OFFSHORE_WIND`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -537,12 +537,12 @@ This configuration contains **46 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.2%` on `tiv` purchases exactly a `$25,000,000` Limit with a `$250,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.002 = **$20,000**
+  - Base Premium = $10,000,000 Ã— 0.002 = **$20,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$20,000**.
 
 ---
@@ -551,8 +551,8 @@ This configuration contains **46 signals** distributed as follows:
 *Onshore wind and utility-scale solar*
 
 ### Routing Protocol (Multiplexer)
-- `operation_segment = RENEWABLE`
-- `technology_type IN ['ONSHORE_WIND', 'UTILITY_SOLAR', 'DISTRIBUTED_SOLAR']`
+- `operation_segment == RENEWABLE`
+- `technology_type in ['ONSHORE_WIND', 'UTILITY_SOLAR', 'DISTRIBUTED_SOLAR']`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -617,12 +617,12 @@ This configuration contains **45 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.13%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0013 = **$13,000**
+  - Base Premium = $10,000,000 Ã— 0.0013 = **$13,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$13,000**.
 
 ---
@@ -631,8 +631,8 @@ This configuration contains **45 signals** distributed as follows:
 *Battery energy storage systems (BESS) and green hydrogen â€” emerging technology risk with catastrophic severity potential*
 
 ### Routing Protocol (Multiplexer)
-- `operation_segment = RENEWABLE`
-- `technology_type IN ['BATTERY_STORAGE', 'HYDROGEN']`
+- `operation_segment == RENEWABLE`
+- `technology_type in ['BATTERY_STORAGE', 'HYDROGEN']`
 
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
@@ -697,12 +697,12 @@ This configuration contains **52 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.27999999999999997%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0028 = **$28,000**
+  - Base Premium = $10,000,000 Ã— 0.0028 = **$28,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$28,000**.
 
 ---
@@ -769,11 +769,11 @@ This configuration contains **25 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = (Base Ã— Rate) Ã— ILF_relativity Ã— Deductible_Factor Ã— Modifiers*
 
 **1. The Pricing Anchor:** The Base Rate of `0.2%` on `tiv` purchases exactly a `$0` Limit with a `$0` Deductible.
 **2. Theoretical Execution:**
   - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.002 = **$20,000**
+  - Base Premium = $10,000,000 Ã— 0.002 = **$20,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$20,000**.
 
