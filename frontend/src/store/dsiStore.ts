@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { ReactNode } from 'react';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export interface DsiState {
   // Navigation & Context State
   activeMenu: string;
@@ -165,7 +167,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   updateDecision: async (quoteCode: string, quoteAction: string, referralAction: string | null) => {
     try {
       // Hits our strict DDD endpoint
-      const res = await fetch(`http://localhost:8000/api/v1/quotes/${quoteCode}/resolve`, {
+      const res = await fetch(`${API_BASE}/api/v1/quotes/${quoteCode}/resolve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         
@@ -191,8 +193,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       const safeFetch = (url: string) => fetch(url).then(res => res.ok ? res.json() : null).catch(() => null);
 
       const [commercialData, riskData] = await Promise.all([
-        safeFetch(`http://localhost:8000/api/v1/commercial/${versionCode}`),
-        safeFetch(`http://localhost:8000/api/v1/commercial/${versionCode}/risk-terms`),
+        safeFetch(`${API_BASE}/api/v1/commercial/${versionCode}`),
+        safeFetch(`${API_BASE}/api/v1/commercial/${versionCode}/risk-terms`),
       ]);
 
       set({
@@ -212,7 +214,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     if (get().riskSignalsVersionCode === versionCode && get().riskSignals.length > 0) return;
     set({ isFetchingRiskSignals: true });
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/frontend/${versionCode}/signals`);
+      const res = await fetch(`${API_BASE}/api/v1/frontend/${versionCode}/signals`);
       if (res.ok) {
         const data = await res.json();
         set({ riskSignals: data, isFetchingRiskSignals: false, riskSignalsVersionCode: versionCode });
@@ -236,7 +238,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       targetDate.setDate(targetDate.getDate() - daysFilter);
       const isoDateString = targetDate.toISOString(); 
 
-      const baseUrl = 'http://localhost:8000/api/v1/analytics/loss';
+      const baseUrl = `${API_BASE}/api/v1/analytics/loss`;
       const params = `?coverage=${encodeURIComponent(coverage)}&created_after=${encodeURIComponent(isoDateString)}`;
 
       // Helper for safe fetching
@@ -273,7 +275,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       targetDate.setDate(targetDate.getDate() - daysFilter);
       const isoDateString = targetDate.toISOString(); 
 
-      const baseUrl = 'http://localhost:8000/api/v1/analytics/exposure';
+      const baseUrl = `${API_BASE}/api/v1/analytics/exposure`;
       const params = `?coverage=${encodeURIComponent(coverage)}&created_after=${encodeURIComponent(isoDateString)}`;
 
       const safeFetch = (url: string) => fetch(url).then(res => res.ok ? res.json() : []).catch(() => []);
@@ -304,7 +306,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     // Skip if already have versions loaded
     if (get().modelVersions.length > 0) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/modelversion/${submissionCode}/submissionshistory/all`);
+      const res = await fetch(`${API_BASE}/api/v1/modelversion/${submissionCode}/submissionshistory/all`);
       if (res.ok) {
         const data = await res.json();
         // Endpoint returns list[ModelVersionDBRecord]
@@ -318,7 +320,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
 
   addNote: async (versionCode: string, note: string, source = "underwriter") => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/modelversion/${versionCode}/notes`, {
+      const res = await fetch(`${API_BASE}/api/v1/modelversion/${versionCode}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note, source }),
@@ -339,7 +341,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   fetchReferralSignals: async (submissionCode: string) => {
     set({ isFetchingSignals: true });
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/modelversion/${submissionCode}/submissionshistory/all`);
+      const res = await fetch(`${API_BASE}/api/v1/modelversion/${submissionCode}/submissionshistory/all`);
       if (!res.ok) throw new Error("Failed to fetch signals");
       const data = await res.json();
       set({ referralSignals: data.signals || [], isFetchingSignals: false });
@@ -352,7 +354,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   submitSignalOverride: async (quoteCode: string, signalCode: string, auditedValue: number, rationale: string) => {
     try {
       // 1. Send the override request to your new endpoint
-      const res = await fetch(`http://localhost:8000/api/v1/signals/${quoteCode}/override`, {
+      const res = await fetch(`${API_BASE}/api/v1/signals/${quoteCode}/override`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -370,7 +372,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
 
       // 2. Fetch the updated Quote
       // We MUST do this because the backend may have generated a brand new Referral for this Quote!
-      const quoteRes = await fetch(`http://localhost:8000/api/v1/quotes/${quoteCode}`);
+      const quoteRes = await fetch(`${API_BASE}/api/v1/quotes/${quoteCode}`);
       
       if (quoteRes.ok) {
         const quoteData = await quoteRes.json();
@@ -405,7 +407,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   selectLimitOption: async (quoteCode: string, selectedLimit: number, rationale?: string) => {
     set({ isSelectingLimit: true });
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/quotes/${quoteCode}/select-option`, {
+      const res = await fetch(`${API_BASE}/api/v1/quotes/${quoteCode}/select-option`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -447,7 +449,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       targetDate.setDate(targetDate.getDate() - days);
       const isoDateString = targetDate.toISOString(); // e.g., 2026-02-03T11:53:00.000Z
       
-      const res = await fetch(`http://localhost:8000/api/v1/frontend/pipeline?created_after=${isoDateString}`);
+      const res = await fetch(`${API_BASE}/api/v1/frontend/pipeline?created_after=${isoDateString}`);
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       
       const data = await res.json();
@@ -473,13 +475,13 @@ export const useDsiStore = create<DsiState>((set, get) => ({
 
       // Core fetches that always rely on the submission_code
       const fetchPromises = [
-        safeFetch(`http://localhost:8000/api/v1/submissions/${row.submission_code}`),
-        safeFetch(`http://localhost:8000/api/v1/modelversion/${row.version_code}/all`),
-        safeFetch(`http://localhost:8000/api/v1/quotes/${row.quote_code}`),
+        safeFetch(`${API_BASE}/api/v1/submissions/${row.submission_code}`),
+        safeFetch(`${API_BASE}/api/v1/modelversion/${row.version_code}/all`),
+        safeFetch(`${API_BASE}/api/v1/quotes/${row.quote_code}`),
       ];
 
       const referralPromise = row.referral_code 
-        ? safeFetch(`http://localhost:8000/api/v1/referrals/${row.referral_code}`)
+        ? safeFetch(`${API_BASE}/api/v1/referrals/${row.referral_code}`)
         : Promise.resolve(null);
 
       // 2. Execute all network requests in parallel
