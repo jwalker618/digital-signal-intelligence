@@ -44,6 +44,8 @@ class DSIProjectAssessor:
             "schema_compliance": {"pass": 0, "total": 0, "gaps": []},
             "signal_architecture": {"pass": 0, "total": 0, "gaps": []},
             "actuarial_math": {"pass": 0, "total": 0, "gaps": []},
+            "commercial": {"pass": 0, "total": 0, "gaps": []},
+            "seed_coverage": {"pass": 0, "total": 0, "gaps": []},
         }
 
     def _assert(self, category: str, condition: bool, gap_message: str):
@@ -349,7 +351,8 @@ class DSIProjectAssessor:
         # Core documents (check multiple possible locations/formats)
         whitepaper_exists = (
             (self.root / "docs/DSI_Whitepaper.md").exists() or
-            (self.root / "docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf").exists()
+            (self.root / "docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf").exists() or
+            any((self.root / "docs/overview").glob("Whitepaper_Digital_Signal_Intelligence*"))
         )
         self._assert(cat, whitepaper_exists,
                      "DSI Whitepaper missing")
@@ -1032,18 +1035,27 @@ class DSIProjectAssessor:
 
         # ILF curve and deductible factor anchor checks
         for prod, data in pricing.get('by_product_type', {}).items():
-            # ILF curve anchor check
             ilf_curve = data.get('ilf_curve', {})
-            ilf_factors = ilf_curve.get('factors', [])
-            anchor_factor = next((f['factor'] for f in ilf_factors if f.get('limit') == b_limit), None)
-            self._assert(cat, anchor_factor == 1.0,
-                         f"{prefix}/{prod} ILF anchor: limit {b_limit} factor is {anchor_factor}, must be 1.0")
 
-            # Deductible anchor check
+            # Parametric ILF (anchor_limit + curve + params) — no table factor check needed
+            if 'curve' in ilf_curve and ilf_curve.get('curve'):
+                self._assert(cat, ilf_curve.get('anchor_limit') is not None,
+                             f"{prefix}/{prod} Parametric ILF missing anchor_limit")
+                self._assert(cat, ilf_curve.get('params') is not None,
+                             f"{prefix}/{prod} Parametric ILF missing params")
+            else:
+                # Table-based ILF — check anchor factor = 1.0
+                ilf_factors = ilf_curve.get('factors', [])
+                anchor_factor = next((f['factor'] for f in ilf_factors if f.get('limit') == b_limit), None)
+                self._assert(cat, anchor_factor == 1.0,
+                             f"{prefix}/{prod} ILF anchor: limit {b_limit} factor is {anchor_factor}, must be 1.0")
+
+            # Deductible anchor check (applies to both formats)
             ded_factors = data.get('deductible_factors', [])
-            ded_anchor = next((f['factor'] for f in ded_factors if f.get('deductible') == b_ded), None)
-            self._assert(cat, ded_anchor == 1.0,
-                         f"{prefix}/{prod} Deductible anchor: {b_ded} factor is {ded_anchor}, must be 1.0")
+            if ded_factors and b_ded is not None:
+                ded_anchor = next((f['factor'] for f in ded_factors if f.get('deductible') == b_ded), None)
+                self._assert(cat, ded_anchor == 1.0,
+                             f"{prefix}/{prod} Deductible anchor: {b_ded} factor is {ded_anchor}, must be 1.0")
 
         # ---------------------------------------------------------------------
         # 5. MULTIPLIER basis validation
@@ -1079,6 +1091,100 @@ class DSIProjectAssessor:
                                          f"{prefix} Signal '{sig.get('id')}' has non-multiplicative modifier: {applied}")
 
     # =========================================================================
+    # COMMERCIAL ENTITIES CHECKS
+    # =========================================================================
+
+    def check_commercial_entities(self):
+        """Check commercial entity definitions are valid and reference existing configs."""
+        cat = "commercial"
+        entities_dir = self.root / "commercial" / "entities"
+        self._assert(cat, entities_dir.exists(),
+                     "commercial/entities/ directory missing")
+        if not entities_dir.exists():
+            return
+
+        # Load all available configs
+        available_configs = set()
+        cov_dir = self.root / "coverages"
+        if cov_dir.exists():
+            for root_dir, _, files in os.walk(cov_dir):
+                if "config.yaml" in files:
+                    cov_path = Path(root_dir)
+                    cov_name = cov_path.name
+                    try:
+                        with open(cov_path / "config.yaml") as f:
+                            data = yaml.safe_load(f)
+                        for top_key, configs in data.items():
+                            if isinstance(configs, dict):
+                                available_configs.update(configs.keys())
+                    except Exception:
+                        pass
+
+        entity_files = list(entities_dir.glob("*.yaml"))
+        self._assert(cat, len(entity_files) > 0,
+                     "No commercial entity YAML files found")
+
+        for ef in entity_files:
+            try:
+                with open(ef) as f:
+                    entity_data = yaml.safe_load(f)
+                entity = entity_data.get('entity', {})
+                entity_id = entity.get('id', ef.stem)
+
+                self._assert(cat, 'id' in entity,
+                             f"Entity {ef.name} missing 'id' field")
+                self._assert(cat, 'base_currency' in entity,
+                             f"Entity {entity_id} missing 'base_currency'")
+
+                # Check configs reference valid configs
+                for cov_binding in entity.get('coverages', []):
+                    for cfg_ref in cov_binding.get('configs', []):
+                        self._assert(cat, cfg_ref in available_configs,
+                                     f"Entity {entity_id} references config '{cfg_ref}' not found in coverage configs")
+
+                # Check required sections
+                self._assert(cat, 'commission' in entity,
+                             f"Entity {entity_id} missing 'commission' section")
+                self._assert(cat, 'taxes_and_levies' in entity,
+                             f"Entity {entity_id} missing 'taxes_and_levies' section")
+
+            except yaml.YAMLError as e:
+                self._assert(cat, False, f"Entity {ef.name} YAML parse error: {e}")
+
+    # =========================================================================
+    # SEED SCRIPT CHECKS
+    # =========================================================================
+
+    def check_seed_script(self):
+        """Check seed script covers all configurations."""
+        cat = "seed_coverage"
+        seed_file = self.root / "seed_dsi_bench.py"
+        self._assert(cat, seed_file.exists(), "seed_dsi_bench.py missing")
+        if not seed_file.exists():
+            return
+
+        with open(seed_file) as f:
+            seed_content = f.read()
+
+        # Load all available configs
+        cov_dir = self.root / "coverages"
+        if cov_dir.exists():
+            for root_dir, _, files in os.walk(cov_dir):
+                if "config.yaml" in files:
+                    cov_path = Path(root_dir)
+                    try:
+                        with open(cov_path / "config.yaml") as f:
+                            data = yaml.safe_load(f)
+                        for top_key, configs in data.items():
+                            if isinstance(configs, dict):
+                                for cfg_name in configs:
+                                    self._assert(cat,
+                                                 f'"{cfg_name}"' in seed_content,
+                                                 f"Config '{cfg_name}' not referenced in seed script")
+                    except Exception:
+                        pass
+
+    # =========================================================================
     # RUN ASSESSMENT
     # =========================================================================
 
@@ -1099,6 +1205,8 @@ class DSIProjectAssessor:
         self.check_signal_arch_files()
         self.check_extractor_coverage()
         self.check_data_persistence()
+        self.check_commercial_entities()
+        self.check_seed_script()
 
         # Coverage configurations
         cov_dir = self.root / "coverages"
