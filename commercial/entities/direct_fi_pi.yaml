@@ -26,6 +26,17 @@ entity:
       configs:
         - pi_general
         - pi_sme
+        - pi_legal_large
+        - pi_legal_specialist
+        - pi_audit
+        - pi_accounting
+        - pi_architecture
+        - pi_engineering
+        - pi_technology
+        - pi_financial_advisory
+        - pi_management_consulting
+        - pi_real_estate
+        - pi_environmental
       max_single_limit: 100_000_000
       constraints:
         - field: revenue
