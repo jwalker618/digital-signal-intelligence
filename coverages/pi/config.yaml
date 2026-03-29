@@ -1799,8 +1799,7 @@ professional_indemnity:
           weight: 0.1
       - id: partner_practice_mix
         label: Partner Practice Mix
-        description: 'Tail-risk drivers specific to large legal practice: partner
-          churn, conflict exposure, matter concentration'
+        description: 'Tail-risk drivers specific to large legal practice: partner churn, conflict exposure, matter concentration'
         risk:
           weight: 0.1
         loss:
@@ -2068,20 +2067,11 @@ professional_indemnity:
       by_product_type:
         professional_liability:
           ilf_curve:
-            base_limit: 5000000
-            factors:
-            - limit: 5000000
-              factor: 1.0
-            - limit: 10000000
-              factor: 1.8
-            - limit: 25000000
-              factor: 3.5
-            - limit: 50000000
-              factor: 6.0
-            - limit: 100000000
-              factor: 10.5
-            - limit: 250000000
-              factor: 19.0
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 100000
             factor: 1.2
@@ -2097,20 +2087,11 @@ professional_indemnity:
             factor: 0.62
         errors_omissions:
           ilf_curve:
-            base_limit: 5000000
-            factors:
-            - limit: 5000000
-              factor: 1.0
-            - limit: 10000000
-              factor: 1.7
-            - limit: 25000000
-              factor: 3.2
-            - limit: 50000000
-              factor: 5.5
-            - limit: 100000000
-              factor: 9.5
-            - limit: 250000000
-              factor: 17.0
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 100000
             factor: 1.2
@@ -2124,6 +2105,12 @@ professional_indemnity:
             factor: 0.72
           - deductible: 5000000
             factor: 0.62
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.5
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
   pi_legal_specialist:
     metadata:
       name: DSI PI Specialist/Plaintiff Law Firm Model
@@ -2344,8 +2331,7 @@ professional_indemnity:
           weight: 0.15
       - id: case_portfolio
         label: Case Portfolio
-        description: Concentration and tail risk of specialist practice; single case
-          can define entire risk profile
+        description: Concentration and tail risk of specialist practice; single case can define entire risk profile
         risk:
           weight: 0.1
         loss:
@@ -2632,7 +2618,7 @@ professional_indemnity:
         value: ACCOUNTING
         required_in_input: true
       - field: sub_profession_type
-        operator: IN
+        operator: in
         value:
         - AUDIT_PUBLIC
         - AUDIT_PRIVATE
@@ -2882,8 +2868,8 @@ professional_indemnity:
           weight: 0.1
       - id: audit_quality
         label: Audit Quality
-        description: Profession-specific risk drivers with extremely high exposure
-          weight reflecting catastrophic concentration risk
+        description: Profession-specific risk drivers with extremely high exposure weight reflecting catastrophic concentration
+          risk
         risk:
           weight: 0.2
         loss:
@@ -3151,20 +3137,11 @@ professional_indemnity:
       by_product_type:
         professional_liability:
           ilf_curve:
-            base_limit: 10000000
-            factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 2.0
-            - limit: 50000000
-              factor: 3.5
-            - limit: 100000000
-              factor: 6.0
-            - limit: 250000000
-              factor: 12.5
-            - limit: 500000000
-              factor: 22.0
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 250000
             factor: 1.15
@@ -3180,20 +3157,11 @@ professional_indemnity:
             factor: 0.6
         errors_omissions:
           ilf_curve:
-            base_limit: 10000000
-            factors:
-            - limit: 10000000
-              factor: 1.0
-            - limit: 25000000
-              factor: 1.8
-            - limit: 50000000
-              factor: 3.0
-            - limit: 100000000
-              factor: 5.2
-            - limit: 250000000
-              factor: 10.5
-            - limit: 500000000
-              factor: 18.0
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 250000
             factor: 1.15
@@ -3207,11 +3175,16 @@ professional_indemnity:
             factor: 0.7
           - deductible: 10000000
             factor: 0.6
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
   pi_accounting:
     metadata:
       name: DSI PI Non-Audit Accounting Model
-      description: 'Non-audit accounting: tax advisory, bookkeeping, estate planning,
-        forensic'
+      description: 'Non-audit accounting: tax advisory, bookkeeping, estate planning, forensic'
       version: 2.3.0
       product_types: *id001
       applicable_markets: *id002
@@ -3597,7 +3570,7 @@ professional_indemnity:
         value: DESIGN_CONSTRUCTION
         required_in_input: true
       - field: sub_profession_type
-        operator: IN
+        operator: in
         value:
         - ARCHITECTURE
         - LANDSCAPE
@@ -3827,8 +3800,7 @@ professional_indemnity:
           weight: 0.1
       - id: design_quality
         label: Design Quality
-        description: Design work quality as primary risk driver; extremely high exposure
-          weight reflects latent defect long-tail
+        description: Design work quality as primary risk driver; extremely high exposure weight reflects latent defect long-tail
         risk:
           weight: 0.25
         loss:
@@ -4100,7 +4072,7 @@ professional_indemnity:
         value: DESIGN_CONSTRUCTION
         required_in_input: true
       - field: sub_profession_type
-        operator: IN
+        operator: in
         value:
         - STRUCTURAL
         - GEOTECHNICAL
@@ -4127,8 +4099,7 @@ professional_indemnity:
         applied: null
         note: Prior PI declined/non-renewed
     - id: structural_collapse
-      question: Any structural failure, collapse, or life-safety incident attributable
-        to firm design in past 10 years?
+      question: Any structural failure, collapse, or life-safety incident attributable to firm design in past 10 years?
       query_condition:
       - return: true
         action: REFER
@@ -4144,8 +4115,7 @@ professional_indemnity:
         applied: null
         note: PE license suspension/investigation
     - id: geotechnical_failure
-      question: Any geotechnical failure (foundation, slope stability, bearing capacity)
-        attributable to firm work?
+      question: Any geotechnical failure (foundation, slope stability, bearing capacity) attributable to firm work?
       query_condition:
       - return: true
         action: REFER
@@ -4153,8 +4123,7 @@ professional_indemnity:
         applied: null
         note: Geotechnical failure history
     - id: critical_infrastructure
-      question: Does firm design critical public infrastructure (bridges, dams, water
-        treatment)?
+      question: Does firm design critical public infrastructure (bridges, dams, water treatment)?
       query_condition:
       - return: true
         action: FLAG
@@ -4333,8 +4302,7 @@ professional_indemnity:
           weight: 0.1
       - id: engineering_quality
         label: Engineering Quality
-        description: Dominates all three dimensions with highest combined group weight
-          (1.20); structural failure IS the risk
+        description: Dominates all three dimensions with highest combined group weight (1.20); structural failure IS the risk
         risk:
           weight: 0.35
         loss:
@@ -4602,20 +4570,11 @@ professional_indemnity:
       by_product_type:
         professional_liability:
           ilf_curve:
-            base_limit: 2000000
-            factors:
-            - limit: 2000000
-              factor: 1.0
-            - limit: 5000000
-              factor: 2.2
-            - limit: 10000000
-              factor: 3.8
-            - limit: 25000000
-              factor: 7.0
-            - limit: 50000000
-              factor: 12.0
-            - limit: 100000000
-              factor: 20.0
+            anchor_limit: 2000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 25000
             factor: 1.2
@@ -4631,20 +4590,11 @@ professional_indemnity:
             factor: 0.65
         errors_omissions:
           ilf_curve:
-            base_limit: 2000000
-            factors:
-            - limit: 2000000
-              factor: 1.0
-            - limit: 5000000
-              factor: 2.0
-            - limit: 10000000
-              factor: 3.4
-            - limit: 25000000
-              factor: 6.2
-            - limit: 50000000
-              factor: 10.5
-            - limit: 100000000
-              factor: 17.5
+            anchor_limit: 2000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
           deductible_factors:
           - deductible: 25000
             factor: 1.2
@@ -4658,6 +4608,12 @@ professional_indemnity:
             factor: 0.72
           - deductible: 1000000
             factor: 0.65
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
   pi_technology:
     metadata:
       name: DSI PI IT Consulting & Systems Integration Model
@@ -4709,8 +4665,7 @@ professional_indemnity:
         applied: null
         note: Client data breach history
     - id: regulatory_investigation
-      question: Any regulatory investigation (GDPR, CCPA, PCI-DSS) related to firm
-        services?
+      question: Any regulatory investigation (GDPR, CCPA, PCI-DSS) related to firm services?
       query_condition:
       - return: true
         action: REFER
@@ -4895,8 +4850,7 @@ professional_indemnity:
           weight: 0.1
       - id: delivery_quality
         label: Delivery Quality
-        description: Technology PI where risk is in delivery, not advice; high exposure
-          weight reflects project concentration
+        description: Technology PI where risk is in delivery, not advice; high exposure weight reflects project concentration
         risk:
           weight: 0.15
         loss:
@@ -5193,8 +5147,7 @@ professional_indemnity:
         applied: null
         note: SEC/FCA enforcement action
     - id: suitability_complaints
-      question: Any suitability-related client complaints or FINRA arbitrations in
-        past 3 years?
+      question: Any suitability-related client complaints or FINRA arbitrations in past 3 years?
       query_condition:
       - return: true
         action: REFER
@@ -5371,8 +5324,7 @@ professional_indemnity:
           weight: 0.1
       - id: advisory_quality
         label: Advisory Quality
-        description: Suitability failures and systemic mis-selling; high exposure
-          weight reflects systemic risk
+        description: Suitability failures and systemic mis-selling; high exposure weight reflects systemic risk
         risk:
           weight: 0.1
         loss:
@@ -5669,8 +5621,7 @@ professional_indemnity:
         applied: null
         note: Significant scope/fee disputes
     - id: adverse_outcomes
-      question: Any client alleging significant adverse outcome from following firm
-        advice?
+      question: Any client alleging significant adverse outcome from following firm advice?
       query_condition:
       - return: true
         action: FLAG
@@ -6025,8 +5976,7 @@ professional_indemnity:
         applied: null
         note: Prior PI declined/non-renewed
     - id: valuation_overturned
-      question: Any valuation challenged or overturned by court or tribunal in past
-        5 years?
+      question: Any valuation challenged or overturned by court or tribunal in past 5 years?
       query_condition:
       - return: true
         action: REFER
@@ -6042,8 +5992,7 @@ professional_indemnity:
         applied: null
         note: RICS/AI disciplinary action
     - id: mortgage_fraud
-      question: Any involvement in transactions subsequently identified as mortgage
-        fraud?
+      question: Any involvement in transactions subsequently identified as mortgage fraud?
       query_condition:
       - return: true
         action: REFER
@@ -6218,8 +6167,7 @@ professional_indemnity:
           weight: 0.1
       - id: valuation_quality
         label: Valuation Quality
-        description: Risk is accuracy of opinion; single negligent valuation can exceed
-          firm annual revenue
+        description: Risk is accuracy of opinion; single negligent valuation can exceed firm annual revenue
         risk:
           weight: 0.2
         loss:
@@ -6476,8 +6424,7 @@ professional_indemnity:
   pi_environmental:
     metadata:
       name: DSI PI Environmental Consulting Model
-      description: 'Environmental consulting: EIA, contaminated land, remediation
-        advisory'
+      description: 'Environmental consulting: EIA, contaminated land, remediation advisory'
       version: 2.3.0
       product_types: *id001
       applicable_markets: *id002
@@ -6509,8 +6456,7 @@ professional_indemnity:
         applied: null
         note: Prior PI declined/non-renewed
     - id: contamination_missed
-      question: Any instance of contamination discovered that firm's prior assessment
-        failed to identify?
+      question: Any instance of contamination discovered that firm's prior assessment failed to identify?
       query_condition:
       - return: true
         action: REFER
@@ -6526,8 +6472,7 @@ professional_indemnity:
         applied: null
         note: Active CERCLA/Superfund PRP
     - id: epa_enforcement
-      question: Any EPA enforcement action related to firm's assessment or remediation
-        advice?
+      question: Any EPA enforcement action related to firm's assessment or remediation advice?
       query_condition:
       - return: true
         action: REFER
@@ -6696,8 +6641,7 @@ professional_indemnity:
           weight: 0.1
       - id: environmental_assessment_quality
         label: Environmental Assessment Quality
-        description: Extreme long-tail exposure and CERCLA severity; second-highest
-          combined weight (1.10)
+        description: Extreme long-tail exposure and CERCLA severity; second-highest combined weight (1.10)
         risk:
           weight: 0.35
         loss:
