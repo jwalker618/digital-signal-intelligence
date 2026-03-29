@@ -4,7 +4,7 @@
 =============================================================================
 DSI PROJECT COMPLETENESS ASSESSMENT
 =============================================================================
-Assessment Date: 2026-03-29 10:18
+Assessment Date: 2026-03-29 11:45
 Assessed By: DSI Unified Assessor v2.0
 Coverages Analyzed: 7
 
@@ -21,14 +21,14 @@ Coverages Analyzed: 7
   Signal Arch Files         13 /  13  [PASS]
   Extractors                22 /  22  [PASS]
   Data Persistence          16 /  16  [PASS]
-  Coverages                263 / 263  [PASS]
-  Schema Compliance        246 / 246  [PASS]
-  Signal Architecture      2546 / 2546  [PASS]
-  Actuarial Math           320 / 326  [GAPS]
-  Commercial                77 /  77  [PASS]
-  Seed Coverage             34 /  34  [PASS]
+  Coverages                407 / 407  [PASS]
+  Schema Compliance        373 / 373  [PASS]
+  Signal Architecture      2763 / 2772  [GAPS]
+  Actuarial Math           437 / 443  [GAPS]
+  Commercial                86 /  86  [PASS]
+  Seed Coverage             43 /  43  [PASS]
 
-  OVERALL SCORE            3623 / 3629  (99.8%)
+  OVERALL SCORE            4246 / 4261  (99.6%)
   STATUS: PASS
 ```
 
@@ -37,8 +37,8 @@ Coverages Analyzed: 7
 | Metric | Count |
 |--------|-------|
 | Production Extractors | 44 |
-| Stub Extractors | 25 |
-| Production Ratio | 63.8% |
+| Stub Extractors | 26 |
+| Production Ratio | 62.9% |
 
 ### Extractor Categories
 
@@ -66,7 +66,19 @@ Coverages Analyzed: 7
 | Performance | 1 |
 | **Total** | **34** |
 
-## Action Items (6 gaps identified)
+## Action Items (15 gaps identified)
+
+### SIGNAL ARCHITECTURE
+
+- [ ] [cyber/cyber_healthcare] Insufficient signals (6 < 15 minimum)
+- [ ] [cyber/cyber_financial_services] Insufficient signals (6 < 15 minimum)
+- [ ] [cyber/cyber_critical_infrastructure] Insufficient signals (5 < 15 minimum)
+- [ ] [cyber/cyber_technology] Insufficient signals (6 < 15 minimum)
+- [ ] [cyber/cyber_digital_platform] Insufficient signals (6 < 15 minimum)
+- [ ] [cyber/cyber_manufacturing] Insufficient signals (5 < 15 minimum)
+- [ ] [cyber/cyber_retail] Insufficient signals (6 < 15 minimum)
+- [ ] [cyber/cyber_public_sector] Insufficient signals (6 < 15 minimum)
+- [ ] [cyber/cyber_professional_services] Insufficient signals (6 < 15 minimum)
 
 ### ACTUARIAL MATH
 
