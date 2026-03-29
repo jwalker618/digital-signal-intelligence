@@ -1312,9 +1312,9 @@ class CoverageExpansionGenerator:
             config_yaml_content = result.config_yaml
             for group in self.spec.new_signal_groups:
                 for signal in group.signals:
-                    if signal.code not in config_yaml_content:
+                    if signal.id not in config_yaml_content:
                         warnings.append(
-                            f"Signal '{signal.code}' defined in spec but not found "
+                            f"Signal '{signal.id}' defined in spec but not found "
                             f"in generated config YAML signal_registry"
                         )
 

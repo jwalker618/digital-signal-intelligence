@@ -250,6 +250,9 @@ class LimitConfiguration:
     valid_deductibles: List[int] = field(default_factory=lambda: [
         10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000,
     ])
+    # Optional min/max limit range (alternative to valid_limits list)
+    min_limit: Optional[int] = None
+    max_limit: Optional[int] = None
     # BUNDLED packages (only used when type=BUNDLED)
     packages: Optional[List[Dict[str, Any]]] = None
 
