@@ -7,10 +7,8 @@ Generated: 2026-03-29 11:39 UTC
 
 import time
 
-from signal_architecture.signals.inference.metadata_registry import (
-    register_inference_function,
-    SignalResult,
-)
+from signal_architecture.signals.inference.registry import register_inference_function
+from signal_architecture.signals.types import SignalResult
 
 from signal_architecture.signals.extractors.stubs.cyber.phase_7_extractors import (
     ConnectedMedicalDeviceSecurityExtractor,
