@@ -73,6 +73,19 @@ export interface DsiState {
   // Notes
   addNote: (versionCode: string, note: string, source?: string) => Promise<void>;
 
+  // Commercial & Risk Terms (Phase 1)
+  commercialTerms: any | null;
+  riskTerms: any | null;
+  isFetchingTerms: boolean;
+  commercialTermsVersionCode: string | null;
+  fetchCommercialTerms: (versionCode: string) => Promise<void>;
+
+  // Sidebar category state
+  activeCategory: string;
+  setActiveCategory: (category: string) => void;
+  expandedCategories: Record<string, boolean>;
+  toggleCategory: (category: string) => void;
+
 }
 
 export const useDsiStore = create<DsiState>((set, get) => ({
@@ -106,6 +119,20 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   referralSignals: [],
   isFetchingSignals: false,
   isSelectingLimit: false,
+
+  // Commercial & Risk Terms
+  commercialTerms: null,
+  riskTerms: null,
+  isFetchingTerms: false,
+  commercialTermsVersionCode: null,
+
+  // Sidebar category state
+  activeCategory: "Summary",
+  setActiveCategory: (category) => set({ activeCategory: category }),
+  expandedCategories: { Commercial: false, Risk: false, Technical: true },
+  toggleCategory: (category) => set((state) => ({
+    expandedCategories: { ...state.expandedCategories, [category]: !state.expandedCategories[category] }
+  })),
 
   // Default Risk Tab
   riskSignals: [],
@@ -156,6 +183,29 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       console.error("Failed to update decision", err);
     }
   }, 
+
+  fetchCommercialTerms: async (versionCode: string) => {
+    if (get().commercialTermsVersionCode === versionCode && get().commercialTerms) return;
+    set({ isFetchingTerms: true });
+    try {
+      const safeFetch = (url: string) => fetch(url).then(res => res.ok ? res.json() : null).catch(() => null);
+
+      const [commercialData, riskData] = await Promise.all([
+        safeFetch(`http://localhost:8000/api/v1/commercial/${versionCode}`),
+        safeFetch(`http://localhost:8000/api/v1/commercial/${versionCode}/risk-terms`),
+      ]);
+
+      set({
+        commercialTerms: commercialData,
+        riskTerms: riskData,
+        isFetchingTerms: false,
+        commercialTermsVersionCode: versionCode,
+      });
+    } catch (err) {
+      console.error("Failed to fetch commercial terms:", err);
+      set({ commercialTerms: null, riskTerms: null, isFetchingTerms: false, commercialTermsVersionCode: null });
+    }
+  },
 
   fetchRiskSignals: async (versionCode: string) => {
     // Skip if already fetched for this version
@@ -411,6 +461,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     // Clear cached tab data when switching submissions
     set({
       isLoading: true, error: null,
+      commercialTerms: null, riskTerms: null, commercialTermsVersionCode: null,
       riskSignals: [], riskSignalsVersionCode: null,
       lossCohortBenchmarks: [], lossTrendDistribution: [], lossScatterData: [],
       exposureBandBenchmarks: [], exposureTierDistribution: [], exposureScatterData: [],

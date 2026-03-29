@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import Modal from "@/components/Modal";
 import {
   User, Search, MessageSquare, Plus, Paperclip,
-  ShieldCheck, ShieldAlert, AlertTriangle, Layers, Target
+  ShieldCheck, ShieldAlert, AlertTriangle, Layers, Target,
+  Building2, Shield
 } from "lucide-react";
-import { formatNum } from "@/lib/format";
+import { formatNum, formatDollar } from "@/lib/format";
 
 const DECISION_STYLE: Record<string, { bg: string; text: string; border: string }> = {
   approve: { bg: 'bg-dsi-positive/10', text: 'text-dsi-positive', border: 'border-dsi-positive/30' },
@@ -16,12 +17,18 @@ const DECISION_STYLE: Record<string, { bg: string; text: string; border: string 
 };
 
 export default function SummaryTab() {
-  const { activeSubmission, activeQuote, activeVersion, addNote } = useDsiStore();
+  const { activeSubmission, activeQuote, activeVersion, addNote, commercialTerms, riskTerms, fetchCommercialTerms } = useDsiStore();
 
   const [isWhoOpen, setIsWhoOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [newNoteText, setNewNoteText] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
+
+  useEffect(() => {
+    if (activeVersion?.version_code) {
+      fetchCommercialTerms(activeVersion.version_code);
+    }
+  }, [activeVersion?.version_code, fetchCommercialTerms]);
 
   if (!activeSubmission || !activeVersion) {
     return (
@@ -242,6 +249,56 @@ export default function SummaryTab() {
                 <div className="flex justify-between"><span className="opacity-60">Method</span><span className="font-bold text-xs uppercase">{activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || 'N/A'}</span></div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          COMMERCIAL & RISK TERMS SUMMARY
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 pb-2">
+        {/* Commercial Summary Card */}
+        <div className="flex flex-col">
+          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+            <Building2 className="icon"/><span className="text-sm">Commercial Summary</span>
+          </div>
+          <div className="flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
+            {commercialTerms ? (
+              <div className="space-y-2 text-sm text-wrap">
+                <div className="flex justify-between"><span className="opacity-60">Entity</span><span className="font-bold">{commercialTerms.entity_name || "N/A"}</span></div>
+                <div className="flex justify-between"><span className="opacity-60">Offered Premium</span><span className="font-bold text-dsi-selected">{formatDollar(commercialTerms.offered_premium)}</span></div>
+                <div className="flex justify-between"><span className="opacity-60">Gross Premium</span><span className="font-bold">{formatDollar(commercialTerms.gross_premium)}</span></div>
+                <div className="flex justify-between"><span className="opacity-60">Currency</span><span className="font-bold">{commercialTerms.base_currency || "USD"}</span></div>
+                <div className="flex justify-between"><span className="opacity-60">Distribution</span><span className="font-bold uppercase">{commercialTerms.distribution_type || "N/A"}</span></div>
+              </div>
+            ) : (
+              <p className="text-xs opacity-50 italic text-center py-4 text-wrap">No commercial terms available</p>
+            )}
+          </div>
+        </div>
+
+        {/* Risk Terms Summary Card */}
+        <div className="flex flex-col">
+          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+            <Shield className="icon"/><span className="text-sm">Risk Terms Summary</span>
+          </div>
+          <div className="flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
+            {riskTerms ? (
+              <div className="space-y-2 text-sm text-wrap">
+                <div className="flex justify-between"><span className="opacity-60">Deductible Type</span><span className="font-bold capitalize">{riskTerms.deductible_type?.replace(/_/g, " ") || "N/A"}</span></div>
+                <div className="flex justify-between"><span className="opacity-60">Deductible Amount</span><span className="font-bold">{formatDollar(riskTerms.deductible_amount)}</span></div>
+                <div className="flex justify-between"><span className="opacity-60">SIR</span><span className={`font-bold ${riskTerms.sir_applies ? "text-dsi-warning" : ""}`}>{riskTerms.sir_applies ? `Yes — ${formatDollar(riskTerms.sir_amount)}` : "No"}</span></div>
+                <div className="flex justify-between"><span className="opacity-60">Aggregate Limit</span><span className="font-bold">{formatDollar(riskTerms.aggregate_limit)}</span></div>
+                <div className="flex justify-between">
+                  <span className="opacity-60">Coverage Terms</span>
+                  <span className="font-bold">
+                    {riskTerms.coverage_terms ? `${Object.keys(riskTerms.coverage_terms).length} terms` : "N/A"}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs opacity-50 italic text-center py-4 text-wrap">No risk terms available</p>
+            )}
           </div>
         </div>
       </div>

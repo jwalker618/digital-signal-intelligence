@@ -15,6 +15,17 @@ import ReferralTab from "@/components/submissions/workbench/ReferralTab";
 import ModelVersionsTab from "@/components/submissions/workbench/ModelVersionsTab";
 import ScenarioTab from "@/components/submissions/workbench/ScenarioTab";
 
+// Commercial tabs
+import CommercialTermsTab from "@/components/submissions/workbench/CommercialTermsTab";
+import PremiumAssemblyTab from "@/components/submissions/workbench/PremiumAssemblyTab";
+import DistributionTab from "@/components/submissions/workbench/DistributionTab";
+
+// Risk terms tabs
+import DeductibleStructureTab from "@/components/submissions/workbench/DeductibleStructureTab";
+import CoverageTermsTab from "@/components/submissions/workbench/CoverageTermsTab";
+import SIRWaitingPeriodsTab from "@/components/submissions/workbench/SIRWaitingPeriodsTab";
+import AggregateReinstatementTab from "@/components/submissions/workbench/AggregateReinstatementTab";
+
 export default function WorkbenchView() {
   const { 
     activeMenu, 
@@ -44,6 +55,23 @@ export default function WorkbenchView() {
     switch (activeMenu) {
       case "Summary":
         return <SummaryTab/>;
+      // Commercial
+      case "Terms Overview":
+        return <CommercialTermsTab/>;
+      case "Premium Assembly":
+        return <PremiumAssemblyTab/>;
+      case "Distribution":
+        return <DistributionTab/>;
+      // Risk Terms
+      case "Deductible Structure":
+        return <DeductibleStructureTab/>;
+      case "Coverage Terms":
+        return <CoverageTermsTab/>;
+      case "SIR & Waiting Periods":
+        return <SIRWaitingPeriodsTab/>;
+      case "Aggregate & Reinstatement":
+        return <AggregateReinstatementTab/>;
+      // Technical
       case "Pricing Anatomy":
         return <PricingTab/>;
       case "Risk Assessment":

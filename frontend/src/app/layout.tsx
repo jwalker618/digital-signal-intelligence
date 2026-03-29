@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
-import { 
+import {
   PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine, MoreVertical,
-  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt, FlaskConical, Orbit
+  Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt, FlaskConical, Orbit,
+  Building2, FileText, Network, Layers, FileCheck, Clock, RefreshCw, LayoutDashboard, ChevronDown, ChevronRight
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [isDark, setIsDark] = useState(false);
   
   const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
-  const { activeMenu, setActiveMenu, daysFilter, setDaysFilter, previousMenu, activeSubmission, navigateBack } = useDsiStore();
+  const { activeMenu, setActiveMenu, daysFilter, setDaysFilter, previousMenu, activeSubmission, navigateBack, activeCategory, setActiveCategory, expandedCategories, toggleCategory } = useDsiStore();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [collapsedWidthPx, setCollapsedWidthPx] = useState<number | null>(null);
@@ -126,42 +127,112 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     
                     /* === DRILL-DOWN MODE === */
                     <>
-                      <button 
+                      <button
                         onClick={navigateBack}
-                        className="w-full flex items-center gap-3 py-2 
-                          text-dsi-background 
-                          hover:text-dsi-selected 
+                        className="w-full flex items-center gap-3 py-2
+                          text-dsi-background
+                          hover:text-dsi-selected
                           mb-2"
                       >
                         <ArrowLeftToLine className="icon shrink-0" />
                         <span className="text-sm tracking-wider truncate">Back to {previousMenu}</span>
                       </button>
-                      
+
                       <ul className="ml-3 pl-dsi-pad flex flex-col gap-1">
+                        {/* SUMMARY — top-level, not nested */}
+                        <li>
+                          <button
+                            onClick={() => { setActiveMenu("Summary"); setActiveCategory("Summary"); }}
+                            className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
+                              activeMenu === "Summary"
+                                ? "text-dsi-contrast-background bg-dsi-background font-semibold"
+                                : "text-dsi-background hover:text-dsi-selected"
+                            }`}
+                          >
+                            <LayoutDashboard className="icon shrink-0" />
+                            <span className="truncate">Summary</span>
+                          </button>
+                        </li>
+
+                        {/* GROUPED CATEGORIES */}
                         {[
-                          { name: "Summary", icon: FolderKanban },
-                          { name: "Pricing Anatomy", icon: Calculator },
-                          { name: "Risk Assessment", icon: ChartNoAxesGantt },
-                          { name: "Loss Assessment", icon: TrendingUpDown },
-                          { name: "Exposure Assessment", icon: Globe },
-                          { name: "Scenarios", icon: FlaskConical },
-                          { name: "Referral Actions", icon: UserStar },
-                          { name: "Model Versions", icon: FileStack },
-                        ].map((item) => (
-                          <li key={item.name}>
+                          {
+                            category: "Commercial",
+                            icon: Building2,
+                            tabs: [
+                              { name: "Terms Overview", icon: FileText },
+                              { name: "Premium Assembly", icon: Calculator },
+                              { name: "Distribution", icon: Network },
+                            ],
+                          },
+                          {
+                            category: "Risk",
+                            icon: Shield,
+                            tabs: [
+                              { name: "Deductible Structure", icon: Layers },
+                              { name: "Coverage Terms", icon: FileCheck },
+                              { name: "SIR & Waiting Periods", icon: Clock },
+                              { name: "Aggregate & Reinstatement", icon: RefreshCw },
+                            ],
+                          },
+                          {
+                            category: "Technical",
+                            icon: ChartNoAxesGantt,
+                            tabs: [
+                              { name: "Pricing Anatomy", icon: Calculator },
+                              { name: "Risk Assessment", icon: ChartNoAxesGantt },
+                              { name: "Loss Assessment", icon: TrendingUpDown },
+                              { name: "Exposure Assessment", icon: Globe },
+                              { name: "Scenarios", icon: FlaskConical },
+                              { name: "Referral Actions", icon: UserStar },
+                              { name: "Model Versions", icon: FileStack },
+                            ],
+                          },
+                        ].map((group) => (
+                          <li key={group.category}>
+                            {/* Category header */}
                             <button
-                              onClick={() => {
-                                setActiveMenu(item.name) 
-                              }}
-                              className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
-                                activeMenu === item.name 
-                                  ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
+                              onClick={() => toggleCategory(group.category)}
+                              className={`flex items-center justify-between gap-3 w-full text-left py-2 px-2 rounded text-sm mt-1 ${
+                                activeCategory === group.category
+                                  ? "text-dsi-selected"
                                   : "text-dsi-background hover:text-dsi-selected"
                               }`}
                             >
-                              <item.icon className="icon shrink-0" />
-                              <span className="truncate">{item.name}</span>
+                              <div className="flex items-center gap-3">
+                                <group.icon className="icon shrink-0" />
+                                <span className="truncate font-semibold tracking-wider text-xs uppercase">{group.category}</span>
+                              </div>
+                              {expandedCategories[group.category] ? (
+                                <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />
+                              ) : (
+                                <ChevronRight className="w-3 h-3 shrink-0 opacity-50" />
+                              )}
                             </button>
+
+                            {/* Category tabs */}
+                            {expandedCategories[group.category] && (
+                              <ul className="ml-3 pl-2 border-l border-dsi-outline/20 flex flex-col gap-0.5 mt-0.5">
+                                {group.tabs.map((tab) => (
+                                  <li key={tab.name}>
+                                    <button
+                                      onClick={() => {
+                                        setActiveMenu(tab.name);
+                                        setActiveCategory(group.category);
+                                      }}
+                                      className={`flex items-center gap-3 w-full text-left py-1.5 px-2 rounded text-sm ${
+                                        activeMenu === tab.name
+                                          ? "text-dsi-contrast-background bg-dsi-background font-semibold"
+                                          : "text-dsi-background hover:text-dsi-selected"
+                                      }`}
+                                    >
+                                      <tab.icon className="icon shrink-0" />
+                                      <span className="truncate">{tab.name}</span>
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </li>
                         ))}
                       </ul>
