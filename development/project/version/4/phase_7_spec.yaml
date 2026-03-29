@@ -1,0 +1,1186 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 7: Cyber
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# Companion prose: phase_7.md
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/4/phase_7_spec.yaml \
+#       --existing-config coverages/cyber/config.yaml \
+#       --write
+#
+# =============================================================================
+
+coverage_line: cyber
+coverage_key: cyber
+phase: phase_7
+description: "Phase 7 Cyber Coverage Expansion — 9 new industry-specific configurations"
+version: "2.3.0"
+
+default_product_types:
+  - cyber_liability
+  - network_security
+
+default_markets: [us, uk, eu, apac]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: cyber_liability, network_security, privacy_liability"
+  - field: limit
+    description: Requested limit in USD
+  - field: revenue
+    description: Annual revenue in USD (MULTIPLIER basis)
+
+routing_field: industry_sector
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_loss_tier_bands:
+  floor: 0.55
+  cap: 1.6
+
+default_exposure_bands:
+  size_weight: 0.6
+  complexity_weight: 0.4
+  size_thresholds:
+    - {label: MICRO, max_value: 1000000, applied: 0.5}
+    - {label: SMALL, max_value: 10000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 50000000, applied: 1.0}
+    - {label: LARGE, max_value: 250000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 1000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000, 500000000, 1000000000]
+  valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+default_pricing:
+  base_limit_reference: 10000000
+  base_deductible_reference: 50000
+  by_product_type:
+    - product_type: cyber_liability
+      curve_type: standard
+      ilf_curve:
+        anchor_limit: 10000000
+        curve: bounded_exponential
+        params: {max_ilf: 5.0, k: 0.02}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.30}
+        - {deductible: 25000, factor: 1.15}
+        - {deductible: 50000, factor: 1.0}
+        - {deductible: 100000, factor: 0.90}
+        - {deductible: 250000, factor: 0.80}
+        - {deductible: 500000, factor: 0.70}
+        - {deductible: 1000000, factor: 0.60}
+    - product_type: network_security
+      curve_type: standard
+      ilf_curve:
+        anchor_limit: 10000000
+        curve: bounded_exponential
+        params: {max_ilf: 5.0, k: 0.02}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.30}
+        - {deductible: 25000, factor: 1.15}
+        - {deductible: 50000, factor: 1.0}
+        - {deductible: 100000, factor: 0.90}
+        - {deductible: 250000, factor: 0.80}
+        - {deductible: 500000, factor: 0.70}
+        - {deductible: 1000000, factor: 0.60}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # --- HEALTH DATA SECURITY (cyber_healthcare) ---
+  - id: health_data_security
+    label: Health Data Security
+    description: "Healthcare-specific data security signals: PHI, medical devices, EHR, HIPAA"
+    group_type: three_layer_assessment
+    signals:
+      - id: connected_medical_device_security
+        name: Connected Medical Device Security
+        group_id: health_data_security
+        description: Connected medical device inventory and security posture
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.15
+      - id: ehr_system_resilience
+        name: EHR System Resilience
+        group_id: health_data_security
+        description: EHR platform hosting, backup, downtime procedures
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.10
+      - id: hipaa_compliance_depth
+        name: HIPAA Compliance Depth
+        group_id: health_data_security
+        description: OCR audit history, corrective action plans, NIST CSF alignment
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.10
+          exposure_complexity_weight: 0.10
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 4, note: "HIPAA compliance critically deficient"}
+      - id: clinical_system_segmentation
+        name: Clinical Network Segmentation
+        group_id: health_data_security
+        description: Isolation between clinical device, admin IT, and guest networks
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: phi_data_volume
+        name: PHI Data Volume
+        group_id: health_data_security
+        description: Estimated volume of PHI records under management
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.05
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.30
+          exposure_complexity_weight: 0.15
+      - id: hhs_breach_portal_history
+        name: HHS Breach Portal History
+        group_id: health_data_security
+        description: Historical entries on HHS Breach Portal
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.10
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: FLAG, note: "Multiple HHS breach portal entries"}
+
+  # --- FINANCIAL SYSTEM SECURITY (cyber_financial_services) ---
+  - id: financial_system_security
+    label: Financial System Security
+    description: "Payment systems, regulatory compliance, transaction controls"
+    group_type: three_layer_assessment
+    signals:
+      - id: payment_system_architecture
+        name: Payment System Architecture
+        group_id: financial_system_security
+        description: Payment processing infrastructure security assessment
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: swift_controls
+        name: SWIFT Controls
+        group_id: financial_system_security
+        description: SWIFT CSP compliance and transaction control effectiveness
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.10
+      - id: pci_compliance_depth
+        name: PCI Compliance Depth
+        group_id: financial_system_security
+        description: PCI DSS compliance level and assessment history
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.10
+          score_conditions:
+            - {threshold: 30, comparison: "<=", action: REFER, override: 4, note: "PCI compliance critically deficient"}
+      - id: transaction_fraud_controls
+        name: Transaction Fraud Controls
+        group_id: financial_system_security
+        description: Real-time fraud detection and prevention capabilities
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.10
+      - id: core_banking_resilience
+        name: Core Banking Resilience
+        group_id: financial_system_security
+        description: Core banking platform resilience and disaster recovery
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.20
+      - id: regulatory_examination_history
+        name: Regulatory Examination History
+        group_id: financial_system_security
+        description: Regulatory examination findings and remediation track record
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.10
+          exposure_complexity_weight: 0.20
+
+  # --- OT/ICS SECURITY (cyber_critical_infrastructure) ---
+  - id: ot_ics_security
+    label: OT/ICS Security
+    description: "Operational technology and industrial control system security"
+    group_type: three_layer_assessment
+    signals:
+      - id: ot_network_segmentation
+        name: OT Network Segmentation
+        group_id: ot_ics_security
+        description: Air-gap or segmentation between IT and OT networks
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.30
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.20
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 4, note: "OT network not segmented from IT"}
+      - id: scada_security_posture
+        name: SCADA Security Posture
+        group_id: ot_ics_security
+        description: SCADA/DCS system security controls and patching cadence
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.15
+      - id: safety_instrumented_system
+        name: Safety Instrumented System Independence
+        group_id: ot_ics_security
+        description: SIS independence from process control network
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.30
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.10
+      - id: ot_patching_cadence
+        name: OT Patching Cadence
+        group_id: ot_ics_security
+        description: Frequency and currency of OT/ICS firmware and software updates
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.10
+          exposure_complexity_weight: 0.15
+      - id: nerc_cip_compliance
+        name: NERC CIP Compliance
+        group_id: ot_ics_security
+        description: NERC CIP compliance status for electric utilities
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+          exposure_complexity_weight: 0.20
+
+  # --- PRODUCT SUPPLY CHAIN SECURITY (cyber_technology) ---
+  - id: product_supply_chain_security
+    label: Product & Supply Chain Security
+    description: "Software product security, SDLC, supply chain, tenant isolation"
+    group_type: three_layer_assessment
+    signals:
+      - id: secure_sdlc_maturity
+        name: Secure SDLC Maturity
+        group_id: product_supply_chain_security
+        description: Software development lifecycle security maturity
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.10
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 4, note: "No secure SDLC process"}
+      - id: sbom_coverage
+        name: SBOM Coverage
+        group_id: product_supply_chain_security
+        description: Software bill of materials generation and vulnerability tracking
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.20
+      - id: tenant_isolation_strength
+        name: Tenant Isolation Strength
+        group_id: product_supply_chain_security
+        description: Multi-tenant isolation architecture validation
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.20
+          exposure_complexity_weight: 0.20
+      - id: dependency_vulnerability_exposure
+        name: Dependency Vulnerability Exposure
+        group_id: product_supply_chain_security
+        description: Third-party dependency vulnerability exposure and patching
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: api_security_posture
+        name: API Security Posture
+        group_id: product_supply_chain_security
+        description: API authentication, rate limiting, input validation
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+      - id: incident_notification_capability
+        name: Incident Notification Capability
+        group_id: product_supply_chain_security
+        description: Customer notification SLAs and breach communication
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.10
+
+  # --- PLATFORM USER SECURITY (cyber_digital_platform) ---
+  - id: platform_user_security
+    label: Platform User Security
+    description: "User data protection, content moderation, platform integrity"
+    group_type: three_layer_assessment
+    signals:
+      - id: user_authentication_strength
+        name: User Authentication Strength
+        group_id: platform_user_security
+        description: MFA adoption, credential policies, session management
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.20
+          exposure_size_weight: 0.15
+      - id: data_retention_practices
+        name: Data Retention Practices
+        group_id: platform_user_security
+        description: Data retention policies, deletion capabilities, GDPR compliance
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: credential_breach_monitoring
+        name: Credential Breach Monitoring
+        group_id: platform_user_security
+        description: Proactive credential stuffing detection and compromised account handling
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.10
+      - id: content_moderation_capability
+        name: Content Moderation Capability
+        group_id: platform_user_security
+        description: Content moderation systems and regulatory compliance
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.25
+      - id: user_data_encryption
+        name: User Data Encryption
+        group_id: platform_user_security
+        description: Encryption at rest and in transit for user data
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.20
+      - id: third_party_data_sharing
+        name: Third Party Data Sharing Controls
+        group_id: platform_user_security
+        description: Controls on data sharing with third parties and advertisers
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.20
+
+  # --- MANUFACTURING OPERATIONS SECURITY (cyber_manufacturing) ---
+  - id: manufacturing_operations_security
+    label: Manufacturing Operations Security
+    description: "OT/IT convergence, production continuity, IP protection"
+    group_type: three_layer_assessment
+    signals:
+      - id: production_ot_segmentation
+        name: Production OT Segmentation
+        group_id: manufacturing_operations_security
+        description: Separation between production OT and corporate IT networks
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 4, note: "Production OT not segmented"}
+      - id: production_recovery_capability
+        name: Production Recovery Capability
+        group_id: manufacturing_operations_security
+        description: Tested disaster recovery for production systems
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.15
+      - id: ip_protection_controls
+        name: IP Protection Controls
+        group_id: manufacturing_operations_security
+        description: Intellectual property and trade secret digital protections
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_complexity_weight: 0.20
+      - id: supply_chain_digital_risk
+        name: Supply Chain Digital Risk
+        group_id: manufacturing_operations_security
+        description: Digital supply chain integration points and vendor access controls
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.20
+      - id: ransomware_preparedness
+        name: Ransomware Preparedness
+        group_id: manufacturing_operations_security
+        description: Ransomware-specific controls, playbooks, and offline backups
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.10
+
+  # --- RETAIL OPERATIONS SECURITY (cyber_retail) ---
+  - id: retail_operations_security
+    label: Retail Operations Security
+    description: "PCI compliance, payment security, e-commerce, store networks"
+    group_type: three_layer_assessment
+    signals:
+      - id: point_to_point_encryption
+        name: Point-to-Point Encryption
+        group_id: retail_operations_security
+        description: P2PE deployment across POS terminals
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+      - id: ecommerce_security_posture
+        name: E-commerce Security Posture
+        group_id: retail_operations_security
+        description: Online transaction security, anti-skimming, WAF
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.20
+          exposure_complexity_weight: 0.15
+      - id: store_network_isolation
+        name: Store Network Isolation
+        group_id: retail_operations_security
+        description: Network isolation between store POS, back-office, and corporate
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.20
+      - id: loyalty_data_protection
+        name: Loyalty Data Protection
+        group_id: retail_operations_security
+        description: Customer loyalty and payment data protection measures
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.20
+      - id: pci_assessment_status
+        name: PCI Assessment Status
+        group_id: retail_operations_security
+        description: PCI DSS assessment level and compliance status
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+          exposure_complexity_weight: 0.15
+      - id: access_provisioning_automation
+        name: Access Provisioning Automation
+        group_id: retail_operations_security
+        description: Automated access provisioning and deprovisioning across locations
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.15
+
+  # --- PUBLIC SECTOR CYBER POSTURE (cyber_public_sector) ---
+  - id: public_sector_cyber_posture
+    label: Public Sector Cyber Posture
+    description: "Government/education cyber security, essential services, legacy systems"
+    group_type: three_layer_assessment
+    signals:
+      - id: essential_services_continuity
+        name: Essential Services Continuity
+        group_id: public_sector_cyber_posture
+        description: Continuity planning for citizen-facing essential services
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {threshold: 25, comparison: "<=", action: REFER, override: 4, note: "No essential services continuity plan"}
+      - id: legacy_system_exposure
+        name: Legacy System Exposure
+        group_id: public_sector_cyber_posture
+        description: Proportion and criticality of end-of-life systems
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          exposure_complexity_weight: 0.25
+      - id: ms_isac_participation
+        name: MS-ISAC Participation
+        group_id: public_sector_cyber_posture
+        description: Multi-State ISAC membership and information sharing
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.10
+          exposure_complexity_weight: 0.10
+      - id: citizen_data_volume
+        name: Citizen Data Volume
+        group_id: public_sector_cyber_posture
+        description: Volume and sensitivity of citizen PII under management
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.30
+      - id: ransomware_payment_governance
+        name: Ransomware Payment Governance
+        group_id: public_sector_cyber_posture
+        description: Governance framework for ransomware payment decisions
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.15
+      - id: cyber_incident_response_maturity
+        name: Cyber Incident Response Maturity
+        group_id: public_sector_cyber_posture
+        description: Incident response plan testing and coordination with CISA
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+
+  # --- PROFESSIONAL DATA SECURITY (cyber_professional_services) ---
+  - id: professional_data_security
+    label: Professional Data Security
+    description: "Client confidentiality, ethical walls, privileged communication"
+    group_type: three_layer_assessment
+    signals:
+      - id: client_data_classification
+        name: Client Data Classification
+        group_id: professional_data_security
+        description: Data classification and handling policies for client data
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.15
+      - id: ethical_wall_capability
+        name: Ethical Wall Capability
+        group_id: professional_data_security
+        description: Information barriers between client matters
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.25
+      - id: email_security_posture
+        name: Email Security Posture
+        group_id: professional_data_security
+        description: DMARC enforcement, email encryption, anti-phishing
+        proxy_tier: DIRECT_OBSERVABLE
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.10
+      - id: client_data_encryption_at_rest
+        name: Client Data Encryption at Rest
+        group_id: professional_data_security
+        description: Encryption of client files and communications at rest
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+      - id: wire_transfer_controls
+        name: Wire Transfer Controls
+        group_id: professional_data_security
+        description: BEC prevention and wire transfer verification procedures
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.20
+      - id: remote_access_security
+        name: Remote Access Security
+        group_id: professional_data_security
+        description: VPN, zero trust, and remote work security posture
+        proxy_tier: INFERRED_PROXY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.15
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. CYBER HEALTHCARE
+  # =========================================================================
+  - id: cyber_healthcare
+    name: DSI Cyber Healthcare Model
+    description: "Health systems, hospitals, pharma, health tech"
+    model_specificity: 4
+    min_premium: 50000
+    product_types: [cyber_liability, privacy_liability, network_security]
+
+    routing_constraints:
+      - {field: industry_sector, operator: "==", value: HEALTHCARE, required_in_input: true}
+      - {field: revenue, operator: ">", value: 50000000}
+
+    direct_queries:
+      - id: hipaa_risk_assessment
+        question: Has a NIST CSF-aligned HIPAA risk analysis been completed in the past 12 months?
+        conditions: [{action: REFER, override: 4, note: "No current HIPAA risk assessment"}]
+      - id: phi_encrypted_rest
+        question: Is all PHI encrypted at rest across all storage systems?
+        conditions: [{action: MODIFIER, applied: 1.20, note: "PHI not encrypted at rest"}]
+      - id: medical_device_inventory
+        question: Do you maintain a complete inventory of all connected medical devices?
+        conditions: [{action: FLAG, note: "No connected medical device inventory"}]
+      - id: patient_portal_mfa
+        question: Is MFA enabled for all patient portal access?
+        conditions: [{action: MODIFIER, applied: 1.15, note: "Patient portal lacks MFA"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: health_data_security, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.05, loss_weight: 0.10, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0018
+      standard_rate: 0.0030
+      substandard_rate: 0.0045
+      decline_rate: 0.0060
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 2. CYBER FINANCIAL SERVICES
+  # =========================================================================
+  - id: cyber_financial_services
+    name: DSI Cyber Financial Services Model
+    description: "Banks, insurers, payment processors, fintech"
+    model_specificity: 4
+    min_premium: 75000
+    product_types: [cyber_liability, network_security, privacy_liability]
+
+    routing_constraints:
+      - {field: industry_sector, operator: "==", value: FINANCIAL_SERVICES, required_in_input: true}
+      - {field: revenue, operator: ">", value: 50000000}
+
+    direct_queries:
+      - id: swift_csp_compliant
+        question: Is the organization SWIFT CSP compliant?
+        conditions: [{action: REFER, override: 4, note: "Not SWIFT CSP compliant"}]
+      - id: real_time_fraud_monitoring
+        question: Is real-time transaction fraud monitoring deployed?
+        conditions: [{action: MODIFIER, applied: 1.25, note: "No real-time fraud monitoring"}]
+      - id: third_party_risk_programme
+        question: Is there a formal third-party cyber risk management programme?
+        conditions: [{action: FLAG, note: "No third-party risk programme"}]
+      - id: segregation_of_duties
+        question: Are privileged access controls and segregation of duties enforced?
+        conditions: [{action: MODIFIER, applied: 1.15, note: "Weak access controls"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: financial_system_security, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.05, loss_weight: 0.10, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0016
+      standard_rate: 0.0028
+      substandard_rate: 0.0042
+      decline_rate: 0.0056
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 3. CYBER CRITICAL INFRASTRUCTURE
+  # =========================================================================
+  - id: cyber_critical_infrastructure
+    name: DSI Cyber Critical Infrastructure Model
+    description: "Utilities, telecom, water, transportation"
+    model_specificity: 4
+    min_premium: 100000
+    product_types: [cyber_liability, network_security]
+
+    routing_constraints:
+      - {field: industry_sector, operator: "in", value: [UTILITIES, TELECOM, WATER, TRANSPORTATION], required_in_input: true}
+      - {field: revenue, operator: ">", value: 50000000}
+
+    direct_queries:
+      - id: ot_network_segmented
+        question: Is the OT network segmented from the IT network?
+        conditions: [{action: REFER, override: 4, note: "OT not segmented from IT"}]
+      - id: sis_independent
+        question: Are safety instrumented systems independent from process control?
+        conditions: [{action: REFER, override: 4, note: "SIS not independent"}]
+      - id: ot_patching_programme
+        question: Is there a formal OT patching programme?
+        conditions: [{action: MODIFIER, applied: 1.30, note: "No OT patching programme"}]
+      - id: manual_override_capability
+        question: Can critical systems be operated manually if digital systems fail?
+        conditions: [{action: MODIFIER, applied: 1.20, note: "No manual override capability"}]
+      - id: cisa_coordination
+        question: Does the organization participate in CISA coordination?
+        conditions: [{action: FLAG, note: "No CISA coordination"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: ot_ics_security, risk_weight: 0.35, loss_weight: 0.35, exposure_weight: 0.25}
+      - {group_id: network_authority, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0012
+      standard_plus_rate: 0.0020
+      standard_rate: 0.0035
+      substandard_rate: 0.0052
+      decline_rate: 0.0070
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.50
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 4. CYBER TECHNOLOGY
+  # =========================================================================
+  - id: cyber_technology
+    name: DSI Cyber Technology Model
+    description: "SaaS, software vendors, MSPs, IT services"
+    model_specificity: 3
+    min_premium: 50000
+    product_types: [cyber_liability, network_security, privacy_liability]
+
+    routing_constraints:
+      - {field: industry_sector, operator: "in", value: [TECHNOLOGY, SOFTWARE, IT_SERVICES, MSP], required_in_input: true}
+
+    direct_queries:
+      - id: secure_sdlc_implemented
+        question: Is a secure software development lifecycle (SDLC) implemented?
+        conditions: [{action: REFER, override: 4, note: "No secure SDLC"}]
+      - id: sbom_generated
+        question: Are software bills of materials (SBOMs) generated for releases?
+        conditions: [{action: FLAG, note: "No SBOM generation"}]
+      - id: tenant_isolation_validated
+        question: Has tenant isolation been validated by independent assessment?
+        conditions: [{action: MODIFIER, applied: 1.20, note: "Tenant isolation not validated"}]
+      - id: incident_notification_sla
+        question: Are customer incident notification SLAs contractually defined?
+        conditions: [{action: FLAG, note: "No incident notification SLAs"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: product_supply_chain_security, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0011
+      standard_plus_rate: 0.0019
+      standard_rate: 0.0032
+      substandard_rate: 0.0048
+      decline_rate: 0.0064
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.45
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 5. CYBER DIGITAL PLATFORM
+  # =========================================================================
+  - id: cyber_digital_platform
+    name: DSI Cyber Digital Platform Model
+    description: "Marketplaces, social media, adtech, media platforms"
+    model_specificity: 3
+    min_premium: 50000
+    product_types: [cyber_liability, privacy_liability, network_security]
+
+    routing_constraints:
+      - {field: industry_sector, operator: "in", value: [DIGITAL_PLATFORM, MEDIA, ADTECH, SOCIAL], required_in_input: true}
+
+    direct_queries:
+      - id: mfa_available_all_users
+        question: Is MFA available to all platform users?
+        conditions: [{action: MODIFIER, applied: 1.25, note: "MFA not available to all users"}]
+      - id: credential_breach_checking
+        question: Does the platform check credentials against known breach databases?
+        conditions: [{action: FLAG, note: "No credential breach checking"}]
+      - id: data_retention_policy
+        question: Is there a documented data retention and deletion policy?
+        conditions: [{action: MODIFIER, applied: 1.15, note: "No data retention policy"}]
+      - id: child_user_protections
+        question: Are COPPA/age-appropriate design protections implemented?
+        conditions: [{action: REFER, override: 4, note: "No child user protections"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: platform_user_security, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0008
+      standard_plus_rate: 0.0015
+      standard_rate: 0.0025
+      substandard_rate: 0.0038
+      decline_rate: 0.0050
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 6. CYBER MANUFACTURING
+  # =========================================================================
+  - id: cyber_manufacturing
+    name: DSI Cyber Manufacturing Model
+    description: "Manufacturing with OT/IT convergence risk"
+    model_specificity: 3
+    min_premium: 50000
+
+    routing_constraints:
+      - {field: industry_sector, operator: "in", value: [MANUFACTURING, INDUSTRIAL], required_in_input: true}
+
+    direct_queries:
+      - id: production_ot_segmented_query
+        question: Is the production OT network segmented from corporate IT?
+        conditions: [{action: REFER, override: 4, note: "Production OT not segmented"}]
+      - id: production_recovery_tested
+        question: Has production disaster recovery been tested in the past 12 months?
+        conditions: [{action: MODIFIER, applied: 1.25, note: "Production DR not tested"}]
+      - id: ransomware_playbook
+        question: Does the organization have a ransomware-specific response playbook?
+        conditions: [{action: FLAG, note: "No ransomware playbook"}]
+      - id: itar_ear_controls
+        question: If applicable, are ITAR/EAR cybersecurity controls implemented?
+        conditions: [{action: REFER, override: 3, note: "Missing ITAR/EAR controls"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: manufacturing_operations_security, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0018
+      standard_rate: 0.0030
+      substandard_rate: 0.0045
+      decline_rate: 0.0060
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.40
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 7. CYBER RETAIL
+  # =========================================================================
+  - id: cyber_retail
+    name: DSI Cyber Retail Model
+    description: "Retail, e-commerce, hospitality"
+    model_specificity: 3
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: industry_sector, operator: "in", value: [RETAIL, ECOMMERCE, HOSPITALITY], required_in_input: true}
+
+    direct_queries:
+      - id: p2pe_deployed
+        question: Is point-to-point encryption deployed across all POS terminals?
+        conditions: [{action: MODIFIER, applied: 1.10, note: "P2PE not deployed"}]
+      - id: ecommerce_skimming_protection
+        question: Are e-commerce anti-skimming protections deployed?
+        conditions: [{action: FLAG, note: "No e-commerce anti-skimming"}]
+      - id: store_network_segmented_query
+        question: Are store networks segmented from corporate and POS systems?
+        conditions: [{action: MODIFIER, applied: 1.20, note: "Store networks not segmented"}]
+      - id: automated_deprovisioning
+        question: Is access deprovisioning automated for departing employees?
+        conditions: [{action: FLAG, note: "No automated deprovisioning"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: retail_operations_security, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0008
+      standard_plus_rate: 0.0013
+      standard_rate: 0.0022
+      substandard_rate: 0.0033
+      decline_rate: 0.0044
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 8. CYBER PUBLIC SECTOR
+  # =========================================================================
+  - id: cyber_public_sector
+    name: DSI Cyber Public Sector Model
+    description: "Government, education, nonprofits"
+    model_specificity: 3
+    min_premium: 15000
+
+    routing_constraints:
+      - {field: industry_sector, operator: "in", value: [GOVERNMENT, EDUCATION, NONPROFIT], required_in_input: true}
+
+    direct_queries:
+      - id: essential_services_continuity_plan
+        question: Is there a tested continuity plan for essential citizen services?
+        conditions: [{action: REFER, override: 4, note: "No essential services continuity plan"}]
+      - id: ms_isac_member
+        question: Is the organization an MS-ISAC member?
+        conditions: [{action: MODIFIER, applied: 1.15, note: "Not MS-ISAC member"}]
+      - id: legacy_system_remediation
+        question: Is there a funded plan to remediate end-of-life systems?
+        conditions: [{action: FLAG, note: "No legacy system remediation plan"}]
+      - id: ransom_payment_authority
+        question: Is there a defined governance process for ransomware payment decisions?
+        conditions: [{action: FLAG, note: "No ransom payment governance"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: public_sector_cyber_posture, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0006
+      standard_plus_rate: 0.0011
+      standard_rate: 0.0018
+      substandard_rate: 0.0027
+      decline_rate: 0.0036
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+
+  # =========================================================================
+  # 9. CYBER PROFESSIONAL SERVICES
+  # =========================================================================
+  - id: cyber_professional_services
+    name: DSI Cyber Professional Services Model
+    description: "Law firms, consultancies, accounting firms"
+    model_specificity: 2
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: industry_sector, operator: "in", value: [LEGAL, CONSULTING, ACCOUNTING], required_in_input: true}
+      - {field: revenue, operator: ">", value: 50000000}
+
+    direct_queries:
+      - id: email_dmarc_enforced
+        question: Is DMARC at enforcement level (reject/quarantine) for all domains?
+        conditions: [{action: MODIFIER, applied: 1.20, note: "DMARC not at enforcement"}]
+      - id: ethical_walls_capability_query
+        question: Are information barriers (ethical walls) implemented between client matters?
+        conditions: [{action: FLAG, note: "No ethical wall capability"}]
+      - id: client_data_encrypted_rest
+        question: Is all client data encrypted at rest?
+        conditions: [{action: MODIFIER, applied: 1.15, note: "Client data not encrypted at rest"}]
+      - id: wire_transfer_verification
+        question: Are wire transfer verification procedures in place to prevent BEC?
+        conditions: [{action: MODIFIER, applied: 1.25, note: "No wire transfer verification"}]
+
+    category_groups: [industry_classification, size_band, geography]
+
+    group_weights:
+      - {group_id: professional_data_security, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: network_authority, risk_weight: 0.10, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: technical_infrastructure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: public_record, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: structured_data, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: security_posture, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0008
+      standard_plus_rate: 0.0013
+      standard_rate: 0.0022
+      substandard_rate: 0.0033
+      decline_rate: 0.0044
+
+    guardrails:
+      modifier_floor: 0.10
+      modifier_cap: 2.50
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

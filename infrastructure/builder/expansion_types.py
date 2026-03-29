@@ -211,7 +211,17 @@ class ExposureBands:
 
 @dataclass
 class ILFCurve:
-    """Increased Limit Factor curve for a product type."""
+    """Increased Limit Factor curve for a product type.
+
+    Two modes:
+    - Parametric (preferred): anchor_limit + curve + params
+    - Table-based (legacy): base_limit + factors
+    """
+    # Parametric mode (production schema requires this)
+    anchor_limit: Optional[int] = None
+    curve: Optional[str] = None  # e.g. "bounded_exponential"
+    params: Optional[Dict[str, Any]] = None  # e.g. {"max_ilf": 5.0, "k": 0.02}
+    # Table-based mode (legacy — converted to parametric on generation)
     base_limit: int = 10_000_000
     factors: List[Dict[str, Any]] = field(default_factory=list)
     # Each factor: {"limit": int, "factor": float}
@@ -225,6 +235,16 @@ class ProductPricing:
     deductible_factors: List[Dict[str, float]] = field(default_factory=list)
     # Each: {"deductible": int, "factor": float}
     curve_type: str = "standard"  # "flat" for first-party, "standard" for liability
+
+
+@dataclass
+class GuardrailsSpec:
+    """Runtime pricing guardrails for generated configurations."""
+    modifier_floor: float = 0.10
+    modifier_cap: float = 2.50
+    max_premium_to_limit_ratio: float = 0.35
+    max_premium_to_revenue_ratio: float = 0.01
+    max_ilf_factor: float = 10.0
 
 
 @dataclass
@@ -250,6 +270,9 @@ class LimitConfiguration:
     valid_deductibles: List[int] = field(default_factory=lambda: [
         10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000,
     ])
+    # Optional min/max limit range (alternative to valid_limits list)
+    min_limit: Optional[int] = None
+    max_limit: Optional[int] = None
     # BUNDLED packages (only used when type=BUNDLED)
     packages: Optional[List[Dict[str, Any]]] = None
 
@@ -326,6 +349,7 @@ class ConfigurationSpec:
     # Pricing
     limit_configuration: Optional[LimitConfiguration] = None
     pricing: Optional[PricingSpec] = None
+    guardrails: Optional[GuardrailsSpec] = None
 
 
 # =============================================================================

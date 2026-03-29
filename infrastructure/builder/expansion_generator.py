@@ -101,6 +101,7 @@ class ConfigYAMLGenerator:
             "exposure": self._build_exposure(config),
             "limit_configuration": self._build_limit_configuration(config),
             "pricing": self._build_pricing(config),
+            "guardrails": self._build_guardrails(config),
         }
 
     def _build_metadata(self, config: ConfigurationSpec) -> Dict[str, Any]:
@@ -123,7 +124,7 @@ class ConfigYAMLGenerator:
             "routing_constraints": [
                 {
                     "field": rc.field,
-                    "operator": rc.operator,
+                    "operator": rc.operator.lower() if rc.operator.upper() == "IN" else rc.operator,
                     "value": rc.value,
                     "required_in_input": rc.required_in_input,
                 }
@@ -521,16 +522,20 @@ class ConfigYAMLGenerator:
         by_product = {}
         for pp in pricing.by_product_type:
             ilf = pp.ilf_curve
-            if hasattr(ilf, 'curve') and ilf.curve is not None:
+            if ilf.anchor_limit is not None and ilf.curve is not None:
+                # Parametric mode — use directly
                 ilf_dict = {
                     "anchor_limit": ilf.anchor_limit,
                     "curve": ilf.curve,
                     "params": ilf.params or {},
                 }
             else:
+                # Table-based mode — convert to parametric (production schema
+                # requires anchor_limit/curve/params, not base_limit/factors)
                 ilf_dict = {
-                    "base_limit": ilf.base_limit,
-                    "factors": ilf.factors,
+                    "anchor_limit": ilf.base_limit,
+                    "curve": "bounded_exponential",
+                    "params": {"max_ilf": 5.0, "k": 0.02},
                 }
             entry = {
                 "ilf_curve": ilf_dict,
@@ -543,6 +548,18 @@ class ConfigYAMLGenerator:
             "base_deductible_reference": pricing.base_deductible_reference,
             "by_product_type": by_product,
 
+        }
+
+    def _build_guardrails(self, config) -> Dict[str, Any]:
+        """Build guardrails section from config or defaults."""
+        from infrastructure.builder.expansion_types import GuardrailsSpec
+        gs = config.guardrails or GuardrailsSpec()
+        return {
+            "modifier_floor": gs.modifier_floor,
+            "modifier_cap": gs.modifier_cap,
+            "max_premium_to_limit_ratio": gs.max_premium_to_limit_ratio,
+            "max_premium_to_revenue_ratio": gs.max_premium_to_revenue_ratio,
+            "max_ilf_factor": gs.max_ilf_factor,
         }
 
     def _dump_yaml(self, data: Dict) -> str:
@@ -614,7 +631,7 @@ class SignalCodeGenerator:
             f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
             '"""',
             "",
-            "from signal_architecture.signals.extractors.stubs.base import StubExtractor",
+            "from signal_architecture.signals.extractors.base import StubExtractor",
             "",
             "",
             "# TTL constants",
@@ -689,7 +706,7 @@ class SignalCodeGenerator:
             f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
             '"""',
             "",
-            "from signal_architecture.signals.aggregators.implementations.base import ProductionAggregator",
+            "from signal_architecture.signals.aggregators.base import ProductionAggregator",
             "",
             "",
             "def _simple_agg(signal_id, score_key, default=50.0):",
@@ -771,10 +788,8 @@ class SignalCodeGenerator:
             "",
             "import time",
             "",
-            "from signal_architecture.signals.inference.metadata_registry import (",
-            "    register_inference_function,",
-            "    SignalResult,",
-            ")",
+            "from signal_architecture.signals.inference.registry import register_inference_function",
+            "from signal_architecture.signals.types import SignalResult",
             "",
         ]
 
@@ -1110,6 +1125,16 @@ def _parse_configuration(raw: Dict) -> ConfigurationSpec:
         conf.limit_configuration = _parse_limit_config(raw["limit_configuration"])
     if "pricing" in raw:
         conf.pricing = _parse_pricing(raw["pricing"])
+    if "guardrails" in raw:
+        from infrastructure.builder.expansion_types import GuardrailsSpec
+        gr = raw["guardrails"]
+        conf.guardrails = GuardrailsSpec(
+            modifier_floor=gr.get("modifier_floor", 0.10),
+            modifier_cap=gr.get("modifier_cap", 2.50),
+            max_premium_to_limit_ratio=gr.get("max_premium_to_limit_ratio", 0.35),
+            max_premium_to_revenue_ratio=gr.get("max_premium_to_revenue_ratio", 0.01),
+            max_ilf_factor=gr.get("max_ilf_factor", 10.0),
+        )
 
     return conf
 
@@ -1312,9 +1337,9 @@ class CoverageExpansionGenerator:
             config_yaml_content = result.config_yaml
             for group in self.spec.new_signal_groups:
                 for signal in group.signals:
-                    if signal.code not in config_yaml_content:
+                    if signal.id not in config_yaml_content:
                         warnings.append(
-                            f"Signal '{signal.code}' defined in spec but not found "
+                            f"Signal '{signal.id}' defined in spec but not found "
                             f"in generated config YAML signal_registry"
                         )
 

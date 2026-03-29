@@ -41,7 +41,6 @@ DSI systematically harvests these signals, scores them consistently, and convert
 | [DSI Principles](docs/overview/Foundational%20Principles.md) | Core methodology | Technical leadership |
 | [Deployment Guide](deploy/deployment_guide.md) | Production deployment | DevOps, Engineering |
 | [Configuration Architecture](docs/overview/Configuration_Architecture.md) | Config layer design | Engineering |
-| [Methodology Defense](development/retrospective_methodology.md) | Actuarial Q&A | Actuaries, Risk |
 | [Case Studies](docs/case_studies/) | Worked examples | Underwriters |
 | [Interactive Demo](demo/index.html) | Hands-on exploration | All stakeholders |
 | [Tower/Subscription Design](development/project/phase_e_design.md) | Market structure architecture | Engineering |

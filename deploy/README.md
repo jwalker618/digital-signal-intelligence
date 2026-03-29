@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.3.0|
-|Date|February 2026|
+|Version|0.4.0|
+|Date|March 2026|
 |Classification|deployment|
 
 ---

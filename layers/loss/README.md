@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.1.0|
-|Date|January 2025|
+|Version|0.4.0|
+|Date|March 2026|
 |Classification|loss|
 
 ---
@@ -96,6 +96,5 @@ Unlike traditional industry code segmentation, DSI cohorts are defined by signal
 
 ## References
 
-- **SKILL.md Phase 16** - Detailed implementation specification
-- **development_docs/historical_loss_analysis.md** - Signal-to-loss mapping evidence
-- **development_docs/signal_mapping_to_historical_loss.md** - Technical signal paths
+- **SKILL.md** - Architecture documentation
+- **layers/loss/** - Implementation

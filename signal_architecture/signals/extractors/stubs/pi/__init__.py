@@ -120,3 +120,4 @@ __all__ = [
     "FirmSizeExtractor",
     "AnnualRevenueExtractor",
 ]
+from . import phase_6_extractors

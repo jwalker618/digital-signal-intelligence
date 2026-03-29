@@ -11,7 +11,6 @@ description: Digital Signal Intelligence (DSI) insurance pricing framework. Use 
 When starting any DSI work:
 
 1. **Read this SKILL.md first**
-1. **Follow the link to the Development documentation indicated in Implementation Status. If this cannot be found, it must be created first**
 1. **Review development/project/ for the relevant phase development plans**: Contains phase development plans
 1. **Do not proceed with work without a phase development plan**: These are required
 1. **Always seek clarification if a request is unclear**
@@ -21,168 +20,31 @@ When starting any DSI work:
 1. **Follow the standard patterns** - don't invent new structures
 1. **Follow the 14-step workflow** - don't skip or reorder steps
 1. **Check technical_pricing/cross_walk/by_coverage.json** for common concepts
-1. **For coverage expansion phases**: Use the Coverage Expansion Pipeline — author an expansion spec YAML, then run `python -m infrastructure.builder.cli expand --spec <path> --write`. See [Coverage Expansion Pipeline](#coverage-expansion-pipeline) section and `infrastructure/builder/README.md`
-1. **For loss correlation work**: Review `loss/correlation_layer/development/` specification documents
-1. **For exposure shadow work**: Review `exposure/shadow_layer/development/` specification documents
+1. **For coverage expansion phases**: Use the Coverage Expansion Pipeline -- author an expansion spec YAML, then run `python -m infrastructure.builder.cli expand --spec <path> --write`. See `infrastructure/builder/README.md`
 1. **After config changes**: Run `python coverages/doc_generator.py` to regenerate logic.md files
-1. **Before committing**: Run `python development/project/assessments/scripts/assess_project.py` to validate project compliance
+1. **After config changes**: Run calibration harness `python -m layers.risk.calibration_harness <coverage>` to validate pricing
 
 ## Implementation Status
 
-| Phase | Name | Status | Development documentation |
-|-|-|-|-|
-| 1 | Foundation | ✅ Complete |  `development/project/phase_1.md` |
-| 2 | Reusable Categorizer Types | ✅ Complete |  `development/project/phase_2.md` |
-| 3 | Coverage Implementations | ✅ Complete | `development/project/phase_3.md` |
-| 4 | Config-Driven Model | ✅ Complete |  `development/project/phase_4.md` |
-| 5 | Scoring Engine | ✅ Complete |  `development/project/phase_5.md` |
-| 6 | Discovery Integration | ✅ Complete |  `development/project/phase_6.md` |
-| 7 | Traditional Modifiers | ✅ Complete |  `development/project/phase_7.md` |
-| 8 | Analytics Engine | ✅ Complete |  `development/project/phase_8.md` |
-| 9 | Test Profiles | ✅ Complete |  `development/project/phase_9.md` |
-| 10 | Multi-Coverage | ✅ Complete |  `development/project/phase_10.md` |
-| 11 | Production API | ✅ Complete |  `development/project/phase_11.md` |
-| 12 | Integration Layer | ✅ Complete |  `development/project/phase_12.md` |
-| 13 | LLM Builder | ✅ Complete |  `development/project/phase_13.md` |
-| 14 | Examples | ✅ Complete |  `development/project/phase_14.md` |
-| 15 | Production Extractors | ✅ Complete |  `development/project/phase_15.md` |
-| 16 | Loss Correlation | ✅ Complete |  `development/project/version/2/phase_p4_e2e_integration_testing.md` |
-| 17 | Exposure Shadow Layer | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
-| 18 | Architecture Restructuring | ✅ Complete | `development/project/phase_18.md` |
-| 19 | DSI Demo Production Build | ✅ Complete | `development/project/version/2/phase_p1_fix_broken_fundamentals.md` |
-| 20 | Config Architecture & Org Graph | ✅ Complete | `development/project/phase_20.md` |
-| 21 | Loss Correlation Implementation | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
-| 22 | Exposure Shadow Implementation | ✅ Complete | `development/project/version/2/phase_r6_layer_implementations.md` |
-| 23 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` (R8) |
-| V4 | Multi-Configuration Multiplexer | ✅ Complete | `development/project/version/active/phase_v4.md` |
+All phases through Version 4 are complete. Version 5 is in planning.
 
-### DSI Comprehensive Upgrade (Phases A-E) (Complete)
+**Version history** (detailed phase docs in `development/project/version/`):
+- **Version 1** (Phases 1-20): Foundation, signal architecture, coverage implementations, config-driven model, scoring engine, discovery, modifiers, analytics, multi-coverage, production API, integration layer, LLM builder, examples, production extractors
+- **Version 2** (R1-R11, P1-P7): Architecture restructuring, production readiness (DB, deployment, observability, performance)
+- **Version 3** (V3, Phases A-E): Comprehensive upgrade (foundation/transparency, scoring completeness, ROL engine, config strictness, tower/subscription)
+- **Version 4** (Phases 1-13): Multi-configuration multiplexer, coverage expansion pipeline, Phase 6 PI expansion (13 configs), Phase 7 Cyber expansion (11 configs)
+- **Version 5** (Planning): UX conversion for commercial/risk terms integration
 
-| Phase | Name | Status | Development documentation |
-|-|-|-|-|
-| A | Foundation & Transparency | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase A) |
-| B | Scoring Completeness | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase B) |
-| C | ROL Engine | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase C) |
-| D | Config Strictness & Cleanup | ✅ Complete | `DSI_UPGRADE_PLAN.md` (Phase D) |
-| E | Tower & Subscription Market Structure | ✅ Complete | `development/project/phase_e_design.md` |
-
-**Phase A Deliverables — Foundation & Transparency:**
-- ✅ A1: `uncapped_premium` field added to PricingResult and ModelVersion — captures pre-guardrail premium for audit trail
-- ✅ A2: `LimitPremiumDetail` replaces flat `Dict[str, float]` — stores discrete `ilf_factor` and `deductible_factor` per limit option
-- ✅ A3: Modifier visibility with before/after premium tracking — dual-exposure disconnect fixed (display values now match pricing factors)
-- ✅ A4: `TierMarginContext` added — distance to adjacent tier boundaries, percentile within current tier
-- ✅ A5: Table-based ILF removed — parametric-only enforcement in schema and ILFCurve
-- ✅ A6: Comprehensive unit tests for all Phase A features
-
-**Phase B Deliverables — Scoring Completeness:**
-- ✅ B1: `evaluate_signal_conditions()` extended to process loss and exposure dimension score_conditions (not just risk)
-- ✅ B2: Exposure dimension breakdown surfaced — magnitude vs complexity scores persisted separately, component factors tracked
-- ✅ B3: Loss score fields clarified — renamed for semantic clarity, individual frequency/severity trend fields added
-- ✅ B4: Unit tests for loss/exposure score_conditions evaluation and dimension breakdown output
-
-**Phase C Deliverables — ROL Engine:**
-- ✅ C1: ROL curve validator (`layers/risk/rol_validator.py`) — replaces PremiumValidator entirely, per-coverage ROL appetite bands, signature supports `attachment=0` for tower compatibility
-- ✅ C2: Dual recommendation engine (`layers/risk/rol_recommender.py`) — upper/lower ROL-optimal limit recommendations with `attachment`, `participation_pct`, `structure_type` fields for Phase E compatibility
-- ✅ C3: Limit re-calculation method — reprice with different limit selection without re-running entire workflow
-- ✅ C4: ConfigHealthGate updated to use ROL validator for boot-time config validation
-- ✅ C5: PremiumValidator removed — fully replaced by ROL validator
-- ✅ C6: Unit tests for ROL validator, dual recommender, re-calculation, and ConfigHealthGate ROL integration
-
-**Phase D Deliverables — Config Strictness & Cleanup:**
-- ✅ D1: `extra="forbid"` added to key Pydantic schema models — unknown YAML fields now rejected
-- ✅ D2: Comparison operators standardized — aliases removed, single canonical form enforced
-- ✅ D3: Cross-coverage field consistency validation added to builder/validator
-- ✅ D4: All 7 coverage config YAML files cleaned up — pass strict `extra="forbid"` validation
-
-**Phase E Deliverables — Tower & Subscription Market Structure:**
-- ✅ E1: Design review documented (`development/project/phase_e_design.md`) — tower/subscription architecture, ILF derivation, order/line model
-- ✅ E2: Tower layer schema — `TOWER` type in `LimitConfigType`, `TowerLayer` model with attachment/limit, bespoke tower support with validation (ordering, overlap detection, ILF range coverage)
-- ✅ E3: Multi-layer pricing engine — tower pricing via `ILF(attachment + limit) - ILF(attachment)` from existing cumulative curves, per-layer premium and ROL
-- ✅ E4: Subscription participation — `SUBSCRIPTION` type with order/line model, `LineRole` enum (LEAD/FOLLOW), lead loading factor, `SubscriptionOrder` and `SubscriptionLine` models
-- ✅ E5: `LayerPremiumDetail` output type — composing ILF differentials, order/line premiums, lead/follow roles; `DualRecommendation` extended with `structure_type`, `layers`, `signed_line`, `role`
-
-### DSI Comprehensive Restructure (Complete)
-
-| Phase | Name | Status | Development documentation |
-|-|-|-|-|
-| R1 | Master Configuration Layout | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R2 | Signal Architecture Alignment | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R3 | Coverage Configuration Rebuilds | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R4 | Infrastructure Builder Revision | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R5 | Infrastructure Verification | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R6 | Layer Implementations | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R7 | Model Configuration Validation | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R8 | Organisational Graph Runtime | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R9 | Performance Enhancement (Rust) | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R10 | Documentation & Cleanup | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-| R11 | Testing | ✅ Complete | `development/project/dsi_restructure_plan.md` |
-
-### Production Readiness Plan (Complete)
-
-| Phase | Name | Status | Development documentation |
-|-|-|-|-|
-| P1 | Fix Broken Fundamentals | ✅ Complete | `development/project/production_readiness_plan.md` |
-| P2 | Database Persistence | ✅ Complete | `development/project/production_readiness_plan.md` |
-| P3 | Production Extractor Wiring | ✅ Complete | `development/project/production_readiness_plan.md` |
-| P4 | End-to-End Integration Testing | ✅ Complete | `development/project/production_readiness_plan.md` |
-| P5 | Observability | ✅ Complete | `development/project/production_readiness_plan.md` |
-| P6 | Deployment Pipeline | ✅ Complete | `development/project/production_readiness_plan.md` |
-| P7 | Performance Validation | ✅ Complete | `development/project/production_readiness_plan.md` |
-
-**P1-P7 Deliverables:**
-- ✅ Lazy imports in `infrastructure/__init__.py` (no hard FastAPI dependency)
-- ✅ All paths fixed (pyproject.toml, CI, Dockerfile) from `technical_pricing/` to actual packages
-- ✅ Alembic migrations with 8-table initial schema, lazy DB engine singletons
-- ✅ Dual storage: DB persistence with in-memory fallback
-- ✅ Unified extractor resolver: stub/production/hybrid modes via `FEATURE_USE_STUBS`
-- ✅ 21 E2E integration tests (full pipeline: submission → scoring → tier → decision)
-- ✅ Structured JSON logging with correlation IDs, Prometheus metrics instrumentation
-- ✅ Rate limiting middleware (in-memory + Redis backends, per-API-key tiers)
-- ✅ CI/CD: Rust build, integration tests, Docker build+push, staging/prod deploy
-- ✅ Performance benchmarks: workflow ~80ms, scoring ~12ms, graph build <1ms
-
-**Coverage Builder v2.0 Overhaul** (February 2026):
-- ✅ Builder generates v2.0 compliant configs (signal_registry, three_layer_assessment, groups, risk/loss/exposure tiers)
-- ✅ Validator aligned with v2.0 schema (rejects v1.x flat structure, enforces score_condition action rules)
-- ✅ Signal library integrated with metadata registry (`signal_architecture/signals/inference/metadata_registry.py`)
-- ✅ CLI tool: `python -m infrastructure.builder.cli build|validate|list-industries|list-signals`
-- ✅ 24 builder tests passing (structure, constraints, multi-industry, validator, signal library)
-- ✅ Builder output passes its own validator AND validates existing cyber config
-- ✅ score_conditions enforce FLAG|MODIFIER|REFER only (DECLINE tier-level only)
-- ✅ Generated configs match canonical structure: `coverage_id → config_name → {metadata, signal_registry, groups, risk_tier_bands, ...}`
-
-**Coverage Expansion Pipeline** (March 2026):
-- ✅ `CoverageExpansionGenerator`: Takes structured YAML expansion specs, generates complete config YAML + signal architecture code
-- ✅ CLI `expand` command: `python -m infrastructure.builder.cli expand --spec <path> [--existing-config <path>] [--write]`
-- ✅ Expansion spec schema (`expansion_types.py`): Machine-consumable format capturing all parameters needed for multi-config generation
-- ✅ Phase 6 PI expansion spec: 11 configurations, 58 new signals, 9 new signal groups — 1,504 lines of spec producing ~7,400 lines of output
-- ✅ Companion doc template: `development/project/templates/expansion_companion.md`
-- ✅ Generates: config YAML sub-configurations, extractor stubs, aggregator stubs (factory pattern), inference function registrations
-
-**Validation Status** (February 2026):
-- ✅ All core Python imports validated and working
-- ✅ Signal analytics module fixed (import order corrected)
-- ✅ API schemas complete (country_hint field added)
-- ✅ Configuration YAML syntax errors fixed
-- ✅ Documentation links validated and corrected
-- ✅ 32 API endpoints documented and functional
-- ✅ All 7 demo applications validated (path fixes applied Feb 2026)
-- ⚠️ Test coverage at ~17% (target: 80%)
-- ✅ 21 inference function name typos fixed across 6 coverage configs
-- ✅ All 7 coverage configs rebuilt to v2.0 structure (banded score_conditions, loss/exposure tier bands, application format)
-- ✅ Cross-coverage structural validation passed (all 7 configs consistent)
-- ✅ Metadata registry created (`signal_architecture/signals/inference/metadata_registry.py`)
-- ✅ Signal enhancements stubbed (Marine port state/classification, Aerospace certification/supply chain, Cross-Coverage regulatory)
-- ✅ Categoriser audit complete (4 core types + 8 variants implemented, 4 statistical types deferred to Phase 8)
-- ✅ Infrastructure verification: scorer (FLAG/REFER/MODIFIER), pricer (MULTIPLIER/PREMIUM_BASE) updated for v2.0
-- ✅ Exposure scorer and loss config adapter implemented (v2.0 tier band consumers)
-- ✅ Model configuration validator: all 7 configs pass validation (0 errors, 0 warnings)
-- ✅ Organisational Graph Runtime: 6 node types, 6 edge types, 5 derivatives, PageRank propagation
-- ✅ Rust dsi-core crate: PageRank, derivatives, validation via PyO3 (release build with LTO)
-- ✅ **Three-Layer Assessment Corrections (Feb 2026)**: All 7 coverage configs updated with proper proxy_tier, correlation_direction, loss/exposure dimensions
-- ✅ **Demo Path Fixes (Feb 2026)**: Fixed sys.path.insert (3 levels) and import paths in all 9 demo files
-
-**Next Steps**: See [Outstanding Work](#outstanding-work) section for consolidated pending, planned, and optional items.
+**Current coverage configurations:**
+| Coverage | Configs | Key Expansion |
+|-|-|-|
+| Cyber | 11 | Phase 7: 9 industry-specific configs |
+| D&O | 2 | do_general, do_sme |
+| FI | 2 | fi_general, fi_sme |
+| Energy | 10 | Phase 5: 8 segment-specific configs |
+| Marine | 1 | marine_general |
+| PI | 13 | Phase 6: 11 profession-specific configs |
+| Aerospace | 1 | aerospace_general |
 
 ---
 
@@ -190,523 +52,50 @@ When starting any DSI work:
 
 Digital Signal Intelligence (DSI) is a new insurance information substrate based on **observable digital signals** rather than self-reported documentation. Core insight: who trusts/partners/certifies an entity reveals risk quality more reliably than what they claim about themselves.
 
-Foundational Principles, which must be adhered to, can be found here:  `docs/overview/Foundational Principles.md`
+- Foundational Principles: `docs/overview/Foundational Principles.md`
+- Whitepaper: `docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf`
+- Visionpaper: `docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf`
 
-The detailed whitepaper can be found here: `docs/overview/Whitepaper_Digital_Signal_Intelligence.pdf`
-
-The detailed visionpaper can be found here: `docs/overview/Visionpaper_Digital_Signal_Intelligence.pdf`
-
------
+---
 
 ## Architecture Overview
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                     SUBMISSION INPUT                             │
-│     Company name, domain hint, coverage, TIV, limits             │
-└──────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                   DISCOVERY MODULE (Step 0)                      │
-│                                                                  │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐                   │
-│  │SEARCH    │ →  │VALIDATE  │ →  │IDENTIFY   │                   │
-│  │          │    │          │    │           │                   │
-│  │Find      │    │Corporate │    │Primary    │                   │
-│  │candidates│    │website   │    │website    │                   │
-│  └──────────┘    └──────────┘    └───────────┘                   │
-│                                                                  │
-│  Output: Discovered website URL + confidence + identity          │
-└──────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                        YAML CONFIG                               │
-│     Single source of truth for coverage model definition         │
-│   (weights, modifiers, tiers, direct queries, conditions)        │
-└──────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                    SIGNAL ARCHITECTURE                           │
-│                                                                  │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐   │
-│  │EXTRACTOR │ →  │AGGREGATOR│ →  │CATEGORIZER│ →  │INFERENCE │   │
-│  │          │    │          │    │           │    │          │   │
-│  │Raw data  │    │Structure/│    │Score or   │    │Orchestrat│   │
-│  │from APIs │    │normalize │    │category   │    │pipeline  │   │
-│  └──────────┘    └──────────┘    └───────────┘    └──────────┘   │
-│                                                                  │
-│  Shared signal infrastructure - feeds all three assessment layers│
-└──────────────────────────────────────────────────────────────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          │                   │                   │
-          ▼                   ▼                   ▼
-┌──────────────────────────────────────────────────────────────────┐
-│              THREE-LAYER PARALLEL ASSESSMENT                     │
-│                                                                  │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐     │
-│  │  RISK SCORING   │ │ EXPOSURE SHADOW │ │ LOSS CORRELATION│     │
-│  │   (Steps 5-6)   │ │  LAYER (Ph 17)  │ │  LAYER (Ph 16)  │     │
-│  │                 │ │                 │ │                 │     │
-│  │ Composite score │ │ Exposure band   │ │ Loss propensity │     │
-│  │ + conditions    │ │ + complexity    │ │ + cohort        │     │
-│  │ → Risk Tier     │ │ → Exposure Band │ │ → Loss Modifier │     │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘     │
-│          │                   │                   │               │
-│          └───────────────────┼───────────────────┘               │
-│                              │                                   │
-└──────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                      PRICING ENGINE                              │
-│                                                                  │
-│  ┌──────────┐                                                    │
-│  │CONFIG    │    Risk Tier × Exposure Band × Loss Modifier       │
-│  │MANAGER   │ →                    ↓                             │
-│  │Hash/store│    Base Premium → Modifiers → Limits → Decision    │
-│  └──────────┘                                                    │ 
-│                                                                  │
-│  PRICER → WORKFLOW ENGINE → Decision (Approve/Refer/Decline)     │
-└──────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                      MODEL OUTPUT                                │
-│                                                                  │
-│  Risk Layer:     Score → Tier → Conditions → Referrals           │
-│  Exposure Layer: Exposure Band → Complexity Category → Range     │
-│  Loss Layer:     Propensity Score → Cohort → Trend → Alerts      │
-│                                                                  │
-│  Combined:       Final Premium → Decision (Approve/Refer/Decline)│
-│                  + Full audit trail across all three layers      │
-└──────────────────────────────────────────────────────────────────┘
+SUBMISSION INPUT  -->  DISCOVERY (Step 0)  -->  YAML CONFIG
+                                                    |
+                                              SIGNAL ARCHITECTURE
+                                    (Extractor -> Aggregator -> Categorizer -> Inference)
+                                                    |
+                          +--------------------------+--------------------------+
+                          |                          |                          |
+                    RISK SCORING              EXPOSURE SHADOW          LOSS CORRELATION
+                   (Steps 5-6)                  (Phase 17)               (Phase 16)
+                          |                          |                          |
+                          +--------------------------+--------------------------+
+                                                    |
+                                              PRICING ENGINE
+                                    (Risk Tier x Exposure Band x Loss Modifier)
+                                                    |
+                                              MODEL OUTPUT
+                                    (Premium + Decision + Audit Trail)
 ```
 
------
+**Four main code areas:**
 
-## Model Process Workflow
-
-The complete model execution follows this workflow:
-
-### Step 1: Model Configuration Instantiation
-
-Configuration uses **Content-Addressable Storage (Hybrid)** pattern:
-
-**Stage 1 - Payload Storage:**
-
-- YAML configuration converted to SHA-256 hash
-- Hash ensures unique integrity (any change = new hash)
-- If hash is new → persist payload to S3 (Azure/AWS/GCP)
-- If hash exists → skip (prevents duplication)
-
-**Stage 2 - Metadata Storage:**
-
-- Metadata (user, timestamp, unique ID) saved to structured storage (PostgreSQL)
-- More metadata records than payloads (many versions reference same config)
-
-### Step 2: Model Data File Creation
-
-**Stage 1 - Signal Capture:**
-
-- Every item with an ID captured
-- Associated returns (signal outputs) persisted against IDs
-- Complete autonomous return = one **model version**
-
-**Stage 2 - Interaction Tracking:**
-
-- Subsequent interactions (e.g., referral review) = new model version
-- Full audit trail maintained
-
-### Step 3: Minimum Viable Input Verification
-
-- Check required inputs present
-- If available → proceed to Step 4
-- If missing → return for user to provide missing inputs
-
-### Step 4: Signal Extraction
-
-- Execute all signal pipelines (Extractor → Aggregator → Categorizer → Inference)
-- Save all outputs to model data file
-- **Signal outputs feed all three assessment layers** (same data, different weighting)
-
-### Step 5: Three-Layer Parallel Assessment
-
-All three assessment layers run **in parallel** using the same signal outputs:
-
-#### Step 5a: Risk Composite Score (Risk Layer)
-
-- Calculate weighted composite score (0-1000) using risk-specific weights
-- No conditions applied yet - pure signal-based score
-- Output: Risk score for tier determination
-
-#### Step 5b: Exposure Magnitude Score (Exposure Shadow Layer - Phase 17)
-
-- Calculate exposure score (0-100) using exposure-specific weights
-- Apply proxy tier hierarchy (direct → inferred → cohort)
-- Output: Exposure band + complexity category + confidence
-
-#### Step 5c: Loss Propensity Score (Loss Correlation Layer - Phase 16)
-
-- Calculate loss propensity score (0-100) using loss-correlated weights
-- Separate frequency and severity propensity
-- Output: Loss propensity band + cohort assignment + trend direction
-
-### Step 6: Signal Conditions Evaluation
-
-Evaluate conditions defined at signal_group and signal_feature levels.
-
-**Possible impacts (conditions CANNOT modify premium):**
-
-- **(a) Tier override** - force to specific tier regardless of score
-- **(b) Referral** - set `auto_approve = false`, send for user verification
-- **(c) Note** - post note to file for underwriter review
-
-### Step 7: Direct Query Response Evaluation
-
-Evaluate responses to direct queries (boolean questions).
-
-**Possible impacts:**
-
-- **(a) Tier override** - force to specific tier
-- **(b) Referral** - set `auto_approve = false`, send for user verification
-- **(c) Note** - post note to file
-- **(d) Modifier** - define modifier applied after base premium generation
-
-### Step 8: Maximum Tier Override Application
-
-- If multiple tier overrides triggered (from Steps 6 & 7)
-- Apply the **maximum** (worst) tier override
-- Example: Score says Tier 2, conditions say Tier 3 and Tier 4 → apply Tier 4
-
-### Step 9: Final Layer Outputs Capture
-
-Capture final outputs from all three assessment layers:
-
-#### Step 9a: Final Risk Tier Capture
-
-- Final tier (after all overrides) captured in model data file
-- This is the tier used for premium calculation
-
-#### Step 9b: Final Exposure Band Capture (Phase 17)
-
-- Exposure band (micro/small/medium/large/very_large) captured
-- Complexity category (simple → extremely_complex) captured
-- Implied TIV range recorded for audit
-
-#### Step 9c: Final Loss Propensity Capture (Phase 16)
-
-- Loss propensity band (very_low → high) captured
-- Severity propensity band captured
-- Cohort assignment and trend direction recorded
-
-### Step 10: Base Premium Generation
-
-Premium calculation uses **all three layer outputs**:
-
-```
-Base Premium = f(Risk Tier, Exposure Band, Loss Propensity)
-```
-
-**Pattern A - Multiplicative (Recommended):**
-
-```python
-tier_premium = tier_thresholds[risk_tier].base_premium
-exposure_modifier = exposure_band_modifiers[exposure_band]
-loss_modifier = loss_propensity_modifiers[loss_band]  # bounded by caps/floors
-
-base_premium = tier_premium * exposure_modifier * loss_modifier
-```
-
-**Pattern B - Grid-Based:**
-
-```yaml
-pricing_grid:
-  tier_1:
-    small_exposure:
-      low_loss: 0.0035
-      moderate_loss: 0.0040
-      high_loss: 0.0050
-```
-
-### Step 11: Modifier Application
-
-Apply all modifiers in sequence:
-
-- Categorical feature modifiers
-- Direct query modifiers (from Step 7d)
-- Experience modifications
-- Any other configured modifiers
-
-### Step 12: Limit Band Scaling
-
-Scale premium across all relevant limit bands per configuration:
-
-- Apply parametric ILF (Increased Limit Factor) curves
-- Generate premium for each limit option with full `LimitPremiumDetail` breakdown
-- Apply deductible credits per limit
-- **Tower mode (Phase E)**: Price each layer via `ILF(attachment + limit) - ILF(attachment)`, generate `LayerPremiumDetail` per layer
-- **Subscription mode (Phase E)**: Price at 100% order level, then allocate to line with lead/follow loading
-- ROL validation per limit option (or per layer for towers)
-- Dual recommendation engine produces upper/lower ROL-optimal limits
-
-### Step 13: Output Decision
-
-Final output for next steps:
-
-- **Approve** - `auto_approve = true`, within appetite, no referrals triggered
-- **Decline** - outside appetite (e.g., Tier 5 with decline rule, or hard decline condition)
-- **Refer** - `auto_approve = false`, requires underwriter review
-
-**Referral triggers from all three layers:**
-- Risk Layer: Tier override conditions, signal conditions
-- Exposure Layer: High exposure + low confidence, complexity threshold
-- Loss Layer: High loss propensity + high confidence, significant deterioration
-
------
-
-## File Structure
-
-```
-# Repository Root
-digital-signal-intelligence/
-├── SKILL.md                         # This document (development guide)
-├── README.md                        # Project overview
-├── CHANGELOG.md                     # Version history
-├── CONTRIBUTING.md                  # Contribution guidelines
-├── pyproject.toml                   # Python project configuration
-├── requirements.txt                 # Production dependencies
-├── requirements-dev.txt             # Development dependencies
-├── setup.py                         # Package setup
-├── Dockerfile                       # Container definition
-├── docker-compose.yml               # Multi-container orchestration
-├── alembic.ini                      # Alembic migration config
-├── LICENSE                          # License for use of DSI
-│
-├── docs/                            # Documentation
-│   ├── overview/
-│   │   ├── Configuration Architecture.md    # ✅ PHASE 20 - Config layer documentation
-│   │   ├── Foundational Principles.md    # Core DSI principles
-│   │   ├── Pitch_deck.pdf    # DSI Executive summary and pitch
-│   │   ├── The_PageRank_Precedent.pdf    # DSI grounding in existing principles
-│   │   ├── Visionpaper_Digital_Signal_Intelligence.pdf  # World Model vision
-│   │   └── Whitepaper_Digital_Signal_Intelligence.pdf   # Detailed whitepaper
-|   |
-│   ├── agent_interaction/
-│   │   └── dsi_specification.md     # Agent integration spec
-|   |
-│   └── case_studies/                # Loss case studies
-│       └── Retrospective_loss_case_studies.pdf   # Detailed retrospective loss analysis
-│
-├── schemas/                         # ✅ PHASE 20 - Organisation-wide schemas
-│   └── organisational_graph.yaml    # Graph schema for World Model
-│
-├── development/                     # Development documentation
-│   ├── project/                     # Phase documents and assessments
-│   │   ├── phase_e_design.md        ✅ PHASE E - Tower/subscription design document
-│   │   ├── version/                 # Phase documentation by version
-│   │   │   ├── 1/                   # Legacy phase docs (1-20)
-│   │   │   ├── 2/                   # Restructure phases (R1-R11, P1-P7)
-│   │   │   └── active/              # Current active phases (V3-V7)
-│   │   └── assessments/             ✅ Project assessment tooling
-│   │       ├── README.md            ✅ Assessment workflow guide
-│   │       ├── ASSESSMENT_METHODOLOGY.md ✅ Detailed methodology
-│   │       ├── project_completeness_checklist.md ✅ 293+ item checklist
-│   │       ├── scripts/             ✅ Assessment scripts
-│   │       │   ├── assess_project.py       ✅ Full project assessment
-│   │       │   └── assess_config_compliance.py ✅ Single config validation
-│   │       └── results/             ✅ Timestamped assessment results
-│   └── ...                          # Analysis and methodology docs
-│
-├── signal_architecture/             # All signal-related code
-│   ├── __init__.py
-│   ├── signals/                     # Core signal extraction pipeline
-│   │   ├── __init__.py
-│   │   ├── base.py                  ✅ Base classes
-│   │   ├── types.py                 ✅ Data structures
-│   │   ├── extractors/
-│   │   │   ├── base.py              ✅ StubExtractor + utilities
-│   │   │   ├── stubs/               ✅ Coverage-specific stub extractors
-│   │   │   └── production/          ✅ PHASE 15 - 50 free extractors
-│   │   ├── aggregators/             ✅ Signal aggregation + routing bridges
-│   │   ├── categorisers/            ✅ Score categorization (British spelling)
-│   │   ├── inference/               ✅ Inference functions + registry
-│   │   ├── routing/                 ✅ PHASE 15 - Jurisdiction-aware routing
-│   │   └── cross_walk/              ✅ Coverage crosswalk mappings
-│   │
-│   ├── discovery/                   ✅ PHASE 6 - Entity identification (Step 0)
-│   │   └── website_discovery.py     ✅ Discovery engine
-│   │
-│   ├── orchestration/               ✅ PHASE 10 - Multi-coverage coordination
-│   │   ├── types.py                 ✅ Orchestration types
-│   │   ├── multi_coverage.py        ✅ Multi-coverage workflow
-│   │   └── locale_detection.py      ✅ Locale detection
-│   │
-│   └── graph/                       ✅ PHASE 23/R8 - Organisational Graph Runtime
-│       ├── types.py                 ✅ Node, Edge, Graph types (6 node, 6 edge types)
-│       ├── node_factory.py          ✅ Create nodes from signals/submission
-│       ├── edge_inferencer.py       ✅ Infer edges from relationships
-│       ├── graph_builder.py         ✅ Full graph construction pipeline
-│       ├── storage.py               ✅ Graph serialization and persistence
-│       ├── derivatives/             ✅ Behavioural derivative calculations
-│       │   └── calculator.py        ✅ Entropy, velocity, drift, concentration, fragility
-│       └── propagation/             ✅ Graph propagation algorithms
-│           └── algorithms.py        ✅ PageRank, risk propagation, exposure aggregation
-│
-├── infrastructure/                  # Support systems and integrations
-│   ├── __init__.py
-│   ├── api/                         ✅ PHASE 11 + P5 - FastAPI REST API
-│   │   ├── main.py                  ✅ Application entry (structured logging, metrics, rate limiting)
-│   │   ├── types.py                 ✅ API types
-│   │   ├── routes/                  ✅ Endpoint handlers
-│   │   ├── auth/                    ✅ JWT & API key auth
-│   │   ├── middleware/              ✅ Middleware components
-│   │   └── observability/           ✅ P5 - Structured logging, Prometheus, rate limiting
-│   │
-│   ├── db/                          ✅ Database layer
-│   │   ├── models.py                ✅ SQLAlchemy models
-│   │   ├── repositories.py          ✅ Data access
-│   │   └── config.py                ✅ Database configuration
-│   │
-│   ├── analytics/                   ✅ PHASE 8-9 - Performance analytics
-│   │   ├── types.py                 ✅ Analytics types
-│   │   ├── performance.py           ✅ Performance metrics
-│   │   ├── portfolio.py             ✅ Portfolio analytics
-│   │   └── signal_analytics.py      ✅ Signal performance
-│   │
-│   ├── builder/                     ✅ PHASE 13 - Coverage builder (v2.0 compliant)
-│   │   ├── coverage_builder.py      ✅ Builder logic (v2.0 schema: signal_registry, groups, tiers)
-│   │   ├── validator.py             ✅ v2.0 schema validator (nested structure, score_condition rules)
-│   │   ├── signal_library.py        ✅ Signal library (integrated with metadata registry)
-│   │   ├── cli.py                   ✅ CLI tool (build, validate, list commands)
-│   │   └── types.py                 ✅ Builder types (ProxyTier, CoverageSpec, etc.)
-│   │
-│   ├── validation/                  ✅ R7 - Model configuration validation
-│   │   ├── __init__.py              ✅ Module exports
-│   │   └── config_validator.py      ✅ Comprehensive v2.0 config validation
-│   │
-│   └── integrations/                ✅ PHASE 12 - External integrations
-│       ├── email/                   ✅ Email notifications
-│       ├── documents/               ✅ Document generation
-│       └── webhooks/                ✅ Webhook handlers
-│
-├── layers/                          # Assessment layer implementations
-│   ├── __init__.py
-│   ├── risk/                        ✅ Risk scoring layer (14-step workflow)
-│   │   ├── types.py                 ✅ All dataclasses (incl. LimitPremiumDetail, LayerPremiumDetail, TierMarginContext)
-│   │   ├── config_manager.py        ✅ Config hashing/storage
-│   │   ├── config_health_gate.py    ✅ Boot-time config validation (ROL-based, Phase C)
-│   │   ├── model_data.py            ✅ Model data file management
-│   │   ├── scorer.py                ✅ Steps 4-6 (risk/loss/exposure score_conditions, Phase B)
-│   │   ├── query_evaluator.py       ✅ Step 7
-│   │   ├── pricer.py                ✅ Steps 8-12 (ILF transparency, tower/subscription pricing, Phase A/E)
-│   │   ├── workflow.py              ✅ Full orchestration + Step 0
-│   │   ├── rol_validator.py         ✅ PHASE C - ROL curve validator (replaces PremiumValidator)
-│   │   ├── rol_recommender.py       ✅ PHASE C - Dual recommendation engine (upper/lower ROL-optimal)
-│   │   └── modifiers/               ✅ PHASE 7 - Traditional modifiers
-│   │
-│   ├── exposure/                    ✅ Exposure scorer + types (v2.0 tier bands)
-│   └── loss/                        ✅ Loss config adapter + types (v2.0 tier bands)
-│
-├── coverages/                       # YAML coverage configurations
-│   ├── doc_generator.py             ✅ Generate logic.md files from configs
-│   ├── master_config_layout.yaml    ✅ Master schema template
-│   ├── README.md                    ✅ Coverages documentation
-│   ├── aerospace/
-│   │   ├── config.yaml              ✅ Configuration definitions
-│   │   └── logic.md                 ✅ Generated documentation
-│   └── #other coverages#/           ✅ Each has config.yaml + logic.md            
-│
-├── exposure/                        # Exposure Shadow Layer specs (PHASE 17)
-│   └── shadow_layer/development/    ✅ Specification documents
-│
-├── tests/                           ✅ Test suite
-│   ├── unit/
-│   ├── integration/                 ✅ P4 - E2E pipeline tests (21 tests)
-│   ├── performance/                 ✅ P7 - Benchmarks (Python baselines + Rust)
-│   └── api/
-│
-├── demo/                            ✅ Live demos and examples
-│   ├── server.py                    ✅ FastAPI demo server
-│   ├── examples/                    ✅ Coverage examples + hybrid routing
-│   └── html/                        ✅ Interactive HTML demos
-│
-├── rust/                            ✅ R9 - Rust performance components
-│   └── dsi-core/                   ✅ PyO3 crate (PageRank, derivatives, validation)
-│       ├── Cargo.toml              ✅ Crate config (pyo3, serde, rayon)
-│       ├── pyproject.toml          ✅ Maturin build config
-│       ├── src/
-│       │   ├── lib.rs              ✅ Module entry point
-│       │   ├── graph.rs            ✅ PageRank, risk propagation, exposure aggregation
-│       │   ├── derivatives.rs      ✅ Entropy, velocity, drift, concentration, fragility
-│       │   └── validation.rs       ✅ YAML config validation
-│       └── benches/                ✅ Criterion benchmarks
-│
-├── alembic/                         ✅ P2 - Database migrations
-│   ├── env.py                       ✅ Migration environment
-│   └── versions/                    ✅ Migration scripts (001_initial_schema)
-│
-└── deploy/                          ✅ Deployment configs
-    ├── docker/                      ✅ docker-compose.prod.yml
-    ├── kubernetes/                  ✅ P6 - Deployment, service, HPA, secrets template
-    └── monitoring/                  ✅ Prometheus config + alert rules
-```
-
-Legend: ✅ Complete | 🔲 Not Started
-
------
-
-## Architecture 
-
-The codebase is now organised into four main areas:
-
-| Area | Purpose | Contents |
+| Area | Purpose | Key Contents |
 |-|-|-|
-| `signal_architecture/` | Signal processing | signals, discovery, orchestration |
-| `infrastructure/` | Support systems | api, db, analytics, builder, integrations |
-| `layers/` | Assessment layers | risk, exposure, loss |
-| `coverages/` | Configuration | YAML configs for all 7 coverages |
+| `signal_architecture/` | Signal processing | signals, discovery, orchestration, multiplexer, graph |
+| `infrastructure/` | Support systems | api, db, analytics, builder, validation, integrations |
+| `layers/` | Assessment layers | risk (14-step workflow), exposure, loss |
+| `coverages/` | Configuration | YAML configs for all 7 coverages + doc_generator |
 
-**Import Paths:**
-```python
-# Signal Architecture
-from signal_architecture.signals import ExtractorResult, SignalResult
-from signal_architecture.discovery import WebsiteDiscoveryEngine
-from signal_architecture.orchestration import MultiCoverageOrchestrator
+**Additional areas:**
+- `commercial/entities/` - Commercial entity definitions (distribution, commission, FX)
+- `deploy/` - Docker, Kubernetes, monitoring configs
+- `rust/dsi-core/` - PyO3 performance crate (PageRank, derivatives)
+- `frontend/` - Next.js React workbench UI
 
-# Infrastructure
-from infrastructure.api import app
-from infrastructure.db import models
-from infrastructure.analytics import performance
-
-# Layers
-from layers.risk import workflow, scorer, pricer
-
-# Coverages
-from coverages import aerospace, cyber
-```
------
-
-## Coverage Crosswalk
-
-Common concepts appear across multiple coverages with different signal paths. Reference `coverage_crosswalk.json` for mappings:
-
-|Common Concept                  |Coverages with Equivalent|
-|--------------------------------|-------------------------|
-|Credit Rating                   |All 7                    |
-|Certification / License Status  |6 (not D&O)              |
-|Leadership Stability            |All 7                    |
-|Public Reporting / Disclosure   |All 7                    |
-|Regulatory Actions / Enforcement|All 7                    |
-|Incident / Breach History       |All 7                    |
-|Accident / Litigation History   |All 7                    |
-|Industry Engagement             |All 7                    |
-|Banking Relationship            |5 (not Aerospace, PI)    |
-
------
+---
 
 ## YAML Config Structure
 
@@ -714,468 +103,89 @@ Common concepts appear across multiple coverages with different signal paths. Re
 
 **Reference:** `coverages/master_config_layout.yaml` - VERSION 2.3
 
+Each coverage line has a single `config.yaml` containing one or more sub-configurations:
+
 ```yaml
-coverage:                          # Domain (e.g., aerospace, cyber, marine)
-  configuration:                   # Instantiable model (e.g., aerospace_general)
-    metadata:                      # Name, version, min premium, markets
-      name: str
-      version: str
-      min_premium: float
-      markets: list[str]
-      minimum_viable_input:        # IMPORTANT: Must include basis if MULTIPLIER used
-        - entity_id
-        - tiv                      # Or revenue, payroll, limit, etc.
-
-    direct_queries:                # Boolean questions (Step 7)
-      - id: str
-        question: str
-        query_condition:
-          - return: bool           # Trigger on true or false
-            action: FLAG | MODIFIER | REFER
-            override: int|null     # For REFER - tier override
-            applied: float|null    # For MODIFIER - multiplicative
-            note: str              # Required for FLAG
-
-    signal_registry:               # All signals defined once
-      - id: str
-        inference_utility_function: str
-        proxy_tier: DIRECT_OBSERVABLE | INFERRED_PROXY | COHORT_INFERENCE
-        three_layer_assessment:
-          group_id: str            # Links to groups.three_layer_assessment
-
-          # Each dimension can have banded score_conditions
-          risk:
-            weight: float
-            correlation_direction: positive | negative
-            score_conditions:      # BANDED - multiple thresholds (OPTIONAL)
-              - threshold: int     # e.g., 20
-                comparison: "<="   # >=, <=, ==, >, <
-                action: MODIFIER
-                applied: 0.85      # 15% credit
-                note: str
-              - threshold: int     # e.g., 80
-                comparison: ">="
-                action: FLAG
-                note: str          # Required for FLAG
-              - threshold: int     # e.g., 95
-                comparison: ">="
-                action: REFER
-                override: int|null # Optional tier override
-
-          loss:
-            severity:
-              weight: float
-              correlation_direction: str
-              score_conditions: [...]  # Same banded structure
-            frequency:
-              weight: float
-              correlation_direction: str
-              score_conditions: [...]
-
-          exposure:
-            size:
-              weight: float
-              correlation_direction: str
-              score_conditions: [...]
-            complexity:
-              weight: float
-              correlation_direction: str
-              score_conditions: [...]
-
+coverage:                          # Domain (e.g., cyber, pi)
+  configuration:                   # Instantiable model (e.g., cyber_healthcare)
+    metadata:                      # Name, version, min premium, routing_constraints
+    direct_queries:                # Boolean questions (Step 7) with conditions
+    signal_registry:               # All signals with three_layer_assessment weights
     groups:
       categories:                  # Categorical modifier groups
-        - id: str
-          label: str
-          impact: MODIFIER | PREMIUM_BASE
-
-      three_layer_assessment:      # Score-contributing groups
-        - id: str
-          label: str
-          risk:
-            weight: float          # Sum to 1.0 across all groups
-            score_conditions: [...] # Group-level banded conditions
-          loss:
-            weight: float
-            score_conditions: [...]
-          exposure:
-            weight: float
-            score_conditions: [...]
-
-    risk_tier_bands:               # Score → tier → premium
-      bands:
-        - id: int                  # Tier 1 = best
-          label: str
-          interpretation:
-            bands:
-              min: int
-              max: int
-            action: APPROVE | REFER | DECLINE
-            application:
-              # METHOD 1: Fixed base premium
-              method: PREMIUM_BASE
-              value: int
-              # METHOD 2: Rate × basis (alternative)
-              # method: MULTIPLIER
-              # applied: float     # Rate (e.g., 0.0035)
-              # basis: str         # Field from minimum_viable_input
-
-    loss_tier_bands:               # Loss score → modifiers
-      bands:
-        - id: int
-          label: str
-          interpretation:
-            bands: {min: int, max: int}
-            application:
-              frequency_modifier: float
-              severity_modifier: float
-      constraints:
-        floor: float               # e.g., 0.75
-        cap: float                 # e.g., 1.50
-
-    exposure:                      # Exposure score → modifiers
-      size:
-        weight: float
-        bands:
-          - id: int
-            label: str
-            interpretation:
-              bands: {min: int, max: int}
-              application:
-                method: MODIFIER | MULTIPLIER
-                applied: float
-                basis: str|null    # For MULTIPLIER
-      complexity:
-        weight: float
-        bands: [...]
+      three_layer_assessment:      # Score-contributing groups with per-layer weights
+    risk_tier_bands:               # Score -> tier -> premium (5 tiers)
+    loss_tier_bands:               # Loss score -> frequency/severity modifiers
+    exposure:                      # Exposure score -> size/complexity modifiers
+    limit_configuration:           # DECOUPLED | BUNDLED | TOWER | SUBSCRIPTION
+    pricing:                       # ILF curves (parametric), deductible factors
+    guardrails:                    # Modifier caps, premium-to-limit ratio limits
 ```
 
-### Limit Configuration Types
+For full schema details, see `coverages/master_config_layout.yaml`.
 
-DSI supports four limit configuration modes:
-
-| Type | Description | Use Case |
-|-|-|-|
-| `BUNDLED` | Menu pricing with pre-defined packages | Simple products |
-| `DECOUPLED` | Independent limit/deductible selection | Standard commercial |
-| `TOWER` | Stacked excess layers with attachment points | Large commercial, specialty |
-| `SUBSCRIPTION` | Order/line model with participation percentages | Subscription/syndicate markets |
-
-#### Tower Configuration (Phase E)
-
-```yaml
-limit_configuration:
-  type: TOWER
-  layers:
-    - id: 1
-      label: Primary
-      attachment: 0
-      limit: 10000000
-    - id: 2
-      label: First Excess
-      attachment: 10000000
-      limit: 15000000
-    - id: 3
-      label: Second Excess
-      attachment: 25000000
-      limit: 25000000
-```
-
-Tower pricing derives from existing cumulative ILF curves:
-```
-layer_premium = base_premium × [ILF(attachment + limit) - ILF(attachment)]
-```
-
-**Bespoke towers** are supported — arbitrary attachment/limit combinations with no requirement for standard layer structures. Validation ensures layers are ordered by attachment, non-overlapping within the same product, and ILF curves cover the full range.
-
-#### Subscription Configuration (Phase E)
-
-```yaml
-limit_configuration:
-  type: SUBSCRIPTION
-  total_limit: 50000000
-  order_premium: 2500000    # 100% premium for the order
-
-subscription_line:
-  minimum_line: 0.05        # 5% minimum participation
-  maximum_line: 0.25        # 25% maximum participation
-  signed_line: 0.15         # actual signed line
-  role: LEAD                # LEAD or FOLLOW
-```
-
-- **Order**: 100% terms — total limit, premium, attachment, layer structure
-- **Line**: Insurer's participation — `line_premium = signed_line × order_premium × lead_loading`
-- **Lead**: Sets terms, handles claims, commands loading factor (e.g. 1.05–1.15)
-- **Follow**: Takes lead's terms at par, no loading applied
-- ROL is always calculated at the 100% order level
-
-Tower and subscription compose: each tower layer has an order-level premium, and the insurer takes a line on one or more layers.
-
-### score_conditions Evaluation Rules
-
-1. **Applies to:** signal_registry signals and groups ONLY (NOT tier bands)
-2. **MODIFIER:** ALL matching conditions apply multiplicatively
-3. **FLAG:** ALL matching conditions captured
-4. **REFER:** FIRST matching triggers referral
-5. **Required fields:**
-   - MODIFIER: `applied` (float)
-   - FLAG: `note` (string)
-   - REFER: `override` optional (tier)
-
------
+---
 
 ## Critical Rules
 
-### Core Framework Rules
+### Core Framework
 
 1. **YAML is truth**: Never hardcode weights, thresholds, modifiers, or tier definitions
-1. **Extractors are stubs**: Randomized but structurally realistic, with TTL caching
-1. **Aggregators are production**: Must handle real data when extractors upgraded
-1. **Categorizers are reusable**: Use the 12 parameterized types
-1. **Inference functions are glue**: One per YAML `inference_utility_function`
-1. **Model layer is coverage-agnostic**: Same code handles all seven coverages
-1. **Consistent structure**: All coverages follow identical file organization
-1. **Scores are 0-100**: Individual signals
-1. **Composite is 0-1000**: Weighted sum × 10
-1. **Confidence matters**: Track data availability throughout pipeline
-1. **TTL varies by source**: Set appropriate `DEFAULT_TTL_SECONDS` per extractor
-1. **Auditability**: Every price must trace back to signals → scores → tier → premium
+1. **Parametric ILF only**: All ILF curves must use `anchor_limit`/`curve`/`params` format
+1. **Scores are 0-100**: Individual signals; **Composite is 0-1000**: Weighted sum x 10
+1. **Auditability**: Every price must trace back to signals -> scores -> tier -> premium
+1. **Three layers run in parallel**: Risk, Exposure, Loss - same signals, different weights
+1. **Pricing uses all three outputs**: Risk Tier x Exposure Band x Loss Modifier -> Premium
+1. **Maximum tier override wins**: When multiple overrides, apply worst tier
 
-### Workflow Rules
+### score_conditions Rules
 
-1. **score_conditions can use MODIFIER action**: Applies multiplicatively to final premium (Step 6)
-1. **Direct queries can use MODIFIER action**: Via modifiers applied after base premium (Step 7)
-1. **All matching MODIFIER conditions stack**: Multiplicatively combined
-1. **Maximum tier override wins**: When multiple overrides, apply worst tier (Step 8)
-1. **Every interaction is versioned**: Full audit trail via model versions (Step 2)
-1. **MULTIPLIER method requires basis**: basis field must be in minimum_viable_input
-
-### Three-Layer Assessment Rules
-
-1. **Signals are shared infrastructure**: Same signal outputs feed all three assessment layers
-1. **Three layers run in parallel**: Risk, Exposure, Loss - not in sequence (Steps 5a/5b/5c)
-1. **Different weights per layer**: Same signals, layer-specific weighting schemes
-1. **All layers captured before pricing**: Steps 9a/9b/9c must complete before Step 10
-1. **Pricing uses all three outputs**: Risk Tier × Exposure Band × Loss Modifier → Premium
-
-### Loss Correlation Layer Rules (Phase 16)
-
-1. **Loss propensity has caps/floors**: Pricing impact bounded to prevent extreme adjustments
-1. **Cohorts are signal-derived**: Not industry codes - behavioral patterns define peer groups
-1. **Correlation direction matters**: Negative correlations inverted before scoring
-1. **Confidence gates pricing**: Low confidence prevents automatic pricing adjustments
-1. **Deterioration triggers action**: Trend monitoring is continuous, not just at renewal
-
-### Exposure Shadow Layer Rules (Phase 17)
-
-1. **Proxy tier determines confidence**: Direct observable > inferred > cohort > unknown
-1. **Output ranges, not points**: Acknowledge uncertainty with bounded estimates
-1. **High exposure + low confidence = referral**: Prevent auto-pricing uncertain large risks
-1. **Complexity multiplies exposure**: More complex structures require higher pricing adjustment
-
-### Pricing Transparency Rules (Phase A)
-
-1. **Uncapped premium captured**: Pre-guardrail premium stored for audit trail (`uncapped_premium` field)
-1. **ILF is transparent**: Each limit option stores discrete `ilf_factor` and `deductible_factor` via `LimitPremiumDetail`
-1. **Modifiers are categorized**: Each modifier tracked with before/after premium impact
-1. **Tier margins provided**: Distance to adjacent tier boundaries and percentile within tier available
-1. **Parametric ILF only**: Table-based ILF removed — all curves must be parametric (5 curve types)
-
-### ROL Engine Rules (Phase C)
-
-1. **ROL validates pricing**: ROL curve validator replaces PremiumValidator — per-coverage appetite bands
-1. **Dual recommendations**: Upper (best value) and lower (minimum adequate) limits recommended by ROL analysis
-1. **Re-pricing without re-scoring**: Limit re-calculation method allows different limit selection without full workflow re-run
-1. **ConfigHealthGate uses ROL**: Boot-time config validation uses ROL validator, not PremiumValidator
-
-### Tower & Subscription Rules (Phase E)
-
-1. **ILF curves are cumulative**: Tower layer pricing = `ILF(A+L) - ILF(A)` — no new curve types needed
-1. **Order is the pricing unit**: ROL, ILF, and premium all apply at the 100% order level
-1. **Line is the allocation unit**: Insurer books `signed_line × order_premium × lead_loading`
-1. **Lead commands loading**: Lead insurer receives configurable loading factor; follow at par
-1. **Bespoke towers supported**: Arbitrary attachment/limit combinations — no standard structure required
-1. **Tower validation**: Layers ordered by attachment, non-overlapping, ILF curves cover full range
-1. **Ground-up unchanged**: TOWER and SUBSCRIPTION are additive — existing BUNDLED/DECOUPLED paths unchanged
-1. **Tower + subscription compose**: Multi-layer order with partial line on selected layers
-
------
-
-## Outstanding Work
-
-This section consolidates all pending, optional, and planned work items. Completed items are tracked in their respective phase documents.
-
-### V3 Active Development Plan
-
-The current development plan is defined in `development/project/version/active/`. See `development/project/version/active/README.md` for dependency graph.
-
-| Phase | Name | Status | Priority | Notes |
-|-|-|-|-|-|
-| V3-1 | Test Suite Recovery | 🔲 Not Started | Critical | Fix import paths in test files, add type aliases |
-| V3-2 | Continuous Monitoring Pipeline | 🔲 Not Started | High | TTL-based refresh, delta detection, alert pipeline |
-| V3-3 | LLM Integration for Builder | 🔲 Not Started | Medium | Enhanced LLM prompts for coverage building |
-| V3-4 | Production Signal Extractors | 🔲 Not Started | Medium | Real API integrations (free: security headers, TLS, DNS) |
-| V3-5 | Simulation Engine Foundation | 🔲 Not Started | Medium | Graph snapshots, counterfactual analysis |
-| V3-6 | Release v1.0.0 | 🔲 Not Started | High | Clean baseline for external demonstration |
-
-**V3-1 Blocking Issues (Est. 3-4 hours to fix)**:
-- Import path mismatches: `from analytics import ...` → `from infrastructure.analytics import ...`
-- Type naming: Tests expect `SignalConfig` (use `SignalGroupConfig`)
-- Missing routing bridge implementations
-
-### Phase V4: Multi-Configuration Multiplexer - COMPLETE ✅
-
-**Documentation**: `development/project/version/active/phase_v4.md`
-
-**Purpose**: Implement a "Race-Track" model for intra-coverage configuration selection. Instead of picking one configuration upfront, run all valid candidates using shared signal data and algorithmically select the winner.
-
-**Key Deliverables**:
-| Component | Description | Status |
-|-|-|-|
-| `DSIMultiplexer` | Signal broker - unions signal requirements, deduplicates, parallel execution | ✅ Complete |
-| `ConfigArbiter` | Ranks outcomes by validity → confidence → specificity → margin | ✅ Complete |
-| Schema: `model_specificity` | Specificity score (1-5) for arbiter ranking | ✅ Complete |
-| Schema: `routing_constraints` | Hard filters before signal execution (revenue, TIV thresholds) | ✅ Complete |
-| `signal_completeness` metric | % signals returned non-null, prevents phantom approvals | ✅ Complete |
-| `MultiplexedWorkflow` | Integration with MultiCoverageOrchestrator | ✅ Complete |
-| Unit tests | 16 tests covering broker, arbiter, constraints, integration | ✅ Complete |
-
-**Files Created**:
-- `signal_architecture/multiplexer/types.py` - Data structures
-- `signal_architecture/multiplexer/broker.py` - DSIMultiplexer class
-- `signal_architecture/multiplexer/arbiter.py` - ConfigArbiter class
-- `signal_architecture/multiplexer/integration.py` - Orchestrator integration
-- `signal_architecture/multiplexer/__init__.py` - Module exports
-- `tests/unit/test_multiplexer.py` - 16 unit tests (all passing)
-
-**Schema Updates**:
-- `coverages/master_config_layout.yaml` v2.1 - Added multiplexer schema and documentation
-- `coverages/cyber/config.yaml` v2.2.0 - Added model_specificity: 1, routing_constraints: []
-
-**Relationship to Phase 10 (Multi-Coverage Orchestrator)**:
-- Phase 10: Inter-coverage (Cyber + D&O + PI for same client)
-- Phase V4: Intra-coverage (Cyber General vs Cyber Tech vs Cyber SME)
-- These are complementary layers that can be composed via `create_multiplexed_workflow_factory()`
+1. **Applies to:** signal_registry signals and groups ONLY (NOT tier bands)
+1. **MODIFIER:** ALL matching conditions apply multiplicatively
+1. **FLAG:** ALL matching conditions captured
+1. **REFER:** FIRST matching triggers referral
+1. **Required fields:** MODIFIER needs `applied`, FLAG needs `note`, REFER optionally takes `override`
 
 ### Coverage Expansion Pipeline
 
-**Purpose**: Efficiently generate multiple sub-configurations when expanding an existing coverage line (e.g., energy → 12 segment-specific configs, PI → 13 profession-specific configs). This replaces the manual process of transcribing phase docs into config YAML and signal code.
+When expanding a coverage line with new sub-configurations:
 
-**When to use**: Any phase that expands an existing coverage line with multiple new sub-configurations. This is the standard workflow for coverage expansion phases.
+1. **Author** expansion spec YAML (see `development/project/version/4/phase_6_spec.yaml`)
+2. **Dry-run**: `python -m infrastructure.builder.cli expand --spec <path> --dry-run`
+3. **Execute**: `python -m infrastructure.builder.cli expand --spec <path> --existing-config coverages/<cov>/config.yaml --write`
+4. **Calibrate**: `python -m layers.risk.calibration_harness <coverage>` - all configs must pass (<15% guardrail hit rate)
+5. **Regenerate docs**: `python coverages/doc_generator.py`
+6. **Update seed script**: Add company entries and signal profiles to `seed_dsi_bench.py`
 
-**When NOT to use**: Use the original `CoverageBuilder` (`build` command) when creating an entirely new coverage line from scratch.
+Spec schema: `infrastructure/builder/expansion_types.py`
+Generator: `infrastructure/builder/expansion_generator.py`
+Full docs: `infrastructure/builder/README.md`
 
-**Workflow**:
+### Commercial Terms & Risk Terms
 
-1. **Author the expansion spec** (`phase_N_spec.yaml`):
-   - Structured YAML format — typically 200-400 lines per config
-   - Defines: new signal groups, signals, per-config routing/weights/pricing/queries
-   - See `development/project/version/4/phase_6_spec.yaml` as reference
-   - Companion doc template: `development/project/templates/expansion_companion.md`
+Commercial entity economics (FX, commission, taxes, distribution) are defined in `commercial/entities/` as YAML files. The `PremiumAssembler` (`layers/risk/premium_assembly.py`) transforms technical premium into gross/offered premium.
 
-2. **Run the generator**:
-   ```bash
-   # Preview (no files written)
-   python -m infrastructure.builder.cli expand \
-       --spec development/project/version/4/phase_6_spec.yaml
+DB tables: `commercial_terms` and `risk_terms` (migration 007).
+Schema: `infrastructure/models/commercial_schema.py`
+API routes: `infrastructure/api/routes/commercial.py`
 
-   # Generate and write files
-   python -m infrastructure.builder.cli expand \
-       --spec development/project/version/4/phase_6_spec.yaml \
-       --existing-config coverages/pi/config.yaml \
-       --write
-   ```
+---
 
-3. **Review generated output**:
-   - Config YAML: appended to existing `config.yaml`
-   - Extractor stubs: `signal_architecture/signals/extractors/stubs/{coverage}/`
-   - Aggregator stubs: `signal_architecture/signals/aggregators/implementations/{coverage}/`
-   - Inference functions: `signal_architecture/signals/inference/functions/{coverage}/`
-
-4. **Post-generation**:
-   - Validate: `python -m infrastructure.builder.cli validate coverages/{coverage}/config.yaml`
-   - Regenerate docs: `python coverages/doc_generator.py`
-   - Update `__init__.py` files to register new extractors/aggregators/functions
-   - Run project assessment: `python development/project/assessments/scripts/assess_project.py`
-
-**Expansion Spec Schema** (`expansion_types.py`):
-- `ExpansionSpec`: Top-level container (coverage_line, phase, defaults, signal groups, configurations)
-- `SignalGroupSpec`: New signal group with its signals
-- `SignalSpec`: Signal definition (id, proxy_tier, three-layer weights or categories)
-- `ConfigurationSpec`: Per-config routing, group weights, pricing, direct queries, tier bands
-
-**Key design decisions**:
-- Spec is the authoritative input; prose companion doc provides strategic rationale
-- Shared defaults reduce repetition (product_types, markets, tier band structure)
-- Per-config overrides for pricing, tier rates, limit configuration, ILF curves
-- Generator validates group weight sums (~1.0) before generating
-
-**Files**:
-- `infrastructure/builder/expansion_types.py` — Spec schema and data types
-- `infrastructure/builder/expansion_generator.py` — Generation engine (config YAML + signal code)
-- `infrastructure/builder/cli.py` — `expand` command
-- `development/project/templates/expansion_companion.md` — Companion doc template
-
-### Pending Items
-
-| Item | Phase | Priority | Notes |
-|-|-|-|-|
-| Fix test import paths | V3-1 | Critical | 10 test files with wrong import paths |
-| Increase unit test coverage | V3-1 | High | Target 80%, currently ~17% |
-| Compile Rust dsi_core wheel | P7 | Medium | Run `maturin develop` to activate Rust speedups |
-| Implement paid extractors (Shodan, VirusTotal, D&B) | V3-4 | Low | See `development/extractor_implementation_plan.md` |
-| Tag v1.0.0 release | V3-6 | Medium | After V3-1 test fixes complete |
-| Author phase_7_spec.yaml | F1 | Medium | Convert `phase_7.md` prose to expansion spec YAML |
-| Execute Phase 6 PI expansion | F2 | Medium | 11 new PI sub-configurations via expansion pipeline |
-| Execute Phase 7 Cyber expansion | F3 | Medium | 10 new Cyber sub-configurations |
-| Validate expanded configs | F4 | Medium | All expanded configs must pass ConfigHealthGate + ROL validator |
-
-### Optional Enhancements
-
-| Item | Phase | Description |
-|-|-|-|
-| ML module | 8 | Gradient boosting, anomaly detection, clustering |
-| Performance dashboards | 8 | Visualization of model performance |
-| Natural language search | 9 | Query portfolio with natural language |
-| Visualization components | 9 | Interactive charts and dashboards |
-| LLM prompts | 13 | Prompt templates for LLM-assisted coverage building |
-
-### Signal Enhancement Recommendations
-
-Based on retrospective analysis of major insurance losses (2019-2024). See `development/` for full analysis.
-
-| Priority | Area | Description | Reference |
-|-|-|-|-|
-| 1 | Marine | Port state control deficiencies, pre-departure systems status | Baltimore/Dali analysis |
-| 2 | Aerospace | Certification transparency, supply chain quality | Boeing 737 MAX analysis |
-| 3 | Cross-Coverage | Real-time regulatory monitoring | SVB, BP Deepwater analysis |
-
-### Inference Functions Reference
-
-All inference functions follow the pattern `{signal_name}_basefunction` and are registered via `@register_inference_function()` decorator.
-
-**Source Locations by Coverage:**
-
-| Coverage | Source File | Functions |
-|-|-|-|
-| Aerospace | `signal_architecture/signals/inference/functions/aerospace/signals.py` | 40+ |
-| Cyber | `signal_architecture/signals/inference/functions/cyber/signals.py` | 50+ |
-| D&O | `signal_architecture/signals/inference/functions/do/signals.py` | 48 |
-| Energy | `signal_architecture/signals/inference/functions/energy/signals.py` | 45+ |
-| FI | `signal_architecture/signals/inference/functions/fi/signals.py` | 50+ |
-| Marine | `signal_architecture/signals/inference/functions/marine/signals.py` | 50+ |
-| PI | `signal_architecture/signals/inference/functions/pi/signals.py` | 60+ |
-| Cross-coverage | `signal_architecture/signals/inference/functions/cross_coverage/signals.py` | Shared |
-
-**Infrastructure:**
-- **Registry**: `signal_architecture/signals/inference/registry.py` - `register_inference_function()`, `get_inference_function()`, `list_inference_functions()`
-- **Metadata**: `signal_architecture/signals/inference/metadata_registry.py` - Signal metadata with proxy tiers, TTLs, extractors
-
-### Reference Documents
+## Key Reference Documents
 
 | Document | Location | Purpose |
 |-|-|-|
-| Historical Loss Analysis | `development/historical_loss_analysis.md` | Case-by-case DSI signal mapping |
-| Signal Mapping | `development/signal_mapping_to_historical_loss.md` | Technical signal path specifications |
-| Retrospective Case Studies | `development/retrospective_case_study_detail.md` | Comprehensive loss analysis |
-| Client Assessment Samples | `development/client_assessment_samples.md` | Real-world assessment examples |
-| Completeness Assessment | `development/project/version/active/completeness_assessment.md` | Whitepaper/Vision paper delivery status |
+| Foundational Principles | `docs/overview/Foundational Principles.md` | Core DSI principles (must follow) |
+| Config Schema | `coverages/master_config_layout.yaml` | YAML config structure reference |
+| Builder README | `infrastructure/builder/README.md` | Coverage expansion pipeline docs |
+| Extractor Plan | `development/extractor_implementation_plan.md` | Stub-to-production conversion roadmap |
+| Coverage Logic | `coverages/<cov>/logic.md` | Auto-generated config documentation |
+| Phase Plans | `development/project/version/` | Detailed phase development docs |
+
+---
+
+## Seed Script
+
+`seed_dsi_bench.py` seeds the database with realistic end-to-end data covering every coverage, configuration, tier, and decision path. Uses production workflow components (ModelScorer, ModelPricer, QueryEvaluator) for all calculations.
+
+Run: `python seed_dsi_bench.py`

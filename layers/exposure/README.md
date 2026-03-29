@@ -4,8 +4,8 @@
 
 | Item | Value |
 |-|-|
-|Version|0.1.0|
-|Date|January 2025|
+|Version|0.4.0|
+|Date|March 2026|
 |Classification|exposure|
 
 ---
@@ -72,4 +72,4 @@ exposure/
 ## References
 
 - **SKILL.md** - Architecture documentation
-- **technical_pricing/model/exposure.py** - Implementation
+- **layers/exposure/** - Implementation

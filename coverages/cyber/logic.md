@@ -1,5 +1,5 @@
 # DSI Logic Document: `CYBER`
-*Generated: 2026-03-06*
+*Generated: 2026-03-29*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -67,13 +67,13 @@ This configuration contains **44 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base � Rate) � ILF_relativity � Deductible_Factor � Modifiers*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
 
-**1. The Pricing Anchor:** The Base Rate of `0.25%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$50,000` Deductible.
+**1. The Pricing Anchor:** The Base Rate of `0.008%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$50,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `revenue` = $10,000,000
-  - Base Premium = $10,000,000 � 0.0025 = **$25,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$25,000**.
+  - Base Premium = $10,000,000 × 8e-05 = **$800**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$800**.
 
 ---
 
@@ -129,10 +129,596 @@ This configuration contains **15 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base � Rate) � ILF_relativity � Deductible_Factor � Modifiers*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$4,000` purchases exactly the `$1,000,000` Limit / `$5,000` Deductible Base Package.
 **2. Theoretical Execution:**
   - Technical Premium = **$4,000**
   - *Scaling relies entirely on selecting a different Limit ID from the Bundled limit_configuration packages.*
+
+---
+
+## Model: `cyber_healthcare`
+*Health systems, hospitals, pharma, health tech*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector == HEALTHCARE`
+- `revenue > 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Health Data Security | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.20 | 0.20 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.05 | 0.10 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **6 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (4 signals): Medium confidence
+
+**Signal Count by Group:**
+- `health_data_security`: 6 signals
+
+**Selection Rationale:**
+- 33% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Health Data Security | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Public Record | 0.55 | 0.20 | 0.20 | 0.15 |
+| 3 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 5 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Security Posture | 0.30 | 0.05 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Health Data Security` with combined weight of 0.80
+**Secondary Driver:** `Public Record` with combined weight of 0.55
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.3%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.003 = **$30,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$30,000**.
+
+---
+
+## Model: `cyber_financial_services`
+*Banks, insurers, payment processors, fintech*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector == FINANCIAL_SERVICES`
+- `revenue > 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Financial System Security | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.20 | 0.20 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.05 | 0.10 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **6 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (4 signals): Medium confidence
+
+**Signal Count by Group:**
+- `financial_system_security`: 6 signals
+
+**Selection Rationale:**
+- 33% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Financial System Security | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Public Record | 0.55 | 0.20 | 0.20 | 0.15 |
+| 3 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 5 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Security Posture | 0.30 | 0.05 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Financial System Security` with combined weight of 0.80
+**Secondary Driver:** `Public Record` with combined weight of 0.55
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.27999999999999997%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0028 = **$28,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$28,000**.
+
+---
+
+## Model: `cyber_critical_infrastructure`
+*Utilities, telecom, water, transportation*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['UTILITIES', 'TELECOM', 'WATER', 'TRANSPORTATION']`
+- `revenue > 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| OT/ICS Security | 0.35 | 0.35 | 0.25 |
+| Network Authority | 0.05 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.15 | 0.15 | 0.10 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.10 | 0.10 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
+- `INFERRED_PROXY` (4 signals): Medium confidence
+
+**Signal Count by Group:**
+- `ot_ics_security`: 5 signals
+
+**Selection Rationale:**
+- 20% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | OT/ICS Security | 0.95 | 0.35 | 0.35 | 0.25 |
+| 2 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 3 | Public Record | 0.40 | 0.15 | 0.15 | 0.10 |
+| 4 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 5 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Security Posture | 0.35 | 0.10 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `OT/ICS Security` with combined weight of 0.95
+**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.45
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.35000000000000003%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0035 = **$35,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$35,000**.
+
+---
+
+## Model: `cyber_technology`
+*SaaS, software vendors, MSPs, IT services*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['TECHNOLOGY', 'SOFTWARE', 'IT_SERVICES', 'MSP']`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Product & Supply Chain Security | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.15 | 0.15 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **6 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `INFERRED_PROXY` (6 signals): Medium confidence
+
+**Signal Count by Group:**
+- `product_supply_chain_security`: 6 signals
+
+**Selection Rationale:**
+- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Product & Supply Chain Security | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 3 | Public Record | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Security Posture | 0.40 | 0.10 | 0.15 | 0.15 |
+| 5 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Product & Supply Chain Security` with combined weight of 0.80
+**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.45
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.32%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0032 = **$32,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$32,000**.
+
+---
+
+## Model: `cyber_digital_platform`
+*Marketplaces, social media, adtech, media platforms*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['DIGITAL_PLATFORM', 'MEDIA', 'ADTECH', 'SOCIAL']`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Platform User Security | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.15 | 0.15 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **6 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `INFERRED_PROXY` (6 signals): Medium confidence
+
+**Signal Count by Group:**
+- `platform_user_security`: 6 signals
+
+**Selection Rationale:**
+- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Platform User Security | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 3 | Public Record | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Security Posture | 0.40 | 0.10 | 0.15 | 0.15 |
+| 5 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Platform User Security` with combined weight of 0.80
+**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.45
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.25%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0025 = **$25,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$25,000**.
+
+---
+
+## Model: `cyber_manufacturing`
+*Manufacturing with OT/IT convergence risk*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['MANUFACTURING', 'INDUSTRIAL']`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Manufacturing Operations Security | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.15 | 0.15 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `INFERRED_PROXY` (5 signals): Medium confidence
+
+**Signal Count by Group:**
+- `manufacturing_operations_security`: 5 signals
+
+**Selection Rationale:**
+- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Manufacturing Operations Security | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 3 | Public Record | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Security Posture | 0.40 | 0.10 | 0.15 | 0.15 |
+| 5 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Manufacturing Operations Security` with combined weight of 0.80
+**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.45
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.3%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.003 = **$30,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$30,000**.
+
+---
+
+## Model: `cyber_retail`
+*Retail, e-commerce, hospitality*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['RETAIL', 'ECOMMERCE', 'HOSPITALITY']`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Retail Operations Security | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.15 | 0.15 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **6 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
+
+**Signal Count by Group:**
+- `retail_operations_security`: 6 signals
+
+**Selection Rationale:**
+- 17% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Retail Operations Security | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 3 | Public Record | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Security Posture | 0.40 | 0.10 | 0.15 | 0.15 |
+| 5 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Retail Operations Security` with combined weight of 0.80
+**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.45
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.22%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0022 = **$22,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$22,000**.
+
+---
+
+## Model: `cyber_public_sector`
+*Government, education, nonprofits*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['GOVERNMENT', 'EDUCATION', 'NONPROFIT']`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Public Sector Cyber Posture | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.15 | 0.15 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **6 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
+
+**Signal Count by Group:**
+- `public_sector_cyber_posture`: 6 signals
+
+**Selection Rationale:**
+- 17% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Public Sector Cyber Posture | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 3 | Public Record | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Security Posture | 0.40 | 0.10 | 0.15 | 0.15 |
+| 5 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Public Sector Cyber Posture` with combined weight of 0.80
+**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.45
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.18%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0018 = **$18,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$18,000**.
+
+---
+
+## Model: `cyber_professional_services`
+*Law firms, consultancies, accounting firms*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['LEGAL', 'CONSULTING', 'ACCOUNTING']`
+- `revenue > 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Professional Data Security | 0.30 | 0.30 | 0.20 |
+| Network Authority | 0.10 | 0.05 | 0.05 |
+| Technical Infrastructure | 0.15 | 0.15 | 0.15 |
+| Public Record | 0.15 | 0.15 | 0.15 |
+| Structured Data | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.10 | 0.10 | 0.15 |
+| Security Posture | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **6 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
+
+**Signal Count by Group:**
+- `professional_data_security`: 6 signals
+
+**Selection Rationale:**
+- 17% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Professional Data Security | 0.80 | 0.30 | 0.30 | 0.20 |
+| 2 | Technical Infrastructure | 0.45 | 0.15 | 0.15 | 0.15 |
+| 3 | Public Record | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Security Posture | 0.40 | 0.10 | 0.15 | 0.15 |
+| 5 | Structured Data | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Corporate Footprint | 0.35 | 0.10 | 0.10 | 0.15 |
+| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `Professional Data Security` with combined weight of 0.80
+**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.45
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.22%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0022 = **$22,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$22,000**.
 
