@@ -4831,7 +4831,7 @@ def seed_data(
 
             quote = Quote(
                 id=quote_id,
-                quote_code=f"Q-{(co['ticker'] or co['entity_name'][:4]).upper().replace(' ', '')}-{_hex(4)}",
+                quote_code=f"Q-{(co['ticker'] or co['entity_name'][:4]).upper().replace(' ', '')}-{_hex(8)}",
                 submission_id=sub_id,
                 model_version_id=mv_id,
                 status=quote_status,
