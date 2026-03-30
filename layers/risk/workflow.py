@@ -483,6 +483,7 @@ class WorkflowEngine:
             categorical_outputs=scoring_result.categorical_outputs,
             group_scores=scoring_result.group_scores,
             pure_composite_score=scoring_result.pure_composite_score,
+            final_composite_score=pricing_result.final_composite_score,
             signal_conditions=scoring_result.conditions_triggered,
             query_conditions=query_result.conditions_triggered,
             tier_overrides=pricing_result.tier_overrides_considered,

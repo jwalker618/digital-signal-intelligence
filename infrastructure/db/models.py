@@ -282,6 +282,7 @@ class ModelVersionRecord(Base):
 
     # Scoring
     pure_composite_score = Column(Float)
+    final_composite_score = Column(Float)    # Score used for tier margin / distance calculations
     confidence = Column(Float)
     signal_coverage = Column(Float)
 

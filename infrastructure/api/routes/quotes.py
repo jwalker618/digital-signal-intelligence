@@ -260,6 +260,7 @@ async def select_limit_option(
         # Scoring (carry forward)
         group_scores=old_model.group_scores,
         pure_composite_score=old_model.pure_composite_score,
+        final_composite_score=old_model.final_composite_score,
         confidence=old_model.confidence,
         signal_coverage=old_model.signal_coverage,
         score_based_tier=old_model.score_based_tier,

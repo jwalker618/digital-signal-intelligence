@@ -465,6 +465,7 @@ class ModelVersionDBRecord(BaseModel):
     categorical_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     group_scores: Optional[Dict[str, Any]] = None
     pure_composite_score: Optional[float] = None
+    final_composite_score: Optional[float] = None
     confidence: Optional[float] = None
     signal_coverage: Optional[float] = None
     signal_conditions: List[Dict[str, Any]] = Field(default_factory=list)
@@ -582,6 +583,7 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
     coverage: Optional[str] = None
     configuration_name: Optional[str] = None
     pure_composite_score: Optional[float] = None
+    final_composite_score: Optional[float] = None
     confidence: Optional[float] = None
     signal_coverage: Optional[float] = None
     signal_conditions: List[Dict[str, Any]] = Field(default_factory=list)
