@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
-  Target, Activity, Paperclip, AlertTriangle, ShieldAlert,
+  Target, Activity, Paperclip, AlertTriangle, ShieldAlert, Glasses,
   Gauge, Layers, ChevronDown, ChevronRight, MessageSquare, ArrowUp
 } from "lucide-react";
 import { formatNum } from "@/lib/format";
@@ -199,31 +199,36 @@ export default function RiskTab() {
       {/* KPIs */}
       <div className="flex flex-col pt-2 pb-2">
         <div className="flex items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
-          <Target className="icon"/><span className="text-sm">Risk Assessment Results</span>
+          <Glasses className="icon"/><span className="text-sm">Results</span>
         </div>
         <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 pl-dsi-pad pr-dsi-pad">
+            
             <div>
-              <span className="opacity-70 block text-xs mb-1">Score-Based Tier</span>
-              <span className="font-bold text-lg text-dsi-selected">Tier {activeVersion.score_based_tier || activeVersion.final_tier}</span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Final Tier</span>
-              <span className="font-bold text-lg text-dsi-selected">Tier {activeVersion.final_tier}</span>
-              <span className="block text-[10px] opacity-40 uppercase">{activeVersion.tier_label}</span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Composite Score</span>
+              <span className="block text-sm mb-1">Pure Composite Score</span>
               <span className="font-bold text-xl">{formatNum(activeVersion.pure_composite_score, 1)}</span>
-            </div>
+            </div>  
+
             <div>
-              <span className="opacity-70 block text-xs mb-1">Confidence</span>
+              <span className="block text-sm mb-1">Confidence</span>
               <span className="font-bold text-lg">{((activeVersion.confidence || 0) * 100).toFixed(0)}%</span>
             </div>
+
             <div>
-              <span className="opacity-70 block text-xs mb-1">Signal Coverage</span>
+              <span className="block text-sm mb-1">Signal Coverage</span>
               <span className="font-bold text-lg">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span>
             </div>
+
+            <div>
+              <span className="block text-sm mb-1">Pure Score-Based Tier</span>
+              <span className="font-bold text-lg">T{activeVersion.score_based_tier}</span>
+            </div>
+
+            <div>
+              <span className="block text-sm mb-1">Final Tier</span>
+              <span className="font-bold text-lg text-dsi-selected normal-case">T{activeVersion.final_tier} ({activeVersion.tier_label})</span>
+            </div>
+
           </div>
         </div>
       </div>
@@ -235,7 +240,12 @@ export default function RiskTab() {
         <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
           <Gauge className="icon"/><span className="text-sm">Tier Position & Improvement Paths</span>
         </div>
-        <div className="border-b-3 border-dsi-contrast-background overflow-x-hidden border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
+        <div className="
+          border-b-3 border-dsi-contrast-background 
+          overflow-x-hidden border-collapse rounded-b-xl 
+          bg-dsi-analysis shadow-sm 
+          pt-dsi-gap pb-4"
+          >
           {hasTierMargin ? (
             <div className="pl-dsi-pad pr-dsi-pad space-y-4">
               {/* Full tier band visualisation — shows ALL tiers with current position */}
@@ -245,25 +255,38 @@ export default function RiskTab() {
                     const isCurrent = band.tier_id === (activeVersion.score_based_tier || activeVersion.final_tier);
                     return (
                       <div key={band.tier_id} className="relative text-wrap">
-                        <div className={`h-8 rounded ${isCurrent ? 'bg-dsi-selected/20 border-2 border-dsi-selected' : 'bg-dsi-background/40 border border-dsi-outline/20'}`}>
+                        <div className={`h-dsi-gap rounded ${isCurrent ? 'bg-dsi-contrast-background/30 border-4 border-dsi-outline/50' : 'bg-dsi-contrast-background/30 border border-dsi-outline/50'}`}>
                           {/* Position marker within current tier */}
                           {isCurrent && marginPct != null && (
-                            <div className="absolute top-0 bottom-0 w-1 bg-dsi-selected rounded z-10" style={{ left: `${Math.max(2, Math.min(98, marginPct * 100))}%` }}>
-                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-dsi-selected whitespace-nowrap">
+                            <div className="
+                              absolute 
+                              top-0
+                              h-dsi-gap
+                              w-1
+                              bg-dsi-selected" 
+                              style={
+                                { left: `${Math.max(2, Math.min(98, marginPct * 100))}%` }
+                                }
+                              >
+                              <div className="
+                                absolute
+                                text-right
+                                bottom-dsi-padicon
+                                text-xs
+                                font-bold 
+                                text-dsi-selected whitespace-nowrap">
                                 {formatNum(currentScore, 0)}
                               </div>
                             </div>
                           )}
                         </div>
-                        <div className="flex justify-between mt-1 text-[9px] opacity-40">
-                          <span>{band.bands?.min ?? ''}</span>
+                        <div className="flex justify-between mt-1 text-xs">
                           <span>{band.bands?.max ?? ''}</span>
+                          <span className={`${isCurrent ? 'font-bold text-dsi-selected' : 'text-xs'}`}>T{band.tier_id} ({band.label})</span>
+                          <span>{band.bands?.min ?? ''}</span>
                         </div>
                         <div className="text-center mt-0.5">
-                          <span className={`text-[10px] font-bold ${isCurrent ? 'text-dsi-selected' : 'opacity-50'}`}>
-                            T{band.tier_id} {band.label}
-                          </span>
-                          <span className={`block text-[9px] ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-positive' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-negative' : 'text-dsi-warning'}`}>
+                          <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-positive' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-negative' : 'text-dsi-warning'}`}>
                             {band.action}
                           </span>
                         </div>
@@ -272,14 +295,48 @@ export default function RiskTab() {
                   })}
                 </div>
               </div>
+                
+                {/* Distance metrics */}
+                <div className="grid grid-cols-3">
+
+                  {/* row 1 */}
+                  <div className="text-sm">Position</div>
+                  <div></div>
+                  <div></div>                 
+
+                  {/* row 2 */}
+                  <div>Position in Current Tier</div>
+                  <div>{activeVersion.tier_margin_percentile.toFixed(3)}%</div>
+                  <div>{activeVersion.tier_margin_tier_min}</div>  
+                  <div>{activeVersion.tier_margin_tier_max}</div>
+                  <div>{activeVersion.tier_margin_distance_better}</div>
+                  <div>{activeVersion.tier_margin_distance_worse}</div>
+                  <div>{activeVersion.tier_margin_adjacent_better}</div>
+                  <div>{activeVersion.tier_margin_adjacent_worse}</div>
+
+                  {/* row 3 */}
+                  <div>To Next Tier Up</div>
+                  <div></div>
+                  <div></div>  
+
+                  {/* row 4 */}
+                  <div>To Next Tier Down</div>
+                  <div></div>
+                  <div></div>  
+
+
+                </div>
 
               {/* Distance metrics */}
               <div className="grid grid-cols-3 gap-4 text-wrap">
-                <div className="border border-dsi-outline/20 rounded-lg p-3">
-                  <span className="text-xs opacity-60 block mb-1">Position in Tier</span>
-                  <span className="font-bold text-lg">{((marginPct || 0) * 100).toFixed(0)}%</span>
+                
+                <div>
+                  <span className="text-sm">Positon</span>
+                  <span className="text-xs block mb-1">Position in Tier</span>
+                  <span className="font-bold text-lg">{((marginPct || 0)).toFixed(3)}%</span>
                   <span className="text-xs opacity-50 block">from tier floor</span>
                 </div>
+                
                 <div className="border border-dsi-outline/20 rounded-lg p-3">
                   <span className="text-xs opacity-60 block mb-1">To Better Tier</span>
                   <span className={`font-bold text-lg ${distBetter != null && distBetter < 20 ? 'text-dsi-positive' : ''}`}>
@@ -289,6 +346,7 @@ export default function RiskTab() {
                     <span className="text-xs opacity-50 block">→ Tier {activeVersion.tier_margin_adjacent_better}</span>
                   )}
                 </div>
+                
                 <div className="border border-dsi-outline/20 rounded-lg p-3">
                   <span className="text-xs opacity-60 block mb-1">To Worse Tier</span>
                   <span className={`font-bold text-lg ${distWorse != null && distWorse < 20 ? 'text-dsi-negative' : ''}`}>
@@ -298,6 +356,7 @@ export default function RiskTab() {
                     <span className="text-xs opacity-50 block">→ Tier {activeVersion.tier_margin_adjacent_worse}</span>
                   )}
                 </div>
+
               </div>
 
               {/* Paths to improve */}

@@ -10,8 +10,18 @@ import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, ReferenceLine, Label
 } from "recharts";
-import { DECISION_COLORS, getDecisionColor, tooltipStyle, CHART_GRID_COLOR, CHART_AXIS_COLOR, CHART_SUBJECT_COLOR, CHART_PEER_COLOR } from "@/lib/chartConfig";
-import { formatNum } from "@/lib/format";
+
+import { 
+  DECISION_COLORS, 
+  getDecisionColor, 
+  tooltipStyle, 
+  CHART_GRID_COLOR, 
+  CHART_AXIS_COLOR, 
+  CHART_SUBJECT_COLOR, 
+  CHART_PEER_COLOR } from "@/lib/chartConfig";
+import { 
+  formatNum 
+} from "@/lib/format";
 
 export default function LossTab() {
   const {
@@ -573,6 +583,7 @@ export default function LossTab() {
                 border-b-3 border-dsi-contrast-background
                 overflow-y-auto border-collapse
                 rounded-b-xl
+                no-scrollbar
                 bg-dsi-analysis shadow-sm
                 pt-2 pb-2
                 max-h-[400px]
