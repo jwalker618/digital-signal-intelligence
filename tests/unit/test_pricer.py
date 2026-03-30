@@ -757,9 +757,27 @@ class TestTierMargin:
         assert margin.tier_id == 4
         assert margin.tier_min == 200
         assert margin.tier_max == 399
+        # Score clamped to tier 4 band: 750 → 399 (tier max)
+        assert margin.score == 399
+        assert margin.distance_to_better_tier == 199.0  # 399 - 200
+        assert margin.distance_to_worse_tier == 0.0     # 399 - 399
 
-    def test_final_composite_score_persisted(self, pricer, sample_config):
-        """PricingResult should include final_composite_score for audit."""
+    def test_final_composite_score_clamped_on_override(self, pricer, sample_config):
+        """final_composite_score should be clamped to the final tier band."""
+        # Score 750 in tier 2, override to tier 4 (200-399) → clamped to 399
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[4],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        assert result.final_composite_score == 399
+
+    def test_final_composite_score_equals_pure_when_no_override(self, pricer, sample_config):
+        """Without overrides, final_composite_score should equal pure_composite_score."""
         result = pricer.price_submission(
             pure_composite_score=750,
             signal_tier_overrides=[],
