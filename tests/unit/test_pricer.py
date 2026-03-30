@@ -738,6 +738,39 @@ class TestTierMargin:
         assert margin.distance_to_better_tier >= 0
         assert margin.distance_to_worse_tier >= 0
 
+    def test_tier_margin_with_override_uses_final_tier_band(self, pricer, sample_config):
+        """Tier margin should reflect the final tier band, not the score-based band."""
+        # Score 750 → score_based_tier 2 (600-799), but override pushes to tier 4 (200-399)
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[4],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        assert result.score_based_tier == 2
+        assert result.final_tier == 4
+        margin = result.tier_margin
+        # Margin must be computed against tier 4 (200-399), not tier 2
+        assert margin.tier_id == 4
+        assert margin.tier_min == 200
+        assert margin.tier_max == 399
+
+    def test_final_composite_score_persisted(self, pricer, sample_config):
+        """PricingResult should include final_composite_score for audit."""
+        result = pricer.price_submission(
+            pure_composite_score=750,
+            signal_tier_overrides=[],
+            query_tier_overrides=[],
+            query_modifiers=[],
+            categorical_outputs=[],
+            submission_data={"deductible": 25000},
+            config=sample_config,
+        )
+        assert result.final_composite_score == 750
+
 
 class TestParametricOnlyILF:
     """Tests for A5: table-based ILF removal."""

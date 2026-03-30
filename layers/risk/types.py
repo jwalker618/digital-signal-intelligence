@@ -867,6 +867,7 @@ class ModelVersion:
 
     # Scoring (Step 5)
     pure_composite_score: float = 0.0
+    final_composite_score: float = 0.0  # Score used for tier margin / distance calculations
 
     # Conditions (Steps 6 & 7)
     signal_conditions: List[TriggeredCondition] = field(default_factory=list)
@@ -1080,6 +1081,7 @@ class PricingResult:
     # Step 9: Final tier
     score_based_tier: int = 3
     final_tier: int = 3
+    final_composite_score: float = 0.0  # Composite score used for tier margin (persisted for audit)
     tier_label: str = "STANDARD"
     tier_config: Optional[Any] = None  # RiskTierBand from config_schema (or legacy TierConfig)
     tier_margin: Optional[TierMarginContext] = None

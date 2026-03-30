@@ -4767,6 +4767,7 @@ def seed_data(
                 categorical_outputs=categorical_outputs_json,
                 group_scores=group_scores,
                 pure_composite_score=composite,
+                final_composite_score=composite,
                 confidence=confidence,
                 signal_coverage=signal_cov,
                 signal_conditions=signal_conditions_json,

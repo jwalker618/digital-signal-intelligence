@@ -90,9 +90,11 @@ class ModelPricer:
         # Step 9: Get final tier band
         final_tier_band = config.get_tier_band(final_tier)
 
-        # Calculate tier margin context
+        # Calculate tier margin context against the FINAL tier band so that
+        # distance / percentile columns reflect the tier actually used for
+        # pricing and decisions, not the pre-override score-based tier.
         tier_margin = self.calculate_tier_margin(
-            pure_composite_score, score_based_band, config
+            pure_composite_score, final_tier_band or score_based_band, config
         )
 
         # Step 10: Calculate base premium
@@ -214,6 +216,7 @@ class ModelPricer:
             max_tier_override=max_override,
             score_based_tier=score_based_band.id,
             final_tier=final_tier,
+            final_composite_score=pure_composite_score,
             tier_label=tier_label,
             tier_config=None,  # Deprecated: use config.get_tier_band() directly
             tier_margin=tier_margin,

@@ -384,6 +384,7 @@ async def override_signal(
 
     # Update the new model version with recalculated values
     new_model.pure_composite_score = recalc["pure_composite_score"]
+    new_model.final_composite_score = recalc["pure_composite_score"]
     new_model.group_scores = recalc["group_scores"]
     new_model.confidence = recalc["confidence"]
     new_model.signal_coverage = recalc["signal_coverage"]
