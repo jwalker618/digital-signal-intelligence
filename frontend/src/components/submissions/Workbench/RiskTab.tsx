@@ -240,12 +240,11 @@ export default function RiskTab() {
             <div className="pl-dsi-pad pr-dsi-pad space-y-4">
               {/* Full tier band visualisation — shows ALL tiers with current position */}
               <div>
-                <div className="flex items-center gap-2 mb-3">
+                <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: `repeat(${tierBands.length || 5}, 1fr)` }}>
                   {tierBands.map((band: any, idx: number) => {
                     const isCurrent = band.tier_id === (activeVersion.score_based_tier || activeVersion.final_tier);
-                    const bandWidth = band.bands ? ((band.bands.max - band.bands.min) / 1000) * 100 : 20;
                     return (
-                      <div key={band.tier_id} className="relative text-wrap" style={{ width: `${bandWidth}%` }}>
+                      <div key={band.tier_id} className="relative text-wrap">
                         <div className={`h-8 rounded ${isCurrent ? 'bg-dsi-selected/20 border-2 border-dsi-selected' : 'bg-dsi-background/40 border border-dsi-outline/20'}`}>
                           {/* Position marker within current tier */}
                           {isCurrent && marginPct != null && (
