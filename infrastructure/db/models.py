@@ -602,6 +602,7 @@ class CommercialTermsRecord(Base):
     __tablename__ = "commercial_terms"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
     model_version_id = Column(
         UUID(as_uuid=True),
         ForeignKey("model_versions.id"),
@@ -701,9 +702,10 @@ class RiskTermsRecord(Base):
     __tablename__ = "risk_terms"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    commercial_terms_id = Column(
+
+    model_version_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("commercial_terms.id"),
+        ForeignKey("model_versions.id"),
         nullable=False,
         index=True,
     )
@@ -749,4 +751,5 @@ class RiskTermsRecord(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    commercial_terms = relationship("CommercialTermsRecord", backref="risk_terms")
+    model_version = relationship("ModelVersionRecord", backref="risk_terms")
+

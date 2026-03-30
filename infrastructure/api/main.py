@@ -380,6 +380,8 @@ async def api_info():
             "frontend": "/api/v1/frontend",
             "simulate": "/api/v1/simulate",
             "modelversion": "/api/v1/modelversion",
+            "commercialterms": "/api/v1/commercialterms",
+            "riskterms": "/api/v1/riskterms",
             "signals": "/api/v1/signals",
             "health": "/api/v1/health",
         },
@@ -396,7 +398,7 @@ async def api_info():
 # =============================================================================
 
 # Import routers after app is created to avoid circular imports
-from .routes import submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals, commercial
+from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals
 
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
@@ -406,7 +408,8 @@ app.include_router(simulate.router, prefix="/api/v1", tags=["Simulate"])
 app.include_router(frontend.router, prefix="/api/v1", tags=["Frontend"])
 app.include_router(modelversion.router, prefix="/api/v1", tags=["ModelVersion"])
 app.include_router(signals.router, prefix="/api/v1", tags=["Signals"])
-app.include_router(commercial.router, prefix="/api/v1", tags=["Commercial"])
+app.include_router(commercialterms.router, prefix="/api/v1", tags=["Commercialterms"])
+app.include_router(riskterms.router, prefix="/api/v1", tags=["Riskterms"])
 
 # =============================================================================
 # METRICS ENDPOINT

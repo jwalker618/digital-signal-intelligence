@@ -150,7 +150,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                             }`}
                           >
                             <LayoutDashboard className="icon shrink-0" />
-                            <span className="truncate">Summary</span>
+                            <span className="truncate font-semibold tracking-wider normal-case">Summary</span>
                           </button>
                         </li>
 
@@ -201,7 +201,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                             >
                               <div className="flex items-center gap-3">
                                 <group.icon className="icon shrink-0" />
-                                <span className="truncate font-semibold tracking-wider text-xs uppercase">{group.category}</span>
+                                <span className="truncate font-semibold tracking-wider normal-case">{group.category}</span>
                               </div>
                               {expandedCategories[group.category] ? (
                                 <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />

@@ -4296,7 +4296,7 @@ def build_commercial_terms(
 
     rt = RiskTermsRecord(
         id=_uid(),
-        commercial_terms_id=ct.id,
+        model_version_id=mv_id,
         deductible_type=ded_type,
         deductible_amount=float(deductible),
         deductible_currency=entity.base_currency,

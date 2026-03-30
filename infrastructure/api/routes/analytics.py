@@ -145,7 +145,7 @@ async def get_loss_scatter_data(
     
     query = (
         select(
-            ModelVersionRecord.version_id,
+            ModelVersionRecord.id,
             ModelVersionRecord.loss_propensity_score.label("x_propensity"),
             ModelVersionRecord.severity_propensity_score.label("y_severity"),
             ModelVersionRecord.decision

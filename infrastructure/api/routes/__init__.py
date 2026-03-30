@@ -12,6 +12,8 @@ from . import frontend
 from . import simulate
 from . import modelversion
 from . import signals
+from . import commercialterms
+from . import riskterms
 
 __all__ = [
     "submissions",
@@ -21,5 +23,7 @@ __all__ = [
     "frontend",
     "simulate",
     "modelversion",
+    "commercialterms",
+    "riskterms",
     "signals",
 ]

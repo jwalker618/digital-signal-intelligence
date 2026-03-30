@@ -193,8 +193,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       const safeFetch = (url: string) => fetch(url).then(res => res.ok ? res.json() : null).catch(() => null);
 
       const [commercialData, riskData] = await Promise.all([
-        safeFetch(`${API_BASE}/api/v1/commercial/${versionCode}`),
-        safeFetch(`${API_BASE}/api/v1/commercial/${versionCode}/risk-terms`),
+        safeFetch(`${API_BASE}/api/v1/commercialterms/${versionCode}`),
+        safeFetch(`${API_BASE}/api/v1/riskterms/${versionCode}`),
       ]);
 
       set({

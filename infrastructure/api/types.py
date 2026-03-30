@@ -786,14 +786,8 @@ class AuditLogRecord(BaseModel):
     created_at: datetime
 
 
-# =============================================================================
-# COMMERCIAL TERMS
-# =============================================================================
-
-@maps_to(CommercialTermsRecord, exclude=["id", "offered_premium_set_by"])
+@maps_to(CommercialTermsRecord, exclude=["id", "model_version_id", "offered_premium_set_by"])
 class CommercialTermsDBRecord(BaseModel):
-    """Full commercial terms projection for API responses."""
-    model_version_id: str
     entity_id: str
     entity_name: Optional[str] = None
     entity_market: Optional[str] = None
@@ -826,39 +820,8 @@ class CommercialTermsDBRecord(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-
-class OfferedPremiumRequest(BaseModel):
-    """Request to set/update the offered premium on commercial terms."""
-    offered_premium: float = Field(gt=0, description="Offered premium amount")
-    offered_premium_rationale: Optional[str] = Field(
-        default=None, description="Rationale for the premium adjustment"
-    )
-
-
-class OfferedPremiumResponse(BaseModel):
-    """Response after setting offered premium."""
-    commercial_terms_id: str
-    offered_premium: float
-    offered_premium_discretion: float
-    gross_premium: float
-    offered_premium_rationale: Optional[str] = None
-    offered_premium_set_at: datetime
-
-
-class EarnedPeriodRequest(BaseModel):
-    """Request to set the earned period on commercial terms."""
-    written_date: Optional[datetime] = None
-    earned_start: datetime
-    earned_end: datetime
-    earned_method: str = Field(
-        default="pro_rata",
-        description="Earning method: pro_rata, risks_attaching, losses_occurring"
-    )
-
-
-@maps_to(RiskTermsRecord, exclude=["id", "commercial_terms_id"])
+@maps_to(RiskTermsRecord, exclude=["id", "model_version_id"])
 class RiskTermsDBRecord(BaseModel):
-    """Risk terms projection for API responses."""
     deductible_type: Optional[str] = None
     deductible_amount: Optional[float] = None
     deductible_currency: str = "USD"
