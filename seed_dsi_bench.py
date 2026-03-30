@@ -3507,6 +3507,10 @@ def build_tier_margin(composite, final_tier, config):
 
     Computes percentile within current tier, distances to adjacent tier
     boundaries, and adjacent tier IDs — same as pricer.calculate_tier_margin().
+
+    The composite is clamped into the final tier band so that distances stay
+    coherent when tier overrides push the final tier beyond the score-based
+    band.  Returns both the clamped final_composite_score and the margin dict.
     """
     bands = config.risk_tier_bands.bands
     current_band = None
@@ -3518,13 +3522,16 @@ def build_tier_margin(composite, final_tier, config):
             break
 
     if current_band is None:
-        return {}
+        return composite, {}
 
     tier_min = current_band.interpretation.bands.min
     tier_max = current_band.interpretation.bands.max
+
+    # Clamp into the final tier band (override may place score outside it)
+    clamped = max(tier_min, min(composite, tier_max))
+
     span = tier_max - tier_min
-    percentile = (composite - tier_min) / span if span > 0 else 0.5
-    percentile = max(0.0, min(1.0, percentile))
+    percentile = (clamped - tier_min) / span if span > 0 else 0.5
 
     # Adjacent tiers (lower ID = better tier)
     adjacent_better = bands[band_idx - 1].id if band_idx > 0 else None
@@ -3532,10 +3539,10 @@ def build_tier_margin(composite, final_tier, config):
 
     # Always compute distances — even at boundary tiers these show
     # headroom within the tier (e.g. 150 points from ceiling in best tier)
-    distance_better = composite - tier_min
-    distance_worse = tier_max - composite
+    distance_better = clamped - tier_min
+    distance_worse = tier_max - clamped
 
-    return {
+    return clamped, {
         "tier_margin_percentile": round(percentile, 4),
         "tier_margin_tier_min": tier_min,
         "tier_margin_tier_max": tier_max,
@@ -4733,7 +4740,7 @@ def seed_data(
                     }
 
             # --- Phase A: Tier margin context ---
-            tier_margin_kwargs = build_tier_margin(composite, final_tier, config)
+            final_composite, tier_margin_kwargs = build_tier_margin(composite, final_tier, config)
 
             # --- Phase A: Tier band config snapshot ---
             tier_band_snap = build_tier_band_interpretation(final_tier, config)
@@ -4767,7 +4774,7 @@ def seed_data(
                 categorical_outputs=categorical_outputs_json,
                 group_scores=group_scores,
                 pure_composite_score=composite,
-                final_composite_score=composite,
+                final_composite_score=final_composite,
                 confidence=confidence,
                 signal_coverage=signal_cov,
                 signal_conditions=signal_conditions_json,
@@ -4831,7 +4838,7 @@ def seed_data(
 
             quote = Quote(
                 id=quote_id,
-                quote_code=f"Q-{(co['ticker'] or co['entity_name'][:4]).upper().replace(' ', '')}-{_hex(4)}",
+                quote_code=f"Q-{(co['ticker'] or co['entity_name'][:4]).upper().replace(' ', '')}-{_hex(8)}",
                 submission_id=sub_id,
                 model_version_id=mv_id,
                 status=quote_status,
