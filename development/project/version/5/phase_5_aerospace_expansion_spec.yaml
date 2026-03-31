@@ -1,0 +1,951 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 5: Aerospace Expansion
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# EXPANSION of existing aerospace coverage (aerospace_general + aerospace_sme).
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/5/phase_5_aerospace_expansion_spec.yaml \
+#       --existing-config coverages/aerospace/config.yaml \
+#       --write
+#
+# Existing configs retained: aerospace_general (specificity 1), aerospace_sme (specificity 2)
+# Existing groups retained: operator_type, fleet_category, fleet_size,
+#                           iosa_status, regulatory_framework
+# Existing signals: 48 (general) + 22 (sme) = 70
+#
+# =============================================================================
+
+coverage_line: aerospace
+coverage_key: aerospace
+phase: phase_5
+description: "Phase 5 Aerospace Coverage Expansion — 5 new specialist configurations"
+version: "2.3.0"
+
+# =============================================================================
+# DEFAULTS
+# =============================================================================
+
+default_product_types:
+  - aviation_hull
+  - aviation_liability
+  - aviation_hull_liability_combined
+
+default_markets: [us, uk, eu, apac, latam, mea]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: aviation_hull, aviation_liability, aviation_hull_liability_combined, space_launch, space_in_orbit, satellite"
+  - field: limit
+    description: Requested limit in USD
+  - field: hull_value
+    description: Total hull/asset value in USD (MULTIPLIER basis)
+
+routing_field: aviation_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_risk_tier_bands:
+  method: MULTIPLIER
+  basis: hull_value
+  bands:
+    - {id: 1, label: PREFERRED, min: 800, max: 1000, action: APPROVE, applied: 0.0012}
+    - {id: 2, label: STANDARD_PLUS, min: 650, max: 799, action: APPROVE, applied: 0.0018}
+    - {id: 3, label: STANDARD, min: 450, max: 649, action: APPROVE, applied: 0.0030}
+    - {id: 4, label: SUBSTANDARD, min: 250, max: 449, action: REFER, applied: 0.0050}
+    - {id: 5, label: DECLINE, min: 0, max: 249, action: DECLINE, applied: 0.0080}
+
+default_loss_tier_bands:
+  floor: 0.50
+  cap: 1.8
+
+default_exposure_bands:
+  size_weight: 0.7
+  complexity_weight: 0.3
+  size_thresholds:
+    - {label: MICRO, max_value: 10000000, applied: 0.5}
+    - {label: SMALL, max_value: 50000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 250000000, applied: 1.0}
+    - {label: LARGE, max_value: 1000000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 5000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+  valid_deductibles: [50000, 100000, 250000, 500000, 1000000, 2500000, 5000000]
+
+# =============================================================================
+# DEFAULT PRICING
+# =============================================================================
+
+default_pricing:
+  base_limit_reference: 5000000
+  base_deductible_reference: 250000
+  taxes_fees_rate: 0.03
+  by_product_type:
+    - product_type: aviation_hull
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.6}
+          - {limit: 25000000, factor: 2.8}
+          - {limit: 50000000, factor: 4.2}
+          - {limit: 100000000, factor: 6.5}
+          - {limit: 250000000, factor: 11.0}
+          - {limit: 500000000, factor: 17.0}
+      deductible_factors:
+        - {deductible: 50000, factor: 1.20}
+        - {deductible: 100000, factor: 1.10}
+        - {deductible: 250000, factor: 1.0}
+        - {deductible: 500000, factor: 0.88}
+        - {deductible: 1000000, factor: 0.75}
+        - {deductible: 2500000, factor: 0.62}
+        - {deductible: 5000000, factor: 0.52}
+
+    - product_type: aviation_liability
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.7}
+          - {limit: 25000000, factor: 3.2}
+          - {limit: 50000000, factor: 5.2}
+          - {limit: 100000000, factor: 8.5}
+          - {limit: 250000000, factor: 15.0}
+          - {limit: 500000000, factor: 24.0}
+      deductible_factors:
+        - {deductible: 50000, factor: 1.20}
+        - {deductible: 100000, factor: 1.10}
+        - {deductible: 250000, factor: 1.0}
+        - {deductible: 500000, factor: 0.88}
+        - {deductible: 1000000, factor: 0.75}
+        - {deductible: 2500000, factor: 0.62}
+        - {deductible: 5000000, factor: 0.52}
+
+    - product_type: aviation_hull_liability_combined
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.65}
+          - {limit: 25000000, factor: 3.0}
+          - {limit: 50000000, factor: 4.7}
+          - {limit: 100000000, factor: 7.5}
+          - {limit: 250000000, factor: 13.0}
+          - {limit: 500000000, factor: 20.0}
+      deductible_factors:
+        - {deductible: 50000, factor: 1.20}
+        - {deductible: 100000, factor: 1.10}
+        - {deductible: 250000, factor: 1.0}
+        - {deductible: 500000, factor: 0.88}
+        - {deductible: 1000000, factor: 0.75}
+        - {deductible: 2500000, factor: 0.62}
+        - {deductible: 5000000, factor: 0.52}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # -------------------------------------------------------------------------
+  # GROUP 1: SPACE RISK
+  # -------------------------------------------------------------------------
+  # Satellite and launch vehicle risk — fundamentally different from
+  # aviation. Binary outcomes (total loss on launch failure), extreme
+  # values, limited loss history for actuarial pricing.
+  # -------------------------------------------------------------------------
+  - id: space_risk
+    label: Space Risk
+    description: "Launch vehicle reliability, satellite technology, orbital debris, in-orbit anomaly history"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: launch_vehicle_reliability
+        name: Launch Vehicle Reliability
+        description: "Historical success rate of launch vehicle family; consecutive success count; provider track record"
+        group_id: space_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.30
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 5, note: "Launch vehicle with poor success record"}
+            - {min: 26, max: 50, action: FLAG, note: "Launch vehicle reliability below market average"}
+
+      - id: satellite_technology_maturity
+        name: Satellite Technology Maturity
+        description: "Heritage vs novel bus/payload design; technology readiness level; manufacturer track record"
+        group_id: space_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+
+      - id: orbital_debris_exposure
+        name: Orbital Debris & Collision Exposure
+        description: "Orbital regime congestion; conjunction assessment capability; manoeuvre capacity"
+        group_id: space_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.10
+
+      - id: in_orbit_anomaly_history
+        name: In-Orbit Anomaly History
+        description: "Prior in-orbit anomalies on same bus/payload family; degradation patterns"
+        group_id: space_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+
+      - id: ground_segment_quality
+        name: Ground Segment Quality
+        description: "Ground station network redundancy; command/control reliability; telemetry monitoring"
+        group_id: space_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+          loss_severity_weight: 0.10
+
+  # -------------------------------------------------------------------------
+  # GROUP 2: ROTARY WING RISK
+  # -------------------------------------------------------------------------
+  # Helicopter-specific risk factors — mission profile is the dominant
+  # driver. Offshore oil, EMS, and utility operations have very
+  # different loss profiles from corporate/charter.
+  # -------------------------------------------------------------------------
+  - id: rotary_wing_risk
+    label: Rotary Wing Risk
+    description: "Helicopter mission profile, pilot experience, maintenance programme, landing zone quality"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: mission_profile
+        name: Mission Profile
+        description: "Primary mission type — drives frequency and severity characteristics"
+        group_id: rotary_wing_risk
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.rotary_mission_profile
+        categories:
+          - {cat: CORPORATE, label: Corporate/VIP Transport, applied: 0.75}
+          - {cat: CHARTER, label: Charter/Air Taxi, applied: 0.90}
+          - {cat: OFFSHORE, label: Offshore Oil & Gas, applied: 1.10}
+          - {cat: EMS, label: Emergency Medical Services, applied: 1.25}
+          - {cat: UTILITY, label: Utility/External Load, applied: 1.30}
+          - {cat: SAR, label: Search and Rescue, applied: 1.20}
+          - {cat: TRAINING, label: Flight Training, applied: 1.15}
+
+      - id: rotary_pilot_experience
+        name: Pilot Experience & Currency
+        description: "Total rotary hours; type-specific hours; instrument currency; NVG qualification"
+        group_id: rotary_wing_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.10
+
+      - id: rotary_maintenance_quality
+        name: Maintenance Programme Quality
+        description: "Overhaul compliance; component tracking; AD/SB compliance rate; maintenance provider quality"
+        group_id: rotary_wing_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+
+      - id: landing_zone_quality
+        name: Landing Zone & Operating Environment
+        description: "Helipad standards; offshore platform conditions; confined area operations frequency"
+        group_id: rotary_wing_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+          exposure_complexity_weight: 0.10
+
+      - id: passenger_liability_exposure
+        name: Passenger Liability Exposure
+        description: "Passenger volume; passenger profile (workers vs public); contractual liability assumptions"
+        group_id: rotary_wing_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+
+  # -------------------------------------------------------------------------
+  # GROUP 3: UNMANNED SYSTEMS
+  # -------------------------------------------------------------------------
+  # UAS/drone risk factors — rapidly evolving regulatory landscape,
+  # collision risk with manned aviation, payload-specific liability.
+  # -------------------------------------------------------------------------
+  - id: unmanned_systems
+    label: Unmanned Aircraft Systems
+    description: "UAS/drone operations — BVLOS capability, airspace integration, payload risk, regulatory compliance"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: uas_operational_scope
+        name: UAS Operational Scope
+        description: "VLOS vs BVLOS; urban vs rural; altitude regime; autonomous vs pilot-controlled"
+        group_id: unmanned_systems
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.uas_operational_scope
+        categories:
+          - {cat: VLOS_RURAL, label: Visual Line of Sight — Rural, applied: 0.70}
+          - {cat: VLOS_URBAN, label: Visual Line of Sight — Urban, applied: 0.90}
+          - {cat: BVLOS_RURAL, label: Beyond VLOS — Rural, applied: 1.10}
+          - {cat: BVLOS_URBAN, label: Beyond VLOS — Urban, applied: 1.40}
+          - {cat: AUTONOMOUS, label: Autonomous Operations, applied: 1.60}
+
+      - id: uas_regulatory_compliance
+        name: UAS Regulatory Compliance
+        description: "Part 107 / EASA UAS category compliance; waiver status; remote ID compliance"
+        group_id: unmanned_systems
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+
+      - id: airspace_integration
+        name: Airspace Integration Safety
+        description: "UTM participation; detect-and-avoid capability; ATC coordination for controlled airspace"
+        group_id: unmanned_systems
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+
+      - id: uas_payload_risk
+        name: Payload & Third-Party Risk
+        description: "Payload type (camera, LiDAR, delivery); overflown population density; ground risk"
+        group_id: unmanned_systems
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.15
+
+      - id: uas_fleet_reliability
+        name: UAS Fleet Reliability
+        description: "Aircraft type certification status; failure rate data; flyaway/lost-link incidents"
+        group_id: unmanned_systems
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "Elevated UAS reliability concerns"}
+
+  # -------------------------------------------------------------------------
+  # GROUP 4: MRO RISK
+  # -------------------------------------------------------------------------
+  # Maintenance, Repair & Overhaul facility risk — workmanship
+  # liability, hangarkeepers, product liability for returned-to-service
+  # components. Different from operator risk.
+  # -------------------------------------------------------------------------
+  - id: mro_risk
+    label: MRO Facility Risk
+    description: "MRO workmanship liability, hangarkeepers exposure, certification compliance, product return risk"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: mro_certification_scope
+        name: MRO Certification Scope
+        description: "FAR 145 / EASA Part 145 ratings scope; capability list breadth; authority limitations"
+        group_id: mro_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+          exposure_complexity_weight: 0.15
+
+      - id: workmanship_claims_history
+        name: Workmanship Claims History
+        description: "Prior claims arising from maintenance errors; AD non-compliance incidents; return-to-service failures"
+        group_id: mro_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Significant workmanship claims history"}
+
+      - id: hangarkeepers_exposure
+        name: Hangarkeepers Exposure
+        description: "Value of customer aircraft in care, custody, control; hangar fire protection; security"
+        group_id: mro_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.20
+
+      - id: quality_system_maturity
+        name: Quality Management System Maturity
+        description: "AS9110 certification; internal audit programme; findings closure rate; continuous improvement"
+        group_id: mro_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+
+      - id: parts_traceability
+        name: Parts Traceability & Supply Chain
+        description: "Parts provenance controls; suspected unapproved parts screening; PMA/DER parts usage"
+        group_id: mro_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "Parts traceability deficiencies"}
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. AEROSPACE SPACE
+  # =========================================================================
+  # Space risk — launch, in-orbit, and satellite insurance. Extreme
+  # values, binary loss outcomes. Separate product types for launch
+  # phase vs in-orbit operations.
+  # =========================================================================
+  - id: aerospace_space
+    name: DSI Space Insurance Model
+    description: "Space risk — launch vehicles, satellites, in-orbit operations"
+    model_specificity: 4
+    min_premium: 500000
+
+    product_types:
+      - space_launch
+      - space_in_orbit
+      - satellite
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: "One of: space_launch, space_in_orbit, satellite"
+      - field: limit
+        description: Requested limit in USD
+      - field: hull_value
+        description: Satellite/launch vehicle insured value in USD
+
+    routing_constraints:
+      - {field: aviation_segment, operator: "==", value: SPACE, required_in_input: true}
+      - {field: hull_value, operator: ">=", value: 50000000, required_in_input: true}
+
+    direct_queries:
+      - id: launch_vehicle_heritage
+        question: Has this launch vehicle type completed 10+ successful consecutive launches?
+        conditions: [{action: MODIFIER, applied: 0.85, note: "Proven launch vehicle credit"}]
+      - id: novel_technology
+        question: Does the satellite/payload incorporate first-generation or unproven technology?
+        conditions: [{action: REFER, override: 4, note: "Novel technology — limited heritage"}]
+      - id: constellation_member
+        question: Is this satellite part of a large constellation (>20 units)?
+        conditions: [{action: MODIFIER, applied: 0.92, note: "Constellation volume credit"}]
+      - id: dual_launch
+        question: Is this a shared/rideshare launch with other payloads?
+        conditions: [{action: FLAG, note: "Rideshare launch — co-passenger risk"}]
+      - id: deorbit_plan
+        question: Does the operator have a compliant debris mitigation/deorbit plan?
+        conditions: [{action: MODIFIER, applied: 0.95, note: "Debris mitigation compliance credit"}]
+
+    category_groups: [operator_type]
+
+    group_weights:
+      - {group_id: space_risk, risk_weight: 0.45, loss_weight: 0.45, exposure_weight: 0.35}
+      - {group_id: regulatory_framework, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: fleet_category, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.035
+      standard_plus_rate: 0.055
+      standard_rate: 0.085
+      substandard_rate: 0.130
+      decline_rate: 0.200
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [1000000, 2500000, 5000000, 10000000, 25000000]
+
+    pricing:
+      base_limit_reference: 50000000
+      base_deductible_reference: 5000000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: space_launch
+          ilf_curve:
+            base_limit: 50000000
+            factors:
+              - {limit: 25000000, factor: 0.65}
+              - {limit: 50000000, factor: 1.0}
+              - {limit: 100000000, factor: 1.7}
+              - {limit: 250000000, factor: 3.2}
+              - {limit: 500000000, factor: 5.5}
+          deductible_factors:
+            - {deductible: 1000000, factor: 1.15}
+            - {deductible: 2500000, factor: 1.05}
+            - {deductible: 5000000, factor: 1.0}
+            - {deductible: 10000000, factor: 0.90}
+            - {deductible: 25000000, factor: 0.78}
+        - product_type: space_in_orbit
+          ilf_curve:
+            base_limit: 50000000
+            factors:
+              - {limit: 25000000, factor: 0.60}
+              - {limit: 50000000, factor: 1.0}
+              - {limit: 100000000, factor: 1.6}
+              - {limit: 250000000, factor: 3.0}
+              - {limit: 500000000, factor: 5.0}
+          deductible_factors:
+            - {deductible: 1000000, factor: 1.15}
+            - {deductible: 2500000, factor: 1.05}
+            - {deductible: 5000000, factor: 1.0}
+            - {deductible: 10000000, factor: 0.90}
+            - {deductible: 25000000, factor: 0.78}
+
+  # =========================================================================
+  # 2. AEROSPACE ROTARY WING
+  # =========================================================================
+  # Helicopter specialist model. Mission profile is primary driver.
+  # EMS and offshore operations have significantly higher loss rates
+  # than corporate/charter.
+  # =========================================================================
+  - id: aerospace_rotary
+    name: DSI Rotary Wing Aviation Model
+    description: "Helicopter operations — mission-specific, EMS, offshore, utility, corporate"
+    model_specificity: 3
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: aviation_segment, operator: "==", value: ROTARY_WING, required_in_input: true}
+
+    direct_queries:
+      - id: accident_history
+        question: Any hull loss or serious incident in the past 5 years?
+        conditions: [{action: REFER, override: 4, note: "Recent hull loss/serious incident"}]
+      - id: nvg_operations
+        question: Does the operator conduct night vision goggle (NVG) operations?
+        conditions: [{action: FLAG, note: "NVG operations — specialised risk profile"}]
+      - id: ems_response_area
+        question: Does the EMS programme operate in mountainous or over-water terrain?
+        conditions: [{action: FLAG, note: "Challenging EMS operating environment"}]
+      - id: single_pilot_ifr
+        question: Are any operations conducted single-pilot IFR?
+        conditions: [{action: REFER, override: 3, note: "Single-pilot IFR operations"}]
+      - id: sms_implementation
+        question: Does the operator have a fully implemented Safety Management System?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "SMS implementation credit"}]
+
+    category_groups: [mission_profile, operator_type, fleet_category]
+
+    group_weights:
+      - {group_id: rotary_wing_risk, risk_weight: 0.35, loss_weight: 0.35, exposure_weight: 0.25}
+      - {group_id: iosa_status, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: regulatory_framework, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: fleet_size, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.0020
+      standard_plus_rate: 0.0035
+      standard_rate: 0.0055
+      substandard_rate: 0.0085
+      decline_rate: 0.0130
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: aviation_hull_liability_combined
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 2000000, factor: 0.60}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.65}
+              - {limit: 25000000, factor: 3.0}
+              - {limit: 50000000, factor: 4.8}
+              - {limit: 100000000, factor: 7.8}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.20}
+            - {deductible: 50000, factor: 1.10}
+            - {deductible: 100000, factor: 1.0}
+            - {deductible: 250000, factor: 0.85}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.60}
+
+  # =========================================================================
+  # 3. AEROSPACE UNMANNED
+  # =========================================================================
+  # UAS/drone operations model. Rapidly evolving market with limited
+  # loss history. BVLOS and autonomous operations represent frontier
+  # risk with high uncertainty loadings.
+  # =========================================================================
+  - id: aerospace_unmanned
+    name: DSI Unmanned Aircraft Systems Model
+    description: "UAS/drone operations — VLOS, BVLOS, autonomous, commercial drone fleets"
+    model_specificity: 3
+    min_premium: 10000
+
+    routing_constraints:
+      - {field: aviation_segment, operator: "==", value: UNMANNED, required_in_input: true}
+
+    direct_queries:
+      - id: bvlos_waiver
+        question: Does the operator hold a BVLOS waiver or equivalent regulatory approval?
+        conditions: [{action: FLAG, note: "BVLOS operations approved"}]
+      - id: urban_operations
+        question: Are operations conducted over densely populated areas?
+        conditions: [{action: REFER, override: 3, note: "Urban overflown population exposure"}]
+      - id: delivery_operations
+        question: Does the operator conduct drone delivery operations?
+        conditions: [{action: FLAG, note: "Delivery operations — dropped object risk"}]
+      - id: incident_history
+        question: Any flyaway, lost-link, or third-party impact incidents in the past 24 months?
+        conditions: [{action: REFER, override: 4, note: "UAS incident history"}]
+
+    category_groups: [uas_operational_scope, operator_type]
+
+    group_weights:
+      - {group_id: unmanned_systems, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.35}
+      - {group_id: regulatory_framework, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: fleet_size, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.015
+      standard_plus_rate: 0.025
+      standard_rate: 0.040
+      substandard_rate: 0.065
+      decline_rate: 0.100
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [500000, 1000000, 2000000, 5000000, 10000000, 25000000]
+      valid_deductibles: [5000, 10000, 25000, 50000, 100000, 250000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: aviation_hull_liability_combined
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 500000, factor: 0.65}
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.6}
+              - {limit: 5000000, factor: 2.8}
+              - {limit: 10000000, factor: 4.5}
+              - {limit: 25000000, factor: 8.0}
+          deductible_factors:
+            - {deductible: 5000, factor: 1.20}
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.85}
+            - {deductible: 50000, factor: 0.72}
+            - {deductible: 100000, factor: 0.60}
+            - {deductible: 250000, factor: 0.50}
+
+  # =========================================================================
+  # 4. AEROSPACE MRO
+  # =========================================================================
+  # MRO facility liability model. Revenue-based pricing (not hull).
+  # Covers workmanship liability, hangarkeepers, and products liability
+  # for returned-to-service components.
+  # =========================================================================
+  - id: aerospace_mro
+    name: DSI Aerospace MRO Liability Model
+    description: "MRO facility liability — workmanship, hangarkeepers, products/completed operations"
+    model_specificity: 3
+    min_premium: 25000
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: aviation_liability
+      - field: limit
+        description: Requested limit in USD
+      - field: revenue
+        description: Annual MRO revenue in USD (MULTIPLIER basis)
+      - field: hull_value
+        description: Maximum single aircraft value in care, custody, control
+
+    routing_constraints:
+      - {field: aviation_segment, operator: "==", value: MRO, required_in_input: true}
+      - {field: revenue, operator: ">=", value: 5000000, required_in_input: true}
+
+    direct_queries:
+      - id: workmanship_claims
+        question: Any workmanship liability claims in the past 5 years?
+        conditions: [{action: REFER, override: 4, note: "Prior workmanship claims"}]
+      - id: hangar_fire
+        question: Has the facility experienced a hangar fire or significant property loss?
+        conditions: [{action: REFER, override: 4, note: "Prior hangar fire/loss"}]
+      - id: bogus_parts
+        question: Has the facility ever been cited for suspected unapproved parts?
+        conditions: [{action: REFER, override: 5, note: "Suspected unapproved parts citation"}]
+      - id: military_contracts
+        question: Does the facility perform military/government contract maintenance?
+        conditions: [{action: FLAG, note: "Military/government contract MRO"}]
+
+    category_groups: [operator_type]
+
+    group_weights:
+      - {group_id: mro_risk, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.30}
+      - {group_id: regulatory_framework, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: fleet_category, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0020
+      standard_plus_rate: 0.0035
+      standard_rate: 0.0055
+      substandard_rate: 0.0085
+      decline_rate: 0.0130
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [50000, 100000, 250000, 500000, 1000000, 2500000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: aviation_liability
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.7}
+              - {limit: 25000000, factor: 3.2}
+              - {limit: 50000000, factor: 5.2}
+              - {limit: 100000000, factor: 8.5}
+              - {limit: 250000000, factor: 15.0}
+          deductible_factors:
+            - {deductible: 50000, factor: 1.20}
+            - {deductible: 100000, factor: 1.0}
+            - {deductible: 250000, factor: 0.85}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.60}
+            - {deductible: 2500000, factor: 0.50}
+
+  # =========================================================================
+  # 5. AEROSPACE HIGH VALUE
+  # =========================================================================
+  # High-value fleet/airline model — major carriers, wide-body fleets.
+  # Hull values >$500M. Tighter underwriting, volume credits.
+  # =========================================================================
+  - id: aerospace_high_value
+    name: DSI Aerospace High Value Fleet Model
+    description: "High-value aviation fleet — airlines, major operators, hull value >$500M"
+    model_specificity: 4
+    min_premium: 500000
+
+    routing_constraints:
+      - {field: hull_value, operator: ">=", value: 500000000, required_in_input: true}
+
+    direct_queries:
+      - id: hull_loss_history
+        question: Any hull losses in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Hull loss in fleet history"}]
+      - id: iosa_registered
+        question: Is the operator IOSA registered and audit current?
+        conditions: [{action: MODIFIER, applied: 0.88, note: "IOSA registration credit"}]
+      - id: safety_management
+        question: Does the operator have an ICAO-compliant Safety Management System?
+        conditions: [{action: MODIFIER, applied: 0.92, note: "SMS compliance credit"}]
+      - id: fleet_age
+        question: Is the average fleet age under 12 years?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Modern fleet credit"}]
+      - id: regulatory_action
+        question: Any regulatory enforcement actions in the past 5 years?
+        conditions: [{action: REFER, override: 4, note: "Regulatory enforcement history"}]
+
+    category_groups: [operator_type, fleet_category]
+
+    group_weights:
+      - {group_id: iosa_status, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: regulatory_framework, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: fleet_size, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: fleet_category, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.0006
+      standard_plus_rate: 0.0010
+      standard_rate: 0.0016
+      substandard_rate: 0.0028
+      decline_rate: 0.0045
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [100000000, 250000000, 500000000]
+      valid_deductibles: [1000000, 2500000, 5000000, 10000000]
+
+    pricing:
+      base_limit_reference: 100000000
+      base_deductible_reference: 2500000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: aviation_hull_liability_combined
+          ilf_curve:
+            base_limit: 100000000
+            factors:
+              - {limit: 100000000, factor: 1.0}
+              - {limit: 250000000, factor: 1.8}
+              - {limit: 500000000, factor: 3.0}
+          deductible_factors:
+            - {deductible: 1000000, factor: 1.12}
+            - {deductible: 2500000, factor: 1.0}
+            - {deductible: 5000000, factor: 0.85}
+            - {deductible: 10000000, factor: 0.72}
+
+# =============================================================================
+# EXPANSION NOTES
+# =============================================================================
+#
+# This is an EXPANSION of existing aerospace coverage.
+#
+# Changes to existing infrastructure:
+# 1. signal_architecture/signals/inference/metadata_registry.py:
+#    - Add 20 new signals to _AEROSPACE_SIGNALS list
+#    - New group IDs: space_risk, rotary_wing_risk, unmanned_systems, mro_risk
+#
+# 2. seed_dsi_bench.py:
+#    - Update docstring to list new config IDs
+#
+# 3. New product types added: space_launch, space_in_orbit, satellite
+#    - These must be added to the config.yaml product_types list
+#
+# Signal summary:
+#   - 4 new groups: space_risk (5), rotary_wing_risk (5),
+#     unmanned_systems (5), mro_risk (5)
+#   - 20 new signals (3 categorical, 17 three-layer)
+#   - 5 existing groups reused: operator_type, fleet_category,
+#     fleet_size, iosa_status, regulatory_framework
+#
+# Configuration summary (5 new, added to existing 2):
+#   - aerospace_space      (specificity 4, SPACE segment)
+#   - aerospace_rotary     (specificity 3, ROTARY_WING segment)
+#   - aerospace_unmanned   (specificity 3, UNMANNED segment)
+#   - aerospace_mro        (specificity 3, MRO segment, revenue basis)
+#   - aerospace_high_value (specificity 4, hull_value >$500M)
+#
+# Total aerospace configs after expansion: 7 (general, sme + 5 new)
+#
+# NOTE: aerospace_mro uses revenue as basis (not hull_value) because
+# MRO revenue is the natural exposure measure for facility liability.
+# This is the same variable-basis pattern used in casualty.
+# =============================================================================
