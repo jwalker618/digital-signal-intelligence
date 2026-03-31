@@ -123,3 +123,4 @@ __all__ = [
     "AssetSizeAggregator",
     "PubliclyTradedAggregator",
 ]
+from . import phase_7_aggregators
