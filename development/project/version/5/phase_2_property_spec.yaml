@@ -1,0 +1,1157 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 2: Property
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# Companion prose: phase_2_prerequisites.md
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/5/phase_2_property_spec.yaml \
+#       --write
+#
+# NOTE: No --existing-config flag — this is a NEW coverage line.
+#
+# =============================================================================
+
+coverage_line: property
+coverage_key: commercial_property
+phase: phase_2
+description: "Phase 2 Commercial Property Coverage — 5 configurations"
+version: "2.3.0"
+
+# =============================================================================
+# DEFAULTS
+# =============================================================================
+
+default_product_types:
+  - commercial_property
+  - builders_risk
+  - business_interruption
+  - difference_in_conditions
+
+default_markets: [us, uk, eu, apac, latam, mea]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: commercial_property, builders_risk, business_interruption, difference_in_conditions"
+  - field: limit
+    description: Requested limit in USD
+  - field: tiv
+    description: Total insured value in USD (MULTIPLIER basis)
+
+routing_field: property_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_risk_tier_bands:
+  method: MULTIPLIER
+  basis: tiv
+  bands:
+    - {id: 1, label: PREFERRED, min: 800, max: 1000, action: APPROVE, applied: 0.0008}
+    - {id: 2, label: STANDARD_PLUS, min: 650, max: 799, action: APPROVE, applied: 0.0015}
+    - {id: 3, label: STANDARD, min: 450, max: 649, action: APPROVE, applied: 0.0025}
+    - {id: 4, label: SUBSTANDARD, min: 250, max: 449, action: REFER, applied: 0.0040}
+    - {id: 5, label: DECLINE, min: 0, max: 249, action: DECLINE, applied: 0.0060}
+
+default_loss_tier_bands:
+  floor: 0.50
+  cap: 1.8
+
+default_exposure_bands:
+  size_weight: 0.7
+  complexity_weight: 0.3
+  size_thresholds:
+    - {label: MICRO, max_value: 5000000, applied: 0.5}
+    - {label: SMALL, max_value: 25000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 100000000, applied: 1.0}
+    - {label: LARGE, max_value: 500000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 5000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+  valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000, 2500000]
+
+# =============================================================================
+# DEFAULT PRICING — ILF Curves and Deductible Factors
+# =============================================================================
+#
+# Property ILFs are FLATTER than liability lines because loss severity
+# is bounded by TIV. A 10x limit increase costs ~6x, not ~28x as in PI.
+#
+# Reference: ISO Commercial Property ILF tables, Lloyd's market benchmarks.
+# =============================================================================
+
+default_pricing:
+  base_limit_reference: 1000000
+  base_deductible_reference: 25000
+  taxes_fees_rate: 0.04
+  by_product_type:
+    - product_type: commercial_property
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.5}
+          - {limit: 5000000, factor: 2.2}
+          - {limit: 10000000, factor: 3.0}
+          - {limit: 25000000, factor: 4.5}
+          - {limit: 50000000, factor: 6.0}
+          - {limit: 100000000, factor: 8.0}
+          - {limit: 250000000, factor: 12.0}
+          - {limit: 500000000, factor: 16.0}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.20}
+        - {deductible: 25000, factor: 1.0}
+        - {deductible: 50000, factor: 0.90}
+        - {deductible: 100000, factor: 0.80}
+        - {deductible: 250000, factor: 0.70}
+        - {deductible: 500000, factor: 0.62}
+        - {deductible: 1000000, factor: 0.55}
+        - {deductible: 2500000, factor: 0.48}
+
+    - product_type: builders_risk
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.6}
+          - {limit: 5000000, factor: 2.5}
+          - {limit: 10000000, factor: 3.5}
+          - {limit: 25000000, factor: 5.5}
+          - {limit: 50000000, factor: 7.5}
+          - {limit: 100000000, factor: 10.5}
+          - {limit: 250000000, factor: 15.0}
+          - {limit: 500000000, factor: 20.0}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.25}
+        - {deductible: 25000, factor: 1.0}
+        - {deductible: 50000, factor: 0.88}
+        - {deductible: 100000, factor: 0.78}
+        - {deductible: 250000, factor: 0.68}
+        - {deductible: 500000, factor: 0.60}
+        - {deductible: 1000000, factor: 0.52}
+        - {deductible: 2500000, factor: 0.45}
+
+    - product_type: business_interruption
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.55}
+          - {limit: 5000000, factor: 2.4}
+          - {limit: 10000000, factor: 3.3}
+          - {limit: 25000000, factor: 5.0}
+          - {limit: 50000000, factor: 7.0}
+          - {limit: 100000000, factor: 9.5}
+          - {limit: 250000000, factor: 14.0}
+          - {limit: 500000000, factor: 19.0}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.20}
+        - {deductible: 25000, factor: 1.0}
+        - {deductible: 50000, factor: 0.90}
+        - {deductible: 100000, factor: 0.80}
+        - {deductible: 250000, factor: 0.70}
+        - {deductible: 500000, factor: 0.62}
+        - {deductible: 1000000, factor: 0.55}
+        - {deductible: 2500000, factor: 0.48}
+
+    - product_type: difference_in_conditions
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.7}
+          - {limit: 5000000, factor: 2.8}
+          - {limit: 10000000, factor: 4.0}
+          - {limit: 25000000, factor: 6.5}
+          - {limit: 50000000, factor: 9.0}
+          - {limit: 100000000, factor: 12.5}
+          - {limit: 250000000, factor: 18.0}
+          - {limit: 500000000, factor: 24.0}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.25}
+        - {deductible: 25000, factor: 1.0}
+        - {deductible: 50000, factor: 0.88}
+        - {deductible: 100000, factor: 0.78}
+        - {deductible: 250000, factor: 0.68}
+        - {deductible: 500000, factor: 0.60}
+        - {deductible: 1000000, factor: 0.52}
+        - {deductible: 2500000, factor: 0.45}
+
+# =============================================================================
+# NEW SIGNAL GROUPS — Added in subsequent parts
+# =============================================================================
+
+new_signal_groups:
+
+  # -------------------------------------------------------------------------
+  # GROUP 1: CONSTRUCTION QUALITY
+  # -------------------------------------------------------------------------
+  # Assesses structural and construction characteristics that drive
+  # fire and collapse risk. Primary risk and loss driver for property.
+  # -------------------------------------------------------------------------
+  - id: construction_quality
+    label: Construction Quality
+    description: "Structural integrity, construction class, age, maintenance, and building code compliance"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: construction_class
+        name: Construction Class
+        description: "ISO/COPE construction classification — frame, joisted masonry, non-combustible, masonry non-combustible, modified fire-resistive, fire-resistive"
+        group_id: construction_quality
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.construction_class
+        categories:
+          - {cat: FR, label: Fire Resistive, applied: 0.70}
+          - {cat: MFR, label: Modified Fire Resistive, applied: 0.80}
+          - {cat: MNC, label: Masonry Non-Combustible, applied: 0.90}
+          - {cat: NC, label: Non-Combustible, applied: 0.95}
+          - {cat: JM, label: Joisted Masonry, applied: 1.10}
+          - {cat: F, label: Frame, applied: 1.40}
+
+      - id: building_age_condition
+        name: Building Age & Condition
+        description: "Composite score of building age, last major renovation, and overall condition rating"
+        group_id: construction_quality
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.05
+
+      - id: building_code_compliance
+        name: Building Code Compliance
+        description: "Current compliance with local building codes; grandfathered non-conformities flagged"
+        group_id: construction_quality
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+
+      - id: roof_condition
+        name: Roof Condition
+        description: "Roof age, material, condition, and recent inspection results — primary water damage driver"
+        group_id: construction_quality
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.10
+
+      - id: electrical_system_quality
+        name: Electrical System Quality
+        description: "Age of electrical systems, panel capacity, wiring type, recent inspection"
+        group_id: construction_quality
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+
+      - id: renovation_history
+        name: Renovation History
+        description: "Track record of capital investment; recent renovations reduce age-related risk"
+        group_id: construction_quality
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          risk_direction: positive
+          loss_frequency_weight: 0.05
+          exposure_complexity_weight: 0.10
+
+  # -------------------------------------------------------------------------
+  # GROUP 2: OCCUPANCY RISK
+  # -------------------------------------------------------------------------
+  # Assesses what the building is used for and how that drives loss
+  # frequency and severity. A warehouse of electronics vs a church
+  # have fundamentally different risk profiles on the same structure.
+  # -------------------------------------------------------------------------
+  - id: occupancy_risk
+    label: Occupancy Risk
+    description: "Tenant type, hazard grade, contents value density, and vacancy exposure"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: occupancy_hazard_grade
+        name: Occupancy Hazard Grade
+        description: "ISO occupancy hazard classification — from low (office) to special (chemical storage)"
+        group_id: occupancy_risk
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.occupancy_hazard_grade
+        categories:
+          - {cat: LOW, label: Low Hazard (Office/Residential), applied: 0.75}
+          - {cat: MOD, label: Moderate Hazard (Retail/Light Mfg), applied: 1.0}
+          - {cat: HIGH, label: High Hazard (Heavy Mfg/Woodworking), applied: 1.35}
+          - {cat: SPECIAL, label: Special Hazard (Chemical/Explosive), applied: 1.80}
+
+      - id: tenant_concentration
+        name: Tenant Concentration
+        description: "Number and diversity of tenants; single-tenant risk vs multi-tenant diversification"
+        group_id: occupancy_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: negative
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.10
+
+      - id: contents_value_density
+        name: Contents Value Density
+        description: "Value of contents per square foot — drives severity; high-value stock amplifies loss"
+        group_id: occupancy_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.15
+
+      - id: vacancy_rate
+        name: Vacancy Rate
+        description: "Percentage of space unoccupied — vacant properties have higher arson and vandalism rates"
+        group_id: occupancy_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "High vacancy — arson/vandalism exposure"}
+
+      - id: housekeeping_quality
+        name: Housekeeping & Maintenance Quality
+        description: "General upkeep, cleanliness, storage practices — proxy for management attention to risk"
+        group_id: occupancy_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+
+  # -------------------------------------------------------------------------
+  # GROUP 3: CATASTROPHE EXPOSURE
+  # -------------------------------------------------------------------------
+  # Natural catastrophe and geographic risk factors. These signals
+  # drive the exposure dimension heavily — a well-built, well-occupied
+  # building in a CAT zone still has massive tail risk.
+  # -------------------------------------------------------------------------
+  - id: cat_exposure
+    label: Catastrophe Exposure
+    description: "Natural catastrophe zone exposure — wind, earthquake, flood, wildfire, convective storm"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: wind_zone
+        name: Wind Zone Exposure
+        description: "Proximity to named-storm-exposed coastline; hurricane/typhoon return periods"
+        group_id: cat_exposure
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Severe wind zone exposure"}
+            - {min: 26, max: 50, action: FLAG, note: "Elevated wind zone"}
+
+      - id: earthquake_zone
+        name: Earthquake Zone Exposure
+        description: "Seismic zone classification; proximity to known fault lines; soil liquefaction risk"
+        group_id: cat_exposure
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.10
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Severe earthquake zone"}
+            - {min: 26, max: 50, action: FLAG, note: "Elevated seismic zone"}
+
+      - id: flood_zone
+        name: Flood Zone Exposure
+        description: "FEMA flood zone classification; proximity to waterways; historical flood events"
+        group_id: cat_exposure
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "High flood zone exposure"}
+
+      - id: wildfire_zone
+        name: Wildfire Zone Exposure
+        description: "Wildland-urban interface proximity; vegetation density; historical fire events"
+        group_id: cat_exposure
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.10
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Severe wildfire exposure"}
+
+      - id: convective_storm_exposure
+        name: Convective Storm Exposure
+        description: "Hail, tornado, and severe thunderstorm frequency for location"
+        group_id: cat_exposure
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.05
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+
+      - id: geographic_concentration
+        name: Geographic Concentration
+        description: "Single-location vs multi-site; distance between sites; aggregation risk"
+        group_id: cat_exposure
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.05
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.15
+
+  # -------------------------------------------------------------------------
+  # GROUP 4: FIRE PROTECTION
+  # -------------------------------------------------------------------------
+  # Fire protection quality directly modifies expected loss. A building
+  # with full sprinklers, central station alarm, and nearby fire dept
+  # has fundamentally different loss expectations vs unprotected.
+  # -------------------------------------------------------------------------
+  - id: fire_protection
+    label: Fire Protection
+    description: "Sprinkler systems, fire alarms, fire department response, fire separation, water supply"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: sprinkler_coverage
+        name: Sprinkler System Coverage
+        description: "Extent and type of automatic sprinkler protection — full, partial, or none"
+        group_id: fire_protection
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.sprinkler_coverage
+        categories:
+          - {cat: FULL_WET, label: Full Wet Sprinkler, applied: 0.55}
+          - {cat: FULL_DRY, label: Full Dry Sprinkler, applied: 0.65}
+          - {cat: PARTIAL, label: Partial Sprinkler, applied: 0.85}
+          - {cat: NONE, label: No Sprinklers, applied: 1.30}
+
+      - id: fire_alarm_quality
+        name: Fire Alarm & Detection Quality
+        description: "Alarm system type — central station, proprietary, local, or none"
+        group_id: fire_protection
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+
+      - id: fire_department_response
+        name: Fire Department Response
+        description: "Distance to nearest fire station; ISO public protection class; response time"
+        group_id: fire_protection
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "Poor fire department response capability"}
+
+      - id: fire_separation
+        name: Fire Separation & Compartmentation
+        description: "Fire walls, fire doors, compartmentation between occupancies or sections"
+        group_id: fire_protection
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          risk_direction: positive
+          loss_severity_weight: 0.15
+
+      - id: water_supply_adequacy
+        name: Water Supply Adequacy
+        description: "Hydrant distance, water pressure, supply duration for fire suppression"
+        group_id: fire_protection
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          risk_direction: positive
+          loss_severity_weight: 0.10
+
+  # -------------------------------------------------------------------------
+  # GROUP 5: BUSINESS INTERRUPTION
+  # -------------------------------------------------------------------------
+  # BI exposure is often the largest component of a property loss.
+  # Recovery time, supply chain dependency, and contingent BI drive
+  # severity far beyond the physical damage amount.
+  # -------------------------------------------------------------------------
+  - id: business_interruption
+    label: Business Interruption
+    description: "Revenue dependency, recovery time, supply chain resilience, contingent BI exposure"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: revenue_concentration
+        name: Revenue Concentration at Location
+        description: "Percentage of total enterprise revenue generated at or dependent on insured location"
+        group_id: business_interruption
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.25
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "High revenue concentration at single location"}
+
+      - id: recovery_time_estimate
+        name: Recovery Time Estimate
+        description: "Estimated time to restore operations after total loss — months to rebuild, re-equip, re-staff"
+        group_id: business_interruption
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.30
+          exposure_complexity_weight: 0.15
+
+      - id: supply_chain_dependency
+        name: Supply Chain Dependency
+        description: "Reliance on single-source suppliers or critical supply chains affected by same peril zone"
+        group_id: business_interruption
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.05
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.20
+
+      - id: contingent_bi_exposure
+        name: Contingent BI Exposure
+        description: "Exposure from key customers or suppliers suffering property loss — contingent and dependent BI"
+        group_id: business_interruption
+        signal_type: three_layer
+        proxy_tier: COHORT_INFERENCE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.05
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 25, action: FLAG, note: "Significant contingent BI exposure"}
+
+      - id: business_continuity_planning
+        name: Business Continuity Planning
+        description: "Quality of BCP/DRP; backup facilities; tested recovery procedures"
+        group_id: business_interruption
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          risk_direction: positive
+          loss_severity_weight: 0.10
+          loss_severity_direction: positive
+
+# =============================================================================
+# CONFIGURATIONS — Added in subsequent parts
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. PROPERTY GENERAL
+  # =========================================================================
+  # Broad commercial property model. Handles the standard mid-market
+  # submission — office buildings, retail, light industrial, multi-tenant.
+  # =========================================================================
+  - id: property_general
+    name: DSI Commercial Property General Model
+    description: "General commercial property — offices, retail, light industrial, multi-tenant"
+    model_specificity: 2
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: tiv, operator: ">=", value: 5000000, required_in_input: true}
+      - {field: tiv, operator: "<", value: 500000000, required_in_input: false}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any open or pending property claims in the past 5 years?
+        conditions: [{action: FLAG, note: "Open property claims history"}]
+      - id: prior_losses_large
+        question: Any single property loss exceeding $1M in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Large prior loss history"}]
+      - id: vacancy_significant
+        question: Is more than 30% of the insured property currently vacant?
+        conditions: [{action: FLAG, note: "Significant vacancy exposure"}]
+      - id: renovation_active
+        question: Any active renovation or construction at the insured location?
+        conditions: [{action: FLAG, note: "Active renovation — hot works exposure"}]
+      - id: hazardous_materials
+        question: Are hazardous materials stored, used, or processed on premises?
+        conditions: [{action: REFER, override: 4, note: "Hazardous materials on site"}]
+
+    category_groups: [construction_class, occupancy_hazard_grade, sprinkler_coverage]
+
+    group_weights:
+      - {group_id: construction_quality, risk_weight: 0.25, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: occupancy_risk, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: cat_exposure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.30}
+      - {group_id: fire_protection, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.10}
+      - {group_id: business_interruption, risk_weight: 0.05, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: tiv
+      preferred_rate: 0.0008
+      standard_plus_rate: 0.0015
+      standard_rate: 0.0025
+      substandard_rate: 0.0040
+      decline_rate: 0.0060
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000, 2500000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: commercial_property
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.5}
+              - {limit: 5000000, factor: 2.2}
+              - {limit: 10000000, factor: 3.0}
+              - {limit: 25000000, factor: 4.5}
+              - {limit: 50000000, factor: 6.0}
+              - {limit: 100000000, factor: 8.0}
+              - {limit: 250000000, factor: 12.0}
+              - {limit: 500000000, factor: 16.0}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.20}
+            - {deductible: 25000, factor: 1.0}
+            - {deductible: 50000, factor: 0.90}
+            - {deductible: 100000, factor: 0.80}
+            - {deductible: 250000, factor: 0.70}
+            - {deductible: 500000, factor: 0.62}
+            - {deductible: 1000000, factor: 0.55}
+            - {deductible: 2500000, factor: 0.48}
+        - product_type: business_interruption
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.55}
+              - {limit: 5000000, factor: 2.4}
+              - {limit: 10000000, factor: 3.3}
+              - {limit: 25000000, factor: 5.0}
+              - {limit: 50000000, factor: 7.0}
+              - {limit: 100000000, factor: 9.5}
+              - {limit: 250000000, factor: 14.0}
+              - {limit: 500000000, factor: 19.0}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.20}
+            - {deductible: 25000, factor: 1.0}
+            - {deductible: 50000, factor: 0.90}
+            - {deductible: 100000, factor: 0.80}
+            - {deductible: 250000, factor: 0.70}
+            - {deductible: 500000, factor: 0.62}
+            - {deductible: 1000000, factor: 0.55}
+            - {deductible: 2500000, factor: 0.48}
+
+  # =========================================================================
+  # 2. PROPERTY HIGH VALUE
+  # =========================================================================
+  # Specialist model for high-value commercial property — major real
+  # estate portfolios, landmark buildings, data centres, critical
+  # infrastructure. TIV > $500M. Tighter underwriting, higher limits.
+  # =========================================================================
+  - id: property_high_value
+    name: DSI Commercial Property High Value Model
+    description: "High-value commercial property — TIV >$500M, landmark, data centre, critical infrastructure"
+    model_specificity: 4
+    min_premium: 250000
+
+    routing_constraints:
+      - {field: tiv, operator: ">=", value: 500000000, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any open or pending property claims in the past 5 years?
+        conditions: [{action: REFER, override: 3, note: "Open claims on high-value property"}]
+      - id: prior_total_loss
+        question: Has this property or a comparable property in the portfolio suffered a total loss?
+        conditions: [{action: REFER, override: 5, note: "Prior total loss history"}]
+      - id: single_tenant
+        question: Is the property 100% occupied by a single tenant?
+        conditions: [{action: FLAG, note: "Single-tenant concentration risk"}]
+      - id: redundant_systems
+        question: Does the property have redundant fire suppression and life safety systems?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Redundant protection credit"}]
+      - id: terrorism_exposure
+        question: Is the property considered a landmark or high-profile terrorism target?
+        conditions: [{action: REFER, override: 4, note: "Terrorism target exposure"}]
+      - id: coastal_frontage
+        question: Does the property have direct coastal frontage or is located within 1 mile of coast?
+        conditions: [{action: FLAG, note: "Coastal frontage — surge/wind exposure"}]
+
+    category_groups: [construction_class, occupancy_hazard_grade, sprinkler_coverage]
+
+    group_weights:
+      - {group_id: construction_quality, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: occupancy_risk, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: cat_exposure, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.35}
+      - {group_id: fire_protection, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.10}
+      - {group_id: business_interruption, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.25}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.05}
+      - {group_id: firm_stability, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: tiv
+      preferred_rate: 0.0005
+      standard_plus_rate: 0.0010
+      standard_rate: 0.0018
+      substandard_rate: 0.0030
+      decline_rate: 0.0050
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [250000, 500000, 1000000, 2500000, 5000000]
+
+    pricing:
+      base_limit_reference: 25000000
+      base_deductible_reference: 500000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: commercial_property
+          ilf_curve:
+            base_limit: 25000000
+            factors:
+              - {limit: 25000000, factor: 1.0}
+              - {limit: 50000000, factor: 1.6}
+              - {limit: 100000000, factor: 2.5}
+              - {limit: 250000000, factor: 4.5}
+              - {limit: 500000000, factor: 7.0}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.88}
+            - {deductible: 2500000, factor: 0.75}
+            - {deductible: 5000000, factor: 0.65}
+        - product_type: business_interruption
+          ilf_curve:
+            base_limit: 25000000
+            factors:
+              - {limit: 25000000, factor: 1.0}
+              - {limit: 50000000, factor: 1.7}
+              - {limit: 100000000, factor: 2.8}
+              - {limit: 250000000, factor: 5.0}
+              - {limit: 500000000, factor: 8.0}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.88}
+            - {deductible: 2500000, factor: 0.75}
+            - {deductible: 5000000, factor: 0.65}
+
+  # =========================================================================
+  # 3. PROPERTY CAT EXPOSED
+  # =========================================================================
+  # Specialist model for risks in high-CAT zones — coastal wind,
+  # California earthquake, wildfire-urban interface. Higher rates,
+  # heavier CAT exposure weight, tighter referral triggers.
+  # =========================================================================
+  - id: property_cat_exposed
+    name: DSI Commercial Property CAT-Exposed Model
+    description: "CAT-exposed commercial property — coastal wind, earthquake, wildfire zones"
+    model_specificity: 3
+    min_premium: 50000
+
+    routing_constraints:
+      - {field: tiv, operator: ">=", value: 5000000, required_in_input: true}
+      - {field: cat_zone, operator: "IN", value: [HIGH_WIND, HIGH_EQ, HIGH_WILDFIRE, HIGH_FLOOD], required_in_input: true}
+
+    direct_queries:
+      - id: prior_cat_loss
+        question: Has this property sustained a catastrophe loss in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Prior CAT loss at this location"}]
+      - id: cat_mitigation
+        question: Have CAT-specific mitigation measures been implemented (hurricane straps, seismic retrofit, defensible space)?
+        conditions: [{action: MODIFIER, applied: 0.85, note: "CAT mitigation credit"}]
+      - id: coastal_proximity
+        question: Is the property within 2500 feet of the coastline?
+        conditions: [{action: REFER, override: 4, note: "Immediate coastal exposure"}]
+      - id: flood_elevation
+        question: Is the property elevated above the base flood elevation?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Elevated above BFE credit"}]
+      - id: secondary_perils
+        question: Is the location exposed to multiple concurrent CAT perils (e.g., wind + flood + storm surge)?
+        conditions: [{action: FLAG, note: "Multi-peril CAT exposure"}]
+
+    category_groups: [construction_class, occupancy_hazard_grade, sprinkler_coverage]
+
+    group_weights:
+      - {group_id: construction_quality, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.05}
+      - {group_id: occupancy_risk, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.05}
+      - {group_id: cat_exposure, risk_weight: 0.35, loss_weight: 0.35, exposure_weight: 0.50}
+      - {group_id: fire_protection, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.05}
+      - {group_id: business_interruption, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.25}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.05}
+      - {group_id: firm_stability, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: tiv
+      preferred_rate: 0.0018
+      standard_plus_rate: 0.0030
+      standard_rate: 0.0045
+      substandard_rate: 0.0065
+      decline_rate: 0.0090
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000, 2500000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: commercial_property
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.5}
+              - {limit: 5000000, factor: 2.2}
+              - {limit: 10000000, factor: 3.0}
+              - {limit: 25000000, factor: 4.5}
+              - {limit: 50000000, factor: 6.0}
+              - {limit: 100000000, factor: 8.0}
+              - {limit: 250000000, factor: 12.0}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.15}
+            - {deductible: 50000, factor: 1.0}
+            - {deductible: 100000, factor: 0.88}
+            - {deductible: 250000, factor: 0.78}
+            - {deductible: 500000, factor: 0.68}
+            - {deductible: 1000000, factor: 0.60}
+            - {deductible: 2500000, factor: 0.52}
+        - product_type: difference_in_conditions
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.7}
+              - {limit: 5000000, factor: 2.8}
+              - {limit: 10000000, factor: 4.0}
+              - {limit: 25000000, factor: 6.5}
+              - {limit: 50000000, factor: 9.0}
+              - {limit: 100000000, factor: 12.5}
+              - {limit: 250000000, factor: 18.0}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.15}
+            - {deductible: 50000, factor: 1.0}
+            - {deductible: 100000, factor: 0.88}
+            - {deductible: 250000, factor: 0.78}
+            - {deductible: 500000, factor: 0.68}
+            - {deductible: 1000000, factor: 0.60}
+            - {deductible: 2500000, factor: 0.52}
+
+  # =========================================================================
+  # 4. PROPERTY BUILDERS RISK
+  # =========================================================================
+  # Specialist model for construction-phase risks. TIV escalates
+  # during build. Higher frequency (active construction site), different
+  # peril profile (collapse, theft of materials, weather damage to
+  # unenclosed structures). Time-limited policy.
+  # =========================================================================
+  - id: property_builders_risk
+    name: DSI Builders Risk Model
+    description: "Construction-phase property coverage — new build, renovation, fit-out"
+    model_specificity: 3
+    min_premium: 15000
+
+    product_types:
+      - builders_risk
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: builders_risk, required_in_input: true}
+
+    direct_queries:
+      - id: project_type
+        question: Is this new construction, renovation, or fit-out/tenant improvement?
+        conditions: [{action: FLAG, note: "Project type classification"}]
+      - id: contractor_experience
+        question: Does the general contractor have 10+ years experience on comparable projects?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Experienced contractor credit"}]
+      - id: wood_frame_over_4
+        question: Is this a wood-frame structure over 4 stories?
+        conditions: [{action: REFER, override: 4, note: "Wood-frame high-rise — fire exposure"}]
+      - id: site_security
+        question: Is the construction site secured with 24/7 fencing, cameras, and guard service?
+        conditions: [{action: MODIFIER, applied: 0.92, note: "Site security credit"}]
+      - id: hot_works_program
+        question: Is a formal hot works permit program in place?
+        conditions: [{action: MODIFIER, applied: 0.95, note: "Hot works program credit"}]
+      - id: project_delay_history
+        question: Has the contractor experienced significant project delays (>6 months) on recent projects?
+        conditions: [{action: FLAG, note: "Contractor delay history"}]
+
+    category_groups: [construction_class]
+
+    group_weights:
+      - {group_id: construction_quality, risk_weight: 0.30, loss_weight: 0.25, exposure_weight: 0.15}
+      - {group_id: occupancy_risk, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: cat_exposure, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.35}
+      - {group_id: fire_protection, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.15}
+      - {group_id: business_interruption, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: corporate_footprint, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+      - {group_id: firm_stability, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.05}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: tiv
+      preferred_rate: 0.0020
+      standard_plus_rate: 0.0035
+      standard_rate: 0.0055
+      substandard_rate: 0.0080
+      decline_rate: 0.0110
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: builders_risk
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.6}
+              - {limit: 5000000, factor: 2.5}
+              - {limit: 10000000, factor: 3.5}
+              - {limit: 25000000, factor: 5.5}
+              - {limit: 50000000, factor: 7.5}
+              - {limit: 100000000, factor: 10.5}
+              - {limit: 250000000, factor: 15.0}
+              - {limit: 500000000, factor: 20.0}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.25}
+            - {deductible: 25000, factor: 1.0}
+            - {deductible: 50000, factor: 0.88}
+            - {deductible: 100000, factor: 0.78}
+            - {deductible: 250000, factor: 0.68}
+            - {deductible: 500000, factor: 0.60}
+            - {deductible: 1000000, factor: 0.52}
+
+  # =========================================================================
+  # 5. PROPERTY SME
+  # =========================================================================
+  # Simplified model for small-to-medium commercial property.
+  # TIV < $5M. Reduced signal set, lower specificity, lower limits.
+  # Follows the _sme pattern used across all existing coverages.
+  # =========================================================================
+  - id: property_sme
+    name: DSI Commercial Property SME Model
+    description: "Small-to-medium commercial property — TIV under $5M, simplified assessment"
+    model_specificity: 1
+    min_premium: 5000
+
+    routing_constraints:
+      - {field: tiv, operator: "<", value: 5000000, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any open or pending property claims in the past 3 years?
+        conditions: [{action: FLAG, note: "Recent claims history"}]
+      - id: prior_losses
+        question: Any property loss exceeding $100K in the past 5 years?
+        conditions: [{action: REFER, override: 4, note: "Significant prior loss for SME"}]
+      - id: owner_occupied
+        question: Is the property owner-occupied?
+        conditions: [{action: MODIFIER, applied: 0.92, note: "Owner-occupied credit"}]
+
+    category_groups: [construction_class, sprinkler_coverage]
+
+    group_weights:
+      - {group_id: construction_quality, risk_weight: 0.30, loss_weight: 0.25, exposure_weight: 0.15}
+      - {group_id: occupancy_risk, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: cat_exposure, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.30}
+      - {group_id: fire_protection, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.15}
+      - {group_id: business_interruption, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.25}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: tiv
+      preferred_rate: 0.0012
+      standard_plus_rate: 0.0020
+      standard_rate: 0.0032
+      substandard_rate: 0.0050
+      decline_rate: 0.0075
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [250000, 500000, 1000000, 2000000, 5000000]
+      valid_deductibles: [2500, 5000, 10000, 25000, 50000, 100000]
+
+    pricing:
+      base_limit_reference: 500000
+      base_deductible_reference: 10000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: commercial_property
+          ilf_curve:
+            base_limit: 500000
+            factors:
+              - {limit: 250000, factor: 0.65}
+              - {limit: 500000, factor: 1.0}
+              - {limit: 1000000, factor: 1.5}
+              - {limit: 2000000, factor: 2.2}
+              - {limit: 5000000, factor: 3.5}
+          deductible_factors:
+            - {deductible: 2500, factor: 1.30}
+            - {deductible: 5000, factor: 1.15}
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.85}
+            - {deductible: 50000, factor: 0.72}
+            - {deductible: 100000, factor: 0.62}
+        - product_type: business_interruption
+          ilf_curve:
+            base_limit: 500000
+            factors:
+              - {limit: 250000, factor: 0.65}
+              - {limit: 500000, factor: 1.0}
+              - {limit: 1000000, factor: 1.55}
+              - {limit: 2000000, factor: 2.3}
+              - {limit: 5000000, factor: 3.8}
+          deductible_factors:
+            - {deductible: 2500, factor: 1.30}
+            - {deductible: 5000, factor: 1.15}
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.85}
+            - {deductible: 50000, factor: 0.72}
+            - {deductible: 100000, factor: 0.62}
+
+# =============================================================================
+# INFRASTRUCTURE NOTES (New Coverage Line)
+# =============================================================================
+#
+# Before this spec can be executed by the builder, the following must exist:
+#
+# 1. coverages/property/__init__.py             — empty file (builder creates)
+# 2. signal_architecture/signals/inference/metadata_registry.py:
+#    - Add: COVERAGE_PROPERTY = "property"
+#    - Add "property" to ALL_COVERAGES list (line 65)
+#    - Create _PROPERTY_SIGNALS list with 27 signal metadata entries
+#    - Call SIGNAL_METADATA_REGISTRY.register_many(_PROPERTY_SIGNALS)
+#    - Update cross-coverage signals (corporate_footprint, firm_stability)
+#      to include "property" in coverage_applicability
+#
+# 3. seed_dsi_bench.py:
+#    - Add "property": "syndicate_example" to COVERAGE_ENTITY_MAP (~line 4034)
+#    - Update docstring to include Property configs
+#
+# 4. commercial/entities/syndicate_example.yaml:
+#    - Add CoverageBinding for "property" with appropriate max_single_limit
+#
+# Signal summary:
+#   - 5 new groups: construction_quality, occupancy_risk, cat_exposure,
+#     fire_protection, business_interruption
+#   - 27 new signals (3 categorical, 24 three-layer)
+#   - 2 reused groups from cross-coverage: corporate_footprint, firm_stability
+#
+# Configuration summary:
+#   - property_general        (specificity 2, TIV $5M-$500M)
+#   - property_high_value     (specificity 4, TIV >$500M)
+#   - property_cat_exposed    (specificity 3, CAT zone required)
+#   - property_builders_risk  (specificity 3, builders_risk product only)
+#   - property_sme            (specificity 1, TIV <$5M)
+#
+# =============================================================================
