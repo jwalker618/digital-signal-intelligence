@@ -1,0 +1,606 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 6: D&O Expansion
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# EXPANSION of existing D&O coverage (do_general + do_sme).
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/5/phase_6_do_expansion_spec.yaml \
+#       --existing-config coverages/do/config.yaml \
+#       --write
+#
+# Existing configs retained: do_general (specificity 1), do_sme (specificity 2)
+# Existing groups retained: company_type, industry, stock_exchange
+#
+# =============================================================================
+
+coverage_line: do
+coverage_key: directors_officers
+phase: phase_6
+description: "Phase 6 D&O Coverage Expansion — 4 new specialist configurations"
+version: "2.3.0"
+
+default_product_types:
+  - side_a
+  - side_b
+  - side_c
+  - side_a_dic
+  - employment_practices
+  - fiduciary
+
+default_markets: [us, uk, eu, apac]
+default_currency: USD
+default_min_premium: 10000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: side_a, side_b, side_c, side_a_dic, employment_practices, fiduciary"
+  - field: limit
+    description: Requested limit in USD
+  - field: revenue
+    description: Annual revenue in USD (MULTIPLIER basis)
+
+routing_field: company_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_risk_tier_bands:
+  method: MULTIPLIER
+  basis: revenue
+  bands:
+    - {id: 1, label: PREFERRED, min: 800, max: 1000, action: APPROVE, applied: 4.0e-05}
+    - {id: 2, label: STANDARD_PLUS, min: 650, max: 799, action: APPROVE, applied: 6.0e-05}
+    - {id: 3, label: STANDARD, min: 450, max: 649, action: APPROVE, applied: 1.0e-04}
+    - {id: 4, label: SUBSTANDARD, min: 250, max: 449, action: REFER, applied: 1.8e-04}
+    - {id: 5, label: DECLINE, min: 0, max: 249, action: DECLINE, applied: 3.0e-04}
+
+default_loss_tier_bands:
+  floor: 0.50
+  cap: 1.8
+
+default_exposure_bands:
+  size_weight: 0.6
+  complexity_weight: 0.4
+  size_thresholds:
+    - {label: MICRO, max_value: 10000000, applied: 0.5}
+    - {label: SMALL, max_value: 100000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 1000000000, applied: 1.0}
+    - {label: LARGE, max_value: 10000000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 100000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+  valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000, 2500000, 5000000]
+
+default_pricing:
+  base_limit_reference: 5000000
+  base_deductible_reference: 100000
+  taxes_fees_rate: 0.05
+  by_product_type:
+    - product_type: side_a
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 1000000, factor: 0.40}
+          - {limit: 2000000, factor: 0.65}
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.7}
+          - {limit: 25000000, factor: 3.2}
+          - {limit: 50000000, factor: 5.5}
+          - {limit: 100000000, factor: 9.5}
+          - {limit: 250000000, factor: 18.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.20}
+        - {deductible: 50000, factor: 1.10}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.88}
+        - {deductible: 500000, factor: 0.78}
+        - {deductible: 1000000, factor: 0.68}
+        - {deductible: 2500000, factor: 0.58}
+        - {deductible: 5000000, factor: 0.50}
+    - product_type: side_b
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 1000000, factor: 0.38}
+          - {limit: 2000000, factor: 0.62}
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.65}
+          - {limit: 25000000, factor: 3.0}
+          - {limit: 50000000, factor: 5.0}
+          - {limit: 100000000, factor: 8.5}
+          - {limit: 250000000, factor: 16.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.20}
+        - {deductible: 50000, factor: 1.10}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.88}
+        - {deductible: 500000, factor: 0.78}
+        - {deductible: 1000000, factor: 0.68}
+        - {deductible: 2500000, factor: 0.58}
+        - {deductible: 5000000, factor: 0.50}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # -------------------------------------------------------------------------
+  # GROUP 1: PUBLIC COMPANY GOVERNANCE
+  # -------------------------------------------------------------------------
+  - id: public_company_governance
+    label: Public Company Governance
+    description: "SEC filing quality, board independence, shareholder activism, restatement risk"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: sec_filing_quality
+        name: SEC Filing Quality
+        description: "10-K/10-Q filing timeliness; material weakness disclosures; restatement history"
+        group_id: public_company_governance
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Material weakness or restatement"}
+
+      - id: board_independence
+        name: Board Independence & Composition
+        description: "Independent director ratio; board diversity; committee structure; CEO/Chair separation"
+        group_id: public_company_governance
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+
+      - id: shareholder_activism
+        name: Shareholder Activism Exposure
+        description: "Activist campaign history; proxy fight risk; 13D filing patterns in sector"
+        group_id: public_company_governance
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "Elevated activist exposure"}
+
+      - id: securities_litigation_exposure
+        name: Securities Litigation Exposure
+        description: "Stock volatility; options backdating; insider trading patterns; SCA frequency in sector"
+        group_id: public_company_governance
+        signal_type: three_layer
+        proxy_tier: COHORT_INFERENCE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.25
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "High securities litigation exposure"}
+
+      - id: executive_compensation_structure
+        name: Executive Compensation Structure
+        description: "Say-on-pay results; compensation vs performance alignment; golden parachute provisions"
+        group_id: public_company_governance
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.10
+          exposure_complexity_weight: 0.10
+
+  # -------------------------------------------------------------------------
+  # GROUP 2: TRANSACTION & EVENT RISK
+  # -------------------------------------------------------------------------
+  - id: transaction_event_risk
+    label: Transaction & Event Risk
+    description: "M&A activity, IPO/SPAC risk, delisting exposure, PE sponsor dynamics"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: ma_activity
+        name: M&A Transaction Activity
+        description: "Pending or recent M&A; hostile bid exposure; go-private transactions"
+        group_id: transaction_event_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 3, note: "Active M&A transaction"}
+
+      - id: ipo_spac_exposure
+        name: IPO/SPAC Exposure
+        description: "Time since IPO; SPAC de-SPAC litigation risk; S-1 disclosure quality"
+        group_id: transaction_event_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.25
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Recent IPO/de-SPAC — elevated SCA risk"}
+
+      - id: pe_sponsor_dynamics
+        name: PE/VC Sponsor Dynamics
+        description: "Sponsor-controlled board; portfolio company oversight; exit timeline pressure"
+        group_id: transaction_event_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.15
+
+      - id: bankruptcy_distress_risk
+        name: Bankruptcy & Financial Distress
+        description: "Altman Z-score proxy; debt covenants; going concern qualifications; liquidity stress"
+        group_id: transaction_event_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.25
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 5, note: "Financial distress — D&O tail risk"}
+
+      - id: regulatory_investigation_exposure
+        name: Regulatory Investigation Exposure
+        description: "SEC/DOJ/FTC investigation history; FCPA exposure; whistleblower complaints"
+        group_id: transaction_event_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "Active regulatory investigation"}
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. D&O PUBLIC COMPANY
+  # =========================================================================
+  - id: do_public
+    name: DSI D&O Public Company Model
+    description: "Publicly listed companies — SEC reporting, securities litigation, shareholder activism"
+    model_specificity: 4
+    min_premium: 100000
+
+    routing_constraints:
+      - {field: company_segment, operator: "==", value: PUBLIC, required_in_input: true}
+      - {field: revenue, operator: ">=", value: 100000000, required_in_input: true}
+
+    direct_queries:
+      - id: securities_class_action
+        question: Is the company a defendant in a pending securities class action?
+        conditions: [{action: REFER, override: 5, note: "Active SCA"}]
+      - id: restatement
+        question: Has the company restated financial results in the past 3 years?
+        conditions: [{action: REFER, override: 4, note: "Financial restatement"}]
+      - id: sec_investigation
+        question: Is the company subject to a pending SEC investigation or enforcement action?
+        conditions: [{action: REFER, override: 5, note: "SEC investigation"}]
+      - id: derivative_action
+        question: Any pending shareholder derivative lawsuits?
+        conditions: [{action: REFER, override: 3, note: "Shareholder derivative action"}]
+      - id: proxy_contest
+        question: Has the company faced a proxy contest in the past 24 months?
+        conditions: [{action: FLAG, note: "Recent proxy contest"}]
+      - id: insider_trading
+        question: Any directors or officers subject to insider trading allegations?
+        conditions: [{action: REFER, override: 5, note: "Insider trading allegations"}]
+
+    category_groups: [company_type, industry, stock_exchange]
+
+    group_weights:
+      - {group_id: public_company_governance, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: transaction_event_risk, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 5.0e-05
+      standard_plus_rate: 8.0e-05
+      standard_rate: 1.4e-04
+      substandard_rate: 2.5e-04
+      decline_rate: 4.0e-04
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [250000, 500000, 1000000, 2500000, 5000000, 10000000]
+
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 500000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: side_a
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 5000000, factor: 0.65}
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.9}
+              - {limit: 50000000, factor: 3.2}
+              - {limit: 100000000, factor: 5.5}
+              - {limit: 250000000, factor: 10.0}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.88}
+            - {deductible: 2500000, factor: 0.75}
+            - {deductible: 5000000, factor: 0.65}
+            - {deductible: 10000000, factor: 0.55}
+
+  # =========================================================================
+  # 2. D&O PE-BACKED
+  # =========================================================================
+  - id: do_pe_backed
+    name: DSI D&O PE/VC-Backed Company Model
+    description: "PE/VC portfolio companies — sponsor dynamics, exit pressure, board composition"
+    model_specificity: 3
+    min_premium: 25000
+
+    routing_constraints:
+      - {field: company_segment, operator: "==", value: PE_BACKED, required_in_input: true}
+
+    direct_queries:
+      - id: exit_timeline
+        question: Is the sponsor actively pursuing an exit (IPO, sale, or secondary) within 12 months?
+        conditions: [{action: FLAG, note: "Near-term exit — transaction risk"}]
+      - id: leveraged_recapitalisation
+        question: Has the company undergone a leveraged recapitalisation or dividend recap?
+        conditions: [{action: REFER, override: 4, note: "Leveraged recap — creditor claim risk"}]
+      - id: management_change
+        question: Has the CEO or CFO changed in the past 12 months?
+        conditions: [{action: FLAG, note: "Recent C-suite change"}]
+      - id: covenant_issues
+        question: Is the company currently in breach of or close to breaching any debt covenants?
+        conditions: [{action: REFER, override: 4, note: "Covenant breach risk"}]
+
+    category_groups: [company_type, industry]
+
+    group_weights:
+      - {group_id: transaction_event_risk, risk_weight: 0.35, loss_weight: 0.30, exposure_weight: 0.25}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: regulatory_standing, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 5.0e-05
+      standard_plus_rate: 8.0e-05
+      standard_rate: 1.3e-04
+      substandard_rate: 2.2e-04
+      decline_rate: 3.5e-04
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000]
+      valid_deductibles: [50000, 100000, 250000, 500000, 1000000, 2500000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 250000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: side_a
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.40}
+              - {limit: 2000000, factor: 0.65}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.7}
+              - {limit: 25000000, factor: 3.2}
+              - {limit: 50000000, factor: 5.5}
+          deductible_factors:
+            - {deductible: 50000, factor: 1.20}
+            - {deductible: 100000, factor: 1.10}
+            - {deductible: 250000, factor: 1.0}
+            - {deductible: 500000, factor: 0.88}
+            - {deductible: 1000000, factor: 0.78}
+            - {deductible: 2500000, factor: 0.65}
+
+  # =========================================================================
+  # 3. D&O NON-PROFIT
+  # =========================================================================
+  - id: do_nonprofit
+    name: DSI D&O Non-Profit Organisation Model
+    description: "Non-profit and charitable organisations — donor restrictions, fiduciary duties, regulatory compliance"
+    model_specificity: 3
+    min_premium: 5000
+
+    routing_constraints:
+      - {field: company_segment, operator: "==", value: NONPROFIT, required_in_input: true}
+
+    direct_queries:
+      - id: donor_restrictions
+        question: Has the organisation been cited for misuse of restricted funds?
+        conditions: [{action: REFER, override: 4, note: "Donor fund misuse"}]
+      - id: irs_compliance
+        question: Is the organisation's tax-exempt status current and in good standing?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Tax-exempt compliance credit"}]
+      - id: whistleblower
+        question: Any pending whistleblower complaints or qui tam actions?
+        conditions: [{action: REFER, override: 4, note: "Whistleblower/qui tam action"}]
+
+    category_groups: [company_type, industry]
+
+    group_weights:
+      - {group_id: corporate_footprint, risk_weight: 0.25, loss_weight: 0.20, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.20}
+      - {group_id: regulatory_standing, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.25}
+      - {group_id: litigation_history, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: transaction_event_risk, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 2.0e-05
+      standard_plus_rate: 3.5e-05
+      standard_rate: 6.0e-05
+      substandard_rate: 1.0e-04
+      decline_rate: 1.8e-04
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [500000, 1000000, 2000000, 5000000, 10000000, 25000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000]
+
+    pricing:
+      base_limit_reference: 2000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: side_a
+          ilf_curve:
+            base_limit: 2000000
+            factors:
+              - {limit: 500000, factor: 0.45}
+              - {limit: 1000000, factor: 0.70}
+              - {limit: 2000000, factor: 1.0}
+              - {limit: 5000000, factor: 1.8}
+              - {limit: 10000000, factor: 3.0}
+              - {limit: 25000000, factor: 5.5}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.15}
+            - {deductible: 25000, factor: 1.0}
+            - {deductible: 50000, factor: 0.88}
+            - {deductible: 100000, factor: 0.78}
+            - {deductible: 250000, factor: 0.68}
+            - {deductible: 500000, factor: 0.58}
+
+  # =========================================================================
+  # 4. D&O IPO / SPAC
+  # =========================================================================
+  - id: do_ipo_spac
+    name: DSI D&O IPO & SPAC Model
+    description: "IPO and SPAC de-SPAC transactions — elevated SCA risk, prospectus liability, short selling"
+    model_specificity: 4
+    min_premium: 150000
+
+    routing_constraints:
+      - {field: company_segment, operator: "IN", value: [IPO, SPAC], required_in_input: true}
+      - {field: revenue, operator: ">=", value: 10000000, required_in_input: true}
+
+    direct_queries:
+      - id: prospectus_quality
+        question: Has the S-1/prospectus been reviewed by experienced securities counsel?
+        conditions: [{action: MODIFIER, applied: 0.92, note: "Experienced securities counsel credit"}]
+      - id: short_interest
+        question: Is short interest in the stock above 15%?
+        conditions: [{action: REFER, override: 3, note: "Elevated short interest"}]
+      - id: revenue_projections
+        question: Were forward-looking revenue projections included in offering materials?
+        conditions: [{action: FLAG, note: "Forward projections — disclosure risk"}]
+      - id: related_party
+        question: Are there significant related-party transactions disclosed?
+        conditions: [{action: FLAG, note: "Related-party transaction disclosure"}]
+      - id: lock_up_expiry
+        question: Is the insider lock-up period expiring within 90 days?
+        conditions: [{action: FLAG, note: "Imminent lock-up expiry — stock pressure risk"}]
+
+    category_groups: [company_type, industry, stock_exchange]
+
+    group_weights:
+      - {group_id: transaction_event_risk, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.30}
+      - {group_id: public_company_governance, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 1.0e-04
+      standard_plus_rate: 1.8e-04
+      standard_rate: 3.0e-04
+      substandard_rate: 5.0e-04
+      decline_rate: 8.0e-04
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [500000, 1000000, 2500000, 5000000, 10000000]
+
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 1000000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: side_a
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 5000000, factor: 0.65}
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.9}
+              - {limit: 50000000, factor: 3.2}
+              - {limit: 100000000, factor: 5.5}
+              - {limit: 250000000, factor: 10.0}
+          deductible_factors:
+            - {deductible: 500000, factor: 1.12}
+            - {deductible: 1000000, factor: 1.0}
+            - {deductible: 2500000, factor: 0.85}
+            - {deductible: 5000000, factor: 0.72}
+            - {deductible: 10000000, factor: 0.60}
+
+# =============================================================================
+# EXPANSION NOTES
+# =============================================================================
+#
+# Changes to existing infrastructure:
+# 1. metadata_registry.py: Add 10 signals, 2 new groups
+#    (public_company_governance, transaction_event_risk)
+# 2. seed_dsi_bench.py: Update docstring
+#
+# Signal summary: 2 new groups, 10 new signals (all three-layer)
+# Config summary: 4 new (do_public, do_pe_backed, do_nonprofit, do_ipo_spac)
+# Total D&O configs after expansion: 6 (general, sme + 4 new)
+# =============================================================================
