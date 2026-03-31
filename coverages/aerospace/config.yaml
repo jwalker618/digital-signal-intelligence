@@ -1361,7 +1361,7 @@ aerospace:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.60
+      max_premium_to_limit_ratio: 0.6
       max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 5.0
   aerospace_sme:
@@ -2173,3 +2173,2368 @@ aerospace:
       max_premium_to_limit_ratio: 0.15
       max_premium_to_revenue_ratio: 0.001
       max_ilf_factor: 5.0
+  aerospace_space:
+    metadata:
+      name: DSI Space Insurance Model
+      description: Space risk — launch vehicles, satellites, in-orbit operations
+      version: 2.3.0
+      product_types:
+      - space_launch
+      - space_in_orbit
+      - satellite
+      applicable_markets: &id001
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: space_launch, space_in_orbit, satellite'
+        - field: limit
+          description: Requested limit in USD
+        - field: hull_value
+          description: Satellite/launch vehicle insured value in USD
+      min_premium: 500000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: aviation_segment
+        operator: ==
+        value: SPACE
+        required_in_input: true
+      - field: hull_value
+        operator: '>='
+        value: 50000000
+        required_in_input: true
+    direct_queries:
+    - id: launch_vehicle_heritage
+      question: Has this launch vehicle type completed 10+ successful consecutive launches?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.85
+        note: Proven launch vehicle credit
+    - id: novel_technology
+      question: Does the satellite/payload incorporate first-generation or unproven technology?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Novel technology — limited heritage
+    - id: constellation_member
+      question: Is this satellite part of a large constellation (>20 units)?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.92
+        note: Constellation volume credit
+    - id: dual_launch
+      question: Is this a shared/rideshare launch with other payloads?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Rideshare launch — co-passenger risk
+    - id: deorbit_plan
+      question: Does the operator have a compliant debris mitigation/deorbit plan?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.95
+        note: Debris mitigation compliance credit
+    signal_registry:
+    - id: launch_vehicle_reliability
+      inference_utility_function: launch_vehicle_reliability_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: space_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+          score_conditions:
+          - action: REFER
+            override: 5
+            note: Launch vehicle with poor success record
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Launch vehicle reliability below market average
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: satellite_technology_maturity
+      inference_utility_function: satellite_technology_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: space_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: orbital_debris_exposure
+      inference_utility_function: orbital_debris_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: space_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: in_orbit_anomaly_history
+      inference_utility_function: in_orbit_anomaly_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: space_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: ground_segment_quality
+      inference_utility_function: ground_segment_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: space_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: space_risk
+        label: Space Risk
+        description: Launch vehicle reliability, satellite technology, orbital debris, in-orbit anomaly history
+        risk:
+          weight: 0.45
+        loss:
+          weight: 0.45
+        exposure:
+          weight: 0.35
+      - id: regulatory_framework
+        label: Regulatory Framework
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: fleet_category
+        label: Fleet Category
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.035
+            basis: hull_value
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.055
+            basis: hull_value
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.085
+            basis: hull_value
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.13
+            basis: hull_value
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.2
+            basis: hull_value
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      - 500000000
+      valid_deductibles:
+      - 1000000
+      - 2500000
+      - 5000000
+      - 10000000
+      - 25000000
+    pricing:
+      base_limit_reference: 50000000
+      base_deductible_reference: 5000000
+      by_product_type:
+        space_launch:
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 1000000
+            factor: 1.15
+          - deductible: 2500000
+            factor: 1.05
+          - deductible: 5000000
+            factor: 1.0
+          - deductible: 10000000
+            factor: 0.9
+          - deductible: 25000000
+            factor: 0.78
+        space_in_orbit:
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 1000000
+            factor: 1.15
+          - deductible: 2500000
+            factor: 1.05
+          - deductible: 5000000
+            factor: 1.0
+          - deductible: 10000000
+            factor: 0.9
+          - deductible: 25000000
+            factor: 0.78
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  aerospace_rotary:
+    metadata:
+      name: DSI Rotary Wing Aviation Model
+      description: Helicopter operations — mission-specific, EMS, offshore, utility, corporate
+      version: 2.3.0
+      product_types: &id002
+      - aviation_hull
+      - aviation_liability
+      - aviation_hull_liability_combined
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: &id003
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: aviation_hull, aviation_liability, aviation_hull_liability_combined, space_launch, space_in_orbit,
+            satellite'
+        - field: limit
+          description: Requested limit in USD
+        - field: hull_value
+          description: Total hull/asset value in USD (MULTIPLIER basis)
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: aviation_segment
+        operator: ==
+        value: ROTARY_WING
+        required_in_input: true
+    direct_queries:
+    - id: accident_history
+      question: Any hull loss or serious incident in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Recent hull loss/serious incident
+    - id: nvg_operations
+      question: Does the operator conduct night vision goggle (NVG) operations?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: NVG operations — specialised risk profile
+    - id: ems_response_area
+      question: Does the EMS programme operate in mountainous or over-water terrain?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Challenging EMS operating environment
+    - id: single_pilot_ifr
+      question: Are any operations conducted single-pilot IFR?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: Single-pilot IFR operations
+    - id: sms_implementation
+      question: Does the operator have a fully implemented Safety Management System?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: SMS implementation credit
+    signal_registry:
+    - id: mission_profile
+      inference_utility_function: mission_profile_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: rotary_wing_risk
+        source: metadata.rotary_mission_profile
+        features:
+        - cat: CORPORATE
+          label: Corporate/VIP Transport
+          applied: 0.75
+        - cat: CHARTER
+          label: Charter/Air Taxi
+          applied: 0.9
+        - cat: OFFSHORE
+          label: Offshore Oil & Gas
+          applied: 1.1
+        - cat: EMS
+          label: Emergency Medical Services
+          applied: 1.25
+        - cat: UTILITY
+          label: Utility/External Load
+          applied: 1.3
+        - cat: SAR
+          label: Search and Rescue
+          applied: 1.2
+        - cat: TRAINING
+          label: Flight Training
+          applied: 1.15
+    - id: rotary_pilot_experience
+      inference_utility_function: rotary_pilot_experience_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: rotary_wing_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: rotary_maintenance_quality
+      inference_utility_function: rotary_maintenance_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: rotary_wing_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: landing_zone_quality
+      inference_utility_function: landing_zone_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: rotary_wing_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: passenger_liability_exposure
+      inference_utility_function: passenger_liability_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: rotary_wing_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: rotary_wing_risk
+        label: Rotary Wing Risk
+        description: Helicopter mission profile, pilot experience, maintenance programme, landing zone quality
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.25
+      - id: iosa_status
+        label: Iosa Status
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: regulatory_framework
+        label: Regulatory Framework
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: fleet_size
+        label: Fleet Size
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.002
+            basis: hull_value
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0035
+            basis: hull_value
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0055
+            basis: hull_value
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0085
+            basis: hull_value
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.013
+            basis: hull_value
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      valid_deductibles:
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      by_product_type:
+        aviation_hull_liability_combined:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.2
+          - deductible: 50000
+            factor: 1.1
+          - deductible: 100000
+            factor: 1.0
+          - deductible: 250000
+            factor: 0.85
+          - deductible: 500000
+            factor: 0.72
+          - deductible: 1000000
+            factor: 0.6
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  aerospace_unmanned:
+    metadata:
+      name: DSI Unmanned Aircraft Systems Model
+      description: UAS/drone operations — VLOS, BVLOS, autonomous, commercial drone fleets
+      version: 2.3.0
+      product_types: *id002
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id003
+      min_premium: 10000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: aviation_segment
+        operator: ==
+        value: UNMANNED
+        required_in_input: true
+    direct_queries:
+    - id: bvlos_waiver
+      question: Does the operator hold a BVLOS waiver or equivalent regulatory approval?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: BVLOS operations approved
+    - id: urban_operations
+      question: Are operations conducted over densely populated areas?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: Urban overflown population exposure
+    - id: delivery_operations
+      question: Does the operator conduct drone delivery operations?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Delivery operations — dropped object risk
+    - id: incident_history
+      question: Any flyaway, lost-link, or third-party impact incidents in the past 24 months?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: UAS incident history
+    signal_registry:
+    - id: uas_operational_scope
+      inference_utility_function: uas_operational_scope_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: unmanned_systems
+        source: metadata.uas_operational_scope
+        features:
+        - cat: VLOS_RURAL
+          label: Visual Line of Sight — Rural
+          applied: 0.7
+        - cat: VLOS_URBAN
+          label: Visual Line of Sight — Urban
+          applied: 0.9
+        - cat: BVLOS_RURAL
+          label: Beyond VLOS — Rural
+          applied: 1.1
+        - cat: BVLOS_URBAN
+          label: Beyond VLOS — Urban
+          applied: 1.4
+        - cat: AUTONOMOUS
+          label: Autonomous Operations
+          applied: 1.6
+    - id: uas_regulatory_compliance
+      inference_utility_function: uas_regulatory_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: unmanned_systems
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: airspace_integration
+      inference_utility_function: airspace_integration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: unmanned_systems
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: uas_payload_risk
+      inference_utility_function: uas_payload_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: unmanned_systems
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: uas_fleet_reliability
+      inference_utility_function: uas_fleet_reliability_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: unmanned_systems
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: FLAG
+            note: Elevated UAS reliability concerns
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: unmanned_systems
+        label: Unmanned Aircraft Systems
+        description: UAS/drone operations — BVLOS capability, airspace integration, payload risk, regulatory compliance
+        risk:
+          weight: 0.4
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.35
+      - id: regulatory_framework
+        label: Regulatory Framework
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: fleet_size
+        label: Fleet Size
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.015
+            basis: hull_value
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.025
+            basis: hull_value
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.04
+            basis: hull_value
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.065
+            basis: hull_value
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.1
+            basis: hull_value
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 500000
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      valid_deductibles:
+      - 5000
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      by_product_type:
+        aviation_hull_liability_combined:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 5000
+            factor: 1.2
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.72
+          - deductible: 100000
+            factor: 0.6
+          - deductible: 250000
+            factor: 0.5
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  aerospace_mro:
+    metadata:
+      name: DSI Aerospace MRO Liability Model
+      description: MRO facility liability — workmanship, hangarkeepers, products/completed operations
+      version: 2.3.0
+      product_types: *id002
+      applicable_markets: *id001
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: aviation_liability
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual MRO revenue in USD (MULTIPLIER basis)
+        - field: hull_value
+          description: Maximum single aircraft value in care, custody, control
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: aviation_segment
+        operator: ==
+        value: MRO
+        required_in_input: true
+      - field: revenue
+        operator: '>='
+        value: 5000000
+        required_in_input: true
+    direct_queries:
+    - id: workmanship_claims
+      question: Any workmanship liability claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Prior workmanship claims
+    - id: hangar_fire
+      question: Has the facility experienced a hangar fire or significant property loss?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Prior hangar fire/loss
+    - id: bogus_parts
+      question: Has the facility ever been cited for suspected unapproved parts?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Suspected unapproved parts citation
+    - id: military_contracts
+      question: Does the facility perform military/government contract maintenance?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Military/government contract MRO
+    signal_registry:
+    - id: mro_certification_scope
+      inference_utility_function: mro_certification_scope_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: mro_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: workmanship_claims_history
+      inference_utility_function: workmanship_claims_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: mro_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Significant workmanship claims history
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: hangarkeepers_exposure
+      inference_utility_function: hangarkeepers_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: mro_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: quality_system_maturity
+      inference_utility_function: quality_system_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: mro_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: parts_traceability
+      inference_utility_function: parts_traceability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: mro_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Parts traceability deficiencies
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: mro_risk
+        label: MRO Facility Risk
+        description: MRO workmanship liability, hangarkeepers exposure, certification compliance, product return risk
+        risk:
+          weight: 0.4
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.3
+      - id: regulatory_framework
+        label: Regulatory Framework
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: fleet_category
+        label: Fleet Category
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.002
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0035
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0055
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0085
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.013
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      valid_deductibles:
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      by_product_type:
+        aviation_liability:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 50000
+            factor: 1.2
+          - deductible: 100000
+            factor: 1.0
+          - deductible: 250000
+            factor: 0.85
+          - deductible: 500000
+            factor: 0.72
+          - deductible: 1000000
+            factor: 0.6
+          - deductible: 2500000
+            factor: 0.5
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  aerospace_high_value:
+    metadata:
+      name: DSI Aerospace High Value Fleet Model
+      description: High-value aviation fleet — airlines, major operators, hull value >$500M
+      version: 2.3.0
+      product_types: *id002
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id003
+      min_premium: 500000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: hull_value
+        operator: '>='
+        value: 500000000
+        required_in_input: true
+    direct_queries:
+    - id: hull_loss_history
+      question: Any hull losses in the past 10 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Hull loss in fleet history
+    - id: iosa_registered
+      question: Is the operator IOSA registered and audit current?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.88
+        note: IOSA registration credit
+    - id: safety_management
+      question: Does the operator have an ICAO-compliant Safety Management System?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.92
+        note: SMS compliance credit
+    - id: fleet_age
+      question: Is the average fleet age under 12 years?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: Modern fleet credit
+    - id: regulatory_action
+      question: Any regulatory enforcement actions in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Regulatory enforcement history
+    signal_registry: []
+    groups:
+      three_layer_assessment:
+      - id: iosa_status
+        label: Iosa Status
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.1
+      - id: regulatory_framework
+        label: Regulatory Framework
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: fleet_size
+        label: Fleet Size
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: fleet_category
+        label: Fleet Category
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0006
+            basis: hull_value
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.001
+            basis: hull_value
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0016
+            basis: hull_value
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0028
+            basis: hull_value
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0045
+            basis: hull_value
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 100000000
+      - 250000000
+      - 500000000
+      valid_deductibles:
+      - 1000000
+      - 2500000
+      - 5000000
+      - 10000000
+    pricing:
+      base_limit_reference: 100000000
+      base_deductible_reference: 2500000
+      by_product_type:
+        aviation_hull_liability_combined:
+          ilf_curve:
+            anchor_limit: 100000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 1000000
+            factor: 1.12
+          - deductible: 2500000
+            factor: 1.0
+          - deductible: 5000000
+            factor: 0.85
+          - deductible: 10000000
+            factor: 0.72
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

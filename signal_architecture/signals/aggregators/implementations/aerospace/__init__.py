@@ -48,3 +48,4 @@ __all__ = [
     "MaintenanceIndicatorsAggregator", "RouteRiskAggregator", "SafetyLeadershipAggregator",
     "MarketPositionAggregator", "GovernmentSupportAggregator",
 ]
+from . import phase_5_aggregators

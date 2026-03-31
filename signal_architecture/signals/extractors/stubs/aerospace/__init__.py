@@ -70,3 +70,4 @@ __all__ = [
     # Maintenance
     "MaintenanceIndicatorsExtractor",
 ]
+from . import phase_5_extractors
