@@ -1,0 +1,1323 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 4: Casualty
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# NEW coverage line — no existing config.
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/5/phase_4_casualty_spec.yaml \
+#       --write
+#
+# NOTE: Casualty is the most complex new coverage because sub-lines use
+# DIFFERENT basis fields for premium calculation:
+#   - General Liability    → revenue
+#   - Workers Compensation → payroll
+#   - Commercial Auto      → fleet_value
+#   - Umbrella/Excess      → underlying_premium
+#   - Environmental        → revenue
+#
+# Each config declares its own basis in risk_tier_bands. Routing constraints
+# ensure mutual exclusivity so the multiplexer never misroutes.
+#
+# =============================================================================
+
+coverage_line: casualty
+coverage_key: commercial_casualty
+phase: phase_4
+description: "Phase 4 Commercial Casualty Coverage — 6 configurations"
+version: "2.3.0"
+
+# =============================================================================
+# DEFAULTS
+# =============================================================================
+
+default_product_types:
+  - general_liability
+  - workers_compensation
+  - commercial_auto
+  - umbrella_excess
+  - environmental_liability
+  - products_liability
+
+default_markets: [us, uk, eu, apac]
+default_currency: USD
+default_min_premium: 15000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability, products_liability"
+  - field: limit
+    description: Requested limit in USD
+  - field: revenue
+    description: Annual revenue in USD (basis for GL, environmental)
+  - field: payroll
+    description: Annual payroll in USD (basis for WC)
+
+routing_field: casualty_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_risk_tier_bands:
+  method: MULTIPLIER
+  basis: revenue
+  preferred_min: 800
+  standard_plus_min: 650
+  standard_min: 450
+  substandard_min: 250
+  preferred_rate: 0.0015
+  standard_plus_rate: 0.0025
+  standard_rate: 0.0045
+  substandard_rate: 0.0075
+  decline_rate: 0.0120
+
+default_loss_tier_bands:
+  floor: 0.50
+  cap: 1.8
+
+default_exposure_bands:
+  size_weight: 0.6
+  complexity_weight: 0.4
+  size_thresholds:
+    - {label: MICRO, max_value: 2000000, applied: 0.5}
+    - {label: SMALL, max_value: 25000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 250000000, applied: 1.0}
+    - {label: LARGE, max_value: 1000000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 10000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+  valid_deductibles: [5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+# =============================================================================
+# DEFAULT PRICING — ILF Curves and Deductible Factors
+# =============================================================================
+#
+# Casualty ILFs are steeper than property but less steep than financial
+# lines. Liability losses have longer tails and more uncertainty.
+# =============================================================================
+
+default_pricing:
+  base_limit_reference: 1000000
+  base_deductible_reference: 10000
+  taxes_fees_rate: 0.05
+  by_product_type:
+    - product_type: general_liability
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.7}
+          - {limit: 5000000, factor: 3.0}
+          - {limit: 10000000, factor: 5.0}
+          - {limit: 25000000, factor: 9.0}
+          - {limit: 50000000, factor: 15.0}
+          - {limit: 100000000, factor: 24.0}
+      deductible_factors:
+        - {deductible: 5000, factor: 1.15}
+        - {deductible: 10000, factor: 1.0}
+        - {deductible: 25000, factor: 0.88}
+        - {deductible: 50000, factor: 0.78}
+        - {deductible: 100000, factor: 0.68}
+        - {deductible: 250000, factor: 0.58}
+        - {deductible: 500000, factor: 0.50}
+        - {deductible: 1000000, factor: 0.42}
+
+    - product_type: workers_compensation
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.5}
+          - {limit: 5000000, factor: 2.5}
+          - {limit: 10000000, factor: 4.0}
+          - {limit: 25000000, factor: 7.0}
+          - {limit: 50000000, factor: 11.0}
+          - {limit: 100000000, factor: 18.0}
+      deductible_factors:
+        - {deductible: 5000, factor: 1.10}
+        - {deductible: 10000, factor: 1.0}
+        - {deductible: 25000, factor: 0.90}
+        - {deductible: 50000, factor: 0.80}
+        - {deductible: 100000, factor: 0.70}
+        - {deductible: 250000, factor: 0.60}
+        - {deductible: 500000, factor: 0.52}
+        - {deductible: 1000000, factor: 0.45}
+
+    - product_type: commercial_auto
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.65}
+          - {limit: 5000000, factor: 2.8}
+          - {limit: 10000000, factor: 4.5}
+          - {limit: 25000000, factor: 8.0}
+          - {limit: 50000000, factor: 13.0}
+          - {limit: 100000000, factor: 21.0}
+      deductible_factors:
+        - {deductible: 5000, factor: 1.15}
+        - {deductible: 10000, factor: 1.0}
+        - {deductible: 25000, factor: 0.85}
+        - {deductible: 50000, factor: 0.75}
+        - {deductible: 100000, factor: 0.65}
+        - {deductible: 250000, factor: 0.55}
+        - {deductible: 500000, factor: 0.48}
+        - {deductible: 1000000, factor: 0.40}
+
+    - product_type: umbrella_excess
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.5}
+          - {limit: 5000000, factor: 2.2}
+          - {limit: 10000000, factor: 3.2}
+          - {limit: 25000000, factor: 5.0}
+          - {limit: 50000000, factor: 7.5}
+          - {limit: 100000000, factor: 11.5}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.0}
+        - {deductible: 25000, factor: 0.92}
+        - {deductible: 50000, factor: 0.85}
+        - {deductible: 100000, factor: 0.78}
+        - {deductible: 250000, factor: 0.70}
+        - {deductible: 500000, factor: 0.62}
+        - {deductible: 1000000, factor: 0.55}
+
+    - product_type: environmental_liability
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.8}
+          - {limit: 5000000, factor: 3.5}
+          - {limit: 10000000, factor: 6.0}
+          - {limit: 25000000, factor: 11.0}
+          - {limit: 50000000, factor: 18.0}
+          - {limit: 100000000, factor: 28.0}
+      deductible_factors:
+        - {deductible: 10000, factor: 1.15}
+        - {deductible: 25000, factor: 1.0}
+        - {deductible: 50000, factor: 0.88}
+        - {deductible: 100000, factor: 0.78}
+        - {deductible: 250000, factor: 0.68}
+        - {deductible: 500000, factor: 0.58}
+        - {deductible: 1000000, factor: 0.50}
+
+    - product_type: products_liability
+      curve_type: standard
+      ilf_curve:
+        base_limit: 1000000
+        factors:
+          - {limit: 1000000, factor: 1.0}
+          - {limit: 2000000, factor: 1.75}
+          - {limit: 5000000, factor: 3.2}
+          - {limit: 10000000, factor: 5.5}
+          - {limit: 25000000, factor: 10.0}
+          - {limit: 50000000, factor: 16.0}
+          - {limit: 100000000, factor: 26.0}
+      deductible_factors:
+        - {deductible: 5000, factor: 1.15}
+        - {deductible: 10000, factor: 1.0}
+        - {deductible: 25000, factor: 0.88}
+        - {deductible: 50000, factor: 0.78}
+        - {deductible: 100000, factor: 0.68}
+        - {deductible: 250000, factor: 0.58}
+        - {deductible: 500000, factor: 0.50}
+        - {deductible: 1000000, factor: 0.42}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # -------------------------------------------------------------------------
+  # GROUP 1: GENERAL LIABILITY CLASS RISK
+  # -------------------------------------------------------------------------
+  # Classification-driven risk factors for general liability. The ISO
+  # GL class code is the single strongest predictor of loss frequency.
+  # This group captures class-specific hazards and premises exposure.
+  # -------------------------------------------------------------------------
+  - id: gl_class_risk
+    label: General Liability Class Risk
+    description: "ISO GL class code, premises hazard, products/completed operations, contractual exposure"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: gl_class_code
+        name: GL Classification Code
+        description: "ISO CGL classification — drives base rate; captures industry-specific hazard profile"
+        group_id: gl_class_risk
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.gl_class_code
+        categories:
+          - {cat: LOW, label: Low Hazard (Office/Professional Services), applied: 0.65}
+          - {cat: MODERATE, label: Moderate (Retail/Hospitality/Light Mfg), applied: 1.0}
+          - {cat: HIGH, label: High Hazard (Construction/Heavy Mfg/Trucking), applied: 1.45}
+          - {cat: SEVERE, label: Severe (Demolition/Roofing/Blasting), applied: 2.0}
+
+      - id: premises_condition
+        name: Premises Condition & Maintenance
+        description: "Physical condition of insured premises; slip-trip-fall exposure; ADA compliance"
+        group_id: gl_class_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.10
+
+      - id: products_completed_ops
+        name: Products & Completed Operations Exposure
+        description: "Products liability tail; completed operations exposure for contractors; recall potential"
+        group_id: gl_class_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.25
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 25, action: FLAG, note: "Significant products/completed ops tail exposure"}
+
+      - id: contractual_liability
+        name: Contractual Liability Exposure
+        description: "Hold-harmless agreements, indemnification clauses; assumption of others' liability"
+        group_id: gl_class_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.15
+
+      - id: subcontractor_management
+        name: Subcontractor Management
+        description: "Quality of subcontractor vetting, certificate tracking, additional insured compliance"
+        group_id: gl_class_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          exposure_complexity_weight: 0.10
+
+      - id: litigation_environment
+        name: Litigation Environment
+        description: "Jurisdictional exposure; nuclear verdict trends; plaintiff bar activity in domicile state"
+        group_id: gl_class_risk
+        signal_type: three_layer
+        proxy_tier: COHORT_INFERENCE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.10
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "High nuclear verdict jurisdiction"}
+
+  # -------------------------------------------------------------------------
+  # GROUP 2: WORKPLACE SAFETY
+  # -------------------------------------------------------------------------
+  # Workers compensation risk factors. OSHA compliance, experience
+  # modification factor, and injury prevention programmes are the
+  # primary drivers of WC loss frequency and severity.
+  # -------------------------------------------------------------------------
+  - id: workplace_safety
+    label: Workplace Safety
+    description: "OSHA compliance, experience modification, safety programmes, injury patterns"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: experience_modification
+        name: Experience Modification Factor
+        description: "NCCI experience mod — actual vs expected losses; most direct predictor of WC performance"
+        group_id: workplace_safety
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.30
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "Very poor experience mod (>1.5)"}
+            - {min: 31, max: 50, action: FLAG, note: "Above-average experience mod"}
+
+      - id: osha_compliance
+        name: OSHA Compliance Record
+        description: "OSHA citation history; serious/willful violations; injury/illness rates vs industry average"
+        group_id: workplace_safety
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Serious OSHA violations"}
+
+      - id: safety_programme_quality
+        name: Safety Programme Quality
+        description: "Formal safety programme maturity; training frequency; near-miss reporting; safety culture"
+        group_id: workplace_safety
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+
+      - id: return_to_work_programme
+        name: Return-to-Work Programme
+        description: "Modified duty programme; early intervention; medical case management effectiveness"
+        group_id: workplace_safety
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          risk_direction: positive
+          loss_severity_weight: 0.20
+
+      - id: occupational_disease_exposure
+        name: Occupational Disease Exposure
+        description: "Exposure to silica, asbestos, noise, repetitive motion, chemical agents — latent disease risk"
+        group_id: workplace_safety
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.20
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Significant occupational disease exposure"}
+
+  # -------------------------------------------------------------------------
+  # GROUP 3: AUTO FLEET RISK
+  # -------------------------------------------------------------------------
+  # Commercial auto fleet risk factors — driver quality, fleet
+  # composition, telematics, route hazard, and MVR screening.
+  # -------------------------------------------------------------------------
+  - id: auto_fleet_risk
+    label: Auto Fleet Risk
+    description: "Fleet composition, driver quality, telematics, route hazard, accident frequency"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: fleet_composition
+        name: Fleet Composition
+        description: "Vehicle types in fleet — light vehicles, medium trucks, heavy trucks, specialized equipment"
+        group_id: auto_fleet_risk
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.fleet_composition
+        categories:
+          - {cat: LIGHT, label: Light Vehicles (Cars/Vans/Pickups), applied: 0.80}
+          - {cat: MEDIUM, label: Medium Trucks (Class 3-6), applied: 1.0}
+          - {cat: HEAVY, label: Heavy Trucks (Class 7-8/Long Haul), applied: 1.35}
+          - {cat: SPECIALIZED, label: Specialized (Tankers/Hazmat/Oversized), applied: 1.60}
+          - {cat: MIXED, label: Mixed Fleet, applied: 1.10}
+
+      - id: driver_quality
+        name: Driver Quality & MVR Screening
+        description: "MVR screening programme; violation rates; CDL compliance; driver training programme"
+        group_id: auto_fleet_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.30
+          loss_severity_weight: 0.10
+
+      - id: telematics_adoption
+        name: Telematics & Safety Technology
+        description: "Telematics penetration; dashcam deployment; collision avoidance systems; ELD compliance"
+        group_id: auto_fleet_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+
+      - id: route_hazard
+        name: Route Hazard Profile
+        description: "Typical operating radius; highway vs urban; seasonal exposure; state-specific hazards"
+        group_id: auto_fleet_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.10
+
+      - id: accident_frequency
+        name: Accident Frequency & Severity
+        description: "Historical accident rate per million miles; DOT reportable incidents; severity trend"
+        group_id: auto_fleet_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "High accident frequency rate"}
+
+      - id: fleet_maintenance
+        name: Fleet Maintenance Programme
+        description: "Preventive maintenance programme; DOT inspection pass rate; vehicle age distribution"
+        group_id: auto_fleet_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+
+  # -------------------------------------------------------------------------
+  # GROUP 4: ENVIRONMENTAL LIABILITY
+  # -------------------------------------------------------------------------
+  # Environmental exposure signals — pollution conditions, remediation
+  # history, regulatory compliance, storage tank quality. Long-tail
+  # exposure with severe regulatory-driven costs.
+  # -------------------------------------------------------------------------
+  - id: environmental_liability
+    label: Environmental Liability
+    description: "Pollution conditions, remediation history, tank compliance, regulatory exposure"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: pollution_conditions
+        name: Known Pollution Conditions
+        description: "Existing contamination on-site; Phase I/II ESA results; remediation status"
+        group_id: environmental_liability
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.25
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Known unremediated contamination"}
+
+      - id: ust_ast_compliance
+        name: Underground/Aboveground Storage Tank Compliance
+        description: "UST/AST regulatory compliance; leak detection; spill prevention; tank age and construction"
+        group_id: environmental_liability
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+
+      - id: regulatory_enforcement_history
+        name: Environmental Regulatory Enforcement
+        description: "EPA/state agency enforcement actions; consent orders; NOVs; penalty history"
+        group_id: environmental_liability
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "Active environmental enforcement"}
+
+      - id: waste_management_practices
+        name: Waste Management Practices
+        description: "Hazardous waste generation; disposal practices; RCRA compliance; manifest tracking"
+        group_id: environmental_liability
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+
+      - id: third_party_site_exposure
+        name: Third-Party Site Exposure
+        description: "CERCLA/Superfund potential; off-site disposal location quality; PRP exposure"
+        group_id: environmental_liability
+        signal_type: three_layer
+        proxy_tier: COHORT_INFERENCE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.20
+          exposure_complexity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "CERCLA/Superfund PRP exposure"}
+
+  # -------------------------------------------------------------------------
+  # GROUP 5: UMBRELLA / EXCESS EXPOSURE
+  # -------------------------------------------------------------------------
+  # Umbrella and excess liability signals — underlying programme
+  # quality, attachment point adequacy, stacking risk, and nuclear
+  # verdict exposure in the excess layers.
+  # -------------------------------------------------------------------------
+  - id: umbrella_exposure
+    label: Umbrella & Excess Exposure
+    description: "Underlying programme quality, attachment adequacy, stacking, nuclear verdict exposure"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: underlying_programme_quality
+        name: Underlying Programme Quality
+        description: "Adequacy of underlying GL/auto/WC/EL limits; gaps in underlying coverage"
+        group_id: umbrella_exposure
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.30
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+
+      - id: attachment_point_adequacy
+        name: Attachment Point Adequacy
+        description: "Whether underlying limits are sufficient to absorb expected frequency losses"
+        group_id: umbrella_exposure
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.10
+
+      - id: nuclear_verdict_exposure
+        name: Nuclear Verdict Exposure
+        description: "Exposure to jurisdiction-specific outsized verdicts; class action potential; mass tort"
+        group_id: umbrella_exposure
+        signal_type: three_layer
+        proxy_tier: COHORT_INFERENCE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.30
+          exposure_size_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Severe nuclear verdict exposure"}
+            - {min: 26, max: 45, action: FLAG, note: "Elevated verdict jurisdiction"}
+
+      - id: tower_position
+        name: Tower Position & Layer Exposure
+        description: "Position in excess tower — lead umbrella vs high-excess; buffer layer adequacy"
+        group_id: umbrella_exposure
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.20
+
+  # -------------------------------------------------------------------------
+  # GROUP 6: PREMISES & OPERATIONS
+  # -------------------------------------------------------------------------
+  # Cross-cutting premises and operations signals applicable to
+  # GL, WC, and umbrella. Public access, security, incident response.
+  # -------------------------------------------------------------------------
+  - id: premises_operations
+    label: Premises & Operations
+    description: "Public access, security measures, incident response, contractual controls"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: public_access_volume
+        name: Public Access Volume
+        description: "Footfall/visitor volume at insured locations; public-facing operations scale"
+        group_id: premises_operations
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          exposure_size_weight: 0.15
+
+      - id: security_measures
+        name: Security & Surveillance Measures
+        description: "CCTV, access control, security personnel, lighting — reduces assault/negligence claims"
+        group_id: premises_operations
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+
+      - id: incident_response_capability
+        name: Incident Response Capability
+        description: "First aid, emergency action plans, incident documentation, claims reporting speed"
+        group_id: premises_operations
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_severity_weight: 0.15
+
+      - id: alcohol_service
+        name: Alcohol Service Exposure
+        description: "Liquor liability exposure; TIPS/responsible service training; dram shop liability states"
+        group_id: premises_operations
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "Significant liquor liability exposure"}
+
+      - id: multi_location_complexity
+        name: Multi-Location Complexity
+        description: "Number of insured locations; geographic spread; jurisdictional diversity"
+        group_id: premises_operations
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          exposure_size_weight: 0.15
+          exposure_complexity_weight: 0.20
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. CASUALTY GENERAL LIABILITY
+  # =========================================================================
+  # Core commercial general liability model. Revenue-based pricing.
+  # Covers premises/operations, products/completed ops, personal/
+  # advertising injury. ISO CGL class code is primary rating factor.
+  # =========================================================================
+  - id: casualty_gl
+    name: DSI Commercial General Liability Model
+    description: "Commercial general liability — premises, operations, products/completed ops"
+    model_specificity: 2
+    min_premium: 15000
+
+    product_types:
+      - general_liability
+      - products_liability
+
+    routing_constraints:
+      - {field: product_type, operator: "IN", value: [general_liability, products_liability], required_in_input: true}
+      - {field: revenue, operator: ">=", value: 5000000, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any open or pending liability claims in the past 5 years?
+        conditions: [{action: FLAG, note: "Open liability claims history"}]
+      - id: product_recall
+        question: Has the insured conducted a product recall in the past 5 years?
+        conditions: [{action: REFER, override: 4, note: "Prior product recall"}]
+      - id: class_action
+        question: Is the insured a defendant in any class action or mass tort litigation?
+        conditions: [{action: REFER, override: 5, note: "Class action/mass tort exposure"}]
+      - id: assault_battery
+        question: Does the insured operate in industries with assault & battery exposure (bars, nightclubs, security)?
+        conditions: [{action: FLAG, note: "Assault & battery exposure class"}]
+      - id: prior_losses_large
+        question: Any single GL loss exceeding $500K in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Large prior GL loss"}]
+
+    category_groups: [gl_class_code, fleet_composition]
+
+    group_weights:
+      - {group_id: gl_class_risk, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.20}
+      - {group_id: premises_operations, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.20}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0012
+      standard_plus_rate: 0.0022
+      standard_rate: 0.0040
+      substandard_rate: 0.0068
+      decline_rate: 0.0110
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: general_liability
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.7}
+              - {limit: 5000000, factor: 3.0}
+              - {limit: 10000000, factor: 5.0}
+              - {limit: 25000000, factor: 9.0}
+              - {limit: 50000000, factor: 15.0}
+              - {limit: 100000000, factor: 24.0}
+          deductible_factors:
+            - {deductible: 5000, factor: 1.15}
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.88}
+            - {deductible: 50000, factor: 0.78}
+            - {deductible: 100000, factor: 0.68}
+            - {deductible: 250000, factor: 0.58}
+            - {deductible: 500000, factor: 0.50}
+            - {deductible: 1000000, factor: 0.42}
+        - product_type: products_liability
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.75}
+              - {limit: 5000000, factor: 3.2}
+              - {limit: 10000000, factor: 5.5}
+              - {limit: 25000000, factor: 10.0}
+              - {limit: 50000000, factor: 16.0}
+              - {limit: 100000000, factor: 26.0}
+          deductible_factors:
+            - {deductible: 5000, factor: 1.15}
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.88}
+            - {deductible: 50000, factor: 0.78}
+            - {deductible: 100000, factor: 0.68}
+            - {deductible: 250000, factor: 0.58}
+            - {deductible: 500000, factor: 0.50}
+            - {deductible: 1000000, factor: 0.42}
+
+  # =========================================================================
+  # 2. CASUALTY WORKERS COMPENSATION
+  # =========================================================================
+  # Workers comp model. Payroll-based pricing. Experience modification
+  # factor is the dominant signal. NCCI class code drives base rate.
+  # State-specific rating bureau rules apply.
+  # =========================================================================
+  - id: casualty_wc
+    name: DSI Workers Compensation Model
+    description: "Workers compensation — payroll-based, experience mod driven, state-specific"
+    model_specificity: 3
+    min_premium: 10000
+
+    product_types:
+      - workers_compensation
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: workers_compensation, required_in_input: true}
+      - {field: payroll, operator: ">=", value: 1000000, required_in_input: true}
+
+    direct_queries:
+      - id: osha_citations
+        question: Any OSHA citations (serious or willful) in the past 3 years?
+        conditions: [{action: REFER, override: 4, note: "Recent OSHA citations"}]
+      - id: fatality_history
+        question: Any workplace fatalities in the past 5 years?
+        conditions: [{action: REFER, override: 5, note: "Workplace fatality history"}]
+      - id: experience_mod_high
+        question: Is the current experience modification factor above 1.25?
+        conditions: [{action: REFER, override: 3, note: "High experience mod — loss-driven"}]
+      - id: multi_state
+        question: Are employees located in more than 10 states?
+        conditions: [{action: FLAG, note: "Multi-state WC — jurisdictional complexity"}]
+      - id: seasonal_workforce
+        question: Does the workforce include >30% seasonal or temporary workers?
+        conditions: [{action: FLAG, note: "High seasonal/temp worker ratio"}]
+
+    category_groups: [gl_class_code]
+
+    group_weights:
+      - {group_id: workplace_safety, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.20}
+      - {group_id: premises_operations, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.20}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: payroll
+      preferred_rate: 0.008
+      standard_plus_rate: 0.015
+      standard_rate: 0.025
+      substandard_rate: 0.045
+      decline_rate: 0.070
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [500000, 1000000, 2000000, 5000000, 10000000]
+      valid_deductibles: [5000, 10000, 25000, 50000, 100000, 250000, 500000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: workers_compensation
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 500000, factor: 0.70}
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.5}
+              - {limit: 5000000, factor: 2.5}
+              - {limit: 10000000, factor: 4.0}
+          deductible_factors:
+            - {deductible: 5000, factor: 1.10}
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.90}
+            - {deductible: 50000, factor: 0.80}
+            - {deductible: 100000, factor: 0.70}
+            - {deductible: 250000, factor: 0.60}
+            - {deductible: 500000, factor: 0.52}
+
+  # =========================================================================
+  # 3. CASUALTY COMMERCIAL AUTO
+  # =========================================================================
+  # Fleet auto liability model. Fleet-value-based pricing. Driver
+  # quality and telematics are primary differentiators.
+  # =========================================================================
+  - id: casualty_auto
+    name: DSI Commercial Auto Liability Model
+    description: "Commercial auto fleet liability — fleet-value based, driver quality, telematics"
+    model_specificity: 3
+    min_premium: 15000
+
+    product_types:
+      - commercial_auto
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: commercial_auto
+      - field: limit
+        description: Requested limit in USD
+      - field: fleet_value
+        description: Total fleet value in USD (MULTIPLIER basis)
+      - field: vehicle_count
+        description: Number of vehicles in fleet
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: commercial_auto, required_in_input: true}
+      - {field: fleet_value, operator: ">=", value: 500000, required_in_input: true}
+
+    direct_queries:
+      - id: dot_authority
+        question: Does the insured hold active DOT operating authority?
+        conditions: [{action: FLAG, note: "DOT regulated carrier"}]
+      - id: hazmat_transport
+        question: Does the fleet transport hazardous materials?
+        conditions: [{action: REFER, override: 3, note: "Hazmat transport exposure"}]
+      - id: driver_shortage
+        question: Is the insured currently experiencing driver shortages (>20% unfilled positions)?
+        conditions: [{action: FLAG, note: "Driver shortage — retention/quality risk"}]
+      - id: prior_fatality
+        question: Any at-fault fatality accidents in the past 5 years?
+        conditions: [{action: REFER, override: 5, note: "At-fault fatality history"}]
+      - id: nuclear_verdict_state
+        question: Does the fleet primarily operate in states with high nuclear verdict frequency?
+        conditions: [{action: FLAG, note: "Nuclear verdict state exposure"}]
+
+    category_groups: [fleet_composition, gl_class_code]
+
+    group_weights:
+      - {group_id: auto_fleet_risk, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.30}
+      - {group_id: premises_operations, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: fleet_value
+      preferred_rate: 0.012
+      standard_plus_rate: 0.020
+      standard_rate: 0.035
+      substandard_rate: 0.055
+      decline_rate: 0.080
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000]
+      valid_deductibles: [5000, 10000, 25000, 50000, 100000, 250000, 500000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: commercial_auto
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.65}
+              - {limit: 5000000, factor: 2.8}
+              - {limit: 10000000, factor: 4.5}
+              - {limit: 25000000, factor: 8.0}
+              - {limit: 50000000, factor: 13.0}
+          deductible_factors:
+            - {deductible: 5000, factor: 1.15}
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.85}
+            - {deductible: 50000, factor: 0.75}
+            - {deductible: 100000, factor: 0.65}
+            - {deductible: 250000, factor: 0.55}
+            - {deductible: 500000, factor: 0.48}
+
+  # =========================================================================
+  # 4. CASUALTY UMBRELLA / EXCESS
+  # =========================================================================
+  # Umbrella and excess liability model. Premium based on underlying
+  # premium as the rating basis — captures the aggregate exposure
+  # from all underlying casualty lines.
+  # =========================================================================
+  - id: casualty_umbrella
+    name: DSI Umbrella & Excess Liability Model
+    description: "Umbrella/excess liability — underlying-premium based, tower position, nuclear verdict exposure"
+    model_specificity: 3
+    min_premium: 25000
+
+    product_types:
+      - umbrella_excess
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: umbrella_excess
+      - field: limit
+        description: Requested limit in USD
+      - field: underlying_premium
+        description: Total underlying casualty premium (GL + auto + WC) in USD (MULTIPLIER basis)
+      - field: revenue
+        description: Annual revenue in USD
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: umbrella_excess, required_in_input: true}
+      - {field: underlying_premium, operator: ">=", value: 25000, required_in_input: true}
+
+    direct_queries:
+      - id: underlying_gaps
+        question: Are there any gaps or exclusions in the underlying casualty programme?
+        conditions: [{action: REFER, override: 4, note: "Gaps in underlying programme"}]
+      - id: class_action_exposure
+        question: Is the insured a defendant in any class action or mass tort litigation?
+        conditions: [{action: REFER, override: 5, note: "Class action/mass tort exposure"}]
+      - id: prior_umbrella_loss
+        question: Has the umbrella/excess layer been penetrated by a claim in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Prior umbrella/excess layer penetration"}]
+      - id: lead_umbrella
+        question: Is this the lead (first) umbrella layer above primary?
+        conditions: [{action: FLAG, note: "Lead umbrella position — higher frequency exposure"}]
+
+    category_groups: [gl_class_code]
+
+    group_weights:
+      - {group_id: umbrella_exposure, risk_weight: 0.35, loss_weight: 0.35, exposure_weight: 0.30}
+      - {group_id: gl_class_risk, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: premises_operations, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: litigation_history, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: underlying_premium
+      preferred_rate: 0.40
+      standard_plus_rate: 0.60
+      standard_rate: 0.85
+      substandard_rate: 1.20
+      decline_rate: 1.80
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: umbrella_excess
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.5}
+              - {limit: 5000000, factor: 2.2}
+              - {limit: 10000000, factor: 3.2}
+              - {limit: 25000000, factor: 5.0}
+              - {limit: 50000000, factor: 7.5}
+              - {limit: 100000000, factor: 11.5}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.0}
+            - {deductible: 25000, factor: 0.92}
+            - {deductible: 50000, factor: 0.85}
+            - {deductible: 100000, factor: 0.78}
+            - {deductible: 250000, factor: 0.70}
+            - {deductible: 500000, factor: 0.62}
+            - {deductible: 1000000, factor: 0.55}
+
+  # =========================================================================
+  # 5. CASUALTY ENVIRONMENTAL
+  # =========================================================================
+  # Environmental liability model. Revenue-based pricing. Long-tail
+  # exposure with regulatory-driven clean-up costs. Covers pollution
+  # legal liability, remediation cost cap, and environmental site
+  # liability.
+  # =========================================================================
+  - id: casualty_environmental
+    name: DSI Environmental Liability Model
+    description: "Environmental liability — pollution, remediation, regulatory defence, third-party claims"
+    model_specificity: 3
+    min_premium: 20000
+
+    product_types:
+      - environmental_liability
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: environmental_liability, required_in_input: true}
+      - {field: revenue, operator: ">=", value: 5000000, required_in_input: true}
+
+    direct_queries:
+      - id: known_contamination
+        question: Are there any known pollution conditions at the insured site(s)?
+        conditions: [{action: REFER, override: 4, note: "Known contamination — pre-existing conditions"}]
+      - id: superfund_prp
+        question: Is the insured a named PRP at any CERCLA/Superfund site?
+        conditions: [{action: REFER, override: 5, note: "CERCLA PRP status"}]
+      - id: ust_presence
+        question: Are there underground storage tanks on any insured property?
+        conditions: [{action: FLAG, note: "UST presence — leak exposure"}]
+      - id: manufacturing_operations
+        question: Does the insured operate manufacturing with chemical processes?
+        conditions: [{action: FLAG, note: "Chemical manufacturing — pollution exposure"}]
+      - id: phase_i_current
+        question: Has a Phase I ESA been completed within the past 3 years for all insured sites?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Current Phase I ESA credit"}]
+
+    category_groups: [gl_class_code]
+
+    group_weights:
+      - {group_id: environmental_liability, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.30}
+      - {group_id: gl_class_risk, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: premises_operations, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.10, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: regulatory_standing, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0015
+      standard_plus_rate: 0.0028
+      standard_rate: 0.0050
+      substandard_rate: 0.0085
+      decline_rate: 0.0130
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: environmental_liability
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.8}
+              - {limit: 5000000, factor: 3.5}
+              - {limit: 10000000, factor: 6.0}
+              - {limit: 25000000, factor: 11.0}
+              - {limit: 50000000, factor: 18.0}
+              - {limit: 100000000, factor: 28.0}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.15}
+            - {deductible: 25000, factor: 1.0}
+            - {deductible: 50000, factor: 0.88}
+            - {deductible: 100000, factor: 0.78}
+            - {deductible: 250000, factor: 0.68}
+            - {deductible: 500000, factor: 0.58}
+            - {deductible: 1000000, factor: 0.50}
+
+  # =========================================================================
+  # 6. CASUALTY SME
+  # =========================================================================
+  # Simplified model for small-to-medium casualty risks. Revenue < $5M.
+  # Reduced signal set, lower specificity, covers GL + products.
+  # =========================================================================
+  - id: casualty_sme
+    name: DSI Casualty SME Model
+    description: "Small-to-medium casualty — revenue under $5M, simplified GL + products"
+    model_specificity: 1
+    min_premium: 5000
+
+    product_types:
+      - general_liability
+      - products_liability
+
+    routing_constraints:
+      - {field: product_type, operator: "IN", value: [general_liability, products_liability], required_in_input: true}
+      - {field: revenue, operator: "<", value: 5000000, required_in_input: true}
+
+    direct_queries:
+      - id: pending_claims
+        question: Any open or pending liability claims in the past 3 years?
+        conditions: [{action: FLAG, note: "Recent claims history"}]
+      - id: prior_losses
+        question: Any liability loss exceeding $100K in the past 5 years?
+        conditions: [{action: REFER, override: 4, note: "Significant prior loss for SME"}]
+
+    category_groups: [gl_class_code]
+
+    group_weights:
+      - {group_id: gl_class_risk, risk_weight: 0.35, loss_weight: 0.35, exposure_weight: 0.25}
+      - {group_id: premises_operations, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.25}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0018
+      standard_plus_rate: 0.0030
+      standard_rate: 0.0050
+      substandard_rate: 0.0080
+      decline_rate: 0.0130
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [500000, 1000000, 2000000, 5000000]
+      valid_deductibles: [2500, 5000, 10000, 25000, 50000, 100000]
+
+    pricing:
+      base_limit_reference: 500000
+      base_deductible_reference: 5000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: general_liability
+          ilf_curve:
+            base_limit: 500000
+            factors:
+              - {limit: 500000, factor: 1.0}
+              - {limit: 1000000, factor: 1.6}
+              - {limit: 2000000, factor: 2.5}
+              - {limit: 5000000, factor: 4.5}
+          deductible_factors:
+            - {deductible: 2500, factor: 1.20}
+            - {deductible: 5000, factor: 1.0}
+            - {deductible: 10000, factor: 0.85}
+            - {deductible: 25000, factor: 0.72}
+            - {deductible: 50000, factor: 0.62}
+            - {deductible: 100000, factor: 0.52}
+
+# =============================================================================
+# INFRASTRUCTURE NOTES (New Coverage Line)
+# =============================================================================
+#
+# Before this spec can be executed by the builder, the following must exist:
+#
+# 1. coverages/casualty/__init__.py             — empty file (builder creates)
+# 2. signal_architecture/signals/inference/metadata_registry.py:
+#    - Add: COVERAGE_CASUALTY = "casualty"
+#    - Add "casualty" to ALL_COVERAGES list (line 65)
+#    - Create _CASUALTY_SIGNALS list with 31 signal metadata entries
+#    - Call SIGNAL_METADATA_REGISTRY.register_many(_CASUALTY_SIGNALS)
+#    - Update cross-coverage signals (corporate_footprint, firm_stability,
+#      regulatory_standing, litigation_history) to include "casualty"
+#
+# 3. seed_dsi_bench.py:
+#    - Add "casualty": "syndicate_example" to COVERAGE_ENTITY_MAP (~line 4034)
+#    - Update docstring to include Casualty configs
+#
+# 4. commercial/entities/syndicate_example.yaml:
+#    - Add CoverageBinding for "casualty"
+#
+# Signal summary:
+#   - 6 new groups: gl_class_risk, workplace_safety, auto_fleet_risk,
+#     environmental_liability, umbrella_exposure, premises_operations
+#   - 31 new signals (3 categorical, 28 three-layer)
+#   - 4 reused groups: corporate_footprint, firm_stability,
+#     regulatory_standing, litigation_history
+#
+# Configuration summary:
+#   - casualty_gl             (specificity 2, GL + products, revenue basis)
+#   - casualty_wc             (specificity 3, WC only, payroll basis)
+#   - casualty_auto           (specificity 3, auto only, fleet_value basis)
+#   - casualty_umbrella       (specificity 3, umbrella/excess, underlying_premium basis)
+#   - casualty_environmental  (specificity 3, environmental, revenue basis)
+#   - casualty_sme            (specificity 1, GL + products <$5M revenue)
+#
+# NOTE: Variable basis fields across configs (revenue, payroll, fleet_value,
+# underlying_premium) — routing constraints ensure mutual exclusivity.
+# =============================================================================

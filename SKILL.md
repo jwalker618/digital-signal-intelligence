@@ -33,18 +33,21 @@ All phases through Version 4 are complete. Version 5 is in planning.
 - **Version 2** (R1-R11, P1-P7): Architecture restructuring, production readiness (DB, deployment, observability, performance)
 - **Version 3** (V3, Phases A-E): Comprehensive upgrade (foundation/transparency, scoring completeness, ROL engine, config strictness, tower/subscription)
 - **Version 4** (Phases 1-13): Multi-configuration multiplexer, coverage expansion pipeline, Phase 6 PI expansion (13 configs), Phase 7 Cyber expansion (11 configs)
-- **Version 5** (Planning): UX conversion for commercial/risk terms integration
+- **Version 5** (Phases 1-8): UX conversion (Phase 1), coverage expansion — 3 new coverages (Property, Casualty, FPR) + 4 expansions (Marine, Aerospace, D&O, FI)
 
-**Current coverage configurations:**
+**Current coverage configurations (10 coverages, 76 configs):**
 | Coverage | Configs | Key Expansion |
 |-|-|-|
 | Cyber | 11 | Phase 7: 9 industry-specific configs |
-| D&O | 2 | do_general, do_sme |
-| FI | 2 | fi_general, fi_sme |
+| D&O | 6 | V5 Phase 6: public, PE-backed, non-profit, IPO/SPAC |
+| FI | 6 | V5 Phase 7: bank, insurer, fintech, crypto |
 | Energy | 10 | Phase 5: 8 segment-specific configs |
-| Marine | 1 | marine_general |
+| Marine | 7 | V5 Phase 3: cargo, tanker, offshore, war risk, high-value |
 | PI | 13 | Phase 6: 11 profession-specific configs |
-| Aerospace | 1 | aerospace_general |
+| Aerospace | 7 | V5 Phase 5: space, rotary wing, UAS, MRO, high-value |
+| Property | 5 | V5 Phase 2: general, high-value, CAT, builders risk, SME |
+| Casualty | 6 | V5 Phase 4: GL, WC, auto, umbrella, environmental, SME |
+| FPR | 5 | V5 Phase 8: trade credit, political risk, surety, K&R, SME |
 
 ---
 
@@ -87,7 +90,7 @@ SUBMISSION INPUT  -->  DISCOVERY (Step 0)  -->  YAML CONFIG
 | `signal_architecture/` | Signal processing | signals, discovery, orchestration, multiplexer, graph |
 | `infrastructure/` | Support systems | api, db, analytics, builder, validation, integrations |
 | `layers/` | Assessment layers | risk (14-step workflow), exposure, loss |
-| `coverages/` | Configuration | YAML configs for all 7 coverages + doc_generator |
+| `coverages/` | Configuration | YAML configs for all 10 coverages + doc_generator |
 
 **Additional areas:**
 - `commercial/entities/` - Commercial entity definitions (distribution, commission, FX)

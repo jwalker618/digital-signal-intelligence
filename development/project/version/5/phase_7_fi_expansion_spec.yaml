@@ -1,0 +1,618 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 7: Financial Institutions Expansion
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# EXPANSION of existing FI coverage (fi_general + fi_sme).
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/5/phase_7_fi_expansion_spec.yaml \
+#       --existing-config coverages/fi/config.yaml \
+#       --write
+#
+# Existing configs retained: fi_general (specificity 1), fi_sme (specificity 2)
+# Existing groups retained: institution_type, asset_size_band,
+#                           publicly_traded, regulatory_framework
+#
+# =============================================================================
+
+coverage_line: fi
+coverage_key: financial_institutions
+phase: phase_7
+description: "Phase 7 Financial Institutions Coverage Expansion — 4 new specialist configurations"
+version: "2.3.0"
+
+default_product_types:
+  - financial_institution_bond
+  - professional_liability
+  - directors_officers
+  - cyber_liability
+  - employment_practices
+  - fiduciary_liability
+
+default_markets: [us, uk, eu, apac]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: financial_institution_bond, professional_liability, directors_officers, cyber_liability, employment_practices, fiduciary_liability"
+  - field: limit
+    description: Requested limit in USD
+  - field: total_assets
+    description: Total assets in USD (MULTIPLIER basis)
+
+routing_field: fi_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_risk_tier_bands:
+  method: MULTIPLIER
+  basis: total_assets
+  preferred_min: 800
+  standard_plus_min: 650
+  standard_min: 450
+  substandard_min: 250
+  preferred_rate: 8.0e-06
+  standard_plus_rate: 1.2e-05
+  standard_rate: 2.0e-05
+  substandard_rate: 3.5e-05
+  decline_rate: 6.0e-05
+
+default_loss_tier_bands:
+  floor: 0.50
+  cap: 1.8
+
+default_exposure_bands:
+  size_weight: 0.6
+  complexity_weight: 0.4
+  size_thresholds:
+    - {label: MICRO, max_value: 500000000, applied: 0.5}
+    - {label: SMALL, max_value: 5000000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 50000000000, applied: 1.0}
+    - {label: LARGE, max_value: 500000000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 5000000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+  valid_deductibles: [100000, 250000, 500000, 1000000, 2500000, 5000000]
+
+default_pricing:
+  base_limit_reference: 10000000
+  base_deductible_reference: 500000
+  taxes_fees_rate: 0.05
+  by_product_type:
+    - product_type: financial_institution_bond
+      curve_type: standard
+      ilf_curve:
+        base_limit: 10000000
+        factors:
+          - {limit: 5000000, factor: 0.60}
+          - {limit: 10000000, factor: 1.0}
+          - {limit: 25000000, factor: 1.8}
+          - {limit: 50000000, factor: 3.0}
+          - {limit: 100000000, factor: 5.0}
+          - {limit: 250000000, factor: 9.5}
+      deductible_factors:
+        - {deductible: 100000, factor: 1.20}
+        - {deductible: 250000, factor: 1.10}
+        - {deductible: 500000, factor: 1.0}
+        - {deductible: 1000000, factor: 0.88}
+        - {deductible: 2500000, factor: 0.75}
+        - {deductible: 5000000, factor: 0.65}
+    - product_type: professional_liability
+      curve_type: standard
+      ilf_curve:
+        base_limit: 10000000
+        factors:
+          - {limit: 5000000, factor: 0.55}
+          - {limit: 10000000, factor: 1.0}
+          - {limit: 25000000, factor: 1.9}
+          - {limit: 50000000, factor: 3.2}
+          - {limit: 100000000, factor: 5.5}
+          - {limit: 250000000, factor: 10.0}
+      deductible_factors:
+        - {deductible: 100000, factor: 1.20}
+        - {deductible: 250000, factor: 1.10}
+        - {deductible: 500000, factor: 1.0}
+        - {deductible: 1000000, factor: 0.88}
+        - {deductible: 2500000, factor: 0.75}
+        - {deductible: 5000000, factor: 0.65}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # -------------------------------------------------------------------------
+  # GROUP 1: BANKING RISK
+  # -------------------------------------------------------------------------
+  - id: banking_risk
+    label: Banking Risk
+    description: "Bank-specific risk — capital adequacy, loan quality, regulatory exam results, BSA/AML compliance"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: capital_adequacy
+        name: Capital Adequacy Ratio
+        description: "Tier 1 capital ratio; leverage ratio; stress test results; CCAR compliance"
+        group_id: banking_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+          exposure_size_weight: 0.20
+
+      - id: loan_portfolio_quality
+        name: Loan Portfolio Quality
+        description: "NPL ratio; charge-off rate; loan concentration by sector; CRE exposure"
+        group_id: banking_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Deteriorating loan quality"}
+
+      - id: regulatory_exam_results
+        name: Regulatory Examination Results
+        description: "CAMELS rating proxy; MRA/MRIA findings; consent orders; cease-and-desist actions"
+        group_id: banking_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Significant regulatory findings"}
+
+      - id: bsa_aml_compliance
+        name: BSA/AML Compliance
+        description: "Bank Secrecy Act compliance; SAR filing quality; KYC programme maturity; sanctions screening"
+        group_id: banking_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "BSA/AML compliance deficiencies"}
+
+      - id: interest_rate_sensitivity
+        name: Interest Rate Sensitivity
+        description: "Asset-liability duration mismatch; unrealised losses in HTM portfolio; NIM volatility"
+        group_id: banking_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+
+  # -------------------------------------------------------------------------
+  # GROUP 2: FINTECH & DIGITAL RISK
+  # -------------------------------------------------------------------------
+  - id: fintech_risk
+    label: Fintech & Digital Risk
+    description: "Fintech-specific risk — regulatory uncertainty, crypto exposure, platform risk, licensing"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: regulatory_licensing_status
+        name: Regulatory Licensing Status
+        description: "Money transmitter licences; broker-dealer registration; state-by-state compliance"
+        group_id: fintech_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "Licensing gaps or deficiencies"}
+
+      - id: crypto_asset_exposure
+        name: Crypto/Digital Asset Exposure
+        description: "Cryptocurrency custody; DeFi protocol exposure; stablecoin reserves; exchange risk"
+        group_id: fintech_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.25
+          exposure_complexity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 3, note: "Significant crypto asset exposure"}
+
+      - id: platform_technology_risk
+        name: Platform Technology Risk
+        description: "Platform uptime; smart contract audit status; API security; third-party dependency"
+        group_id: fintech_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+
+      - id: consumer_protection_compliance
+        name: Consumer Protection Compliance
+        description: "CFPB/FCA complaint rates; fair lending compliance; UDAAP risk; disclosure quality"
+        group_id: fintech_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "Elevated consumer complaint rate"}
+
+      - id: partner_bank_dependency
+        name: Partner Bank / BaaS Dependency
+        description: "Banking-as-a-Service dependency; partner bank concentration; regulatory through risk"
+        group_id: fintech_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_complexity_weight: 0.15
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. FI BANK
+  # =========================================================================
+  - id: fi_bank
+    name: DSI FI Banking Specialist Model
+    description: "Regulated banks — commercial, community, savings; capital adequacy and loan quality focus"
+    model_specificity: 4
+    min_premium: 50000
+
+    routing_constraints:
+      - {field: fi_segment, operator: "==", value: BANK, required_in_input: true}
+      - {field: total_assets, operator: ">=", value: 1000000000, required_in_input: true}
+
+    direct_queries:
+      - id: consent_order
+        question: Is the bank subject to any active consent order, C&D, or formal enforcement action?
+        conditions: [{action: REFER, override: 5, note: "Active enforcement action"}]
+      - id: npl_ratio
+        question: Is the non-performing loan ratio above 3%?
+        conditions: [{action: REFER, override: 4, note: "Elevated NPL ratio"}]
+      - id: bsa_enforcement
+        question: Has the bank received a BSA/AML enforcement action in the past 5 years?
+        conditions: [{action: REFER, override: 5, note: "BSA/AML enforcement history"}]
+      - id: cre_concentration
+        question: Does CRE lending exceed 300% of tier 1 capital?
+        conditions: [{action: FLAG, note: "CRE concentration above regulatory guidance"}]
+      - id: recent_merger
+        question: Has the bank completed a merger or acquisition in the past 24 months?
+        conditions: [{action: FLAG, note: "Recent M&A — integration risk"}]
+
+    category_groups: [institution_type, asset_size_band, publicly_traded]
+
+    group_weights:
+      - {group_id: banking_risk, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.30}
+      - {group_id: regulatory_framework, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: total_assets
+      preferred_rate: 6.0e-06
+      standard_plus_rate: 1.0e-05
+      standard_rate: 1.8e-05
+      substandard_rate: 3.0e-05
+      decline_rate: 5.0e-05
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [250000, 500000, 1000000, 2500000, 5000000]
+
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 500000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: financial_institution_bond
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.8}
+              - {limit: 50000000, factor: 3.0}
+              - {limit: 100000000, factor: 5.0}
+              - {limit: 250000000, factor: 9.5}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.85}
+            - {deductible: 2500000, factor: 0.72}
+            - {deductible: 5000000, factor: 0.60}
+
+  # =========================================================================
+  # 2. FI INSURER
+  # =========================================================================
+  - id: fi_insurer
+    name: DSI FI Insurance Company Model
+    description: "Insurance companies — solvency, reserve adequacy, reinsurance quality, regulatory compliance"
+    model_specificity: 3
+    min_premium: 50000
+
+    routing_constraints:
+      - {field: fi_segment, operator: "==", value: INSURER, required_in_input: true}
+
+    direct_queries:
+      - id: am_best_downgrade
+        question: Has the company been downgraded by AM Best in the past 24 months?
+        conditions: [{action: REFER, override: 4, note: "Recent AM Best downgrade"}]
+      - id: reserve_deficiency
+        question: Has the company experienced adverse reserve development exceeding 5% of surplus?
+        conditions: [{action: REFER, override: 4, note: "Material adverse reserve development"}]
+      - id: reinsurance_concentration
+        question: Is more than 30% of ceded premium placed with a single reinsurer?
+        conditions: [{action: FLAG, note: "Reinsurance concentration risk"}]
+      - id: regulatory_action
+        question: Any state insurance department regulatory actions in the past 3 years?
+        conditions: [{action: REFER, override: 4, note: "Insurance regulatory action"}]
+
+    category_groups: [institution_type, asset_size_band]
+
+    group_weights:
+      - {group_id: regulatory_framework, risk_weight: 0.30, loss_weight: 0.25, exposure_weight: 0.20}
+      - {group_id: corporate_footprint, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.30}
+      - {group_id: firm_stability, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.25}
+      - {group_id: litigation_history, risk_weight: 0.20, loss_weight: 0.25, exposure_weight: 0.25}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: total_assets
+      preferred_rate: 5.0e-06
+      standard_plus_rate: 8.0e-06
+      standard_rate: 1.5e-05
+      substandard_rate: 2.5e-05
+      decline_rate: 4.0e-05
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [100000, 250000, 500000, 1000000, 2500000]
+
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 250000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: professional_liability
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 5000000, factor: 0.55}
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.9}
+              - {limit: 50000000, factor: 3.2}
+              - {limit: 100000000, factor: 5.5}
+          deductible_factors:
+            - {deductible: 100000, factor: 1.20}
+            - {deductible: 250000, factor: 1.0}
+            - {deductible: 500000, factor: 0.85}
+            - {deductible: 1000000, factor: 0.72}
+            - {deductible: 2500000, factor: 0.60}
+
+  # =========================================================================
+  # 3. FI FINTECH
+  # =========================================================================
+  - id: fi_fintech
+    name: DSI FI Fintech & Digital Banking Model
+    description: "Fintech companies — digital banking, payments, lending platforms, neobanks"
+    model_specificity: 3
+    min_premium: 25000
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: "One of: professional_liability, directors_officers, cyber_liability"
+      - field: limit
+        description: Requested limit in USD
+      - field: revenue
+        description: Annual revenue in USD (MULTIPLIER basis for fintech)
+
+    routing_constraints:
+      - {field: fi_segment, operator: "==", value: FINTECH, required_in_input: true}
+
+    direct_queries:
+      - id: licensing_gaps
+        question: Is the company operating in any state without required money transmitter or lending licences?
+        conditions: [{action: REFER, override: 5, note: "Licensing gaps — regulatory risk"}]
+      - id: cfpb_complaint
+        question: Has the company been subject to CFPB enforcement or investigation?
+        conditions: [{action: REFER, override: 4, note: "CFPB enforcement"}]
+      - id: partner_bank_change
+        question: Has the partner/sponsor bank changed in the past 12 months?
+        conditions: [{action: FLAG, note: "Partner bank change — continuity risk"}]
+      - id: data_breach
+        question: Has the company experienced a customer data breach in the past 3 years?
+        conditions: [{action: REFER, override: 4, note: "Prior data breach"}]
+
+    category_groups: [institution_type]
+
+    group_weights:
+      - {group_id: fintech_risk, risk_weight: 0.40, loss_weight: 0.35, exposure_weight: 0.30}
+      - {group_id: regulatory_framework, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: revenue
+      preferred_rate: 0.0008
+      standard_plus_rate: 0.0015
+      standard_rate: 0.0025
+      substandard_rate: 0.0042
+      decline_rate: 0.0070
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: professional_liability
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.40}
+              - {limit: 2000000, factor: 0.65}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.7}
+              - {limit: 25000000, factor: 3.2}
+              - {limit: 50000000, factor: 5.5}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.20}
+            - {deductible: 50000, factor: 1.10}
+            - {deductible: 100000, factor: 1.0}
+            - {deductible: 250000, factor: 0.85}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.60}
+
+  # =========================================================================
+  # 4. FI CRYPTO / DIGITAL ASSETS
+  # =========================================================================
+  - id: fi_crypto
+    name: DSI FI Crypto & Digital Assets Model
+    description: "Crypto exchanges, custodians, DeFi protocols, stablecoin issuers"
+    model_specificity: 4
+    min_premium: 50000
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: "One of: professional_liability, directors_officers, cyber_liability"
+      - field: limit
+        description: Requested limit in USD
+      - field: aum
+        description: Assets under management/custody in USD (MULTIPLIER basis)
+
+    routing_constraints:
+      - {field: fi_segment, operator: "==", value: CRYPTO, required_in_input: true}
+      - {field: aum, operator: ">=", value: 100000000, required_in_input: true}
+
+    direct_queries:
+      - id: regulatory_clarity
+        question: Is the company registered with the SEC, CFTC, or equivalent regulator?
+        conditions: [{action: MODIFIER, applied: 0.85, note: "Registered entity credit"}]
+      - id: hack_history
+        question: Has the platform suffered a security breach or hack resulting in customer asset loss?
+        conditions: [{action: REFER, override: 5, note: "Prior hack/asset loss"}]
+      - id: proof_of_reserves
+        question: Does the company publish audited proof of reserves?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Proof of reserves credit"}]
+      - id: defi_protocol
+        question: Does the company operate or rely on DeFi smart contracts?
+        conditions: [{action: FLAG, note: "DeFi protocol risk — smart contract vulnerability"}]
+      - id: stablecoin_exposure
+        question: Does the company issue or hold significant stablecoin reserves?
+        conditions: [{action: FLAG, note: "Stablecoin reserve risk"}]
+
+    category_groups: [institution_type]
+
+    group_weights:
+      - {group_id: fintech_risk, risk_weight: 0.45, loss_weight: 0.40, exposure_weight: 0.35}
+      - {group_id: regulatory_framework, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: aum
+      preferred_rate: 0.0008
+      standard_plus_rate: 0.0015
+      standard_rate: 0.0028
+      substandard_rate: 0.0050
+      decline_rate: 0.0085
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [250000, 500000, 1000000, 2500000, 5000000]
+
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 1000000
+      taxes_fees_rate: 0.05
+      by_product_type:
+        - product_type: professional_liability
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 5000000, factor: 0.60}
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.9}
+              - {limit: 50000000, factor: 3.2}
+              - {limit: 100000000, factor: 5.5}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.05}
+            - {deductible: 1000000, factor: 1.0}
+            - {deductible: 2500000, factor: 0.85}
+            - {deductible: 5000000, factor: 0.72}
+
+# =============================================================================
+# EXPANSION NOTES
+# =============================================================================
+#
+# Changes to existing infrastructure:
+# 1. metadata_registry.py: Add 10 signals, 2 new groups
+#    (banking_risk, fintech_risk)
+# 2. seed_dsi_bench.py: Update docstring
+#
+# Signal summary: 2 new groups, 10 new signals (all three-layer)
+# Config summary: 4 new (fi_bank, fi_insurer, fi_fintech, fi_crypto)
+# Total FI configs after expansion: 6 (general, sme + 4 new)
+#
+# NOTE: fi_fintech uses revenue basis, fi_crypto uses aum basis.
+# fi_bank and fi_insurer use total_assets basis (same as existing).
+# =============================================================================

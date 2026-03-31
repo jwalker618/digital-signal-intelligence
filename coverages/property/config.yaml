@@ -1,0 +1,4641 @@
+commercial_property:
+  property_general:
+    metadata:
+      name: DSI Commercial Property General Model
+      description: General commercial property — offices, retail, light industrial, multi-tenant
+      version: 2.3.0
+      product_types:
+      - commercial_property
+      - builders_risk
+      - business_interruption
+      - difference_in_conditions
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: commercial_property, builders_risk, business_interruption, difference_in_conditions'
+        - field: limit
+          description: Requested limit in USD
+        - field: tiv
+          description: Total insured value in USD (MULTIPLIER basis)
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 2
+      routing_constraints:
+      - field: tiv
+        operator: '>='
+        value: 5000000
+        required_in_input: true
+      - field: tiv
+        operator: <
+        value: 500000000
+        required_in_input: false
+    direct_queries:
+    - id: pending_claims
+      question: Any open or pending property claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Open property claims history
+    - id: prior_losses_large
+      question: Any single property loss exceeding $1M in the past 10 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Large prior loss history
+    - id: vacancy_significant
+      question: Is more than 30% of the insured property currently vacant?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Significant vacancy exposure
+    - id: renovation_active
+      question: Any active renovation or construction at the insured location?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Active renovation — hot works exposure
+    - id: hazardous_materials
+      question: Are hazardous materials stored, used, or processed on premises?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Hazardous materials on site
+    signal_registry:
+    - id: construction_class
+      inference_utility_function: construction_class_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: construction_quality
+        source: metadata.construction_class
+        features:
+        - cat: FR
+          label: Fire Resistive
+          applied: 0.7
+        - cat: MFR
+          label: Modified Fire Resistive
+          applied: 0.8
+        - cat: MNC
+          label: Masonry Non-Combustible
+          applied: 0.9
+        - cat: NC
+          label: Non-Combustible
+          applied: 0.95
+        - cat: JM
+          label: Joisted Masonry
+          applied: 1.1
+        - cat: F
+          label: Frame
+          applied: 1.4
+    - id: building_age_condition
+      inference_utility_function: building_age_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+    - id: building_code_compliance
+      inference_utility_function: building_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: roof_condition
+      inference_utility_function: roof_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: electrical_system_quality
+      inference_utility_function: electrical_system_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: renovation_history
+      inference_utility_function: renovation_history_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: occupancy_hazard_grade
+      inference_utility_function: occupancy_hazard_grade_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: occupancy_risk
+        source: metadata.occupancy_hazard_grade
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Residential)
+          applied: 0.75
+        - cat: MOD
+          label: Moderate Hazard (Retail/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Heavy Mfg/Woodworking)
+          applied: 1.35
+        - cat: SPECIAL
+          label: Special Hazard (Chemical/Explosive)
+          applied: 1.8
+    - id: tenant_concentration
+      inference_utility_function: tenant_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: negative
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: contents_value_density
+      inference_utility_function: contents_value_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: vacancy_rate
+      inference_utility_function: vacancy_rate_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: FLAG
+            note: High vacancy — arson/vandalism exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+    - id: housekeeping_quality
+      inference_utility_function: housekeeping_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wind_zone
+      inference_utility_function: wind_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wind zone exposure
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated wind zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: earthquake_zone
+      inference_utility_function: earthquake_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe earthquake zone
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated seismic zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: flood_zone
+      inference_utility_function: flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High flood zone exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wildfire_zone
+      inference_utility_function: wildfire_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wildfire exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: convective_storm_exposure
+      inference_utility_function: convective_storm_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: geographic_concentration
+      inference_utility_function: geographic_concentration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: sprinkler_coverage
+      inference_utility_function: sprinkler_coverage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: fire_protection
+        source: metadata.sprinkler_coverage
+        features:
+        - cat: FULL_WET
+          label: Full Wet Sprinkler
+          applied: 0.55
+        - cat: FULL_DRY
+          label: Full Dry Sprinkler
+          applied: 0.65
+        - cat: PARTIAL
+          label: Partial Sprinkler
+          applied: 0.85
+        - cat: NONE
+          label: No Sprinklers
+          applied: 1.3
+    - id: fire_alarm_quality
+      inference_utility_function: fire_alarm_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: fire_department_response
+      inference_utility_function: fire_department_response_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Poor fire department response capability
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: fire_separation
+      inference_utility_function: fire_separation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: water_supply_adequacy
+      inference_utility_function: water_supply_adequacy_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: revenue_concentration
+      inference_utility_function: revenue_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High revenue concentration at single location
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: recovery_time_estimate
+      inference_utility_function: recovery_time_estimate_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: supply_chain_dependency
+      inference_utility_function: supply_chain_dependency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: contingent_bi_exposure
+      inference_utility_function: contingent_bi_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+          score_conditions:
+          - action: FLAG
+            note: Significant contingent BI exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: business_continuity_planning
+      inference_utility_function: business_continuity_planning_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: construction_quality
+        label: Construction Quality
+        description: Structural integrity, construction class, age, maintenance, and building code compliance
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.1
+      - id: occupancy_risk
+        label: Occupancy Risk
+        description: Tenant type, hazard grade, contents value density, and vacancy exposure
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: cat_exposure
+        label: Catastrophe Exposure
+        description: Natural catastrophe zone exposure — wind, earthquake, flood, wildfire, convective storm
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.3
+      - id: fire_protection
+        label: Fire Protection
+        description: Sprinkler systems, fire alarms, fire department response, fire separation, water supply
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.1
+      - id: business_interruption
+        label: Business Interruption
+        description: Revenue dependency, recovery time, supply chain resilience, contingent BI exposure
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.1
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0008
+            basis: tiv
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0015
+            basis: tiv
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0025
+            basis: tiv
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.004
+            basis: tiv
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.006
+            basis: tiv
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      - 500000000
+      valid_deductibles:
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      by_product_type:
+        commercial_property:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.2
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.9
+          - deductible: 100000
+            factor: 0.8
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.62
+          - deductible: 1000000
+            factor: 0.55
+          - deductible: 2500000
+            factor: 0.48
+        business_interruption:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.2
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.9
+          - deductible: 100000
+            factor: 0.8
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.62
+          - deductible: 1000000
+            factor: 0.55
+          - deductible: 2500000
+            factor: 0.48
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  property_high_value:
+    metadata:
+      name: DSI Commercial Property High Value Model
+      description: High-value commercial property — TIV >$500M, landmark, data centre, critical infrastructure
+      version: 2.3.0
+      product_types:
+      - commercial_property
+      - builders_risk
+      - business_interruption
+      - difference_in_conditions
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: commercial_property, builders_risk, business_interruption, difference_in_conditions'
+        - field: limit
+          description: Requested limit in USD
+        - field: tiv
+          description: Total insured value in USD (MULTIPLIER basis)
+      min_premium: 250000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: tiv
+        operator: '>='
+        value: 500000000
+        required_in_input: true
+    direct_queries:
+    - id: pending_claims
+      question: Any open or pending property claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: Open claims on high-value property
+    - id: prior_total_loss
+      question: Has this property or a comparable property in the portfolio suffered a total loss?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Prior total loss history
+    - id: single_tenant
+      question: Is the property 100% occupied by a single tenant?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Single-tenant concentration risk
+    - id: redundant_systems
+      question: Does the property have redundant fire suppression and life safety systems?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: Redundant protection credit
+    - id: terrorism_exposure
+      question: Is the property considered a landmark or high-profile terrorism target?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Terrorism target exposure
+    - id: coastal_frontage
+      question: Does the property have direct coastal frontage or is located within 1 mile of coast?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Coastal frontage — surge/wind exposure
+    signal_registry:
+    - id: construction_class
+      inference_utility_function: construction_class_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: construction_quality
+        source: metadata.construction_class
+        features:
+        - cat: FR
+          label: Fire Resistive
+          applied: 0.7
+        - cat: MFR
+          label: Modified Fire Resistive
+          applied: 0.8
+        - cat: MNC
+          label: Masonry Non-Combustible
+          applied: 0.9
+        - cat: NC
+          label: Non-Combustible
+          applied: 0.95
+        - cat: JM
+          label: Joisted Masonry
+          applied: 1.1
+        - cat: F
+          label: Frame
+          applied: 1.4
+    - id: building_age_condition
+      inference_utility_function: building_age_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+    - id: building_code_compliance
+      inference_utility_function: building_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: roof_condition
+      inference_utility_function: roof_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: electrical_system_quality
+      inference_utility_function: electrical_system_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: renovation_history
+      inference_utility_function: renovation_history_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: occupancy_hazard_grade
+      inference_utility_function: occupancy_hazard_grade_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: occupancy_risk
+        source: metadata.occupancy_hazard_grade
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Residential)
+          applied: 0.75
+        - cat: MOD
+          label: Moderate Hazard (Retail/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Heavy Mfg/Woodworking)
+          applied: 1.35
+        - cat: SPECIAL
+          label: Special Hazard (Chemical/Explosive)
+          applied: 1.8
+    - id: tenant_concentration
+      inference_utility_function: tenant_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: negative
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: contents_value_density
+      inference_utility_function: contents_value_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: vacancy_rate
+      inference_utility_function: vacancy_rate_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: FLAG
+            note: High vacancy — arson/vandalism exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+    - id: housekeeping_quality
+      inference_utility_function: housekeeping_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wind_zone
+      inference_utility_function: wind_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wind zone exposure
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated wind zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: earthquake_zone
+      inference_utility_function: earthquake_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe earthquake zone
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated seismic zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: flood_zone
+      inference_utility_function: flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High flood zone exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wildfire_zone
+      inference_utility_function: wildfire_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wildfire exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: convective_storm_exposure
+      inference_utility_function: convective_storm_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: geographic_concentration
+      inference_utility_function: geographic_concentration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: sprinkler_coverage
+      inference_utility_function: sprinkler_coverage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: fire_protection
+        source: metadata.sprinkler_coverage
+        features:
+        - cat: FULL_WET
+          label: Full Wet Sprinkler
+          applied: 0.55
+        - cat: FULL_DRY
+          label: Full Dry Sprinkler
+          applied: 0.65
+        - cat: PARTIAL
+          label: Partial Sprinkler
+          applied: 0.85
+        - cat: NONE
+          label: No Sprinklers
+          applied: 1.3
+    - id: fire_alarm_quality
+      inference_utility_function: fire_alarm_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: fire_department_response
+      inference_utility_function: fire_department_response_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Poor fire department response capability
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: fire_separation
+      inference_utility_function: fire_separation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: water_supply_adequacy
+      inference_utility_function: water_supply_adequacy_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: revenue_concentration
+      inference_utility_function: revenue_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High revenue concentration at single location
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: recovery_time_estimate
+      inference_utility_function: recovery_time_estimate_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: supply_chain_dependency
+      inference_utility_function: supply_chain_dependency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: contingent_bi_exposure
+      inference_utility_function: contingent_bi_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+          score_conditions:
+          - action: FLAG
+            note: Significant contingent BI exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: business_continuity_planning
+      inference_utility_function: business_continuity_planning_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: construction_quality
+        label: Construction Quality
+        description: Structural integrity, construction class, age, maintenance, and building code compliance
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.1
+      - id: occupancy_risk
+        label: Occupancy Risk
+        description: Tenant type, hazard grade, contents value density, and vacancy exposure
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.1
+      - id: cat_exposure
+        label: Catastrophe Exposure
+        description: Natural catastrophe zone exposure — wind, earthquake, flood, wildfire, convective storm
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.35
+      - id: fire_protection
+        label: Fire Protection
+        description: Sprinkler systems, fire alarms, fire department response, fire separation, water supply
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.1
+      - id: business_interruption
+        label: Business Interruption
+        description: Revenue dependency, recovery time, supply chain resilience, contingent BI exposure
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.25
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.05
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0005
+            basis: tiv
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.001
+            basis: tiv
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: tiv
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.003
+            basis: tiv
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: tiv
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      - 500000000
+      valid_deductibles:
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+      - 5000000
+    pricing:
+      base_limit_reference: 25000000
+      base_deductible_reference: 500000
+      by_product_type:
+        commercial_property:
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.88
+          - deductible: 2500000
+            factor: 0.75
+          - deductible: 5000000
+            factor: 0.65
+        business_interruption:
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.88
+          - deductible: 2500000
+            factor: 0.75
+          - deductible: 5000000
+            factor: 0.65
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  property_cat_exposed:
+    metadata:
+      name: DSI Commercial Property CAT-Exposed Model
+      description: CAT-exposed commercial property — coastal wind, earthquake, wildfire zones
+      version: 2.3.0
+      product_types:
+      - commercial_property
+      - builders_risk
+      - business_interruption
+      - difference_in_conditions
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: commercial_property, builders_risk, business_interruption, difference_in_conditions'
+        - field: limit
+          description: Requested limit in USD
+        - field: tiv
+          description: Total insured value in USD (MULTIPLIER basis)
+      min_premium: 50000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: tiv
+        operator: '>='
+        value: 5000000
+        required_in_input: true
+      - field: cat_zone
+        operator: in
+        value:
+        - HIGH_WIND
+        - HIGH_EQ
+        - HIGH_WILDFIRE
+        - HIGH_FLOOD
+        required_in_input: true
+    direct_queries:
+    - id: prior_cat_loss
+      question: Has this property sustained a catastrophe loss in the past 10 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Prior CAT loss at this location
+    - id: cat_mitigation
+      question: Have CAT-specific mitigation measures been implemented (hurricane straps, seismic retrofit, defensible space)?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.85
+        note: CAT mitigation credit
+    - id: coastal_proximity
+      question: Is the property within 2500 feet of the coastline?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Immediate coastal exposure
+    - id: flood_elevation
+      question: Is the property elevated above the base flood elevation?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: Elevated above BFE credit
+    - id: secondary_perils
+      question: Is the location exposed to multiple concurrent CAT perils (e.g., wind + flood + storm surge)?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Multi-peril CAT exposure
+    signal_registry:
+    - id: construction_class
+      inference_utility_function: construction_class_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: construction_quality
+        source: metadata.construction_class
+        features:
+        - cat: FR
+          label: Fire Resistive
+          applied: 0.7
+        - cat: MFR
+          label: Modified Fire Resistive
+          applied: 0.8
+        - cat: MNC
+          label: Masonry Non-Combustible
+          applied: 0.9
+        - cat: NC
+          label: Non-Combustible
+          applied: 0.95
+        - cat: JM
+          label: Joisted Masonry
+          applied: 1.1
+        - cat: F
+          label: Frame
+          applied: 1.4
+    - id: building_age_condition
+      inference_utility_function: building_age_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+    - id: building_code_compliance
+      inference_utility_function: building_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: roof_condition
+      inference_utility_function: roof_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: electrical_system_quality
+      inference_utility_function: electrical_system_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: renovation_history
+      inference_utility_function: renovation_history_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: occupancy_hazard_grade
+      inference_utility_function: occupancy_hazard_grade_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: occupancy_risk
+        source: metadata.occupancy_hazard_grade
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Residential)
+          applied: 0.75
+        - cat: MOD
+          label: Moderate Hazard (Retail/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Heavy Mfg/Woodworking)
+          applied: 1.35
+        - cat: SPECIAL
+          label: Special Hazard (Chemical/Explosive)
+          applied: 1.8
+    - id: tenant_concentration
+      inference_utility_function: tenant_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: negative
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: contents_value_density
+      inference_utility_function: contents_value_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: vacancy_rate
+      inference_utility_function: vacancy_rate_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: FLAG
+            note: High vacancy — arson/vandalism exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+    - id: housekeeping_quality
+      inference_utility_function: housekeeping_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wind_zone
+      inference_utility_function: wind_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wind zone exposure
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated wind zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: earthquake_zone
+      inference_utility_function: earthquake_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe earthquake zone
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated seismic zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: flood_zone
+      inference_utility_function: flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High flood zone exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wildfire_zone
+      inference_utility_function: wildfire_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wildfire exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: convective_storm_exposure
+      inference_utility_function: convective_storm_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: geographic_concentration
+      inference_utility_function: geographic_concentration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: sprinkler_coverage
+      inference_utility_function: sprinkler_coverage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: fire_protection
+        source: metadata.sprinkler_coverage
+        features:
+        - cat: FULL_WET
+          label: Full Wet Sprinkler
+          applied: 0.55
+        - cat: FULL_DRY
+          label: Full Dry Sprinkler
+          applied: 0.65
+        - cat: PARTIAL
+          label: Partial Sprinkler
+          applied: 0.85
+        - cat: NONE
+          label: No Sprinklers
+          applied: 1.3
+    - id: fire_alarm_quality
+      inference_utility_function: fire_alarm_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: fire_department_response
+      inference_utility_function: fire_department_response_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Poor fire department response capability
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: fire_separation
+      inference_utility_function: fire_separation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: water_supply_adequacy
+      inference_utility_function: water_supply_adequacy_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: revenue_concentration
+      inference_utility_function: revenue_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High revenue concentration at single location
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: recovery_time_estimate
+      inference_utility_function: recovery_time_estimate_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: supply_chain_dependency
+      inference_utility_function: supply_chain_dependency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: contingent_bi_exposure
+      inference_utility_function: contingent_bi_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+          score_conditions:
+          - action: FLAG
+            note: Significant contingent BI exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: business_continuity_planning
+      inference_utility_function: business_continuity_planning_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: construction_quality
+        label: Construction Quality
+        description: Structural integrity, construction class, age, maintenance, and building code compliance
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.05
+      - id: occupancy_risk
+        label: Occupancy Risk
+        description: Tenant type, hazard grade, contents value density, and vacancy exposure
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.05
+      - id: cat_exposure
+        label: Catastrophe Exposure
+        description: Natural catastrophe zone exposure — wind, earthquake, flood, wildfire, convective storm
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.5
+      - id: fire_protection
+        label: Fire Protection
+        description: Sprinkler systems, fire alarms, fire department response, fire separation, water supply
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.05
+      - id: business_interruption
+        label: Business Interruption
+        description: Revenue dependency, recovery time, supply chain resilience, contingent BI exposure
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.25
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.05
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: tiv
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.003
+            basis: tiv
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0045
+            basis: tiv
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0065
+            basis: tiv
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.009
+            basis: tiv
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      valid_deductibles:
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      by_product_type:
+        commercial_property:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.88
+          - deductible: 250000
+            factor: 0.78
+          - deductible: 500000
+            factor: 0.68
+          - deductible: 1000000
+            factor: 0.6
+          - deductible: 2500000
+            factor: 0.52
+        difference_in_conditions:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.88
+          - deductible: 250000
+            factor: 0.78
+          - deductible: 500000
+            factor: 0.68
+          - deductible: 1000000
+            factor: 0.6
+          - deductible: 2500000
+            factor: 0.52
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  property_builders_risk:
+    metadata:
+      name: DSI Builders Risk Model
+      description: Construction-phase property coverage — new build, renovation, fit-out
+      version: 2.3.0
+      product_types:
+      - builders_risk
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: commercial_property, builders_risk, business_interruption, difference_in_conditions'
+        - field: limit
+          description: Requested limit in USD
+        - field: tiv
+          description: Total insured value in USD (MULTIPLIER basis)
+      min_premium: 15000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: ==
+        value: builders_risk
+        required_in_input: true
+    direct_queries:
+    - id: project_type
+      question: Is this new construction, renovation, or fit-out/tenant improvement?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Project type classification
+    - id: contractor_experience
+      question: Does the general contractor have 10+ years experience on comparable projects?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: Experienced contractor credit
+    - id: wood_frame_over_4
+      question: Is this a wood-frame structure over 4 stories?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Wood-frame high-rise — fire exposure
+    - id: site_security
+      question: Is the construction site secured with 24/7 fencing, cameras, and guard service?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.92
+        note: Site security credit
+    - id: hot_works_program
+      question: Is a formal hot works permit program in place?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.95
+        note: Hot works program credit
+    - id: project_delay_history
+      question: Has the contractor experienced significant project delays (>6 months) on recent projects?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Contractor delay history
+    signal_registry:
+    - id: construction_class
+      inference_utility_function: construction_class_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: construction_quality
+        source: metadata.construction_class
+        features:
+        - cat: FR
+          label: Fire Resistive
+          applied: 0.7
+        - cat: MFR
+          label: Modified Fire Resistive
+          applied: 0.8
+        - cat: MNC
+          label: Masonry Non-Combustible
+          applied: 0.9
+        - cat: NC
+          label: Non-Combustible
+          applied: 0.95
+        - cat: JM
+          label: Joisted Masonry
+          applied: 1.1
+        - cat: F
+          label: Frame
+          applied: 1.4
+    - id: building_age_condition
+      inference_utility_function: building_age_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+    - id: building_code_compliance
+      inference_utility_function: building_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: roof_condition
+      inference_utility_function: roof_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: electrical_system_quality
+      inference_utility_function: electrical_system_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: renovation_history
+      inference_utility_function: renovation_history_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: occupancy_hazard_grade
+      inference_utility_function: occupancy_hazard_grade_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: occupancy_risk
+        source: metadata.occupancy_hazard_grade
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Residential)
+          applied: 0.75
+        - cat: MOD
+          label: Moderate Hazard (Retail/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Heavy Mfg/Woodworking)
+          applied: 1.35
+        - cat: SPECIAL
+          label: Special Hazard (Chemical/Explosive)
+          applied: 1.8
+    - id: tenant_concentration
+      inference_utility_function: tenant_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: negative
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: contents_value_density
+      inference_utility_function: contents_value_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: vacancy_rate
+      inference_utility_function: vacancy_rate_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: FLAG
+            note: High vacancy — arson/vandalism exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+    - id: housekeeping_quality
+      inference_utility_function: housekeeping_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wind_zone
+      inference_utility_function: wind_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wind zone exposure
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated wind zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: earthquake_zone
+      inference_utility_function: earthquake_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe earthquake zone
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated seismic zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: flood_zone
+      inference_utility_function: flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High flood zone exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wildfire_zone
+      inference_utility_function: wildfire_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wildfire exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: convective_storm_exposure
+      inference_utility_function: convective_storm_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: geographic_concentration
+      inference_utility_function: geographic_concentration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: sprinkler_coverage
+      inference_utility_function: sprinkler_coverage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: fire_protection
+        source: metadata.sprinkler_coverage
+        features:
+        - cat: FULL_WET
+          label: Full Wet Sprinkler
+          applied: 0.55
+        - cat: FULL_DRY
+          label: Full Dry Sprinkler
+          applied: 0.65
+        - cat: PARTIAL
+          label: Partial Sprinkler
+          applied: 0.85
+        - cat: NONE
+          label: No Sprinklers
+          applied: 1.3
+    - id: fire_alarm_quality
+      inference_utility_function: fire_alarm_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: fire_department_response
+      inference_utility_function: fire_department_response_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Poor fire department response capability
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: fire_separation
+      inference_utility_function: fire_separation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: water_supply_adequacy
+      inference_utility_function: water_supply_adequacy_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: revenue_concentration
+      inference_utility_function: revenue_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High revenue concentration at single location
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: recovery_time_estimate
+      inference_utility_function: recovery_time_estimate_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: supply_chain_dependency
+      inference_utility_function: supply_chain_dependency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: contingent_bi_exposure
+      inference_utility_function: contingent_bi_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+          score_conditions:
+          - action: FLAG
+            note: Significant contingent BI exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: business_continuity_planning
+      inference_utility_function: business_continuity_planning_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: construction_quality
+        label: Construction Quality
+        description: Structural integrity, construction class, age, maintenance, and building code compliance
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.15
+      - id: occupancy_risk
+        label: Occupancy Risk
+        description: Tenant type, hazard grade, contents value density, and vacancy exposure
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: cat_exposure
+        label: Catastrophe Exposure
+        description: Natural catastrophe zone exposure — wind, earthquake, flood, wildfire, convective storm
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.35
+      - id: fire_protection
+        label: Fire Protection
+        description: Sprinkler systems, fire alarms, fire department response, fire separation, water supply
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.15
+      - id: business_interruption
+        label: Business Interruption
+        description: Revenue dependency, recovery time, supply chain resilience, contingent BI exposure
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.002
+            basis: tiv
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0035
+            basis: tiv
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0055
+            basis: tiv
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.008
+            basis: tiv
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.011
+            basis: tiv
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      - 500000000
+      valid_deductibles:
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      by_product_type:
+        builders_risk:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.25
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.88
+          - deductible: 100000
+            factor: 0.78
+          - deductible: 250000
+            factor: 0.68
+          - deductible: 500000
+            factor: 0.6
+          - deductible: 1000000
+            factor: 0.52
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  property_sme:
+    metadata:
+      name: DSI Commercial Property SME Model
+      description: Small-to-medium commercial property — TIV under $5M, simplified assessment
+      version: 2.3.0
+      product_types:
+      - commercial_property
+      - builders_risk
+      - business_interruption
+      - difference_in_conditions
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: commercial_property, builders_risk, business_interruption, difference_in_conditions'
+        - field: limit
+          description: Requested limit in USD
+        - field: tiv
+          description: Total insured value in USD (MULTIPLIER basis)
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 1
+      routing_constraints:
+      - field: tiv
+        operator: <
+        value: 5000000
+        required_in_input: true
+    direct_queries:
+    - id: pending_claims
+      question: Any open or pending property claims in the past 3 years?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Recent claims history
+    - id: prior_losses
+      question: Any property loss exceeding $100K in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Significant prior loss for SME
+    - id: owner_occupied
+      question: Is the property owner-occupied?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.92
+        note: Owner-occupied credit
+    signal_registry:
+    - id: construction_class
+      inference_utility_function: construction_class_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: construction_quality
+        source: metadata.construction_class
+        features:
+        - cat: FR
+          label: Fire Resistive
+          applied: 0.7
+        - cat: MFR
+          label: Modified Fire Resistive
+          applied: 0.8
+        - cat: MNC
+          label: Masonry Non-Combustible
+          applied: 0.9
+        - cat: NC
+          label: Non-Combustible
+          applied: 0.95
+        - cat: JM
+          label: Joisted Masonry
+          applied: 1.1
+        - cat: F
+          label: Frame
+          applied: 1.4
+    - id: building_age_condition
+      inference_utility_function: building_age_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.05
+    - id: building_code_compliance
+      inference_utility_function: building_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: roof_condition
+      inference_utility_function: roof_condition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: electrical_system_quality
+      inference_utility_function: electrical_system_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: renovation_history
+      inference_utility_function: renovation_history_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: construction_quality
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: occupancy_hazard_grade
+      inference_utility_function: occupancy_hazard_grade_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: occupancy_risk
+        source: metadata.occupancy_hazard_grade
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Residential)
+          applied: 0.75
+        - cat: MOD
+          label: Moderate Hazard (Retail/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Heavy Mfg/Woodworking)
+          applied: 1.35
+        - cat: SPECIAL
+          label: Special Hazard (Chemical/Explosive)
+          applied: 1.8
+    - id: tenant_concentration
+      inference_utility_function: tenant_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: negative
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: contents_value_density
+      inference_utility_function: contents_value_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: vacancy_rate
+      inference_utility_function: vacancy_rate_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: FLAG
+            note: High vacancy — arson/vandalism exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+    - id: housekeeping_quality
+      inference_utility_function: housekeeping_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: occupancy_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wind_zone
+      inference_utility_function: wind_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wind zone exposure
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated wind zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: earthquake_zone
+      inference_utility_function: earthquake_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe earthquake zone
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated seismic zone
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: flood_zone
+      inference_utility_function: flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High flood zone exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: wildfire_zone
+      inference_utility_function: wildfire_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe wildfire exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: convective_storm_exposure
+      inference_utility_function: convective_storm_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: geographic_concentration
+      inference_utility_function: geographic_concentration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: cat_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: sprinkler_coverage
+      inference_utility_function: sprinkler_coverage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: fire_protection
+        source: metadata.sprinkler_coverage
+        features:
+        - cat: FULL_WET
+          label: Full Wet Sprinkler
+          applied: 0.55
+        - cat: FULL_DRY
+          label: Full Dry Sprinkler
+          applied: 0.65
+        - cat: PARTIAL
+          label: Partial Sprinkler
+          applied: 0.85
+        - cat: NONE
+          label: No Sprinklers
+          applied: 1.3
+    - id: fire_alarm_quality
+      inference_utility_function: fire_alarm_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: fire_department_response
+      inference_utility_function: fire_department_response_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Poor fire department response capability
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: fire_separation
+      inference_utility_function: fire_separation_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: water_supply_adequacy
+      inference_utility_function: water_supply_adequacy_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: fire_protection
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: revenue_concentration
+      inference_utility_function: revenue_concentration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High revenue concentration at single location
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: recovery_time_estimate
+      inference_utility_function: recovery_time_estimate_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: supply_chain_dependency
+      inference_utility_function: supply_chain_dependency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: contingent_bi_exposure
+      inference_utility_function: contingent_bi_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+          score_conditions:
+          - action: FLAG
+            note: Significant contingent BI exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: business_continuity_planning
+      inference_utility_function: business_continuity_planning_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: business_interruption
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    groups:
+      three_layer_assessment:
+      - id: construction_quality
+        label: Construction Quality
+        description: Structural integrity, construction class, age, maintenance, and building code compliance
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.15
+      - id: occupancy_risk
+        label: Occupancy Risk
+        description: Tenant type, hazard grade, contents value density, and vacancy exposure
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: cat_exposure
+        label: Catastrophe Exposure
+        description: Natural catastrophe zone exposure — wind, earthquake, flood, wildfire, convective storm
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.3
+      - id: fire_protection
+        label: Fire Protection
+        description: Sprinkler systems, fire alarms, fire department response, fire separation, water supply
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.15
+      - id: business_interruption
+        label: Business Interruption
+        description: Revenue dependency, recovery time, supply chain resilience, contingent BI exposure
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.25
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0012
+            basis: tiv
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.002
+            basis: tiv
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0032
+            basis: tiv
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: tiv
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0075
+            basis: tiv
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.7
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.3
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 250000
+      - 500000
+      - 1000000
+      - 2000000
+      - 5000000
+      valid_deductibles:
+      - 2500
+      - 5000
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+    pricing:
+      base_limit_reference: 500000
+      base_deductible_reference: 10000
+      by_product_type:
+        commercial_property:
+          ilf_curve:
+            anchor_limit: 500000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 2500
+            factor: 1.3
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.72
+          - deductible: 100000
+            factor: 0.62
+        business_interruption:
+          ilf_curve:
+            anchor_limit: 500000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 2500
+            factor: 1.3
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.72
+          - deductible: 100000
+            factor: 0.62
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

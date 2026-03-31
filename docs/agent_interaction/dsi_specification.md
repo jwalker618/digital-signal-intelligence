@@ -243,7 +243,7 @@ Content-Type: application/json
     "identifier_type": "domain"              // domain | name | registration
   },
   "coverage": {
-    "type": "cyber",                         // cyber | fi | energy | marine | do | pi | aerospace
+    "type": "cyber",                         // cyber | fi | energy | marine | do | pi | aerospace | property | casualty | fpr
     "limit": 10000000,                       // In base currency units
     "currency": "USD",
     "deductible": "standard",                // standard | elevated | custom

@@ -75,3 +75,4 @@ __all__ = [
     "ISSGovernanceAggregator", "CompanyTypeAggregator", "DOIndustryAggregator",
     "StockExchangeAggregator",
 ]
+from . import phase_6_aggregators

@@ -136,3 +136,4 @@ __all__ = [
     "AssetSizeExtractor",
     "PubliclyTradedExtractor",
 ]
+from . import phase_7_extractors

@@ -82,9 +82,9 @@ Production extractors are shared: `signal_architecture/signals/extractors/produc
 
 ---
 
-### D&O (2 configs)
+### D&O (6 configs)
 
-`do_general, do_sme`
+`do_general, do_sme, do_public, do_pe_backed, do_nonprofit, do_ipo_spac`
 
 **Ready now**: SEC EDGAR (10-K, DEF 14A, 8-K), board composition
 
@@ -96,9 +96,9 @@ Production extractors are shared: `signal_architecture/signals/extractors/produc
 
 ---
 
-### Financial Institutions (2 configs)
+### Financial Institutions (6 configs)
 
-`fi_general, fi_sme`
+`fi_general, fi_sme, fi_bank, fi_insurer, fi_fintech, fi_crypto`
 
 **Ready now**: FDIC/OCC exam data, SEC filings, OFAC sanctions
 
@@ -110,9 +110,9 @@ Production extractors are shared: `signal_architecture/signals/extractors/produc
 
 ---
 
-### Marine (2 configs)
+### Marine (7 configs)
 
-`marine_general, marine_sme`
+`marine_general, marine_sme, marine_cargo, marine_tanker, marine_offshore, marine_war_risk, marine_high_value`
 
 **Ready now**: Port state control, classification society, OFAC sanctions
 
@@ -124,17 +124,59 @@ Production extractors are shared: `signal_architecture/signals/extractors/produc
 
 ---
 
-### Aerospace (2 configs)
+### Aerospace (7 configs)
 
-`aerospace_general, aerospace_sme`
+`aerospace_general, aerospace_sme, aerospace_space, aerospace_rotary, aerospace_unmanned, aerospace_mro, aerospace_high_value`
 
 **Ready now**: FAA certificates, EASA SAFA, EU Air Safety List
 
-**Stubs to convert**: `stubs/aerospace/` (3 files)
+**Stubs to convert**: `stubs/aerospace/` (6 files)
 
 **Paid dependencies**: OAG schedule data (~$30K/yr)
 
 **Verify**: `python -m layers.risk.calibration_harness aerospace`
+
+---
+
+### Property (5 configs)
+
+`property_general, property_high_value, property_cat_exposed, property_builders_risk, property_sme`
+
+**Ready now**: ISO/COPE construction classifications, FEMA flood zones, ISO public protection class
+
+**Stubs to convert**: `stubs/property/` (3 files)
+
+**Paid dependencies**: CAT modelling (RMS/AIR ~$50K/yr), property valuations
+
+**Verify**: `python -m layers.risk.calibration_harness property`
+
+---
+
+### Casualty (6 configs)
+
+`casualty_gl, casualty_wc, casualty_auto, casualty_umbrella, casualty_environmental, casualty_sme`
+
+**Ready now**: NCCI experience mods, OSHA citations, DOT safety records, EPA enforcement
+
+**Stubs to convert**: `stubs/casualty/` (3 files)
+
+**Paid dependencies**: NCCI class code data (~$15K/yr), ISO CGL rates
+
+**Verify**: `python -m layers.risk.calibration_harness casualty`
+
+---
+
+### Financial & Political Risk (5 configs)
+
+`fpr_trade_credit, fpr_political_risk, fpr_surety, fpr_kidnap_ransom, fpr_sme`
+
+**Ready now**: Sovereign risk ratings, Berne Union data, sanctions screening
+
+**Stubs to convert**: `stubs/fpr/` (3 files)
+
+**Paid dependencies**: Country risk analytics (Verisk Maplecroft ~$25K/yr), credit agency feeds
+
+**Verify**: `python -m layers.risk.calibration_harness fpr`
 
 ---
 

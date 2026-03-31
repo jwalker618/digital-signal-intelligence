@@ -1980,3 +1980,2103 @@ directors_officers:
       max_premium_to_limit_ratio: 0.15
       max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 10.0
+  do_public:
+    metadata:
+      name: DSI D&O Public Company Model
+      description: Publicly listed companies — SEC reporting, securities litigation, shareholder activism
+      version: 2.3.0
+      product_types: &id001
+      - side_a
+      - side_b
+      - side_c
+      - side_a_dic
+      - employment_practices
+      - fiduciary
+      applicable_markets: &id002
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required: &id003
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: side_a, side_b, side_c, side_a_dic, employment_practices, fiduciary'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD (MULTIPLIER basis)
+      min_premium: 100000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: company_segment
+        operator: ==
+        value: PUBLIC
+        required_in_input: true
+      - field: revenue
+        operator: '>='
+        value: 100000000
+        required_in_input: true
+    direct_queries:
+    - id: securities_class_action
+      question: Is the company a defendant in a pending securities class action?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Active SCA
+    - id: restatement
+      question: Has the company restated financial results in the past 3 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Financial restatement
+    - id: sec_investigation
+      question: Is the company subject to a pending SEC investigation or enforcement action?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: SEC investigation
+    - id: derivative_action
+      question: Any pending shareholder derivative lawsuits?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: Shareholder derivative action
+    - id: proxy_contest
+      question: Has the company faced a proxy contest in the past 24 months?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Recent proxy contest
+    - id: insider_trading
+      question: Any directors or officers subject to insider trading allegations?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Insider trading allegations
+    signal_registry:
+    - id: sec_filing_quality
+      inference_utility_function: sec_filing_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: &id008
+          - action: REFER
+            override: 4
+            note: Material weakness or restatement
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: board_independence
+      inference_utility_function: board_independence_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: shareholder_activism
+      inference_utility_function: shareholder_activism_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions: &id009
+          - action: FLAG
+            note: Elevated activist exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: securities_litigation_exposure
+      inference_utility_function: securities_litigation_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions: &id010
+          - action: REFER
+            override: 4
+            note: High securities litigation exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: executive_compensation_structure
+      inference_utility_function: executive_compensation_structure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: ma_activity
+      inference_utility_function: ma_activity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: &id004
+          - action: REFER
+            override: 3
+            note: Active M&A transaction
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: ipo_spac_exposure
+      inference_utility_function: ipo_spac_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: &id005
+          - action: REFER
+            override: 4
+            note: Recent IPO/de-SPAC — elevated SCA risk
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: pe_sponsor_dynamics
+      inference_utility_function: pe_sponsor_dynamics_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: bankruptcy_distress_risk
+      inference_utility_function: bankruptcy_distress_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions: &id006
+          - action: REFER
+            override: 5
+            note: Financial distress — D&O tail risk
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: regulatory_investigation_exposure
+      inference_utility_function: regulatory_investigation_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions: &id007
+          - action: REFER
+            override: 4
+            note: Active regulatory investigation
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: public_company_governance
+        label: Public Company Governance
+        description: SEC filing quality, board independence, shareholder activism, restatement risk
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: transaction_event_risk
+        label: Transaction & Event Risk
+        description: M&A activity, IPO/SPAC risk, delisting exposure, PE sponsor dynamics
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.2
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 5.0e-05
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 8.0e-05
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.00014
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.00025
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0004
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 100000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 100000000
+                max: 1000000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 10000000000
+                max: 100000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      valid_deductibles:
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+      - 5000000
+      - 10000000
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 500000
+      by_product_type:
+        side_a:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.88
+          - deductible: 2500000
+            factor: 0.75
+          - deductible: 5000000
+            factor: 0.65
+          - deductible: 10000000
+            factor: 0.55
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  do_pe_backed:
+    metadata:
+      name: DSI D&O PE/VC-Backed Company Model
+      description: PE/VC portfolio companies — sponsor dynamics, exit pressure, board composition
+      version: 2.3.0
+      product_types: *id001
+      applicable_markets: *id002
+      minimum_viable_input:
+        required: *id003
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: company_segment
+        operator: ==
+        value: PE_BACKED
+        required_in_input: true
+    direct_queries:
+    - id: exit_timeline
+      question: Is the sponsor actively pursuing an exit (IPO, sale, or secondary) within 12 months?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Near-term exit — transaction risk
+    - id: leveraged_recapitalisation
+      question: Has the company undergone a leveraged recapitalisation or dividend recap?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Leveraged recap — creditor claim risk
+    - id: management_change
+      question: Has the CEO or CFO changed in the past 12 months?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Recent C-suite change
+    - id: covenant_issues
+      question: Is the company currently in breach of or close to breaching any debt covenants?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Covenant breach risk
+    signal_registry:
+    - id: ma_activity
+      inference_utility_function: ma_activity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: *id004
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: ipo_spac_exposure
+      inference_utility_function: ipo_spac_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: *id005
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: pe_sponsor_dynamics
+      inference_utility_function: pe_sponsor_dynamics_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: bankruptcy_distress_risk
+      inference_utility_function: bankruptcy_distress_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions: *id006
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: regulatory_investigation_exposure
+      inference_utility_function: regulatory_investigation_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions: *id007
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: transaction_event_risk
+        label: Transaction & Event Risk
+        description: M&A activity, IPO/SPAC risk, delisting exposure, PE sponsor dynamics
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.25
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.2
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 5.0e-05
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 8.0e-05
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.00013
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.00022
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.00035
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 100000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 100000000
+                max: 1000000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 10000000000
+                max: 100000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      valid_deductibles:
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 250000
+      by_product_type:
+        side_a:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 50000
+            factor: 1.2
+          - deductible: 100000
+            factor: 1.1
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.88
+          - deductible: 1000000
+            factor: 0.78
+          - deductible: 2500000
+            factor: 0.65
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  do_nonprofit:
+    metadata:
+      name: DSI D&O Non-Profit Organisation Model
+      description: Non-profit and charitable organisations — donor restrictions, fiduciary duties, regulatory compliance
+      version: 2.3.0
+      product_types: *id001
+      applicable_markets: *id002
+      minimum_viable_input:
+        required: *id003
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: company_segment
+        operator: ==
+        value: NONPROFIT
+        required_in_input: true
+    direct_queries:
+    - id: donor_restrictions
+      question: Has the organisation been cited for misuse of restricted funds?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Donor fund misuse
+    - id: irs_compliance
+      question: Is the organisation's tax-exempt status current and in good standing?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: Tax-exempt compliance credit
+    - id: whistleblower
+      question: Any pending whistleblower complaints or qui tam actions?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Whistleblower/qui tam action
+    signal_registry:
+    - id: ma_activity
+      inference_utility_function: ma_activity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: *id004
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: ipo_spac_exposure
+      inference_utility_function: ipo_spac_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: *id005
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: pe_sponsor_dynamics
+      inference_utility_function: pe_sponsor_dynamics_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: bankruptcy_distress_risk
+      inference_utility_function: bankruptcy_distress_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions: *id006
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: regulatory_investigation_exposure
+      inference_utility_function: regulatory_investigation_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions: *id007
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.2
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.25
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: transaction_event_risk
+        label: Transaction & Event Risk
+        description: M&A activity, IPO/SPAC risk, delisting exposure, PE sponsor dynamics
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 2.0e-05
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 3.5e-05
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 6.0e-05
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0001
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.00018
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 100000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 100000000
+                max: 1000000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 10000000000
+                max: 100000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 500000
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      valid_deductibles:
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+    pricing:
+      base_limit_reference: 2000000
+      base_deductible_reference: 25000
+      by_product_type:
+        side_a:
+          ilf_curve:
+            anchor_limit: 2000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.88
+          - deductible: 100000
+            factor: 0.78
+          - deductible: 250000
+            factor: 0.68
+          - deductible: 500000
+            factor: 0.58
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  do_ipo_spac:
+    metadata:
+      name: DSI D&O IPO & SPAC Model
+      description: IPO and SPAC de-SPAC transactions — elevated SCA risk, prospectus liability, short selling
+      version: 2.3.0
+      product_types: *id001
+      applicable_markets: *id002
+      minimum_viable_input:
+        required: *id003
+      min_premium: 150000
+      default_currency: USD
+      model_specificity: 4
+      routing_constraints:
+      - field: company_segment
+        operator: in
+        value:
+        - IPO
+        - SPAC
+        required_in_input: true
+      - field: revenue
+        operator: '>='
+        value: 10000000
+        required_in_input: true
+    direct_queries:
+    - id: prospectus_quality
+      question: Has the S-1/prospectus been reviewed by experienced securities counsel?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.92
+        note: Experienced securities counsel credit
+    - id: short_interest
+      question: Is short interest in the stock above 15%?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: Elevated short interest
+    - id: revenue_projections
+      question: Were forward-looking revenue projections included in offering materials?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Forward projections — disclosure risk
+    - id: related_party
+      question: Are there significant related-party transactions disclosed?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Related-party transaction disclosure
+    - id: lock_up_expiry
+      question: Is the insider lock-up period expiring within 90 days?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Imminent lock-up expiry — stock pressure risk
+    signal_registry:
+    - id: sec_filing_quality
+      inference_utility_function: sec_filing_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: *id008
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: board_independence
+      inference_utility_function: board_independence_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: shareholder_activism
+      inference_utility_function: shareholder_activism_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions: *id009
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: securities_litigation_exposure
+      inference_utility_function: securities_litigation_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions: *id010
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: executive_compensation_structure
+      inference_utility_function: executive_compensation_structure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_company_governance
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: ma_activity
+      inference_utility_function: ma_activity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: *id004
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: ipo_spac_exposure
+      inference_utility_function: ipo_spac_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions: *id005
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: pe_sponsor_dynamics
+      inference_utility_function: pe_sponsor_dynamics_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: bankruptcy_distress_risk
+      inference_utility_function: bankruptcy_distress_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions: *id006
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: regulatory_investigation_exposure
+      inference_utility_function: regulatory_investigation_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: transaction_event_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions: *id007
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: transaction_event_risk
+        label: Transaction & Event Risk
+        description: M&A activity, IPO/SPAC risk, delisting exposure, PE sponsor dynamics
+        risk:
+          weight: 0.4
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.3
+      - id: public_company_governance
+        label: Public Company Governance
+        description: SEC filing quality, board independence, shareholder activism, restatement risk
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.2
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0001
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.00018
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0003
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0005
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0008
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 10000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 10000000
+                max: 100000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 100000000
+                max: 1000000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 10000000000
+                max: 100000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      valid_deductibles:
+      - 500000
+      - 1000000
+      - 2500000
+      - 5000000
+      - 10000000
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 1000000
+      by_product_type:
+        side_a:
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.85
+          - deductible: 5000000
+            factor: 0.72
+          - deductible: 10000000
+            factor: 0.6
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0

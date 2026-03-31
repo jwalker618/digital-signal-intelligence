@@ -1,5 +1,5 @@
 # DSI Logic Document: `FI`
-*Generated: 2026-03-29*
+*Generated: 2026-03-31*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -147,4 +147,245 @@ This configuration contains **8 signals** distributed as follows:
 **2. Theoretical Execution:**
   - Technical Premium = **$12,000**
   - *Scaling relies entirely on selecting a different Limit ID from the Bundled limit_configuration packages.*
+
+---
+
+## Model: `fi_bank`
+*Regulated banks — commercial, community, savings; capital adequacy and loan quality focus*
+
+### Routing Protocol (Multiplexer)
+- `fi_segment == BANK`
+- `total_assets >= 1000000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Banking Risk | 0.40 | 0.40 | 0.30 |
+| Regulatory Framework | 0.20 | 0.15 | 0.15 |
+| Corporate Footprint | 0.15 | 0.15 | 0.25 |
+| Firm Stability | 0.15 | 0.15 | 0.15 |
+| Litigation History | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
+- `INFERRED_PROXY` (2 signals): Medium confidence
+
+**Signal Count by Group:**
+- `banking_risk`: 5 signals
+
+**Selection Rationale:**
+- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Banking Risk | 1.10 | 0.40 | 0.40 | 0.30 |
+| 2 | Corporate Footprint | 0.55 | 0.15 | 0.15 | 0.25 |
+| 3 | Regulatory Framework | 0.50 | 0.20 | 0.15 | 0.15 |
+| 4 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
+| 5 | Litigation History | 0.40 | 0.10 | 0.15 | 0.15 |
+
+**Primary Assessment Driver:** `Banking Risk` with combined weight of 1.10
+**Secondary Driver:** `Corporate Footprint` with combined weight of 0.55
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.0018%` on `total_assets` purchases exactly a `$10,000,000` Limit with a `$500,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `total_assets` = $10,000,000
+  - Base Premium = $10,000,000 × 1.8e-05 = **$180**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$180**.
+
+---
+
+## Model: `fi_insurer`
+*Insurance companies — solvency, reserve adequacy, reinsurance quality, regulatory compliance*
+
+### Routing Protocol (Multiplexer)
+- `fi_segment == INSURER`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Regulatory Framework | 0.30 | 0.25 | 0.20 |
+| Corporate Footprint | 0.25 | 0.25 | 0.30 |
+| Firm Stability | 0.25 | 0.25 | 0.25 |
+| Litigation History | 0.20 | 0.25 | 0.25 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **0 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+
+**Signal Count by Group:**
+
+**Selection Rationale:**
+- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Corporate Footprint | 0.80 | 0.25 | 0.25 | 0.30 |
+| 2 | Regulatory Framework | 0.75 | 0.30 | 0.25 | 0.20 |
+| 3 | Firm Stability | 0.75 | 0.25 | 0.25 | 0.25 |
+| 4 | Litigation History | 0.70 | 0.20 | 0.25 | 0.25 |
+
+**Primary Assessment Driver:** `Corporate Footprint` with combined weight of 0.80
+**Secondary Driver:** `Regulatory Framework` with combined weight of 0.75
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.0015%` on `total_assets` purchases exactly a `$10,000,000` Limit with a `$250,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `total_assets` = $10,000,000
+  - Base Premium = $10,000,000 × 1.5e-05 = **$150**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$150**.
+
+---
+
+## Model: `fi_fintech`
+*Fintech companies — digital banking, payments, lending platforms, neobanks*
+
+### Routing Protocol (Multiplexer)
+- `fi_segment == FINTECH`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Fintech & Digital Risk | 0.40 | 0.35 | 0.30 |
+| Regulatory Framework | 0.15 | 0.15 | 0.15 |
+| Corporate Footprint | 0.15 | 0.15 | 0.20 |
+| Firm Stability | 0.20 | 0.20 | 0.20 |
+| Litigation History | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
+
+**Signal Count by Group:**
+- `fintech_risk`: 5 signals
+
+**Selection Rationale:**
+- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Fintech & Digital Risk | 1.05 | 0.40 | 0.35 | 0.30 |
+| 2 | Firm Stability | 0.60 | 0.20 | 0.20 | 0.20 |
+| 3 | Corporate Footprint | 0.50 | 0.15 | 0.15 | 0.20 |
+| 4 | Regulatory Framework | 0.45 | 0.15 | 0.15 | 0.15 |
+| 5 | Litigation History | 0.40 | 0.10 | 0.15 | 0.15 |
+
+**Primary Assessment Driver:** `Fintech & Digital Risk` with combined weight of 1.05
+**Secondary Driver:** `Firm Stability` with combined weight of 0.60
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.25%` on `revenue` purchases exactly a `$5,000,000` Limit with a `$100,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0025 = **$25,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$25,000**.
+
+---
+
+## Model: `fi_crypto`
+*Crypto exchanges, custodians, DeFi protocols, stablecoin issuers*
+
+### Routing Protocol (Multiplexer)
+- `fi_segment == CRYPTO`
+- `aum >= 100000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Fintech & Digital Risk | 0.45 | 0.40 | 0.35 |
+| Regulatory Framework | 0.15 | 0.15 | 0.15 |
+| Corporate Footprint | 0.15 | 0.15 | 0.20 |
+| Firm Stability | 0.15 | 0.15 | 0.15 |
+| Litigation History | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
+
+**Signal Count by Group:**
+- `fintech_risk`: 5 signals
+
+**Selection Rationale:**
+- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Fintech & Digital Risk | 1.20 | 0.45 | 0.40 | 0.35 |
+| 2 | Corporate Footprint | 0.50 | 0.15 | 0.15 | 0.20 |
+| 3 | Regulatory Framework | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
+| 5 | Litigation History | 0.40 | 0.10 | 0.15 | 0.15 |
+
+**Primary Assessment Driver:** `Fintech & Digital Risk` with combined weight of 1.20
+**Secondary Driver:** `Corporate Footprint` with combined weight of 0.50
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.27999999999999997%` on `aum` purchases exactly a `$10,000,000` Limit with a `$1,000,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `aum` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0028 = **$28,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$28,000**.
 

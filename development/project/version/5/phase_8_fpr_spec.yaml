@@ -1,0 +1,995 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 8: Financial & Political Risk
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# NEW coverage line — no existing config.
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/5/phase_8_fpr_spec.yaml \
+#       --write
+#
+# Financial & Political Risk covers trade credit, political risk/violence,
+# surety/contract bonds, and kidnap & ransom. These are specialty lines
+# with unique pricing bases:
+#   - Trade Credit       → contract_value / turnover
+#   - Political Risk     → limit (investment/asset value at risk)
+#   - Surety             → bond_amount (penal sum)
+#   - Kidnap & Ransom    → limit (aggregate)
+#
+# =============================================================================
+
+coverage_line: fpr
+coverage_key: financial_political_risk
+phase: phase_8
+description: "Phase 8 Financial & Political Risk Coverage — 5 configurations"
+version: "2.3.0"
+
+# =============================================================================
+# DEFAULTS
+# =============================================================================
+
+default_product_types:
+  - trade_credit
+  - political_risk
+  - political_violence
+  - surety_bond
+  - contract_bond
+  - kidnap_ransom
+
+default_markets: [us, uk, eu, apac, latam, mea, africa]
+default_currency: USD
+default_min_premium: 15000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: trade_credit, political_risk, political_violence, surety_bond, contract_bond, kidnap_ransom"
+  - field: limit
+    description: Requested limit in USD
+  - field: contract_value
+    description: Contract or turnover value in USD (basis for trade credit)
+
+routing_field: fpr_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_risk_tier_bands:
+  method: MULTIPLIER
+  basis: limit
+  preferred_min: 800
+  standard_plus_min: 650
+  standard_min: 450
+  substandard_min: 250
+  preferred_rate: 0.005
+  standard_plus_rate: 0.010
+  standard_rate: 0.018
+  substandard_rate: 0.030
+  decline_rate: 0.050
+
+default_loss_tier_bands:
+  floor: 0.45
+  cap: 2.0
+
+default_exposure_bands:
+  size_weight: 0.6
+  complexity_weight: 0.4
+  size_thresholds:
+    - {label: MICRO, max_value: 5000000, applied: 0.5}
+    - {label: SMALL, max_value: 25000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 100000000, applied: 1.0}
+    - {label: LARGE, max_value: 500000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 5000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+  valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000, 2500000]
+
+# =============================================================================
+# DEFAULT PRICING
+# =============================================================================
+
+default_pricing:
+  base_limit_reference: 5000000
+  base_deductible_reference: 100000
+  taxes_fees_rate: 0.04
+  by_product_type:
+    - product_type: trade_credit
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 1000000, factor: 0.40}
+          - {limit: 2000000, factor: 0.65}
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.6}
+          - {limit: 25000000, factor: 2.8}
+          - {limit: 50000000, factor: 4.5}
+          - {limit: 100000000, factor: 7.0}
+          - {limit: 250000000, factor: 13.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.15}
+        - {deductible: 50000, factor: 1.05}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.88}
+        - {deductible: 500000, factor: 0.78}
+        - {deductible: 1000000, factor: 0.68}
+        - {deductible: 2500000, factor: 0.58}
+
+    - product_type: political_risk
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 1000000, factor: 0.35}
+          - {limit: 2000000, factor: 0.60}
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.7}
+          - {limit: 25000000, factor: 3.2}
+          - {limit: 50000000, factor: 5.5}
+          - {limit: 100000000, factor: 9.0}
+          - {limit: 250000000, factor: 16.0}
+      deductible_factors:
+        - {deductible: 50000, factor: 1.15}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.85}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.62}
+        - {deductible: 2500000, factor: 0.52}
+
+    - product_type: political_violence
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 1000000, factor: 0.38}
+          - {limit: 2000000, factor: 0.62}
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.65}
+          - {limit: 25000000, factor: 3.0}
+          - {limit: 50000000, factor: 5.0}
+          - {limit: 100000000, factor: 8.0}
+          - {limit: 250000000, factor: 14.0}
+      deductible_factors:
+        - {deductible: 50000, factor: 1.15}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.85}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.62}
+        - {deductible: 2500000, factor: 0.52}
+
+    - product_type: surety_bond
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 1000000, factor: 0.45}
+          - {limit: 2000000, factor: 0.70}
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.5}
+          - {limit: 25000000, factor: 2.5}
+          - {limit: 50000000, factor: 4.0}
+          - {limit: 100000000, factor: 6.0}
+          - {limit: 250000000, factor: 10.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.10}
+        - {deductible: 50000, factor: 1.0}
+        - {deductible: 100000, factor: 0.90}
+        - {deductible: 250000, factor: 0.80}
+        - {deductible: 500000, factor: 0.70}
+        - {deductible: 1000000, factor: 0.60}
+
+    - product_type: kidnap_ransom
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 1000000, factor: 0.40}
+          - {limit: 2000000, factor: 0.65}
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.7}
+          - {limit: 25000000, factor: 3.0}
+          - {limit: 50000000, factor: 5.0}
+          - {limit: 100000000, factor: 8.5}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.10}
+        - {deductible: 50000, factor: 1.0}
+        - {deductible: 100000, factor: 0.88}
+        - {deductible: 250000, factor: 0.78}
+        - {deductible: 500000, factor: 0.68}
+        - {deductible: 1000000, factor: 0.58}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # -------------------------------------------------------------------------
+  # GROUP 1: TRADE CREDIT RISK
+  # -------------------------------------------------------------------------
+  - id: trade_credit_risk
+    label: Trade Credit Risk
+    description: "Buyer creditworthiness, payment behaviour, country risk, concentration, trade terms"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: buyer_creditworthiness
+        name: Buyer Creditworthiness
+        description: "Buyer credit rating, financial stability, payment history, industry sector health"
+        group_id: trade_credit_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.30
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Buyer credit deterioration"}
+
+      - id: payment_terms_exposure
+        name: Payment Terms Exposure
+        description: "Average payment terms (days); extended terms increase exposure duration and default probability"
+        group_id: trade_credit_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+
+      - id: buyer_concentration
+        name: Buyer Concentration
+        description: "Top 10 buyer share of insured turnover; single-buyer maximum exposure"
+        group_id: trade_credit_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "High buyer concentration"}
+
+      - id: country_risk_exposure
+        name: Country Risk Exposure
+        description: "Buyer domicile country risk; currency transfer risk; sovereign default proximity"
+        group_id: trade_credit_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+          exposure_complexity_weight: 0.15
+
+      - id: trade_dispute_frequency
+        name: Trade Dispute Frequency
+        description: "Historical frequency of trade disputes, set-offs, quality claims by buyers"
+        group_id: trade_credit_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+
+      - id: sector_cyclicality
+        name: Sector Cyclicality
+        description: "Insured's industry sector vulnerability to economic downturns; commodity price sensitivity"
+        group_id: trade_credit_risk
+        signal_type: three_layer
+        proxy_tier: COHORT_INFERENCE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.10
+          exposure_complexity_weight: 0.10
+
+  # -------------------------------------------------------------------------
+  # GROUP 2: POLITICAL RISK
+  # -------------------------------------------------------------------------
+  - id: political_risk
+    label: Political Risk
+    description: "Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: sovereign_risk_rating
+        name: Sovereign Risk Rating
+        description: "Country sovereign risk classification; political stability index; governance indicators"
+        group_id: political_risk
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        category_source: metadata.sovereign_risk_rating
+        categories:
+          - {cat: LOW, label: Low Risk (OECD Core), applied: 0.60}
+          - {cat: MODERATE, label: Moderate (Emerging Market Stable), applied: 1.0}
+          - {cat: HIGH, label: High (Frontier/Volatile), applied: 1.50}
+          - {cat: SEVERE, label: Severe (Conflict/Failed State), applied: 2.20}
+
+      - id: expropriation_risk
+        name: Expropriation & Nationalisation Risk
+        description: "History of expropriation; nationalisation trends; creeping expropriation indicators"
+        group_id: political_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.30
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "High expropriation risk jurisdiction"}
+
+      - id: currency_inconvertibility
+        name: Currency Inconvertibility & Transfer Risk
+        description: "FX controls; capital account restrictions; central bank reserve adequacy"
+        group_id: political_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+
+      - id: contract_frustration
+        name: Contract Frustration Risk
+        description: "Government contract cancellation; licence revocation; regulatory change risk"
+        group_id: political_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_complexity_weight: 0.10
+
+      - id: political_violence_exposure
+        name: Political Violence Exposure
+        description: "Civil unrest frequency; terrorism threat level; armed conflict proximity; coup risk"
+        group_id: political_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Active political violence zone"}
+
+  # -------------------------------------------------------------------------
+  # GROUP 3: SURETY & BOND RISK
+  # -------------------------------------------------------------------------
+  - id: surety_risk
+    label: Surety & Bond Risk
+    description: "Principal financial strength, project execution capability, bonding capacity, default history"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: principal_financial_strength
+        name: Principal Financial Strength
+        description: "Contractor/principal financial ratios; working capital; debt-to-equity; liquidity"
+        group_id: surety_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.30
+          risk_direction: positive
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.15
+
+      - id: project_execution_track_record
+        name: Project Execution Track Record
+        description: "On-time/on-budget delivery history; completed project count; scope creep frequency"
+        group_id: surety_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+
+      - id: backlog_to_capacity
+        name: Backlog-to-Capacity Ratio
+        description: "Work-in-progress relative to bonding capacity; over-extension risk"
+        group_id: surety_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "Backlog approaching capacity limits"}
+
+      - id: bond_default_history
+        name: Bond Default & Claim History
+        description: "Prior surety claims; performance bond calls; completion guarantor involvement"
+        group_id: surety_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.25
+          loss_severity_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Prior surety bond claim"}
+
+      - id: obligee_complexity
+        name: Obligee & Contract Complexity
+        description: "Government vs private obligee; contract terms; liquidated damages provisions"
+        group_id: surety_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_severity_weight: 0.10
+          exposure_complexity_weight: 0.20
+
+  # -------------------------------------------------------------------------
+  # GROUP 4: KIDNAP & RANSOM RISK
+  # -------------------------------------------------------------------------
+  - id: kidnap_ransom_risk
+    label: Kidnap & Ransom Risk
+    description: "Travel exposure, country threat, executive protection, crisis response capability"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: travel_exposure_profile
+        name: Travel Exposure Profile
+        description: "Volume and frequency of employee travel to high-risk jurisdictions"
+        group_id: kidnap_ransom_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          loss_frequency_weight: 0.25
+          exposure_size_weight: 0.20
+
+      - id: country_threat_level
+        name: Country Threat Level
+        description: "Destination-specific kidnap/extortion threat; crime index; express kidnap frequency"
+        group_id: kidnap_ransom_risk
+        signal_type: categorical
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        category_source: metadata.kr_threat_level
+        categories:
+          - {cat: LOW, label: Low Threat, applied: 0.60}
+          - {cat: MODERATE, label: Moderate Threat, applied: 1.0}
+          - {cat: HIGH, label: High Threat, applied: 1.50}
+          - {cat: EXTREME, label: Extreme Threat, applied: 2.20}
+
+      - id: executive_protection
+        name: Executive Protection Measures
+        description: "Close protection; secure transportation; safe houses; journey management plans"
+        group_id: kidnap_ransom_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+
+      - id: crisis_response_capability
+        name: Crisis Response Capability
+        description: "Retained crisis response consultant; crisis management plan; communication protocols"
+        group_id: kidnap_ransom_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_severity_weight: 0.25
+
+      - id: expatriate_population
+        name: Expatriate Population
+        description: "Number of expatriate employees; dependency ratio; family members in high-risk locations"
+        group_id: kidnap_ransom_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          exposure_size_weight: 0.15
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. FPR TRADE CREDIT
+  # =========================================================================
+  - id: fpr_trade_credit
+    name: DSI Trade Credit Insurance Model
+    description: "Trade credit — buyer default, insolvency, protracted default, political risk on receivables"
+    model_specificity: 3
+    min_premium: 25000
+
+    product_types:
+      - trade_credit
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: trade_credit
+      - field: limit
+        description: Requested limit in USD
+      - field: turnover
+        description: Annual insured turnover in USD (MULTIPLIER basis)
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: trade_credit, required_in_input: true}
+      - {field: turnover, operator: ">=", value: 5000000, required_in_input: true}
+
+    direct_queries:
+      - id: prior_bad_debts
+        question: Have bad debt write-offs exceeded 2% of turnover in any of the past 3 years?
+        conditions: [{action: REFER, override: 4, note: "Elevated bad debt history"}]
+      - id: single_buyer_exposure
+        question: Does any single buyer represent more than 20% of insured turnover?
+        conditions: [{action: FLAG, note: "Single buyer concentration >20%"}]
+      - id: emerging_market_exposure
+        question: Is more than 40% of insured turnover to buyers in emerging/frontier markets?
+        conditions: [{action: FLAG, note: "High emerging market buyer exposure"}]
+      - id: extended_terms
+        question: Are payment terms exceeding 180 days offered to any buyers?
+        conditions: [{action: FLAG, note: "Extended payment terms exposure"}]
+      - id: whole_turnover
+        question: Is this a whole-turnover policy (all buyers covered) or named-buyer only?
+        conditions: [{action: FLAG, note: "Policy structure classification"}]
+
+    category_groups: [sovereign_risk_rating]
+
+    group_weights:
+      - {group_id: trade_credit_risk, risk_weight: 0.40, loss_weight: 0.40, exposure_weight: 0.35}
+      - {group_id: political_risk, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: turnover
+      preferred_rate: 0.002
+      standard_plus_rate: 0.004
+      standard_rate: 0.007
+      substandard_rate: 0.012
+      decline_rate: 0.020
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000, 2500000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: trade_credit
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.40}
+              - {limit: 2000000, factor: 0.65}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.6}
+              - {limit: 25000000, factor: 2.8}
+              - {limit: 50000000, factor: 4.5}
+              - {limit: 100000000, factor: 7.0}
+              - {limit: 250000000, factor: 13.0}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.15}
+            - {deductible: 50000, factor: 1.05}
+            - {deductible: 100000, factor: 1.0}
+            - {deductible: 250000, factor: 0.88}
+            - {deductible: 500000, factor: 0.78}
+            - {deductible: 1000000, factor: 0.68}
+            - {deductible: 2500000, factor: 0.58}
+
+  # =========================================================================
+  # 2. FPR POLITICAL RISK
+  # =========================================================================
+  - id: fpr_political_risk
+    name: DSI Political Risk & Violence Model
+    description: "Political risk — expropriation, currency inconvertibility, political violence, contract frustration"
+    model_specificity: 3
+    min_premium: 25000
+
+    product_types:
+      - political_risk
+      - political_violence
+
+    routing_constraints:
+      - {field: product_type, operator: "IN", value: [political_risk, political_violence], required_in_input: true}
+
+    direct_queries:
+      - id: active_conflict
+        question: Is the insured asset/investment located in a country with active armed conflict?
+        conditions: [{action: REFER, override: 5, note: "Active armed conflict zone"}]
+      - id: prior_expropriation
+        question: Has the host government expropriated assets in the same sector in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Sector-specific expropriation history"}]
+      - id: bilateral_treaty
+        question: Is the investment protected by a bilateral investment treaty (BIT)?
+        conditions: [{action: MODIFIER, applied: 0.88, note: "BIT protection credit"}]
+      - id: local_partner
+        question: Is there a local joint venture partner with government connections?
+        conditions: [{action: FLAG, note: "Local partner — may mitigate or amplify risk"}]
+      - id: resource_extraction
+        question: Is this a natural resource extraction investment (oil, gas, mining)?
+        conditions: [{action: FLAG, note: "Resource extraction — elevated nationalisation risk"}]
+
+    category_groups: [sovereign_risk_rating]
+
+    group_weights:
+      - {group_id: political_risk, risk_weight: 0.45, loss_weight: 0.45, exposure_weight: 0.40}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: litigation_history, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: limit
+      preferred_rate: 0.005
+      standard_plus_rate: 0.012
+      standard_rate: 0.022
+      substandard_rate: 0.038
+      decline_rate: 0.060
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [50000, 100000, 250000, 500000, 1000000, 2500000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: political_risk
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.35}
+              - {limit: 2000000, factor: 0.60}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.7}
+              - {limit: 25000000, factor: 3.2}
+              - {limit: 50000000, factor: 5.5}
+              - {limit: 100000000, factor: 9.0}
+              - {limit: 250000000, factor: 16.0}
+          deductible_factors:
+            - {deductible: 50000, factor: 1.15}
+            - {deductible: 100000, factor: 1.0}
+            - {deductible: 250000, factor: 0.85}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.62}
+            - {deductible: 2500000, factor: 0.52}
+        - product_type: political_violence
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.38}
+              - {limit: 2000000, factor: 0.62}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.65}
+              - {limit: 25000000, factor: 3.0}
+              - {limit: 50000000, factor: 5.0}
+              - {limit: 100000000, factor: 8.0}
+              - {limit: 250000000, factor: 14.0}
+          deductible_factors:
+            - {deductible: 50000, factor: 1.15}
+            - {deductible: 100000, factor: 1.0}
+            - {deductible: 250000, factor: 0.85}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.62}
+            - {deductible: 2500000, factor: 0.52}
+
+  # =========================================================================
+  # 3. FPR SURETY
+  # =========================================================================
+  - id: fpr_surety
+    name: DSI Surety & Contract Bond Model
+    description: "Surety bonds — performance, payment, bid, maintenance; contractor financial strength focus"
+    model_specificity: 3
+    min_premium: 10000
+
+    product_types:
+      - surety_bond
+      - contract_bond
+
+    minimum_viable_input:
+      - field: client_name
+        description: Client name
+      - field: product_type
+        description: "One of: surety_bond, contract_bond"
+      - field: limit
+        description: Requested limit (penal sum) in USD
+      - field: bond_amount
+        description: Bond penal sum in USD (MULTIPLIER basis)
+
+    routing_constraints:
+      - {field: product_type, operator: "IN", value: [surety_bond, contract_bond], required_in_input: true}
+
+    direct_queries:
+      - id: prior_bond_claim
+        question: Has the principal had a surety bond claim or performance bond call in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Prior surety claim history"}]
+      - id: financial_audit
+        question: Are the principal's financial statements audited by a CPA firm?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Audited financial statements credit"}]
+      - id: work_in_progress
+        question: Does work-in-progress exceed 80% of the principal's single project limit?
+        conditions: [{action: FLAG, note: "High WIP-to-capacity ratio"}]
+      - id: government_contract
+        question: Is this a government/public works contract requiring Miller Act compliance?
+        conditions: [{action: FLAG, note: "Government contract — Miller Act bond"}]
+      - id: joint_venture
+        question: Is this a joint venture project with shared bonding obligations?
+        conditions: [{action: FLAG, note: "JV bonding — partner credit exposure"}]
+
+    category_groups: []
+
+    group_weights:
+      - {group_id: surety_risk, risk_weight: 0.45, loss_weight: 0.45, exposure_weight: 0.35}
+      - {group_id: corporate_footprint, risk_weight: 0.25, loss_weight: 0.20, exposure_weight: 0.30}
+      - {group_id: firm_stability, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: bond_amount
+      preferred_rate: 0.008
+      standard_plus_rate: 0.015
+      standard_rate: 0.025
+      substandard_rate: 0.040
+      decline_rate: 0.065
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [500000, 1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: surety_bond
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 500000, factor: 0.25}
+              - {limit: 1000000, factor: 0.45}
+              - {limit: 2000000, factor: 0.70}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.5}
+              - {limit: 25000000, factor: 2.5}
+              - {limit: 50000000, factor: 4.0}
+              - {limit: 100000000, factor: 6.0}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.15}
+            - {deductible: 25000, factor: 1.05}
+            - {deductible: 50000, factor: 1.0}
+            - {deductible: 100000, factor: 0.90}
+            - {deductible: 250000, factor: 0.80}
+            - {deductible: 500000, factor: 0.70}
+
+  # =========================================================================
+  # 4. FPR KIDNAP & RANSOM
+  # =========================================================================
+  - id: fpr_kidnap_ransom
+    name: DSI Kidnap & Ransom Model
+    description: "K&R — kidnap, ransom, extortion, detention, hijack; crisis response included"
+    model_specificity: 3
+    min_premium: 15000
+
+    product_types:
+      - kidnap_ransom
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: kidnap_ransom, required_in_input: true}
+
+    direct_queries:
+      - id: prior_incident
+        question: Has the insured or any employee been subject to a kidnap, extortion, or detention event?
+        conditions: [{action: REFER, override: 4, note: "Prior K&R incident"}]
+      - id: high_risk_travel
+        question: Do employees regularly travel to countries rated HIGH or EXTREME threat?
+        conditions: [{action: FLAG, note: "Regular high-threat travel"}]
+      - id: crisis_consultant
+        question: Does the insured retain a specialist crisis response consultant?
+        conditions: [{action: MODIFIER, applied: 0.85, note: "Retained crisis consultant credit"}]
+      - id: extractive_industry
+        question: Does the insured operate in extractive industries (oil, gas, mining) in frontier markets?
+        conditions: [{action: FLAG, note: "Extractive industry in frontier markets"}]
+
+    category_groups: [kr_threat_level]
+
+    group_weights:
+      - {group_id: kidnap_ransom_risk, risk_weight: 0.45, loss_weight: 0.40, exposure_weight: 0.35}
+      - {group_id: political_risk, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: limit
+      preferred_rate: 0.005
+      standard_plus_rate: 0.010
+      standard_rate: 0.018
+      substandard_rate: 0.030
+      decline_rate: 0.050
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: kidnap_ransom
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.40}
+              - {limit: 2000000, factor: 0.65}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.7}
+              - {limit: 25000000, factor: 3.0}
+              - {limit: 50000000, factor: 5.0}
+              - {limit: 100000000, factor: 8.5}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.10}
+            - {deductible: 50000, factor: 1.0}
+            - {deductible: 100000, factor: 0.88}
+            - {deductible: 250000, factor: 0.78}
+            - {deductible: 500000, factor: 0.68}
+            - {deductible: 1000000, factor: 0.58}
+
+  # =========================================================================
+  # 5. FPR SME
+  # =========================================================================
+  - id: fpr_sme
+    name: DSI Financial & Political Risk SME Model
+    description: "Simplified FPR for smaller exposures — trade credit + political risk combined"
+    model_specificity: 1
+    min_premium: 5000
+
+    product_types:
+      - trade_credit
+      - political_risk
+
+    routing_constraints:
+      - {field: product_type, operator: "IN", value: [trade_credit, political_risk], required_in_input: true}
+      - {field: limit, operator: "<", value: 5000000, required_in_input: false}
+
+    direct_queries:
+      - id: prior_losses
+        question: Any trade credit or political risk losses in the past 3 years?
+        conditions: [{action: FLAG, note: "Recent loss history"}]
+      - id: high_risk_country
+        question: Is more than 50% of exposure to HIGH or SEVERE risk countries?
+        conditions: [{action: REFER, override: 4, note: "Majority high-risk country exposure"}]
+
+    category_groups: [sovereign_risk_rating]
+
+    group_weights:
+      - {group_id: trade_credit_risk, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.25}
+      - {group_id: political_risk, risk_weight: 0.25, loss_weight: 0.25, exposure_weight: 0.25}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.15, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: regulatory_standing, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: limit
+      preferred_rate: 0.008
+      standard_plus_rate: 0.015
+      standard_rate: 0.025
+      substandard_rate: 0.042
+      decline_rate: 0.065
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [250000, 500000, 1000000, 2000000, 5000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000]
+
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      taxes_fees_rate: 0.04
+      by_product_type:
+        - product_type: trade_credit
+          ilf_curve:
+            base_limit: 1000000
+            factors:
+              - {limit: 250000, factor: 0.40}
+              - {limit: 500000, factor: 0.65}
+              - {limit: 1000000, factor: 1.0}
+              - {limit: 2000000, factor: 1.6}
+              - {limit: 5000000, factor: 2.8}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.15}
+            - {deductible: 25000, factor: 1.0}
+            - {deductible: 50000, factor: 0.88}
+            - {deductible: 100000, factor: 0.78}
+            - {deductible: 250000, factor: 0.68}
+
+# =============================================================================
+# INFRASTRUCTURE NOTES (New Coverage Line)
+# =============================================================================
+#
+# Before this spec can be executed by the builder, the following must exist:
+#
+# 1. coverages/fpr/__init__.py                  — empty file (builder creates)
+# 2. signal_architecture/signals/inference/metadata_registry.py:
+#    - Add: COVERAGE_FPR = "fpr"
+#    - Add "fpr" to ALL_COVERAGES list (line 65)
+#    - Create _FPR_SIGNALS list with 22 signal metadata entries
+#    - Call SIGNAL_METADATA_REGISTRY.register_many(_FPR_SIGNALS)
+#    - Update cross-coverage signals (corporate_footprint, firm_stability,
+#      regulatory_standing, litigation_history) to include "fpr"
+#
+# 3. seed_dsi_bench.py:
+#    - Add "fpr": "syndicate_example" to COVERAGE_ENTITY_MAP (~line 4034)
+#    - Update docstring to include FPR configs
+#
+# 4. commercial/entities/syndicate_example.yaml:
+#    - Add CoverageBinding for "fpr"
+#
+# Signal summary:
+#   - 4 new groups: trade_credit_risk (6), political_risk (5),
+#     surety_risk (5), kidnap_ransom_risk (5)
+#   - 22 new signals (3 categorical, 19 three-layer)
+#   - 4 reused groups: corporate_footprint, firm_stability,
+#     regulatory_standing, litigation_history
+#
+# Configuration summary:
+#   - fpr_trade_credit    (specificity 3, trade_credit, turnover basis)
+#   - fpr_political_risk  (specificity 3, political_risk/violence, limit basis)
+#   - fpr_surety          (specificity 3, surety/contract bond, bond_amount basis)
+#   - fpr_kidnap_ransom   (specificity 3, K&R, limit basis)
+#   - fpr_sme             (specificity 1, trade_credit + political_risk <$5M)
+#
+# Variable basis fields: turnover, limit, bond_amount
+# =============================================================================

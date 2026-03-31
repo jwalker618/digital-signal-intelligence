@@ -1,5 +1,5 @@
 # DSI Logic Document: `AEROSPACE`
-*Generated: 2026-03-29*
+*Generated: 2026-03-31*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -155,4 +155,312 @@ This configuration contains **22 signals** distributed as follows:
 **2. Theoretical Execution:**
   - Technical Premium = **$7,500**
   - *Scaling relies entirely on selecting a different Limit ID from the Bundled limit_configuration packages.*
+
+---
+
+## Model: `aerospace_space`
+*Space risk — launch vehicles, satellites, in-orbit operations*
+
+### Routing Protocol (Multiplexer)
+- `aviation_segment == SPACE`
+- `hull_value >= 50000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Space Risk | 0.45 | 0.45 | 0.35 |
+| Regulatory Framework | 0.15 | 0.10 | 0.15 |
+| Corporate Footprint | 0.20 | 0.20 | 0.25 |
+| Firm Stability | 0.10 | 0.15 | 0.15 |
+| Fleet Category | 0.10 | 0.10 | 0.10 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
+
+**Signal Count by Group:**
+- `space_risk`: 5 signals
+
+**Selection Rationale:**
+- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Space Risk | 1.25 | 0.45 | 0.45 | 0.35 |
+| 2 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
+| 3 | Regulatory Framework | 0.40 | 0.15 | 0.10 | 0.15 |
+| 4 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
+| 5 | Fleet Category | 0.30 | 0.10 | 0.10 | 0.10 |
+
+**Primary Assessment Driver:** `Space Risk` with combined weight of 1.25
+**Secondary Driver:** `Corporate Footprint` with combined weight of 0.65
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `8.5%` on `hull_value` purchases exactly a `$50,000,000` Limit with a `$5,000,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `hull_value` = $10,000,000
+  - Base Premium = $10,000,000 × 0.085 = **$850,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$850,000**.
+
+---
+
+## Model: `aerospace_rotary`
+*Helicopter operations — mission-specific, EMS, offshore, utility, corporate*
+
+### Routing Protocol (Multiplexer)
+- `aviation_segment == ROTARY_WING`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Rotary Wing Risk | 0.35 | 0.35 | 0.25 |
+| Iosa Status | 0.10 | 0.10 | 0.10 |
+| Regulatory Framework | 0.15 | 0.10 | 0.15 |
+| Fleet Size | 0.10 | 0.10 | 0.15 |
+| Corporate Footprint | 0.15 | 0.20 | 0.20 |
+| Firm Stability | 0.15 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
+
+**Signal Count by Group:**
+- `rotary_wing_risk`: 5 signals
+
+**Selection Rationale:**
+- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Rotary Wing Risk | 0.95 | 0.35 | 0.35 | 0.25 |
+| 2 | Corporate Footprint | 0.55 | 0.15 | 0.20 | 0.20 |
+| 3 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Regulatory Framework | 0.40 | 0.15 | 0.10 | 0.15 |
+| 5 | Fleet Size | 0.35 | 0.10 | 0.10 | 0.15 |
+| 6 | Iosa Status | 0.30 | 0.10 | 0.10 | 0.10 |
+
+**Primary Assessment Driver:** `Rotary Wing Risk` with combined weight of 0.95
+**Secondary Driver:** `Corporate Footprint` with combined weight of 0.55
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.5499999999999999%` on `hull_value` purchases exactly a `$5,000,000` Limit with a `$100,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `hull_value` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0055 = **$55,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$55,000**.
+
+---
+
+## Model: `aerospace_unmanned`
+*UAS/drone operations — VLOS, BVLOS, autonomous, commercial drone fleets*
+
+### Routing Protocol (Multiplexer)
+- `aviation_segment == UNMANNED`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Unmanned Aircraft Systems | 0.40 | 0.40 | 0.35 |
+| Regulatory Framework | 0.20 | 0.15 | 0.15 |
+| Corporate Footprint | 0.15 | 0.15 | 0.20 |
+| Firm Stability | 0.15 | 0.15 | 0.15 |
+| Fleet Size | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
+- `INFERRED_PROXY` (2 signals): Medium confidence
+
+**Signal Count by Group:**
+- `unmanned_systems`: 5 signals
+
+**Selection Rationale:**
+- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Unmanned Aircraft Systems | 1.15 | 0.40 | 0.40 | 0.35 |
+| 2 | Regulatory Framework | 0.50 | 0.20 | 0.15 | 0.15 |
+| 3 | Corporate Footprint | 0.50 | 0.15 | 0.15 | 0.20 |
+| 4 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
+| 5 | Fleet Size | 0.40 | 0.10 | 0.15 | 0.15 |
+
+**Primary Assessment Driver:** `Unmanned Aircraft Systems` with combined weight of 1.15
+**Secondary Driver:** `Regulatory Framework` with combined weight of 0.50
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `4.0%` on `hull_value` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `hull_value` = $10,000,000
+  - Base Premium = $10,000,000 × 0.04 = **$400,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$400,000**.
+
+---
+
+## Model: `aerospace_mro`
+*MRO facility liability — workmanship, hangarkeepers, products/completed operations*
+
+### Routing Protocol (Multiplexer)
+- `aviation_segment == MRO`
+- `revenue >= 5000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| MRO Facility Risk | 0.40 | 0.40 | 0.30 |
+| Regulatory Framework | 0.15 | 0.10 | 0.15 |
+| Corporate Footprint | 0.20 | 0.20 | 0.25 |
+| Firm Stability | 0.15 | 0.15 | 0.15 |
+| Fleet Category | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **5 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
+- `INFERRED_PROXY` (2 signals): Medium confidence
+
+**Signal Count by Group:**
+- `mro_risk`: 5 signals
+
+**Selection Rationale:**
+- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | MRO Facility Risk | 1.10 | 0.40 | 0.40 | 0.30 |
+| 2 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
+| 3 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
+| 4 | Regulatory Framework | 0.40 | 0.15 | 0.10 | 0.15 |
+| 5 | Fleet Category | 0.40 | 0.10 | 0.15 | 0.15 |
+
+**Primary Assessment Driver:** `MRO Facility Risk` with combined weight of 1.10
+**Secondary Driver:** `Corporate Footprint` with combined weight of 0.65
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.5499999999999999%` on `revenue` purchases exactly a `$5,000,000` Limit with a `$100,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0055 = **$55,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$55,000**.
+
+---
+
+## Model: `aerospace_high_value`
+*High-value aviation fleet — airlines, major operators, hull value >$500M*
+
+### Routing Protocol (Multiplexer)
+- `hull_value >= 500000000`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| Iosa Status | 0.20 | 0.15 | 0.10 |
+| Regulatory Framework | 0.20 | 0.15 | 0.15 |
+| Fleet Size | 0.15 | 0.15 | 0.20 |
+| Fleet Category | 0.10 | 0.15 | 0.15 |
+| Corporate Footprint | 0.25 | 0.25 | 0.25 |
+| Firm Stability | 0.10 | 0.15 | 0.15 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **0 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+
+**Signal Count by Group:**
+
+**Selection Rationale:**
+- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | Corporate Footprint | 0.75 | 0.25 | 0.25 | 0.25 |
+| 2 | Regulatory Framework | 0.50 | 0.20 | 0.15 | 0.15 |
+| 3 | Fleet Size | 0.50 | 0.15 | 0.15 | 0.20 |
+| 4 | Iosa Status | 0.45 | 0.20 | 0.15 | 0.10 |
+| 5 | Fleet Category | 0.40 | 0.10 | 0.15 | 0.15 |
+| 6 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
+
+**Primary Assessment Driver:** `Corporate Footprint` with combined weight of 0.75
+**Secondary Driver:** `Regulatory Framework` with combined weight of 0.50
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.16%` on `hull_value` purchases exactly a `$100,000,000` Limit with a `$2,500,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `hull_value` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0016 = **$16,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$16,000**.
 
