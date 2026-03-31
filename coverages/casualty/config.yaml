@@ -1,0 +1,3791 @@
+commercial_casualty:
+  casualty_gl:
+    metadata:
+      name: DSI Commercial General Liability Model
+      description: Commercial general liability — premises, operations, products/completed ops
+      version: 2.3.0
+      product_types:
+      - general_liability
+      - products_liability
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
+            products_liability'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD (basis for GL, environmental)
+        - field: payroll
+          description: Annual payroll in USD (basis for WC)
+      min_premium: 15000
+      default_currency: USD
+      model_specificity: 2
+      routing_constraints:
+      - field: product_type
+        operator: in
+        value:
+        - general_liability
+        - products_liability
+        required_in_input: true
+      - field: revenue
+        operator: '>='
+        value: 5000000
+        required_in_input: true
+    direct_queries:
+    - id: pending_claims
+      question: Any open or pending liability claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Open liability claims history
+    - id: product_recall
+      question: Has the insured conducted a product recall in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Prior product recall
+    - id: class_action
+      question: Is the insured a defendant in any class action or mass tort litigation?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Class action/mass tort exposure
+    - id: assault_battery
+      question: Does the insured operate in industries with assault & battery exposure (bars, nightclubs, security)?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Assault & battery exposure class
+    - id: prior_losses_large
+      question: Any single GL loss exceeding $500K in the past 10 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Large prior GL loss
+    signal_registry:
+    - id: gl_class_code
+      inference_utility_function: gl_class_code_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: gl_class_risk
+        source: metadata.gl_class_code
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Professional Services)
+          applied: 0.65
+        - cat: MODERATE
+          label: Moderate (Retail/Hospitality/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Construction/Heavy Mfg/Trucking)
+          applied: 1.45
+        - cat: SEVERE
+          label: Severe (Demolition/Roofing/Blasting)
+          applied: 2.0
+    - id: premises_condition
+      inference_utility_function: premises_condition_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: products_completed_ops
+      inference_utility_function: products_completed_ops_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Significant products/completed ops tail exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contractual_liability
+      inference_utility_function: contractual_liability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: subcontractor_management
+      inference_utility_function: subcontractor_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: litigation_environment
+      inference_utility_function: litigation_environment_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High nuclear verdict jurisdiction
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: public_access_volume
+      inference_utility_function: public_access_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: security_measures
+      inference_utility_function: security_measures_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: incident_response_capability
+      inference_utility_function: incident_response_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: alcohol_service
+      inference_utility_function: alcohol_service_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: Significant liquor liability exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: multi_location_complexity
+      inference_utility_function: multi_location_complexity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: gl_class_risk
+        label: General Liability Class Risk
+        description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.2
+      - id: premises_operations
+        label: Premises & Operations
+        description: Public access, security measures, incident response, contractual controls
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.2
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0012
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.004
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0068
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.011
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 2000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 2000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      valid_deductibles:
+      - 5000
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      by_product_type:
+        general_liability:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.88
+          - deductible: 50000
+            factor: 0.78
+          - deductible: 100000
+            factor: 0.68
+          - deductible: 250000
+            factor: 0.58
+          - deductible: 500000
+            factor: 0.5
+          - deductible: 1000000
+            factor: 0.42
+        products_liability:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.88
+          - deductible: 50000
+            factor: 0.78
+          - deductible: 100000
+            factor: 0.68
+          - deductible: 250000
+            factor: 0.58
+          - deductible: 500000
+            factor: 0.5
+          - deductible: 1000000
+            factor: 0.42
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  casualty_wc:
+    metadata:
+      name: DSI Workers Compensation Model
+      description: Workers compensation — payroll-based, experience mod driven, state-specific
+      version: 2.3.0
+      product_types:
+      - workers_compensation
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
+            products_liability'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD (basis for GL, environmental)
+        - field: payroll
+          description: Annual payroll in USD (basis for WC)
+      min_premium: 10000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: ==
+        value: workers_compensation
+        required_in_input: true
+      - field: payroll
+        operator: '>='
+        value: 1000000
+        required_in_input: true
+    direct_queries:
+    - id: osha_citations
+      question: Any OSHA citations (serious or willful) in the past 3 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Recent OSHA citations
+    - id: fatality_history
+      question: Any workplace fatalities in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Workplace fatality history
+    - id: experience_mod_high
+      question: Is the current experience modification factor above 1.25?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: High experience mod — loss-driven
+    - id: multi_state
+      question: Are employees located in more than 10 states?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Multi-state WC — jurisdictional complexity
+    - id: seasonal_workforce
+      question: Does the workforce include >30% seasonal or temporary workers?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: High seasonal/temp worker ratio
+    signal_registry:
+    - id: experience_modification
+      inference_utility_function: experience_modification_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: workplace_safety
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Very poor experience mod (>1.5)
+            threshold: 30
+            comparison: <=
+          - action: FLAG
+            note: Above-average experience mod
+            threshold: 50
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: osha_compliance
+      inference_utility_function: osha_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: workplace_safety
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Serious OSHA violations
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+    - id: safety_programme_quality
+      inference_utility_function: safety_programme_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: workplace_safety
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: return_to_work_programme
+      inference_utility_function: return_to_work_programme_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: workplace_safety
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: occupational_disease_exposure
+      inference_utility_function: occupational_disease_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: workplace_safety
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Significant occupational disease exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: public_access_volume
+      inference_utility_function: public_access_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: security_measures
+      inference_utility_function: security_measures_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: incident_response_capability
+      inference_utility_function: incident_response_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: alcohol_service
+      inference_utility_function: alcohol_service_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: Significant liquor liability exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: multi_location_complexity
+      inference_utility_function: multi_location_complexity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: workplace_safety
+        label: Workplace Safety
+        description: OSHA compliance, experience modification, safety programmes, injury patterns
+        risk:
+          weight: 0.4
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.2
+      - id: premises_operations
+        label: Premises & Operations
+        description: Public access, security measures, incident response, contractual controls
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.2
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.008
+            basis: payroll
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.015
+            basis: payroll
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.025
+            basis: payroll
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.045
+            basis: payroll
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.07
+            basis: payroll
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 2000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 2000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 500000
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      valid_deductibles:
+      - 5000
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      by_product_type:
+        workers_compensation:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 5000
+            factor: 1.1
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.9
+          - deductible: 50000
+            factor: 0.8
+          - deductible: 100000
+            factor: 0.7
+          - deductible: 250000
+            factor: 0.6
+          - deductible: 500000
+            factor: 0.52
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  casualty_auto:
+    metadata:
+      name: DSI Commercial Auto Liability Model
+      description: Commercial auto fleet liability — fleet-value based, driver quality, telematics
+      version: 2.3.0
+      product_types:
+      - commercial_auto
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: commercial_auto
+        - field: limit
+          description: Requested limit in USD
+        - field: fleet_value
+          description: Total fleet value in USD (MULTIPLIER basis)
+        - field: vehicle_count
+          description: Number of vehicles in fleet
+      min_premium: 15000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: ==
+        value: commercial_auto
+        required_in_input: true
+      - field: fleet_value
+        operator: '>='
+        value: 500000
+        required_in_input: true
+    direct_queries:
+    - id: dot_authority
+      question: Does the insured hold active DOT operating authority?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: DOT regulated carrier
+    - id: hazmat_transport
+      question: Does the fleet transport hazardous materials?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 3
+        applied: null
+        note: Hazmat transport exposure
+    - id: driver_shortage
+      question: Is the insured currently experiencing driver shortages (>20% unfilled positions)?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Driver shortage — retention/quality risk
+    - id: prior_fatality
+      question: Any at-fault fatality accidents in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: At-fault fatality history
+    - id: nuclear_verdict_state
+      question: Does the fleet primarily operate in states with high nuclear verdict frequency?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Nuclear verdict state exposure
+    signal_registry:
+    - id: fleet_composition
+      inference_utility_function: fleet_composition_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: auto_fleet_risk
+        source: metadata.fleet_composition
+        features:
+        - cat: LIGHT
+          label: Light Vehicles (Cars/Vans/Pickups)
+          applied: 0.8
+        - cat: MEDIUM
+          label: Medium Trucks (Class 3-6)
+          applied: 1.0
+        - cat: HEAVY
+          label: Heavy Trucks (Class 7-8/Long Haul)
+          applied: 1.35
+        - cat: SPECIALIZED
+          label: Specialized (Tankers/Hazmat/Oversized)
+          applied: 1.6
+        - cat: MIXED
+          label: Mixed Fleet
+          applied: 1.1
+    - id: driver_quality
+      inference_utility_function: driver_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: auto_fleet_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.3
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: telematics_adoption
+      inference_utility_function: telematics_adoption_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: auto_fleet_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: route_hazard
+      inference_utility_function: route_hazard_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: auto_fleet_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: accident_frequency
+      inference_utility_function: accident_frequency_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: auto_fleet_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: High accident frequency rate
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: fleet_maintenance
+      inference_utility_function: fleet_maintenance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: auto_fleet_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+    - id: public_access_volume
+      inference_utility_function: public_access_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: security_measures
+      inference_utility_function: security_measures_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: incident_response_capability
+      inference_utility_function: incident_response_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: alcohol_service
+      inference_utility_function: alcohol_service_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: Significant liquor liability exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: multi_location_complexity
+      inference_utility_function: multi_location_complexity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: auto_fleet_risk
+        label: Auto Fleet Risk
+        description: Fleet composition, driver quality, telematics, route hazard, accident frequency
+        risk:
+          weight: 0.4
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.3
+      - id: premises_operations
+        label: Premises & Operations
+        description: Public access, security measures, incident response, contractual controls
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.012
+            basis: fleet_value
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.02
+            basis: fleet_value
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.035
+            basis: fleet_value
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.055
+            basis: fleet_value
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.08
+            basis: fleet_value
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 2000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 2000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      valid_deductibles:
+      - 5000
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      by_product_type:
+        commercial_auto:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.75
+          - deductible: 100000
+            factor: 0.65
+          - deductible: 250000
+            factor: 0.55
+          - deductible: 500000
+            factor: 0.48
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  casualty_umbrella:
+    metadata:
+      name: DSI Umbrella & Excess Liability Model
+      description: Umbrella/excess liability — underlying-premium based, tower position, nuclear verdict exposure
+      version: 2.3.0
+      product_types:
+      - umbrella_excess
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: umbrella_excess
+        - field: limit
+          description: Requested limit in USD
+        - field: underlying_premium
+          description: Total underlying casualty premium (GL + auto + WC) in USD (MULTIPLIER basis)
+        - field: revenue
+          description: Annual revenue in USD
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: ==
+        value: umbrella_excess
+        required_in_input: true
+      - field: underlying_premium
+        operator: '>='
+        value: 25000
+        required_in_input: true
+    direct_queries:
+    - id: underlying_gaps
+      question: Are there any gaps or exclusions in the underlying casualty programme?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Gaps in underlying programme
+    - id: class_action_exposure
+      question: Is the insured a defendant in any class action or mass tort litigation?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Class action/mass tort exposure
+    - id: prior_umbrella_loss
+      question: Has the umbrella/excess layer been penetrated by a claim in the past 10 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Prior umbrella/excess layer penetration
+    - id: lead_umbrella
+      question: Is this the lead (first) umbrella layer above primary?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Lead umbrella position — higher frequency exposure
+    signal_registry:
+    - id: gl_class_code
+      inference_utility_function: gl_class_code_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: gl_class_risk
+        source: metadata.gl_class_code
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Professional Services)
+          applied: 0.65
+        - cat: MODERATE
+          label: Moderate (Retail/Hospitality/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Construction/Heavy Mfg/Trucking)
+          applied: 1.45
+        - cat: SEVERE
+          label: Severe (Demolition/Roofing/Blasting)
+          applied: 2.0
+    - id: premises_condition
+      inference_utility_function: premises_condition_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: products_completed_ops
+      inference_utility_function: products_completed_ops_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Significant products/completed ops tail exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contractual_liability
+      inference_utility_function: contractual_liability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: subcontractor_management
+      inference_utility_function: subcontractor_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: litigation_environment
+      inference_utility_function: litigation_environment_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High nuclear verdict jurisdiction
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: underlying_programme_quality
+      inference_utility_function: underlying_programme_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: umbrella_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: attachment_point_adequacy
+      inference_utility_function: attachment_point_adequacy_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: umbrella_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: nuclear_verdict_exposure
+      inference_utility_function: nuclear_verdict_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: umbrella_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Severe nuclear verdict exposure
+            threshold: 25
+            comparison: <=
+          - action: FLAG
+            note: Elevated verdict jurisdiction
+            threshold: 45
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: tower_position
+      inference_utility_function: tower_position_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: umbrella_exposure
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: public_access_volume
+      inference_utility_function: public_access_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: security_measures
+      inference_utility_function: security_measures_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: incident_response_capability
+      inference_utility_function: incident_response_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: alcohol_service
+      inference_utility_function: alcohol_service_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: Significant liquor liability exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: multi_location_complexity
+      inference_utility_function: multi_location_complexity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: umbrella_exposure
+        label: Umbrella & Excess Exposure
+        description: Underlying programme quality, attachment adequacy, stacking, nuclear verdict exposure
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.3
+      - id: gl_class_risk
+        label: General Liability Class Risk
+        description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: premises_operations
+        label: Premises & Operations
+        description: Public access, security measures, incident response, contractual controls
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.4
+            basis: underlying_premium
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.6
+            basis: underlying_premium
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.85
+            basis: underlying_premium
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 1.2
+            basis: underlying_premium
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 1.8
+            basis: underlying_premium
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 2000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 2000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      valid_deductibles:
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 10000
+      by_product_type:
+        umbrella_excess:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.92
+          - deductible: 50000
+            factor: 0.85
+          - deductible: 100000
+            factor: 0.78
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.62
+          - deductible: 1000000
+            factor: 0.55
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  casualty_environmental:
+    metadata:
+      name: DSI Environmental Liability Model
+      description: Environmental liability — pollution, remediation, regulatory defence, third-party claims
+      version: 2.3.0
+      product_types:
+      - environmental_liability
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
+            products_liability'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD (basis for GL, environmental)
+        - field: payroll
+          description: Annual payroll in USD (basis for WC)
+      min_premium: 20000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: ==
+        value: environmental_liability
+        required_in_input: true
+      - field: revenue
+        operator: '>='
+        value: 5000000
+        required_in_input: true
+    direct_queries:
+    - id: known_contamination
+      question: Are there any known pollution conditions at the insured site(s)?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Known contamination — pre-existing conditions
+    - id: superfund_prp
+      question: Is the insured a named PRP at any CERCLA/Superfund site?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: CERCLA PRP status
+    - id: ust_presence
+      question: Are there underground storage tanks on any insured property?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: UST presence — leak exposure
+    - id: manufacturing_operations
+      question: Does the insured operate manufacturing with chemical processes?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Chemical manufacturing — pollution exposure
+    - id: phase_i_current
+      question: Has a Phase I ESA been completed within the past 3 years for all insured sites?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: Current Phase I ESA credit
+    signal_registry:
+    - id: gl_class_code
+      inference_utility_function: gl_class_code_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: gl_class_risk
+        source: metadata.gl_class_code
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Professional Services)
+          applied: 0.65
+        - cat: MODERATE
+          label: Moderate (Retail/Hospitality/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Construction/Heavy Mfg/Trucking)
+          applied: 1.45
+        - cat: SEVERE
+          label: Severe (Demolition/Roofing/Blasting)
+          applied: 2.0
+    - id: premises_condition
+      inference_utility_function: premises_condition_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: products_completed_ops
+      inference_utility_function: products_completed_ops_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Significant products/completed ops tail exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contractual_liability
+      inference_utility_function: contractual_liability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: subcontractor_management
+      inference_utility_function: subcontractor_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: litigation_environment
+      inference_utility_function: litigation_environment_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High nuclear verdict jurisdiction
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: pollution_conditions
+      inference_utility_function: pollution_conditions_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: environmental_liability
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Known unremediated contamination
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: ust_ast_compliance
+      inference_utility_function: ust_ast_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: environmental_liability
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: regulatory_enforcement_history
+      inference_utility_function: regulatory_enforcement_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: environmental_liability
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Active environmental enforcement
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: waste_management_practices
+      inference_utility_function: waste_management_practices_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: environmental_liability
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: third_party_site_exposure
+      inference_utility_function: third_party_site_exposure_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: environmental_liability
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: CERCLA/Superfund PRP exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: public_access_volume
+      inference_utility_function: public_access_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: security_measures
+      inference_utility_function: security_measures_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: incident_response_capability
+      inference_utility_function: incident_response_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: alcohol_service
+      inference_utility_function: alcohol_service_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: Significant liquor liability exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: multi_location_complexity
+      inference_utility_function: multi_location_complexity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: environmental_liability
+        label: Environmental Liability
+        description: Pollution conditions, remediation history, tank compliance, regulatory exposure
+        risk:
+          weight: 0.4
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.3
+      - id: gl_class_risk
+        label: General Liability Class Risk
+        description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: premises_operations
+        label: Premises & Operations
+        description: Public access, security measures, incident response, contractual controls
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0015
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0028
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0085
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.013
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 2000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 2000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      valid_deductibles:
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      by_product_type:
+        environmental_liability:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.88
+          - deductible: 100000
+            factor: 0.78
+          - deductible: 250000
+            factor: 0.68
+          - deductible: 500000
+            factor: 0.58
+          - deductible: 1000000
+            factor: 0.5
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  casualty_sme:
+    metadata:
+      name: DSI Casualty SME Model
+      description: Small-to-medium casualty — revenue under $5M, simplified GL + products
+      version: 2.3.0
+      product_types:
+      - general_liability
+      - products_liability
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
+            products_liability'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD (basis for GL, environmental)
+        - field: payroll
+          description: Annual payroll in USD (basis for WC)
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 1
+      routing_constraints:
+      - field: product_type
+        operator: in
+        value:
+        - general_liability
+        - products_liability
+        required_in_input: true
+      - field: revenue
+        operator: <
+        value: 5000000
+        required_in_input: true
+    direct_queries:
+    - id: pending_claims
+      question: Any open or pending liability claims in the past 3 years?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Recent claims history
+    - id: prior_losses
+      question: Any liability loss exceeding $100K in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Significant prior loss for SME
+    signal_registry:
+    - id: gl_class_code
+      inference_utility_function: gl_class_code_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: gl_class_risk
+        source: metadata.gl_class_code
+        features:
+        - cat: LOW
+          label: Low Hazard (Office/Professional Services)
+          applied: 0.65
+        - cat: MODERATE
+          label: Moderate (Retail/Hospitality/Light Mfg)
+          applied: 1.0
+        - cat: HIGH
+          label: High Hazard (Construction/Heavy Mfg/Trucking)
+          applied: 1.45
+        - cat: SEVERE
+          label: Severe (Demolition/Roofing/Blasting)
+          applied: 2.0
+    - id: premises_condition
+      inference_utility_function: premises_condition_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: products_completed_ops
+      inference_utility_function: products_completed_ops_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: Significant products/completed ops tail exposure
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contractual_liability
+      inference_utility_function: contractual_liability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: subcontractor_management
+      inference_utility_function: subcontractor_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: litigation_environment
+      inference_utility_function: litigation_environment_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: gl_class_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: High nuclear verdict jurisdiction
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.1
+    - id: public_access_volume
+      inference_utility_function: public_access_volume_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: security_measures
+      inference_utility_function: security_measures_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: incident_response_capability
+      inference_utility_function: incident_response_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: alcohol_service
+      inference_utility_function: alcohol_service_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+          score_conditions:
+          - action: FLAG
+            note: Significant liquor liability exposure
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: multi_location_complexity
+      inference_utility_function: multi_location_complexity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: premises_operations
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: gl_class_risk
+        label: General Liability Class Risk
+        description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.35
+        exposure:
+          weight: 0.25
+      - id: premises_operations
+        label: Premises & Operations
+        description: Public access, security measures, incident response, contractual controls
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.25
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.003
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.008
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.013
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.5
+        cap: 1.8
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 2000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 2000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 250000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 1000000000
+                max: 10000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 500000
+      - 1000000
+      - 2000000
+      - 5000000
+      valid_deductibles:
+      - 2500
+      - 5000
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+    pricing:
+      base_limit_reference: 500000
+      base_deductible_reference: 5000
+      by_product_type:
+        general_liability:
+          ilf_curve:
+            anchor_limit: 500000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 2500
+            factor: 1.2
+          - deductible: 5000
+            factor: 1.0
+          - deductible: 10000
+            factor: 0.85
+          - deductible: 25000
+            factor: 0.72
+          - deductible: 50000
+            factor: 0.62
+          - deductible: 100000
+            factor: 0.52
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
