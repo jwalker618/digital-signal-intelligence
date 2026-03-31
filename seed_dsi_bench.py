@@ -11,15 +11,25 @@ ILF scaling, modifier application, tier resolution, and query evaluation
 all flow through the same code paths as a real submission.
 
 Coverage lines seeded:
-  - Cyber (cyber_general + cyber_sme)
-  - Directors & Officers (do_general + do_sme)
-  - Financial Institutions (fi_general + fi_sme)
+  - Cyber (cyber_general + cyber_sme + 9 industry configs)
+  - Directors & Officers (do_general + do_sme + do_public, do_pe_backed,
+           do_nonprofit, do_ipo_spac)
+  - Financial Institutions (fi_general + fi_sme + fi_bank, fi_insurer,
+           fi_fintech, fi_crypto)
   - Energy (energy_general, energy_upstream_deepwater, energy_upstream_onshore,
            energy_upstream_unconventional, energy_midstream, energy_downstream,
            energy_offshore_wind, energy_onshore_renewable, energy_storage, energy_sme)
-  - Marine (marine_general)
-  - Professional Indemnity (pi_general + pi_sme)
-  - Aerospace (aerospace_general)
+  - Marine (marine_general + marine_sme + marine_cargo, marine_tanker,
+           marine_offshore, marine_war_risk, marine_high_value)
+  - Professional Indemnity (pi_general + pi_sme + 11 profession configs)
+  - Aerospace (aerospace_general + aerospace_sme + aerospace_space,
+           aerospace_rotary, aerospace_unmanned, aerospace_mro, aerospace_high_value)
+  - Property (property_general, property_high_value, property_cat_exposed,
+           property_builders_risk, property_sme)
+  - Casualty (casualty_gl, casualty_wc, casualty_auto, casualty_umbrella,
+           casualty_environmental, casualty_sme)
+  - Financial & Political Risk (fpr_trade_credit, fpr_political_risk,
+           fpr_surety, fpr_kidnap_ransom, fpr_sme)
 
 Each company entry creates:
   1. Submission (with submission_data and direct_query_responses)
@@ -4039,6 +4049,9 @@ COVERAGE_ENTITY_MAP = {
     "aerospace": "syndicate_example",
     "financial_institutions": None,  # Direct writer (generated)
     "professional_indemnity": None,  # Direct writer (generated)
+    "commercial_property": "syndicate_example",
+    "commercial_casualty": "syndicate_example",
+    "financial_political_risk": "syndicate_example",
 }
 
 

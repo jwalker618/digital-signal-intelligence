@@ -61,6 +61,9 @@ COVERAGE_ENERGY = "energy"
 COVERAGE_DO = "do"
 COVERAGE_MARINE = "marine"
 COVERAGE_PI = "pi"
+COVERAGE_PROPERTY = "property"
+COVERAGE_CASUALTY = "casualty"
+COVERAGE_FPR = "fpr"
 
 ALL_COVERAGES = [
     COVERAGE_AEROSPACE,
@@ -70,6 +73,9 @@ ALL_COVERAGES = [
     COVERAGE_DO,
     COVERAGE_MARINE,
     COVERAGE_PI,
+    COVERAGE_PROPERTY,
+    COVERAGE_CASUALTY,
+    COVERAGE_FPR,
 ]
 
 
@@ -1262,14 +1268,14 @@ _CROSS_COVERAGE_SIGNALS: List[SignalMetadata] = [
         "esg_rating", "ESG Rating", "structured_data",
         INFERRED_PROXY, _TTL_DAILY, ["ESGRatingExtractor"],
         OUTPUT_SCORE, _SCORE_RANGE,
-        [COVERAGE_FI, COVERAGE_DO, COVERAGE_ENERGY, COVERAGE_MARINE],
+        [COVERAGE_FI, COVERAGE_DO, COVERAGE_ENERGY, COVERAGE_MARINE, COVERAGE_PROPERTY, COVERAGE_CASUALTY, COVERAGE_AEROSPACE, COVERAGE_FPR],
         "Third-party ESG rating from major providers",
     ),
     _sm(
         "esg_reporting", "ESG/Sustainability Reporting", "corporate_footprint",
         INFERRED_PROXY, _TTL_WEEKLY, ["ESGReportingExtractor"],
         OUTPUT_SCORE, _SCORE_RANGE,
-        [COVERAGE_FI, COVERAGE_DO, COVERAGE_ENERGY],
+        [COVERAGE_FI, COVERAGE_DO, COVERAGE_ENERGY, COVERAGE_PROPERTY, COVERAGE_CASUALTY],
         "Quality of ESG and sustainability reporting",
     ),
     _sm(
@@ -1295,7 +1301,7 @@ _CROSS_COVERAGE_SIGNALS: List[SignalMetadata] = [
         "network_authority", INFERRED_PROXY, _TTL_MONTHLY,
         ["IndustryAssociationExtractor"],
         OUTPUT_SCORE, _SCORE_RANGE,
-        [COVERAGE_FI, COVERAGE_DO, COVERAGE_ENERGY, COVERAGE_MARINE],
+        [COVERAGE_FI, COVERAGE_DO, COVERAGE_ENERGY, COVERAGE_MARINE, COVERAGE_PROPERTY, COVERAGE_CASUALTY, COVERAGE_AEROSPACE, COVERAGE_FPR],
         "Active membership and leadership in industry associations",
     ),
     _sm(
@@ -1303,7 +1309,7 @@ _CROSS_COVERAGE_SIGNALS: List[SignalMetadata] = [
         "network_authority", INFERRED_PROXY, _TTL_WEEKLY,
         ["BankingRelationshipExtractor"],
         OUTPUT_SCORE, _SCORE_RANGE,
-        [COVERAGE_DO, COVERAGE_ENERGY, COVERAGE_MARINE],
+        [COVERAGE_DO, COVERAGE_ENERGY, COVERAGE_MARINE, COVERAGE_PROPERTY, COVERAGE_CASUALTY, COVERAGE_FPR],
         "Quality of banking and financing relationships",
     ),
 ]
@@ -1321,3 +1327,936 @@ SIGNAL_METADATA_REGISTRY.register_many(_DO_SIGNALS)
 SIGNAL_METADATA_REGISTRY.register_many(_MARINE_SIGNALS)
 SIGNAL_METADATA_REGISTRY.register_many(_PI_SIGNALS)
 SIGNAL_METADATA_REGISTRY.register_many(_CROSS_COVERAGE_SIGNALS)
+
+
+# =========================================================================
+# NEW PROPERTY SIGNALS (phase_2)
+# =========================================================================
+
+_PROPERTY_SIGNALS: List[SignalMetadata] = [
+    # -- Construction Quality --
+    _sm(
+        "construction_class", "Construction Class", "construction_quality",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ConstructionClassExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_PROPERTY],
+        "ISO/COPE construction classification — frame, joisted masonry, non-combustible, masonry non-combu...",
+    ),
+    _sm(
+        "building_age_condition", "Building Age & Condition", "construction_quality",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["BuildingAgeConditionExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Composite score of building age, last major renovation, and overall condition rating",
+    ),
+    _sm(
+        "building_code_compliance", "Building Code Compliance", "construction_quality",
+        INFERRED_PROXY, _TTL_MONTHLY, ["BuildingCodeComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Current compliance with local building codes; grandfathered non-conformities flagged",
+    ),
+    _sm(
+        "roof_condition", "Roof Condition", "construction_quality",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["RoofConditionExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Roof age, material, condition, and recent inspection results — primary water damage driver",
+    ),
+    _sm(
+        "electrical_system_quality", "Electrical System Quality", "construction_quality",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ElectricalSystemQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Age of electrical systems, panel capacity, wiring type, recent inspection",
+    ),
+    _sm(
+        "renovation_history", "Renovation History", "construction_quality",
+        INFERRED_PROXY, _TTL_MONTHLY, ["RenovationHistoryExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Track record of capital investment; recent renovations reduce age-related risk",
+    ),
+    # -- Occupancy Risk --
+    _sm(
+        "occupancy_hazard_grade", "Occupancy Hazard Grade", "occupancy_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["OccupancyHazardGradeExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_PROPERTY],
+        "ISO occupancy hazard classification — from low (office) to special (chemical storage)",
+    ),
+    _sm(
+        "tenant_concentration", "Tenant Concentration", "occupancy_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["TenantConcentrationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Number and diversity of tenants; single-tenant risk vs multi-tenant diversification",
+    ),
+    _sm(
+        "contents_value_density", "Contents Value Density", "occupancy_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ContentsValueDensityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Value of contents per square foot — drives severity; high-value stock amplifies loss",
+    ),
+    _sm(
+        "vacancy_rate", "Vacancy Rate", "occupancy_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["VacancyRateExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Percentage of space unoccupied — vacant properties have higher arson and vandalism rates",
+    ),
+    _sm(
+        "housekeeping_quality", "Housekeeping & Maintenance Quality", "occupancy_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["HousekeepingQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "General upkeep, cleanliness, storage practices — proxy for management attention to risk",
+    ),
+    # -- Catastrophe Exposure --
+    _sm(
+        "wind_zone", "Wind Zone Exposure", "cat_exposure",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["WindZoneExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Proximity to named-storm-exposed coastline; hurricane/typhoon return periods",
+    ),
+    _sm(
+        "earthquake_zone", "Earthquake Zone Exposure", "cat_exposure",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["EarthquakeZoneExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Seismic zone classification; proximity to known fault lines; soil liquefaction risk",
+    ),
+    _sm(
+        "flood_zone", "Flood Zone Exposure", "cat_exposure",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["FloodZoneExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "FEMA flood zone classification; proximity to waterways; historical flood events",
+    ),
+    _sm(
+        "wildfire_zone", "Wildfire Zone Exposure", "cat_exposure",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["WildfireZoneExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Wildland-urban interface proximity; vegetation density; historical fire events",
+    ),
+    _sm(
+        "convective_storm_exposure", "Convective Storm Exposure", "cat_exposure",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ConvectiveStormExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Hail, tornado, and severe thunderstorm frequency for location",
+    ),
+    _sm(
+        "geographic_concentration", "Geographic Concentration", "cat_exposure",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["GeographicConcentrationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Single-location vs multi-site; distance between sites; aggregation risk",
+    ),
+    # -- Fire Protection --
+    _sm(
+        "sprinkler_coverage", "Sprinkler System Coverage", "fire_protection",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["SprinklerCoverageExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_PROPERTY],
+        "Extent and type of automatic sprinkler protection — full, partial, or none",
+    ),
+    _sm(
+        "fire_alarm_quality", "Fire Alarm & Detection Quality", "fire_protection",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["FireAlarmQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Alarm system type — central station, proprietary, local, or none",
+    ),
+    _sm(
+        "fire_department_response", "Fire Department Response", "fire_protection",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["FireDepartmentResponseExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Distance to nearest fire station; ISO public protection class; response time",
+    ),
+    _sm(
+        "fire_separation", "Fire Separation & Compartmentation", "fire_protection",
+        INFERRED_PROXY, _TTL_MONTHLY, ["FireSeparationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Fire walls, fire doors, compartmentation between occupancies or sections",
+    ),
+    _sm(
+        "water_supply_adequacy", "Water Supply Adequacy", "fire_protection",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["WaterSupplyAdequacyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Hydrant distance, water pressure, supply duration for fire suppression",
+    ),
+    # -- Business Interruption --
+    _sm(
+        "revenue_concentration", "Revenue Concentration at Location", "business_interruption",
+        INFERRED_PROXY, _TTL_MONTHLY, ["RevenueConcentrationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Percentage of total enterprise revenue generated at or dependent on insured location",
+    ),
+    _sm(
+        "recovery_time_estimate", "Recovery Time Estimate", "business_interruption",
+        INFERRED_PROXY, _TTL_MONTHLY, ["RecoveryTimeEstimateExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Estimated time to restore operations after total loss — months to rebuild, re-equip, re-staff",
+    ),
+    _sm(
+        "supply_chain_dependency", "Supply Chain Dependency", "business_interruption",
+        INFERRED_PROXY, _TTL_MONTHLY, ["SupplyChainDependencyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Reliance on single-source suppliers or critical supply chains affected by same peril zone",
+    ),
+    _sm(
+        "contingent_bi_exposure", "Contingent BI Exposure", "business_interruption",
+        COHORT_INFERENCE, _TTL_MONTHLY, ["ContingentBiExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Exposure from key customers or suppliers suffering property loss — contingent and dependent BI",
+    ),
+    _sm(
+        "business_continuity_planning", "Business Continuity Planning", "business_interruption",
+        INFERRED_PROXY, _TTL_MONTHLY, ["BusinessContinuityPlanningExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_PROPERTY],
+        "Quality of BCP/DRP; backup facilities; tested recovery procedures",
+    ),
+]
+
+
+# =========================================================================
+# EXPANSION MARINE SIGNALS (phase_3)
+# =========================================================================
+
+_MARINE_EXPANSION_SIGNALS: List[SignalMetadata] = [
+    # -- Cargo Quality --
+    _sm(
+        "cargo_commodity_class", "Cargo Commodity Classification", "cargo_quality",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["CargoCommodityClassExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_MARINE],
+        "Commodity hazard class — from low (finished goods) to high (hazmat, perishable, livestock)",
+    ),
+    _sm(
+        "packaging_quality", "Packaging & Stowage Quality", "cargo_quality",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PackagingQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Container condition, packaging standards, stowage compliance with IMDG/CTU codes",
+    ),
+    _sm(
+        "transit_mode", "Transit Mode Risk", "cargo_quality",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["TransitModeExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_MARINE],
+        "Primary transit mode — ocean, multimodal, inland waterway; transhipment count increases loss freq...",
+    ),
+    _sm(
+        "storage_exposure", "Storage & Warehousing Exposure", "cargo_quality",
+        INFERRED_PROXY, _TTL_WEEKLY, ["StorageExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Duration and quality of intermediate storage; port congestion and dwell time",
+    ),
+    _sm(
+        "theft_pilferage_exposure", "Theft & Pilferage Exposure", "cargo_quality",
+        INFERRED_PROXY, _TTL_MONTHLY, ["TheftPilferageExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Route-specific theft risk; high-value cargo attractiveness; security measures in transit",
+    ),
+    _sm(
+        "temperature_control", "Temperature Control Adequacy", "cargo_quality",
+        INFERRED_PROXY, _TTL_MONTHLY, ["TemperatureControlExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Reefer container condition, cold chain integrity, monitoring systems for perishable/pharma cargo",
+    ),
+    # -- Tanker Risk --
+    _sm(
+        "tanker_vetting_status", "Tanker Vetting Status", "tanker_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["TankerVettingStatusExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "SIRE/CDI inspection results; oil major vetting approval status",
+    ),
+    _sm(
+        "pollution_liability_exposure", "Pollution Liability Exposure", "tanker_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PollutionLiabilityExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "CLC/IOPC exposure; P&I club pollution cover adequacy; spill response capability",
+    ),
+    _sm(
+        "double_hull_compliance", "Double Hull Compliance", "tanker_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["DoubleHullComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "MARPOL double-hull status; structural condition of hull; age of coating systems",
+    ),
+    _sm(
+        "cargo_compatibility", "Cargo Compatibility & History", "tanker_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["CargoCompatibilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Grade-specific tank cleaning compliance; cargo contamination claim history",
+    ),
+    _sm(
+        "sts_operations", "Ship-to-Ship Transfer Operations", "tanker_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["StsOperationsExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Frequency and quality of STS operations; compliance with OCIMF guidelines",
+    ),
+    # -- Offshore Marine --
+    _sm(
+        "unit_type", "Offshore Unit Type", "offshore_marine",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["UnitTypeExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_MARINE],
+        "Classification of offshore unit — FPSO, jack-up, semi-sub, drill ship, OSV, construction",
+    ),
+    _sm(
+        "mooring_integrity", "Mooring System Integrity", "offshore_marine",
+        INFERRED_PROXY, _TTL_MONTHLY, ["MooringIntegrityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Mooring system age, inspection compliance, chain/anchor condition for stationary units",
+    ),
+    _sm(
+        "dp_system_reliability", "Dynamic Positioning Reliability", "offshore_marine",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["DpSystemReliabilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "DP class, redundancy level, incident history, annual DP trials compliance",
+    ),
+    _sm(
+        "metocean_exposure", "Metocean Exposure", "offshore_marine",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["MetoceanExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Operating location weather severity — wave height, wind speed, current, ice exposure",
+    ),
+    _sm(
+        "offshore_class_compliance", "Offshore Classification Compliance", "offshore_marine",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["OffshoreClassComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Class society survey status; special survey compliance; conditions of class outstanding",
+    ),
+    # -- Port State & Regulatory Compliance --
+    _sm(
+        "psc_detention_rate", "PSC Detention Rate", "port_state_compliance",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["PscDetentionRateExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Port state control detention frequency relative to fleet size; deficiency categories",
+    ),
+    _sm(
+        "ism_audit_quality", "ISM Audit Quality", "port_state_compliance",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["IsmAuditQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "ISM Code Document of Compliance status; major non-conformities; audit frequency",
+    ),
+    _sm(
+        "isps_compliance", "ISPS Compliance", "port_state_compliance",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["IspsComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "International Ship and Port Facility Security code compliance; security plan quality",
+    ),
+    _sm(
+        "sanctions_screening_depth", "Sanctions Screening Depth", "port_state_compliance",
+        INFERRED_PROXY, _TTL_WEEKLY, ["SanctionsScreeningDepthExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Thoroughness of sanctions and restricted party screening across charterers, cargo owners, ports",
+    ),
+    _sm(
+        "class_survey_currency", "Classification Survey Currency", "port_state_compliance",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ClassSurveyCurrencyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_MARINE],
+        "Currency of class surveys — annual, intermediate, special; overdue survey flags",
+    ),
+]
+
+
+# =========================================================================
+# NEW CASUALTY SIGNALS (phase_4)
+# =========================================================================
+
+_CASUALTY_SIGNALS: List[SignalMetadata] = [
+    # -- General Liability Class Risk --
+    _sm(
+        "gl_class_code", "GL Classification Code", "gl_class_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["GlClassCodeExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_CASUALTY],
+        "ISO CGL classification — drives base rate; captures industry-specific hazard profile",
+    ),
+    _sm(
+        "premises_condition", "Premises Condition & Maintenance", "gl_class_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PremisesConditionExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Physical condition of insured premises; slip-trip-fall exposure; ADA compliance",
+    ),
+    _sm(
+        "products_completed_ops", "Products & Completed Operations Exposure", "gl_class_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ProductsCompletedOpsExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Products liability tail; completed operations exposure for contractors; recall potential",
+    ),
+    _sm(
+        "contractual_liability", "Contractual Liability Exposure", "gl_class_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ContractualLiabilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Hold-harmless agreements, indemnification clauses; assumption of others' liability",
+    ),
+    _sm(
+        "subcontractor_management", "Subcontractor Management", "gl_class_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["SubcontractorManagementExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Quality of subcontractor vetting, certificate tracking, additional insured compliance",
+    ),
+    _sm(
+        "litigation_environment", "Litigation Environment", "gl_class_risk",
+        COHORT_INFERENCE, _TTL_MONTHLY, ["LitigationEnvironmentExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Jurisdictional exposure; nuclear verdict trends; plaintiff bar activity in domicile state",
+    ),
+    # -- Workplace Safety --
+    _sm(
+        "experience_modification", "Experience Modification Factor", "workplace_safety",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ExperienceModificationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "NCCI experience mod — actual vs expected losses; most direct predictor of WC performance",
+    ),
+    _sm(
+        "osha_compliance", "OSHA Compliance Record", "workplace_safety",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["OshaComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "OSHA citation history; serious/willful violations; injury/illness rates vs industry average",
+    ),
+    _sm(
+        "safety_programme_quality", "Safety Programme Quality", "workplace_safety",
+        INFERRED_PROXY, _TTL_MONTHLY, ["SafetyProgrammeQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Formal safety programme maturity; training frequency; near-miss reporting; safety culture",
+    ),
+    _sm(
+        "return_to_work_programme", "Return-to-Work Programme", "workplace_safety",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ReturnToWorkProgrammeExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Modified duty programme; early intervention; medical case management effectiveness",
+    ),
+    _sm(
+        "occupational_disease_exposure", "Occupational Disease Exposure", "workplace_safety",
+        INFERRED_PROXY, _TTL_MONTHLY, ["OccupationalDiseaseExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Exposure to silica, asbestos, noise, repetitive motion, chemical agents — latent disease risk",
+    ),
+    # -- Auto Fleet Risk --
+    _sm(
+        "fleet_composition", "Fleet Composition", "auto_fleet_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["FleetCompositionExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_CASUALTY],
+        "Vehicle types in fleet — light vehicles, medium trucks, heavy trucks, specialized equipment",
+    ),
+    _sm(
+        "driver_quality", "Driver Quality & MVR Screening", "auto_fleet_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["DriverQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "MVR screening programme; violation rates; CDL compliance; driver training programme",
+    ),
+    _sm(
+        "telematics_adoption", "Telematics & Safety Technology", "auto_fleet_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["TelematicsAdoptionExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Telematics penetration; dashcam deployment; collision avoidance systems; ELD compliance",
+    ),
+    _sm(
+        "route_hazard", "Route Hazard Profile", "auto_fleet_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["RouteHazardExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Typical operating radius; highway vs urban; seasonal exposure; state-specific hazards",
+    ),
+    _sm(
+        "accident_frequency", "Accident Frequency & Severity", "auto_fleet_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["AccidentFrequencyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Historical accident rate per million miles; DOT reportable incidents; severity trend",
+    ),
+    _sm(
+        "fleet_maintenance", "Fleet Maintenance Programme", "auto_fleet_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["FleetMaintenanceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Preventive maintenance programme; DOT inspection pass rate; vehicle age distribution",
+    ),
+    # -- Environmental Liability --
+    _sm(
+        "pollution_conditions", "Known Pollution Conditions", "environmental_liability",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["PollutionConditionsExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Existing contamination on-site; Phase I/II ESA results; remediation status",
+    ),
+    _sm(
+        "ust_ast_compliance", "Underground/Aboveground Storage Tank Compliance", "environmental_liability",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["UstAstComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "UST/AST regulatory compliance; leak detection; spill prevention; tank age and construction",
+    ),
+    _sm(
+        "regulatory_enforcement_history", "Environmental Regulatory Enforcement", "environmental_liability",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["RegulatoryEnforcementHistoryExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "EPA/state agency enforcement actions; consent orders; NOVs; penalty history",
+    ),
+    _sm(
+        "waste_management_practices", "Waste Management Practices", "environmental_liability",
+        INFERRED_PROXY, _TTL_MONTHLY, ["WasteManagementPracticesExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Hazardous waste generation; disposal practices; RCRA compliance; manifest tracking",
+    ),
+    _sm(
+        "third_party_site_exposure", "Third-Party Site Exposure", "environmental_liability",
+        COHORT_INFERENCE, _TTL_MONTHLY, ["ThirdPartySiteExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "CERCLA/Superfund potential; off-site disposal location quality; PRP exposure",
+    ),
+    # -- Umbrella & Excess Exposure --
+    _sm(
+        "underlying_programme_quality", "Underlying Programme Quality", "umbrella_exposure",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["UnderlyingProgrammeQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Adequacy of underlying GL/auto/WC/EL limits; gaps in underlying coverage",
+    ),
+    _sm(
+        "attachment_point_adequacy", "Attachment Point Adequacy", "umbrella_exposure",
+        INFERRED_PROXY, _TTL_MONTHLY, ["AttachmentPointAdequacyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Whether underlying limits are sufficient to absorb expected frequency losses",
+    ),
+    _sm(
+        "nuclear_verdict_exposure", "Nuclear Verdict Exposure", "umbrella_exposure",
+        COHORT_INFERENCE, _TTL_MONTHLY, ["NuclearVerdictExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Exposure to jurisdiction-specific outsized verdicts; class action potential; mass tort",
+    ),
+    _sm(
+        "tower_position", "Tower Position & Layer Exposure", "umbrella_exposure",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["TowerPositionExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Position in excess tower — lead umbrella vs high-excess; buffer layer adequacy",
+    ),
+    # -- Premises & Operations --
+    _sm(
+        "public_access_volume", "Public Access Volume", "premises_operations",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PublicAccessVolumeExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Footfall/visitor volume at insured locations; public-facing operations scale",
+    ),
+    _sm(
+        "security_measures", "Security & Surveillance Measures", "premises_operations",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["SecurityMeasuresExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "CCTV, access control, security personnel, lighting — reduces assault/negligence claims",
+    ),
+    _sm(
+        "incident_response_capability", "Incident Response Capability", "premises_operations",
+        INFERRED_PROXY, _TTL_MONTHLY, ["IncidentResponseCapabilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "First aid, emergency action plans, incident documentation, claims reporting speed",
+    ),
+    _sm(
+        "alcohol_service", "Alcohol Service Exposure", "premises_operations",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["AlcoholServiceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Liquor liability exposure; TIPS/responsible service training; dram shop liability states",
+    ),
+    _sm(
+        "multi_location_complexity", "Multi-Location Complexity", "premises_operations",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["MultiLocationComplexityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_CASUALTY],
+        "Number of insured locations; geographic spread; jurisdictional diversity",
+    ),
+]
+
+
+# =========================================================================
+# EXPANSION AEROSPACE SIGNALS (phase_5)
+# =========================================================================
+
+_AEROSPACE_EXPANSION_SIGNALS: List[SignalMetadata] = [
+    # -- Space Risk --
+    _sm(
+        "launch_vehicle_reliability", "Launch Vehicle Reliability", "space_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["LaunchVehicleReliabilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Historical success rate of launch vehicle family; consecutive success count; provider track record",
+    ),
+    _sm(
+        "satellite_technology_maturity", "Satellite Technology Maturity", "space_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["SatelliteTechnologyMaturityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Heritage vs novel bus/payload design; technology readiness level; manufacturer track record",
+    ),
+    _sm(
+        "orbital_debris_exposure", "Orbital Debris & Collision Exposure", "space_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["OrbitalDebrisExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Orbital regime congestion; conjunction assessment capability; manoeuvre capacity",
+    ),
+    _sm(
+        "in_orbit_anomaly_history", "In-Orbit Anomaly History", "space_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["InOrbitAnomalyHistoryExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Prior in-orbit anomalies on same bus/payload family; degradation patterns",
+    ),
+    _sm(
+        "ground_segment_quality", "Ground Segment Quality", "space_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["GroundSegmentQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Ground station network redundancy; command/control reliability; telemetry monitoring",
+    ),
+    # -- Rotary Wing Risk --
+    _sm(
+        "mission_profile", "Mission Profile", "rotary_wing_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["MissionProfileExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_AEROSPACE],
+        "Primary mission type — drives frequency and severity characteristics",
+    ),
+    _sm(
+        "rotary_pilot_experience", "Pilot Experience & Currency", "rotary_wing_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["RotaryPilotExperienceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Total rotary hours; type-specific hours; instrument currency; NVG qualification",
+    ),
+    _sm(
+        "rotary_maintenance_quality", "Maintenance Programme Quality", "rotary_wing_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["RotaryMaintenanceQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Overhaul compliance; component tracking; AD/SB compliance rate; maintenance provider quality",
+    ),
+    _sm(
+        "landing_zone_quality", "Landing Zone & Operating Environment", "rotary_wing_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["LandingZoneQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Helipad standards; offshore platform conditions; confined area operations frequency",
+    ),
+    _sm(
+        "passenger_liability_exposure", "Passenger Liability Exposure", "rotary_wing_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PassengerLiabilityExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Passenger volume; passenger profile (workers vs public); contractual liability assumptions",
+    ),
+    # -- Unmanned Aircraft Systems --
+    _sm(
+        "uas_operational_scope", "UAS Operational Scope", "unmanned_systems",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["UasOperationalScopeExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_AEROSPACE],
+        "VLOS vs BVLOS; urban vs rural; altitude regime; autonomous vs pilot-controlled",
+    ),
+    _sm(
+        "uas_regulatory_compliance", "UAS Regulatory Compliance", "unmanned_systems",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["UasRegulatoryComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Part 107 / EASA UAS category compliance; waiver status; remote ID compliance",
+    ),
+    _sm(
+        "airspace_integration", "Airspace Integration Safety", "unmanned_systems",
+        INFERRED_PROXY, _TTL_MONTHLY, ["AirspaceIntegrationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "UTM participation; detect-and-avoid capability; ATC coordination for controlled airspace",
+    ),
+    _sm(
+        "uas_payload_risk", "Payload & Third-Party Risk", "unmanned_systems",
+        INFERRED_PROXY, _TTL_MONTHLY, ["UasPayloadRiskExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Payload type (camera, LiDAR, delivery); overflown population density; ground risk",
+    ),
+    _sm(
+        "uas_fleet_reliability", "UAS Fleet Reliability", "unmanned_systems",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["UasFleetReliabilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Aircraft type certification status; failure rate data; flyaway/lost-link incidents",
+    ),
+    # -- MRO Facility Risk --
+    _sm(
+        "mro_certification_scope", "MRO Certification Scope", "mro_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["MroCertificationScopeExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "FAR 145 / EASA Part 145 ratings scope; capability list breadth; authority limitations",
+    ),
+    _sm(
+        "workmanship_claims_history", "Workmanship Claims History", "mro_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["WorkmanshipClaimsHistoryExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Prior claims arising from maintenance errors; AD non-compliance incidents; return-to-service fail...",
+    ),
+    _sm(
+        "hangarkeepers_exposure", "Hangarkeepers Exposure", "mro_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["HangarkeepersExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Value of customer aircraft in care, custody, control; hangar fire protection; security",
+    ),
+    _sm(
+        "quality_system_maturity", "Quality Management System Maturity", "mro_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["QualitySystemMaturityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "AS9110 certification; internal audit programme; findings closure rate; continuous improvement",
+    ),
+    _sm(
+        "parts_traceability", "Parts Traceability & Supply Chain", "mro_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PartsTraceabilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_AEROSPACE],
+        "Parts provenance controls; suspected unapproved parts screening; PMA/DER parts usage",
+    ),
+]
+
+
+# =========================================================================
+# EXPANSION DO SIGNALS (phase_6)
+# =========================================================================
+
+_DO_EXPANSION_SIGNALS: List[SignalMetadata] = [
+    # -- Public Company Governance --
+    _sm(
+        "sec_filing_quality", "SEC Filing Quality", "public_company_governance",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["SecFilingQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "10-K/10-Q filing timeliness; material weakness disclosures; restatement history",
+    ),
+    _sm(
+        "board_composition_quality", "Board Composition Quality", "public_company_governance",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["BoardCompositionQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Independent director ratio; board diversity; committee structure; CEO/Chair separation",
+    ),
+    _sm(
+        "shareholder_activism", "Shareholder Activism Exposure", "public_company_governance",
+        INFERRED_PROXY, _TTL_WEEKLY, ["ShareholderActivismExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Activist campaign history; proxy fight risk; 13D filing patterns in sector",
+    ),
+    _sm(
+        "securities_litigation_exposure", "Securities Litigation Exposure", "public_company_governance",
+        COHORT_INFERENCE, _TTL_WEEKLY, ["SecuritiesLitigationExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Stock volatility; options backdating; insider trading patterns; SCA frequency in sector",
+    ),
+    _sm(
+        "executive_compensation_structure", "Executive Compensation Structure", "public_company_governance",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ExecutiveCompensationStructureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Say-on-pay results; compensation vs performance alignment; golden parachute provisions",
+    ),
+    # -- Transaction & Event Risk --
+    _sm(
+        "ma_activity", "M&A Transaction Activity", "transaction_event_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["MaActivityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Pending or recent M&A; hostile bid exposure; go-private transactions",
+    ),
+    _sm(
+        "ipo_spac_exposure", "IPO/SPAC Exposure", "transaction_event_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["IpoSpacExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Time since IPO; SPAC de-SPAC litigation risk; S-1 disclosure quality",
+    ),
+    _sm(
+        "pe_sponsor_dynamics", "PE/VC Sponsor Dynamics", "transaction_event_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PeSponsorDynamicsExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Sponsor-controlled board; portfolio company oversight; exit timeline pressure",
+    ),
+    _sm(
+        "bankruptcy_distress_risk", "Bankruptcy & Financial Distress", "transaction_event_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["BankruptcyDistressRiskExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "Altman Z-score proxy; debt covenants; going concern qualifications; liquidity stress",
+    ),
+    _sm(
+        "regulatory_investigation_exposure", "Regulatory Investigation Exposure", "transaction_event_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["RegulatoryInvestigationExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_DO],
+        "SEC/DOJ/FTC investigation history; FCPA exposure; whistleblower complaints",
+    ),
+]
+
+
+# =========================================================================
+# EXPANSION FI SIGNALS (phase_7)
+# =========================================================================
+
+_FI_EXPANSION_SIGNALS: List[SignalMetadata] = [
+    # -- Banking Risk --
+    _sm(
+        "capital_adequacy", "Capital Adequacy Ratio", "banking_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["CapitalAdequacyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "Tier 1 capital ratio; leverage ratio; stress test results; CCAR compliance",
+    ),
+    _sm(
+        "loan_portfolio_quality", "Loan Portfolio Quality", "banking_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["LoanPortfolioQualityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "NPL ratio; charge-off rate; loan concentration by sector; CRE exposure",
+    ),
+    _sm(
+        "regulatory_exam_results", "Regulatory Examination Results", "banking_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["RegulatoryExamResultsExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "CAMELS rating proxy; MRA/MRIA findings; consent orders; cease-and-desist actions",
+    ),
+    _sm(
+        "bsa_aml_compliance", "BSA/AML Compliance", "banking_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["BsaAmlComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "Bank Secrecy Act compliance; SAR filing quality; KYC programme maturity; sanctions screening",
+    ),
+    _sm(
+        "interest_rate_sensitivity", "Interest Rate Sensitivity", "banking_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["InterestRateSensitivityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "Asset-liability duration mismatch; unrealised losses in HTM portfolio; NIM volatility",
+    ),
+    # -- Fintech & Digital Risk --
+    _sm(
+        "regulatory_licensing_status", "Regulatory Licensing Status", "fintech_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["RegulatoryLicensingStatusExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "Money transmitter licences; broker-dealer registration; state-by-state compliance",
+    ),
+    _sm(
+        "crypto_asset_exposure", "Crypto/Digital Asset Exposure", "fintech_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["CryptoAssetExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "Cryptocurrency custody; DeFi protocol exposure; stablecoin reserves; exchange risk",
+    ),
+    _sm(
+        "platform_technology_risk", "Platform Technology Risk", "fintech_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["PlatformTechnologyRiskExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "Platform uptime; smart contract audit status; API security; third-party dependency",
+    ),
+    _sm(
+        "consumer_protection_compliance", "Consumer Protection Compliance", "fintech_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ConsumerProtectionComplianceExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "CFPB/FCA complaint rates; fair lending compliance; UDAAP risk; disclosure quality",
+    ),
+    _sm(
+        "partner_bank_dependency", "Partner Bank / BaaS Dependency", "fintech_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["PartnerBankDependencyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FI],
+        "Banking-as-a-Service dependency; partner bank concentration; regulatory through risk",
+    ),
+]
+
+
+# =========================================================================
+# NEW FPR SIGNALS (phase_8)
+# =========================================================================
+
+_FPR_SIGNALS: List[SignalMetadata] = [
+    # -- Trade Credit Risk --
+    _sm(
+        "buyer_creditworthiness", "Buyer Creditworthiness", "trade_credit_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["BuyerCreditworthinessExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Buyer credit rating, financial stability, payment history, industry sector health",
+    ),
+    _sm(
+        "payment_terms_exposure", "Payment Terms Exposure", "trade_credit_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["PaymentTermsExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Average payment terms (days); extended terms increase exposure duration and default probability",
+    ),
+    _sm(
+        "buyer_concentration", "Buyer Concentration", "trade_credit_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["BuyerConcentrationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Top 10 buyer share of insured turnover; single-buyer maximum exposure",
+    ),
+    _sm(
+        "country_risk_exposure", "Country Risk Exposure", "trade_credit_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["CountryRiskExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Buyer domicile country risk; currency transfer risk; sovereign default proximity",
+    ),
+    _sm(
+        "trade_dispute_frequency", "Trade Dispute Frequency", "trade_credit_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["TradeDisputeFrequencyExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Historical frequency of trade disputes, set-offs, quality claims by buyers",
+    ),
+    _sm(
+        "sector_cyclicality", "Sector Cyclicality", "trade_credit_risk",
+        COHORT_INFERENCE, _TTL_MONTHLY, ["SectorCyclicalityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Insured's industry sector vulnerability to economic downturns; commodity price sensitivity",
+    ),
+    # -- Political Risk --
+    _sm(
+        "sovereign_risk_rating", "Sovereign Risk Rating", "political_risk",
+        DIRECT_OBSERVABLE, _TTL_WEEKLY, ["SovereignRiskRatingExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_FPR],
+        "Country sovereign risk classification; political stability index; governance indicators",
+    ),
+    _sm(
+        "expropriation_risk", "Expropriation & Nationalisation Risk", "political_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ExpropriationRiskExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "History of expropriation; nationalisation trends; creeping expropriation indicators",
+    ),
+    _sm(
+        "currency_inconvertibility", "Currency Inconvertibility & Transfer Risk", "political_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["CurrencyInconvertibilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "FX controls; capital account restrictions; central bank reserve adequacy",
+    ),
+    _sm(
+        "contract_frustration", "Contract Frustration Risk", "political_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ContractFrustrationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Government contract cancellation; licence revocation; regulatory change risk",
+    ),
+    _sm(
+        "political_violence_exposure", "Political Violence Exposure", "political_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["PoliticalViolenceExposureExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Civil unrest frequency; terrorism threat level; armed conflict proximity; coup risk",
+    ),
+    # -- Surety & Bond Risk --
+    _sm(
+        "principal_financial_strength", "Principal Financial Strength", "surety_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["PrincipalFinancialStrengthExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Contractor/principal financial ratios; working capital; debt-to-equity; liquidity",
+    ),
+    _sm(
+        "project_execution_track_record", "Project Execution Track Record", "surety_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ProjectExecutionTrackRecordExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "On-time/on-budget delivery history; completed project count; scope creep frequency",
+    ),
+    _sm(
+        "backlog_to_capacity", "Backlog-to-Capacity Ratio", "surety_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["BacklogToCapacityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Work-in-progress relative to bonding capacity; over-extension risk",
+    ),
+    _sm(
+        "bond_default_history", "Bond Default & Claim History", "surety_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["BondDefaultHistoryExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Prior surety claims; performance bond calls; completion guarantor involvement",
+    ),
+    _sm(
+        "obligee_complexity", "Obligee & Contract Complexity", "surety_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["ObligeeComplexityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Government vs private obligee; contract terms; liquidated damages provisions",
+    ),
+    # -- Kidnap & Ransom Risk --
+    _sm(
+        "travel_exposure_profile", "Travel Exposure Profile", "kidnap_ransom_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["TravelExposureProfileExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Volume and frequency of employee travel to high-risk jurisdictions",
+    ),
+    _sm(
+        "country_threat_level", "Country Threat Level", "kidnap_ransom_risk",
+        INFERRED_PROXY, _TTL_WEEKLY, ["CountryThreatLevelExtractor"],
+        OUTPUT_CATEGORY, None, [COVERAGE_FPR],
+        "Destination-specific kidnap/extortion threat; crime index; express kidnap frequency",
+    ),
+    _sm(
+        "executive_protection", "Executive Protection Measures", "kidnap_ransom_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ExecutiveProtectionExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Close protection; secure transportation; safe houses; journey management plans",
+    ),
+    _sm(
+        "crisis_response_capability", "Crisis Response Capability", "kidnap_ransom_risk",
+        INFERRED_PROXY, _TTL_MONTHLY, ["CrisisResponseCapabilityExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Retained crisis response consultant; crisis management plan; communication protocols",
+    ),
+    _sm(
+        "expatriate_population", "Expatriate Population", "kidnap_ransom_risk",
+        DIRECT_OBSERVABLE, _TTL_MONTHLY, ["ExpatriatePopulationExtractor"],
+        OUTPUT_SCORE, _SCORE_RANGE, [COVERAGE_FPR],
+        "Number of expatriate employees; dependency ratio; family members in high-risk locations",
+    ),
+]
+
+
+
+SIGNAL_METADATA_REGISTRY.register_many(_PROPERTY_SIGNALS)
+SIGNAL_METADATA_REGISTRY.register_many(_MARINE_EXPANSION_SIGNALS)
+SIGNAL_METADATA_REGISTRY.register_many(_CASUALTY_SIGNALS)
+SIGNAL_METADATA_REGISTRY.register_many(_AEROSPACE_EXPANSION_SIGNALS)
+SIGNAL_METADATA_REGISTRY.register_many(_DO_EXPANSION_SIGNALS)
+SIGNAL_METADATA_REGISTRY.register_many(_FI_EXPANSION_SIGNALS)
+SIGNAL_METADATA_REGISTRY.register_many(_FPR_SIGNALS)
