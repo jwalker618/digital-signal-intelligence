@@ -54,12 +54,15 @@ routing_field: fi_segment
 default_risk_tier_bands:
   method: MULTIPLIER
   basis: total_assets
-  bands:
-    - {id: 1, label: PREFERRED, min: 800, max: 1000, action: APPROVE, applied: 8.0e-06}
-    - {id: 2, label: STANDARD_PLUS, min: 650, max: 799, action: APPROVE, applied: 1.2e-05}
-    - {id: 3, label: STANDARD, min: 450, max: 649, action: APPROVE, applied: 2.0e-05}
-    - {id: 4, label: SUBSTANDARD, min: 250, max: 449, action: REFER, applied: 3.5e-05}
-    - {id: 5, label: DECLINE, min: 0, max: 249, action: DECLINE, applied: 6.0e-05}
+  preferred_min: 800
+  standard_plus_min: 650
+  standard_min: 450
+  substandard_min: 250
+  preferred_rate: 8.0e-06
+  standard_plus_rate: 1.2e-05
+  standard_rate: 2.0e-05
+  substandard_rate: 3.5e-05
+  decline_rate: 6.0e-05
 
 default_loss_tier_bands:
   floor: 0.50

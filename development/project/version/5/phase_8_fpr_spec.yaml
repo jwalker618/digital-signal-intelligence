@@ -61,12 +61,15 @@ routing_field: fpr_segment
 default_risk_tier_bands:
   method: MULTIPLIER
   basis: limit
-  bands:
-    - {id: 1, label: PREFERRED, min: 800, max: 1000, action: APPROVE, applied: 0.005}
-    - {id: 2, label: STANDARD_PLUS, min: 650, max: 799, action: APPROVE, applied: 0.010}
-    - {id: 3, label: STANDARD, min: 450, max: 649, action: APPROVE, applied: 0.018}
-    - {id: 4, label: SUBSTANDARD, min: 250, max: 449, action: REFER, applied: 0.030}
-    - {id: 5, label: DECLINE, min: 0, max: 249, action: DECLINE, applied: 0.050}
+  preferred_min: 800
+  standard_plus_min: 650
+  standard_min: 450
+  substandard_min: 250
+  preferred_rate: 0.005
+  standard_plus_rate: 0.010
+  standard_rate: 0.018
+  substandard_rate: 0.030
+  decline_rate: 0.050
 
 default_loss_tier_bands:
   floor: 0.45

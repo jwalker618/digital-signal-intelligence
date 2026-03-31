@@ -53,12 +53,15 @@ routing_field: company_segment
 default_risk_tier_bands:
   method: MULTIPLIER
   basis: revenue
-  bands:
-    - {id: 1, label: PREFERRED, min: 800, max: 1000, action: APPROVE, applied: 4.0e-05}
-    - {id: 2, label: STANDARD_PLUS, min: 650, max: 799, action: APPROVE, applied: 6.0e-05}
-    - {id: 3, label: STANDARD, min: 450, max: 649, action: APPROVE, applied: 1.0e-04}
-    - {id: 4, label: SUBSTANDARD, min: 250, max: 449, action: REFER, applied: 1.8e-04}
-    - {id: 5, label: DECLINE, min: 0, max: 249, action: DECLINE, applied: 3.0e-04}
+  preferred_min: 800
+  standard_plus_min: 650
+  standard_min: 450
+  substandard_min: 250
+  preferred_rate: 4.0e-05
+  standard_plus_rate: 6.0e-05
+  standard_rate: 1.0e-04
+  substandard_rate: 1.8e-04
+  decline_rate: 3.0e-04
 
 default_loss_tier_bands:
   floor: 0.50
