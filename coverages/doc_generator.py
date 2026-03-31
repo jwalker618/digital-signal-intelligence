@@ -261,6 +261,9 @@ class DSIDocGenerator:
             'aerospace': 'aerospace',
             'energy': 'energy',
             'marine': 'marine',
+            'property': 'commercial_property',
+            'casualty': 'commercial_casualty',
+            'fpr': 'financial_political_risk',
         }
 
         generated = []

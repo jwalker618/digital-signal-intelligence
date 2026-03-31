@@ -1,5 +1,5 @@
 # DSI Logic Document: `ENERGY`
-*Generated: 2026-03-29*
+*Generated: 2026-03-31*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:

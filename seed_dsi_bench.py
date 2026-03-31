@@ -126,6 +126,9 @@ COVERAGE_DIR_MAP = {
     "marine": "marine",
     "professional_indemnity": "pi",
     "aerospace": "aerospace",
+    "commercial_property": "property",
+    "commercial_casualty": "casualty",
+    "financial_political_risk": "fpr",
 }
 
 # Production singletons — instantiated once, reused for all companies

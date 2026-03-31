@@ -274,7 +274,7 @@ digital-signal-intelligence/
 ├── signal_architecture/    # Signal processing (signals, discovery, orchestration, graph, multiplexer)
 ├── infrastructure/         # Support systems (api, db, analytics, builder, integrations)
 ├── layers/                 # Assessment layers (risk, exposure, loss)
-├── coverages/              # YAML coverage configurations (7 coverages)
+├── coverages/              # YAML coverage configurations (10 coverages)
 ├── tests/                  # Test suite (unit, integration, api, performance)
 ├── deploy/                 # Deployment configs (Docker, Kubernetes, monitoring)
 ├── demo/                   # Interactive demos and examples
