@@ -1,0 +1,1055 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — Phase 3: Marine Expansion
+# =============================================================================
+#
+# Machine-consumable spec for the CoverageExpansionGenerator.
+# EXPANSION of existing marine coverage (marine_general + marine_sme).
+#
+# Usage:
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/5/phase_3_marine_expansion_spec.yaml \
+#       --existing-config coverages/marine/config.yaml \
+#       --write
+#
+# Existing configs retained: marine_general (specificity 1), marine_sme (specificity 2)
+# Existing groups retained: operator_type, vessel_category, fleet_age_band,
+#                           flag_state_quality, trading_pattern
+# Existing signals: 50 (general) + 15 (sme) = 65
+#
+# =============================================================================
+
+coverage_line: marine
+coverage_key: marine
+phase: phase_3
+description: "Phase 3 Marine Coverage Expansion — 5 new specialist configurations"
+version: "2.3.0"
+
+# =============================================================================
+# DEFAULTS
+# =============================================================================
+
+default_product_types:
+  - hull_machinery
+  - total_loss
+  - increased_value
+  - loss_of_hire
+  - war_risks
+  - pi_liability
+  - cargo
+
+default_markets: [global]
+default_currency: USD
+default_min_premium: 50000
+
+default_minimum_viable_input:
+  - field: client_name
+    description: Client name
+  - field: product_type
+    description: "One of: hull_machinery, total_loss, increased_value, loss_of_hire, war_risks, pi_liability, cargo"
+  - field: limit
+    description: Requested limit in USD
+  - field: hull_value
+    description: Total hull value in USD
+  - field: tiv
+    description: Total insured value (hull + increased value + loss of hire)
+
+routing_field: operation_segment
+
+# =============================================================================
+# DEFAULT TIER BANDS
+# =============================================================================
+
+default_risk_tier_bands:
+  method: MULTIPLIER
+  basis: tiv
+  bands:
+    - {id: 1, label: PREFERRED, min: 800, max: 1000, action: APPROVE, applied: 0.0015}
+    - {id: 2, label: STANDARD_PLUS, min: 650, max: 799, action: APPROVE, applied: 0.0022}
+    - {id: 3, label: STANDARD, min: 450, max: 649, action: APPROVE, applied: 0.0035}
+    - {id: 4, label: SUBSTANDARD, min: 250, max: 449, action: REFER, applied: 0.0055}
+    - {id: 5, label: DECLINE, min: 0, max: 249, action: DECLINE, applied: 0.0080}
+
+default_loss_tier_bands:
+  floor: 0.50
+  cap: 1.8
+
+default_exposure_bands:
+  size_weight: 0.7
+  complexity_weight: 0.3
+  size_thresholds:
+    - {label: MICRO, max_value: 10000000, applied: 0.5}
+    - {label: SMALL, max_value: 50000000, applied: 0.75}
+    - {label: MEDIUM, max_value: 250000000, applied: 1.0}
+    - {label: LARGE, max_value: 1000000000, applied: 1.5}
+    - {label: VERY_LARGE, max_value: 5000000000, applied: 2.5}
+
+default_limit_configuration:
+  type: DECOUPLED
+  valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+  valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000, 2500000]
+
+# =============================================================================
+# DEFAULT PRICING — ILF Curves and Deductible Factors
+# =============================================================================
+#
+# Marine ILFs are moderate — between property (flat) and liability (steep).
+# Hull losses are bounded by vessel value; liability and cargo can exceed.
+# =============================================================================
+
+default_pricing:
+  base_limit_reference: 5000000
+  base_deductible_reference: 100000
+  taxes_fees_rate: 0.03
+  by_product_type:
+    - product_type: hull_machinery
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.6}
+          - {limit: 25000000, factor: 2.8}
+          - {limit: 50000000, factor: 4.2}
+          - {limit: 100000000, factor: 6.5}
+          - {limit: 250000000, factor: 11.0}
+          - {limit: 500000000, factor: 17.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.25}
+        - {deductible: 50000, factor: 1.12}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.85}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.62}
+        - {deductible: 2500000, factor: 0.52}
+
+    - product_type: cargo
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.5}
+          - {limit: 25000000, factor: 2.5}
+          - {limit: 50000000, factor: 3.8}
+          - {limit: 100000000, factor: 5.8}
+          - {limit: 250000000, factor: 10.0}
+          - {limit: 500000000, factor: 15.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.20}
+        - {deductible: 50000, factor: 1.10}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.85}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.62}
+        - {deductible: 2500000, factor: 0.52}
+
+    - product_type: pi_liability
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.7}
+          - {limit: 25000000, factor: 3.2}
+          - {limit: 50000000, factor: 5.0}
+          - {limit: 100000000, factor: 8.0}
+          - {limit: 250000000, factor: 14.0}
+          - {limit: 500000000, factor: 22.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.25}
+        - {deductible: 50000, factor: 1.12}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.85}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.62}
+        - {deductible: 2500000, factor: 0.52}
+
+    - product_type: war_risks
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.8}
+          - {limit: 25000000, factor: 3.5}
+          - {limit: 50000000, factor: 5.5}
+          - {limit: 100000000, factor: 9.0}
+          - {limit: 250000000, factor: 16.0}
+          - {limit: 500000000, factor: 25.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.25}
+        - {deductible: 50000, factor: 1.12}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.85}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.62}
+        - {deductible: 2500000, factor: 0.52}
+
+    - product_type: loss_of_hire
+      curve_type: standard
+      ilf_curve:
+        base_limit: 5000000
+        factors:
+          - {limit: 5000000, factor: 1.0}
+          - {limit: 10000000, factor: 1.55}
+          - {limit: 25000000, factor: 2.6}
+          - {limit: 50000000, factor: 4.0}
+          - {limit: 100000000, factor: 6.0}
+          - {limit: 250000000, factor: 10.5}
+          - {limit: 500000000, factor: 16.0}
+      deductible_factors:
+        - {deductible: 25000, factor: 1.25}
+        - {deductible: 50000, factor: 1.12}
+        - {deductible: 100000, factor: 1.0}
+        - {deductible: 250000, factor: 0.85}
+        - {deductible: 500000, factor: 0.72}
+        - {deductible: 1000000, factor: 0.62}
+        - {deductible: 2500000, factor: 0.52}
+
+# =============================================================================
+# NEW SIGNAL GROUPS
+# =============================================================================
+
+new_signal_groups:
+
+  # -------------------------------------------------------------------------
+  # GROUP 1: CARGO QUALITY
+  # -------------------------------------------------------------------------
+  # Specialist signals for cargo insurance — commodity type, packaging,
+  # transit mode, storage, and theft exposure. Cargo risk is fundamentally
+  # different from hull risk; loss drivers are goods-specific.
+  # -------------------------------------------------------------------------
+  - id: cargo_quality
+    label: Cargo Quality
+    description: "Cargo type, packaging, transit mode, storage conditions, and theft/pilferage exposure"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: cargo_commodity_class
+        name: Cargo Commodity Classification
+        description: "Commodity hazard class — from low (finished goods) to high (hazmat, perishable, livestock)"
+        group_id: cargo_quality
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.cargo_commodity_class
+        categories:
+          - {cat: LOW_HAZARD, label: Low Hazard (Finished Goods/Dry Cargo), applied: 0.80}
+          - {cat: MODERATE, label: Moderate (Machinery/Electronics/Vehicles), applied: 1.0}
+          - {cat: HIGH_VALUE, label: High Value (Pharmaceuticals/Fine Art/Bullion), applied: 1.30}
+          - {cat: PERISHABLE, label: Perishable (Reefer Cargo/Livestock), applied: 1.25}
+          - {cat: HAZMAT, label: Hazardous Materials (IMO Classes), applied: 1.50}
+          - {cat: PROJECT, label: Project Cargo (Oversized/Heavy Lift), applied: 1.35}
+
+      - id: packaging_quality
+        name: Packaging & Stowage Quality
+        description: "Container condition, packaging standards, stowage compliance with IMDG/CTU codes"
+        group_id: cargo_quality
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+
+      - id: transit_mode
+        name: Transit Mode Risk
+        description: "Primary transit mode — ocean, multimodal, inland waterway; transhipment count increases loss frequency"
+        group_id: cargo_quality
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.transit_mode
+        categories:
+          - {cat: OCEAN_DIRECT, label: Direct Ocean (Port-to-Port), applied: 0.85}
+          - {cat: OCEAN_TRANSHIP, label: Ocean with Transhipment, applied: 1.10}
+          - {cat: MULTIMODAL, label: Multimodal (Ocean + Land), applied: 1.15}
+          - {cat: INLAND, label: Inland Waterway Only, applied: 0.90}
+          - {cat: AIR_SEA, label: Air-Sea Combined, applied: 1.05}
+
+      - id: storage_exposure
+        name: Storage & Warehousing Exposure
+        description: "Duration and quality of intermediate storage; port congestion and dwell time"
+        group_id: cargo_quality
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+          exposure_size_weight: 0.10
+
+      - id: theft_pilferage_exposure
+        name: Theft & Pilferage Exposure
+        description: "Route-specific theft risk; high-value cargo attractiveness; security measures in transit"
+        group_id: cargo_quality
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: FLAG, note: "High theft/pilferage exposure route"}
+
+      - id: temperature_control
+        name: Temperature Control Adequacy
+        description: "Reefer container condition, cold chain integrity, monitoring systems for perishable/pharma cargo"
+        group_id: cargo_quality
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+
+  # -------------------------------------------------------------------------
+  # GROUP 2: TANKER RISK
+  # -------------------------------------------------------------------------
+  # Tanker-specific risk factors — pollution, vetting, double hull,
+  # cargo compatibility, tank cleaning. Tankers carry unique liability
+  # exposure from oil pollution and chemical spills.
+  # -------------------------------------------------------------------------
+  - id: tanker_risk
+    label: Tanker Risk
+    description: "Tanker-specific risk — vetting status, pollution exposure, cargo compatibility, hull construction"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: tanker_vetting_status
+        name: Tanker Vetting Status
+        description: "SIRE/CDI inspection results; oil major vetting approval status"
+        group_id: tanker_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "Failed or expired vetting"}
+            - {min: 31, max: 50, action: FLAG, note: "Vetting concerns — observations outstanding"}
+
+      - id: pollution_liability_exposure
+        name: Pollution Liability Exposure
+        description: "CLC/IOPC exposure; P&I club pollution cover adequacy; spill response capability"
+        group_id: tanker_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          loss_severity_weight: 0.30
+          exposure_size_weight: 0.20
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Severe pollution liability exposure"}
+
+      - id: double_hull_compliance
+        name: Double Hull Compliance
+        description: "MARPOL double-hull status; structural condition of hull; age of coating systems"
+        group_id: tanker_risk
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+
+      - id: cargo_compatibility
+        name: Cargo Compatibility & History
+        description: "Grade-specific tank cleaning compliance; cargo contamination claim history"
+        group_id: tanker_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+
+      - id: sts_operations
+        name: Ship-to-Ship Transfer Operations
+        description: "Frequency and quality of STS operations; compliance with OCIMF guidelines"
+        group_id: tanker_risk
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.10
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.10
+          score_conditions:
+            - {min: 0, max: 35, action: FLAG, note: "STS operations with compliance concerns"}
+
+  # -------------------------------------------------------------------------
+  # GROUP 3: OFFSHORE MARINE
+  # -------------------------------------------------------------------------
+  # Specialist signals for offshore marine units — FPSOs, jack-ups,
+  # semi-submersibles, offshore construction vessels. Different risk
+  # profile from trading vessels — stationary or semi-stationary,
+  # high-value, complex operations.
+  # -------------------------------------------------------------------------
+  - id: offshore_marine
+    label: Offshore Marine
+    description: "Offshore unit risk — FPSO, jack-up, semi-sub, construction vessel, mooring integrity"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: unit_type
+        name: Offshore Unit Type
+        description: "Classification of offshore unit — FPSO, jack-up, semi-sub, drill ship, OSV, construction"
+        group_id: offshore_marine
+        signal_type: categorical
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        category_source: metadata.offshore_unit_type
+        categories:
+          - {cat: FPSO, label: FPSO/FSO, applied: 1.20}
+          - {cat: JACKUP, label: Jack-Up Rig, applied: 1.10}
+          - {cat: SEMI_SUB, label: Semi-Submersible, applied: 1.25}
+          - {cat: DRILL_SHIP, label: Drill Ship, applied: 1.15}
+          - {cat: OSV, label: Offshore Supply Vessel, applied: 0.90}
+          - {cat: CONSTRUCTION, label: Construction/Pipe-Lay Vessel, applied: 1.30}
+          - {cat: WIND_INSTALLATION, label: Wind Turbine Installation Vessel, applied: 1.15}
+
+      - id: mooring_integrity
+        name: Mooring System Integrity
+        description: "Mooring system age, inspection compliance, chain/anchor condition for stationary units"
+        group_id: offshore_marine
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.20
+
+      - id: dp_system_reliability
+        name: Dynamic Positioning Reliability
+        description: "DP class, redundancy level, incident history, annual DP trials compliance"
+        group_id: offshore_marine
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 4, note: "DP system reliability concerns"}
+
+      - id: metocean_exposure
+        name: Metocean Exposure
+        description: "Operating location weather severity — wave height, wind speed, current, ice exposure"
+        group_id: offshore_marine
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          loss_frequency_weight: 0.15
+          loss_severity_weight: 0.15
+          exposure_size_weight: 0.15
+
+      - id: offshore_class_compliance
+        name: Offshore Classification Compliance
+        description: "Class society survey status; special survey compliance; conditions of class outstanding"
+        group_id: offshore_marine
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "Class conditions outstanding"}
+
+  # -------------------------------------------------------------------------
+  # GROUP 4: PORT STATE & REGULATORY COMPLIANCE
+  # -------------------------------------------------------------------------
+  # Expanded regulatory compliance signals beyond the existing
+  # flag_state_quality group. Covers port state control, ISM/ISPS
+  # audit quality, and sanctions screening depth.
+  # -------------------------------------------------------------------------
+  - id: port_state_compliance
+    label: Port State & Regulatory Compliance
+    description: "PSC detention history, ISM/ISPS audit quality, sanctions screening, class survey status"
+    group_type: three_layer_assessment
+
+    signals:
+      - id: psc_detention_rate
+        name: PSC Detention Rate
+        description: "Port state control detention frequency relative to fleet size; deficiency categories"
+        group_id: port_state_compliance
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.20
+          loss_severity_weight: 0.10
+          score_conditions:
+            - {min: 0, max: 25, action: REFER, override: 4, note: "High PSC detention rate"}
+            - {min: 26, max: 45, action: FLAG, note: "Elevated PSC deficiencies"}
+
+      - id: ism_audit_quality
+        name: ISM Audit Quality
+        description: "ISM Code Document of Compliance status; major non-conformities; audit frequency"
+        group_id: port_state_compliance
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.25
+          risk_direction: positive
+          loss_frequency_weight: 0.15
+
+      - id: isps_compliance
+        name: ISPS Compliance
+        description: "International Ship and Port Facility Security code compliance; security plan quality"
+        group_id: port_state_compliance
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+
+      - id: sanctions_screening_depth
+        name: Sanctions Screening Depth
+        description: "Thoroughness of sanctions and restricted party screening across charterers, cargo owners, ports"
+        group_id: port_state_compliance
+        signal_type: three_layer
+        proxy_tier: INFERRED_PROXY
+        ttl: WEEKLY
+        three_layer:
+          risk_weight: 0.20
+          risk_direction: positive
+          loss_severity_weight: 0.15
+          score_conditions:
+            - {min: 0, max: 30, action: REFER, override: 5, note: "Inadequate sanctions screening"}
+
+      - id: class_survey_currency
+        name: Classification Survey Currency
+        description: "Currency of class surveys — annual, intermediate, special; overdue survey flags"
+        group_id: port_state_compliance
+        signal_type: three_layer
+        proxy_tier: DIRECT_OBSERVABLE
+        ttl: MONTHLY
+        three_layer:
+          risk_weight: 0.15
+          risk_direction: positive
+          loss_frequency_weight: 0.10
+
+# =============================================================================
+# CONFIGURATIONS
+# =============================================================================
+
+configurations:
+
+  # =========================================================================
+  # 1. MARINE CARGO
+  # =========================================================================
+  # Specialist cargo insurance model. Routes on cargo product type.
+  # Different loss drivers from hull — commodity, packaging, theft,
+  # temperature control, transit mode. TIV is shipment value.
+  # =========================================================================
+  - id: marine_cargo
+    name: DSI Marine Cargo Specialist Model
+    description: "Marine cargo insurance — commodity-specific, transit risk, storage exposure"
+    model_specificity: 3
+    min_premium: 25000
+
+    product_types:
+      - cargo
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: cargo, required_in_input: true}
+      - {field: tiv, operator: ">=", value: 5000000, required_in_input: true}
+
+    direct_queries:
+      - id: prior_cargo_claims
+        question: Any cargo claims exceeding $500K in the past 3 years?
+        conditions: [{action: REFER, override: 4, note: "Large prior cargo claims"}]
+      - id: hazmat_cargo
+        question: Does this shipment include IMO-classified hazardous materials?
+        conditions: [{action: REFER, override: 3, note: "Hazardous cargo — specialist review"}]
+      - id: open_cover
+        question: Is this an open cover (blanket) declaration or a specific voyage policy?
+        conditions: [{action: FLAG, note: "Open cover — accumulation monitoring required"}]
+      - id: war_zone_transit
+        question: Does the transit route pass through any Joint War Committee listed areas?
+        conditions: [{action: REFER, override: 4, note: "JWC listed area transit"}]
+      - id: refrigerated_cargo
+        question: Is the cargo temperature-controlled (reefer)?
+        conditions: [{action: FLAG, note: "Reefer cargo — cold chain exposure"}]
+
+    category_groups: [cargo_commodity_class, transit_mode, operator_type]
+
+    group_weights:
+      - {group_id: cargo_quality, risk_weight: 0.35, loss_weight: 0.35, exposure_weight: 0.30}
+      - {group_id: port_state_compliance, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: trading_pattern, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.20}
+      - {group_id: fleet_age_band, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: flag_state_quality, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: tiv
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0018
+      standard_rate: 0.0030
+      substandard_rate: 0.0050
+      decline_rate: 0.0075
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 2000000, 5000000, 10000000, 25000000, 50000000, 100000000, 250000000]
+      valid_deductibles: [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 50000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: cargo
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 1000000, factor: 0.45}
+              - {limit: 2000000, factor: 0.70}
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.5}
+              - {limit: 25000000, factor: 2.5}
+              - {limit: 50000000, factor: 3.8}
+              - {limit: 100000000, factor: 5.8}
+              - {limit: 250000000, factor: 10.0}
+          deductible_factors:
+            - {deductible: 10000, factor: 1.20}
+            - {deductible: 25000, factor: 1.10}
+            - {deductible: 50000, factor: 1.0}
+            - {deductible: 100000, factor: 0.88}
+            - {deductible: 250000, factor: 0.75}
+            - {deductible: 500000, factor: 0.65}
+            - {deductible: 1000000, factor: 0.55}
+
+  # =========================================================================
+  # 2. MARINE TANKER
+  # =========================================================================
+  # Specialist model for tanker fleets — crude, product, chemical,
+  # LNG/LPG. Unique pollution liability, vetting requirements, and
+  # regulatory burden. Hull value basis.
+  # =========================================================================
+  - id: marine_tanker
+    name: DSI Marine Tanker Specialist Model
+    description: "Tanker fleet hull & liability — crude, product, chemical, gas carriers"
+    model_specificity: 4
+    min_premium: 100000
+
+    routing_constraints:
+      - {field: operation_segment, operator: "==", value: TANKER, required_in_input: true}
+      - {field: hull_value, operator: ">=", value: 50000000, required_in_input: true}
+
+    direct_queries:
+      - id: vetting_rejections
+        question: Has any vessel been rejected by an oil major vetting programme in the past 24 months?
+        conditions: [{action: REFER, override: 4, note: "Oil major vetting rejection"}]
+      - id: pollution_incident
+        question: Any oil/chemical pollution incidents in the past 5 years?
+        conditions: [{action: REFER, override: 5, note: "Prior pollution incident"}]
+      - id: psc_detentions
+        question: Any vessels detained by port state control in past 36 months?
+        conditions: [{action: REFER, override: 3, note: "PSC detentions in past 36 months"}]
+      - id: sanctioned_trade
+        question: Any vessels currently or recently trading to sanctioned regions?
+        conditions: [{action: REFER, override: 5, note: "Sanctioned region trading"}]
+      - id: sts_operations_query
+        question: Does the fleet conduct ship-to-ship transfer operations?
+        conditions: [{action: FLAG, note: "STS operations — pollution exposure"}]
+      - id: single_hull
+        question: Are any vessels in the fleet single-hull construction?
+        conditions: [{action: REFER, override: 5, note: "Single hull tanker — regulatory non-compliance"}]
+
+    category_groups: [operator_type, vessel_category]
+
+    group_weights:
+      - {group_id: tanker_risk, risk_weight: 0.30, loss_weight: 0.30, exposure_weight: 0.25}
+      - {group_id: port_state_compliance, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: fleet_age_band, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: flag_state_quality, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: trading_pattern, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: firm_stability, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.0018
+      standard_plus_rate: 0.0028
+      standard_rate: 0.0042
+      substandard_rate: 0.0065
+      decline_rate: 0.0095
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [100000, 250000, 500000, 1000000, 2500000, 5000000]
+
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 250000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: hull_machinery
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.8}
+              - {limit: 50000000, factor: 2.8}
+              - {limit: 100000000, factor: 4.5}
+              - {limit: 250000000, factor: 8.0}
+              - {limit: 500000000, factor: 13.0}
+          deductible_factors:
+            - {deductible: 100000, factor: 1.20}
+            - {deductible: 250000, factor: 1.0}
+            - {deductible: 500000, factor: 0.85}
+            - {deductible: 1000000, factor: 0.72}
+            - {deductible: 2500000, factor: 0.60}
+            - {deductible: 5000000, factor: 0.50}
+        - product_type: pi_liability
+          ilf_curve:
+            base_limit: 10000000
+            factors:
+              - {limit: 10000000, factor: 1.0}
+              - {limit: 25000000, factor: 1.9}
+              - {limit: 50000000, factor: 3.2}
+              - {limit: 100000000, factor: 5.5}
+              - {limit: 250000000, factor: 10.0}
+              - {limit: 500000000, factor: 17.0}
+          deductible_factors:
+            - {deductible: 100000, factor: 1.20}
+            - {deductible: 250000, factor: 1.0}
+            - {deductible: 500000, factor: 0.85}
+            - {deductible: 1000000, factor: 0.72}
+            - {deductible: 2500000, factor: 0.60}
+            - {deductible: 5000000, factor: 0.50}
+
+  # =========================================================================
+  # 3. MARINE OFFSHORE
+  # =========================================================================
+  # Specialist model for offshore marine units — FPSOs, rigs, OSVs,
+  # construction vessels. High-value, complex operations, stationary
+  # or semi-stationary. Uses hull_value as basis.
+  # =========================================================================
+  - id: marine_offshore
+    name: DSI Marine Offshore Specialist Model
+    description: "Offshore marine units — FPSOs, rigs, OSVs, construction vessels, wind installation"
+    model_specificity: 4
+    min_premium: 150000
+
+    routing_constraints:
+      - {field: operation_segment, operator: "==", value: OFFSHORE, required_in_input: true}
+      - {field: hull_value, operator: ">=", value: 50000000, required_in_input: true}
+
+    direct_queries:
+      - id: total_loss_history
+        question: Has this unit or a sister unit suffered a total loss or constructive total loss?
+        conditions: [{action: REFER, override: 5, note: "Unit or sister total loss history"}]
+      - id: mooring_failure
+        question: Has the unit experienced a mooring failure or DP incident in the past 5 years?
+        conditions: [{action: REFER, override: 4, note: "Prior mooring/DP failure"}]
+      - id: lay_up_status
+        question: Is the unit currently in warm or cold lay-up?
+        conditions: [{action: FLAG, note: "Lay-up status — reduced maintenance risk"}]
+      - id: deepwater_operations
+        question: Does the unit operate in water depths exceeding 1500 metres?
+        conditions: [{action: FLAG, note: "Deepwater operations — higher severity potential"}]
+      - id: harsh_environment
+        question: Does the unit operate in harsh environment zones (North Sea, Norwegian Sea, sub-Arctic)?
+        conditions: [{action: MODIFIER, applied: 1.15, note: "Harsh environment loading"}]
+
+    category_groups: [unit_type, operator_type]
+
+    group_weights:
+      - {group_id: offshore_marine, risk_weight: 0.35, loss_weight: 0.30, exposure_weight: 0.30}
+      - {group_id: port_state_compliance, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: fleet_age_band, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: flag_state_quality, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: trading_pattern, risk_weight: 0.05, loss_weight: 0.10, exposure_weight: 0.10}
+      - {group_id: corporate_footprint, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: firm_stability, risk_weight: 0.05, loss_weight: 0.05, exposure_weight: 0.10}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.0020
+      standard_plus_rate: 0.0035
+      standard_rate: 0.0055
+      substandard_rate: 0.0080
+      decline_rate: 0.0120
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [250000, 500000, 1000000, 2500000, 5000000]
+
+    pricing:
+      base_limit_reference: 25000000
+      base_deductible_reference: 500000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: hull_machinery
+          ilf_curve:
+            base_limit: 25000000
+            factors:
+              - {limit: 25000000, factor: 1.0}
+              - {limit: 50000000, factor: 1.6}
+              - {limit: 100000000, factor: 2.6}
+              - {limit: 250000000, factor: 4.8}
+              - {limit: 500000000, factor: 7.5}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.85}
+            - {deductible: 2500000, factor: 0.72}
+            - {deductible: 5000000, factor: 0.60}
+        - product_type: loss_of_hire
+          ilf_curve:
+            base_limit: 25000000
+            factors:
+              - {limit: 25000000, factor: 1.0}
+              - {limit: 50000000, factor: 1.7}
+              - {limit: 100000000, factor: 2.8}
+              - {limit: 250000000, factor: 5.2}
+              - {limit: 500000000, factor: 8.5}
+          deductible_factors:
+            - {deductible: 250000, factor: 1.15}
+            - {deductible: 500000, factor: 1.0}
+            - {deductible: 1000000, factor: 0.85}
+            - {deductible: 2500000, factor: 0.72}
+            - {deductible: 5000000, factor: 0.60}
+
+  # =========================================================================
+  # 4. MARINE WAR RISK
+  # =========================================================================
+  # Specialist war risk model. War risk pricing is volatile and
+  # geopolitically driven. Separate from standard hull because
+  # loss triggers and accumulation patterns are fundamentally different.
+  # =========================================================================
+  - id: marine_war_risk
+    name: DSI Marine War Risk Specialist Model
+    description: "Marine war risk — hull war, strikes, piracy, confiscation, terrorism"
+    model_specificity: 3
+    min_premium: 25000
+
+    product_types:
+      - war_risks
+
+    routing_constraints:
+      - {field: product_type, operator: "==", value: war_risks, required_in_input: true}
+
+    direct_queries:
+      - id: jwc_listed_area
+        question: Does the vessel currently trade to or transit Joint War Committee listed areas?
+        conditions: [{action: REFER, override: 3, note: "JWC listed area trading — additional premium required"}]
+      - id: piracy_exposure
+        question: Does the trading pattern include high-piracy-risk areas (Gulf of Aden, Gulf of Guinea, Strait of Malacca)?
+        conditions: [{action: FLAG, note: "Piracy exposure zones"}]
+      - id: sanctions_proximity
+        question: Does the vessel trade to ports adjacent to sanctioned territories?
+        conditions: [{action: REFER, override: 5, note: "Sanctions proximity — compliance review"}]
+      - id: armed_guards
+        question: Does the vessel employ armed security personnel in high-risk areas?
+        conditions: [{action: MODIFIER, applied: 0.85, note: "Armed security credit"}]
+      - id: flag_state_war_risk
+        question: Is the vessel flagged in a state that is a party to an active armed conflict?
+        conditions: [{action: REFER, override: 5, note: "Conflict-state flag"}]
+
+    category_groups: [operator_type, vessel_category]
+
+    group_weights:
+      - {group_id: trading_pattern, risk_weight: 0.35, loss_weight: 0.30, exposure_weight: 0.30}
+      - {group_id: port_state_compliance, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: flag_state_quality, risk_weight: 0.20, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: fleet_age_band, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.0005
+      standard_plus_rate: 0.0012
+      standard_rate: 0.0025
+      substandard_rate: 0.0050
+      decline_rate: 0.0080
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [5000000, 10000000, 25000000, 50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000, 1000000]
+
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: war_risks
+          ilf_curve:
+            base_limit: 5000000
+            factors:
+              - {limit: 5000000, factor: 1.0}
+              - {limit: 10000000, factor: 1.8}
+              - {limit: 25000000, factor: 3.5}
+              - {limit: 50000000, factor: 5.5}
+              - {limit: 100000000, factor: 9.0}
+              - {limit: 250000000, factor: 16.0}
+              - {limit: 500000000, factor: 25.0}
+          deductible_factors:
+            - {deductible: 25000, factor: 1.25}
+            - {deductible: 50000, factor: 1.12}
+            - {deductible: 100000, factor: 1.0}
+            - {deductible: 250000, factor: 0.85}
+            - {deductible: 500000, factor: 0.72}
+            - {deductible: 1000000, factor: 0.62}
+
+  # =========================================================================
+  # 5. MARINE HIGH VALUE FLEET
+  # =========================================================================
+  # Specialist model for premium fleet operators — modern vessels,
+  # top-tier classification, major liner/tanker operators with
+  # hull values >$250M per vessel or fleet values >$1B.
+  # =========================================================================
+  - id: marine_high_value
+    name: DSI Marine High Value Fleet Model
+    description: "High-value fleet hull & liability — modern tonnage, top-tier operators, fleet value >$1B"
+    model_specificity: 4
+    min_premium: 250000
+
+    routing_constraints:
+      - {field: hull_value, operator: ">=", value: 250000000, required_in_input: true}
+
+    direct_queries:
+      - id: total_loss_history
+        question: Any total losses in the fleet in the past 10 years?
+        conditions: [{action: REFER, override: 4, note: "Fleet total loss history"}]
+      - id: fleet_age
+        question: Is the average fleet age under 10 years?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Young fleet credit"}]
+      - id: classification_society
+        question: Are all vessels classed with IACS member societies?
+        conditions: [{action: MODIFIER, applied: 0.92, note: "IACS classification credit"}]
+      - id: fleet_management
+        question: Is the fleet entirely self-managed (not third-party technical management)?
+        conditions: [{action: MODIFIER, applied: 0.95, note: "Self-managed fleet credit"}]
+      - id: psc_clean_record
+        question: Is the fleet PSC detention-free for the past 36 months?
+        conditions: [{action: MODIFIER, applied: 0.90, note: "Clean PSC record credit"}]
+
+    category_groups: [operator_type, vessel_category]
+
+    group_weights:
+      - {group_id: port_state_compliance, risk_weight: 0.25, loss_weight: 0.20, exposure_weight: 0.15}
+      - {group_id: fleet_age_band, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.20}
+      - {group_id: flag_state_quality, risk_weight: 0.15, loss_weight: 0.15, exposure_weight: 0.10}
+      - {group_id: trading_pattern, risk_weight: 0.10, loss_weight: 0.15, exposure_weight: 0.15}
+      - {group_id: corporate_footprint, risk_weight: 0.20, loss_weight: 0.20, exposure_weight: 0.25}
+      - {group_id: firm_stability, risk_weight: 0.10, loss_weight: 0.10, exposure_weight: 0.15}
+
+    risk_tier_bands:
+      method: MULTIPLIER
+      basis: hull_value
+      preferred_rate: 0.0010
+      standard_plus_rate: 0.0018
+      standard_rate: 0.0028
+      substandard_rate: 0.0045
+      decline_rate: 0.0070
+
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [50000000, 100000000, 250000000, 500000000]
+      valid_deductibles: [500000, 1000000, 2500000, 5000000]
+
+    pricing:
+      base_limit_reference: 50000000
+      base_deductible_reference: 1000000
+      taxes_fees_rate: 0.03
+      by_product_type:
+        - product_type: hull_machinery
+          ilf_curve:
+            base_limit: 50000000
+            factors:
+              - {limit: 50000000, factor: 1.0}
+              - {limit: 100000000, factor: 1.6}
+              - {limit: 250000000, factor: 3.0}
+              - {limit: 500000000, factor: 5.0}
+          deductible_factors:
+            - {deductible: 500000, factor: 1.12}
+            - {deductible: 1000000, factor: 1.0}
+            - {deductible: 2500000, factor: 0.82}
+            - {deductible: 5000000, factor: 0.68}
+        - product_type: loss_of_hire
+          ilf_curve:
+            base_limit: 50000000
+            factors:
+              - {limit: 50000000, factor: 1.0}
+              - {limit: 100000000, factor: 1.7}
+              - {limit: 250000000, factor: 3.2}
+              - {limit: 500000000, factor: 5.5}
+          deductible_factors:
+            - {deductible: 500000, factor: 1.12}
+            - {deductible: 1000000, factor: 1.0}
+            - {deductible: 2500000, factor: 0.82}
+            - {deductible: 5000000, factor: 0.68}
+
+# =============================================================================
+# EXPANSION NOTES
+# =============================================================================
+#
+# This is an EXPANSION of existing marine coverage. No new infrastructure
+# touchpoints required — the coverages/marine/ directory and signal
+# registry entries already exist.
+#
+# Changes to existing infrastructure:
+# 1. signal_architecture/signals/inference/metadata_registry.py:
+#    - Add 22 new signals to _MARINE_SIGNALS list
+#    - New group IDs: cargo_quality, tanker_risk, offshore_marine, port_state_compliance
+#
+# 2. seed_dsi_bench.py:
+#    - Update docstring to list new config IDs
+#    - Existing marine entity mapping (syndicate_example) is sufficient
+#
+# Signal summary:
+#   - 4 new groups: cargo_quality (6 signals), tanker_risk (5 signals),
+#     offshore_marine (5 signals), port_state_compliance (5 signals)
+#   - 22 new signals (4 categorical, 18 three-layer)
+#   - 5 existing groups reused: operator_type, vessel_category,
+#     fleet_age_band, flag_state_quality, trading_pattern
+#
+# Configuration summary (5 new, added to existing 2):
+#   - marine_cargo       (specificity 3, cargo product only)
+#   - marine_tanker      (specificity 4, TANKER segment, hull_value >$50M)
+#   - marine_offshore    (specificity 4, OFFSHORE segment, hull_value >$50M)
+#   - marine_war_risk    (specificity 3, war_risks product only)
+#   - marine_high_value  (specificity 4, hull_value >$250M)
+#
+# Total marine configs after expansion: 7 (general, sme + 5 new)
+# =============================================================================
