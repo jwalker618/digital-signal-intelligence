@@ -6,14 +6,20 @@ import Modal from "@/components/Modal";
 import {
   User, Search, MessageSquare, Plus, Paperclip,
   ShieldCheck, ShieldAlert, AlertTriangle, Layers, Target,
-  Building2, Shield
+  Building2, Shield, ShieldX, ShieldQuestionMark,
 } from "lucide-react";
 import { formatNum, formatDollar } from "@/lib/format";
 
-const DECISION_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  approve: { bg: 'bg-dsi-positive/10', text: 'text-dsi-positive', border: 'border-dsi-positive/30' },
-  refer: { bg: 'bg-dsi-warning/10', text: 'text-dsi-warning', border: 'border-dsi-warning/30' },
-  decline: { bg: 'bg-dsi-negative/10', text: 'text-dsi-negative', border: 'border-dsi-negative/30' },
+const DECISION_STYLE: Record<string, { bg: string; }> = {
+  approve: { 
+    bg: 'bg-dsi-approve', 
+    },
+  refer: { 
+    bg: 'bg-dsi-refer', 
+    },
+  decline: { 
+    bg: 'bg-dsi-decline', 
+    },
 };
 
 export default function SummaryTab() {
@@ -49,7 +55,7 @@ export default function SummaryTab() {
   };
 
   const decision = (activeVersion.decision || 'unknown').toLowerCase();
-  const dStyle = DECISION_STYLE[decision] || { bg: 'bg-dsi-muted/10', text: 'text-dsi-muted', border: 'border-dsi-muted/30' };
+  const dStyle = DECISION_STYLE[decision] || { bg: 'bg-dsi-muted', border: 'border-dsi-muted' };
   const notes = activeVersion.notes || [];
 
   return (
@@ -58,15 +64,19 @@ export default function SummaryTab() {
       {/* ═══════════════════════════════════════════════════════════════════
           DECISION BANNER — incorporates status, dates, policy info
           ═══════════════════════════════════════════════════════════════════ */}
-      <div className={`rounded-xl border-2 ${dStyle.border} ${dStyle.bg} px-dsi-pad py-4 mb-4`}>
+      <div className={`rounded-xl border-b-3 border-dsi-contrast-background ${dStyle.bg} shadow-sm px-dsi-pad py-4 mb-4`}>
         {/* Top row: Decision + status context */}
+        
         <div className="flex items-center justify-between mb-3 pb-3 border-b border-dsi-outline/10">
+          
           <div className="flex items-center gap-4">
-            {decision === 'approve' ? <ShieldCheck className={`w-10 h-10 ${dStyle.text}`} /> :
-             decision === 'refer' ? <ShieldAlert className={`w-10 h-10 ${dStyle.text}`} /> :
-             <AlertTriangle className={`w-10 h-10 ${dStyle.text}`} />}
+            {decision === 'approve' ? 
+              <ShieldCheck className={`w-10 h-10 text-dsi-selected`} /> :
+             decision === 'refer' ? 
+              <ShieldQuestionMark className={`w-10 h-10 text-dsi-selected`} /> :
+              <ShieldX className={`w-10 h-10 text-dsi-selected`} />}
             <div>
-              <span className={`text-2xl font-black uppercase tracking-wider ${dStyle.text}`}>
+              <span className={`text-2xl font-bold uppercase tracking-wider text-dsi-selected`}>
                 {activeVersion.decision || 'Pending'}
               </span>
               {activeVersion.auto_approve && (
@@ -74,6 +84,7 @@ export default function SummaryTab() {
               )}
             </div>
           </div>
+          
           <div className="flex items-center gap-6 text-sm whitespace-nowrap">
             <div>
               <span className="opacity-50 text-xs block">Status</span>
@@ -104,37 +115,66 @@ export default function SummaryTab() {
               </>
             )}
           </div>
-        </div>
 
-        {/* Bottom row: Hero numbers */}
-        <div className="flex items-center gap-8">
-          <div>
-            <span className="block text-[10px] uppercase tracking-wider opacity-50">Final Tier</span>
-            <span className="text-2xl font-black text-dsi-selected">Tier {activeVersion.final_tier}</span>
-            <span className="block text-[10px] opacity-40 uppercase">{activeVersion.tier_label}</span>
-          </div>
-          <div className="w-px h-10 bg-dsi-outline/20" />
-          <div>
-            <span className="block text-[10px] uppercase tracking-wider opacity-50">Composite Score</span>
-            <span className="text-2xl font-black text-dsi-selected">{activeVersion.pure_composite_score?.toFixed(1) || "N/A"}</span>
-            <span className="block text-[10px] opacity-40">{((activeVersion.confidence || 0) * 100).toFixed(0)}% confidence</span>
-          </div>
-          <div className="w-px h-10 bg-dsi-outline/20" />
-          <div>
-            <span className="block text-[10px] uppercase tracking-wider opacity-50">Final Premium</span>
-            <span className="text-2xl font-black text-dsi-selected">
-              {activeVersion.final_premium ? `$${activeVersion.final_premium.toLocaleString()}` :
-               activeVersion.premium_after_modifiers ? `$${activeVersion.premium_after_modifiers.toLocaleString()}` : 'Pending'}
-            </span>
-          </div>
-          <div className="w-px h-10 bg-dsi-outline/20" />
-          <div>
-            <span className="block text-[10px] uppercase tracking-wider opacity-50">Recommended Limit</span>
-            <span className="text-2xl font-black text-dsi-selected">
-              {activeQuote?.recommended_limit ? `$${activeQuote.recommended_limit.toLocaleString()}` : 'N/A'}
-            </span>
-          </div>
         </div>
+        
+        {/* Bottom row: Hero numbers */}
+        <div className="grid grid-cols-6">
+
+          {/* row 1 */}
+          <div className="
+            overflow-x-hidden whitespace-nowrap border-collapse
+            flex gap-dsi-pad text-sm"
+            >Final Composite Score
+          </div>
+          <div className="
+            overflow-x-hidden whitespace-nowrap border-collapse
+            flex gap-dsi-pad text-sm 
+            border-r-1 border-dsi-outline/50"
+            >Final Tier
+          </div>
+          <div className="
+            overflow-x-hidden whitespace-nowrap border-collapse
+            flex gap-dsi-pad text-sm 
+            border-r-1 border-dsi-outline/50"
+            >Currency
+          </div>
+          <div className="
+            overflow-x-hidden whitespace-nowrap border-collapse
+            flex gap-dsi-pad text-sm 
+            border-r-1 border-dsi-outline/50"
+            >Recommended Technical Premium
+          </div>
+          <div className="
+            overflow-x-hidden whitespace-nowrap border-collapse
+            flex gap-dsi-pad text-sm 
+            border-r-1 border-dsi-outline/50"
+            >Recommened Techncial Limit
+          </div>
+          <div className="
+            overflow-x-hidden whitespace-nowrap border-collapse
+            flex gap-dsi-pad text-sm 
+            border-r-1 border-dsi-outline/50"
+            >Gross Premium
+          </div>
+
+          <div className="text-2xl font-bold text-dsi-selected">{activeVersion.final_composite_score?.toFixed(1) || "N/A"}</div>
+          <div className="text-2xl font-bold text-dsi-selected uppercase">T{activeVersion.final_tier} ({activeVersion.tier_label})</div>
+          <div className="text-2xl font-bold text-dsi-selected">
+            1
+            </div>
+          <div className="text-2xl font-bold text-dsi-selected">
+              {activeVersion.final_premium ? `${activeVersion.final_premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}`: 0}
+            </div>
+          <div className="text-2xl font-bold text-dsi-selected">
+              {activeQuote?.recommended_limit ? `${activeQuote.recommended_limit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : 0}
+            </div>
+          <div className="text-2xl font-bold text-dsi-selected">
+              {commercialTerms?.gross_premium ? `${commercialTerms.gross_premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : 0}
+            </div>
+
+        </div>          
+
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
@@ -390,3 +430,5 @@ export default function SummaryTab() {
     </div>
   );
 }
+
+

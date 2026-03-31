@@ -5,7 +5,8 @@ import { IBM_Plex_Sans, Inter } from "next/font/google";
 import {
   PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine, MoreVertical,
   Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt, FlaskConical, Orbit,
-  Building2, FileText, Network, Layers, FileCheck, Clock, RefreshCw, LayoutDashboard, ChevronDown, ChevronRight
+  Building2, FileText, Network, Layers, FileCheck, Clock, RefreshCw, LayoutDashboard, ChevronDown, ChevronRight,
+  BookKey, Scale,
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
@@ -149,7 +150,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                                 : "text-dsi-background hover:text-dsi-selected"
                             }`}
                           >
-                            <LayoutDashboard className="icon shrink-0" />
+                            <BookKey className="icon shrink-0" />
                             <span className="truncate font-semibold tracking-wider normal-case">Summary</span>
                           </button>
                         </li>
@@ -157,7 +158,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         {/* GROUPED CATEGORIES */}
                         {[
                           {
-                            category: "Commercial",
+                            category: "Commercial Terms",
                             icon: Building2,
                             tabs: [
                               { name: "Terms Overview", icon: FileText },
@@ -166,8 +167,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                             ],
                           },
                           {
-                            category: "Risk",
-                            icon: Shield,
+                            category: "Risk Terms",
+                            icon: Scale,
                             tabs: [
                               { name: "Deductible Structure", icon: Layers },
                               { name: "Coverage Terms", icon: FileCheck },
@@ -176,7 +177,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                             ],
                           },
                           {
-                            category: "Technical",
+                            category: "Technical Assessment",
                             icon: ChartNoAxesGantt,
                             tabs: [
                               { name: "Pricing Anatomy", icon: Calculator },

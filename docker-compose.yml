@@ -23,8 +23,10 @@ services:
       - DATABASE_URL=postgresql+asyncpg://dsi_user:dsi_password@postgres:5432/dsi_db
       - REDIS_URL=redis://redis:6379/0
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - dsi-network
     command: uvicorn infrastructure.api.main:app --host 0.0.0.0 --port 8000 --reload
@@ -34,9 +36,9 @@ services:
     image: postgres:15-alpine
     container_name: dsi-postgres
     environment:
-      - POSTGRES_USER=dsi_user
-      - POSTGRES_PASSWORD=dsi_password
-      - POSTGRES_DB=dsi_db
+      POSTGRES_USER: dsi_user
+      POSTGRES_PASSWORD: dsi_password
+      POSTGRES_DB: dsi_db
     ports:
       - "5432:5432"
     volumes:
@@ -44,6 +46,11 @@ services:
     networks:
       - dsi-network
     restart: unless-stopped
+    healthcheck:
+      test:  ["CMD-SHELL", "pg_isready -U dsi_user -d dsi_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
 
   # Redis Cache
   redis:

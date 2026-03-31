@@ -116,8 +116,8 @@ export default function RiskTab() {
 
   // Tier improvement paths
   const tierBands = activeVersion?.tier_band_interpretation?.tiers || [];
-  const currentTier = activeVersion?.score_based_tier || activeVersion?.final_tier;
-  const currentScore = activeVersion?.pure_composite_score || 0;
+  const currentTier = activeVersion?.final_tier || activeVersion?.score_based_tier;
+  const currentScore = activeVersion?.final_composite_score || 0;
 
   const improvementPaths = useMemo(() => {
     if (!currentTier || currentTier <= 1 || tierBands.length === 0) return [];
@@ -202,7 +202,7 @@ export default function RiskTab() {
           <Glasses className="icon"/><span className="text-sm">Results</span>
         </div>
         <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 pl-dsi-pad pr-dsi-pad">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pl-dsi-pad pr-dsi-pad">
             
             <div>
               <span className="block text-sm mb-1">Pure Composite Score</span>
@@ -222,6 +222,11 @@ export default function RiskTab() {
             <div>
               <span className="block text-sm mb-1">Pure Score-Based Tier</span>
               <span className="font-bold text-lg">T{activeVersion.score_based_tier}</span>
+            </div>
+
+            <div>
+              <span className="block text-sm mb-1">Final Composite Score</span>
+              <span className="font-bold text-lg text-dsi-selected normal-case">{formatNum(activeVersion.final_composite_score, 1)}</span>
             </div>
 
             <div>
@@ -252,7 +257,7 @@ export default function RiskTab() {
               <div>
                 <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: `repeat(${tierBands.length || 5}, 1fr)` }}>
                   {tierBands.map((band: any, idx: number) => {
-                    const isCurrent = band.tier_id === (activeVersion.score_based_tier || activeVersion.final_tier);
+                    const isCurrent = band.tier_id === (activeVersion.final_tier || activeVersion.score_based_tier);
                     return (
                       <div key={band.tier_id} className="relative text-wrap">
                         <div className={`h-dsi-gap rounded ${isCurrent ? 'bg-dsi-contrast-background/30 border-4 border-dsi-outline/50' : 'bg-dsi-contrast-background/30 border border-dsi-outline/50'}`}>
@@ -280,11 +285,13 @@ export default function RiskTab() {
                             </div>
                           )}
                         </div>
+                        
                         <div className="flex justify-between mt-1 text-xs">
                           <span>{band.bands?.max ?? ''}</span>
                           <span className={`${isCurrent ? 'font-bold text-dsi-selected' : 'text-xs'}`}>T{band.tier_id} ({band.label})</span>
                           <span>{band.bands?.min ?? ''}</span>
                         </div>
+                        
                         <div className="text-center mt-0.5">
                           <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-positive' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-negative' : 'text-dsi-warning'}`}>
                             {band.action}
@@ -297,67 +304,25 @@ export default function RiskTab() {
               </div>
                 
                 {/* Distance metrics */}
-                <div className="grid grid-cols-3">
+                <div className="grid grid-cols-4">
 
                   {/* row 1 */}
-                  <div className="text-sm">Position</div>
-                  <div></div>
-                  <div></div>                 
+                  <div className="flex flex-col">
+                    <span>Position</span>
+                    <span>{activeVersion.tier_margin_percentile.toFixed(3)}%</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span>hey</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span>yo</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span>hi</span>
+                  </div>                 
 
-                  {/* row 2 */}
-                  <div>Position in Current Tier</div>
-                  <div>{activeVersion.tier_margin_percentile.toFixed(3)}%</div>
-                  <div>{activeVersion.tier_margin_tier_min}</div>  
-                  <div>{activeVersion.tier_margin_tier_max}</div>
-                  <div>{activeVersion.tier_margin_distance_better}</div>
-                  <div>{activeVersion.tier_margin_distance_worse}</div>
-                  <div>{activeVersion.tier_margin_adjacent_better}</div>
-                  <div>{activeVersion.tier_margin_adjacent_worse}</div>
-
-                  {/* row 3 */}
-                  <div>To Next Tier Up</div>
-                  <div></div>
-                  <div></div>  
-
-                  {/* row 4 */}
-                  <div>To Next Tier Down</div>
-                  <div></div>
-                  <div></div>  
-
-
+                  
                 </div>
-
-              {/* Distance metrics */}
-              <div className="grid grid-cols-3 gap-4 text-wrap">
-                
-                <div>
-                  <span className="text-sm">Positon</span>
-                  <span className="text-xs block mb-1">Position in Tier</span>
-                  <span className="font-bold text-lg">{((marginPct || 0)).toFixed(3)}%</span>
-                  <span className="text-xs opacity-50 block">from tier floor</span>
-                </div>
-                
-                <div className="border border-dsi-outline/20 rounded-lg p-3">
-                  <span className="text-xs opacity-60 block mb-1">To Better Tier</span>
-                  <span className={`font-bold text-lg ${distBetter != null && distBetter < 20 ? 'text-dsi-positive' : ''}`}>
-                    {distBetter != null ? `${formatNum(distBetter, 0)} pts` : 'N/A'}
-                  </span>
-                  {activeVersion.tier_margin_adjacent_better != null && (
-                    <span className="text-xs opacity-50 block">→ Tier {activeVersion.tier_margin_adjacent_better}</span>
-                  )}
-                </div>
-                
-                <div className="border border-dsi-outline/20 rounded-lg p-3">
-                  <span className="text-xs opacity-60 block mb-1">To Worse Tier</span>
-                  <span className={`font-bold text-lg ${distWorse != null && distWorse < 20 ? 'text-dsi-negative' : ''}`}>
-                    {distWorse != null ? `${formatNum(distWorse, 0)} pts` : 'N/A'}
-                  </span>
-                  {activeVersion.tier_margin_adjacent_worse != null && (
-                    <span className="text-xs opacity-50 block">→ Tier {activeVersion.tier_margin_adjacent_worse}</span>
-                  )}
-                </div>
-
-              </div>
 
               {/* Paths to improve */}
               {improvementPaths.length > 0 && (

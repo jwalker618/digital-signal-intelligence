@@ -101,7 +101,7 @@ class FrontendSubmissionPipeline(BaseModel):
     created_at: datetime
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
-    pure_composite_score: Optional[float] = None
+    final_composite_score: Optional[float] = None
     final_tier: Optional[int] = None
     tier_label: Optional[str] = None
     decision: str

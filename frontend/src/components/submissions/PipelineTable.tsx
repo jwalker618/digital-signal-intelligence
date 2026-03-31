@@ -121,11 +121,11 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                     hasValue={!!coverageFilter}
                   />
                 </th>
-                <th className="py-3 px-2 text-wrap">Pure Composite Score</th>
-                <th className="py-3 px-2 text-center">Tier</th>
-                <th className="py-3 px-2 text-center">Gross Premium</th>
-                <th className="py-3 px-2 text-center">Limit</th>
-                <th className="py-3 px-2 text-center">
+                <th className="py-3 px-2 text-center text-wrap">Final Composite Score</th>
+                <th className="py-3 px-2 text-center text-wrap">Final Tier</th>
+                <th className="py-3 px-2 text-center text-wrap">Recommended Technical Premium</th>
+                <th className="py-3 px-2 text-center text-wrap">Recommended Technical Limit</th>
+                <th className="py-3 px-2 text-center text-wrap">
                   {type === "full" ? (
                     <ColumnFilterHeader
                       label="Decision"
@@ -198,7 +198,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                   >
                     <td className="py-3 px-1">{sub.entity_name}</td>
                     <td className="py-3 px-2">{sub.coverage_configuration}</td>
-                    <td className="py-3 px-2 text-right">{(sub.pure_composite_score ?? 0).toFixed(0)}</td>
+                    <td className="py-3 px-2 text-right">{(sub.final_composite_score ?? 0).toFixed(0)}</td>
                     <td className="py-3 px-2 text-right">{sub.final_tier}</td>
                     <td className="py-3 px-2 text-right">{premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                     <td className="py-3 px-2 text-right">{limit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>

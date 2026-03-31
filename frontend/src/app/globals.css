@@ -58,9 +58,9 @@
   --dsi-muted: #64748b;
 
   /* Decisions — light */
-  --dsi-approve: #059669;
-  --dsi-refer: #d97706;
-  --dsi-decline: #dc2626;
+  --dsi-approve: #B0DD7F;
+  --dsi-refer: #F8BD5E;
+  --dsi-decline: #F99587;
 
   /* Charts — light */
   --dsi-chart-grid: #94a3b8;
@@ -87,9 +87,9 @@
   --dsi-muted: #94a3b8;
 
   /* Decisions — dark */
-  --dsi-approve: #10b981;
-  --dsi-refer: #f59e0b;
-  --dsi-decline: #f43f5e;
+  --dsi-approve: #00B050;
+  --dsi-refer: #F59E0B;
+  --dsi-decline: #C00000;
 
   /* Charts — dark */
   --dsi-chart-grid: #334155;

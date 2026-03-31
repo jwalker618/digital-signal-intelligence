@@ -4452,7 +4452,7 @@ def seed_data(
 
             sub = Submission(
                 id=sub_id,
-                submission_code=f"sub_{(co['ticker'] or co['entity_name'][:4]).lower().replace(' ', '_')}_{_hex(6)}",
+                submission_code=f"sub_{(co['ticker'] or co['entity_name'][:4]).lower().replace(' ', '_')}_{_hex(8)}",
                 entity_name=co["entity_name"],
                 domain_hint=co["domain"],
                 discovered_domain=co["domain"],

@@ -59,7 +59,7 @@ async def get_frontend_pipeline(
                     q.status,
                     q.recommended_premium,
                     q.recommended_limit,
-                    mv.pure_composite_score,
+                    mv.final_composite_score,
                     mv.final_tier,
                     mv.tier_label,
                     mv.decision
