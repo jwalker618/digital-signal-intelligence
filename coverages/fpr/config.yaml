@@ -1,0 +1,2809 @@
+financial_political_risk:
+  fpr_trade_credit:
+    metadata:
+      name: DSI Trade Credit Insurance Model
+      description: Trade credit — buyer default, insolvency, protracted default, political risk on receivables
+      version: 2.3.0
+      product_types:
+      - trade_credit
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      - africa
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: trade_credit
+        - field: limit
+          description: Requested limit in USD
+        - field: turnover
+          description: Annual insured turnover in USD (MULTIPLIER basis)
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: ==
+        value: trade_credit
+        required_in_input: true
+      - field: turnover
+        operator: '>='
+        value: 5000000
+        required_in_input: true
+    direct_queries:
+    - id: prior_bad_debts
+      question: Have bad debt write-offs exceeded 2% of turnover in any of the past 3 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Elevated bad debt history
+    - id: single_buyer_exposure
+      question: Does any single buyer represent more than 20% of insured turnover?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Single buyer concentration >20%
+    - id: emerging_market_exposure
+      question: Is more than 40% of insured turnover to buyers in emerging/frontier markets?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: High emerging market buyer exposure
+    - id: extended_terms
+      question: Are payment terms exceeding 180 days offered to any buyers?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Extended payment terms exposure
+    - id: whole_turnover
+      question: Is this a whole-turnover policy (all buyers covered) or named-buyer only?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Policy structure classification
+    signal_registry:
+    - id: buyer_creditworthiness
+      inference_utility_function: buyer_creditworthiness_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Buyer credit deterioration
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: payment_terms_exposure
+      inference_utility_function: payment_terms_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: buyer_concentration
+      inference_utility_function: buyer_concentration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: High buyer concentration
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: country_risk_exposure
+      inference_utility_function: country_risk_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: trade_dispute_frequency
+      inference_utility_function: trade_dispute_frequency_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: sector_cyclicality
+      inference_utility_function: sector_cyclicality_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: sovereign_risk_rating
+      inference_utility_function: sovereign_risk_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: political_risk
+        source: metadata.sovereign_risk_rating
+        features:
+        - cat: LOW
+          label: Low Risk (OECD Core)
+          applied: 0.6
+        - cat: MODERATE
+          label: Moderate (Emerging Market Stable)
+          applied: 1.0
+        - cat: HIGH
+          label: High (Frontier/Volatile)
+          applied: 1.5
+        - cat: SEVERE
+          label: Severe (Conflict/Failed State)
+          applied: 2.2
+    - id: expropriation_risk
+      inference_utility_function: expropriation_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: High expropriation risk jurisdiction
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+    - id: currency_inconvertibility
+      inference_utility_function: currency_inconvertibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contract_frustration
+      inference_utility_function: contract_frustration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: political_violence_exposure
+      inference_utility_function: political_violence_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Active political violence zone
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: trade_credit_risk
+        label: Trade Credit Risk
+        description: Buyer creditworthiness, payment behaviour, country risk, concentration, trade terms
+        risk:
+          weight: 0.4
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.35
+      - id: political_risk
+        label: Political Risk
+        description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.002
+            basis: turnover
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.004
+            basis: turnover
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.007
+            basis: turnover
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.012
+            basis: turnover
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.02
+            basis: turnover
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.45
+        cap: 2.0
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      valid_deductibles:
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      by_product_type:
+        trade_credit:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.05
+          - deductible: 100000
+            factor: 1.0
+          - deductible: 250000
+            factor: 0.88
+          - deductible: 500000
+            factor: 0.78
+          - deductible: 1000000
+            factor: 0.68
+          - deductible: 2500000
+            factor: 0.58
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  fpr_political_risk:
+    metadata:
+      name: DSI Political Risk & Violence Model
+      description: Political risk — expropriation, currency inconvertibility, political violence, contract frustration
+      version: 2.3.0
+      product_types:
+      - political_risk
+      - political_violence
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      - africa
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: trade_credit, political_risk, political_violence, surety_bond, contract_bond, kidnap_ransom'
+        - field: limit
+          description: Requested limit in USD
+        - field: contract_value
+          description: Contract or turnover value in USD (basis for trade credit)
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: in
+        value:
+        - political_risk
+        - political_violence
+        required_in_input: true
+    direct_queries:
+    - id: active_conflict
+      question: Is the insured asset/investment located in a country with active armed conflict?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 5
+        applied: null
+        note: Active armed conflict zone
+    - id: prior_expropriation
+      question: Has the host government expropriated assets in the same sector in the past 10 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Sector-specific expropriation history
+    - id: bilateral_treaty
+      question: Is the investment protected by a bilateral investment treaty (BIT)?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.88
+        note: BIT protection credit
+    - id: local_partner
+      question: Is there a local joint venture partner with government connections?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Local partner — may mitigate or amplify risk
+    - id: resource_extraction
+      question: Is this a natural resource extraction investment (oil, gas, mining)?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Resource extraction — elevated nationalisation risk
+    signal_registry:
+    - id: sovereign_risk_rating
+      inference_utility_function: sovereign_risk_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: political_risk
+        source: metadata.sovereign_risk_rating
+        features:
+        - cat: LOW
+          label: Low Risk (OECD Core)
+          applied: 0.6
+        - cat: MODERATE
+          label: Moderate (Emerging Market Stable)
+          applied: 1.0
+        - cat: HIGH
+          label: High (Frontier/Volatile)
+          applied: 1.5
+        - cat: SEVERE
+          label: Severe (Conflict/Failed State)
+          applied: 2.2
+    - id: expropriation_risk
+      inference_utility_function: expropriation_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: High expropriation risk jurisdiction
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+    - id: currency_inconvertibility
+      inference_utility_function: currency_inconvertibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contract_frustration
+      inference_utility_function: contract_frustration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: political_violence_exposure
+      inference_utility_function: political_violence_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Active political violence zone
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: political_risk
+        label: Political Risk
+        description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
+        risk:
+          weight: 0.45
+        loss:
+          weight: 0.45
+        exposure:
+          weight: 0.4
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.1
+      - id: litigation_history
+        label: Litigation History
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: limit
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.012
+            basis: limit
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.022
+            basis: limit
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.038
+            basis: limit
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.06
+            basis: limit
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.45
+        cap: 2.0
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      - 250000000
+      valid_deductibles:
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+      - 2500000
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 100000
+      by_product_type:
+        political_risk:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 50000
+            factor: 1.15
+          - deductible: 100000
+            factor: 1.0
+          - deductible: 250000
+            factor: 0.85
+          - deductible: 500000
+            factor: 0.72
+          - deductible: 1000000
+            factor: 0.62
+          - deductible: 2500000
+            factor: 0.52
+        political_violence:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 50000
+            factor: 1.15
+          - deductible: 100000
+            factor: 1.0
+          - deductible: 250000
+            factor: 0.85
+          - deductible: 500000
+            factor: 0.72
+          - deductible: 1000000
+            factor: 0.62
+          - deductible: 2500000
+            factor: 0.52
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  fpr_surety:
+    metadata:
+      name: DSI Surety & Contract Bond Model
+      description: Surety bonds — performance, payment, bid, maintenance; contractor financial strength focus
+      version: 2.3.0
+      product_types:
+      - surety_bond
+      - contract_bond
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      - africa
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: surety_bond, contract_bond'
+        - field: limit
+          description: Requested limit (penal sum) in USD
+        - field: bond_amount
+          description: Bond penal sum in USD (MULTIPLIER basis)
+      min_premium: 10000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: in
+        value:
+        - surety_bond
+        - contract_bond
+        required_in_input: true
+    direct_queries:
+    - id: prior_bond_claim
+      question: Has the principal had a surety bond claim or performance bond call in the past 10 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Prior surety claim history
+    - id: financial_audit
+      question: Are the principal's financial statements audited by a CPA firm?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.9
+        note: Audited financial statements credit
+    - id: work_in_progress
+      question: Does work-in-progress exceed 80% of the principal's single project limit?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: High WIP-to-capacity ratio
+    - id: government_contract
+      question: Is this a government/public works contract requiring Miller Act compliance?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Government contract — Miller Act bond
+    - id: joint_venture
+      question: Is this a joint venture project with shared bonding obligations?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: JV bonding — partner credit exposure
+    signal_registry:
+    - id: principal_financial_strength
+      inference_utility_function: principal_financial_strength_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: surety_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: project_execution_track_record
+      inference_utility_function: project_execution_track_record_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: surety_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: backlog_to_capacity
+      inference_utility_function: backlog_to_capacity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: surety_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+          score_conditions:
+          - action: FLAG
+            note: Backlog approaching capacity limits
+            threshold: 30
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: bond_default_history
+      inference_utility_function: bond_default_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: surety_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Prior surety bond claim
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: obligee_complexity
+      inference_utility_function: obligee_complexity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: surety_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: surety_risk
+        label: Surety & Bond Risk
+        description: Principal financial strength, project execution capability, bonding capacity, default history
+        risk:
+          weight: 0.45
+        loss:
+          weight: 0.45
+        exposure:
+          weight: 0.35
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.3
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.2
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.008
+            basis: bond_amount
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.015
+            basis: bond_amount
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.025
+            basis: bond_amount
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.04
+            basis: bond_amount
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.065
+            basis: bond_amount
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.45
+        cap: 2.0
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 500000
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      valid_deductibles:
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 50000
+      by_product_type:
+        surety_bond:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.05
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.9
+          - deductible: 250000
+            factor: 0.8
+          - deductible: 500000
+            factor: 0.7
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  fpr_kidnap_ransom:
+    metadata:
+      name: DSI Kidnap & Ransom Model
+      description: K&R — kidnap, ransom, extortion, detention, hijack; crisis response included
+      version: 2.3.0
+      product_types:
+      - kidnap_ransom
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      - africa
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: trade_credit, political_risk, political_violence, surety_bond, contract_bond, kidnap_ransom'
+        - field: limit
+          description: Requested limit in USD
+        - field: contract_value
+          description: Contract or turnover value in USD (basis for trade credit)
+      min_premium: 15000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: product_type
+        operator: ==
+        value: kidnap_ransom
+        required_in_input: true
+    direct_queries:
+    - id: prior_incident
+      question: Has the insured or any employee been subject to a kidnap, extortion, or detention event?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Prior K&R incident
+    - id: high_risk_travel
+      question: Do employees regularly travel to countries rated HIGH or EXTREME threat?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Regular high-threat travel
+    - id: crisis_consultant
+      question: Does the insured retain a specialist crisis response consultant?
+      query_condition:
+      - return: true
+        action: MODIFIER
+        override: null
+        applied: 0.85
+        note: Retained crisis consultant credit
+    - id: extractive_industry
+      question: Does the insured operate in extractive industries (oil, gas, mining) in frontier markets?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Extractive industry in frontier markets
+    signal_registry:
+    - id: sovereign_risk_rating
+      inference_utility_function: sovereign_risk_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: political_risk
+        source: metadata.sovereign_risk_rating
+        features:
+        - cat: LOW
+          label: Low Risk (OECD Core)
+          applied: 0.6
+        - cat: MODERATE
+          label: Moderate (Emerging Market Stable)
+          applied: 1.0
+        - cat: HIGH
+          label: High (Frontier/Volatile)
+          applied: 1.5
+        - cat: SEVERE
+          label: Severe (Conflict/Failed State)
+          applied: 2.2
+    - id: expropriation_risk
+      inference_utility_function: expropriation_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: High expropriation risk jurisdiction
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+    - id: currency_inconvertibility
+      inference_utility_function: currency_inconvertibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contract_frustration
+      inference_utility_function: contract_frustration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: political_violence_exposure
+      inference_utility_function: political_violence_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Active political violence zone
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: travel_exposure_profile
+      inference_utility_function: travel_exposure_profile_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: kidnap_ransom_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: country_threat_level
+      inference_utility_function: country_threat_level_basefunction
+      proxy_tier: INFERRED_PROXY
+      categories:
+        group_id: kidnap_ransom_risk
+        source: metadata.kr_threat_level
+        features:
+        - cat: LOW
+          label: Low Threat
+          applied: 0.6
+        - cat: MODERATE
+          label: Moderate Threat
+          applied: 1.0
+        - cat: HIGH
+          label: High Threat
+          applied: 1.5
+        - cat: EXTREME
+          label: Extreme Threat
+          applied: 2.2
+    - id: executive_protection
+      inference_utility_function: executive_protection_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: kidnap_ransom_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: crisis_response_capability
+      inference_utility_function: crisis_response_capability_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: kidnap_ransom_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.25
+    - id: expatriate_population
+      inference_utility_function: expatriate_population_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: kidnap_ransom_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    groups:
+      three_layer_assessment:
+      - id: kidnap_ransom_risk
+        label: Kidnap & Ransom Risk
+        description: Travel exposure, country threat, executive protection, crisis response capability
+        risk:
+          weight: 0.45
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.35
+      - id: political_risk
+        label: Political Risk
+        description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.005
+            basis: limit
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.01
+            basis: limit
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.018
+            basis: limit
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.03
+            basis: limit
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.05
+            basis: limit
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.45
+        cap: 2.0
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 1000000
+      - 2000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      valid_deductibles:
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
+      - 1000000
+    pricing:
+      base_limit_reference: 5000000
+      base_deductible_reference: 50000
+      by_product_type:
+        kidnap_ransom:
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.1
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.88
+          - deductible: 250000
+            factor: 0.78
+          - deductible: 500000
+            factor: 0.68
+          - deductible: 1000000
+            factor: 0.58
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
+  fpr_sme:
+    metadata:
+      name: DSI Financial & Political Risk SME Model
+      description: Simplified FPR for smaller exposures — trade credit + political risk combined
+      version: 2.3.0
+      product_types:
+      - trade_credit
+      - political_risk
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      - latam
+      - mea
+      - africa
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: trade_credit, political_risk, political_violence, surety_bond, contract_bond, kidnap_ransom'
+        - field: limit
+          description: Requested limit in USD
+        - field: contract_value
+          description: Contract or turnover value in USD (basis for trade credit)
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 1
+      routing_constraints:
+      - field: product_type
+        operator: in
+        value:
+        - trade_credit
+        - political_risk
+        required_in_input: true
+      - field: limit
+        operator: <
+        value: 5000000
+        required_in_input: false
+    direct_queries:
+    - id: prior_losses
+      question: Any trade credit or political risk losses in the past 3 years?
+      query_condition:
+      - return: true
+        action: FLAG
+        override: null
+        applied: null
+        note: Recent loss history
+    - id: high_risk_country
+      question: Is more than 50% of exposure to HIGH or SEVERE risk countries?
+      query_condition:
+      - return: true
+        action: REFER
+        override: 4
+        applied: null
+        note: Majority high-risk country exposure
+    signal_registry:
+    - id: buyer_creditworthiness
+      inference_utility_function: buyer_creditworthiness_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.3
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Buyer credit deterioration
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.25
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    - id: payment_terms_exposure
+      inference_utility_function: payment_terms_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.15
+    - id: buyer_concentration
+      inference_utility_function: buyer_concentration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: FLAG
+            note: High buyer concentration
+            threshold: 30
+            comparison: <=
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.2
+    - id: country_risk_exposure
+      inference_utility_function: country_risk_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: trade_dispute_frequency
+      inference_utility_function: trade_dispute_frequency_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: sector_cyclicality
+      inference_utility_function: sector_cyclicality_basefunction
+      proxy_tier: COHORT_INFERENCE
+      three_layer_assessment:
+        group_id: trade_credit_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.1
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: sovereign_risk_rating
+      inference_utility_function: sovereign_risk_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      categories:
+        group_id: political_risk
+        source: metadata.sovereign_risk_rating
+        features:
+        - cat: LOW
+          label: Low Risk (OECD Core)
+          applied: 0.6
+        - cat: MODERATE
+          label: Moderate (Emerging Market Stable)
+          applied: 1.0
+        - cat: HIGH
+          label: High (Frontier/Volatile)
+          applied: 1.5
+        - cat: SEVERE
+          label: Severe (Conflict/Failed State)
+          applied: 2.2
+    - id: expropriation_risk
+      inference_utility_function: expropriation_risk_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.25
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: High expropriation risk jurisdiction
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.3
+    - id: currency_inconvertibility
+      inference_utility_function: currency_inconvertibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.2
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.2
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+    - id: contract_frustration
+      inference_utility_function: contract_frustration_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.15
+        exposure:
+          complexity:
+            correlation_direction: positive
+            weight: 0.1
+    - id: political_violence_exposure
+      inference_utility_function: political_violence_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: political_risk
+        risk:
+          correlation_direction: positive
+          weight: 0.15
+          score_conditions:
+          - action: REFER
+            override: 4
+            note: Active political violence zone
+            threshold: 25
+            comparison: <=
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
+          severity:
+            correlation_direction: positive
+            weight: 0.2
+    groups:
+      three_layer_assessment:
+      - id: trade_credit_risk
+        label: Trade Credit Risk
+        description: Buyer creditworthiness, payment behaviour, country risk, concentration, trade terms
+        risk:
+          weight: 0.3
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.25
+      - id: political_risk
+        label: Political Risk
+        description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
+        risk:
+          weight: 0.25
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.25
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk:
+          weight: 0.2
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.25
+      - id: firm_stability
+        label: Firm Stability
+        description: ''
+        risk:
+          weight: 0.15
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: ''
+        risk:
+          weight: 0.1
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.008
+            basis: limit
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.015
+            basis: limit
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.025
+            basis: limit
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.042
+            basis: limit
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.065
+            basis: limit
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.45
+        cap: 2.0
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 5000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 5000000
+                max: 25000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 25000000
+                max: 100000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 100000000
+                max: 500000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large exposure value
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 500000000
+                max: 5000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operational complexity
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operational complexity
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operational complexity
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits:
+      - 250000
+      - 500000
+      - 1000000
+      - 2000000
+      - 5000000
+      valid_deductibles:
+      - 10000
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 25000
+      by_product_type:
+        trade_credit:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.0
+              k: 0.02
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.88
+          - deductible: 100000
+            factor: 0.78
+          - deductible: 250000
+            factor: 0.68
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.35
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 10.0
