@@ -126,3 +126,4 @@ __all__ = [
     "DOIndustryExtractor",
     "StockExchangeExtractor",
 ]
+from . import phase_6_extractors
