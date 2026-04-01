@@ -7,24 +7,26 @@ import ViewCanvas from "@/components/ViewCanvas";
 import { Download, FileText, MoreVertical, Calendar, Hash, Printer, X, Settings2 } from "lucide-react";
 
 import SummaryTab from "@/components/submissions/workbench/SummaryTab";
-import PricingTab from "@/components/submissions/workbench/PricingTab";
-import RiskTab from "@/components/submissions/workbench/RiskTab";
-import LossTab from "@/components/submissions/workbench/LossTab";
-import ExposureTab from "@/components/submissions/workbench/ExposureTab";
-import ReferralTab from "@/components/submissions/workbench/ReferralTab";
-import ModelVersionsTab from "@/components/submissions/workbench/ModelVersionsTab";
-import ScenarioTab from "@/components/submissions/workbench/ScenarioTab";
 
-// Commercial tabs
-import CommercialTermsTab from "@/components/submissions/workbench/CommercialTermsTab";
-import PremiumAssemblyTab from "@/components/submissions/workbench/PremiumAssemblyTab";
-import DistributionTab from "@/components/submissions/workbench/DistributionTab";
+// Commercial
+import CommercialTermsTab from "@/components/submissions/workbench/commercialterms/CommercialTermsTab";
+import PremiumAssemblyTab from "@/components/submissions/workbench/commercialterms/PremiumAssemblyTab";
+import DistributionTab from "@/components/submissions/workbench/commercialterms/DistributionTab";
 
-// Risk terms tabs
-import DeductibleStructureTab from "@/components/submissions/workbench/DeductibleStructureTab";
-import CoverageTermsTab from "@/components/submissions/workbench/CoverageTermsTab";
-import SIRWaitingPeriodsTab from "@/components/submissions/workbench/SIRWaitingPeriodsTab";
-import AggregateReinstatementTab from "@/components/submissions/workbench/AggregateReinstatementTab";
+// Risk Terms
+import DeductibleStructureTab from "@/components/submissions/workbench/riskterms/DeductibleStructureTab";
+import CoverageTermsTab from "@/components/submissions/workbench/riskterms/CoverageTermsTab";
+import SIRWaitingPeriodsTab from "@/components/submissions/workbench/riskterms/SIRWaitingPeriodsTab";
+import AggregateReinstatementTab from "@/components/submissions/workbench/riskterms/AggregateReinstatementTab";
+
+// Technical Analysis
+import PricingTab from "@/components/submissions/workbench/technicalanalysis/PricingTab";
+import RiskTab from "@/components/submissions/workbench/technicalanalysis/RiskTab";
+import LossTab from "@/components/submissions/workbench/technicalanalysis/LossTab";
+import ExposureTab from "@/components/submissions/workbench/technicalanalysis/ExposureTab";
+import ReferralTab from "@/components/submissions/workbench/technicalanalysis/ReferralTab";
+import ScenarioTab from "@/components/submissions/workbench/technicalanalysis/ScenarioTab";
+import ModelVersionsTab from "@/components/submissions/workbench/technicalanalysis/ModelVersionsTab";
 
 export default function WorkbenchView() {
   const { 

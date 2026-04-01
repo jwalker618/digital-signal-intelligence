@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
 import StickyHeader from "@/components/shared/StickyHeader";
 import { Clock, Activity, Shield, DollarSign } from "lucide-react";
-import { formatDollar } from "@/lib/format";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 export default function SIRWaitingPeriodsTab() {
   const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
@@ -39,7 +39,7 @@ export default function SIRWaitingPeriodsTab() {
             <div className="border border-dsi-outline/20 rounded-xl p-5">
               <span className="opacity-50 block text-xs mb-1 uppercase tracking-wider">SIR Amount</span>
               <span className="font-bold text-xl">
-                {rt.sir_amount != null ? formatDollar(rt.sir_amount) : "N/A"}
+                {rt.sir_amount != null ? formatCurrency(rt.sir_amount) : "N/A"}
               </span>
             </div>
             <div className="border border-dsi-outline/20 rounded-xl p-5">
@@ -61,7 +61,7 @@ export default function SIRWaitingPeriodsTab() {
               </span>
               {rt.waiting_period_hours != null && rt.waiting_period_hours > 0 && (
                 <span className="block text-xs opacity-50 mt-1">
-                  ({(rt.waiting_period_hours / 24).toFixed(1)} days)
+                  ({formatNumber(rt.waiting_period_hours / 24, 1)} days)
                 </span>
               )}
             </div>
@@ -85,7 +85,7 @@ export default function SIRWaitingPeriodsTab() {
             </div>
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Deductible Amount</span>
-              <span className="font-bold">{formatDollar(rt.deductible_amount)}</span>
+              <span className="font-bold">{formatCurrency(rt.deductible_amount)}</span>
             </div>
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Deductible Basis</span>

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
+import { formatNumber, formatPercent, formatDate } from "@/lib/format";
 import {
   GitBranch, GitCommit, Bot, User, Paperclip,
   ShieldCheck, ShieldAlert, AlertTriangle, ArrowDown, MessageSquare
@@ -168,11 +169,11 @@ export default function ModelVersionsTab() {
                           <div className="text-xs opacity-50 uppercase tracking-wider mb-0.5">Score</div>
                           <div className="flex items-baseline gap-1.5">
                             <span className="text-xl font-bold text-dsi-selected">
-                              {mvScore?.toFixed(1) || "N/A"}
+                              {mvScore != null ? formatNumber(mvScore, 1) : "N/A"}
                             </span>
                             {scoreDelta != null && Math.abs(scoreDelta) > 0.1 && (
                               <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
-                                {scoreDelta > 0 ? '+' : ''}{scoreDelta.toFixed(1)}
+                                {scoreDelta > 0 ? '+' : ''}{formatNumber(scoreDelta, 1)}
                               </span>
                             )}
                           </div>
@@ -205,10 +206,10 @@ export default function ModelVersionsTab() {
                       {/* Stats row: confidence, coverage, conditions, notes */}
                       <div className="flex items-center gap-3 text-[10px] opacity-50 mb-3">
                         {mv.confidence != null && (
-                          <span>Conf: {(mv.confidence * 100).toFixed(0)}%</span>
+                          <span>Conf: {formatPercent(mv.confidence, 0)}</span>
                         )}
                         {mv.signal_coverage != null && (
-                          <span>Cov: {(mv.signal_coverage * 100).toFixed(0)}%</span>
+                          <span>Cov: {formatPercent(mv.signal_coverage, 0)}</span>
                         )}
                         {condCount > 0 && (
                           <span className="text-dsi-warning/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
@@ -229,7 +230,7 @@ export default function ModelVersionsTab() {
                           {mv.created_by === "system" ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
                           {mv.created_by}
                         </span>
-                        <span>{mv.created_at ? new Date(mv.created_at).toLocaleString() : 'N/A'}</span>
+                        <span>{formatDate(mv.created_at)}</span>
                       </div>
                     </div>
 

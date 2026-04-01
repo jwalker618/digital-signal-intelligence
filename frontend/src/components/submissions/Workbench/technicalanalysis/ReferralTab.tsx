@@ -7,7 +7,7 @@ import {
   Layers, Eye, Flame, Paperclip, Clock, User,
   ChevronDown, ChevronRight
 } from "lucide-react";
-import { formatNum } from "@/lib/format";
+import { formatNumber, formatPercent } from "@/lib/format";
 
 const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
   modifier:      { bg: 'bg-dsi-info/15', text: 'text-dsi-info' },
@@ -106,7 +106,7 @@ export default function ReferralTab() {
 
       {/* STICKY HEADER */}
       <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
         <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
@@ -171,7 +171,7 @@ export default function ReferralTab() {
 
       {/* TRIGGERS + CONDITIONS — accordion style */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <ShieldAlert className="icon text-dsi-negative"/><span className="text-sm">Referral Context</span>
         </div>
         <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
@@ -229,7 +229,7 @@ export default function ReferralTab() {
 
       {/* G2: SIGNAL AUDIT — GROUP ACCORDION */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="flex justify-between items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse justify-between items-center pr-dsi-pad">
           <div className="flex items-center gap-dsi-pad">
             <Layers className="icon"/><span className="text-sm">Signal Audit Matrix</span>
             <span className="text-xs opacity-60 ml-2">({totalSignals} signals)</span>
@@ -282,10 +282,10 @@ export default function ReferralTab() {
                           <span className="text-[10px] bg-dsi-positive/10 text-dsi-positive px-1.5 py-0.5 rounded font-bold">{groupAudited} audited</span>
                         )}
                       </div>
-                      <span className="text-right text-sm">{formatNum(gs?.risk_score, 1)}</span>
+                      <span className="text-right text-sm">{formatNumber(gs?.risk_score, 1)}</span>
                       <span></span>
-                      <span className="text-right text-sm opacity-60">{formatNum(gs?.risk_weight, 2)}</span>
-                      <span className="text-right text-sm font-bold">{formatNum(gs?.risk_contribution, 1)}</span>
+                      <span className="text-right text-sm opacity-60">{formatNumber(gs?.risk_weight, 2)}</span>
+                      <span className="text-right text-sm font-bold">{formatNumber(gs?.risk_contribution, 1)}</span>
                       <span></span><span></span><span></span><span></span>
                     </div>
 
@@ -306,20 +306,20 @@ export default function ReferralTab() {
                             </span>
                           </div>
                           <span className={`text-right text-sm ${sig.is_overridden ? 'text-dsi-positive font-bold' : ''}`}>
-                            {formatNum(sig.score, 1)}
+                            {formatNumber(sig.score, 1)}
                           </span>
                           <span className={`text-right text-xs content-center ${(sig.confidence || 0) < 0.7 ? 'text-dsi-warning font-bold' : 'opacity-70'}`}>
-                            {sig.confidence != null ? `${(sig.confidence * 100).toFixed(0)}%` : '-'}
+                            {sig.confidence != null ? formatPercent(sig.confidence, 0) : '-'}
                           </span>
-                          <span className="text-right text-sm opacity-50">{formatNum(sig.weight, 2)}</span>
+                          <span className="text-right text-sm opacity-50">{formatNumber(sig.weight, 2)}</span>
                           <span className={`text-right text-sm ${isHighImpact ? 'font-bold text-dsi-warning' : ''}`}>
-                            {formatNum(sig.contribution || sig.contribution_to_score, 2)}
+                            {formatNumber(sig.contribution || sig.contribution_to_score, 2)}
                           </span>
                           <span className="text-center text-xs">
                             {sig.was_absent ? <span className="text-dsi-negative font-bold">YES</span> : <span className="opacity-30">NO</span>}
                           </span>
                           <span className="text-right text-sm font-bold text-dsi-positive">
-                            {sig.is_overridden ? formatNum(sig.audited_value, 2) : "—"}
+                            {sig.is_overridden ? formatNumber(sig.audited_value, 2) : "—"}
                           </span>
                           <span className="text-xs opacity-80 truncate max-w-[90px]" title={sig.override_rationale}>
                             {sig.override_rationale || "—"}
@@ -351,7 +351,7 @@ export default function ReferralTab() {
       {/* FINAL DECISION ACTIONS */}
       {(activeSubmission?.decision === "refer" || activeVersion?.decision === "refer") && (
         <div className="flex flex-col pt-2 pb-2">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
             <Check className="icon"/><span className="text-sm">Final Decision Actions</span>
           </div>
           <div className="flex flex-row items-center justify-between gap-4 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 pl-dsi-pad pr-dsi-pad">
@@ -391,7 +391,7 @@ export default function ReferralTab() {
               <div className="flex items-center justify-between text-sm opacity-70 mb-6">
                 <span>{overrideModal.signal.signal_name || overrideModal.signal.code}</span>
                 {overrideModal.signal.confidence != null && (
-                  <span className="bg-dsi-selected/10 px-2 rounded">Conf: {(overrideModal.signal.confidence * 100).toFixed(0)}%</span>
+                  <span className="bg-dsi-selected/10 px-2 rounded">Conf: {formatPercent(overrideModal.signal.confidence, 0)}</span>
                 )}
               </div>
               <div className="flex items-center justify-between gap-4">

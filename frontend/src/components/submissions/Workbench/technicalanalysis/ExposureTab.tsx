@@ -11,7 +11,7 @@ import {
   BarChart, Bar, Cell, ReferenceLine, Label
 } from "recharts";
 import { getDecisionColor, tooltipStyle, CHART_GRID_COLOR, CHART_AXIS_COLOR, CHART_SUBJECT_COLOR, CHART_PEER_COLOR } from "@/lib/chartConfig";
-import { formatNum } from "@/lib/format";
+import { formatNumber, formatCurrency } from "@/lib/format";
 
 export default function ExposureTab() {
   const {
@@ -94,16 +94,7 @@ export default function ExposureTab() {
         >
 
         {/* SECTION HEADER */}
-        <div className="
-          flex gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad
-          pt-2 pb-2
-        "
-        >
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
 
@@ -149,31 +140,16 @@ export default function ExposureTab() {
           COMPONENT A: SUBJECT PROFILE — expanded with all exposure fields
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="
-          flex gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad
-          pt-2 pb-2
-        ">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Target className="icon"/><span className="text-sm">Active Submission: Exposure Profile</span>
         </div>
-        <div className="
-          flex flex-col flex-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-4 pb-4
-        ">
+        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
           {/* Row 1: Primary KPIs — expanded */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 pl-dsi-pad pr-dsi-pad">
             <div>
               <span className="opacity-70 block text-xs mb-1">Exposure Value (TIV/Rev)</span>
               <span className="font-bold text-lg text-dsi-selected">
-                ${(activeVersion.exposure_value || 0).toLocaleString()}
+                {formatCurrency(activeVersion.exposure_value || 0)}
               </span>
             </div>
             <div>
@@ -183,26 +159,26 @@ export default function ExposureTab() {
               </span>
               {hasBandPosition && (
                 <span className="text-[10px] opacity-40 block">
-                  ${Number(bandMin).toLocaleString()} – ${Number(bandMax).toLocaleString()}
+                  {formatCurrency(Number(bandMin))} – {formatCurrency(Number(bandMax))}
                 </span>
               )}
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Size Score</span>
               <span className="font-bold text-lg">
-                {activeVersion.exposure_size_score?.toFixed(1) || "0.0"}
+                {formatNumber(activeVersion.exposure_size_score, 1, "0.0")}
               </span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Complexity Score</span>
               <span className="font-bold text-lg">
-                {activeVersion.exposure_complexity_score?.toFixed(1) || "N/A"}
+                {formatNumber(activeVersion.exposure_complexity_score, 1, "N/A")}
               </span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Calculated Modifier</span>
               <span className="font-bold text-lg">
-                {activeVersion.exposure_modifier?.toFixed(3) || "1.000"}x
+                {formatNumber(activeVersion.exposure_modifier, 3, "1.000")}x
               </span>
             </div>
             <div>
@@ -228,25 +204,10 @@ export default function ExposureTab() {
 
         {/* BAND POSITION GAUGE */}
         <div className="flex flex-col">
-          <div className="
-            flex gap-dsi-pad
-            rounded-t-xl
-            border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse
-            bg-dsi-analysis/60
-            pl-dsi-pad
-            pt-2 pb-2
-          ">
+          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
             <Gauge className="icon"/><span className="text-sm">Band Position</span>
           </div>
-          <div className="
-            flex flex-col flex-1
-            border-b-3 border-dsi-contrast-background
-            overflow-x-hidden border-collapse
-            rounded-b-xl
-            bg-dsi-analysis shadow-sm
-            pt-4 pb-4
-          ">
+          <div className="dsi-section-analysis overflow-x-hidden border-collapse pt-4 pb-4">
             {hasBandPosition ? (
               <div className="pl-dsi-pad pr-dsi-pad space-y-4">
                 {/* Band bar */}
@@ -267,13 +228,13 @@ export default function ExposureTab() {
                       style={{ left: `${Math.max(2, Math.min(98, (bandPct || 0) * 100))}%` }}
                     >
                       <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-dsi-selected whitespace-nowrap">
-                        ${exposureValue.toLocaleString()}
+                        {formatCurrency(exposureValue)}
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-between text-xs mt-1 opacity-50">
-                    <span>${Number(bandMin).toLocaleString()}</span>
-                    <span>${Number(bandMax).toLocaleString()}</span>
+                    <span>{formatCurrency(Number(bandMin))}</span>
+                    <span>{formatCurrency(Number(bandMax))}</span>
                   </div>
                 </div>
 
@@ -281,19 +242,19 @@ export default function ExposureTab() {
                 <div className="grid grid-cols-3 gap-4 text-wrap">
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-60 block mb-1">Band Percentile</span>
-                    <span className="font-bold text-lg">{((bandPct || 0) * 100).toFixed(0)}%</span>
+                    <span className="font-bold text-lg">{formatNumber((bandPct || 0) * 100, 0)}%</span>
                     <span className="text-xs opacity-50 block">from band floor</span>
                   </div>
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-60 block mb-1">Below Ceiling</span>
                     <span className="font-bold text-lg">
-                      ${(bandMax - exposureValue).toLocaleString()}
+                      {formatCurrency(bandMax - exposureValue)}
                     </span>
                   </div>
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-60 block mb-1">Above Floor</span>
                     <span className="font-bold text-lg">
-                      ${(exposureValue - bandMin).toLocaleString()}
+                      {formatCurrency(exposureValue - bandMin)}
                     </span>
                   </div>
                 </div>
@@ -308,25 +269,10 @@ export default function ExposureTab() {
 
         {/* EXPOSURE COMPONENTS BREAKDOWN — structured rendering */}
         <div className="flex flex-col">
-          <div className="
-            flex gap-dsi-pad
-            rounded-t-xl
-            border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse
-            bg-dsi-analysis/60
-            pl-dsi-pad
-            pt-2 pb-2
-          ">
+          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
             <Puzzle className="icon"/><span className="text-sm">Exposure Components</span>
           </div>
-          <div className="
-            flex flex-col flex-1
-            border-b-3 border-dsi-contrast-background
-            overflow-y-auto border-collapse
-            rounded-b-xl
-            bg-dsi-analysis shadow-sm
-            pt-4 pb-4
-          ">
+          <div className="dsi-section-analysis overflow-y-auto border-collapse pt-4 pb-4">
             {hasComponents ? (
               <div className="pl-dsi-pad pr-dsi-pad space-y-3">
                 {/* Size component */}
@@ -334,12 +280,12 @@ export default function ExposureTab() {
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold uppercase">Size Component</span>
-                      <span className="text-[10px] opacity-40">Weight: {formatNum(sizeComp.weight, 2)}</span>
+                      <span className="text-[10px] opacity-40">Weight: {formatNumber(sizeComp.weight, 2)}</span>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-wrap">
                       <div>
                         <span className="text-[10px] opacity-50 block">Score</span>
-                        <span className="text-sm font-bold">{formatNum(sizeComp.score, 1)}</span>
+                        <span className="text-sm font-bold">{formatNumber(sizeComp.score, 1)}</span>
                       </div>
                       <div>
                         <span className="text-[10px] opacity-50 block">Band</span>
@@ -347,7 +293,7 @@ export default function ExposureTab() {
                       </div>
                       <div>
                         <span className="text-[10px] opacity-50 block">Modifier</span>
-                        <span className="text-sm font-bold">{formatNum(sizeComp.modifier, 3)}x</span>
+                        <span className="text-sm font-bold">{formatNumber(sizeComp.modifier, 3)}x</span>
                       </div>
                     </div>
                   </div>
@@ -358,12 +304,12 @@ export default function ExposureTab() {
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold uppercase">Complexity Component</span>
-                      <span className="text-[10px] opacity-40">Weight: {formatNum(complexityComp.weight, 2)}</span>
+                      <span className="text-[10px] opacity-40">Weight: {formatNumber(complexityComp.weight, 2)}</span>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-wrap">
                       <div>
                         <span className="text-[10px] opacity-50 block">Score</span>
-                        <span className="text-sm font-bold">{formatNum(complexityComp.score, 1)}</span>
+                        <span className="text-sm font-bold">{formatNumber(complexityComp.score, 1)}</span>
                       </div>
                       <div>
                         <span className="text-[10px] opacity-50 block">Band</span>
@@ -371,7 +317,7 @@ export default function ExposureTab() {
                       </div>
                       <div>
                         <span className="text-[10px] opacity-50 block">Modifier</span>
-                        <span className="text-sm font-bold">{formatNum(complexityComp.modifier, 3)}x</span>
+                        <span className="text-sm font-bold">{formatNumber(complexityComp.modifier, 3)}x</span>
                       </div>
                     </div>
                   </div>
@@ -381,7 +327,7 @@ export default function ExposureTab() {
                 {combinedModifier != null && (
                   <div className="border-t border-dsi-outline/20 pt-3 flex items-center justify-between">
                     <span className="text-xs opacity-60">Combined Modifier</span>
-                    <span className="font-bold text-lg">{formatNum(combinedModifier, 3)}x</span>
+                    <span className="font-bold text-lg">{formatNumber(combinedModifier, 3)}x</span>
                   </div>
                 )}
               </div>
@@ -406,25 +352,10 @@ export default function ExposureTab() {
               CHART ROW 1: SCATTER MATRIX (decision-colored)
               ======================================================================= */}
           <div className="flex flex-col pt-2 pb-2">
-            <div className="
-              flex gap-dsi-pad
-              rounded-t-xl
-              border-b-1 border-dsi-outline/50
-              overflow-x-hidden whitespace-nowrap border-collapse
-              bg-dsi-analysis/60
-              pl-dsi-pad
-              pt-2 pb-2
-            ">
+            <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
               <ScatterIcon className="icon"/><span className="text-sm">Exposure Magnitude vs. Overall Risk</span>
             </div>
-            <div className="
-              flex flex-col flex-1
-              border-b-3 border-dsi-contrast-background
-              overflow-x-hidden whitespace-nowrap border-collapse
-              rounded-b-xl
-              bg-dsi-analysis shadow-sm
-              pt-4 pb-4
-            ">
+            <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
               <div className="pl-dsi-pad pr-dsi-pad flex gap-4 mb-2 text-[10px] uppercase tracking-wider">
                 <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-approve"></span> Approve</span>
                 <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-refer"></span> Refer</span>
@@ -454,7 +385,7 @@ export default function ExposureTab() {
                     <RechartsTooltip
                       cursor={{ strokeDasharray: '3 3' }}
                       contentStyle={tooltipStyle}
-                      formatter={(value: any, name: string) => [Number(value).toFixed(1), name]}
+                      formatter={(value: any, name: string) => [formatNumber(Number(value), 1), name]}
                     />
                     {/* Subject crosshair reference lines */}
                     <ReferenceLine
@@ -493,26 +424,11 @@ export default function ExposureTab() {
 
             {/* COMPONENT C: BAND BENCHMARKING */}
             <div className="flex flex-col">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <BarChart3 className="icon"/><span className="text-sm">Band Benchmarking</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-x-hidden whitespace-nowrap border-collapse
-                rounded-b-xl
-                bg-dsi-analysis shadow-sm
-                pt-4 pb-4
-              ">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Modifier across book bands. Subject modifier shown as reference line ({subjectModifier.toFixed(3)}x).</p>
+              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Modifier across book bands. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
                 <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
                   {exposureBandBenchmarks.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -524,13 +440,13 @@ export default function ExposureTab() {
                           contentStyle={tooltipStyle}
                           cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
                           formatter={(value: any, name: string) => {
-                            if (name === 'avg_modifier') return [`${Number(value).toFixed(3)}x`, 'Avg Modifier'];
+                            if (name === 'avg_modifier') return [`${formatNumber(Number(value), 3)}x`, 'Avg Modifier'];
                             return [value, name];
                           }}
                           labelFormatter={(label) => {
                             const match = exposureBandBenchmarks.find((d: any) => d.band_label === label);
                             if (!match) return label;
-                            return `${label} (n=${match.peer_count}, avg value $${Number(match.avg_exposure_value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })})`;
+                            return `${label} (n=${match.peer_count}, avg value ${formatCurrency(Number(match.avg_exposure_value || 0))})`;
                           }}
                         />
                         {/* Subject modifier reference line */}
@@ -540,7 +456,7 @@ export default function ExposureTab() {
                           strokeDasharray="6 3"
                           strokeWidth={2}
                         >
-                          <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
+                          <Label value={`Subject ${formatNumber(subjectModifier, 3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
                         </ReferenceLine>
                         <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
                           label={({ x, y, width, index }: any) => {
@@ -570,26 +486,11 @@ export default function ExposureTab() {
 
             {/* COMPONENT D: TIER DISTRIBUTION */}
             <div className="flex flex-col">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <Layers className="icon"/><span className="text-sm">Exposure by Final Tier</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-x-hidden whitespace-nowrap border-collapse
-                rounded-b-xl
-                bg-dsi-analysis shadow-sm
-                pt-4 pb-4
-              ">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Magnitude Score within each Final Tier. Subject magnitude shown as reference line ({subjectMagnitude.toFixed(1)}).</p>
+              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Magnitude Score within each Final Tier. Subject magnitude shown as reference line ({formatNumber(subjectMagnitude, 1)}).</p>
                 <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
                   {exposureTierDistribution.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -600,7 +501,7 @@ export default function ExposureTab() {
                         <RechartsTooltip
                           contentStyle={tooltipStyle}
                           cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
-                          formatter={(value: any, name: string) => [Number(value).toFixed(1), name === 'avg_magnitude' ? 'Avg Magnitude' : name]}
+                          formatter={(value: any, name: string) => [formatNumber(Number(value), 1), name === 'avg_magnitude' ? 'Avg Magnitude' : name]}
                           labelFormatter={(label) => {
                             const match = exposureTierDistribution.find((d: any) => d.tier === label);
                             return match ? `${label} (n=${match.peer_count})` : label;
@@ -613,7 +514,7 @@ export default function ExposureTab() {
                           strokeDasharray="6 3"
                           strokeWidth={2}
                         >
-                          <Label value={`Subject ${subjectMagnitude.toFixed(1)}`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
+                          <Label value={`Subject ${formatNumber(subjectMagnitude, 1)}`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
                         </ReferenceLine>
                         <Bar dataKey="avg_magnitude" fill="var(--dsi-chart-peer)" radius={[4, 4, 0, 0]}
                           label={({ x, y, width, index }: any) => {
@@ -648,27 +549,11 @@ export default function ExposureTab() {
               ======================================================================= */}
           {exposureConditions.length > 0 && (
             <div className="flex flex-col pt-2 pb-2">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <AlertTriangle className="icon"/>
                 <span className="text-sm">Exposure Signal Conditions ({exposureConditions.length})</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-y-auto border-collapse
-                rounded-b-xl
-                bg-dsi-analysis shadow-sm
-                pt-2 pb-2
-                max-h-[280px]
-              ">
+              <div className="dsi-section-analysis overflow-y-auto border-collapse max-h-[280px]">
                 <div className="space-y-0">
                   {exposureConditions.map((cond: any, idx: number) => {
                     const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
@@ -694,7 +579,7 @@ export default function ExposureTab() {
                           </span>
                           {cond.action_value != null && typeof cond.action_value === 'number' && (
                             <span className="text-xs font-bold opacity-70 w-16 text-right">
-                              {isModifier ? `${(cond.action_value * 100).toFixed(0)}%` :
+                              {isModifier ? `${formatNumber(cond.action_value * 100, 0)}%` :
                                isTierOverride ? `→ T${cond.action_value}` :
                                cond.action_value}
                             </span>

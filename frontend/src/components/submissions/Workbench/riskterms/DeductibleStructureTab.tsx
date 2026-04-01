@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
 import StickyHeader from "@/components/shared/StickyHeader";
 import { Layers, Activity, DollarSign, Shield } from "lucide-react";
-import { formatDollar } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 
 export default function DeductibleStructureTab() {
   const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
@@ -44,7 +44,7 @@ export default function DeductibleStructureTab() {
             </div>
             <div className="border border-dsi-outline/20 rounded-xl p-5">
               <span className="opacity-50 block text-xs mb-1 uppercase tracking-wider">Deductible Amount</span>
-              <span className="font-bold text-xl">{formatDollar(rt.deductible_amount)}</span>
+              <span className="font-bold text-xl">{formatCurrency(rt.deductible_amount)}</span>
             </div>
             <div className="border border-dsi-outline/20 rounded-xl p-5">
               <span className="opacity-50 block text-xs mb-1 uppercase tracking-wider">Currency</span>
@@ -64,11 +64,11 @@ export default function DeductibleStructureTab() {
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Attachment Point</span>
-              <span className="font-bold">{formatDollar(rt.attachment_point)}</span>
+              <span className="font-bold">{formatCurrency(rt.attachment_point)}</span>
             </div>
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Layer Limit</span>
-              <span className="font-bold">{formatDollar(rt.layer_limit)}</span>
+              <span className="font-bold">{formatCurrency(rt.layer_limit)}</span>
             </div>
           </div>
         </SectionCard>
@@ -82,7 +82,7 @@ export default function DeductibleStructureTab() {
               {Object.entries(rt.sub_limits).map(([key, value]) => (
                 <div key={key} className="flex justify-between items-center py-2 px-3 rounded bg-dsi-background/20 text-sm">
                   <span className="opacity-70 capitalize">{key.replace(/_/g, " ")}</span>
-                  <span className="font-bold">{typeof value === "number" ? formatDollar(value) : String(value)}</span>
+                  <span className="font-bold">{typeof value === "number" ? formatCurrency(value) : String(value)}</span>
                 </div>
               ))}
             </div>

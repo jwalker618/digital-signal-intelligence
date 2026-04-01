@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
 import StickyHeader from "@/components/shared/StickyHeader";
 import { FileText, Building2, DollarSign, ArrowRightLeft, Calendar, Activity } from "lucide-react";
-import { formatDollar, formatPct } from "@/lib/format";
+import { formatCurrency, formatPercent, formatNumber, formatDate, formatText } from "@/lib/format";
 
 export default function CommercialTermsTab() {
   const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
@@ -56,13 +56,13 @@ export default function CommercialTermsTab() {
         <div className="px-dsi-pad py-4">
           <div className="space-y-3">
             {[
-              { label: "Technical Premium (USD)", value: formatDollar(ct.technical_premium_usd) },
-              { label: "Technical Premium (Local)", value: ct.technical_premium_local ? `${ct.base_currency || ""} ${Number(ct.technical_premium_local).toLocaleString()}` : "-" },
-              { label: "Total Commission", value: ct.total_commission != null ? `- ${formatDollar(ct.total_commission)}` : "-", sub: true },
-              { label: "Net Premium", value: formatDollar(ct.net_premium), highlight: true },
-              { label: "Total Taxes & Levies", value: ct.total_taxes != null ? `+ ${formatDollar(ct.total_taxes)}` : "-", sub: true },
-              { label: "Gross Premium", value: formatDollar(ct.gross_premium), highlight: true },
-              { label: "Offered Premium", value: formatDollar(ct.offered_premium), highlight: true, accent: true },
+              { label: "Technical Premium (USD)", value: formatCurrency(ct.technical_premium_usd) },
+              { label: "Technical Premium (Local)", value: ct.technical_premium_local ? `${ct.base_currency || ""} ${formatNumber(ct.technical_premium_local)}` : "-" },
+              { label: "Total Commission", value: ct.total_commission != null ? `- ${formatCurrency(ct.total_commission)}` : "-", sub: true },
+              { label: "Net Premium", value: formatCurrency(ct.net_premium), highlight: true },
+              { label: "Total Taxes & Levies", value: ct.total_taxes != null ? `+ ${formatCurrency(ct.total_taxes)}` : "-", sub: true },
+              { label: "Gross Premium", value: formatCurrency(ct.gross_premium), highlight: true },
+              { label: "Offered Premium", value: formatCurrency(ct.offered_premium), highlight: true, accent: true },
             ].map((row) => (
               <div
                 key={row.label}
@@ -85,19 +85,19 @@ export default function CommercialTermsTab() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Brokerage</span>
-            <span className="font-bold">{deductions.brokerage_rate != null ? formatPct(deductions.brokerage_rate) : formatPct(deductions.brokerage)}</span>
+            <span className="font-bold">{deductions.brokerage_rate != null ? formatPercent(deductions.brokerage_rate) : formatPercent(deductions.brokerage)}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Overrider</span>
-            <span className="font-bold">{deductions.overrider_rate != null ? formatPct(deductions.overrider_rate) : formatPct(deductions.overrider)}</span>
+            <span className="font-bold">{deductions.overrider_rate != null ? formatPercent(deductions.overrider_rate) : formatPercent(deductions.overrider)}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Profit Commission</span>
-            <span className="font-bold">{deductions.profit_commission_rate != null ? formatPct(deductions.profit_commission_rate) : formatPct(deductions.profit_commission)}</span>
+            <span className="font-bold">{deductions.profit_commission_rate != null ? formatPercent(deductions.profit_commission_rate) : formatPercent(deductions.profit_commission)}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Total Commission</span>
-            <span className="font-bold">{formatDollar(ct.total_commission)}</span>
+            <span className="font-bold">{formatCurrency(ct.total_commission)}</span>
           </div>
         </div>
       </SectionCard>
@@ -111,7 +111,7 @@ export default function CommercialTermsTab() {
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">FX Rate to USD</span>
-            <span className="font-bold">{ct.fx_rate_to_usd?.toFixed(4) || "1.0000"}</span>
+            <span className="font-bold">{ct.fx_rate_to_usd != null ? formatNumber(ct.fx_rate_to_usd, 4) : "1.0000"}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Rate Source</span>
@@ -119,7 +119,7 @@ export default function CommercialTermsTab() {
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Rate Date</span>
-            <span className="font-bold">{ct.fx_rate_date ? new Date(ct.fx_rate_date).toLocaleDateString() : "N/A"}</span>
+            <span className="font-bold">{ct.fx_rate_date ? formatDate(ct.fx_rate_date) : "N/A"}</span>
           </div>
         </div>
       </SectionCard>
@@ -133,7 +133,7 @@ export default function CommercialTermsTab() {
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Signed Line</span>
-            <span className="font-bold">{ct.signed_line != null ? formatPct(ct.signed_line) : "N/A"}</span>
+            <span className="font-bold">{ct.signed_line != null ? formatPercent(ct.signed_line) : "N/A"}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Role</span>
@@ -151,15 +151,15 @@ export default function CommercialTermsTab() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Offered Premium</span>
-            <span className="font-bold text-dsi-selected text-lg">{formatDollar(ct.offered_premium)}</span>
+            <span className="font-bold text-dsi-selected text-lg">{formatCurrency(ct.offered_premium)}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Discretion</span>
-            <span className="font-bold">{ct.offered_premium_discretion != null ? formatPct(ct.offered_premium_discretion) : "N/A"}</span>
+            <span className="font-bold">{ct.offered_premium_discretion != null ? formatPercent(ct.offered_premium_discretion) : "N/A"}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Minimum Premium</span>
-            <span className="font-bold">{formatDollar(ct.minimum_gross_premium)}</span>
+            <span className="font-bold">{formatCurrency(ct.minimum_gross_premium)}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">At Minimum?</span>
@@ -176,7 +176,7 @@ export default function CommercialTermsTab() {
           {ct.offered_premium_set_at && (
             <div className="col-span-full">
               <span className="opacity-50 block text-xs mb-0.5">Set At</span>
-              <span className="font-bold">{new Date(ct.offered_premium_set_at).toLocaleString()}</span>
+              <span className="font-bold">{formatDate(ct.offered_premium_set_at)}</span>
             </div>
           )}
         </div>
@@ -187,15 +187,15 @@ export default function CommercialTermsTab() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Written Date</span>
-            <span className="font-bold">{ct.written_date ? new Date(ct.written_date).toLocaleDateString() : "N/A"}</span>
+            <span className="font-bold">{ct.written_date ? formatDate(ct.written_date) : "N/A"}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Earned Start</span>
-            <span className="font-bold">{ct.earned_start ? new Date(ct.earned_start).toLocaleDateString() : "N/A"}</span>
+            <span className="font-bold">{ct.earned_start ? formatDate(ct.earned_start) : "N/A"}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Earned End</span>
-            <span className="font-bold">{ct.earned_end ? new Date(ct.earned_end).toLocaleDateString() : "N/A"}</span>
+            <span className="font-bold">{ct.earned_end ? formatDate(ct.earned_end) : "N/A"}</span>
           </div>
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Earned Method</span>

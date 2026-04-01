@@ -19,8 +19,8 @@ import {
   CHART_AXIS_COLOR, 
   CHART_SUBJECT_COLOR, 
   CHART_PEER_COLOR } from "@/lib/chartConfig";
-import { 
-  formatNum 
+import {
+  formatNumber, formatPercent, formatCurrency
 } from "@/lib/format";
 
 export default function LossTab() {
@@ -125,16 +125,7 @@ export default function LossTab() {
         >
 
         {/* SECTION HEADER */}
-        <div className="
-          flex gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad
-          pt-2 pb-2
-        "
-        >
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
 
@@ -180,25 +171,10 @@ export default function LossTab() {
           COMPONENT A: SUBJECT PROFILE — expanded with all loss fields
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="
-          flex gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad
-          pt-2 pb-2
-        ">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Target className="icon"/><span className="text-sm">Active Submission: Loss Profile</span>
         </div>
-        <div className="
-          flex flex-col flex-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-4 pb-4
-        ">
+        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
           {/* Row 1: Primary KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 pl-dsi-pad pr-dsi-pad">
             <div>
@@ -216,25 +192,25 @@ export default function LossTab() {
             <div>
               <span className="opacity-70 block text-xs mb-1">Combined Modifier</span>
               <span className="font-bold text-lg">
-                {activeVersion.loss_combined_modifier?.toFixed(3) || "1.000"}x
+                {activeVersion.loss_combined_modifier != null ? formatNumber(activeVersion.loss_combined_modifier, 3) : "1.000"}x
               </span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Freq Multiplier</span>
               <span className="font-bold text-lg">
-                {activeVersion.loss_frequency_multiplier?.toFixed(3) || "1.000"}x
+                {activeVersion.loss_frequency_multiplier != null ? formatNumber(activeVersion.loss_frequency_multiplier, 3) : "1.000"}x
               </span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Sev Multiplier</span>
               <span className="font-bold text-lg">
-                {activeVersion.loss_severity_multiplier?.toFixed(3) || "1.000"}x
+                {activeVersion.loss_severity_multiplier != null ? formatNumber(activeVersion.loss_severity_multiplier, 3) : "1.000"}x
               </span>
             </div>
             <div>
               <span className="opacity-70 block text-xs mb-1">Model Confidence</span>
               <span className="font-bold text-lg">
-                {activeVersion.loss_confidence != null ? `${(activeVersion.loss_confidence * 100).toFixed(0)}%` : "N/A"}
+                {activeVersion.loss_confidence != null ? formatPercent(activeVersion.loss_confidence, 0) : "N/A"}
               </span>
             </div>
             <div>
@@ -243,7 +219,7 @@ export default function LossTab() {
                 {activeVersion.loss_cohort_name || "Unknown"}
               </span>
               <span className="text-[10px] opacity-40">
-                {activeVersion.loss_cohort_confidence != null ? `${(activeVersion.loss_cohort_confidence * 100).toFixed(0)}% conf` : ''}
+                {activeVersion.loss_cohort_confidence != null ? `${formatPercent(activeVersion.loss_cohort_confidence, 0)} conf` : ''}
               </span>
             </div>
             <div>
@@ -286,25 +262,10 @@ export default function LossTab() {
 
             {/* COMPONENT B: SCATTER MATRIX (decision-colored) */}
             <div className="lg:col-span-2 flex flex-col">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <ShieldAlert className="icon"/><span className="text-sm">Frequency vs. Severity Matrix</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-x-hidden whitespace-nowrap border-collapse
-                rounded-b-xl
-                bg-dsi-analysis shadow-sm
-                pt-4 pb-4
-              ">
+              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
                 <div className="pl-dsi-pad pr-dsi-pad flex gap-4 mb-2 text-[10px] uppercase tracking-wider">
                   <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-approve"></span> Approve</span>
                   <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-refer"></span> Refer</span>
@@ -334,7 +295,7 @@ export default function LossTab() {
                       <RechartsTooltip
                         cursor={{ strokeDasharray: '3 3' }}
                         contentStyle={tooltipStyle}
-                        formatter={(value: any, name: string) => [Number(value).toFixed(1), name]}
+                        formatter={(value: any, name: string) => [formatNumber(Number(value), 1), name]}
                       />
                       {/* Subject crosshair reference lines */}
                       <ReferenceLine
@@ -368,25 +329,10 @@ export default function LossTab() {
 
             {/* COMPONENT D: SUBJECT VELOCITY PANEL with previous scores */}
             <div className="flex flex-col">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <TrendingUp className="icon"/><span className="text-sm">Loss Trajectory</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-x-hidden whitespace-nowrap border-collapse
-                rounded-b-xl
-                bg-dsi-analysis shadow-sm
-                pt-4 pb-4
-              ">
+              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
                 <div className="pl-dsi-pad pr-dsi-pad space-y-3">
 
                   {/* Overall trend */}
@@ -398,13 +344,13 @@ export default function LossTab() {
                     </div>
                     <div className="flex items-baseline gap-1 mt-1">
                       <span className={`font-bold text-sm ${getVelocityColor(scoreVelocity)}`}>
-                        {scoreVelocity > 0 ? '+' : ''}{scoreVelocity.toFixed(1)}
+                        {scoreVelocity > 0 ? '+' : ''}{formatNumber(scoreVelocity, 1)}
                       </span>
                       <span className="text-xs opacity-50">pts/period</span>
                     </div>
                     {prevScore != null && (
                       <div className="text-[10px] opacity-40 mt-1">
-                        Previous: {formatNum(prevScore, 1)} → Current: {formatNum(activeVersion.loss_propensity_score, 1)}
+                        Previous: {formatNumber(prevScore, 1)} → Current: {formatNumber(activeVersion.loss_propensity_score, 1)}
                       </div>
                     )}
                   </div>
@@ -418,12 +364,12 @@ export default function LossTab() {
                         <span className="font-bold">{getTrendLabel(freqTrend)}</span>
                       </div>
                       <span className={`font-bold text-sm ${getVelocityColor(freqVelocity)}`}>
-                        {freqVelocity > 0 ? '+' : ''}{freqVelocity.toFixed(1)}
+                        {freqVelocity > 0 ? '+' : ''}{formatNumber(freqVelocity, 1)}
                       </span>
                     </div>
                     {prevFreqScore != null && (
                       <div className="text-[10px] opacity-40 mt-1">
-                        Previous: {formatNum(prevFreqScore, 1)} → Current: {formatNum(activeVersion.loss_propensity_score, 1)}
+                        Previous: {formatNumber(prevFreqScore, 1)} → Current: {formatNumber(activeVersion.loss_propensity_score, 1)}
                       </div>
                     )}
                   </div>
@@ -437,12 +383,12 @@ export default function LossTab() {
                         <span className="font-bold">{getTrendLabel(sevTrend)}</span>
                       </div>
                       <span className={`font-bold text-sm ${getVelocityColor(sevVelocity)}`}>
-                        {sevVelocity > 0 ? '+' : ''}{sevVelocity.toFixed(1)}
+                        {sevVelocity > 0 ? '+' : ''}{formatNumber(sevVelocity, 1)}
                       </span>
                     </div>
                     {prevSevScore != null && (
                       <div className="text-[10px] opacity-40 mt-1">
-                        Previous: {formatNum(prevSevScore, 1)} → Current: {formatNum(activeVersion.severity_propensity_score, 1)}
+                        Previous: {formatNumber(prevSevScore, 1)} → Current: {formatNumber(activeVersion.severity_propensity_score, 1)}
                       </div>
                     )}
                   </div>
@@ -481,26 +427,11 @@ export default function LossTab() {
 
             {/* COHORT BENCHMARKING (2/3 width) */}
             <div className="lg:col-span-2 flex flex-col">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <BarChart3 className="icon"/><span className="text-sm">Cohort Benchmarking</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-x-hidden whitespace-nowrap border-collapse
-                rounded-b-xl
-                bg-dsi-analysis shadow-sm
-                pt-4 pb-4
-              ">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({subjectModifier.toFixed(3)}x).</p>
+              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
                 <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
                   {lossCohortBenchmarks.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -522,7 +453,7 @@ export default function LossTab() {
                           contentStyle={tooltipStyle}
                           cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
                           formatter={(value: any, name: string) => {
-                            if (name === 'avg_modifier') return [`${Number(value).toFixed(3)}x`, 'Avg Modifier'];
+                            if (name === 'avg_modifier') return [`${formatNumber(Number(value), 3)}x`, 'Avg Modifier'];
                             return [value, name];
                           }}
                           labelFormatter={(label) => {
@@ -537,7 +468,7 @@ export default function LossTab() {
                           strokeDasharray="6 3"
                           strokeWidth={2}
                         >
-                          <Label value={`Subject ${subjectModifier.toFixed(3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
+                          <Label value={`Subject ${formatNumber(subjectModifier, 3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
                         </ReferenceLine>
                         <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
                           label={({ x, y, width, index }: any) => {
@@ -567,27 +498,10 @@ export default function LossTab() {
 
             {/* LOSS GROUP SCORES BREAKDOWN (1/3 width) */}
             <div className="flex flex-col">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <Layers className="icon"/><span className="text-sm">Loss Group Scores</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-y-auto border-collapse
-                rounded-b-xl
-                no-scrollbar
-                bg-dsi-analysis shadow-sm
-                pt-2 pb-2
-                max-h-[400px]
-              ">
+              <div className="dsi-section-analysis overflow-y-auto border-collapse no-scrollbar max-h-[400px]">
                 {groupEntries.length > 0 ? (
                   <div className="space-y-0">
                     {groupEntries.map(([group, detail]: [string, any]) => {
@@ -599,7 +513,7 @@ export default function LossTab() {
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-xs font-semibold truncate max-w-[140px]" title={group}>{group}</span>
                             {confidence != null && (
-                              <span className="text-[10px] opacity-40 ml-1">{(confidence * 100).toFixed(0)}% conf</span>
+                              <span className="text-[10px] opacity-40 ml-1">{formatPercent(confidence, 0)} conf</span>
                             )}
                           </div>
                           {/* Frequency bar */}
@@ -614,7 +528,7 @@ export default function LossTab() {
                                 }}
                               />
                             </div>
-                            <span className="text-[10px] font-bold w-8 text-right">{formatNum(freqScore, 1)}</span>
+                            <span className="text-[10px] font-bold w-8 text-right">{formatNumber(freqScore, 1)}</span>
                           </div>
                           {/* Severity bar */}
                           <div className="flex items-center gap-2">
@@ -628,7 +542,7 @@ export default function LossTab() {
                                 }}
                               />
                             </div>
-                            <span className="text-[10px] font-bold w-8 text-right">{formatNum(sevScore, 1)}</span>
+                            <span className="text-[10px] font-bold w-8 text-right">{formatNumber(sevScore, 1)}</span>
                           </div>
                         </div>
                       );
@@ -649,27 +563,11 @@ export default function LossTab() {
               ======================================================================= */}
           {lossConditions.length > 0 && (
             <div className="flex flex-col pt-2 pb-2">
-              <div className="
-                flex gap-dsi-pad
-                rounded-t-xl
-                border-b-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                bg-dsi-analysis/60
-                pl-dsi-pad
-                pt-2 pb-2
-              ">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <AlertTriangle className="icon"/>
                 <span className="text-sm">Loss Signal Conditions ({lossConditions.length})</span>
               </div>
-              <div className="
-                flex flex-col flex-1
-                border-b-3 border-dsi-contrast-background
-                overflow-y-auto border-collapse
-                rounded-b-xl
-                bg-dsi-analysis shadow-sm
-                pt-2 pb-2
-                max-h-[280px]
-              ">
+              <div className="dsi-section-analysis overflow-y-auto border-collapse max-h-[280px]">
                 <div className="space-y-0">
                   {lossConditions.map((cond: any, idx: number) => {
                     const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
@@ -695,7 +593,7 @@ export default function LossTab() {
                           </span>
                           {cond.action_value != null && typeof cond.action_value === 'number' && (
                             <span className="text-xs font-bold opacity-70 w-16 text-right">
-                              {isModifier ? `${(cond.action_value * 100).toFixed(0)}%` :
+                              {isModifier ? formatPercent(cond.action_value, 0) :
                                isTierOverride ? `→ T${cond.action_value}` :
                                cond.action_value}
                             </span>
