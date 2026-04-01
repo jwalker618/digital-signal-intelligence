@@ -8,35 +8,11 @@ import { Layers, Activity, DollarSign, Shield } from "lucide-react";
 import { formatDollar } from "@/lib/format";
 
 export default function DeductibleStructureTab() {
-  const { activeSubmission, activeQuote, activeVersion, riskTerms, isFetchingTerms, fetchCommercialTerms } = useDsiStore();
-
-  useEffect(() => {
-    if (activeVersion?.version_code) {
-      fetchCommercialTerms(activeVersion.version_code);
-    }
-  }, [activeVersion?.version_code, fetchCommercialTerms]);
+  const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  if (isFetchingTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <Activity className="w-8 h-8 animate-spin" />
-        <p className="text-sm tracking-widest uppercase">Loading Deductible Structure...</p>
-      </div>
-    );
-  }
-
-  if (!riskTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <Layers className="w-12 h-12 opacity-30" />
-        <p className="text-sm tracking-widest uppercase">No risk terms available for this submission</p>
-      </div>
-    );
-  }
-
-  const rt = riskTerms;
+  const rt = activeRisk;
 
   const deductibleTypeLabel: Record<string, string> = {
     per_occurrence: "Per Occurrence",

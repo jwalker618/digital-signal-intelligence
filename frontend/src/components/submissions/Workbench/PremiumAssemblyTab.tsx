@@ -8,35 +8,11 @@ import { Calculator, ArrowDown, Activity, AlertTriangle, DollarSign } from "luci
 import { formatDollar, formatPct } from "@/lib/format";
 
 export default function PremiumAssemblyTab() {
-  const { activeSubmission, activeQuote, activeVersion, commercialTerms, isFetchingTerms, fetchCommercialTerms } = useDsiStore();
-
-  useEffect(() => {
-    if (activeVersion?.version_code) {
-      fetchCommercialTerms(activeVersion.version_code);
-    }
-  }, [activeVersion?.version_code, fetchCommercialTerms]);
+  const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  if (isFetchingTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <Activity className="w-8 h-8 animate-spin" />
-        <p className="text-sm tracking-widest uppercase">Loading Premium Assembly...</p>
-      </div>
-    );
-  }
-
-  if (!commercialTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <Calculator className="w-12 h-12 opacity-30" />
-        <p className="text-sm tracking-widest uppercase">No commercial terms available</p>
-      </div>
-    );
-  }
-
-  const ct = commercialTerms;
+  const ct = activeCommercial;
   const deductions = ct.deductions || {};
   const taxes = ct.taxes_and_levies || {};
 

@@ -3,38 +3,32 @@
 import { useState, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import Modal from "@/components/Modal";
+
 import {
-  User, Search, MessageSquare, Plus, Paperclip,
-  ShieldCheck, ShieldAlert, AlertTriangle, Layers, Target,
-  Building2, Shield, ShieldX, ShieldQuestionMark,
+  User, Search, MessageSquare, Plus, 
+  ShieldCheck, Layers, 
+  Building2, ShieldX, ShieldQuestionMark, Scale,
+  TrendingUpDown, Globe,
+  ChartNoAxesGantt,
 } from "lucide-react";
-import { formatNum, formatDollar } from "@/lib/format";
+
+import { formatNum, formatNumber, formatPercent, formatDate, formatText } from "@/lib/format";
+import "@/app/globals.css";
 
 const DECISION_STYLE: Record<string, { bg: string; }> = {
-  approve: { 
-    bg: 'bg-dsi-approve', 
-    },
-  refer: { 
-    bg: 'bg-dsi-refer', 
-    },
-  decline: { 
-    bg: 'bg-dsi-decline', 
-    },
+  approve: { bg: 'bg-dsi-approve', },
+  refer: {   bg: 'bg-dsi-refer',   },
+  decline: { bg: 'bg-dsi-decline', },
 };
 
 export default function SummaryTab() {
-  const { activeSubmission, activeQuote, activeVersion, addNote, commercialTerms, riskTerms, fetchCommercialTerms } = useDsiStore();
+  const { activeSubmission, activeQuote, activeVersion, activeCommercial, activeRisk, addNote,  } = useDsiStore();
 
   const [isWhoOpen, setIsWhoOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
+  const [isBaseOpen, setIsBaseOpen] = useState(false);  
   const [newNoteText, setNewNoteText] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
-
-  useEffect(() => {
-    if (activeVersion?.version_code) {
-      fetchCommercialTerms(activeVersion.version_code);
-    }
-  }, [activeVersion?.version_code, fetchCommercialTerms]);
 
   if (!activeSubmission || !activeVersion) {
     return (
@@ -64,12 +58,12 @@ export default function SummaryTab() {
       {/* ═══════════════════════════════════════════════════════════════════
           DECISION BANNER — incorporates status, dates, policy info
           ═══════════════════════════════════════════════════════════════════ */}
-      <div className={`rounded-xl border-b-3 border-dsi-contrast-background ${dStyle.bg} shadow-sm px-dsi-pad py-4 mb-4`}>
+      <div className={`rounded-xl border-b-3 border-dsi-contrast-background ${dStyle.bg} shadow-sm py-4 mb-4`}>
         {/* Top row: Decision + status context */}
         
-        <div className="flex items-center justify-between mb-3 pb-3 border-b border-dsi-outline/10">
+        <div className="flex items-center justify-between pb-3 border-b border-dsi-outline/50">
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 pl-dsi-pad">
             {decision === 'approve' ? 
               <ShieldCheck className={`w-10 h-10 text-dsi-selected`} /> :
              decision === 'refer' ? 
@@ -80,37 +74,37 @@ export default function SummaryTab() {
                 {activeVersion.decision || 'Pending'}
               </span>
               {activeVersion.auto_approve && (
-                <span className="block text-[10px] opacity-50">Auto-approved by engine</span>
+                <span className="block text-xs">Auto-approved by engine</span>
               )}
             </div>
           </div>
           
-          <div className="flex items-center gap-6 text-sm whitespace-nowrap">
+          <div className="flex items-center gap-6 pr-dsi-gap">
             <div>
-              <span className="opacity-50 text-xs block">Status</span>
-              <span className="font-bold uppercase">{activeQuote?.status || 'N/A'}</span>
+              <span className="block dsi-analysis-description">Status</span>
+              <span className="dsi-analysis-item">{formatText(activeQuote.status, "upper")}</span>
             </div>
             {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <>
                 <div>
-                  <span className="opacity-50 text-xs block">Valid From</span>
-                  <span className="font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'}</span>
+                  <span className="block dsi-analysis-description">Valid From</span>
+                  <span className="dsi-analysis-item">{formatDate(activeQuote.valid_from)}</span>
                 </div>
                 <div>
-                  <span className="opacity-50 text-xs block">Valid Until</span>
-                  <span className="font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
+                  <span className="block dsi-analysis-description">Valid Until</span>
+                  <span className="dsi-analysis-item">{formatDate(activeQuote.valid_until)}</span>
                 </div>
               </>
             )}
             {activeQuote?.status === 'bound' && (
               <>
                 <div>
-                  <span className="opacity-50 text-xs block">Bound Date</span>
-                  <span className="font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                  <span className="block dsi-analysis-description">Bound Date</span>
+                  <span className="dsi-analysis-item">{formatDate(activeQuote.bound_at)}</span>
                 </div>
                 <div>
-                  <span className="opacity-50 text-xs block">Policy Ref</span>
-                  <span className="font-bold">{activeQuote?.policy_number || 'Pending'}</span>
+                  <span className="block dsi-analysis-description">Policy Ref</span>
+                  <span className="dsi-analysis-item">{formatText(activeQuote.policy_number, "upper", "pending")}</span>
                 </div>
               </>
             )}
@@ -119,223 +113,243 @@ export default function SummaryTab() {
         </div>
         
         {/* Bottom row: Hero numbers */}
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-[10%_20%_10%_15%_15%_15%]">
 
           {/* row 1 */}
-          <div className="
-            overflow-x-hidden whitespace-nowrap border-collapse
-            flex gap-dsi-pad text-sm"
-            >Final Composite Score
-          </div>
-          <div className="
-            overflow-x-hidden whitespace-nowrap border-collapse
-            flex gap-dsi-pad text-sm 
-            border-r-1 border-dsi-outline/50"
-            >Final Tier
-          </div>
-          <div className="
-            overflow-x-hidden whitespace-nowrap border-collapse
-            flex gap-dsi-pad text-sm 
-            border-r-1 border-dsi-outline/50"
-            >Currency
-          </div>
-          <div className="
-            overflow-x-hidden whitespace-nowrap border-collapse
-            flex gap-dsi-pad text-sm 
-            border-r-1 border-dsi-outline/50"
-            >Recommended Technical Premium
-          </div>
-          <div className="
-            overflow-x-hidden whitespace-nowrap border-collapse
-            flex gap-dsi-pad text-sm 
-            border-r-1 border-dsi-outline/50"
-            >Recommened Techncial Limit
-          </div>
-          <div className="
-            overflow-x-hidden whitespace-nowrap border-collapse
-            flex gap-dsi-pad text-sm 
-            border-r-1 border-dsi-outline/50"
-            >Gross Premium
-          </div>
-
-          <div className="text-2xl font-bold text-dsi-selected">{activeVersion.final_composite_score?.toFixed(1) || "N/A"}</div>
-          <div className="text-2xl font-bold text-dsi-selected uppercase">T{activeVersion.final_tier} ({activeVersion.tier_label})</div>
-          <div className="text-2xl font-bold text-dsi-selected">
-            1
-            </div>
-          <div className="text-2xl font-bold text-dsi-selected">
-              {activeVersion.final_premium ? `${activeVersion.final_premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}`: 0}
-            </div>
-          <div className="text-2xl font-bold text-dsi-selected">
-              {activeQuote?.recommended_limit ? `${activeQuote.recommended_limit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : 0}
-            </div>
-          <div className="text-2xl font-bold text-dsi-selected">
-              {commercialTerms?.gross_premium ? `${commercialTerms.gross_premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : 0}
-            </div>
+          <div className="dsi-grid-table-header">Final Composite Score</div>
+          <div className="dsi-grid-table-header">Final Tier</div>
+          <div className="dsi-grid-table-header">Currency</div>
+          <div className="dsi-grid-table-header">Recommended Technical Premium</div>
+          <div className="dsi-grid-table-header">Recommended Technical Limit</div>
+          <div className="dsi-grid-table-header border-r-0">Gross Premium</div>
+          
+          {/* row 2 */}
+          <div className="dsi-grid-table-item">{formatNumber(activeVersion.final_composite_score, 1)}</div>
+          <div className="dsi-grid-table-item">T{activeVersion.final_tier} ({activeVersion.tier_label})</div>
+          <div className="dsi-grid-table-item">{formatText(activeCommercial.base_currency, "upper", "tbc")}</div>
+          <div className="dsi-grid-table-item">{formatNumber(activeQuote.recommended_premium, 0)}</div>
+          <div className="dsi-grid-table-item">{formatNumber(activeQuote.recommended_limit, 0)}</div>
+          <div className="dsi-grid-table-item border-r-0">{formatNumber(activeCommercial.gross_premium, 0)}</div>
 
         </div>          
 
       </div>
 
+      <div className="grid grid-cols-[10%_90%]">
       {/* ═══════════════════════════════════════════════════════════════════
-          WHO / DISCOVERY (left stacked) + BASE DETAILS (right, full height)
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-[1fr_2fr] gap-4 mb-4">
+          WHO / DISCOVERY / BASE VERSION
+          ═══════════════════════════════════════════════════════════════════ */}      
+        <div className="flex flex-col gap-4 group cursor-pointer">
+          
+          <div onClick={() => setIsWhoOpen(true)} className="dsi-section-analysis rounded-xl">
+            <div className="dsi-analysis-item text-left">
+              <span className="block">Who are they</span>
+              <span className="block font-normal text-xs hover:text-dsi-selected">View &rarr;</span>
+            </div>  
+          </div>
 
-        {/* LEFT: Who + Discovery stacked */}
-        <div className="flex flex-col gap-4">
-          <div onClick={() => setIsWhoOpen(true)} className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold flex items-center gap-2"><User className="w-4 h-4 text-dsi-selected" /> Who they are</h3>
-              <span className="text-xs opacity-50 group-hover:opacity-100 text-dsi-selected">View &rarr;</span>
-            </div>
-            <p className="text-xs opacity-70 line-clamp-3 text-wrap">
-              {activeSubmission.entity_name} &bull; {activeSubmission.submission_data?.industry || 'Unknown Industry'} &bull; {activeSubmission.submission_data?.geography || 'Unknown Geo'}
-            </p>
+          <div onClick={() => setIsDiscoveryOpen(true)} className="dsi-section-analysis rounded-xl">
+            <div className="dsi-analysis-item text-left">
+              <span className="block">Discovery</span>
+              <span className="block font-normal text-xs hover:text-dsi-selected">View &rarr;</span>
+            </div>  
           </div>
-          <div onClick={() => setIsDiscoveryOpen(true)} className="group cursor-pointer border border-dsi-outline/20 rounded-xl p-4 bg-dsi-analysis hover:bg-dsi-background/30 transition-all shadow-sm flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold flex items-center gap-2"><Search className="w-4 h-4 text-dsi-selected" /> Discovery</h3>
-              <span className="text-xs opacity-50 group-hover:opacity-100 text-dsi-selected">View &rarr;</span>
-            </div>
-            <p className="text-xs opacity-70 line-clamp-3 text-wrap">
-              {activeVersion.discovery_output?.domain || 'No domain discovered'} &bull; Confidence: {activeVersion.discovery_output?.confidence || 'N/A'}
-            </p>
+
+          <div onClick={() => setIsBaseOpen(true)} className="dsi-section-analysis rounded-xl">
+            <div className="dsi-analysis-item text-left">
+              <span className="block">Model details</span>
+              <span className="block font-normal text-xs hover:text-dsi-selected">View &rarr;</span>
+            </div>  
           </div>
+
         </div>
 
-        {/* RIGHT: Base Details — same height as left two cards */}
-        <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <Paperclip className="icon"/><span className="text-sm">Base Details</span>
+        {/* ═══════════════════════════════════════════════════════════════════
+            THREE PILLAR ASSESSMENT
+            ═══════════════════════════════════════════════════════════════════ */}
+        <div className="flex flex-col ml-dsi-pad">
+          <div className="dsi-section-header">
+            <Layers className="icon"/>
+            <span className="text-sm">Three Pillar Assessment</span>
           </div>
-          <div className="flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 text-sm text-wrap">
-              <div><span className="opacity-50 block text-xs mb-0.5">Submission Code</span><span className="font-bold">{activeSubmission?.submission_code}</span></div>
-              <div><span className="opacity-50 block text-xs mb-0.5">Quote Code</span><span className="font-bold">{activeQuote?.quote_code}</span></div>
-              <div><span className="opacity-50 block text-xs mb-0.5">Coverage</span><span className="font-semibold">{activeSubmission.coverage}</span></div>
-              <div><span className="opacity-50 block text-xs mb-0.5">Configuration</span><span className="font-semibold">{activeSubmission.configuration}</span></div>
-              <div><span className="opacity-50 block text-xs mb-0.5">Product Type</span><span className="font-semibold">{activeSubmission.submission_data?.product_type || 'N/A'}</span></div>
-              <div><span className="opacity-50 block text-xs mb-0.5">Signal Coverage</span><span className="font-semibold">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span></div>
-              <div><span className="opacity-50 block text-xs mb-0.5">Rec. Premium</span><span className="font-semibold">{activeQuote?.recommended_premium ? `$${activeQuote.recommended_premium.toLocaleString()}` : 'N/A'}</span></div>
-              <div><span className="opacity-50 block text-xs mb-0.5">Rec. Limit</span><span className="font-semibold">{activeQuote?.recommended_limit ? `$${activeQuote.recommended_limit.toLocaleString()}` : 'N/A'}</span></div>
-              <div>
-                <span className="opacity-50 block text-xs mb-0.5">ROL</span>
-                <span className="font-semibold">
-                  {activeQuote?.recommended_premium && activeQuote?.recommended_limit
-                    ? `${((activeQuote.recommended_premium / activeQuote.recommended_limit) * 100).toFixed(2)}%`
-                    : 'N/A'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          THREE PILLAR ASSESSMENT — full width
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-          <Layers className="icon"/><span className="text-sm">Three Pillar Assessment</span>
-        </div>
-        <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* RISK */}
-            <div className="border border-dsi-outline/20 rounded-lg p-4 text-wrap">
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-dsi-outline/10">
-                <Target className="w-4 h-4 text-dsi-selected" />
-                <span className="text-xs font-bold uppercase tracking-wider opacity-60">Risk</span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="opacity-60">Composite Score</span><span className="font-bold">{formatNum(activeVersion.pure_composite_score, 1)}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Score-Based Tier</span><span className="font-bold">Tier {activeVersion.score_based_tier || activeVersion.final_tier}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Final Tier</span><span className="font-bold text-dsi-selected">Tier {activeVersion.final_tier} ({activeVersion.tier_label})</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Confidence</span><span className="font-bold">{((activeVersion.confidence || 0) * 100).toFixed(0)}%</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Signal Coverage</span><span className="font-bold">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span></div>
-              </div>
-            </div>
-            {/* LOSS */}
-            <div className="border border-dsi-outline/20 rounded-lg p-4 text-wrap">
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-dsi-outline/10">
-                <ShieldAlert className="w-4 h-4 text-dsi-selected" />
-                <span className="text-xs font-bold uppercase tracking-wider opacity-60">Loss Propensity</span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="opacity-60">Propensity Band</span><span className="font-bold uppercase">{activeVersion.loss_propensity_band?.replace(/_/g, ' ') || 'N/A'}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Combined Modifier</span><span className="font-bold">{activeVersion.loss_combined_modifier?.toFixed(3) || '1.000'}x</span></div>
-                <div className="flex justify-between">
-                  <span className="opacity-60">Trend</span>
-                  <span className={`font-bold ${activeVersion.loss_trend_direction?.toLowerCase().includes('improv') ? 'text-dsi-positive' : activeVersion.loss_trend_direction?.toLowerCase().includes('deter') ? 'text-dsi-negative' : 'opacity-70'}`}>
-                    {activeVersion.loss_trend_direction?.replace(/_/g, ' ') || 'Stable'}
-                  </span>
+          <div className="dsi-section-analysis">
+            <div className="grid grid-cols-1 md:grid-cols-3">
+              
+              {/* RISK */}
+              <div className="border-r-1 border-dsi-outline/50">
+                <div className="flex gap-2 ml-dsi-pad pt-1 pb-1">
+                  <ChartNoAxesGantt className="icon"/>
+                  <span className="text-sm">Risk</span>
                 </div>
-                <div className="flex justify-between"><span className="opacity-60">Cohort</span><span className="font-bold text-xs">{activeVersion.loss_cohort_name || 'Unknown'}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Model Confidence</span><span className="font-bold">{activeVersion.loss_confidence != null ? `${(activeVersion.loss_confidence * 100).toFixed(0)}%` : 'N/A'}</span></div>
+                <div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Final Composite Score</span>
+                    <span className="dsi-analysis-item">{formatNumber(activeVersion.final_composite_score, 1)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Score-Based Tier</span>
+                    <span className="dsi-analysis-item">T{activeVersion.score_based_tier}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Final Tier</span>
+                    <span className="dsi-analysis-item">T{activeVersion.final_tier} ({activeVersion.tier_label})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Confidence</span>
+                    <span className="dsi-analysis-item">{((activeVersion.confidence || 0) * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Signal Coverage</span>
+                    <span className="dsi-analysis-item">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            {/* EXPOSURE */}
-            <div className="border border-dsi-outline/20 rounded-lg p-4 text-wrap">
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-dsi-outline/10">
-                <AlertTriangle className="w-4 h-4 text-dsi-selected" />
-                <span className="text-xs font-bold uppercase tracking-wider opacity-60">Exposure</span>
+              
+              {/* LOSS */}
+              <div className="border-r-1 border-dsi-outline/50">
+                <div className="flex gap-2 ml-dsi-pad pt-1 pb-1">
+                  <TrendingUpDown className="icon" />
+                  <span className="text-sm">Loss Propensity</span>
+                </div>
+                <div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Propensity Band</span>
+                    <span className="dsi-analysis-item">{activeVersion.loss_propensity_band?.replace(/_/g, ' ') || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Combined Modifier</span>
+                    <span className="dsi-analysis-item">{activeVersion.loss_combined_modifier?.toFixed(3) || '1.000'}x</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Trend</span>
+                    <span className={`font-bold ${activeVersion.loss_trend_direction?.toLowerCase().includes('improv') ? 'text-dsi-positive' : activeVersion.loss_trend_direction?.toLowerCase().includes('deter') ? 'text-dsi-negative' : 'opacity-70'}`}>
+                      {activeVersion.loss_trend_direction?.replace(/_/g, ' ') || 'Stable'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Cohort</span>
+                    <span className="dsi-analysis-item">{activeVersion.loss_cohort_name || 'Unknown'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Model Confidence</span>
+                    <span className="dsi-analysis-item">{activeVersion.loss_confidence != null ? `${(activeVersion.loss_confidence * 100).toFixed(0)}%` : 'N/A'}</span>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="opacity-60">Exposure Value</span><span className="font-bold">${(activeVersion.exposure_value || 0).toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Exposure Band</span><span className="font-bold uppercase">{activeVersion.exposure_band_label || 'N/A'}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Modifier</span><span className="font-bold">{activeVersion.exposure_modifier?.toFixed(3) || '1.000'}x</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Size Score</span><span className="font-bold">{formatNum(activeVersion.exposure_size_score, 1)}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Method</span><span className="font-bold text-xs uppercase">{activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || 'N/A'}</span></div>
+              
+              {/* EXPOSURE */}
+              <div>
+                <div className="flex gap-2 ml-dsi-pad pt-1 pb-1">
+                  <Globe className="icon" />
+                  <span className="text-sm">Exposure</span>
+                </div>
+                <div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Exposure Value</span>
+                    <span className="dsi-analysis-item">{formatNumber(activeVersion.exposure_value, 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Exposure Band</span>
+                    <span className="dsi-analysis-item">{activeVersion.exposure_band_label || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Modifier</span>
+                    <span className="dsi-analysis-item">{activeVersion.exposure_modifier?.toFixed(3) || '1.000'}x</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Size Score</span>
+                    <span className="dsi-analysis-item">{formatNum(activeVersion.exposure_size_score, 1)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="dsi-analysis-description">Method</span>
+                    <span className="dsi-analysis-item ">{activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || 'N/A'}</span>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
         </div>
+
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
           COMMERCIAL & RISK TERMS SUMMARY
           ═══════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 pb-2">
-        {/* Commercial Summary Card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 pb-4">  
+        
         <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <Building2 className="icon"/><span className="text-sm">Commercial Summary</span>
+          <div className="dsi-section-header">
+            <Building2 className="icon"/>
+            <span className="text-sm">Commercial Summary</span>
           </div>
-          <div className="flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
-            {commercialTerms ? (
-              <div className="space-y-2 text-sm text-wrap">
-                <div className="flex justify-between"><span className="opacity-60">Entity</span><span className="font-bold">{commercialTerms.entity_name || "N/A"}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Offered Premium</span><span className="font-bold text-dsi-selected">{formatDollar(commercialTerms.offered_premium)}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Gross Premium</span><span className="font-bold">{formatDollar(commercialTerms.gross_premium)}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Currency</span><span className="font-bold">{commercialTerms.base_currency || "USD"}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Distribution</span><span className="font-bold uppercase">{commercialTerms.distribution_type || "N/A"}</span></div>
+
+          <div className="dsi-section-analysis">
+            {activeCommercial ? (
+              <div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Entity</span>
+                  <span className="dsi-analysis-item">{activeCommercial.entity_name || "N/A"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Offered Premium</span>
+                  <span className="dsi-analysis-item">{formatNumber(activeCommercial.offered_premium, 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Gross Premium</span>
+                  <span className="dsi-analysis-item">{formatNumber(activeCommercial.gross_premium, 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Currency</span>
+                  <span className="dsi-analysis-item">{activeCommercial.base_currency || "USD"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Distribution</span>
+                  <span className="dsi-analysis-item">{activeCommercial.distribution_type || "N/A"}</span>
+                </div>
               </div>
             ) : (
               <p className="text-xs opacity-50 italic text-center py-4 text-wrap">No commercial terms available</p>
             )}
           </div>
+
         </div>
 
         {/* Risk Terms Summary Card */}
         <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <Shield className="icon"/><span className="text-sm">Risk Terms Summary</span>
+          <div className="dsi-section-header">
+            <Scale className="icon"/>
+            <span className="text-sm">Risk Terms Summary</span>
           </div>
-          <div className="flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
-            {riskTerms ? (
-              <div className="space-y-2 text-sm text-wrap">
-                <div className="flex justify-between"><span className="opacity-60">Deductible Type</span><span className="font-bold capitalize">{riskTerms.deductible_type?.replace(/_/g, " ") || "N/A"}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Deductible Amount</span><span className="font-bold">{formatDollar(riskTerms.deductible_amount)}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">SIR</span><span className={`font-bold ${riskTerms.sir_applies ? "text-dsi-warning" : ""}`}>{riskTerms.sir_applies ? `Yes — ${formatDollar(riskTerms.sir_amount)}` : "No"}</span></div>
-                <div className="flex justify-between"><span className="opacity-60">Aggregate Limit</span><span className="font-bold">{formatDollar(riskTerms.aggregate_limit)}</span></div>
+
+          <div className="dsi-section-analysis">
+            {activeRisk ? (
+              <div>
                 <div className="flex justify-between">
-                  <span className="opacity-60">Coverage Terms</span>
-                  <span className="font-bold">
-                    {riskTerms.coverage_terms ? `${Object.keys(riskTerms.coverage_terms).length} terms` : "N/A"}
+                  <span className="dsi-analysis-description">Deductible Type</span>
+                  <span className="dsi-analysis-item">{activeRisk.deductible_type || "N/A"}</span>
+                  </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Deductible Amount</span>
+                  <span className="dsi-analysis-item">{formatNumber(activeRisk.deductible_amount, 0)}</span>
+                  </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">SIR</span>
+                  <span className="dsi-analysis-item">{formatNumber(activeRisk.sir_amount, 0, 'n/a')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Aggregate Limit</span>
+                  <span className="dsi-analysis-item">{formatNumber(activeRisk.aggregate_limit, 0, 'n/a')}</span>
+                  </div>
+                <div className="flex justify-between">
+                  <span className="dsi-analysis-description">Coverage Terms</span>
+                  <span className="dsi-analysis-item">
+                    {activeRisk.coverage_terms ? `${Object.keys(activeRisk.coverage_terms).length} terms` : "N/A"}
                   </span>
                 </div>
               </div>
+
             ) : (
               <p className="text-xs opacity-50 italic text-center py-4 text-wrap">No risk terms available</p>
             )}
@@ -347,11 +361,14 @@ export default function SummaryTab() {
           NOTES — full width, inline add, persisted to DB
           ═══════════════════════════════════════════════════════════════════ */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-          <MessageSquare className="icon"/><span className="text-sm">Notes ({notes.length})</span>
+        
+        <div className="dsi-section-header">
+          <MessageSquare className="icon"/>
+          <span className="text-sm">Notes ({notes.length})</span>
         </div>
-        <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
-          {/* Inline add */}
+
+        <div className="dsi-section-analysis">
+
           <div className="flex gap-2 mb-4">
             <input
               type="text"

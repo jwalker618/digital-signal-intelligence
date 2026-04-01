@@ -8,35 +8,11 @@ import { RefreshCw, Activity, Layers, DollarSign } from "lucide-react";
 import { formatDollar, formatPct } from "@/lib/format";
 
 export default function AggregateReinstatementTab() {
-  const { activeSubmission, activeQuote, activeVersion, riskTerms, isFetchingTerms, fetchCommercialTerms } = useDsiStore();
-
-  useEffect(() => {
-    if (activeVersion?.version_code) {
-      fetchCommercialTerms(activeVersion.version_code);
-    }
-  }, [activeVersion?.version_code, fetchCommercialTerms]);
+  const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  if (isFetchingTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <Activity className="w-8 h-8 animate-spin" />
-        <p className="text-sm tracking-widest uppercase">Loading Aggregate & Reinstatement...</p>
-      </div>
-    );
-  }
-
-  if (!riskTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <RefreshCw className="w-12 h-12 opacity-30" />
-        <p className="text-sm tracking-widest uppercase">No risk terms available for this submission</p>
-      </div>
-    );
-  }
-
-  const rt = riskTerms;
+  const rt = activeRisk;
 
   return (
     <div className="w-full no-scrollbar border-collapse animate-in fade-in duration-500 pb-12 pt-3">

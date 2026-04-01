@@ -7,35 +7,11 @@ import StickyHeader from "@/components/shared/StickyHeader";
 import { FileCheck, Activity, ShieldCheck, ShieldAlert } from "lucide-react";
 
 export default function CoverageTermsTab() {
-  const { activeSubmission, activeQuote, activeVersion, riskTerms, isFetchingTerms, fetchCommercialTerms } = useDsiStore();
-
-  useEffect(() => {
-    if (activeVersion?.version_code) {
-      fetchCommercialTerms(activeVersion.version_code);
-    }
-  }, [activeVersion?.version_code, fetchCommercialTerms]);
+  const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  if (isFetchingTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <Activity className="w-8 h-8 animate-spin" />
-        <p className="text-sm tracking-widest uppercase">Loading Coverage Terms...</p>
-      </div>
-    );
-  }
-
-  if (!riskTerms) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
-        <FileCheck className="w-12 h-12 opacity-30" />
-        <p className="text-sm tracking-widest uppercase">No risk terms available for this submission</p>
-      </div>
-    );
-  }
-
-  const rt = riskTerms;
+  const rt = activeRisk;
   const coverageTerms = rt.coverage_terms || {};
   const extensions = coverageTerms.extensions || [];
   const exclusions = coverageTerms.exclusions || [];

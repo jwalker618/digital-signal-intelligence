@@ -29,6 +29,8 @@ export interface DsiState {
   activeQuote: string | null;
   activeVersion: string | null;
   activeReferral: string | null;
+  activeCommercial: string | null;
+  activeRisk: string | null;    
   isLoading: boolean;
   error: string | null;
 
@@ -75,13 +77,6 @@ export interface DsiState {
   // Notes
   addNote: (versionCode: string, note: string, source?: string) => Promise<void>;
 
-  // Commercial & Risk Terms (Phase 1)
-  commercialTerms: any | null;
-  riskTerms: any | null;
-  isFetchingTerms: boolean;
-  commercialTermsVersionCode: string | null;
-  fetchCommercialTerms: (versionCode: string) => Promise<void>;
-
   // Sidebar category state
   activeCategory: string;
   setActiveCategory: (category: string) => void;
@@ -115,18 +110,14 @@ export const useDsiStore = create<DsiState>((set, get) => ({
   activeSubmission: null,
   activeQuote: null,
   activeVersion: null,
+  activeCommercial: null,
+  activeRisk: null,
   activeReferral: null,
   isLoading: false,
   error: null,
   referralSignals: [],
   isFetchingSignals: false,
   isSelectingLimit: false,
-
-  // Commercial & Risk Terms
-  commercialTerms: null,
-  riskTerms: null,
-  isFetchingTerms: false,
-  commercialTermsVersionCode: null,
 
   // Sidebar category state
   activeCategory: "Summary",
@@ -185,29 +176,6 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       console.error("Failed to update decision", err);
     }
   }, 
-
-  fetchCommercialTerms: async (versionCode: string) => {
-    if (get().commercialTermsVersionCode === versionCode && get().commercialTerms) return;
-    set({ isFetchingTerms: true });
-    try {
-      const safeFetch = (url: string) => fetch(url).then(res => res.ok ? res.json() : null).catch(() => null);
-
-      const [commercialData, riskData] = await Promise.all([
-        safeFetch(`${API_BASE}/api/v1/commercialterms/${versionCode}`),
-        safeFetch(`${API_BASE}/api/v1/riskterms/${versionCode}`),
-      ]);
-
-      set({
-        commercialTerms: commercialData,
-        riskTerms: riskData,
-        isFetchingTerms: false,
-        commercialTermsVersionCode: versionCode,
-      });
-    } catch (err) {
-      console.error("Failed to fetch commercial terms:", err);
-      set({ commercialTerms: null, riskTerms: null, isFetchingTerms: false, commercialTermsVersionCode: null });
-    }
-  },
 
   fetchRiskSignals: async (versionCode: string) => {
     // Skip if already fetched for this version
@@ -463,8 +431,6 @@ export const useDsiStore = create<DsiState>((set, get) => ({
     // Clear cached tab data when switching submissions
     set({
       isLoading: true, error: null,
-      commercialTerms: null, riskTerms: null, commercialTermsVersionCode: null,
-      riskSignals: [], riskSignalsVersionCode: null,
       lossCohortBenchmarks: [], lossTrendDistribution: [], lossScatterData: [],
       exposureBandBenchmarks: [], exposureTierDistribution: [], exposureScatterData: [],
       modelVersions: [], auditLogs: [],
@@ -478,6 +444,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
         safeFetch(`${API_BASE}/api/v1/submissions/${row.submission_code}`),
         safeFetch(`${API_BASE}/api/v1/modelversion/${row.version_code}/all`),
         safeFetch(`${API_BASE}/api/v1/quotes/${row.quote_code}`),
+        safeFetch(`${API_BASE}/api/v1/commercialterms/${row.version_code}`),
+        safeFetch(`${API_BASE}/api/v1/riskterms/${row.version_code}`),
       ];
 
       const referralPromise = row.referral_code 
@@ -485,7 +453,7 @@ export const useDsiStore = create<DsiState>((set, get) => ({
         : Promise.resolve(null);
 
       // 2. Execute all network requests in parallel
-      const [subData, versionsData, quoteData, referralData] = await Promise.all(
+      const [subData, versionsData, quoteData, commercialData, riskData, referralData] = await Promise.all(
         [
         ...fetchPromises,
         referralPromise
@@ -497,6 +465,8 @@ export const useDsiStore = create<DsiState>((set, get) => ({
           activeSubmission: subData, 
           activeQuote: quoteData,
           activeVersion: versionsData,
+          activeCommercial: commercialData,
+          activeRisk: riskData,
           activeReferral: referralData,
           isLoading: false,
           activeMenu: "Summary"

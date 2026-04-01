@@ -316,8 +316,8 @@ class ModelPricer:
 
         # Always compute distances — even at boundary tiers these show
         # headroom within the tier (e.g. 150 points from ceiling in best tier)
-        distance_better = score - tier_min
-        distance_worse = tier_max - score
+        distance_better = (tier_max - score) + 1
+        distance_worse = (score - tier_min) + 1
 
         return TierMarginContext(
             score=score,

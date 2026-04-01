@@ -89,7 +89,7 @@
   /* Decisions — dark */
   --dsi-approve: #00B050;
   --dsi-refer: #F59E0B;
-  --dsi-decline: #C00000;
+  --dsi-decline: #E85656;
 
   /* Charts — dark */
   --dsi-chart-grid: #334155;
@@ -111,4 +111,51 @@
 @utility icon {
   width: 20px;
   height: 20px;
+}
+
+@utility dsi-section-header {
+  @apply flex;
+  @apply gap-dsi-pad;
+  @apply rounded-t-xl;
+  @apply border-b-1 border-dsi-outline/50;
+  @apply bg-dsi-analysis/60;
+  @apply pl-dsi-pad;
+  @apply pt-2 pb-2;
+}
+
+@utility dsi-section-analysis {
+  @apply flex flex-col flex-1;
+  @apply border-b-3 border-dsi-contrast-background;
+  @apply rounded-b-xl;
+  @apply bg-dsi-analysis ;
+  @apply shadow-sm;
+  @apply pt-2 pb-2;
+}
+
+@utility dsi-grid-table-header {
+  @apply pt-2 pr-dsi-pad pl-dsi-pad;
+  @apply text-sm text-wrap;
+  @apply text-center;
+  @apply border-r border-dsi-outline/50;
+}
+
+@utility dsi-grid-table-item {
+  @apply pr-dsi-pad pl-dsi-pad;
+  @apply text-2xl text-wrap;
+  @apply text-center;
+  @apply font-bold;
+  @apply text-dsi-selected;
+  @apply border-r border-dsi-outline/50;
+}
+
+@utility dsi-analysis-description {
+  @apply pt-1 pl-dsi-pad pr-dsi-pad;
+  @apply text-sm;
+  @apply text-left;
+}
+
+@utility dsi-analysis-item {
+  @apply pt-1 pl-dsi-pad pr-dsi-pad;
+  @apply font-bold;
+  @apply text-left;
 }
