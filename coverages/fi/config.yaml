@@ -2430,6 +2430,7 @@ financial_institutions:
             factor: 0.72
           - deductible: 5000000
             factor: 0.6
+      basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -2537,7 +2538,7 @@ financial_institutions:
           action: APPROVE
           application:
             method: MULTIPLIER
-            applied: 5.0e-06
+            applied: 7.0e-06
             basis: total_assets
       - id: 2
         label: STANDARD_PLUS
@@ -2549,7 +2550,7 @@ financial_institutions:
           action: APPROVE
           application:
             method: MULTIPLIER
-            applied: 8.0e-06
+            applied: 1.0e-05
             basis: total_assets
       - id: 3
         label: STANDARD
@@ -2800,6 +2801,7 @@ financial_institutions:
             factor: 0.72
           - deductible: 2500000
             factor: 0.6
+      basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

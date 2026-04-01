@@ -3521,6 +3521,7 @@ directors_officers:
             factor: 0.68
           - deductible: 500000
             factor: 0.58
+      basis_damping: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
