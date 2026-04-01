@@ -660,13 +660,99 @@ class WorkflowEngine:
                 k: v for k, v in exposure_result.components.items()
                 if k not in ("primary_exposure", "mode")
             }
-            # Add exposure weights per group from config
+
+            # ------------------------------------------------------------------
+            # Signal-derived exposure group scores (mirrors loss_group_scores)
+            # Each signal has optional exposure.size and exposure.complexity
+            # weights. Aggregate per group → contribution → composite, exactly
+            # like loss does for frequency/severity.
+            # ------------------------------------------------------------------
+            _sig_lookup: dict = {}
+            for sig_def in config.signal_registry:
+                tla = sig_def.three_layer_assessment
+                if tla and tla.exposure:
+                    _sig_lookup[sig_def.id] = {
+                        "group": tla.group_id,
+                        "size_weight": tla.exposure.size.weight if tla.exposure.size else None,
+                        "size_dir": tla.exposure.size.correlation_direction.value if tla.exposure.size else None,
+                        "comp_weight": tla.exposure.complexity.weight if tla.exposure.complexity else None,
+                        "comp_dir": tla.exposure.complexity.correlation_direction.value if tla.exposure.complexity else None,
+                    }
+
+            # Build per-group size/complexity scores from signal outputs
+            _exp_groups: dict = {}  # group_id → {size_sum, size_w, comp_sum, comp_w, conf_sum, conf_w}
+            for so in scoring_result.signal_outputs:
+                sl = _sig_lookup.get(so.signal_id)
+                if not sl:
+                    continue
+                gid = sl["group"]
+                if gid not in _exp_groups:
+                    _exp_groups[gid] = dict(
+                        size_sum=0.0, size_w=0.0,
+                        comp_sum=0.0, comp_w=0.0,
+                        conf_sum=0.0, conf_w=0.0,
+                    )
+                g = _exp_groups[gid]
+                # Direction: negative correlation inverts the score
+                raw = so.raw_score
+                if sl["size_weight"]:
+                    val = (100 - raw) if sl["size_dir"] == "negative" else raw
+                    g["size_sum"] += val * sl["size_weight"]
+                    g["size_w"] += sl["size_weight"]
+                if sl["comp_weight"]:
+                    val = (100 - raw) if sl["comp_dir"] == "negative" else raw
+                    g["comp_sum"] += val * sl["comp_weight"]
+                    g["comp_w"] += sl["comp_weight"]
+                g["conf_sum"] += so.confidence * (sl["size_weight"] or sl["comp_weight"] or 0)
+                g["conf_w"] += (sl["size_weight"] or sl["comp_weight"] or 0)
+
+            # Collect group-level exposure weights from config
             _exposure_group_weights: dict = {}
             for group in config.groups.three_layer_assessment:
                 if hasattr(group, 'exposure') and group.exposure:
                     _exposure_group_weights[group.id] = group.exposure.weight
-            if _exposure_group_weights:
-                _raw_components["group_weights"] = _exposure_group_weights
+
+            # Assemble per-group exposure detail
+            _exp_group_scores: dict = {}
+            for gid, agg in _exp_groups.items():
+                ew = _exposure_group_weights.get(gid, 0.0)
+                size_score = round(agg["size_sum"] / agg["size_w"], 2) if agg["size_w"] > 0 else None
+                comp_score = round(agg["comp_sum"] / agg["comp_w"], 2) if agg["comp_w"] > 0 else None
+                entry: dict = {"exposure_weight": ew}
+                if size_score is not None:
+                    size_c = round(size_score * ew, 4)
+                    entry["size_score"] = size_score
+                    entry["size_contribution"] = size_c
+                    entry["size_contribution_formula"] = f"{size_score} × {ew} = {size_c}"
+                if comp_score is not None:
+                    comp_c = round(comp_score * ew, 4)
+                    entry["complexity_score"] = comp_score
+                    entry["complexity_contribution"] = comp_c
+                    entry["complexity_contribution_formula"] = f"{comp_score} × {ew} = {comp_c}"
+                entry["confidence"] = round(agg["conf_sum"] / agg["conf_w"], 4) if agg["conf_w"] > 0 else 0.0
+                _exp_group_scores[gid] = entry
+
+            # Roll up composite
+            _ew_total = sum(_exposure_group_weights.get(g, 0.0) for g in _exp_groups)
+            if _ew_total > 0 and _exp_group_scores:
+                _size_comp = round(
+                    sum(g.get("size_contribution", 0) for g in _exp_group_scores.values()) / _ew_total, 2
+                )
+                _comp_comp = round(
+                    sum(g.get("complexity_contribution", 0) for g in _exp_group_scores.values()) / _ew_total, 2
+                )
+                _exp_group_scores["_composite"] = {
+                    "exposure_weight_total": round(_ew_total, 4),
+                    "size_composite_score": _size_comp,
+                    "size_composite_formula": f"sum(size_contributions) / {round(_ew_total, 4)} = {_size_comp}",
+                    "complexity_composite_score": _comp_comp,
+                    "complexity_composite_formula": f"sum(complexity_contributions) / {round(_ew_total, 4)} = {_comp_comp}",
+                    "exposure_modifier": exposure_result.factor,
+                    "exposure_band_label": None,  # filled below after band lookup
+                }
+
+            _raw_components["group_scores"] = _exp_group_scores
+            _raw_components["group_weights"] = _exposure_group_weights
 
             # Add combined modifier derivation so every step is traceable
             _size = _raw_components.get("size_factor", 1.0)
@@ -706,6 +792,9 @@ class WorkflowEngine:
                 "max_value": bmax,
                 "modifier": exposure_result.factor,  # actual pricing factor, not a display value
             }
+            # Back-fill band label into the signal-derived composite
+            if "_composite" in _exp_group_scores:
+                _exp_group_scores["_composite"]["exposure_band_label"] = blabel
 
         return WorkflowResult(
             entity_id=entity_id,

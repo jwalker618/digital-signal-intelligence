@@ -3948,7 +3948,96 @@ def build_loss_propensity(co, group_scores, config=None):
     }
 
 
-def build_exposure_assessment(co, config):
+def _build_exposure_group_scores(config, signal_outputs, band_label):
+    """Compute per-group exposure scores from signal outputs (mirrors loss_group_scores).
+
+    Each signal has optional exposure.size and exposure.complexity weights.
+    Aggregate per group → weighted contribution → composite, exactly like
+    loss does for frequency/severity.
+    """
+    if not signal_outputs:
+        return {}
+
+    # Build signal lookup: signal_id → {group, size_weight, comp_weight, directions}
+    sig_lookup = {}
+    for sig_def in config.signal_registry:
+        tla = sig_def.three_layer_assessment
+        if tla and tla.exposure:
+            sig_lookup[sig_def.id] = {
+                "group": tla.group_id,
+                "size_weight": tla.exposure.size.weight if tla.exposure.size else None,
+                "size_dir": tla.exposure.size.correlation_direction.value if tla.exposure.size else None,
+                "comp_weight": tla.exposure.complexity.weight if tla.exposure.complexity else None,
+                "comp_dir": tla.exposure.complexity.correlation_direction.value if tla.exposure.complexity else None,
+            }
+
+    # Aggregate per group
+    groups = {}
+    for so in signal_outputs:
+        sl = sig_lookup.get(so.signal_id)
+        if not sl:
+            continue
+        gid = sl["group"]
+        if gid not in groups:
+            groups[gid] = dict(size_sum=0.0, size_w=0.0, comp_sum=0.0, comp_w=0.0,
+                               conf_sum=0.0, conf_w=0.0)
+        g = groups[gid]
+        raw = so.raw_score
+        if sl["size_weight"]:
+            val = (100 - raw) if sl["size_dir"] == "negative" else raw
+            g["size_sum"] += val * sl["size_weight"]
+            g["size_w"] += sl["size_weight"]
+        if sl["comp_weight"]:
+            val = (100 - raw) if sl["comp_dir"] == "negative" else raw
+            g["comp_sum"] += val * sl["comp_weight"]
+            g["comp_w"] += sl["comp_weight"]
+        g["conf_sum"] += so.confidence * (sl["size_weight"] or sl["comp_weight"] or 0)
+        g["conf_w"] += (sl["size_weight"] or sl["comp_weight"] or 0)
+
+    # Group-level weights
+    group_weights = {}
+    for group in config.groups.three_layer_assessment:
+        if hasattr(group, 'exposure') and group.exposure:
+            group_weights[group.id] = group.exposure.weight
+
+    # Build per-group detail
+    result = {}
+    for gid, agg in groups.items():
+        ew = group_weights.get(gid, 0.0)
+        entry = {"exposure_weight": ew}
+        if agg["size_w"] > 0:
+            s = round(agg["size_sum"] / agg["size_w"], 2)
+            sc = round(s * ew, 4)
+            entry["size_score"] = s
+            entry["size_contribution"] = sc
+            entry["size_contribution_formula"] = f"{s} × {ew} = {sc}"
+        if agg["comp_w"] > 0:
+            c = round(agg["comp_sum"] / agg["comp_w"], 2)
+            cc = round(c * ew, 4)
+            entry["complexity_score"] = c
+            entry["complexity_contribution"] = cc
+            entry["complexity_contribution_formula"] = f"{c} × {ew} = {cc}"
+        entry["confidence"] = round(agg["conf_sum"] / agg["conf_w"], 4) if agg["conf_w"] > 0 else 0.0
+        result[gid] = entry
+
+    # Composite rollup
+    ew_total = sum(group_weights.get(g, 0.0) for g in groups)
+    if ew_total > 0 and result:
+        size_comp = round(sum(g.get("size_contribution", 0) for g in result.values()) / ew_total, 2)
+        comp_comp = round(sum(g.get("complexity_contribution", 0) for g in result.values()) / ew_total, 2)
+        result["_composite"] = {
+            "exposure_weight_total": round(ew_total, 4),
+            "size_composite_score": size_comp,
+            "size_composite_formula": f"sum(size_contributions) / {round(ew_total, 4)} = {size_comp}",
+            "complexity_composite_score": comp_comp,
+            "complexity_composite_formula": f"sum(complexity_contributions) / {round(ew_total, 4)} = {comp_comp}",
+            "exposure_band_label": band_label,
+        }
+
+    return result
+
+
+def build_exposure_assessment(co, config, signal_outputs=None):
     """Build exposure assessment columns keyed for ModelVersionRecord kwargs.
 
     Exposure Modifier Calculation Chain
@@ -4075,6 +4164,7 @@ def build_exposure_assessment(co, config):
                 for group in config.groups.three_layer_assessment
                 if hasattr(group, 'exposure') and group.exposure
             },
+            "group_scores": _build_exposure_group_scores(config, signal_outputs, size_band_label),
         },
     }
 
@@ -4565,7 +4655,7 @@ def seed_data(
             # Build loss propensity + exposure assessment BEFORE pricing
             # so their modifiers feed into the premium calculation
             loss_kwargs = build_loss_propensity(co, group_scores, config=config)
-            exposure_kwargs = build_exposure_assessment(co, config)
+            exposure_kwargs = build_exposure_assessment(co, config, signal_outputs=signal_outputs)
 
             # Combine signal + query + loss + exposure modifiers (same as workflow.py)
             all_modifiers = signal_modifiers + query_result.modifiers
