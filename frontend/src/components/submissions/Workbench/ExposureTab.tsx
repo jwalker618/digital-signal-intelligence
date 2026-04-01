@@ -59,15 +59,15 @@ export default function ExposureTab() {
   const hasComponents = sizeComp || complexityComp;
 
   // Exposure-relevant signal conditions
-  // Exposure groups come from group_scores entries with exposure_weight > 0
-  const groupScores = activeVersion.group_scores || {};
+  // Exposure groups come from exposure_components.group_weights (moved from group_scores)
+  const expGroupWeights = (activeVersion.exposure_components || {} as any).group_weights || {};
   const exposureGroupKeys = useMemo(() => {
     const keys = new Set<string>();
-    for (const [key, val] of Object.entries(groupScores)) {
-      if ((val as any)?.exposure_weight && (val as any).exposure_weight > 0) keys.add(key);
+    for (const [key, val] of Object.entries(expGroupWeights)) {
+      if ((val as number) > 0) keys.add(key);
     }
     return keys;
-  }, [groupScores]);
+  }, [expGroupWeights]);
 
   const signalConditions = activeVersion?.signal_conditions || [];
   const queryConditions = activeVersion?.query_conditions || [];

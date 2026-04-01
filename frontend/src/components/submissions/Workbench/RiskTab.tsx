@@ -399,14 +399,15 @@ export default function RiskTab() {
                 const groupConditions = conditionsBySource[groupId] || [];
                 const hasConditions = groupConditions.length > 0 || signals.some((s: any) => (conditionsBySource[s.code] || []).length > 0);
 
-                // Loss derivation for this group
-                const lossWeight = gs.loss_weight || 0;
+                // Loss derivation for this group (loss_weight now lives in loss_group_scores)
                 const lossGroupEntry = (activeVersion?.loss_group_scores || {})[groupId];
+                const lossWeight = lossGroupEntry?.loss_weight || 0;
                 const lossFreqScore = lossGroupEntry?.frequency_score;
                 const lossSevScore = lossGroupEntry?.severity_score;
 
-                // Exposure derivation
-                const expWeight = gs.exposure_weight || 0;
+                // Exposure derivation (exposure_weight now lives in exposure_components.group_weights)
+                const expGroupWeights = (activeVersion?.exposure_components || {}).group_weights || {};
+                const expWeight = expGroupWeights[groupId] || 0;
 
                 return (
                   <div key={groupId}>

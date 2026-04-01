@@ -3789,7 +3789,7 @@ def build_rol_recommendation(limit_premiums, requested_limit):
     }
 
 
-def build_loss_propensity(co, group_scores):
+def build_loss_propensity(co, group_scores, config=None):
     """Build loss propensity columns derived from actual signal group scores.
 
     Loss Modifier Calculation Chain
@@ -3798,7 +3798,7 @@ def build_loss_propensity(co, group_scores):
     from signal group scores:
 
     1. FREQUENCY PROPENSITY (weight: 0.6 in combined modifier):
-       - Input: signal group scores weighted by each group's loss_weight
+       - Input: signal group scores weighted by each group's loss_weight (from config)
        - Inverted: high risk_score (good) → low frequency propensity (good)
        - loss_propensity_score = 100 - weighted_avg(group_scores)
        - Mapped to band: very_low / low / moderate / elevated / high
@@ -3820,11 +3820,18 @@ def build_loss_propensity(co, group_scores):
        - Trend direction: stable / improving / deteriorating
        - Combined values are weighted averages (0.6 freq + 0.4 sev)
     """
+    # Build loss weight lookup from config (loss_weight no longer in group_scores)
+    _loss_weights: dict = {}
+    if config is not None:
+        for group in config.groups.three_layer_assessment:
+            if hasattr(group, 'loss') and group.loss:
+                _loss_weights[group.id] = group.loss.weight
+
     # Derive loss propensity score from group scores using loss weights
     loss_weighted_sum = 0.0
     loss_weight_total = 0.0
     for gid, gs in group_scores.items():
-        lw = gs.get("loss_weight")
+        lw = _loss_weights.get(gid, 0.0)
         if lw and lw > 0:
             loss_weighted_sum += gs["risk_score"] * lw
             loss_weight_total += lw
@@ -3865,17 +3872,44 @@ def build_loss_propensity(co, group_scores):
     sev_mult = sev_mult_map.get(sev_band, 1.0)
     combined = round(freq_mult * 0.6 + sev_mult * 0.4, 3)
 
-    # Loss group scores for full reconstructability
+    # Loss group scores for full reconstructability — now includes weights and contributions
     loss_group_scores = {}
     for gid, gs in group_scores.items():
-        lw = gs.get("loss_weight")
+        lw = _loss_weights.get(gid, 0.0)
         if lw and lw > 0:
-            inverted = round(100.0 - gs["risk_score"], 2)
+            g_freq = round(100.0 - gs["risk_score"], 2)
+            g_sev = round(min(100, max(0, g_freq + random.uniform(-3, 3))), 2)
+            g_freq_c = round(g_freq * lw, 4)
+            g_sev_c = round(g_sev * lw, 4)
             loss_group_scores[gid] = {
-                "frequency_score": inverted,
-                "severity_score": round(min(100, max(0, inverted + random.uniform(-3, 3))), 2),
+                "loss_weight": lw,
+                "frequency_score": g_freq,
+                "frequency_contribution": g_freq_c,
+                "frequency_contribution_formula": f"{g_freq} × {lw} = {g_freq_c}",
+                "severity_score": g_sev,
+                "severity_contribution": g_sev_c,
+                "severity_contribution_formula": f"{g_sev} × {lw} = {g_sev_c}",
                 "confidence": round(random.uniform(0.7, 0.95), 4),
             }
+    # Add composite derivation summary
+    _lw_total = sum(v["loss_weight"] for v in loss_group_scores.values()) if loss_group_scores else 0.0
+    _freq_comp = round(sum(v["frequency_contribution"] for v in loss_group_scores.values()) / _lw_total, 2) if _lw_total > 0 else 0.0
+    _sev_comp = round(sum(v["severity_contribution"] for v in loss_group_scores.values()) / _lw_total, 2) if _lw_total > 0 else 0.0
+    loss_group_scores["_composite"] = {
+        "loss_weight_total": round(_lw_total, 4),
+        "frequency_composite_score": _freq_comp,
+        "frequency_composite_formula": f"sum(frequency_contributions) / {round(_lw_total, 4)} = {_freq_comp}",
+        "severity_composite_score": _sev_comp,
+        "severity_composite_formula": f"sum(severity_contributions) / {round(_lw_total, 4)} = {_sev_comp}",
+        "loss_propensity_score": loss_score,
+        "loss_propensity_band": loss_band,
+        "frequency_multiplier": freq_mult,
+        "severity_propensity_score": sev_score,
+        "severity_propensity_band": sev_band,
+        "severity_multiplier": sev_mult,
+        "combined_loss_modifier": combined,
+        "combined_loss_modifier_formula": f"({freq_mult} × 0.6) + ({sev_mult} × 0.4) = {combined}",
+    }
 
     loss_confidence = round(random.uniform(0.65, 0.95), 2)
 
@@ -4033,6 +4067,14 @@ def build_exposure_assessment(co, config):
                 "weight": complexity_weight,
             },
             "combined_modifier": combined_modifier,
+            "exposure_modifier_formula": (
+                f"size({size_modifier} × {size_weight}) + complexity({complexity_modifier} × {complexity_weight}) = {combined_modifier}"
+            ),
+            "group_weights": {
+                group.id: group.exposure.weight
+                for group in config.groups.three_layer_assessment
+                if hasattr(group, 'exposure') and group.exposure
+            },
         },
     }
 
@@ -4522,7 +4564,7 @@ def seed_data(
 
             # Build loss propensity + exposure assessment BEFORE pricing
             # so their modifiers feed into the premium calculation
-            loss_kwargs = build_loss_propensity(co, group_scores)
+            loss_kwargs = build_loss_propensity(co, group_scores, config=config)
             exposure_kwargs = build_exposure_assessment(co, config)
 
             # Combine signal + query + loss + exposure modifiers (same as workflow.py)

@@ -971,14 +971,16 @@ class ScoringResult:
     signal_outputs: List[SignalOutput] = field(default_factory=list)
     categorical_outputs: List[CategoricalOutput] = field(default_factory=list)
     # group_scores: Dict[group_id, GroupScoreDetail] where GroupScoreDetail is:
-    #   risk_score: float          - weighted average of signal scores in group (0-100)
-    #   risk_weight: float         - group weight toward composite (from config)
-    #   risk_contribution: float   - risk_score * risk_weight * 10 (contribution to 0-1000 composite)
-    #   signal_count: int          - number of signals extracted for this group
-    #   expected_signal_count: int - total signals defined in config for this group
-    #   coverage_ratio: float      - signal_count / expected_signal_count
-    #   loss_weight: float|None    - group weight in loss dimension (if configured)
-    #   exposure_weight: float|None - group weight in exposure dimension (if configured)
+    #   risk_score: float                - weighted average of signal scores in group (0-100)
+    #   risk_weight: float               - group weight toward composite (from config)
+    #   risk_contribution: float         - risk_score × risk_weight × 10 (contribution to 0-1000 composite)
+    #   risk_contribution_formula: str   - human-readable formula: "65.3 × 0.25 × 10 = 163.25"
+    #   signal_count: int                - number of signals extracted for this group
+    #   expected_signal_count: int       - total signals defined in config for this group
+    #   coverage_ratio: float            - signal_count / expected_signal_count
+    #
+    # NOTE: loss_weight lives in loss_group_scores; exposure_weight lives in exposure_components.
+    # sum(risk_contribution for all groups) = pure_composite_score (0-1000)
     group_scores: Dict[str, Any] = field(default_factory=dict)
 
     # Step 5: Pure composite

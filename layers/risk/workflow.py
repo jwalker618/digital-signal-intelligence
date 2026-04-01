@@ -567,17 +567,60 @@ class WorkflowEngine:
             model_version.loss_severity_multiplier = loss_propensity_result.severity_multiplier
             model_version.loss_combined_modifier = loss_propensity_result.combined_loss_modifier
             # Persist loss group scores for full reconstructability
-            model_version.loss_group_scores = {
-                group_name: {
-                    "frequency_score": round(loss_propensity_result.frequency_group_scores.get(group_name, 0.0), 2),
-                    "severity_score": round(loss_propensity_result.severity_group_scores.get(group_name, 0.0), 2),
+            # Each group shows: weight, frequency/severity scores, their weighted
+            # contributions, and a human-readable formula so every number can be
+            # traced back to its inputs.
+            _all_loss_groups = set(
+                list(loss_propensity_result.frequency_group_scores.keys())
+                + list(loss_propensity_result.severity_group_scores.keys())
+            )
+            _loss_weight_total = sum(
+                loss_propensity_result.group_weights.get(g, 0.0) for g in _all_loss_groups
+            )
+            _loss_group_scores: dict = {}
+            for group_name in _all_loss_groups:
+                freq_score = round(loss_propensity_result.frequency_group_scores.get(group_name, 0.0), 2)
+                sev_score = round(loss_propensity_result.severity_group_scores.get(group_name, 0.0), 2)
+                loss_weight = loss_propensity_result.group_weights.get(group_name, 0.0)
+                freq_contribution = round(freq_score * loss_weight, 4)
+                sev_contribution = round(sev_score * loss_weight, 4)
+                _loss_group_scores[group_name] = {
+                    "loss_weight": loss_weight,
+                    "frequency_score": freq_score,
+                    "frequency_contribution": freq_contribution,
+                    "frequency_contribution_formula": f"{freq_score} × {loss_weight} = {freq_contribution}",
+                    "severity_score": sev_score,
+                    "severity_contribution": sev_contribution,
+                    "severity_contribution_formula": f"{sev_score} × {loss_weight} = {sev_contribution}",
                     "confidence": round(loss_propensity_result.group_confidences.get(group_name, 0.0), 4),
                 }
-                for group_name in set(
-                    list(loss_propensity_result.frequency_group_scores.keys())
-                    + list(loss_propensity_result.severity_group_scores.keys())
-                )
+            # Add composite derivation summary so the roll-up is clear
+            _freq_composite = round(
+                sum(g["frequency_contribution"] for g in _loss_group_scores.values()) / _loss_weight_total, 2
+            ) if _loss_weight_total > 0 else 0.0
+            _sev_composite = round(
+                sum(g["severity_contribution"] for g in _loss_group_scores.values()) / _loss_weight_total, 2
+            ) if _loss_weight_total > 0 else 0.0
+            _loss_group_scores["_composite"] = {
+                "loss_weight_total": round(_loss_weight_total, 4),
+                "frequency_composite_score": _freq_composite,
+                "frequency_composite_formula": f"sum(frequency_contributions) / {round(_loss_weight_total, 4)} = {_freq_composite}",
+                "severity_composite_score": _sev_composite,
+                "severity_composite_formula": f"sum(severity_contributions) / {round(_loss_weight_total, 4)} = {_sev_composite}",
+                "loss_propensity_score": loss_propensity_result.loss_propensity_score,
+                "loss_propensity_band": loss_propensity_result.loss_propensity_band.value,
+                "frequency_multiplier": loss_propensity_result.frequency_multiplier,
+                "severity_propensity_score": loss_propensity_result.severity_propensity_score,
+                "severity_propensity_band": loss_propensity_result.severity_propensity_band.value,
+                "severity_multiplier": loss_propensity_result.severity_multiplier,
+                "combined_loss_modifier": loss_propensity_result.combined_loss_modifier,
+                "combined_loss_modifier_formula": (
+                    f"({loss_propensity_result.frequency_multiplier} × freq_weight) + "
+                    f"({loss_propensity_result.severity_multiplier} × sev_weight) = "
+                    f"{loss_propensity_result.combined_loss_modifier}"
+                ),
             }
+            model_version.loss_group_scores = _loss_group_scores
             model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
             model_version.loss_previous_score = loss_propensity_result.previous_combined_score
             model_version.loss_score_velocity = loss_propensity_result.combined_score_velocity
@@ -611,10 +654,31 @@ class WorkflowEngine:
                 else "full"
             )
             # Persist component factors for transparency
-            model_version.exposure_components = {
+            # Include exposure_weight per group (moved from group_scores) and
+            # show how each factor combines into the final exposure modifier.
+            _raw_components = {
                 k: v for k, v in exposure_result.components.items()
                 if k not in ("primary_exposure", "mode")
             }
+            # Add exposure weights per group from config
+            _exposure_group_weights: dict = {}
+            for group in config.groups.three_layer_assessment:
+                if hasattr(group, 'exposure') and group.exposure:
+                    _exposure_group_weights[group.id] = group.exposure.weight
+            if _exposure_group_weights:
+                _raw_components["group_weights"] = _exposure_group_weights
+
+            # Add combined modifier derivation so every step is traceable
+            _size = _raw_components.get("size_factor", 1.0)
+            _growth = _raw_components.get("growth_factor", 1.0)
+            _conc = _raw_components.get("concentration_factor", 1.0)
+            _emp = _raw_components.get("employee_factor", 1.0)
+            _raw_components["exposure_modifier"] = exposure_result.factor
+            _raw_components["exposure_modifier_formula"] = (
+                f"size({_size}) × growth({_growth}) × concentration({_conc}) × employee({_emp}) "
+                f"= {exposure_result.factor}"
+            )
+            model_version.exposure_components = _raw_components
             # Map exposure value to band label for display context
             # Band modifier is the ACTUAL pricing factor — not a separate lookup
             _EXPOSURE_BAND_LABELS = [
