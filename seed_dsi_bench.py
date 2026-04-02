@@ -4982,6 +4982,8 @@ def seed_data(
             # === 2c. CONFIG SNAPSHOT (normalised from model_version config columns) ===
             config_snapshot = ConfigSnapshot(
                 config_hash=mv_config_hash,
+                coverage=co["coverage"],
+                configuration_name=co["configuration"],
                 tier_band_interpretation=tier_band_snap,
                 loss_band_interpretation=loss_band_snap,
                 correlation_matrix_version=correlation_matrix_version_val,
