@@ -92,6 +92,11 @@ class LossCorrelationScorer:
             self._calculate_group_scores(loss_signals)
         )
 
+        # Build group weights lookup from config
+        group_weights: Dict[str, float] = {
+            g.name: g.weight for g in self.config.correlation_groups
+        }
+
         # Calculate composite scores
         loss_propensity_score = self._calculate_composite(
             frequency_group_scores,
@@ -150,6 +155,7 @@ class LossCorrelationScorer:
             cohort_confidence=cohort_confidence,
             group_scores={**frequency_group_scores, **severity_group_scores},
             group_confidences=group_confidences,
+            group_weights=group_weights,
             frequency_group_scores=frequency_group_scores,
             severity_group_scores=severity_group_scores,
             frequency_multiplier=frequency_multiplier,

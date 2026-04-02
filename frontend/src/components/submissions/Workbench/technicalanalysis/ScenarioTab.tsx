@@ -7,10 +7,7 @@ import {
   ChevronRight, ShieldAlert, FlaskConical, ArrowRightToLine, PenLine, Shield
 } from "lucide-react";
 import { runFullCascade, distributeGroupOverride, ScenarioOverrides, ScenarioResult } from "@/lib/scenarioEngine";
-import { formatNum } from "@/lib/format";
-
-const fmtDollar = (num: number | null | undefined) =>
-  num != null ? `$${Number(num).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "-";
+import { formatNumber, formatCurrency } from "@/lib/format";
 
 const deltaColor = (s: number, o: number) =>
   Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-dsi-negative' : 'text-dsi-positive';
@@ -114,7 +111,7 @@ export default function ScenarioTab() {
 
       {/* STICKY HEADER */}
       <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
         <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
@@ -149,7 +146,7 @@ export default function ScenarioTab() {
               F1/F2: GROUP → SIGNAL ACCORDION WITH OVERRIDES
               ══════════════════════════════════════════════════════════════ */}
           <div className="flex flex-col pt-2 pb-2">
-            <div className="flex justify-between items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
+            <div className="dsi-section-header justify-between items-center overflow-x-hidden whitespace-nowrap border-collapse pr-dsi-pad">
               <div className="flex items-center gap-dsi-pad">
                 <FlaskConical className="icon"/><span className="text-sm">Signal Overrides</span>
                 {Object.keys(signalOverrides).length > 0 && (
@@ -169,16 +166,16 @@ export default function ScenarioTab() {
             <div className="grid grid-cols-2 gap-4 bg-dsi-analysis border-x border-dsi-outline/10 px-dsi-pad py-3">
               <div>
                 <span className="opacity-50 block text-xs mb-1">Original Composite</span>
-                <span className="font-bold text-xl">{formatNum(scenario.original_composite, 1)}</span>
+                <span className="font-bold text-xl">{formatNumber(scenario.original_composite, 1)}</span>
                 <span className="text-xs opacity-40 ml-2">Tier {scenario.original_tier}</span>
               </div>
               <div>
                 <span className="text-dsi-selected block text-xs mb-1 font-bold">Scenario Composite</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-bold text-2xl text-dsi-selected">{formatNum(scenario.composite_score, 1)}</span>
+                  <span className="font-bold text-2xl text-dsi-selected">{formatNumber(scenario.composite_score, 1)}</span>
                   {Math.abs(scenario.composite_score - scenario.original_composite) > 0.1 && (
                     <span className={`text-xs font-bold ${deltaColor(scenario.composite_score, scenario.original_composite)}`}>
-                      ({scenario.composite_score > scenario.original_composite ? '+' : ''}{formatNum(scenario.composite_score - scenario.original_composite, 1)})
+                      ({scenario.composite_score > scenario.original_composite ? '+' : ''}{formatNumber(scenario.composite_score - scenario.original_composite, 1)})
                     </span>
                   )}
                   {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
@@ -218,9 +215,9 @@ export default function ScenarioTab() {
                         <span className="font-bold text-sm">{groupId}</span>
                         <span className="text-[10px] opacity-40">({signals.length})</span>
                       </div>
-                      <span className="text-right text-sm" onClick={() => toggleGroup(groupId)}>{formatNum(origGroupScore, 1)}</span>
-                      <span className="text-right text-sm opacity-60" onClick={() => toggleGroup(groupId)}>{formatNum(gs?.risk_weight, 2)}</span>
-                      <span className="text-right text-sm font-bold" onClick={() => toggleGroup(groupId)}>{formatNum(gs?.risk_contribution, 1)}</span>
+                      <span className="text-right text-sm" onClick={() => toggleGroup(groupId)}>{formatNumber(origGroupScore, 1)}</span>
+                      <span className="text-right text-sm opacity-60" onClick={() => toggleGroup(groupId)}>{formatNumber(gs?.risk_weight, 2)}</span>
+                      <span className="text-right text-sm font-bold" onClick={() => toggleGroup(groupId)}>{formatNumber(gs?.risk_contribution, 1)}</span>
                       {/* F2: Group-level override input */}
                       <div className="flex items-center justify-center gap-0.5">
                         <button onClick={() => handleGroupOverride(groupId, scenGroupScore - 1)} className="p-0.5 rounded hover:bg-dsi-outline/20 text-dsi-selected/60 hover:text-dsi-selected">
@@ -230,7 +227,7 @@ export default function ScenarioTab() {
                           type="number"
                           className={`w-16 bg-dsi-background border rounded px-1.5 py-1 text-center text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${groupChanged ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
                           value={groupChanged ? Math.round(scenGroupScore * 10) / 10 : ''}
-                          placeholder={formatNum(origGroupScore, 1)}
+                          placeholder={formatNumber(origGroupScore, 1)}
                           onChange={(e) => {
                             if (e.target.value === '') {
                               // Reset group signals to originals
@@ -249,7 +246,7 @@ export default function ScenarioTab() {
                         </button>
                       </div>
                       <span className={`text-right text-sm font-bold ${groupChanged ? 'text-dsi-selected' : ''}`}>
-                        {formatNum(scenGroupScore, 1)}
+                        {formatNumber(scenGroupScore, 1)}
                       </span>
                     </div>
 
@@ -263,9 +260,9 @@ export default function ScenarioTab() {
                             <span className="text-sm">{sig.code}</span>
                             {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
                           </div>
-                          <span className="text-right text-sm">{formatNum(sig.score, 1)}</span>
-                          <span className="text-right text-sm opacity-50">{formatNum(sig.weight, 2)}</span>
-                          <span className="text-right text-sm">{formatNum(sig.contribution, 2)}</span>
+                          <span className="text-right text-sm">{formatNumber(sig.score, 1)}</span>
+                          <span className="text-right text-sm opacity-50">{formatNumber(sig.weight, 2)}</span>
+                          <span className="text-right text-sm">{formatNumber(sig.contribution, 2)}</span>
                           <div className="flex items-center justify-center gap-0.5">
                             <button onClick={() => handleStep(sig.code, sig.score || 0, -1)} className="p-0.5 rounded hover:bg-dsi-outline/20 text-dsi-selected/60 hover:text-dsi-selected">
                               <ChevronDown className="w-3 h-3" />
@@ -274,7 +271,7 @@ export default function ScenarioTab() {
                               type="number"
                               className={`w-14 bg-dsi-background border rounded px-1 py-0.5 text-center text-xs outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isOverridden ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20 focus:border-dsi-selected/50'}`}
                               value={isOverridden ? currentScore : ''}
-                              placeholder={formatNum(sig.score, 1)}
+                              placeholder={formatNumber(sig.score, 1)}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setSignalOverrides(prev => {
@@ -290,7 +287,7 @@ export default function ScenarioTab() {
                             </button>
                           </div>
                           <span className={`text-right text-sm ${isOverridden ? 'font-bold text-dsi-selected' : ''}`}>
-                            {formatNum(currentScore, 1)}
+                            {formatNumber(currentScore, 1)}
                           </span>
                         </div>
                       );
@@ -307,7 +304,7 @@ export default function ScenarioTab() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
             {/* Loss modifier calculation */}
             <div className="flex flex-col">
-              <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <Shield className="icon"/><span className="text-sm">Loss Modifier Calculation</span>
               </div>
               <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4 px-dsi-pad">
@@ -315,18 +312,18 @@ export default function ScenarioTab() {
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
                   <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
                 </div>
-                <CalcRow label="Signal-weighted avg" sublabel="Loss group scores" original={formatNum(100 - (activeVersion?.loss_propensity_score || 50), 1)} scenario={scenario.loss_modifier ? formatNum(100 - scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
-                <CalcRow label="Propensity Score" sublabel="Inverted (100 - avg)" original={formatNum(activeVersion?.loss_propensity_score, 1)} scenario={scenario.loss_modifier ? formatNum(scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
+                <CalcRow label="Signal-weighted avg" sublabel="Loss group scores" original={formatNumber(100 - (activeVersion?.loss_propensity_score || 50), 1)} scenario={scenario.loss_modifier ? formatNumber(100 - scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
+                <CalcRow label="Propensity Score" sublabel="Inverted (100 - avg)" original={formatNumber(activeVersion?.loss_propensity_score, 1)} scenario={scenario.loss_modifier ? formatNumber(scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
                 <CalcRow label="Propensity Band" sublabel="" original={activeVersion?.loss_propensity_band?.replace(/_/g, ' ')?.toUpperCase() || 'N/A'} scenario={scenario.loss_modifier?.propensity_band?.replace(/_/g, ' ')?.toUpperCase() || '-'} changed={scenario.loss_modifier != null && scenario.loss_modifier.propensity_band !== activeVersion?.loss_propensity_band} />
-                <CalcRow label="Frequency Multiplier" sublabel={`Weight: ${formatNum(lossConfig?.frequency_weight, 2)}`} original={`${formatNum(activeVersion?.loss_frequency_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNum(scenario.loss_modifier.frequency_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
-                <CalcRow label="Severity Multiplier" sublabel={`Weight: ${formatNum(lossConfig?.severity_weight, 2)}`} original={`${formatNum(activeVersion?.loss_severity_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNum(scenario.loss_modifier.severity_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
+                <CalcRow label="Frequency Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.frequency_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_frequency_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.frequency_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
+                <CalcRow label="Severity Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.severity_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_severity_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.severity_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
                 {/* Combined result */}
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t-2 border-dsi-outline/20 mt-1">
                   <span className="text-sm font-bold">Combined Modifier</span>
-                  <span className="text-right text-sm font-bold">{formatNum(scenario.original_loss_combined, 3)}x</span>
+                  <span className="text-right text-sm font-bold">{formatNumber(scenario.original_loss_combined, 3)}x</span>
                   <span className="text-center opacity-30">→</span>
                   <span className={`text-right text-sm font-bold ${deltaColor(scenario.scenario_loss_combined, scenario.original_loss_combined)}`}>
-                    {formatNum(scenario.scenario_loss_combined, 3)}x
+                    {formatNumber(scenario.scenario_loss_combined, 3)}x
                   </span>
                 </div>
                 {/* Override input */}
@@ -334,7 +331,7 @@ export default function ScenarioTab() {
                   <span className="text-xs opacity-60 shrink-0">Direct override:</span>
                   <input type="number" step="0.01"
                     className={`w-20 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${lossModifierOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                    value={lossModifierOverride ?? ''} placeholder={formatNum(scenario.scenario_loss_combined, 3)}
+                    value={lossModifierOverride ?? ''} placeholder={formatNumber(scenario.scenario_loss_combined, 3)}
                     onChange={(e) => setLossModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
                   <span className="text-xs opacity-40">x</span>
@@ -344,7 +341,7 @@ export default function ScenarioTab() {
 
             {/* Exposure modifier calculation */}
             <div className="flex flex-col">
-              <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
                 <Shield className="icon"/><span className="text-sm">Exposure & Scaling</span>
               </div>
               <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4 px-dsi-pad">
@@ -352,22 +349,22 @@ export default function ScenarioTab() {
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
                   <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
                 </div>
-                <CalcRow label="Exposure Value" sublabel="TIV / Revenue" original={fmtDollar(activeVersion?.exposure_value)} scenario={fmtDollar(activeVersion?.exposure_value)} changed={false} />
-                <CalcRow label="Size Score" sublabel="" original={formatNum(activeVersion?.exposure_size_score, 1)} scenario={formatNum(activeVersion?.exposure_size_score, 1)} changed={false} />
+                <CalcRow label="Exposure Value" sublabel="TIV / Revenue" original={formatCurrency(activeVersion?.exposure_value)} scenario={formatCurrency(activeVersion?.exposure_value)} changed={false} />
+                <CalcRow label="Size Score" sublabel="" original={formatNumber(activeVersion?.exposure_size_score, 1)} scenario={formatNumber(activeVersion?.exposure_size_score, 1)} changed={false} />
                 <CalcRow label="Exposure Band" sublabel="" original={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} scenario={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} changed={false} />
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t border-dsi-outline/20">
                   <span className="text-sm font-bold">Exposure Modifier</span>
-                  <span className="text-right text-sm font-bold">{formatNum(scenario.original_exposure_modifier, 3)}x</span>
+                  <span className="text-right text-sm font-bold">{formatNumber(scenario.original_exposure_modifier, 3)}x</span>
                   <span className="text-center opacity-30">→</span>
                   <span className={`text-right text-sm font-bold ${deltaColor(scenario.scenario_exposure_modifier, scenario.original_exposure_modifier)}`}>
-                    {formatNum(scenario.scenario_exposure_modifier, 3)}x
+                    {formatNumber(scenario.scenario_exposure_modifier, 3)}x
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-1 pt-2 border-t border-dsi-outline/10">
                   <span className="text-xs opacity-60 shrink-0">Direct override:</span>
                   <input type="number" step="0.01"
                     className={`w-20 bg-dsi-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${exposureModifierOverride !== null ? 'border-dsi-selected text-dsi-selected' : 'border-dsi-outline/20'}`}
-                    value={exposureModifierOverride ?? ''} placeholder={formatNum(scenario.original_exposure_modifier, 3)}
+                    value={exposureModifierOverride ?? ''} placeholder={formatNumber(scenario.original_exposure_modifier, 3)}
                     onChange={(e) => setExposureModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
                   <span className="text-xs opacity-40">x</span>
@@ -385,7 +382,7 @@ export default function ScenarioTab() {
                         onChange={(e) => setLimitOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                       />
                     </div>
-                    <span className="text-[10px] opacity-30 block mt-1">ILF: {formatNum(activeVersion?.ilf_factor, 3)}x → {formatNum(scenario.ilf_factor, 3)}x</span>
+                    <span className="text-[10px] opacity-30 block mt-1">ILF: {formatNumber(activeVersion?.ilf_factor, 3)}x → {formatNumber(scenario.ilf_factor, 3)}x</span>
                   </div>
                   <div>
                     <span className="text-xs opacity-60 block mb-1">Deductible</span>
@@ -397,7 +394,7 @@ export default function ScenarioTab() {
                         onChange={(e) => setDeductibleOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                       />
                     </div>
-                    <span className="text-[10px] opacity-30 block mt-1">Factor: {formatNum(activeVersion?.final_premium_detail?.deductible_factor, 3)}x → {formatNum(scenario.deductible_factor, 3)}x</span>
+                    <span className="text-[10px] opacity-30 block mt-1">Factor: {formatNumber(activeVersion?.final_premium_detail?.deductible_factor, 3)}x → {formatNumber(scenario.deductible_factor, 3)}x</span>
                   </div>
                 </div>
               </div>
@@ -408,7 +405,7 @@ export default function ScenarioTab() {
               F5: PRICING CASCADE (PricingTab style)
               ══════════════════════════════════════════════════════════════ */}
           <div className="flex flex-col pt-2 pb-2">
-            <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+            <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
               <PenLine className="icon"/><span className="text-sm">Pricing Cascade — Original vs Scenario</span>
             </div>
             <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
@@ -437,10 +434,10 @@ export default function ScenarioTab() {
                   {activeVersion?.base_premium_method || ''}
                 </div>
                 <div className="text-sm text-right bg-dsi-selected/5 border-t border-dsi-outline/10 content-center pt-3">
-                  {fmtDollar(scenario.original_base_premium)}
+                  {formatCurrency(scenario.original_base_premium)}
                 </div>
                 <div className={`pl-dsi-pad pr-dsi-pad text-right text-sm font-bold bg-dsi-selected/10 border-t border-dsi-outline/10 content-center pt-3 ${Math.abs(scenario.base_premium - scenario.original_base_premium) > 1 ? 'text-dsi-selected' : ''}`}>
-                  {fmtDollar(scenario.base_premium)}
+                  {formatCurrency(scenario.base_premium)}
                 </div>
 
                 {/* MODIFIERS */}
@@ -459,10 +456,10 @@ export default function ScenarioTab() {
                   <div key={idx} className="contents">
                     <div className={`grid grid-cols-[50%_10%_20%_20%] px-dsi-pad ${changed ? 'bg-dsi-selected/5' : ''}`}>
                       <div className="text-xs pl-dsi-padicon py-1.5 truncate" title={step.name}>{step.name}</div>
-                      <div className="text-center text-xs content-center">{step.scenario_factor.toFixed(3)}x</div>
-                      <div className="text-right text-xs content-center">{step.original_factor.toFixed(3)}x</div>
+                      <div className="text-center text-xs content-center">{formatNumber(step.scenario_factor, 3)}x</div>
+                      <div className="text-right text-xs content-center">{formatNumber(step.original_factor, 3)}x</div>
                       <div className={`pr-dsi-pad text-right text-xs content-center font-bold ${changed ? 'text-dsi-selected' : ''}`}>
-                        {step.scenario_factor.toFixed(3)}x
+                        {formatNumber(step.scenario_factor, 3)}x
                       </div>
                     </div>
                   </div>
@@ -472,28 +469,28 @@ export default function ScenarioTab() {
               <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad border-t border-dsi-outline/20 pt-2 mt-1">
                 <div className="text-sm font-bold py-1">Premium After Modifiers</div>
                 <div></div>
-                <div className="text-right text-sm">{fmtDollar(activeVersion?.premium_after_modifiers)}</div>
+                <div className="text-right text-sm">{formatCurrency(activeVersion?.premium_after_modifiers)}</div>
                 <div className={`pr-dsi-pad text-right text-sm font-bold ${deltaColor(scenario.premium_after_modifiers, activeVersion?.premium_after_modifiers || 0)}`}>
-                  {fmtDollar(scenario.premium_after_modifiers)}
+                  {formatCurrency(scenario.premium_after_modifiers)}
                 </div>
               </div>
 
               {/* ILF + DEDUCTIBLE + GUARDRAILS */}
               <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad border-t border-dsi-outline/10 pt-2 mt-1">
                 <div className="text-xs py-1 pl-dsi-padicon">ILF Factor ({activeVersion?.ilf_method || 'N/A'})</div>
-                <div className="text-center text-xs content-center">{formatNum(scenario.ilf_factor, 3)}x</div>
-                <div className="text-right text-xs content-center">{formatNum(scenario.original_ilf_factor, 3)}x</div>
+                <div className="text-center text-xs content-center">{formatNumber(scenario.ilf_factor, 3)}x</div>
+                <div className="text-right text-xs content-center">{formatNumber(scenario.original_ilf_factor, 3)}x</div>
                 <div className={`pr-dsi-pad text-right text-xs content-center font-bold ${Math.abs(scenario.ilf_factor - scenario.original_ilf_factor) > 0.001 ? 'text-dsi-selected' : ''}`}>
-                  {formatNum(scenario.ilf_factor, 3)}x
+                  {formatNumber(scenario.ilf_factor, 3)}x
                 </div>
               </div>
 
               <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad">
                 <div className="text-xs py-1 pl-dsi-padicon">Deductible Factor</div>
-                <div className="text-center text-xs content-center">{formatNum(scenario.deductible_factor, 3)}x</div>
-                <div className="text-right text-xs content-center">{formatNum(scenario.original_deductible_factor, 3)}x</div>
+                <div className="text-center text-xs content-center">{formatNumber(scenario.deductible_factor, 3)}x</div>
+                <div className="text-right text-xs content-center">{formatNumber(scenario.original_deductible_factor, 3)}x</div>
                 <div className={`pr-dsi-pad text-right text-xs content-center font-bold ${Math.abs(scenario.deductible_factor - scenario.original_deductible_factor) > 0.001 ? 'text-dsi-selected' : ''}`}>
-                  {formatNum(scenario.deductible_factor, 3)}x
+                  {formatNumber(scenario.deductible_factor, 3)}x
                 </div>
               </div>
 
@@ -514,18 +511,18 @@ export default function ScenarioTab() {
               <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad border-t-2 border-dsi-outline/30 pt-3 mt-3">
                 <div className="text-lg font-black py-1">Final Premium</div>
                 <div></div>
-                <div className="text-right text-lg font-bold content-center">{fmtDollar(scenario.original_final_premium)}</div>
+                <div className="text-right text-lg font-bold content-center">{formatCurrency(scenario.original_final_premium)}</div>
                 <div className={`pr-dsi-pad text-right text-lg font-black content-center ${deltaColor(scenario.final_premium, scenario.original_final_premium)}`}>
-                  {fmtDollar(scenario.final_premium)}
+                  {formatCurrency(scenario.final_premium)}
                 </div>
               </div>
 
               {Math.abs(scenario.final_premium - scenario.original_final_premium) > 1 && (
                 <div className="px-dsi-pad pt-1 text-right">
                   <span className={`text-sm font-bold ${deltaColor(scenario.final_premium, scenario.original_final_premium)}`}>
-                    {scenario.final_premium > scenario.original_final_premium ? '+' : ''}{fmtDollar(scenario.final_premium - scenario.original_final_premium)}
+                    {scenario.final_premium > scenario.original_final_premium ? '+' : ''}{formatCurrency(scenario.final_premium - scenario.original_final_premium)}
                     {scenario.original_final_premium > 0 && (
-                      <span className="ml-1">({scenario.final_premium > scenario.original_final_premium ? '+' : ''}{((scenario.final_premium - scenario.original_final_premium) / scenario.original_final_premium * 100).toFixed(1)}%)</span>
+                      <span className="ml-1">({scenario.final_premium > scenario.original_final_premium ? '+' : ''}{formatNumber((scenario.final_premium - scenario.original_final_premium) / scenario.original_final_premium * 100, 1)}%)</span>
                     )}
                   </span>
                 </div>

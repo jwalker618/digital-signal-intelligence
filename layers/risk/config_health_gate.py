@@ -144,13 +144,45 @@ def _build_fixtures_for_config(config: CoverageConfig) -> List[Dict[str, Any]]:
             }
 
             if rate > 0 and basis_field not in ("categorical", "category"):
-                # MULTIPLIER method: solve rate * basis * ilf = target_pl * limit
-                # Estimate ILF for this limit to avoid base premium × ILF exceeding target
+                # MULTIPLIER method: solve for basis so that the pricing
+                # pipeline (including sub-linear damping) produces a premium
+                # that hits the target P/L ratio.
+                #
+                # The pricer applies:
+                #   effective_basis = limit × (basis / limit)^damping   [when basis > limit]
+                #   base_premium = rate × effective_basis
+                #   final_premium ≈ base_premium × ILF
+                #
+                # Setting final_premium = target_pl × limit and solving:
+                #   target_pl × limit = rate × limit × (basis/limit)^d × ILF
+                #   (basis/limit)^d = target_pl / (rate × ILF)
+                #   basis = limit × (target_pl / (rate × ILF))^(1/d)
+                #
+                # When basis ≤ limit, damping doesn't apply — use the linear
+                # formula: basis = target_pl × limit / (rate × ILF).
+                # Try the submission's product type first; fall back to the
+                # first ILF curve key if no curve is registered for it.
                 product_type = submission["product_type"]
                 estimated_ilf = config.get_ilf(product_type, limit)
+                if estimated_ilf <= 0 or estimated_ilf == 1.0:
+                    for pt_key in config.pricing.by_product_type:
+                        alt = config.get_ilf(pt_key, limit)
+                        if alt > 1.0:
+                            estimated_ilf = alt
+                            break
                 if estimated_ilf <= 0:
                     estimated_ilf = 1.0
-                basis_value = target_pl * limit / (rate * estimated_ilf)
+
+                damping = config.pricing.basis_damping
+                ratio = target_pl / (rate * estimated_ilf)
+
+                if damping < 1.0 and ratio > 1.0:
+                    # Damping will apply (basis > limit) — use damped formula
+                    basis_value = limit * ratio ** (1.0 / damping)
+                else:
+                    # No damping or basis ≤ limit — linear formula
+                    basis_value = limit * ratio
+
                 basis_value = max(1_000_000, min(basis_value, 500_000_000_000))
                 submission[basis_field] = basis_value
             elif rate > 0:

@@ -2252,7 +2252,7 @@ commercial_casualty:
           action: REFER
           application:
             method: MULTIPLIER
-            applied: 0.85
+            applied: 0.65
             basis: underlying_premium
       - id: 4
         label: SUBSTANDARD
@@ -2264,7 +2264,7 @@ commercial_casualty:
           action: REFER
           application:
             method: MULTIPLIER
-            applied: 1.2
+            applied: 0.70
             basis: underlying_premium
       - id: 5
         label: DECLINE

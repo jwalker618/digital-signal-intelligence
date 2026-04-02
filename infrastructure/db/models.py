@@ -143,6 +143,9 @@ class Submission(Base):
     submission_data = Column(JSONB, default=dict)
     direct_query_responses = Column(JSONB, default=dict)
 
+    # Discovery output (one-time per submission, not per model version)
+    discovery_output = Column(JSONB)
+
     # Processing metadata
     processing_started_at = Column(DateTime(timezone=True))
     processing_completed_at = Column(DateTime(timezone=True))
@@ -158,11 +161,61 @@ class Submission(Base):
     created_by_user = relationship("User", back_populates="submissions")
     quotes = relationship("Quote", back_populates="submission", cascade="all, delete-orphan")
     model_versions = relationship("ModelVersionRecord", back_populates="submission", cascade="all, delete-orphan")
-    
+    notes = relationship("SubmissionNote", back_populates="submission", cascade="all, delete-orphan", order_by="SubmissionNote.created_at")
+
     __table_args__ = (
         Index("ix_submissions_entity_coverage", "entity_name", "coverage"),
         Index("ix_submissions_created_at", "created_at"),
     )
+
+
+class SubmissionNote(Base):
+    """Individual note on a submission — workflow-generated or underwriter-added."""
+    __tablename__ = "submission_notes"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    submission_id = Column(UUID(as_uuid=True), ForeignKey("submissions.id"), nullable=False)
+    note = Column(Text, nullable=False)
+    source = Column(String(100), nullable=False)  # workflow, underwriter, system, etc.
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    submission = relationship("Submission", back_populates="notes")
+
+    __table_args__ = (
+        Index("ix_submission_notes_submission", "submission_id"),
+    )
+
+
+class ConfigSnapshot(Base):
+    """Frozen config at execution time — one row per unique config_hash.
+
+    Enables client-side scenario recalculation without backend round-trips.
+    Referenced by model_versions via config_hash.
+    """
+    __tablename__ = "config_snapshots"
+
+    config_hash = Column(String(64), primary_key=True)
+    coverage = Column(String(50), nullable=False)
+    configuration_name = Column(String(100), nullable=False)
+
+    # Tier & loss band config
+    tier_band_interpretation = Column(JSONB)
+    loss_band_interpretation = Column(JSONB)
+    correlation_matrix_version = Column(String(100))
+
+    # Exposure config
+    exposure_assessment_method = Column(String(50))
+    exposure_band_interpretation = Column(JSONB)
+
+    # Scenario recalculation configs
+    loss_correlation_config = Column(JSONB)
+    ilf_curve_config = Column(JSONB)
+    deductible_factor_table = Column(JSONB)
+    exposure_modifier_config = Column(JSONB)
+    guardrails_config = Column(JSONB)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class Quote(Base):
@@ -272,11 +325,8 @@ class ModelVersionRecord(Base):
     coverage = Column(String(50))
     configuration_name = Column(String(100))
 
-    # Discovery output
-    discovery_output = Column(JSONB)
-
-    # Signal outputs
-    signal_outputs = Column(JSONB, default=list)
+    # Signal outputs (signal_outputs removed — fully covered by model_version_signals join)
+    # Discovery output moved to submissions table (one-time per submission)
     categorical_outputs = Column(JSONB, default=list)
     group_scores = Column(JSONB, default=dict)
 
@@ -307,10 +357,7 @@ class ModelVersionRecord(Base):
     tier_margin_adjacent_better = Column(Integer)     # ID of next better tier (null if best)
     tier_margin_adjacent_worse = Column(Integer)      # ID of next worse tier (null if worst)
 
-    # =========================================================================
-    # TIER BAND CONFIG SNAPSHOT (Phase A — rich config context)
-    # =========================================================================
-    tier_band_interpretation = Column(JSONB)          # Full tier band config: {action, bands, application, label}
+    # tier_band_interpretation moved to config_snapshots table
 
     # Pricing
     base_premium = Column(Float)
@@ -348,7 +395,7 @@ class ModelVersionRecord(Base):
     decision = Column(SQLEnum(DecisionType))
     auto_approve = Column(Boolean, default=False)
     referral_reasons = Column(JSONB, default=list)
-    notes = Column(JSONB, default=list)
+    # notes moved to submission_notes table
 
     # =========================================================================
     # LOSS PROPENSITY (Phase 16 - three-pillar: loss)
@@ -375,8 +422,8 @@ class ModelVersionRecord(Base):
     loss_frequency_velocity = Column(Float)          # frequency score velocity (points/month)
     loss_severity_velocity = Column(Float)           # severity score velocity (points/month)
     loss_last_refresh = Column(DateTime(timezone=True))
-    correlation_matrix_version = Column(String(100))
-    loss_band_interpretation = Column(JSONB)          # Full loss tier band config snapshot: {bands, constraints, frequency_modifier, severity_modifier}
+    # correlation_matrix_version moved to config_snapshots
+    # loss_band_interpretation moved to config_snapshots
 
     # =========================================================================
     # EXPOSURE ASSESSMENT (three-pillar: exposure)
@@ -388,18 +435,13 @@ class ModelVersionRecord(Base):
     exposure_size_score = Column(Float)              # 0-100 normalised size score
     exposure_complexity_score = Column(Float)          # 0-100 normalised complexity score
     exposure_modifier = Column(Float)                 # Multiplier applied to premium
-    exposure_assessment_method = Column(String(50))   # config_band_lookup, signal_composite, etc.
+    # exposure_assessment_method moved to config_snapshots
     exposure_components = Column(JSONB)                # {size_factor, growth_factor, concentration_factor, ...}
-    exposure_band_interpretation = Column(JSONB)       # Full exposure config snapshot: {size_bands, complexity_bands, weights}
-
-    # =========================================================================
-    # CONFIG SNAPSHOTS — for full client-side scenario recalculation
-    # =========================================================================
-    loss_correlation_config = Column(JSONB)    # Loss correlation groups, weights, band thresholds, multiplier maps
-    ilf_curve_config = Column(JSONB)           # ILF curve type, params (q/b/alpha/k), anchor limit
-    deductible_factor_table = Column(JSONB)    # {product_type: [{deductible, factor}, ...]}
-    exposure_modifier_config = Column(JSONB)   # Size curve, growth/concentration thresholds
-    guardrails_config = Column(JSONB)          # modifier_floor, modifier_cap, premium ratio caps
+    # exposure_band_interpretation moved to config_snapshots
+    # Config snapshots (tier_band_interpretation, loss_band_interpretation,
+    # loss_correlation_config, ilf_curve_config, deductible_factor_table,
+    # exposure_modifier_config, guardrails_config) moved to config_snapshots table
+    # — referenced via config_hash FK
 
     # Audit
     created_by = Column(String(100))

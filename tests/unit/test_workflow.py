@@ -95,7 +95,7 @@ def mock_scorer():
             )
         ],
         categorical_outputs=[],
-        group_scores={"safety_signals": {"risk_score": 85.0, "risk_weight": 1.0, "risk_contribution": 850.0}},
+        group_scores={"safety_signals": {"risk_score": 85.0, "risk_weight": 1.0, "risk_contribution": 850.0, "risk_contribution_formula": "85.0 × 1.0 × 10 = 850.0"}},
         pure_composite_score=850.0,
         confidence=0.95,
         signal_coverage=1.0,

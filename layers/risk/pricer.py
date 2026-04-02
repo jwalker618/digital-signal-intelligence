@@ -315,7 +315,11 @@ class ModelPricer:
                 adjacent_worse = bands[current_idx + 1].id
 
         # Always compute distances — even at boundary tiers these show
-        # headroom within the tier (e.g. 150 points from ceiling in best tier)
+        # headroom within the tier (e.g. 50 points to cross into better tier).
+        # distance_to_better_tier: points needed to cross into the next better
+        #   tier (tier_max - score + 1, since reaching tier_max is still this tier).
+        # distance_to_worse_tier: points you can lose before falling into the
+        #   next worse tier (score - tier_min + 1, since tier_min is still safe).
         distance_better = (tier_max - score) + 1
         distance_worse = (score - tier_min) + 1
 

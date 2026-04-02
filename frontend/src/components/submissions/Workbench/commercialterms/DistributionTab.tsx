@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
 import StickyHeader from "@/components/shared/StickyHeader";
 import { Network, Building2, Activity, Users, Layers } from "lucide-react";
-import { formatDollar, formatPct } from "@/lib/format";
+import { formatCurrency, formatPercent } from "@/lib/format";
 
 export default function DistributionTab() {
   const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
@@ -35,7 +35,7 @@ export default function DistributionTab() {
         </div>
         <div>
           <span className="opacity-50 block text-xs mb-0.5">Gross Premium</span>
-          <span className="font-bold">{formatDollar(ct.gross_premium)}</span>
+          <span className="font-bold">{formatCurrency(ct.gross_premium)}</span>
         </div>
       </div>
     </div>
@@ -46,7 +46,7 @@ export default function DistributionTab() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div className="border border-dsi-outline/20 rounded-lg p-4">
           <span className="opacity-50 block text-xs mb-1">Signed Line</span>
-          <span className="font-bold text-2xl text-dsi-selected">{ct.signed_line != null ? formatPct(ct.signed_line) : "N/A"}</span>
+          <span className="font-bold text-2xl text-dsi-selected">{ct.signed_line != null ? formatPercent(ct.signed_line) : "N/A"}</span>
         </div>
         <div className="border border-dsi-outline/20 rounded-lg p-4">
           <span className="opacity-50 block text-xs mb-1">Role</span>
@@ -58,7 +58,7 @@ export default function DistributionTab() {
         </div>
         <div className="border border-dsi-outline/20 rounded-lg p-4">
           <span className="opacity-50 block text-xs mb-1">Gross Premium</span>
-          <span className="font-bold text-lg">{formatDollar(ct.gross_premium)}</span>
+          <span className="font-bold text-lg">{formatCurrency(ct.gross_premium)}</span>
         </div>
       </div>
 
@@ -68,16 +68,16 @@ export default function DistributionTab() {
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Order Premium (100%)</span>
-              <span className="font-bold">{formatDollar(ct.gross_premium)}</span>
+              <span className="font-bold">{formatCurrency(ct.gross_premium)}</span>
             </div>
             <div>
-              <span className="opacity-50 block text-xs mb-0.5">Line Premium ({formatPct(ct.signed_line)})</span>
-              <span className="font-bold text-dsi-selected">{formatDollar(ct.gross_premium * ct.signed_line)}</span>
+              <span className="opacity-50 block text-xs mb-0.5">Line Premium ({formatPercent(ct.signed_line)})</span>
+              <span className="font-bold text-dsi-selected">{formatCurrency(ct.gross_premium * ct.signed_line)}</span>
             </div>
             {ct.role === "LEAD" && ct.lead_loading_factor && ct.lead_loading_factor > 1 && (
               <div>
                 <span className="opacity-50 block text-xs mb-0.5">Lead-Loaded Premium</span>
-                <span className="font-bold text-dsi-selected">{formatDollar(ct.gross_premium * ct.signed_line * ct.lead_loading_factor)}</span>
+                <span className="font-bold text-dsi-selected">{formatCurrency(ct.gross_premium * ct.signed_line * ct.lead_loading_factor)}</span>
               </div>
             )}
           </div>
@@ -95,11 +95,11 @@ export default function DistributionTab() {
         </div>
         <div className="border border-dsi-outline/20 rounded-lg p-4">
           <span className="opacity-50 block text-xs mb-1">Signed Line</span>
-          <span className="font-bold text-lg">{ct.signed_line != null ? formatPct(ct.signed_line) : "N/A"}</span>
+          <span className="font-bold text-lg">{ct.signed_line != null ? formatPercent(ct.signed_line) : "N/A"}</span>
         </div>
         <div className="border border-dsi-outline/20 rounded-lg p-4">
           <span className="opacity-50 block text-xs mb-1">Total Gross Premium</span>
-          <span className="font-bold text-lg">{formatDollar(ct.gross_premium)}</span>
+          <span className="font-bold text-lg">{formatCurrency(ct.gross_premium)}</span>
         </div>
       </div>
       <div className="border border-dsi-outline/20 rounded-lg p-4 text-sm opacity-60">
@@ -118,7 +118,7 @@ export default function DistributionTab() {
         </div>
         <div className="border border-dsi-outline/20 rounded-lg p-4">
           <span className="opacity-50 block text-xs mb-1">Total Gross Premium</span>
-          <span className="font-bold text-lg">{formatDollar(ct.gross_premium)}</span>
+          <span className="font-bold text-lg">{formatCurrency(ct.gross_premium)}</span>
         </div>
       </div>
       <div className="border border-dsi-outline/20 rounded-lg p-4 text-sm opacity-60">
@@ -155,11 +155,11 @@ export default function DistributionTab() {
               </div>
               <div className="border border-dsi-outline/20 rounded-lg p-4">
                 <span className="opacity-50 block text-xs mb-1">Gross Premium</span>
-                <span className="font-bold text-lg">{formatDollar(ct.gross_premium)}</span>
+                <span className="font-bold text-lg">{formatCurrency(ct.gross_premium)}</span>
               </div>
               <div className="border border-dsi-outline/20 rounded-lg p-4">
                 <span className="opacity-50 block text-xs mb-1">Offered Premium</span>
-                <span className="font-bold text-lg text-dsi-selected">{formatDollar(ct.offered_premium)}</span>
+                <span className="font-bold text-lg text-dsi-selected">{formatCurrency(ct.offered_premium)}</span>
               </div>
             </div>
           </div>

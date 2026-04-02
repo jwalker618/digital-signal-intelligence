@@ -479,7 +479,6 @@ class WorkflowEngine:
             submission_data=submission_data,
             direct_query_responses=direct_query_responses,
             categorical_selections=categorical_selections,
-            signal_outputs=scoring_result.signal_outputs,
             categorical_outputs=scoring_result.categorical_outputs,
             group_scores=scoring_result.group_scores,
             pure_composite_score=scoring_result.pure_composite_score,
@@ -501,7 +500,6 @@ class WorkflowEngine:
             decision=decision,
             auto_approve=auto_approve,
             referral_reasons=all_referrals,
-            notes=all_notes,
             confidence=scoring_result.confidence,
             signal_coverage=scoring_result.signal_coverage,
         )
@@ -550,9 +548,6 @@ class WorkflowEngine:
             f"premium={pricing_result.final_premium:.0f}"
         )
 
-        # Add discovery output to model version for audit trail
-        model_version.discovery_output = discovery_output
-
         # Add loss propensity outputs to model version (Phase 16)
         if loss_propensity_result:
             model_version.loss_propensity_score = loss_propensity_result.loss_propensity_score
@@ -567,17 +562,60 @@ class WorkflowEngine:
             model_version.loss_severity_multiplier = loss_propensity_result.severity_multiplier
             model_version.loss_combined_modifier = loss_propensity_result.combined_loss_modifier
             # Persist loss group scores for full reconstructability
-            model_version.loss_group_scores = {
-                group_name: {
-                    "frequency_score": round(loss_propensity_result.frequency_group_scores.get(group_name, 0.0), 2),
-                    "severity_score": round(loss_propensity_result.severity_group_scores.get(group_name, 0.0), 2),
+            # Each group shows: weight, frequency/severity scores, their weighted
+            # contributions, and a human-readable formula so every number can be
+            # traced back to its inputs.
+            _all_loss_groups = set(
+                list(loss_propensity_result.frequency_group_scores.keys())
+                + list(loss_propensity_result.severity_group_scores.keys())
+            )
+            _loss_weight_total = sum(
+                loss_propensity_result.group_weights.get(g, 0.0) for g in _all_loss_groups
+            )
+            _loss_group_scores: dict = {}
+            for group_name in _all_loss_groups:
+                freq_score = round(loss_propensity_result.frequency_group_scores.get(group_name, 0.0), 2)
+                sev_score = round(loss_propensity_result.severity_group_scores.get(group_name, 0.0), 2)
+                loss_weight = loss_propensity_result.group_weights.get(group_name, 0.0)
+                freq_contribution = round(freq_score * loss_weight, 4)
+                sev_contribution = round(sev_score * loss_weight, 4)
+                _loss_group_scores[group_name] = {
+                    "loss_weight": loss_weight,
+                    "frequency_score": freq_score,
+                    "frequency_contribution": freq_contribution,
+                    "frequency_contribution_formula": f"{freq_score} × {loss_weight} = {freq_contribution}",
+                    "severity_score": sev_score,
+                    "severity_contribution": sev_contribution,
+                    "severity_contribution_formula": f"{sev_score} × {loss_weight} = {sev_contribution}",
                     "confidence": round(loss_propensity_result.group_confidences.get(group_name, 0.0), 4),
                 }
-                for group_name in set(
-                    list(loss_propensity_result.frequency_group_scores.keys())
-                    + list(loss_propensity_result.severity_group_scores.keys())
-                )
+            # Add composite derivation summary so the roll-up is clear
+            _freq_composite = round(
+                sum(g["frequency_contribution"] for g in _loss_group_scores.values()) / _loss_weight_total, 2
+            ) if _loss_weight_total > 0 else 0.0
+            _sev_composite = round(
+                sum(g["severity_contribution"] for g in _loss_group_scores.values()) / _loss_weight_total, 2
+            ) if _loss_weight_total > 0 else 0.0
+            _loss_group_scores["_composite"] = {
+                "loss_weight_total": round(_loss_weight_total, 4),
+                "frequency_composite_score": _freq_composite,
+                "frequency_composite_formula": f"sum(frequency_contributions) / {round(_loss_weight_total, 4)} = {_freq_composite}",
+                "severity_composite_score": _sev_composite,
+                "severity_composite_formula": f"sum(severity_contributions) / {round(_loss_weight_total, 4)} = {_sev_composite}",
+                "loss_propensity_score": loss_propensity_result.loss_propensity_score,
+                "loss_propensity_band": loss_propensity_result.loss_propensity_band.value,
+                "frequency_multiplier": loss_propensity_result.frequency_multiplier,
+                "severity_propensity_score": loss_propensity_result.severity_propensity_score,
+                "severity_propensity_band": loss_propensity_result.severity_propensity_band.value,
+                "severity_multiplier": loss_propensity_result.severity_multiplier,
+                "combined_loss_modifier": loss_propensity_result.combined_loss_modifier,
+                "combined_loss_modifier_formula": (
+                    f"({loss_propensity_result.frequency_multiplier} × freq_weight) + "
+                    f"({loss_propensity_result.severity_multiplier} × sev_weight) = "
+                    f"{loss_propensity_result.combined_loss_modifier}"
+                ),
             }
+            model_version.loss_group_scores = _loss_group_scores
             model_version.loss_trend_direction = loss_propensity_result.trend_direction.value
             model_version.loss_previous_score = loss_propensity_result.previous_combined_score
             model_version.loss_score_velocity = loss_propensity_result.combined_score_velocity
@@ -589,8 +627,6 @@ class WorkflowEngine:
             model_version.loss_frequency_trend_direction = getattr(loss_propensity_result, 'frequency_trend_direction', None)
             model_version.loss_severity_trend_direction = getattr(loss_propensity_result, 'severity_trend_direction', None)
             model_version.loss_last_refresh = loss_propensity_result.calculated_at
-            model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
-
         # Add exposure assessment outputs to model version
         exposure_result = next(
             (r for r in traditional_modifier_results if r.modifier_type == "exposure"),
@@ -606,15 +642,118 @@ class WorkflowEngine:
             model_version.exposure_complexity_score = exposure_result.components.get(
                 "complexity_score", None
             )
-            model_version.exposure_assessment_method = (
-                "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
-                else "full"
-            )
             # Persist component factors for transparency
-            model_version.exposure_components = {
+            # Include exposure_weight per group (moved from group_scores) and
+            # show how each factor combines into the final exposure modifier.
+            _raw_components = {
                 k: v for k, v in exposure_result.components.items()
                 if k not in ("primary_exposure", "mode")
             }
+
+            # ------------------------------------------------------------------
+            # Signal-derived exposure group scores (mirrors loss_group_scores)
+            # Each signal has optional exposure.size and exposure.complexity
+            # weights. Aggregate per group → contribution → composite, exactly
+            # like loss does for frequency/severity.
+            # ------------------------------------------------------------------
+            _sig_lookup: dict = {}
+            for sig_def in config.signal_registry:
+                tla = sig_def.three_layer_assessment
+                if tla and tla.exposure:
+                    _sig_lookup[sig_def.id] = {
+                        "group": tla.group_id,
+                        "size_weight": tla.exposure.size.weight if tla.exposure.size else None,
+                        "size_dir": tla.exposure.size.correlation_direction.value if tla.exposure.size else None,
+                        "comp_weight": tla.exposure.complexity.weight if tla.exposure.complexity else None,
+                        "comp_dir": tla.exposure.complexity.correlation_direction.value if tla.exposure.complexity else None,
+                    }
+
+            # Build per-group size/complexity scores from signal outputs
+            _exp_groups: dict = {}  # group_id → {size_sum, size_w, comp_sum, comp_w, conf_sum, conf_w}
+            for so in scoring_result.signal_outputs:
+                sl = _sig_lookup.get(so.signal_id)
+                if not sl:
+                    continue
+                gid = sl["group"]
+                if gid not in _exp_groups:
+                    _exp_groups[gid] = dict(
+                        size_sum=0.0, size_w=0.0,
+                        comp_sum=0.0, comp_w=0.0,
+                        conf_sum=0.0, conf_w=0.0,
+                    )
+                g = _exp_groups[gid]
+                # Direction: negative correlation inverts the score
+                raw = so.raw_score
+                if sl["size_weight"]:
+                    val = (100 - raw) if sl["size_dir"] == "negative" else raw
+                    g["size_sum"] += val * sl["size_weight"]
+                    g["size_w"] += sl["size_weight"]
+                if sl["comp_weight"]:
+                    val = (100 - raw) if sl["comp_dir"] == "negative" else raw
+                    g["comp_sum"] += val * sl["comp_weight"]
+                    g["comp_w"] += sl["comp_weight"]
+                g["conf_sum"] += so.confidence * (sl["size_weight"] or sl["comp_weight"] or 0)
+                g["conf_w"] += (sl["size_weight"] or sl["comp_weight"] or 0)
+
+            # Collect group-level exposure weights from config
+            _exposure_group_weights: dict = {}
+            for group in config.groups.three_layer_assessment:
+                if hasattr(group, 'exposure') and group.exposure:
+                    _exposure_group_weights[group.id] = group.exposure.weight
+
+            # Assemble per-group exposure detail
+            _exp_group_scores: dict = {}
+            for gid, agg in _exp_groups.items():
+                ew = _exposure_group_weights.get(gid, 0.0)
+                size_score = round(agg["size_sum"] / agg["size_w"], 2) if agg["size_w"] > 0 else None
+                comp_score = round(agg["comp_sum"] / agg["comp_w"], 2) if agg["comp_w"] > 0 else None
+                entry: dict = {"exposure_weight": ew}
+                if size_score is not None:
+                    size_c = round(size_score * ew, 4)
+                    entry["size_score"] = size_score
+                    entry["size_contribution"] = size_c
+                    entry["size_contribution_formula"] = f"{size_score} × {ew} = {size_c}"
+                if comp_score is not None:
+                    comp_c = round(comp_score * ew, 4)
+                    entry["complexity_score"] = comp_score
+                    entry["complexity_contribution"] = comp_c
+                    entry["complexity_contribution_formula"] = f"{comp_score} × {ew} = {comp_c}"
+                entry["confidence"] = round(agg["conf_sum"] / agg["conf_w"], 4) if agg["conf_w"] > 0 else 0.0
+                _exp_group_scores[gid] = entry
+
+            # Roll up composite
+            _ew_total = sum(_exposure_group_weights.get(g, 0.0) for g in _exp_groups)
+            if _ew_total > 0 and _exp_group_scores:
+                _size_comp = round(
+                    sum(g.get("size_contribution", 0) for g in _exp_group_scores.values()) / _ew_total, 2
+                )
+                _comp_comp = round(
+                    sum(g.get("complexity_contribution", 0) for g in _exp_group_scores.values()) / _ew_total, 2
+                )
+                _exp_group_scores["_composite"] = {
+                    "exposure_weight_total": round(_ew_total, 4),
+                    "size_composite_score": _size_comp,
+                    "size_composite_formula": f"sum(size_contributions) / {round(_ew_total, 4)} = {_size_comp}",
+                    "complexity_composite_score": _comp_comp,
+                    "complexity_composite_formula": f"sum(complexity_contributions) / {round(_ew_total, 4)} = {_comp_comp}",
+                    "exposure_modifier": exposure_result.factor,
+                    "exposure_band_label": None,  # filled below after band lookup
+                }
+
+            _raw_components["group_scores"] = _exp_group_scores
+            _raw_components["group_weights"] = _exposure_group_weights
+
+            # Add combined modifier derivation so every step is traceable
+            _size = _raw_components.get("size_factor", 1.0)
+            _growth = _raw_components.get("growth_factor", 1.0)
+            _conc = _raw_components.get("concentration_factor", 1.0)
+            _emp = _raw_components.get("employee_factor", 1.0)
+            _raw_components["exposure_modifier"] = exposure_result.factor
+            _raw_components["exposure_modifier_formula"] = (
+                f"size({_size}) × growth({_growth}) × concentration({_conc}) × employee({_emp}) "
+                f"= {exposure_result.factor}"
+            )
+            model_version.exposure_components = _raw_components
             # Map exposure value to band label for display context
             # Band modifier is the ACTUAL pricing factor — not a separate lookup
             _EXPOSURE_BAND_LABELS = [
@@ -642,6 +781,9 @@ class WorkflowEngine:
                 "max_value": bmax,
                 "modifier": exposure_result.factor,  # actual pricing factor, not a display value
             }
+            # Back-fill band label into the signal-derived composite
+            if "_composite" in _exp_group_scores:
+                _exp_group_scores["_composite"]["exposure_band_label"] = blabel
 
         return WorkflowResult(
             entity_id=entity_id,
@@ -659,9 +801,12 @@ class WorkflowEngine:
             confidence=scoring_result.confidence,
             is_valid=True,
             # Discovery summary (Step 0)
+            discovery_output=discovery_output,
             discovered_domain=discovery_output.discovered_domain if discovery_output else None,
             discovery_confidence=discovery_output.confidence.value if discovery_output else None,
             discovery_warnings=discovery_output.warnings if discovery_output else [],
+            # Notes for caller to persist as SubmissionNote records
+            submission_notes=all_notes,
             # Premium assembly (Step 14)
             premium_breakdown=premium_breakdown,
         )

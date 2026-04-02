@@ -593,8 +593,8 @@ class ModelScorer:
             Tuple of (composite_score, group_scores_detail, confidence, coverage)
             where group_scores_detail is Dict[group_id, {
                 risk_score, risk_weight, risk_contribution,
+                risk_contribution_formula,
                 signal_count, expected_signal_count, coverage_ratio,
-                loss_weight, exposure_weight
             }]
         """
         # Group signals by group_id
@@ -610,15 +610,6 @@ class ModelScorer:
             if sig.three_layer_assessment:
                 gid = sig.three_layer_assessment.group_id
                 signals_per_group[gid] = signals_per_group.get(gid, 0) + 1
-
-        # Build loss/exposure weight lookups from config (if available)
-        loss_weights: Dict[str, float] = {}
-        exposure_weights: Dict[str, float] = {}
-        for group in config.groups.three_layer_assessment:
-            if hasattr(group, 'loss') and group.loss:
-                loss_weights[group.id] = group.loss.weight
-            if hasattr(group, 'exposure') and group.exposure:
-                exposure_weights[group.id] = group.exposure.weight
 
         # Calculate group scores using three_layer_assessment groups
         group_scores_detail: Dict[str, Any] = {}
@@ -662,11 +653,10 @@ class ModelScorer:
                 "risk_score": round(group_score, 2),
                 "risk_weight": risk_weight,
                 "risk_contribution": round(risk_contribution, 2),
+                "risk_contribution_formula": f"{round(group_score, 2)} × {risk_weight} × 10 = {round(risk_contribution, 2)}",
                 "signal_count": actual_count,
                 "expected_signal_count": expected_count,
                 "coverage_ratio": round(group_populated / expected_count, 4) if expected_count > 0 else 0.0,
-                "loss_weight": loss_weights.get(group.id),
-                "exposure_weight": exposure_weights.get(group.id),
             }
 
         # Calculate composite score (0-1000 scale) — sum of all group contributions

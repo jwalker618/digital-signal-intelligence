@@ -715,8 +715,10 @@ class TestTierMargin:
         )
         margin = result.tier_margin
         # Tier 2 is 600-799, score 750
-        assert margin.distance_to_better_tier == 150.0  # 750 - 600 = 150
-        assert margin.distance_to_worse_tier == 49.0    # 799 - 750 = 49
+        # Need 50 points to cross into tier 1 (800+): (799 - 750) + 1
+        assert margin.distance_to_better_tier == 50.0
+        # Can lose 151 points before falling to tier 3 (<600): (750 - 600) + 1
+        assert margin.distance_to_worse_tier == 151.0
         assert margin.adjacent_better_tier == 1
         assert margin.adjacent_worse_tier == 3
 
@@ -759,8 +761,10 @@ class TestTierMargin:
         assert margin.tier_max == 399
         # Score clamped to tier 4 band: 750 → 399 (tier max)
         assert margin.score == 399
-        assert margin.distance_to_better_tier == 199.0  # 399 - 200
-        assert margin.distance_to_worse_tier == 0.0     # 399 - 399
+        # At the ceiling: need just 1 point to cross into tier 3 (400+)
+        assert margin.distance_to_better_tier == 1
+        # 200 points of buffer before falling to tier 5 (<200): (399 - 200) + 1
+        assert margin.distance_to_worse_tier == 200
 
     def test_final_composite_score_clamped_on_override(self, pricer, sample_config):
         """final_composite_score should be clamped to the final tier band."""

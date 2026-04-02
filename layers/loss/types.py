@@ -263,6 +263,7 @@ class LossPropensityResult:
     # Component scores
     group_scores: Dict[str, float]
     group_confidences: Dict[str, float]
+    group_weights: Dict[str, float]  # group_name → loss weight from config
     frequency_group_scores: Dict[str, float]
     severity_group_scores: Dict[str, float]
 

@@ -6,7 +6,7 @@ import {
   Target, Activity, Paperclip, AlertTriangle, ShieldAlert, Glasses,
   Gauge, Layers, ChevronDown, ChevronRight, MessageSquare, ArrowUp
 } from "lucide-react";
-import { formatNum } from "@/lib/format";
+import { formatNumber, formatPercent, formatDate, formatText, formatCurrency } from "@/lib/format";
 
 const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
   modifier:      { bg: 'bg-dsi-info/15', text: 'text-dsi-info' },
@@ -166,7 +166,7 @@ export default function RiskTab() {
 
       {/* STICKY HEADER */}
       <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
         <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
@@ -176,14 +176,14 @@ export default function RiskTab() {
           <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
             {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
               <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
+                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? formatDate(activeQuote.valid_from) : 'N/A'};</span>
                 <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
+                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? formatDate(activeQuote.valid_until) : 'N/A'}</span>
               </span>
             )}
             {activeQuote?.status === 'bound' && (
               <span>
-                <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
+                <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? formatDate(activeQuote.bound_at) : 'N/A'}</span>
                 <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
               </span>
             )}
@@ -198,25 +198,25 @@ export default function RiskTab() {
 
       {/* KPIs */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="flex items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header items-center overflow-x-hidden whitespace-nowrap border-collapse pr-dsi-pad">
           <Glasses className="icon"/><span className="text-sm">Results</span>
         </div>
-        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
+        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pl-dsi-pad pr-dsi-pad">
             
             <div>
               <span className="block text-sm mb-1">Pure Composite Score</span>
-              <span className="font-bold text-xl">{formatNum(activeVersion.pure_composite_score, 1)}</span>
+              <span className="font-bold text-xl">{formatNumber(activeVersion.pure_composite_score, 1)}</span>
             </div>  
 
             <div>
               <span className="block text-sm mb-1">Confidence</span>
-              <span className="font-bold text-lg">{((activeVersion.confidence || 0) * 100).toFixed(0)}%</span>
+              <span className="font-bold text-lg">{formatPercent(activeVersion.confidence || 0, 0)}</span>
             </div>
 
             <div>
               <span className="block text-sm mb-1">Signal Coverage</span>
-              <span className="font-bold text-lg">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span>
+              <span className="font-bold text-lg">{formatPercent(activeVersion.signal_coverage || 0, 0)}</span>
             </div>
 
             <div>
@@ -226,7 +226,7 @@ export default function RiskTab() {
 
             <div>
               <span className="block text-sm mb-1">Final Composite Score</span>
-              <span className="font-bold text-lg text-dsi-selected normal-case">{formatNum(activeVersion.final_composite_score, 1)}</span>
+              <span className="font-bold text-lg text-dsi-selected normal-case">{formatNumber(activeVersion.final_composite_score, 1)}</span>
             </div>
 
             <div>
@@ -242,7 +242,7 @@ export default function RiskTab() {
           TIER POSITION — full width, enhanced visualisation
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <Gauge className="icon"/><span className="text-sm">Tier Position & Improvement Paths</span>
         </div>
         <div className="
@@ -280,7 +280,7 @@ export default function RiskTab() {
                                 text-xs
                                 font-bold 
                                 text-dsi-selected whitespace-nowrap">
-                                {formatNum(currentScore, 0)}
+                                {formatNumber(currentScore, 0)}
                               </div>
                             </div>
                           )}
@@ -309,7 +309,7 @@ export default function RiskTab() {
                   {/* row 1 */}
                   <div className="flex flex-col">
                     <span>Position</span>
-                    <span>{activeVersion.tier_margin_percentile.toFixed(3)}%</span>
+                    <span>{formatNumber(activeVersion.tier_margin_percentile, 3)}%</span>
                   </div>
                   <div className="flex flex-col">
                     <span>hey</span>
@@ -347,7 +347,7 @@ export default function RiskTab() {
                           <div className="text-[10px] opacity-50 border-t border-dsi-outline/10 pt-1.5 mt-1.5">
                             <span className="font-semibold">Key levers: </span>
                             {topLevers.map((l, i) => (
-                              <span key={l.group}>{i > 0 && ', '}{l.group} ({formatNum(l.contribution, 0)}pts)</span>
+                              <span key={l.group}>{i > 0 && ', '}{l.group} ({formatNumber(l.contribution, 0)}pts)</span>
                             ))}
                           </div>
                         )}
@@ -369,10 +369,10 @@ export default function RiskTab() {
           GROUP → SIGNAL BREAKDOWN with contribution totals and pillar derivation
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="flex items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header items-center overflow-x-hidden whitespace-nowrap border-collapse">
           <Layers className="icon"/><span className="text-sm">Group & Signal Breakdown</span>
         </div>
-        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
+        <div className="dsi-section-analysis overflow-x-auto whitespace-nowrap border-collapse">
 
           {isFetchingRiskSignals ? (
             <div className="flex flex-col items-center justify-center py-10 opacity-50 space-y-4">
@@ -399,14 +399,15 @@ export default function RiskTab() {
                 const groupConditions = conditionsBySource[groupId] || [];
                 const hasConditions = groupConditions.length > 0 || signals.some((s: any) => (conditionsBySource[s.code] || []).length > 0);
 
-                // Loss derivation for this group
-                const lossWeight = gs.loss_weight || 0;
+                // Loss derivation for this group (loss_weight now lives in loss_group_scores)
                 const lossGroupEntry = (activeVersion?.loss_group_scores || {})[groupId];
+                const lossWeight = lossGroupEntry?.loss_weight || 0;
                 const lossFreqScore = lossGroupEntry?.frequency_score;
                 const lossSevScore = lossGroupEntry?.severity_score;
 
-                // Exposure derivation
-                const expWeight = gs.exposure_weight || 0;
+                // Exposure derivation (exposure_weight now lives in exposure_components.group_weights)
+                const expGroupWeights = (activeVersion?.exposure_components || {}).group_weights || {};
+                const expWeight = expGroupWeights[groupId] || 0;
 
                 return (
                   <div key={groupId}>
@@ -425,9 +426,9 @@ export default function RiskTab() {
                         )}
                         <span className="text-[10px] opacity-40 ml-1">({signals.length})</span>
                       </div>
-                      <span className="text-right text-sm">{formatNum(gs.risk_score, 1)}</span>
-                      <span className="text-right text-sm opacity-60">{formatNum(gs.risk_weight, 2)}</span>
-                      <span className="text-right text-sm font-bold">{formatNum(gs.risk_contribution, 1)}</span>
+                      <span className="text-right text-sm">{formatNumber(gs.risk_score, 1)}</span>
+                      <span className="text-right text-sm opacity-60">{formatNumber(gs.risk_weight, 2)}</span>
+                      <span className="text-right text-sm font-bold">{formatNumber(gs.risk_contribution, 1)}</span>
                       <span className="text-center">
                         <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-positive' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-warning' : 'text-dsi-negative'}`}>
                           {gs.signal_count || 0}/{gs.expected_signal_count || 0}
@@ -437,9 +438,9 @@ export default function RiskTab() {
                       <span className="text-right text-xs text-wrap">
                         {lossWeight > 0 ? (
                           <span>
-                            <span className="opacity-50">wgt {formatNum(lossWeight, 2)}</span>
+                            <span className="opacity-50">wgt {formatNumber(lossWeight, 2)}</span>
                             {lossFreqScore != null && (
-                              <span className="block"><span className="font-bold">{formatNum(lossFreqScore, 1)}</span><span className="opacity-40"> freq</span></span>
+                              <span className="block"><span className="font-bold">{formatNumber(lossFreqScore, 1)}</span><span className="opacity-40"> freq</span></span>
                             )}
                             {currentLossBand && (
                               <span className="block text-[9px] font-bold uppercase text-dsi-info">→ {currentLossBand.label} ({currentLossBand.frequency_modifier}x)</span>
@@ -451,7 +452,7 @@ export default function RiskTab() {
                       <span className="text-right text-xs text-wrap">
                         {expWeight > 0 ? (
                           <span>
-                            <span className="opacity-50">wgt {formatNum(expWeight, 2)}</span>
+                            <span className="opacity-50">wgt {formatNumber(expWeight, 2)}</span>
                             {currentExpBand && (
                               <span className="block text-[9px] font-bold uppercase text-dsi-info">→ {currentExpBand.label} ({currentExpBand.modifier}x)</span>
                             )}
@@ -493,9 +494,9 @@ export default function RiskTab() {
                             {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
                             {sig.proxy_tier && <span className="text-[10px] opacity-30">T{sig.proxy_tier}</span>}
                           </div>
-                          <span className="text-right text-sm">{formatNum(sig.score, 1)}</span>
-                          <span className="text-right text-sm opacity-50">{formatNum(sig.weight, 2)}</span>
-                          <span className="text-right text-sm">{formatNum(sig.contribution, 2)}</span>
+                          <span className="text-right text-sm">{formatNumber(sig.score, 1)}</span>
+                          <span className="text-right text-sm opacity-50">{formatNumber(sig.weight, 2)}</span>
+                          <span className="text-right text-sm">{formatNumber(sig.contribution, 2)}</span>
                           <span></span><span></span><span></span>
                         </div>
                       );
@@ -515,16 +516,16 @@ export default function RiskTab() {
                     <span className="font-black text-sm">Total → Composite Score</span>
                     <span></span>
                     <span></span>
-                    <span className="text-right font-black text-sm">{formatNum(totalContribution, 1)}</span>
+                    <span className="text-right font-black text-sm">{formatNumber(totalContribution, 1)}</span>
                     <span></span>
                     <span className="text-right text-xs text-wrap">
                       {currentLossBand ? (
-                        <span className="font-bold text-dsi-info uppercase">{activeVersion?.loss_propensity_band?.replace(/_/g, ' ')} → {formatNum(activeVersion?.loss_combined_modifier, 3)}x</span>
+                        <span className="font-bold text-dsi-info uppercase">{activeVersion?.loss_propensity_band?.replace(/_/g, ' ')} → {formatNumber(activeVersion?.loss_combined_modifier, 3)}x</span>
                       ) : <span className="opacity-30">–</span>}
                     </span>
                     <span className="text-right text-xs text-wrap">
                       {currentExpBand ? (
-                        <span className="font-bold text-dsi-info uppercase">{activeVersion?.exposure_band_label} → {formatNum(activeVersion?.exposure_modifier, 3)}x</span>
+                        <span className="font-bold text-dsi-info uppercase">{activeVersion?.exposure_band_label} → {formatNumber(activeVersion?.exposure_modifier, 3)}x</span>
                       ) : <span className="opacity-30">–</span>}
                     </span>
                   </div>
@@ -533,7 +534,7 @@ export default function RiskTab() {
 
               {/* Tier result summary */}
               <div className="px-dsi-pad py-2 text-xs opacity-60 text-wrap">
-                Composite {formatNum(currentScore, 1)} → <span className="font-bold text-dsi-selected">Tier {activeVersion?.final_tier} ({activeVersion?.tier_label})</span>
+                Composite {formatNumber(currentScore, 1)} → <span className="font-bold text-dsi-selected">Tier {activeVersion?.final_tier} ({activeVersion?.tier_label})</span>
                 {activeVersion?.score_based_tier !== activeVersion?.final_tier && (
                   <span className="ml-2 opacity-50">(score-based: Tier {activeVersion?.score_based_tier}, overridden to {activeVersion?.final_tier})</span>
                 )}
@@ -547,11 +548,11 @@ export default function RiskTab() {
           ACTIVE CONDITIONS — full width, bottom section
           ======================================================================= */}
       <div className="flex flex-col pt-2 pb-2">
-        <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
           <AlertTriangle className="icon"/>
           <span className="text-sm">Active Conditions ({allConditions.length})</span>
         </div>
-        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
+        <div className="dsi-section-analysis border-collapse">
           {conditionTypeSummary.length === 0 ? (
             <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">No conditions triggered.</div>
           ) : (
@@ -571,7 +572,7 @@ export default function RiskTab() {
                       <div className="flex items-center gap-2">
                         {modifierCount > 0 && (
                           <span className="text-[10px] bg-dsi-info/15 text-dsi-info px-1.5 py-0.5 rounded font-bold">
-                            {modifierCount} modifier{modifierCount > 1 ? 's' : ''} ({(aggregateModifier * 100).toFixed(0)}%)
+                            {modifierCount} modifier{modifierCount > 1 ? 's' : ''} ({formatPercent(aggregateModifier, 0)})
                           </span>
                         )}
                       </div>
@@ -599,7 +600,7 @@ export default function RiskTab() {
                             </span>
                             {cond.action_value != null && typeof cond.action_value === 'number' && (
                               <span className="text-xs font-bold opacity-70 w-16 text-right">
-                                {actionKey === 'modifier' ? `${(cond.action_value * 100).toFixed(0)}%` :
+                                {actionKey === 'modifier' ? formatPercent(cond.action_value, 0) :
                                  actionKey === 'tier_override' ? `→ T${cond.action_value}` :
                                  cond.action_value}
                               </span>

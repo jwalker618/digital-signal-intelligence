@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
 import StickyHeader from "@/components/shared/StickyHeader";
 import { Calculator, ArrowDown, Activity, AlertTriangle, DollarSign } from "lucide-react";
-import { formatDollar, formatPct } from "@/lib/format";
+import { formatCurrency, formatPercent, formatNumber } from "@/lib/format";
 
 export default function PremiumAssemblyTab() {
   const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
@@ -19,7 +19,7 @@ export default function PremiumAssemblyTab() {
   // Build waterfall steps
   const waterfallSteps = [
     { label: "Technical Premium (USD)", value: ct.technical_premium_usd, type: "start" as const },
-    { label: "FX Conversion", value: ct.technical_premium_local, note: `${ct.base_currency} @ ${ct.fx_rate_to_usd?.toFixed(4) || "1.0000"}`, type: "neutral" as const },
+    { label: "FX Conversion", value: ct.technical_premium_local, note: `${ct.base_currency} @ ${formatNumber(ct.fx_rate_to_usd, 4) || "1.0000"}`, type: "neutral" as const },
   ];
 
   // Deduction items
@@ -68,7 +68,7 @@ export default function PremiumAssemblyTab() {
             {/* Technical Premium */}
             <div className="flex justify-between items-center py-3 px-4 rounded-lg bg-dsi-background/30 border border-dsi-outline/10">
               <span className="text-sm font-semibold">Technical Premium (USD)</span>
-              <span className="font-bold text-lg">{formatDollar(ct.technical_premium_usd)}</span>
+              <span className="font-bold text-lg">{formatCurrency(ct.technical_premium_usd)}</span>
             </div>
 
             <div className="flex justify-center py-1"><ArrowDown className="w-4 h-4 opacity-30" /></div>
@@ -79,7 +79,7 @@ export default function PremiumAssemblyTab() {
                 <div className="flex justify-between items-center py-3 px-4 rounded-lg bg-dsi-background/30 border border-dsi-outline/10">
                   <div>
                     <span className="text-sm font-semibold">Technical Premium ({ct.base_currency})</span>
-                    <span className="text-xs opacity-50 block">FX Rate: {ct.fx_rate_to_usd?.toFixed(4)}</span>
+                    <span className="text-xs opacity-50 block">FX Rate: {formatNumber(ct.fx_rate_to_usd, 4)}</span>
                   </div>
                   <span className="font-bold text-lg">{ct.base_currency} {Number(ct.technical_premium_local).toLocaleString()}</span>
                 </div>
@@ -97,14 +97,14 @@ export default function PremiumAssemblyTab() {
                   <div key={item.label} className="flex justify-between items-center py-2 px-4 text-sm border-b border-dsi-outline/5 last:border-0">
                     <span className="opacity-70">{item.label}</span>
                     <div className="text-right">
-                      <span className="font-bold text-dsi-negative">{item.rate != null ? formatPct(item.rate) : "-"}</span>
-                      {item.amount != null && <span className="text-xs opacity-50 block">{formatDollar(item.amount)}</span>}
+                      <span className="font-bold text-dsi-negative">{item.rate != null ? formatPercent(item.rate) : "-"}</span>
+                      {item.amount != null && <span className="text-xs opacity-50 block">{formatCurrency(item.amount)}</span>}
                     </div>
                   </div>
                 ))}
                 <div className="flex justify-between items-center py-2 px-4 text-sm bg-dsi-negative/5 font-semibold">
                   <span>Total Commission</span>
-                  <span className="font-bold">{formatDollar(ct.total_commission)}</span>
+                  <span className="font-bold">{formatCurrency(ct.total_commission)}</span>
                 </div>
               </div>
             )}
@@ -114,7 +114,7 @@ export default function PremiumAssemblyTab() {
             {/* Net Premium */}
             <div className="flex justify-between items-center py-3 px-4 rounded-lg bg-dsi-info/5 border border-dsi-info/20">
               <span className="text-sm font-bold">Net Premium</span>
-              <span className="font-bold text-lg text-dsi-info">{formatDollar(ct.net_premium)}</span>
+              <span className="font-bold text-lg text-dsi-info">{formatCurrency(ct.net_premium)}</span>
             </div>
 
             <div className="flex justify-center py-1"><ArrowDown className="w-4 h-4 opacity-30" /></div>
@@ -128,12 +128,12 @@ export default function PremiumAssemblyTab() {
                 {taxItems.map((item) => (
                   <div key={item.label} className="flex justify-between items-center py-2 px-4 text-sm border-b border-dsi-outline/5 last:border-0">
                     <span className="opacity-70">{item.label}</span>
-                    <span className="font-bold">{item.rate != null ? formatPct(item.rate) : "-"}</span>
+                    <span className="font-bold">{item.rate != null ? formatPercent(item.rate) : "-"}</span>
                   </div>
                 ))}
                 <div className="flex justify-between items-center py-2 px-4 text-sm bg-dsi-warning/5 font-semibold">
                   <span>Total Taxes</span>
-                  <span className="font-bold">{formatDollar(ct.total_taxes)}</span>
+                  <span className="font-bold">{formatCurrency(ct.total_taxes)}</span>
                 </div>
               </div>
             )}
@@ -143,7 +143,7 @@ export default function PremiumAssemblyTab() {
             {/* Gross Premium */}
             <div className="flex justify-between items-center py-3 px-4 rounded-lg bg-dsi-positive/5 border border-dsi-positive/20">
               <span className="text-sm font-bold">Gross Premium</span>
-              <span className="font-bold text-lg text-dsi-positive">{formatDollar(ct.gross_premium)}</span>
+              <span className="font-bold text-lg text-dsi-positive">{formatCurrency(ct.gross_premium)}</span>
             </div>
 
             <div className="flex justify-center py-1"><ArrowDown className="w-4 h-4 opacity-30" /></div>
@@ -154,11 +154,11 @@ export default function PremiumAssemblyTab() {
                 <span className="text-sm font-bold">Offered Premium</span>
                 {discretionPct != null && (
                   <span className={`text-xs block ${discretionPct > 0 ? "text-dsi-positive" : discretionPct < 0 ? "text-dsi-negative" : "opacity-50"}`}>
-                    {discretionPct > 0 ? "+" : ""}{(discretionPct * 100).toFixed(1)}% discretion from gross
+                    {discretionPct > 0 ? "+" : ""}{formatPercent(discretionPct, 1)} discretion from gross
                   </span>
                 )}
               </div>
-              <span className="font-black text-2xl text-dsi-selected">{formatDollar(ct.offered_premium)}</span>
+              <span className="font-black text-2xl text-dsi-selected">{formatCurrency(ct.offered_premium)}</span>
             </div>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function PremiumAssemblyTab() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="border border-dsi-outline/20 rounded-lg p-4">
               <span className="opacity-50 block text-xs mb-1">Minimum Gross Premium</span>
-              <span className="font-bold text-lg">{formatDollar(ct.minimum_gross_premium)}</span>
+              <span className="font-bold text-lg">{formatCurrency(ct.minimum_gross_premium)}</span>
             </div>
             <div className="border border-dsi-outline/20 rounded-lg p-4">
               <span className="opacity-50 block text-xs mb-1">At Minimum Premium?</span>
@@ -180,7 +180,7 @@ export default function PremiumAssemblyTab() {
             </div>
             <div className="border border-dsi-outline/20 rounded-lg p-4">
               <span className="opacity-50 block text-xs mb-1">Max Discretion Allowed</span>
-              <span className="font-bold text-lg">{ct.offered_premium_discretion != null ? `±${(ct.offered_premium_discretion * 100).toFixed(0)}%` : "N/A"}</span>
+              <span className="font-bold text-lg">{ct.offered_premium_discretion != null ? `±${formatPercent(ct.offered_premium_discretion, 0)}` : "N/A"}</span>
             </div>
           </div>
         </div>
@@ -192,16 +192,16 @@ export default function PremiumAssemblyTab() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 text-sm">
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Gross Premium</span>
-              <span className="font-bold">{formatDollar(ct.gross_premium)}</span>
+              <span className="font-bold">{formatCurrency(ct.gross_premium)}</span>
             </div>
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Offered Premium</span>
-              <span className="font-bold text-dsi-selected">{formatDollar(ct.offered_premium)}</span>
+              <span className="font-bold text-dsi-selected">{formatCurrency(ct.offered_premium)}</span>
             </div>
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Discretion Applied</span>
               <span className={`font-bold ${discretionPct != null && discretionPct > 0 ? "text-dsi-positive" : discretionPct != null && discretionPct < 0 ? "text-dsi-negative" : ""}`}>
-                {discretionPct != null ? `${discretionPct > 0 ? "+" : ""}${(discretionPct * 100).toFixed(1)}%` : "N/A"}
+                {discretionPct != null ? `${discretionPct > 0 ? "+" : ""}${formatPercent(discretionPct, 1)}` : "N/A"}
               </span>
             </div>
             <div>

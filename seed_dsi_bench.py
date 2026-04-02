@@ -33,7 +33,7 @@ Coverage lines seeded:
 
 Each company entry creates:
   1. Submission (with submission_data and direct_query_responses)
-  2. ModelVersionRecord (full signal_outputs, group_scores, conditions, pricing)
+  2. ModelVersionRecord (group_scores, conditions, pricing)
   3. Quote (with recommended premium/limit, composite_score, confidence)
   4. Referral (for refer/decline decisions)
   5. SignalCache entries (per-signal cached data)
@@ -74,6 +74,8 @@ from infrastructure.db.models import (
     QuoteStatus,
     DecisionType,
     ReferralStatus,
+    SubmissionNote,
+    ConfigSnapshot,
 )
 
 # Production workflow components
@@ -3789,7 +3791,7 @@ def build_rol_recommendation(limit_premiums, requested_limit):
     }
 
 
-def build_loss_propensity(co, group_scores):
+def build_loss_propensity(co, group_scores, config=None):
     """Build loss propensity columns derived from actual signal group scores.
 
     Loss Modifier Calculation Chain
@@ -3798,7 +3800,7 @@ def build_loss_propensity(co, group_scores):
     from signal group scores:
 
     1. FREQUENCY PROPENSITY (weight: 0.6 in combined modifier):
-       - Input: signal group scores weighted by each group's loss_weight
+       - Input: signal group scores weighted by each group's loss_weight (from config)
        - Inverted: high risk_score (good) → low frequency propensity (good)
        - loss_propensity_score = 100 - weighted_avg(group_scores)
        - Mapped to band: very_low / low / moderate / elevated / high
@@ -3820,11 +3822,18 @@ def build_loss_propensity(co, group_scores):
        - Trend direction: stable / improving / deteriorating
        - Combined values are weighted averages (0.6 freq + 0.4 sev)
     """
+    # Build loss weight lookup from config (loss_weight no longer in group_scores)
+    _loss_weights: dict = {}
+    if config is not None:
+        for group in config.groups.three_layer_assessment:
+            if hasattr(group, 'loss') and group.loss:
+                _loss_weights[group.id] = group.loss.weight
+
     # Derive loss propensity score from group scores using loss weights
     loss_weighted_sum = 0.0
     loss_weight_total = 0.0
     for gid, gs in group_scores.items():
-        lw = gs.get("loss_weight")
+        lw = _loss_weights.get(gid, 0.0)
         if lw and lw > 0:
             loss_weighted_sum += gs["risk_score"] * lw
             loss_weight_total += lw
@@ -3865,17 +3874,44 @@ def build_loss_propensity(co, group_scores):
     sev_mult = sev_mult_map.get(sev_band, 1.0)
     combined = round(freq_mult * 0.6 + sev_mult * 0.4, 3)
 
-    # Loss group scores for full reconstructability
+    # Loss group scores for full reconstructability — now includes weights and contributions
     loss_group_scores = {}
     for gid, gs in group_scores.items():
-        lw = gs.get("loss_weight")
+        lw = _loss_weights.get(gid, 0.0)
         if lw and lw > 0:
-            inverted = round(100.0 - gs["risk_score"], 2)
+            g_freq = round(100.0 - gs["risk_score"], 2)
+            g_sev = round(min(100, max(0, g_freq + random.uniform(-3, 3))), 2)
+            g_freq_c = round(g_freq * lw, 4)
+            g_sev_c = round(g_sev * lw, 4)
             loss_group_scores[gid] = {
-                "frequency_score": inverted,
-                "severity_score": round(min(100, max(0, inverted + random.uniform(-3, 3))), 2),
+                "loss_weight": lw,
+                "frequency_score": g_freq,
+                "frequency_contribution": g_freq_c,
+                "frequency_contribution_formula": f"{g_freq} × {lw} = {g_freq_c}",
+                "severity_score": g_sev,
+                "severity_contribution": g_sev_c,
+                "severity_contribution_formula": f"{g_sev} × {lw} = {g_sev_c}",
                 "confidence": round(random.uniform(0.7, 0.95), 4),
             }
+    # Add composite derivation summary
+    _lw_total = sum(v["loss_weight"] for v in loss_group_scores.values()) if loss_group_scores else 0.0
+    _freq_comp = round(sum(v["frequency_contribution"] for v in loss_group_scores.values()) / _lw_total, 2) if _lw_total > 0 else 0.0
+    _sev_comp = round(sum(v["severity_contribution"] for v in loss_group_scores.values()) / _lw_total, 2) if _lw_total > 0 else 0.0
+    loss_group_scores["_composite"] = {
+        "loss_weight_total": round(_lw_total, 4),
+        "frequency_composite_score": _freq_comp,
+        "frequency_composite_formula": f"sum(frequency_contributions) / {round(_lw_total, 4)} = {_freq_comp}",
+        "severity_composite_score": _sev_comp,
+        "severity_composite_formula": f"sum(severity_contributions) / {round(_lw_total, 4)} = {_sev_comp}",
+        "loss_propensity_score": loss_score,
+        "loss_propensity_band": loss_band,
+        "frequency_multiplier": freq_mult,
+        "severity_propensity_score": sev_score,
+        "severity_propensity_band": sev_band,
+        "severity_multiplier": sev_mult,
+        "combined_loss_modifier": combined,
+        "combined_loss_modifier_formula": f"({freq_mult} × 0.6) + ({sev_mult} × 0.4) = {combined}",
+    }
 
     loss_confidence = round(random.uniform(0.65, 0.95), 2)
 
@@ -3914,7 +3950,96 @@ def build_loss_propensity(co, group_scores):
     }
 
 
-def build_exposure_assessment(co, config):
+def _build_exposure_group_scores(config, signal_outputs, band_label):
+    """Compute per-group exposure scores from signal outputs (mirrors loss_group_scores).
+
+    Each signal has optional exposure.size and exposure.complexity weights.
+    Aggregate per group → weighted contribution → composite, exactly like
+    loss does for frequency/severity.
+    """
+    if not signal_outputs:
+        return {}
+
+    # Build signal lookup: signal_id → {group, size_weight, comp_weight, directions}
+    sig_lookup = {}
+    for sig_def in config.signal_registry:
+        tla = sig_def.three_layer_assessment
+        if tla and tla.exposure:
+            sig_lookup[sig_def.id] = {
+                "group": tla.group_id,
+                "size_weight": tla.exposure.size.weight if tla.exposure.size else None,
+                "size_dir": tla.exposure.size.correlation_direction.value if tla.exposure.size else None,
+                "comp_weight": tla.exposure.complexity.weight if tla.exposure.complexity else None,
+                "comp_dir": tla.exposure.complexity.correlation_direction.value if tla.exposure.complexity else None,
+            }
+
+    # Aggregate per group
+    groups = {}
+    for so in signal_outputs:
+        sl = sig_lookup.get(so.signal_id)
+        if not sl:
+            continue
+        gid = sl["group"]
+        if gid not in groups:
+            groups[gid] = dict(size_sum=0.0, size_w=0.0, comp_sum=0.0, comp_w=0.0,
+                               conf_sum=0.0, conf_w=0.0)
+        g = groups[gid]
+        raw = so.raw_score
+        if sl["size_weight"]:
+            val = (100 - raw) if sl["size_dir"] == "negative" else raw
+            g["size_sum"] += val * sl["size_weight"]
+            g["size_w"] += sl["size_weight"]
+        if sl["comp_weight"]:
+            val = (100 - raw) if sl["comp_dir"] == "negative" else raw
+            g["comp_sum"] += val * sl["comp_weight"]
+            g["comp_w"] += sl["comp_weight"]
+        g["conf_sum"] += so.confidence * (sl["size_weight"] or sl["comp_weight"] or 0)
+        g["conf_w"] += (sl["size_weight"] or sl["comp_weight"] or 0)
+
+    # Group-level weights
+    group_weights = {}
+    for group in config.groups.three_layer_assessment:
+        if hasattr(group, 'exposure') and group.exposure:
+            group_weights[group.id] = group.exposure.weight
+
+    # Build per-group detail
+    result = {}
+    for gid, agg in groups.items():
+        ew = group_weights.get(gid, 0.0)
+        entry = {"exposure_weight": ew}
+        if agg["size_w"] > 0:
+            s = round(agg["size_sum"] / agg["size_w"], 2)
+            sc = round(s * ew, 4)
+            entry["size_score"] = s
+            entry["size_contribution"] = sc
+            entry["size_contribution_formula"] = f"{s} × {ew} = {sc}"
+        if agg["comp_w"] > 0:
+            c = round(agg["comp_sum"] / agg["comp_w"], 2)
+            cc = round(c * ew, 4)
+            entry["complexity_score"] = c
+            entry["complexity_contribution"] = cc
+            entry["complexity_contribution_formula"] = f"{c} × {ew} = {cc}"
+        entry["confidence"] = round(agg["conf_sum"] / agg["conf_w"], 4) if agg["conf_w"] > 0 else 0.0
+        result[gid] = entry
+
+    # Composite rollup
+    ew_total = sum(group_weights.get(g, 0.0) for g in groups)
+    if ew_total > 0 and result:
+        size_comp = round(sum(g.get("size_contribution", 0) for g in result.values()) / ew_total, 2)
+        comp_comp = round(sum(g.get("complexity_contribution", 0) for g in result.values()) / ew_total, 2)
+        result["_composite"] = {
+            "exposure_weight_total": round(ew_total, 4),
+            "size_composite_score": size_comp,
+            "size_composite_formula": f"sum(size_contributions) / {round(ew_total, 4)} = {size_comp}",
+            "complexity_composite_score": comp_comp,
+            "complexity_composite_formula": f"sum(complexity_contributions) / {round(ew_total, 4)} = {comp_comp}",
+            "exposure_band_label": band_label,
+        }
+
+    return result
+
+
+def build_exposure_assessment(co, config, signal_outputs=None):
     """Build exposure assessment columns keyed for ModelVersionRecord kwargs.
 
     Exposure Modifier Calculation Chain
@@ -4033,6 +4158,15 @@ def build_exposure_assessment(co, config):
                 "weight": complexity_weight,
             },
             "combined_modifier": combined_modifier,
+            "exposure_modifier_formula": (
+                f"size({size_modifier} × {size_weight}) + complexity({complexity_modifier} × {complexity_weight}) = {combined_modifier}"
+            ),
+            "group_weights": {
+                group.id: group.exposure.weight
+                for group in config.groups.three_layer_assessment
+                if hasattr(group, 'exposure') and group.exposure
+            },
+            "group_scores": _build_exposure_group_scores(config, signal_outputs, size_band_label),
         },
     }
 
@@ -4465,6 +4599,7 @@ def seed_data(
                 continue
 
             direct_query_responses = build_direct_query_responses(co, config)
+            discovery = build_discovery_output(co)
 
             sub = Submission(
                 id=sub_id,
@@ -4483,6 +4618,7 @@ def seed_data(
                 processing_completed_at=processing_end,
                 processing_duration_ms=(processing_end - processing_start).total_seconds() * 1000,
                 created_by=system_user_id,
+                discovery_output=discovery,
             )
             db.add(sub)
             db.flush()
@@ -4522,8 +4658,8 @@ def seed_data(
 
             # Build loss propensity + exposure assessment BEFORE pricing
             # so their modifiers feed into the premium calculation
-            loss_kwargs = build_loss_propensity(co, group_scores)
-            exposure_kwargs = build_exposure_assessment(co, config)
+            loss_kwargs = build_loss_propensity(co, group_scores, config=config)
+            exposure_kwargs = build_exposure_assessment(co, config, signal_outputs=signal_outputs)
 
             # Combine signal + query + loss + exposure modifiers (same as workflow.py)
             all_modifiers = signal_modifiers + query_result.modifiers
@@ -4594,8 +4730,6 @@ def seed_data(
                 print(f"   [{i:>4d}/{total_co}] {co['entity_name']:<30s} "
                       f"| {coverage_key:<30s} | Tier {final_tier} ({pricing_result.tier_label}) "
                       f"| {decision_str.upper():<8s} | ${pricing_result.final_premium:,.0f}{tag}")
-
-            discovery = build_discovery_output(co)
 
             # loss_kwargs and exposure_kwargs already computed above (before pricing)
 
@@ -4775,6 +4909,12 @@ def seed_data(
             # --- Phase C: ROL dual recommendation ---
             rol_kwargs = build_rol_recommendation(limit_premiums, requested_limit)
 
+            # Extract config snapshot fields from loss_kwargs and exposure_kwargs
+            # before spreading them into the ModelVersionRecord
+            mv_config_hash = _hex(16)
+            correlation_matrix_version_val = loss_kwargs.pop("correlation_matrix_version", "v1.0.0")
+            exposure_assessment_method_val = exposure_kwargs.pop("exposure_assessment_method", "config_band_lookup")
+
             mv = ModelVersionRecord(
                 id=mv_id,
                 version_code=f"mv_{_hex(8)}",
@@ -4784,9 +4924,7 @@ def seed_data(
                 is_latest=True,
                 coverage=co["coverage"],
                 configuration_name=co["configuration"],
-                config_hash=_hex(16),
-                discovery_output=discovery,
-                signal_outputs=signal_outputs_json,
+                config_hash=mv_config_hash,
                 categorical_outputs=categorical_outputs_json,
                 group_scores=group_scores,
                 pure_composite_score=composite,
@@ -4812,21 +4950,9 @@ def seed_data(
                 ilf_factor=ilf_factor,
                 ilf_method=ilf_method,
                 ilf_anchor_limit=ilf_anchor,
-                # Tier band config snapshot
-                tier_band_interpretation=tier_band_snap,
-                # Loss/exposure band config snapshots
-                loss_band_interpretation=loss_band_snap,
-                exposure_band_interpretation=exposure_band_snap,
-                # Config snapshots for scenario recalculation
-                loss_correlation_config=loss_corr_config,
-                ilf_curve_config=ilf_curve_snap,
-                deductible_factor_table=ded_factor_snap,
-                exposure_modifier_config=exposure_mod_snap,
-                guardrails_config=guardrails_snap,
                 decision=decision_enum,
                 auto_approve=auto_approve,
                 referral_reasons=referral_reasons,
-                notes=[{"note": co.get("description", ""), "source": "seed_script"}],
                 created_by="seed_dsi_bench",
                 # Tier margin context (Phase A)
                 **tier_margin_kwargs,
@@ -4838,6 +4964,36 @@ def seed_data(
                 **exposure_kwargs,
             )
             db.add(mv)
+            db.flush()
+
+            # === 2b. SUBMISSION NOTE (normalised from model_version.notes) ===
+            note_text = co.get("description", "")
+            if note_text:
+                submission_note = SubmissionNote(
+                    id=_uid(),
+                    submission_id=sub_id,
+                    note=note_text,
+                    source="seed_script",
+                    created_by="seed_dsi_bench",
+                    created_at=NOW,
+                )
+                db.add(submission_note)
+
+            # === 2c. CONFIG SNAPSHOT (normalised from model_version config columns) ===
+            config_snapshot = ConfigSnapshot(
+                config_hash=mv_config_hash,
+                tier_band_interpretation=tier_band_snap,
+                loss_band_interpretation=loss_band_snap,
+                correlation_matrix_version=correlation_matrix_version_val,
+                exposure_assessment_method=exposure_assessment_method_val,
+                exposure_band_interpretation=exposure_band_snap,
+                loss_correlation_config=loss_corr_config,
+                ilf_curve_config=ilf_curve_snap,
+                deductible_factor_table=ded_factor_snap,
+                exposure_modifier_config=exposure_mod_snap,
+                guardrails_config=guardrails_snap,
+            )
+            db.merge(config_snapshot)
             db.flush()
 
             # === 3. QUOTE (de-duplicated: scoring lives on model_version) ===

@@ -100,6 +100,7 @@ def _make_loss_propensity_result(
         cohort_confidence=0.9,
         group_scores={"tech": 50.0},
         group_confidences={"tech": 0.9},
+        group_weights={"tech": 1.0},
         frequency_group_scores={"tech": 50.0},
         severity_group_scores={"tech": 40.0},
         frequency_multiplier=1.0,

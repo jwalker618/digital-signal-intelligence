@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
+import { formatNumber, formatPercent, formatCurrency } from "@/lib/format";
 import {
   Calculator, HandCoins, ChevronDown,
   ChevronRight, ArrowRightToLine, Paperclip,
@@ -130,15 +131,7 @@ export default function PricingTab() {
         >
 
         {/* SECTION HEADER */}
-        <div className="
-          flex gap-dsi-pad
-          rounded-t-xl
-          border-b-1 border-dsi-outline/50
-          overflow-x-hidden whitespace-nowrap border-collapse
-          bg-dsi-analysis/60
-          pl-dsi-pad
-          pt-2 pb-2
-        "
+        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse"
         >
           <Paperclip className="icon"/><span className="text-sm">Key Details</span>
         </div>
@@ -189,15 +182,7 @@ export default function PricingTab() {
 
         <div className="lg:col-span-2 flex flex-col">
           {/* SECTION HEADER */}
-          <div className="
-            flex gap-dsi-pad
-            rounded-t-xl
-            border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse
-            bg-dsi-analysis/60
-            pl-dsi-pad
-            pt-2 pb-2
-          "
+          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse"
           >
             <Calculator className="icon"/><span className="text-sm">Pricing Anatomy</span>
           </div>
@@ -205,14 +190,7 @@ export default function PricingTab() {
           {/* =======================================================================
               COMPONENT B: PRICING ANATOMY
               ======================================================================= */}
-          <div className="
-            flex flex-col flex-1
-            border-b-3 border-dsi-contrast-background
-            overflow-x-hidden whitespace-nowrap border-collapse
-            rounded-b-xl
-            bg-dsi-analysis shadow-sm
-            pt-2 pb-2
-            "
+          <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse"
             >
             <div className="
               flex-1
@@ -250,7 +228,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{(activeVersion?.base_premium_derivation?.basis_value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{formatCurrency(activeVersion?.base_premium_derivation?.basis_value || 0)}
                   </div>
 
                   {/* row 2 */}
@@ -286,7 +264,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
-                    >{(activeVersion?.base_premium_derivation?.result || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{formatCurrency(activeVersion?.base_premium_derivation?.result || 0)}
                   </div>
                 </div>
 
@@ -349,7 +327,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('categorical')}
                 >
-                  {categoricalTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(categoricalTotal)}
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
@@ -358,7 +336,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('categorical')}
                 >
-                  {premiumAfterCategorical.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(premiumAfterCategorical)}
               </div>
 
               {/* ==============================================
@@ -377,13 +355,13 @@ export default function PricingTab() {
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-center text-xs content-center bg-dsi-background/30"
                     >
-                    {Number(mod.multiplier).toFixed(3)}x
+                    {formatNumber(mod.multiplier, 3)}x
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-right text-xs content-center bg-dsi-background/30"
                     >
-                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(mod.impact)}
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -435,7 +413,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('signal')}
                 >
-                  {signalTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(signalTotal)}
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
@@ -444,7 +422,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('signal')}
                 >
-                  {premiumAfterSignal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(premiumAfterSignal)}
               </div>
 
               {/* ==============================================
@@ -463,13 +441,13 @@ export default function PricingTab() {
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-center text-xs content-center bg-dsi-background/30"
                     >
-                    {Number(mod.multiplier).toFixed(3)}x
+                    {formatNumber(mod.multiplier, 3)}x
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-right text-xs content-center bg-dsi-background/30"
                     >
-                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(mod.impact)}
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -521,7 +499,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('direct')}
                 >
-                  {directTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(directTotal)}
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
@@ -530,7 +508,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('direct')}
                 >
-                  {premiumAfterDirect.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(premiumAfterDirect)}
               </div>
 
               {/* ==============================================
@@ -549,13 +527,13 @@ export default function PricingTab() {
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-center text-xs content-center bg-dsi-background/30"
                     >
-                    {Number(mod.multiplier).toFixed(3)}x
+                    {formatNumber(mod.multiplier, 3)}x
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-right text-xs content-center bg-dsi-background/30"
                     >
-                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(mod.impact)}
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -607,7 +585,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('loss')}
                 >
-                  {lossTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(lossTotal)}
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
@@ -616,7 +594,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('loss')}
                 >
-                  {premiumAfterLoss.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(premiumAfterLoss)}
               </div>
 
               {/* ==============================================
@@ -635,13 +613,13 @@ export default function PricingTab() {
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-center text-xs content-center bg-dsi-background/30"
                     >
-                    {Number(mod.multiplier).toFixed(3)}x
+                    {formatNumber(mod.multiplier, 3)}x
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-right text-xs content-center bg-dsi-background/30"
                     >
-                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(mod.impact)}
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -692,7 +670,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('exposure')}
                 >
-                  {exposureTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(exposureTotal)}
               </div>
               <div className="
                 overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
@@ -701,7 +679,7 @@ export default function PricingTab() {
                 "
                 onClick={() => toggleGroup('exposure')}
                 >
-                  {premiumAfterExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(premiumAfterExposure)}
               </div>
 
               {/* ==============================================
@@ -720,13 +698,13 @@ export default function PricingTab() {
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-center text-xs content-center bg-dsi-background/30"
                     >
-                    {Number(mod.multiplier).toFixed(3)}x
+                    {formatNumber(mod.multiplier, 3)}x
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     text-right text-xs content-center bg-dsi-background/30"
                     >
-                    {mod.impact.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(mod.impact)}
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
@@ -772,7 +750,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{(activeVersion?.final_premium_detail?.premium_before_scaling || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{formatCurrency(activeVersion?.final_premium_detail?.premium_before_scaling || 0)}
                   </div>
 
                   {/* row 2 */}
@@ -786,7 +764,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{(activeVersion?.final_premium_detail?.ilf_factor || 0).toFixed(3)}x
+                    >{formatNumber(activeVersion?.final_premium_detail?.ilf_factor || 0, 3)}x
                   </div>
 
                   {/* row 3 */}
@@ -800,7 +778,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
-                    >{(activeVersion?.final_premium_detail?.deductible_factor || 0).toFixed(3)}x
+                    >{formatNumber(activeVersion?.final_premium_detail?.deductible_factor || 0, 3)}x
                   </div>
 
                   {/* GUARDRAILS */}
@@ -833,7 +811,7 @@ export default function PricingTab() {
                         overflow-x-hidden whitespace-nowrap border-collapse
                         pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected line-through
                         "
-                        >{activeVersion.uncapped_premium?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        >{formatCurrency(activeVersion.uncapped_premium)}
                       </div>
                       
                       {activeVersion.guardrail_warnings.map((warning: any, i: number) => (
@@ -856,7 +834,7 @@ export default function PricingTab() {
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
                     pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
-                    >{(activeVersion?.final_premium_detail?.premium_after_scaling || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    >{formatCurrency(activeVersion?.final_premium_detail?.premium_after_scaling || 0)}
                   </div>
                   
                 </div>
@@ -872,15 +850,7 @@ export default function PricingTab() {
         <div className="flex flex-col">
 
           {/* SECTION HEADER: Recommended Quote Details */}
-          <div className="
-            flex gap-dsi-pad
-            rounded-t-xl
-            border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse
-            bg-dsi-analysis/60
-            pl-dsi-pad
-            pt-2 pb-2
-          "
+          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse"
           >
             <HandCoins className="icon"/><span className="text-sm">Recommended Quote Details</span>
           </div>
@@ -908,7 +878,7 @@ export default function PricingTab() {
                   Final Premium
                 </div>
                 <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
-                  {recommendedPremium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(recommendedPremium)}
                 </div>
               </div>
               <div className="
@@ -921,7 +891,7 @@ export default function PricingTab() {
                   Final Limit
                 </div>
                 <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
-                  {recommendedLimit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(recommendedLimit)}
                 </div>
               </div>
             </div>
@@ -982,17 +952,17 @@ export default function PricingTab() {
                             </span>
                           )}
 
-                          <span className="text-sm">{option.limit.toLocaleString(undefined, { maximumFractionDigits: 0 })} Limit</span>
+                          <span className="text-sm">{formatCurrency(option.limit)} Limit</span>
 
                         </div>
                         <span className="font-bold">
-                          {option.premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          {formatCurrency(option.premium)}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center pt-1">
                         <span className="text-xs text-wrap">{option.rationale}</span>
-                        <span className="text-xs pl-2">ROL {(option.rol * 100).toFixed(1)}%</span>
+                        <span className="text-xs pl-2">ROL {formatPercent(option.rol, 1)}</span>
                       </div>
 
                       {!isCurrentRecommended && (

@@ -5,7 +5,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
 import StickyHeader from "@/components/shared/StickyHeader";
 import { RefreshCw, Activity, Layers, DollarSign } from "lucide-react";
-import { formatDollar, formatPct } from "@/lib/format";
+import { formatCurrency, formatPercent } from "@/lib/format";
 
 export default function AggregateReinstatementTab() {
   const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
@@ -33,13 +33,13 @@ export default function AggregateReinstatementTab() {
             <div className="border-2 border-dsi-selected/20 bg-dsi-selected/5 rounded-xl p-5">
               <span className="opacity-50 block text-xs mb-1 uppercase tracking-wider">Aggregate Limit</span>
               <span className="font-bold text-xl text-dsi-selected">
-                {formatDollar(rt.aggregate_limit)}
+                {formatCurrency(rt.aggregate_limit)}
               </span>
             </div>
             <div className="border border-dsi-outline/20 rounded-xl p-5">
               <span className="opacity-50 block text-xs mb-1 uppercase tracking-wider">Aggregate Deductible</span>
               <span className="font-bold text-xl">
-                {formatDollar(rt.aggregate_deductible)}
+                {formatCurrency(rt.aggregate_deductible)}
               </span>
             </div>
             <div className="border border-dsi-outline/20 rounded-xl p-5">
@@ -70,7 +70,7 @@ export default function AggregateReinstatementTab() {
             <div className="border border-dsi-outline/20 rounded-xl p-5">
               <span className="opacity-50 block text-xs mb-1 uppercase tracking-wider">Reinstatement Rate</span>
               <span className="font-bold text-xl">
-                {rt.reinstatement_rate != null ? formatPct(rt.reinstatement_rate) : "N/A"}
+                {rt.reinstatement_rate != null ? formatPercent(rt.reinstatement_rate) : "N/A"}
               </span>
               {rt.reinstatement_rate != null && (
                 <span className="block text-xs opacity-50 mt-1">
@@ -88,11 +88,11 @@ export default function AggregateReinstatementTab() {
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Attachment Point</span>
-              <span className="font-bold">{formatDollar(rt.attachment_point)}</span>
+              <span className="font-bold">{formatCurrency(rt.attachment_point)}</span>
             </div>
             <div>
               <span className="opacity-50 block text-xs mb-0.5">Layer Limit</span>
-              <span className="font-bold">{formatDollar(rt.layer_limit)}</span>
+              <span className="font-bold">{formatCurrency(rt.layer_limit)}</span>
             </div>
           </div>
         </SectionCard>
