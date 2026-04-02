@@ -4974,7 +4974,7 @@ def seed_data(
                     submission_id=sub_id,
                     note=note_text,
                     source="seed_script",
-                    created_by="seed_dsi_bench",
+                    created_by=system_user_id,
                     created_at=NOW,
                 )
                 db.add(submission_note)
