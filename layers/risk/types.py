@@ -1146,10 +1146,15 @@ class WorkflowResult:
     signals_returned: int = 0
     signals_defined: int = 0
 
+    # Discovery output (Step 0) — caller persists on submission
+    discovery_output: Optional["DiscoveryOutput"] = None
     # Discovery summary (Step 0)
     discovered_domain: Optional[str] = None
     discovery_confidence: Optional[str] = None
     discovery_warnings: List[str] = field(default_factory=list)
+
+    # Notes for caller to persist as SubmissionNote records
+    submission_notes: List[str] = field(default_factory=list)
 
     # Missing inputs (if Step 3 fails)
     missing_inputs: List[str] = field(default_factory=list)

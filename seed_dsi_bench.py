@@ -33,7 +33,7 @@ Coverage lines seeded:
 
 Each company entry creates:
   1. Submission (with submission_data and direct_query_responses)
-  2. ModelVersionRecord (full signal_outputs, group_scores, conditions, pricing)
+  2. ModelVersionRecord (group_scores, conditions, pricing)
   3. Quote (with recommended premium/limit, composite_score, confidence)
   4. Referral (for refer/decline decisions)
   5. SignalCache entries (per-signal cached data)
@@ -74,6 +74,8 @@ from infrastructure.db.models import (
     QuoteStatus,
     DecisionType,
     ReferralStatus,
+    SubmissionNote,
+    ConfigSnapshot,
 )
 
 # Production workflow components
@@ -4597,6 +4599,7 @@ def seed_data(
                 continue
 
             direct_query_responses = build_direct_query_responses(co, config)
+            discovery = build_discovery_output(co)
 
             sub = Submission(
                 id=sub_id,
@@ -4615,6 +4618,7 @@ def seed_data(
                 processing_completed_at=processing_end,
                 processing_duration_ms=(processing_end - processing_start).total_seconds() * 1000,
                 created_by=system_user_id,
+                discovery_output=discovery,
             )
             db.add(sub)
             db.flush()
@@ -4726,8 +4730,6 @@ def seed_data(
                 print(f"   [{i:>4d}/{total_co}] {co['entity_name']:<30s} "
                       f"| {coverage_key:<30s} | Tier {final_tier} ({pricing_result.tier_label}) "
                       f"| {decision_str.upper():<8s} | ${pricing_result.final_premium:,.0f}{tag}")
-
-            discovery = build_discovery_output(co)
 
             # loss_kwargs and exposure_kwargs already computed above (before pricing)
 
@@ -4907,6 +4909,12 @@ def seed_data(
             # --- Phase C: ROL dual recommendation ---
             rol_kwargs = build_rol_recommendation(limit_premiums, requested_limit)
 
+            # Extract config snapshot fields from loss_kwargs and exposure_kwargs
+            # before spreading them into the ModelVersionRecord
+            mv_config_hash = _hex(16)
+            correlation_matrix_version_val = loss_kwargs.pop("correlation_matrix_version", "v1.0.0")
+            exposure_assessment_method_val = exposure_kwargs.pop("exposure_assessment_method", "config_band_lookup")
+
             mv = ModelVersionRecord(
                 id=mv_id,
                 version_code=f"mv_{_hex(8)}",
@@ -4916,9 +4924,7 @@ def seed_data(
                 is_latest=True,
                 coverage=co["coverage"],
                 configuration_name=co["configuration"],
-                config_hash=_hex(16),
-                discovery_output=discovery,
-                signal_outputs=signal_outputs_json,
+                config_hash=mv_config_hash,
                 categorical_outputs=categorical_outputs_json,
                 group_scores=group_scores,
                 pure_composite_score=composite,
@@ -4944,21 +4950,9 @@ def seed_data(
                 ilf_factor=ilf_factor,
                 ilf_method=ilf_method,
                 ilf_anchor_limit=ilf_anchor,
-                # Tier band config snapshot
-                tier_band_interpretation=tier_band_snap,
-                # Loss/exposure band config snapshots
-                loss_band_interpretation=loss_band_snap,
-                exposure_band_interpretation=exposure_band_snap,
-                # Config snapshots for scenario recalculation
-                loss_correlation_config=loss_corr_config,
-                ilf_curve_config=ilf_curve_snap,
-                deductible_factor_table=ded_factor_snap,
-                exposure_modifier_config=exposure_mod_snap,
-                guardrails_config=guardrails_snap,
                 decision=decision_enum,
                 auto_approve=auto_approve,
                 referral_reasons=referral_reasons,
-                notes=[{"note": co.get("description", ""), "source": "seed_script"}],
                 created_by="seed_dsi_bench",
                 # Tier margin context (Phase A)
                 **tier_margin_kwargs,
@@ -4970,6 +4964,36 @@ def seed_data(
                 **exposure_kwargs,
             )
             db.add(mv)
+            db.flush()
+
+            # === 2b. SUBMISSION NOTE (normalised from model_version.notes) ===
+            note_text = co.get("description", "")
+            if note_text:
+                submission_note = SubmissionNote(
+                    id=_uid(),
+                    submission_id=sub_id,
+                    note=note_text,
+                    source="seed_script",
+                    created_by="seed_dsi_bench",
+                    created_at=NOW,
+                )
+                db.add(submission_note)
+
+            # === 2c. CONFIG SNAPSHOT (normalised from model_version config columns) ===
+            config_snapshot = ConfigSnapshot(
+                config_hash=mv_config_hash,
+                tier_band_interpretation=tier_band_snap,
+                loss_band_interpretation=loss_band_snap,
+                correlation_matrix_version=correlation_matrix_version_val,
+                exposure_assessment_method=exposure_assessment_method_val,
+                exposure_band_interpretation=exposure_band_snap,
+                loss_correlation_config=loss_corr_config,
+                ilf_curve_config=ilf_curve_snap,
+                deductible_factor_table=ded_factor_snap,
+                exposure_modifier_config=exposure_mod_snap,
+                guardrails_config=guardrails_snap,
+            )
+            db.merge(config_snapshot)
             db.flush()
 
             # === 3. QUOTE (de-duplicated: scoring lives on model_version) ===

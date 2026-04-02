@@ -23,6 +23,7 @@ from infrastructure.db.models import (
     ModelVersionSignal,
     Signal,
     DecisionType,
+    SubmissionNote,
 )
 from infrastructure.db.repositories import (
     ModelVersionRepository,
@@ -330,17 +331,12 @@ async def override_signal(
         config_hash=old_model.config_hash,
         coverage=old_model.coverage,
         configuration_name=old_model.configuration_name,
-        discovery_output=old_model.discovery_output,
-        signal_outputs=old_model.signal_outputs,
         categorical_outputs=old_model.categorical_outputs,
         signal_conditions=old_model.signal_conditions,
         query_conditions=old_model.query_conditions,
         tier_overrides=old_model.tier_overrides,
         modifiers_applied=old_model.modifiers_applied,
         referral_reasons=old_model.referral_reasons,
-        notes=(old_model.notes or []) + [
-            f"Signal override: {request.signal_code} changed from {original_score} to {request.audited_value}"
-        ],
         # Loss propensity (carry forward)
         loss_propensity_score=old_model.loss_propensity_score,
         severity_propensity_score=old_model.severity_propensity_score,
@@ -357,15 +353,21 @@ async def override_signal(
         loss_previous_score=old_model.loss_previous_score,
         loss_score_velocity=old_model.loss_score_velocity,
         loss_last_refresh=old_model.loss_last_refresh,
-        correlation_matrix_version=old_model.correlation_matrix_version,
         # Exposure (carry forward)
         exposure_value=old_model.exposure_value,
         exposure_band_id=old_model.exposure_band_id,
         exposure_band_label=old_model.exposure_band_label,
         exposure_size_score=old_model.exposure_size_score,
         exposure_modifier=old_model.exposure_modifier,
-        exposure_assessment_method=old_model.exposure_assessment_method,
     )
+
+    # ── b2. Record signal override as a submission note ───────────────────
+    override_note = SubmissionNote(
+        submission_id=old_model.submission_id,
+        note=f"Signal override: {request.signal_code} changed from {original_score} to {request.audited_value}",
+        source="signal_override",
+    )
+    db.add(override_note)
 
     # ── c. Copy signal bindings with override ────────────────────────────
 

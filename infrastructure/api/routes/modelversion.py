@@ -15,16 +15,20 @@ from sqlalchemy import select
 from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
     ModelVersionRecord,
-    Submission
+    Submission,
+    SubmissionNote,
+    ConfigSnapshot,
 )
 
 from ..types import (
     ModelVersionDBRecord,
-    ModelVersionDBRecord_BaseOnly, 
-    ModelVersionDBRecord_DetailOnly, 
-    ModelVersionDBRecord_CommentaryOnly, 
+    ModelVersionDBRecord_BaseOnly,
+    ModelVersionDBRecord_DetailOnly,
+    ModelVersionDBRecord_CommentaryOnly,
     ModelVersionDBRecord_ExposureOnly,
-    ModelVersionDBRecord_LossOnly
+    ModelVersionDBRecord_LossOnly,
+    ConfigSnapshotResponse,
+    SubmissionNoteResponse,
 )
 
 logger = logging.getLogger("dsi.api.modelversions")
@@ -241,6 +245,36 @@ async def get_submission_modelversion_exposure(
 
 
 # =============================================================================
+# CONFIG SNAPSHOT
+# =============================================================================
+
+@router.get("/modelversion/{version_code}/config", response_model=ConfigSnapshotResponse)
+async def get_modelversion_config(
+    version_code: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> ConfigSnapshotResponse:
+    """Get the config snapshot for a model version, looked up via config_hash."""
+    query = select(ModelVersionRecord).where(ModelVersionRecord.version_code == version_code)
+    result = await db.execute(query)
+    record = result.scalar_one_or_none()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Model version not found")
+
+    if not record.config_hash:
+        raise HTTPException(status_code=404, detail="No config snapshot linked to this model version")
+
+    config_query = select(ConfigSnapshot).where(ConfigSnapshot.config_hash == record.config_hash)
+    config_result = await db.execute(config_query)
+    config = config_result.scalar_one_or_none()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="Config snapshot not found")
+
+    return config
+
+
+# =============================================================================
 # NOTES
 # =============================================================================
 
@@ -255,7 +289,7 @@ async def add_note(
     request: AddNoteRequest,
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Append a note to a model version's notes array."""
+    """Add a note to the submission linked to this model version."""
     query = select(ModelVersionRecord).where(ModelVersionRecord.version_code == version_code)
     result = await db.execute(query)
     record = result.scalar_one_or_none()
@@ -263,11 +297,25 @@ async def add_note(
     if not record:
         raise HTTPException(status_code=404, detail="Model version not found")
 
-    existing_notes = record.notes or []
-    new_note = {"note": request.note, "source": request.source}
-    record.notes = existing_notes + [new_note]
-
+    # Create a SubmissionNote on the parent submission
+    submission_note = SubmissionNote(
+        submission_id=record.submission_id,
+        note=request.note,
+        source=request.source,
+    )
+    db.add(submission_note)
     await db.commit()
-    await db.refresh(record)
 
-    return {"status": "ok", "notes": record.notes}
+    # Return all notes for this submission
+    notes_query = (
+        select(SubmissionNote)
+        .where(SubmissionNote.submission_id == record.submission_id)
+        .order_by(SubmissionNote.created_at)
+    )
+    notes_result = await db.execute(notes_query)
+    notes = [
+        {"note": n.note, "source": n.source, "created_at": str(n.created_at)}
+        for n in notes_result.scalars().all()
+    ]
+
+    return {"status": "ok", "notes": notes}

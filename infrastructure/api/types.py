@@ -16,6 +16,7 @@ from infrastructure.db.models import (
     User, APIKey, Submission, Quote, Referral, ModelVersionRecord,
     Signal, SignalSource, SignalCache, ModelVersionSignal, SignalAuditRecord, AuditLog,
     CommercialTermsRecord, RiskTermsRecord,
+    ConfigSnapshot, SubmissionNote,
 )
 
 def maps_to(orm_model: Type, exclude: List[str] = None):
@@ -381,6 +382,34 @@ class JobResponse(BaseModel):
     completed_at: Optional[datetime] = None
 
 
+# --- H. Config Snapshot & Submission Notes ---
+
+@maps_to(ConfigSnapshot, exclude=[])
+class ConfigSnapshotResponse(BaseModel):
+    """Frozen configuration snapshot keyed by config_hash."""
+    config_hash: str
+    coverage: str
+    configuration_name: str
+    tier_band_interpretation: Optional[Dict[str, Any]] = None
+    loss_band_interpretation: Optional[Dict[str, Any]] = None
+    correlation_matrix_version: Optional[str] = None
+    exposure_assessment_method: Optional[str] = None
+    exposure_band_interpretation: Optional[Dict[str, Any]] = None
+    loss_correlation_config: Optional[Dict[str, Any]] = None
+    ilf_curve_config: Optional[Dict[str, Any]] = None
+    deductible_factor_table: Optional[Dict[str, Any]] = None
+    exposure_modifier_config: Optional[Dict[str, Any]] = None
+    guardrails_config: Optional[Dict[str, Any]] = None
+    created_at: Optional[datetime] = None
+
+@maps_to(SubmissionNote, exclude=["id", "submission_id", "created_by"])
+class SubmissionNoteResponse(BaseModel):
+    """Individual note attached to a submission."""
+    note: str
+    source: str
+    created_at: Optional[datetime] = None
+
+
 # =============================================================================
 # PART 2: ALIGNED ORM DTOs
 # These models strictly map 1:1 to their underlying database tables. 
@@ -422,6 +451,8 @@ class SubmissionRecord(BaseModel):
     status: SubmissionStatus
     submission_data: Dict[str, Any] = Field(default_factory=dict)
     direct_query_responses: Dict[str, Any] = Field(default_factory=dict)
+    discovery_output: Optional[Dict[str, Any]] = None
+    notes: List[SubmissionNoteResponse] = Field(default_factory=list)
     error_message: Optional[str] = None
     created_at: datetime
 
@@ -460,8 +491,6 @@ class ModelVersionDBRecord(BaseModel):
     config_hash: Optional[str] = None
     coverage: Optional[str] = None
     configuration_name: Optional[str] = None
-    discovery_output: Optional[Dict[str, Any]] = None
-    signal_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     categorical_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     group_scores: Optional[Dict[str, Any]] = None
     pure_composite_score: Optional[float] = None
@@ -482,7 +511,6 @@ class ModelVersionDBRecord(BaseModel):
     tier_margin_distance_worse: Optional[float] = None
     tier_margin_adjacent_better: Optional[float] = None
     tier_margin_adjacent_worse: Optional[float] = None
-    tier_band_interpretation: Optional[Dict[str, Any]] = None
 
     base_premium: Optional[float] = None
     base_premium_method: Optional[str] = None
@@ -512,7 +540,6 @@ class ModelVersionDBRecord(BaseModel):
     decision: Optional[DecisionType] = None
     auto_approve: bool = False
     referral_reasons: List[str] = Field(default_factory=list)
-    notes: List[Note] = Field(default_factory=list)
 
     loss_propensity_score: Optional[float] = None
     severity_propensity_score: Optional[float] = None
@@ -538,8 +565,6 @@ class ModelVersionDBRecord(BaseModel):
     loss_frequency_velocity: Optional[float] = None
     loss_severity_velocity: Optional[float] = None
     loss_last_refresh: Optional[datetime] = None
-    correlation_matrix_version: Optional[str] = None
-    loss_band_interpretation: Optional[Dict[str, Any]] = None
 
     exposure_value: Optional[float] = None
     exposure_band_id: Optional[int] = None
@@ -548,32 +573,23 @@ class ModelVersionDBRecord(BaseModel):
     exposure_size_score: Optional[float] = None
     exposure_complexity_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
-    exposure_assessment_method: Optional[str] = None
     exposure_components: Optional[Dict[str, Any]] = None
-    exposure_band_interpretation: Optional[Dict[str, Any]] = None
 
-    # Config snapshots for client-side scenario recalculation
-    loss_correlation_config: Optional[Dict[str, Any]] = None
-    ilf_curve_config: Optional[Dict[str, Any]] = None
-    deductible_factor_table: Optional[Dict[str, Any]] = None
-    exposure_modifier_config: Optional[Dict[str, Any]] = None
-    guardrails_config: Optional[Dict[str, Any]] = None
+@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash",
+                                        "categorical_outputs", "group_scores",
 
-@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
-                                        "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
+                                        "referral_reasons",
 
-                                        "referral_reasons", "notes",
-                                        
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
                                         "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
                                         "loss_trend_direction", "loss_frequency_trend_direction", "loss_severity_trend_direction",
                                         "loss_previous_score", "loss_previous_frequency_score", "loss_previous_severity_score",
                                         "loss_score_velocity", "loss_frequency_velocity", "loss_severity_velocity",
-                                        "loss_last_refresh","correlation_matrix_version", 
-                                        
+                                        "loss_last_refresh",
+
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier",
                                       ])
 class ModelVersionDBRecord_BaseOnly(BaseModel):
     version_code: str
@@ -613,28 +629,26 @@ class ModelVersionDBRecord_BaseOnly(BaseModel):
                                         "base_premium", "base_premium_method", "modifiers_applied", "premium_after_modifiers",
                                         "limit_premiums", "final_premium", "final_premium_detail", "ilf_factor","ilf_method","ilf_anchor_limit",
                                         "decision","auto_approve", "base_premium_derivation",
-   
-                                        "referral_reasons", "notes",
-                                        
+
+                                        "referral_reasons",
+
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
                                         "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
                                         "loss_trend_direction", "loss_frequency_trend_direction", "loss_severity_trend_direction",
                                         "loss_previous_score", "loss_previous_frequency_score", "loss_previous_severity_score",
                                         "loss_score_velocity", "loss_frequency_velocity", "loss_severity_velocity",
-                                        "loss_last_refresh","correlation_matrix_version",  
-                                        
+                                        "loss_last_refresh",
+
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier",
                                         ])
 class ModelVersionDBRecord_DetailOnly(BaseModel):
     version_code: str
-    discovery_output: Optional[Dict[str, Any]] = None
-    signal_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     categorical_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     group_scores: Optional[Dict[str, Any]] = None
 
-@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
+@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash",
                                         "version_number", "version_type", "is_latest", "coverage", "configuration_name",
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
@@ -642,25 +656,24 @@ class ModelVersionDBRecord_DetailOnly(BaseModel):
                                         "limit_premiums", "final_premium", "final_premium_detail", "ilf_factor","ilf_method","ilf_anchor_limit",
                                         "decision","auto_approve", "base_premium_derivation",
 
-                                        "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
-                                        
+                                        "categorical_outputs", "group_scores",
+
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
                                         "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
                                         "loss_trend_direction", "loss_frequency_trend_direction", "loss_severity_trend_direction",
                                         "loss_previous_score", "loss_previous_frequency_score", "loss_previous_severity_score",
                                         "loss_score_velocity", "loss_frequency_velocity", "loss_severity_velocity",
-                                        "loss_last_refresh","correlation_matrix_version", 
-                                        
+                                        "loss_last_refresh",
+
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier",
                                       ])
 class ModelVersionDBRecord_CommentaryOnly(BaseModel):
-    version_code: str 
+    version_code: str
     referral_reasons: List[str] = Field(default_factory=list)
-    notes: List[Note] = Field(default_factory=list)
 
-@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
+@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash",
                                         "version_number", "version_type", "is_latest", "coverage", "configuration_name",
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
@@ -668,12 +681,12 @@ class ModelVersionDBRecord_CommentaryOnly(BaseModel):
                                         "limit_premiums", "final_premium", "final_premium_detail", "ilf_factor","ilf_method","ilf_anchor_limit",
                                         "decision","auto_approve", "base_premium_derivation",
 
-                                        "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
+                                        "categorical_outputs", "group_scores",
 
-                                        "referral_reasons", "notes",
-                                
+                                        "referral_reasons",
+
                                         "exposure_value", "exposure_band_id", "exposure_band_label", "exposure_band_boundaries",
-                                        "exposure_size_score", "exposure_modifier", "exposure_assessment_method",
+                                        "exposure_size_score", "exposure_modifier",
                                       ])
 class ModelVersionDBRecord_LossOnly(BaseModel):
     version_code: str 
@@ -699,9 +712,8 @@ class ModelVersionDBRecord_LossOnly(BaseModel):
     loss_frequency_velocity: Optional[float] = None
     loss_severity_velocity: Optional[float] = None
     loss_last_refresh: Optional[datetime] = None
-    correlation_matrix_version: Optional[str] = None
 
-@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash", 
+@maps_to(ModelVersionRecord, exclude=["id", "submission_id", "created_by", "created_at", "config_hash",
                                         "version_number", "version_type", "is_latest", "coverage", "configuration_name",
                                         "pure_composite_score", "confidence", "signal_coverage", "signal_conditions",
                                         "query_conditions", "tier_overrides", "score_based_tier", "final_tier", "tier_label",
@@ -709,17 +721,17 @@ class ModelVersionDBRecord_LossOnly(BaseModel):
                                         "limit_premiums", "final_premium", "final_premium_detail", "ilf_factor","ilf_method","ilf_anchor_limit",
                                         "decision","auto_approve", "base_premium_derivation",
 
-                                        "discovery_output", "signal_outputs", "categorical_outputs", "group_scores",
+                                        "categorical_outputs", "group_scores",
 
-                                        "referral_reasons", "notes",
-                                        
+                                        "referral_reasons",
+
                                         "loss_propensity_score", "severity_propensity_score", "loss_propensity_band", "severity_propensity_band",
                                         "loss_confidence", "loss_cohort_code", "loss_cohort_name", "loss_cohort_confidence", "loss_frequency_multiplier",
                                         "loss_severity_multiplier", "loss_combined_modifier", "loss_group_scores",
                                         "loss_trend_direction", "loss_frequency_trend_direction", "loss_severity_trend_direction",
                                         "loss_previous_score", "loss_previous_frequency_score", "loss_previous_severity_score",
                                         "loss_score_velocity", "loss_frequency_velocity", "loss_severity_velocity",
-                                        "loss_last_refresh","correlation_matrix_version", 
+                                        "loss_last_refresh",
                                       ])
 class ModelVersionDBRecord_ExposureOnly(BaseModel):
     version_code: str
@@ -729,7 +741,6 @@ class ModelVersionDBRecord_ExposureOnly(BaseModel):
     exposure_band_boundaries: Optional[Dict[str, Any]] = None
     exposure_size_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
-    exposure_assessment_method: Optional[str] = None
 
 @maps_to(SignalCache, exclude=["id"])
 class SignalCacheRecord(BaseModel):

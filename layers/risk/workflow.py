@@ -479,7 +479,6 @@ class WorkflowEngine:
             submission_data=submission_data,
             direct_query_responses=direct_query_responses,
             categorical_selections=categorical_selections,
-            signal_outputs=scoring_result.signal_outputs,
             categorical_outputs=scoring_result.categorical_outputs,
             group_scores=scoring_result.group_scores,
             pure_composite_score=scoring_result.pure_composite_score,
@@ -501,7 +500,6 @@ class WorkflowEngine:
             decision=decision,
             auto_approve=auto_approve,
             referral_reasons=all_referrals,
-            notes=all_notes,
             confidence=scoring_result.confidence,
             signal_coverage=scoring_result.signal_coverage,
         )
@@ -549,9 +547,6 @@ class WorkflowEngine:
             f"decision={decision.value}, "
             f"premium={pricing_result.final_premium:.0f}"
         )
-
-        # Add discovery output to model version for audit trail
-        model_version.discovery_output = discovery_output
 
         # Add loss propensity outputs to model version (Phase 16)
         if loss_propensity_result:
@@ -632,8 +627,6 @@ class WorkflowEngine:
             model_version.loss_frequency_trend_direction = getattr(loss_propensity_result, 'frequency_trend_direction', None)
             model_version.loss_severity_trend_direction = getattr(loss_propensity_result, 'severity_trend_direction', None)
             model_version.loss_last_refresh = loss_propensity_result.calculated_at
-            model_version.correlation_matrix_version = loss_propensity_result.correlation_matrix_version
-
         # Add exposure assessment outputs to model version
         exposure_result = next(
             (r for r in traditional_modifier_results if r.modifier_type == "exposure"),
@@ -648,10 +641,6 @@ class WorkflowEngine:
             ) * 50  # normalize to 0-100 scale
             model_version.exposure_complexity_score = exposure_result.components.get(
                 "complexity_score", None
-            )
-            model_version.exposure_assessment_method = (
-                "streamlined" if exposure_result.components.get("mode", 0.0) == 0.0
-                else "full"
             )
             # Persist component factors for transparency
             # Include exposure_weight per group (moved from group_scores) and
@@ -812,9 +801,12 @@ class WorkflowEngine:
             confidence=scoring_result.confidence,
             is_valid=True,
             # Discovery summary (Step 0)
+            discovery_output=discovery_output,
             discovered_domain=discovery_output.discovered_domain if discovery_output else None,
             discovery_confidence=discovery_output.confidence.value if discovery_output else None,
             discovery_warnings=discovery_output.warnings if discovery_output else [],
+            # Notes for caller to persist as SubmissionNote records
+            submission_notes=all_notes,
             # Premium assembly (Step 14)
             premium_breakdown=premium_breakdown,
         )

@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
@@ -375,7 +376,11 @@ async def get_submission(
     db: AsyncSession = Depends(get_async_db),
 ) -> SubmissionRecord:
     """Get submission details by code."""
-    query = select(Submission).where(Submission.submission_code == submission_code)
+    query = (
+        select(Submission)
+        .where(Submission.submission_code == submission_code)
+        .options(selectinload(Submission.notes))
+    )
 
     result = await db.execute(query)
     record = result.scalar_one_or_none()
