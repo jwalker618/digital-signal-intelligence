@@ -13,8 +13,9 @@
 ```
 A-1 (Auth Foundation) ──────────────────────────────────────────┐
   │                                                              │
-  ├──> A-2 (Audit System) ──> A-3 (Auth Frontend)               │
-  │      │                                                       │
+  ├──> A-2 (Audit System) ──> A-3 (Auth Frontend + PWA)         │
+  │      │                         │                             │
+  │      │                         └──> A-4 (Push Notifications) │
   │      └──> B-4 (Audit Log Viewer)                             │
   │                                                              │
   ├──> B-1 (System Health)  ─── can run in parallel ───┐         │
@@ -132,9 +133,9 @@ infrastructure/
 
 | Workstream | Phases | Backend | Frontend | Total |
 |------------|--------|---------|----------|-------|
-| A: Auth & Audit | 3 | 4-5 weeks | 3-4 weeks | 7-9 weeks |
+| A: Auth, Audit & PWA | 4 | 5-6 weeks | 4-5 weeks | 9-11 weeks |
 | B: Admin Backend | 4 | 5-6 weeks | 6-8 weeks | 11-14 weeks |
 | C: Recalibration | 3 | 4-5 weeks | 3-4 weeks | 7-9 weeks |
-| **Total** | **10** | | | **25-32 weeks** |
+| **Total** | **11** | | | **27-34 weeks** |
 
 With parallelisation (per the build sequence above), the critical path is approximately 16-20 weeks.

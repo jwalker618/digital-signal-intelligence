@@ -181,7 +181,7 @@ Frontend work is phased alongside backend:
 |-------|-------------|-------------------|
 | 1 | Login page, auth store, AuthGuard, session management | A-1 complete |
 | 2 | WebSocket client, NotificationToast, PermissionGate | A-2 complete |
-| 3 | Role-based nav in layout.tsx, profile page, MFA flow | A-1 + A-2 |
+| 3 | Role-based nav in layout.tsx, profile page, MFA flow, **PWA setup** (manifest, icons, next-pwa config, meta tags) | A-1 + A-2 |
 | 4 | Admin shell + System Health dashboard | B-1 API |
 | 5 | Config Management UI | B-2 API |
 | 6 | User/Role Management pages | B-3 API |
@@ -190,4 +190,5 @@ Frontend work is phased alongside backend:
 | 9 | CausalAdjustmentCard in workbench | WE-4 complete |
 | 10 | Loss Register + bulk import | C-1 API |
 | 11 | Recalibration dashboard + governance UI | C-3 API |
-| 12 | Portfolio Dashboard (last -- most complex) | WE-5 complete |
+| 12 | **Push notifications**: subscription UI, preferences on profile page, service worker push handler | A-4 backend complete |
+| 13 | Portfolio Dashboard (last -- most complex) | WE-5 complete |

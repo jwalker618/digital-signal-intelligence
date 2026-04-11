@@ -83,14 +83,15 @@ After all backend phases are stable:
 
 | Step | Phase | What |
 |------|-------|------|
-| 7a | **A-3** | Login, MFA, auth store, AuthGuard, session management, role-based navigation in `layout.tsx` |
+| 7a | **A-3** | Login, MFA, auth store, AuthGuard, session management, role-based navigation in `layout.tsx`, **PWA installability** (manifest, service worker, asset caching via next-pwa), `next.config.ts` update |
 | 7b | **FE-WE** | ConsistencyCard (WE-2), CausalAdjustmentCard (WE-4), CAF waterfall line item |
 | 7c | **FE-Admin** | Admin shell, System Health (B-1), Config Management (B-2), User Management (B-3), Audit Log (B-4) |
 | 7d | **FE-Loss** | Loss Register, bulk import (C-1) |
 | 7e | **FE-Recal** | Recalibration dashboard, proposal detail, governance UI (C-3) |
 | 7f | **FE-Portfolio** | Portfolio Dashboard, concentration panel, systemic nodes, scenario simulation (WE-5) |
+| 7g | **A-4** | Push notification subscription, preferences UI on profile page, service worker push handler, `custom-sw.js`. Backend: push service, subscription API, audit middleware extension. `alembic 018` |
 
-7a must come first (auth gating). 7b-7f can run in parallel.
+7a must come first (auth gating + PWA foundation). 7b-7f can run in parallel. 7g comes after 7a (extends profile page and service worker).
 
 ### Track 5: Seed & Validation (Final)
 
@@ -127,12 +128,24 @@ Files touched by multiple phases, showing the correct order:
 4. **B-1/B-2/B-3/B-4**: Mount admin router
 5. **C-1**: Mount loss router
 6. **C-3**: Mount recalibration router
+7. **A-4**: Mount push notification router
 
 ### `infrastructure/models/commercial_schema.py`
 1. **WE-5**: Add portfolio concentration check to appetite evaluation
 
+### `frontend/next.config.ts`
+1. **A-3**: Add `next-pwa` wrapper with caching strategies (single touch -- no other phase modifies this file)
+
 ### `frontend/src/app/layout.tsx`
-1. **A-3**: Wrap with AuthGuard, add permission-gated navigation, add admin section, add portfolio item
+1. **A-3**: Wrap with AuthGuard, add permission-gated navigation, add admin section, add portfolio item, add PWA meta tags (single touch)
+
+### `frontend/src/app/profile/page.tsx`
+1. **A-3**: Create with modular section layout (profile, password, MFA, audit log)
+2. **A-4**: Add `<NotificationPreferences />` section (extends, does not restructure)
+
+### `infrastructure/api/audit/middleware.py`
+1. **A-2**: Create (audit event capture + WebSocket broadcast)
+2. **A-4**: Extend with `push_service.notify_event()` call after broadcast
 
 ### `seed_dsi_bench.py`
 1. **SEED**: Single comprehensive rewrite (final phase)
@@ -152,6 +165,7 @@ All migrations are independent (no inter-migration dependencies beyond sequentia
 | `015` | B-2 | `config_versions`, `config_deployments` |
 | `016` | C-1 | `loss_events`, `signal_loss_pairs` |
 | `017` | C-2 | `recalibration_proposals` |
+| `018` | A-4 | `push_subscriptions`, `notification_preferences` |
 
 ---
 
@@ -182,4 +196,6 @@ To prevent rework, each phase explicitly excludes:
 | B-1/B-2/B-3/B-4 | Does not touch seed script. Frontend deferred to Track 4 |
 | C-1/C-2 | Does not touch seed script, frontend |
 | C-3 | Frontend only (governance UI). Backend API is thin wrapper around C-2 |
+| A-3 | Single touch on `layout.tsx` (auth + PWA meta), single touch on `next.config.ts` (PWA plugin). Creates profile page with modular layout for A-4 to extend |
+| A-4 | Does not touch `layout.tsx` or `next.config.ts`. Extends profile page (A-3) and audit middleware (A-2) only. Creates own backend files + migration |
 | SEED | Modifies seed_dsi_bench.py only. No logic changes anywhere else |
