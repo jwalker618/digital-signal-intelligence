@@ -929,3 +929,102 @@ class RiskTermsRecord(Base):
     # Relationships
     model_version = relationship("ModelVersionRecord", backref="risk_terms")
 
+
+class LossEvent(Base):
+    """Actual loss event -- a claim or incident reported after a policy is bound.
+
+    Loss events are linked to a specific ModelVersionRecord (the assessment
+    active at bind time) via the SignalLossLinker. The linked assessment
+    is the source of signal scores that feed recalibration analysis (C-2).
+    """
+    __tablename__ = "loss_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Entity
+    entity_name = Column(String(500), nullable=False)
+
+    # Policy linkage
+    quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id", ondelete="SET NULL"))
+    policy_reference = Column(String(100))
+    claim_reference = Column(String(100))
+
+    # Timeline
+    loss_date = Column(DateTime(timezone=True), nullable=False)
+    notification_date = Column(DateTime(timezone=True))
+    closed_date = Column(DateTime(timezone=True))
+
+    # Classification
+    loss_type = Column(String(100), nullable=False)
+    coverage = Column(String(50), nullable=False)
+    config_name = Column(String(100))
+
+    # Financial
+    incurred_amount = Column(Float, nullable=False, default=0.0)
+    paid_amount = Column(Float, nullable=False, default=0.0)
+    reserved_amount = Column(Float, nullable=False, default=0.0)
+    currency = Column(String(3), nullable=False, default="USD")
+
+    # Status + cause
+    status = Column(String(20), nullable=False, default="OPEN")  # OPEN | CLOSED | REOPENED
+    cause_description = Column(Text)
+    event_metadata = Column("metadata", JSONB, nullable=False, default=dict)  # reserved 'metadata' is the column name
+
+    # Link to assessment at bind time (populated by linker)
+    linked_assessment_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id", ondelete="SET NULL"))
+    linker_run_at = Column(DateTime(timezone=True))
+
+    # Audit
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    quote = relationship("Quote", foreign_keys=[quote_id])
+    linked_assessment = relationship("ModelVersionRecord", foreign_keys=[linked_assessment_id])
+    signal_loss_pairs = relationship("SignalLossPair", back_populates="loss_event", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("ix_loss_events_entity_date", "entity_name", "loss_date"),
+        Index("ix_loss_events_coverage_status", "coverage", "status"),
+    )
+
+
+class SignalLossPair(Base):
+    """Pairs a bind-time signal profile with the actual loss outcome.
+
+    This is the primary input to the C-2 recalibration engine: for every
+    loss, a snapshot of exactly the signal scores the model used at bind,
+    so we can back-test which signals actually predicted the loss.
+    """
+    __tablename__ = "signal_loss_pairs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    assessment_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id", ondelete="CASCADE"), nullable=False, index=True)
+    loss_event_id = Column(UUID(as_uuid=True), ForeignKey("loss_events.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Signal profile at bind time (dict of signal_code -> score)
+    signal_scores_at_bind = Column(JSONB, nullable=False, default=dict)
+
+    # Composite metrics at bind time
+    composite_score_at_bind = Column(Float)
+    tier_at_bind = Column(Integer)
+    loss_propensity_at_bind = Column(Float)
+    confidence_at_bind = Column(Float)
+
+    # Temporal
+    bind_date = Column(DateTime(timezone=True))
+    time_to_loss_days = Column(Integer)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    assessment = relationship("ModelVersionRecord", foreign_keys=[assessment_id])
+    loss_event = relationship("LossEvent", back_populates="signal_loss_pairs", foreign_keys=[loss_event_id])
+
+    __table_args__ = (
+        Index("uq_signal_loss_pair_composite", "assessment_id", "loss_event_id", unique=True),
+    )
+

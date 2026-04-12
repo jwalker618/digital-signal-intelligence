@@ -426,7 +426,7 @@ async def api_info():
 # =============================================================================
 
 # Import routers after app is created to avoid circular imports
-from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals
+from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals, losses
 from .auth.routes import router as auth_router
 from .websocket.routes import router as websocket_router
 from world_engine.registry.api import router as world_engine_router
@@ -443,6 +443,7 @@ app.include_router(modelversion.router, prefix="/api/v1", tags=["ModelVersion"])
 app.include_router(signals.router, prefix="/api/v1", tags=["Signals"])
 app.include_router(commercialterms.router, prefix="/api/v1", tags=["Commercialterms"])
 app.include_router(riskterms.router, prefix="/api/v1", tags=["Riskterms"])
+app.include_router(losses.router, prefix="/api/v1", tags=["Losses"])
 app.include_router(world_engine_router, prefix="/api/v1/world-engine", tags=["World Engine"])
 
 # =============================================================================
