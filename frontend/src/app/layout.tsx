@@ -323,9 +323,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           onClick={() => {
                             setActiveMenu("World Engine");
                             setIsOpen(false);
+                            router.push("/world-engine");
                           }}
                           className={`w-full flex items-center gap-3 py-2 mt-4 ${
-                            activeMenu === "World Engine"
+                            pathname?.startsWith("/world-engine")
                               ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
                               : "text-dsi-background hover:text-dsi-selected"
                           }`}
@@ -338,9 +339,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       {/* Role-gated sections wired up in A-3e */}
                       {hasPermission("config:read") && (
                         <button
-                          onClick={() => { setActiveMenu("Config"); setIsOpen(false); }}
+                          onClick={() => { setActiveMenu("Config"); setIsOpen(false); router.push("/admin/configs"); }}
                           className={`w-full flex items-center gap-3 py-2 mt-2 ${
-                            activeMenu === "Config"
+                            pathname?.startsWith("/admin/configs")
                               ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
                               : "text-dsi-background hover:text-dsi-selected"
                           }`}
@@ -352,9 +353,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                       {hasPermission("recalibration:view") && (
                         <button
-                          onClick={() => { setActiveMenu("Recalibration"); setIsOpen(false); }}
+                          onClick={() => { setActiveMenu("Recalibration"); setIsOpen(false); router.push("/admin/recalibration"); }}
                           className={`w-full flex items-center gap-3 py-2 mt-2 ${
-                            activeMenu === "Recalibration"
+                            pathname?.startsWith("/admin/recalibration")
                               ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
                               : "text-dsi-background hover:text-dsi-selected"
                           }`}
@@ -366,9 +367,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                       {hasPermission("admin:system") && (
                         <button
-                          onClick={() => { setActiveMenu("Admin"); setIsOpen(false); }}
+                          onClick={() => { setActiveMenu("Admin"); setIsOpen(false); router.push("/admin"); }}
                           className={`w-full flex items-center gap-3 py-2 mt-2 ${
-                            activeMenu === "Admin"
+                            pathname === "/admin" || pathname?.startsWith("/admin/")
                               ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
                               : "text-dsi-background hover:text-dsi-selected"
                           }`}
