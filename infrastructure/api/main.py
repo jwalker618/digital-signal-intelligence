@@ -277,6 +277,11 @@ app.add_middleware(RateLimitMiddleware)
 from .auth.tenant_middleware import TenantAuthMiddleware
 app.add_middleware(TenantAuthMiddleware)
 
+# Audit middleware (assigns request_id, logs session activity). Runs AFTER
+# auth so it has access to request.state.auth.
+from .audit.middleware import AuditMiddleware
+app.add_middleware(AuditMiddleware)
+
 
 # =============================================================================
 # EXCEPTION HANDLERS
@@ -423,9 +428,11 @@ async def api_info():
 # Import routers after app is created to avoid circular imports
 from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals
 from .auth.routes import router as auth_router
+from .websocket.routes import router as websocket_router
 from world_engine.registry.api import router as world_engine_router
 
 app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
+app.include_router(websocket_router, tags=["WebSocket"])
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
 app.include_router(referrals.router, prefix="/api/v1", tags=["Referrals"])

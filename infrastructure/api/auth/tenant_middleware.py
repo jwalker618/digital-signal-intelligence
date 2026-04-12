@@ -39,6 +39,7 @@ PUBLIC_PATH_EXACT: frozenset[str] = frozenset({
     "/api/v1/metrics",
     "/metrics",
     "/openapi.json",
+    "/ws",  # WebSocket auth happens in the endpoint via token query param
 })
 
 # Paths where any sub-path is also public (prefix match)
