@@ -157,6 +157,106 @@ class WorkflowEngine:
         self.loss_correlation_scorer = loss_correlation_scorer
         self.enable_loss_correlation = enable_loss_correlation and LOSS_CORRELATION_AVAILABLE
 
+    def _compute_consistency(
+        self,
+        entity_id: str,
+        model_version: Any,
+        scoring_result: Any,
+        pricing_result: Any,
+        loss_propensity_result: Any,
+        config: Any,
+    ) -> Tuple[Optional[float], List[str]]:
+        """WE-2: compute inline consistency for this assessment.
+
+        Persists the ConsistencyScore to the registry and returns the
+        overall score + divergent signal pairs for inclusion in the
+        WorkflowResult. Never raises -- exceptions bubble up to the
+        caller which treats them as non-blocking.
+        """
+        from world_engine.consistency import ConsistencyInputs, ConsistencyScorer, SignalScore
+        from world_engine.registry import IntelligenceRegistry
+
+        # Build signals list from scoring_result.signal_outputs
+        signals = [
+            SignalScore(
+                signal_id=s.signal_id,
+                group_id=s.group_id,
+                raw_score=float(s.raw_score),
+            )
+            for s in (scoring_result.signal_outputs or [])
+            if s.raw_score is not None
+        ]
+
+        # Group composites: group_scores is Dict[group_id, dict-or-number]
+        group_composites: Dict[str, float] = {}
+        for gid, detail in (scoring_result.group_scores or {}).items():
+            if gid.startswith("_"):  # skip computed summaries
+                continue
+            if isinstance(detail, dict):
+                value = detail.get("risk_score") or detail.get("score") or detail.get("value")
+            else:
+                value = detail
+            if isinstance(value, (int, float)):
+                group_composites[gid] = float(value)
+
+        # Map loss-propensity band to an ordinal (1-5)
+        loss_band_order = {
+            "very_low": 1, "low": 2, "moderate": 3, "elevated": 4, "high": 5,
+        }
+        loss_tier = None
+        if loss_propensity_result is not None:
+            band = getattr(loss_propensity_result, "loss_propensity_band", None)
+            band_val = band.value if hasattr(band, "value") else band
+            if isinstance(band_val, str):
+                loss_tier = loss_band_order.get(band_val.lower())
+
+        # Exposure tier from model_version.exposure_band_id if present
+        exposure_tier = getattr(model_version, "exposure_band_id", None)
+        if exposure_tier is not None:
+            try:
+                exposure_tier = int(exposure_tier)
+            except (TypeError, ValueError):
+                exposure_tier = None
+
+        # Max tier for normalisation: use config.risk_tier_bands count if available
+        max_tier = 5
+        try:
+            bands = getattr(getattr(config, "risk_tier_bands", None), "__len__", None)
+            if callable(bands):
+                max_tier = max(max_tier, len(config.risk_tier_bands))
+        except Exception:
+            pass
+
+        assessment_id = getattr(model_version, "version_code", None) or getattr(
+            model_version, "id", ""
+        )
+
+        inputs = ConsistencyInputs(
+            entity_id=entity_id,
+            assessment_id=str(assessment_id),
+            signals=signals,
+            group_composites=group_composites,
+            risk_tier=getattr(pricing_result, "final_tier", None),
+            loss_tier=loss_tier,
+            exposure_tier=exposure_tier,
+            max_tier=max_tier,
+        )
+
+        scorer = ConsistencyScorer()
+        cs = scorer.score(inputs)
+
+        # Persist to registry (best-effort: if DB is unavailable we still
+        # return the in-memory score so the API response carries it).
+        try:
+            from infrastructure.db.config import session_scope
+
+            with session_scope() as db:
+                IntelligenceRegistry(db).store_consistency_score(cs)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("ConsistencyScore persistence skipped: %s", exc)
+
+        return cs.overall_consistency, list(cs.divergent_pairs)
+
     def _calculate_loss_propensity(
         self,
         signal_outputs: List[Any],
@@ -785,6 +885,27 @@ class WorkflowEngine:
             if "_composite" in _exp_group_scores:
                 _exp_group_scores["_composite"]["exposure_band_label"] = blabel
 
+        # -----------------------------------------------------------------
+        # WE-2: Consistency scoring (non-blocking)
+        #
+        # Runs after all three layers have produced outputs + pricing has
+        # assigned the final tier. Failure does NOT block the assessment;
+        # the score is simply omitted.
+        # -----------------------------------------------------------------
+        consistency_score_value: Optional[float] = None
+        divergent_pairs: List[str] = []
+        try:
+            consistency_score_value, divergent_pairs = self._compute_consistency(
+                entity_id=entity_id,
+                model_version=model_version,
+                scoring_result=scoring_result,
+                pricing_result=pricing_result,
+                loss_propensity_result=loss_propensity_result,
+                config=config,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Consistency scoring failed (non-blocking): %s", exc)
+
         return WorkflowResult(
             entity_id=entity_id,
             coverage=coverage,
@@ -809,6 +930,9 @@ class WorkflowEngine:
             submission_notes=all_notes,
             # Premium assembly (Step 14)
             premium_breakdown=premium_breakdown,
+            # WE-2: Consistency
+            consistency_score=consistency_score_value,
+            divergent_pairs=divergent_pairs,
         )
 
     def verify_inputs(

@@ -1163,6 +1163,10 @@ class WorkflowResult:
     # Premium assembly (commercial terms applied to technical premium)
     premium_breakdown: Optional[Any] = None  # PremiumBreakdown from premium_assembly
 
+    # World Engine consistency (WE-2). None if scoring failed or was skipped.
+    consistency_score: Optional[float] = None              # 0-1 overall
+    divergent_pairs: List[str] = field(default_factory=list)  # signal pairs flagged as divergent
+
 
 # Backward compatibility aliases
 LimitBand = LimitBandConfig
