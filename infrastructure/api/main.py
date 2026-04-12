@@ -343,7 +343,26 @@ async def health_check():
 async def readiness_check():
     """Kubernetes readiness probe."""
     # Ready if we can process requests (even without DB)
-    return {"ready": True}
+    response: dict = {"ready": True}
+
+    # Include World Engine maturity as a non-blocking health indicator.
+    # If the registry query fails (e.g. during migration), we still report ready.
+    try:
+        from infrastructure.db.config import session_scope
+        from world_engine.maturity import MaturityEvaluator
+
+        with session_scope() as db:
+            maturity = MaturityEvaluator().evaluate(db)
+            response["world_engine"] = {
+                "status": "ok",
+                "maturity_stage": maturity.stage.value,
+                "assessed_entities": maturity.assessed_entity_count,
+                "active_relationships": maturity.active_relationships,
+            }
+    except Exception as exc:  # noqa: BLE001
+        response["world_engine"] = {"status": "degraded", "error": str(exc)}
+
+    return response
 
 
 @app.get("/api/v1/health/live", tags=["Health"])
@@ -399,6 +418,7 @@ async def api_info():
 
 # Import routers after app is created to avoid circular imports
 from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals
+from world_engine.registry.api import router as world_engine_router
 
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
@@ -410,6 +430,7 @@ app.include_router(modelversion.router, prefix="/api/v1", tags=["ModelVersion"])
 app.include_router(signals.router, prefix="/api/v1", tags=["Signals"])
 app.include_router(commercialterms.router, prefix="/api/v1", tags=["Commercialterms"])
 app.include_router(riskterms.router, prefix="/api/v1", tags=["Riskterms"])
+app.include_router(world_engine_router, prefix="/api/v1/world-engine", tags=["World Engine"])
 
 # =============================================================================
 # METRICS ENDPOINT
