@@ -889,6 +889,12 @@ class ModelVersion:
     final_premium: float = 0.0
     uncapped_premium: Optional[float] = None  # Pre-guardrail premium (set when capped)
 
+    # WE-4: Causal Adjustment Factor
+    caf_value: float = 1.0                     # Multiplicative adjustment (default neutral)
+    caf_confidence: Optional[float] = None
+    caf_constrained: bool = False
+    static_premium: Optional[float] = None     # P_static for CAF audit: P_final = P_static * CAF
+
     # Decision (Step 13)
     decision: DecisionType = DecisionType.REFER
     auto_approve: bool = False

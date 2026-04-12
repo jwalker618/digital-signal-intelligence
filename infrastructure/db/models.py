@@ -430,6 +430,14 @@ class ModelVersionRecord(Base):
     confidence = Column(Float)
     signal_coverage = Column(Float)
 
+    # WE-4: Causal Adjustment Factor audit summary
+    #   Full payload (precursors, trajectory, constraint regime) lives in
+    #   we_causal_adjustments. These columns capture the at-a-glance state.
+    caf_value = Column(Float, nullable=False, default=1.0, server_default="1.0")
+    caf_confidence = Column(Float)
+    caf_constrained = Column(Boolean, nullable=False, default=False, server_default="false")
+    static_premium = Column(Float)  # P_static for CAF audit: P_final = P_static * CAF
+
     # Conditions
     signal_conditions = Column(JSONB, default=list)
     query_conditions = Column(JSONB, default=list)
