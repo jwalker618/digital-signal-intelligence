@@ -429,10 +429,12 @@ async def api_info():
 from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals, losses
 from .auth.routes import router as auth_router
 from .websocket.routes import router as websocket_router
+from .admin import router as admin_router
 from world_engine.registry.api import router as world_engine_router
 
 app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
 app.include_router(websocket_router, tags=["WebSocket"])
+app.include_router(admin_router, prefix="/api/v1", tags=["Admin"])
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
 app.include_router(referrals.router, prefix="/api/v1", tags=["Referrals"])

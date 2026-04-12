@@ -1075,3 +1075,39 @@ class RecalibrationProposal(Base):
 
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+
+
+class ExtractorHealth(Base):
+    """Per-extractor health metrics for the admin dashboard (B-1)."""
+    __tablename__ = "extractor_health"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    extractor_id = Column(String(200), nullable=False, index=True)
+    coverage = Column(String(50), index=True)
+    signal_type = Column(String(100))
+
+    success_count_24h = Column(Integer, nullable=False, default=0)
+    error_count_24h = Column(Integer, nullable=False, default=0)
+    avg_latency_ms = Column(Float)
+
+    last_success_at = Column(DateTime(timezone=True))
+    last_error_at = Column(DateTime(timezone=True))
+    last_error_message = Column(Text)
+
+    ttl_seconds = Column(Integer)
+    data_freshness_score = Column(Float)  # 0-1
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class MetricSnapshot(Base):
+    """Periodic pipeline metric rollups for trend analysis (B-1)."""
+    __tablename__ = "metric_snapshots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    snapshot_type = Column(String(20), nullable=False)  # hourly | daily
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    coverage = Column(String(50))
+    metrics = Column(JSONB, nullable=False, default=dict)
+
