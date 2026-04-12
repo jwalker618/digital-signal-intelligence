@@ -15,6 +15,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from infrastructure.db.config import get_db
@@ -146,6 +147,157 @@ def get_portfolio_concentrations(
     return PortfolioConcentrationsResponse(
         entity_id=entity_id, concentrations=concentrations
     )
+
+
+# ---------------------------------------------------------------------------
+# Portfolio Graph + simulation (WE-5)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/portfolio/{entity_id}/graph")
+def get_portfolio_graph(
+    entity_id: str,
+    registry: IntelligenceRegistry = Depends(get_registry),
+):
+    """Return the full Portfolio Graph for a commercial entity (WE-5a)."""
+    from world_engine.portfolio import PortfolioGraphBuilder
+
+    graph = PortfolioGraphBuilder(registry.db).build(entity_id)
+    return graph
+
+
+@router.get("/portfolio/{entity_id}/graph/systemic-nodes")
+def get_systemic_nodes(
+    entity_id: str,
+    registry: IntelligenceRegistry = Depends(get_registry),
+):
+    """Return only the systemic nodes (top portfolio-PageRank)."""
+    from world_engine.portfolio import PortfolioGraphBuilder
+
+    graph = PortfolioGraphBuilder(registry.db).build(entity_id)
+    return {"entity_id": entity_id, "systemic_nodes": graph.systemic_nodes}
+
+
+@router.post("/portfolio/{entity_id}/detect-concentrations")
+def detect_concentrations(
+    entity_id: str,
+    registry: IntelligenceRegistry = Depends(get_registry),
+):
+    """Build the portfolio and run concentration detection. Persists alerts."""
+    from world_engine.portfolio import (
+        ConcentrationDetector,
+        PortfolioGraphBuilder,
+    )
+
+    db = registry.db
+    graph = PortfolioGraphBuilder(db).build(entity_id)
+    alerts = ConcentrationDetector(db).detect(graph)
+    for a in alerts:
+        registry.store_concentration(a)
+    db.commit()
+    return {
+        "entity_id": entity_id,
+        "entity_count": graph.entity_count,
+        "concentrations_detected": len(alerts),
+        "alerts": alerts,
+    }
+
+
+class MarginalImpactRequest(BaseModel):
+    """Body for /portfolio/{entity_id}/marginal-impact."""
+
+    prospective_entity_name: str
+    prospective_signals: dict[str, float]
+
+
+@router.post("/portfolio/{entity_id}/marginal-impact")
+def marginal_impact(
+    entity_id: str,
+    body: "MarginalImpactRequest",
+    registry: IntelligenceRegistry = Depends(get_registry),
+):
+    """Evaluate the portfolio impact of accepting a prospective submission (WE-5e)."""
+    from world_engine.portfolio import MarginalImpactAnalyser
+
+    result = MarginalImpactAnalyser(registry.db).analyse(
+        prospective_entity_name=body.prospective_entity_name,
+        prospective_signals=body.prospective_signals,
+        commercial_entity_id=entity_id,
+    )
+    return result
+
+
+class SimulateRequest(BaseModel):
+    """Body for /portfolio/{entity_id}/simulate."""
+
+    name: str
+    description: Optional[str] = None
+    shocks: list[dict]   # free-form; coerced to ScenarioShock
+
+
+@router.post("/portfolio/{entity_id}/simulate")
+def simulate(
+    entity_id: str,
+    body: "SimulateRequest",
+    registry: IntelligenceRegistry = Depends(get_registry),
+):
+    """Run a scenario simulation on the portfolio (WE-5f)."""
+    from world_engine.portfolio import (
+        PortfolioGraphBuilder,
+        ScenarioDefinition,
+        ScenarioShock,
+        ScenarioSimulator,
+    )
+
+    graph = PortfolioGraphBuilder(registry.db).build(entity_id)
+    scenario = ScenarioDefinition(
+        name=body.name,
+        description=body.description,
+        shocks=[ScenarioShock(**s) for s in body.shocks],
+    )
+    return ScenarioSimulator().simulate(scenario, graph)
+
+
+@router.get("/portfolio/{entity_id}/simulate/presets")
+def simulation_presets(entity_id: str):
+    """Pre-defined scenario templates for the frontend scenario panel."""
+    return {
+        "entity_id": entity_id,
+        "presets": [
+            {
+                "name": "Cloud provider outage",
+                "description": "A major cloud provider experiences a regional outage.",
+                "shocks": [{
+                    "target_type": "signal", "target_id": "cloud_provider",
+                    "magnitude": 0.0, "propagation": "full_cascade", "decay_rate": 0.5,
+                }],
+            },
+            {
+                "name": "Regulatory change",
+                "description": "Regulator tightens requirements in a single jurisdiction.",
+                "shocks": [{
+                    "target_type": "signal", "target_id": "jurisdiction",
+                    "magnitude": -30.0, "propagation": "one_hop", "decay_rate": 0.4,
+                }],
+            },
+            {
+                "name": "Supply chain disruption",
+                "description": "A shared supplier fails.",
+                "shocks": [{
+                    "target_type": "signal", "target_id": "supplier",
+                    "magnitude": -50.0, "propagation": "full_cascade", "decay_rate": 0.6,
+                }],
+            },
+            {
+                "name": "Vulnerability disclosure",
+                "description": "Critical CVE published in a widely-used dependency.",
+                "shocks": [{
+                    "target_type": "external_event", "target_id": "critical_cve",
+                    "magnitude": -25.0, "propagation": "one_hop", "decay_rate": 0.3,
+                }],
+            },
+        ],
+    }
 
 
 # ---------------------------------------------------------------------------
