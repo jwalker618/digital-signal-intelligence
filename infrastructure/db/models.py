@@ -73,6 +73,57 @@ class ReferralStatus(str, enum.Enum):
 # MODELS
 # =============================================================================
 
+class Tenant(Base):
+    """Isolated customer organisation.
+
+    All tenant-scoped resources (users, submissions, etc.) carry a tenant_id
+    FK back to this table. Multi-tenancy is enforced at the query layer via
+    the tenant_middleware.
+    """
+    __tablename__ = "tenants"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(100), unique=True, nullable=False, index=True)
+    sso_provider = Column(String(20), nullable=False, default="NONE")  # NONE | SAML | OIDC
+    sso_metadata = Column(JSONB, nullable=False, default=dict)
+    settings = Column(JSONB, nullable=False, default=dict)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    users = relationship("User", back_populates="tenant", foreign_keys="User.tenant_id")
+    roles = relationship("Role", back_populates="tenant", cascade="all, delete-orphan")
+    sessions = relationship("UserSession", back_populates="tenant", cascade="all, delete-orphan")
+
+
+class Role(Base):
+    """Tenant-scoped role with a granular permission set.
+
+    System roles (is_system_role=True) are seeded by migration and cannot
+    be deleted. Custom roles can be created by admins per tenant.
+    """
+    __tablename__ = "roles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    permissions = Column(JSONB, nullable=False, default=list)
+    is_system_role = Column(Boolean, nullable=False, default=False)
+    description = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    tenant = relationship("Tenant", back_populates="roles")
+    users = relationship("User", back_populates="role", foreign_keys="User.role_id")
+
+    __table_args__ = (
+        Index("uq_roles_tenant_name", "tenant_id", "name", unique=True),
+    )
+
+
 class User(Base):
     """User account for API access."""
     __tablename__ = "users"
@@ -85,6 +136,21 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     permissions = Column(JSONB, default=list)
 
+    # Multi-tenant / role
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)
+    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="RESTRICT"), nullable=True)
+
+    # MFA
+    mfa_secret = Column(String(255))  # Encrypted TOTP secret
+    mfa_backup_codes = Column(JSONB)  # Encrypted list of single-use codes
+    mfa_enabled = Column(Boolean, nullable=False, default=False)
+
+    # Account security
+    is_locked = Column(Boolean, nullable=False, default=False)
+    failed_login_attempts = Column(Integer, nullable=False, default=0)
+    password_reset_token_hash = Column(String(255))
+    password_reset_expires_at = Column(DateTime(timezone=True))
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     last_login = Column(DateTime(timezone=True))
@@ -92,6 +158,34 @@ class User(Base):
     # Relationships
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
     submissions = relationship("Submission", back_populates="created_by_user")
+    tenant = relationship("Tenant", back_populates="users", foreign_keys=[tenant_id])
+    role = relationship("Role", back_populates="users", foreign_keys=[role_id])
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan", foreign_keys="UserSession.user_id")
+
+
+class UserSession(Base):
+    """Active JWT session with refresh token rotation.
+
+    A session row exists per active refresh token. When a refresh token is
+    used, the row is updated with a new hash (rotation). Revoking a session
+    sets revoked_at and invalidates all tokens associated with it.
+    """
+    __tablename__ = "user_sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    refresh_token_hash = Column(String(255), unique=True, nullable=False, index=True)
+    user_agent = Column(Text)
+    ip_address = Column(String(45))
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    revoked_at = Column(DateTime(timezone=True))
+    last_activity_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="sessions", foreign_keys=[user_id])
+    tenant = relationship("Tenant", back_populates="sessions")
 
 
 class APIKey(Base):

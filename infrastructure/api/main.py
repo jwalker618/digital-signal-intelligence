@@ -273,6 +273,10 @@ async def request_logging(request: Request, call_next):
 # Rate limiting middleware
 app.add_middleware(RateLimitMiddleware)
 
+# Tenant auth middleware (populates request.state.auth on authenticated requests)
+from .auth.tenant_middleware import TenantAuthMiddleware
+app.add_middleware(TenantAuthMiddleware)
+
 
 # =============================================================================
 # EXCEPTION HANDLERS
@@ -418,8 +422,10 @@ async def api_info():
 
 # Import routers after app is created to avoid circular imports
 from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals
+from .auth.routes import router as auth_router
 from world_engine.registry.api import router as world_engine_router
 
+app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
 app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
 app.include_router(referrals.router, prefix="/api/v1", tags=["Referrals"])
